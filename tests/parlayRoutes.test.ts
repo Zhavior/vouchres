@@ -5,37 +5,51 @@ import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { parlayRoutes } from "../server/routes/parlayRoutes";
 import { AppError } from "../server/errors/AppError";
 
-vi.mock("../server/middleware/auth", () => ({
-  requireAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = {
-      id: "user-test-1",
-      profile: { is_staff: (globalThis as any).__parlayTestIsStaff !== false },
-    };
-    next();
-  },
-  optionalAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = {
-      id: "user-test-1",
-      profile: { is_staff: (globalThis as any).__parlayTestIsStaff !== false },
-    };
-    next();
-  },
-  requireStaff: (req: any, _res: unknown, next: (err?: unknown) => void) => {
-    if (!req.user?.profile?.is_staff) {
-      return next(new AppError({
-        status: 403,
-        code: "forbidden",
-        message: "Staff access is required.",
-      }));
-    }
-    next();
-  },
-  getSupabaseAdmin: vi.fn(async () => ({
-    from: () => ({
-      insert: async () => ({ error: null }),
-    }),
-  })),
-}));
+vi.mock("../server/middleware/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../server/middleware/auth")>();
+  return {
+    ...actual,
+    requireAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = {
+        id: "user-test-1",
+        profile: {
+          is_staff: (globalThis as any).__parlayTestIsStaff !== false,
+          age_confirmed_at: "2026-01-01",
+          jurisdiction_confirmed_at: "2026-01-01",
+          jurisdiction: "US-CA",
+        },
+      };
+      next();
+    },
+    optionalAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = {
+        id: "user-test-1",
+        profile: {
+          is_staff: (globalThis as any).__parlayTestIsStaff !== false,
+          age_confirmed_at: "2026-01-01",
+          jurisdiction_confirmed_at: "2026-01-01",
+          jurisdiction: "US-CA",
+        },
+      };
+      next();
+    },
+    requireStaff: (req: any, _res: unknown, next: (err?: unknown) => void) => {
+      if (!req.user?.profile?.is_staff) {
+        return next(new AppError({
+          status: 403,
+          code: "forbidden",
+          message: "Staff access is required.",
+        }));
+      }
+      next();
+    },
+    getSupabaseAdmin: vi.fn(async () => ({
+      from: () => ({
+        insert: async () => ({ error: null }),
+      }),
+    })),
+  };
+});
 
 vi.mock("../server/services/grading/sportGraders", () => ({
   getGrader: vi.fn(() => ({

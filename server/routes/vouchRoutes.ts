@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { z } from "zod";
-import { AuthedRequest, requireAuth, optionalAuth } from "../middleware/auth";
+import { AuthedRequest, requireAuth, optionalAuth, requireLegalConfirmed } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
@@ -55,6 +55,7 @@ vouchRoutes.get("/vouches", optionalAuth, asyncHandler(async (req: AuthedRequest
 vouchRoutes.post(
   "/vouches",
   requireAuth,
+  requireLegalConfirmed,
   validate({ body: CreateVouchSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const body = req.body as z.infer<typeof CreateVouchSchema>;

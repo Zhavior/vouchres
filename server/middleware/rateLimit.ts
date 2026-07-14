@@ -50,6 +50,22 @@ function memoryHit(key: string, windowMs: number): number {
   return current.count;
 }
 
+function rateLimitUnavailable(req: RequestWithContext, res: Response) {
+  const requestId = req.requestId ?? "unknown";
+  res.setHeader("x-request-id", requestId);
+  return res.status(503).json(
+    buildApiErrorResponse({
+      code: "upstream_unavailable",
+      message: "Rate limiting temporarily unavailable. Try again shortly.",
+      requestId,
+    }),
+  );
+}
+
+function shouldFailClosedOnRedisError(): boolean {
+  return process.env.NODE_ENV === "production" && isUpstashEnabled();
+}
+
 function handler(req: RequestWithContext, res: Response) {
   const requestId = req.requestId ?? "unknown";
   res.setHeader("x-request-id", requestId);
@@ -80,9 +96,15 @@ function rateLimit(options: RateLimitOptions) {
           return next();
         }
       } catch (error) {
-        console.warn("[rateLimit] redis fallback", {
+        console.error("[rateLimit] redis error", {
           limiter: options.name,
           message: error instanceof Error ? error.message : String(error),
+        });
+        if (shouldFailClosedOnRedisError()) {
+          return rateLimitUnavailable(req, res);
+        }
+        console.warn("[rateLimit] redis fallback to memory", {
+          limiter: options.name,
         });
       }
     }

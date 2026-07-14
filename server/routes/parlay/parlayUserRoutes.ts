@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../../middleware/auth";
+import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../../middleware/auth";
 import { requireTierOrQuota, incrementQuota } from "../../middleware/entitlements";
 import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
@@ -366,6 +366,7 @@ parlayUserRoutes.get(
 parlayUserRoutes.post(
   "/parlays/save",
   requireAuth,
+  requireLegalConfirmed,
   validate({ body: SaveMeParlaySchema }),
   saveMeParlayHandler,
 );

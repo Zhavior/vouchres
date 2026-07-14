@@ -5,16 +5,27 @@ import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { requestContext } from "../server/middleware/requestContext";
 import { vouchRoutes } from "../server/routes/vouchRoutes";
 
-vi.mock("../server/middleware/auth", () => ({
-  optionalAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = undefined;
-    next();
-  },
-  requireAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = { id: "user_test" };
-    next();
-  },
-}));
+vi.mock("../server/middleware/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../server/middleware/auth")>();
+  return {
+    ...actual,
+    optionalAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = undefined;
+      next();
+    },
+    requireAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = {
+        id: "user_test",
+        profile: {
+          age_confirmed_at: "2026-01-01",
+          jurisdiction_confirmed_at: "2026-01-01",
+          jurisdiction: "US-CA",
+        },
+      };
+      next();
+    },
+  };
+});
 
 vi.mock("../server/services/persistence/vouchService", () => ({
   listVouchesForUser: vi.fn(),

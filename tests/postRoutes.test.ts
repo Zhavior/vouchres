@@ -7,20 +7,32 @@ import { postRoutes } from "../server/routes/postRoutes";
 
 const fromMock = vi.fn();
 
-vi.mock("../server/middleware/auth", () => ({
-  optionalAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = undefined;
-    next();
-  },
-  requireAuth: (req: any, _res: unknown, next: () => void) => {
-    req.user = { id: "user_test", profile: { is_staff: false } };
-    next();
-  },
-  supabaseAdmin: {
-    from: (...args: unknown[]) => fromMock(...args),
-    rpc: vi.fn(),
-  },
-}));
+vi.mock("../server/middleware/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../server/middleware/auth")>();
+  return {
+    ...actual,
+    optionalAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = undefined;
+      next();
+    },
+    requireAuth: (req: any, _res: unknown, next: () => void) => {
+      req.user = {
+        id: "user_test",
+        profile: {
+          is_staff: false,
+          age_confirmed_at: "2026-01-01",
+          jurisdiction_confirmed_at: "2026-01-01",
+          jurisdiction: "US-CA",
+        },
+      };
+      next();
+    },
+    supabaseAdmin: {
+      from: (...args: unknown[]) => fromMock(...args),
+      rpc: vi.fn(),
+    },
+  };
+});
 
 vi.mock("../server/middleware/validation", () => ({
   validate: () => (_req: unknown, _res: unknown, next: () => void) => next(),
