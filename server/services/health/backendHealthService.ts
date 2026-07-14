@@ -110,7 +110,7 @@ function configChecks(): ConfigCheck[] {
     {
       name: "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
       configured: redisConfigured,
-      requiredInProduction: false,
+      requiredInProduction: true,
       requiredForProductionProof: true,
     },
     {
@@ -122,7 +122,7 @@ function configChecks(): ConfigCheck[] {
     {
       name: "SENTRY_DSN",
       configured: configured("SENTRY_DSN"),
-      requiredInProduction: false,
+      requiredInProduction: true,
       requiredForProductionProof: true,
     },
   ];
@@ -246,12 +246,6 @@ export function getBackendHealthReport(now = new Date()) {
   if (env === "production" && configured("STRIPE_SECRET_KEY") && !configured("STRIPE_WEBHOOK_SECRET")) {
     warnings.push("STRIPE_SECRET_KEY is set without STRIPE_WEBHOOK_SECRET; billing webhooks will fail closed.");
   }
-  if (env === "production" && !configured("SENTRY_DSN")) {
-    warnings.push("SENTRY_DSN is not configured; production exceptions will only hit stdout.");
-  }
-  if (env === "production" && !(configured("UPSTASH_REDIS_REST_URL") && configured("UPSTASH_REDIS_REST_TOKEN"))) {
-    warnings.push("Upstash Redis is not configured; rate limits and HR board cache use single-instance memory.");
-  }
 
   const missingProductionProof = checks.filter(
     (check) => check.requiredForProductionProof && !check.configured,
@@ -279,11 +273,11 @@ export function getBackendHealthReport(now = new Date()) {
 
   const status: BackendHealthStatus = warnings.length > 0 ? "degraded" : "ok";
 
-  // GET /api/health/backend — `productionProof` is the ops checklist for true
-  // multi-instance readiness. `actionItems` lists unset env vars with Vercel
-  // remediation hints. Fail-closed prod requires SUPABASE_*, CRON_SECRET, and
-  // STRIPE_WEBHOOK_SECRET when billing is enabled. Set SENTRY_DSN + Upstash
-  // Redis, then run grading + multi-instance soak from productionProof.soakPending.
+  // GET /api/health/backend (staff-only) — `productionProof` is the ops checklist.
+  // `actionItems` lists unset env vars with remediation hints.
+  // Fail-closed prod requires SUPABASE_*, CRON_SECRET, SENTRY_DSN, Upstash Redis,
+  // and STRIPE_WEBHOOK_SECRET when billing is enabled.
+  // Run grading + multi-instance soak from productionProof.soakPending.
   return {
     ok: true,
     status,

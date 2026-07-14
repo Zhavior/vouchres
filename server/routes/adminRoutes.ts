@@ -153,8 +153,8 @@ adminRoutes.post(
       throw new AppError({
         status: 500,
         code: "internal_server_error",
-        message: err?.message ?? "Failed to grade pending picks.",
-        expose: true,
+        message: "Failed to grade pending picks.",
+        expose: false,
         cause: err,
       });
     }

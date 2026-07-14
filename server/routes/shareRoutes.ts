@@ -99,16 +99,11 @@ shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
       });
     }
 
-    const err = error as { name?: string; message?: string };
     throw new AppError({
       status: 500,
       code: "internal_server_error",
       message: "Failed to generate HR share card.",
-      details: {
-        errorName: err?.name ?? "Error",
-        message: err?.message ?? "Unknown error",
-        route: "/api/share/hr-card",
-      },
+      expose: false,
       cause: error,
     });
   }

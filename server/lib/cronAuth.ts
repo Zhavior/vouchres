@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { Request } from "express";
 import { AppError } from "../errors/AppError";
 import { isProductionRuntime } from "./runtime";
@@ -5,6 +6,20 @@ import { isProductionRuntime } from "./runtime";
 function readCronSecret(): string | null {
   const secret = process.env.CRON_SECRET?.trim();
   return secret ? secret : null;
+}
+
+/**
+ * Constant-time string compare. Length mismatch returns false without throwing.
+ */
+function secretsEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a, "utf8");
+  const bBuf = Buffer.from(b, "utf8");
+  if (aBuf.length !== bBuf.length) {
+    // Still run a compare against `a` so timing does not short-circuit on length alone.
+    timingSafeEqual(aBuf, aBuf);
+    return false;
+  }
+  return timingSafeEqual(aBuf, bBuf);
 }
 
 /**
@@ -23,7 +38,8 @@ export function isAuthorizedCronRequest(req: Request): boolean {
     ? authHeader.slice("Bearer ".length).trim()
     : "";
 
-  return bearerToken === cronSecret;
+  if (!bearerToken) return false;
+  return secretsEqual(bearerToken, cronSecret);
 }
 
 export function assertCronAuthorized(req: Request): void {

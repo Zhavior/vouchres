@@ -3,6 +3,8 @@ import { getMissingProductionConfig } from "../services/health/backendHealthServ
 /**
  * Fail fast in production when required secrets are missing.
  * Development and test runs log warnings only so local boot stays frictionless.
+ *
+ * Production hard-requires: Supabase, CRON_SECRET, Upstash Redis, SENTRY_DSN.
  */
 export function validateProductionEnvAtBoot(): void {
   const missing = getMissingProductionConfig();
@@ -10,19 +12,13 @@ export function validateProductionEnvAtBoot(): void {
 
   const optionalProductionWarnings: string[] = [];
   if (env === "production") {
-    if (!process.env.SENTRY_DSN?.trim()) {
-      optionalProductionWarnings.push("SENTRY_DSN (error tracking disabled)");
-    }
-    if (!process.env.UPSTASH_REDIS_REST_URL?.trim() || !process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
-      optionalProductionWarnings.push("UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (single-instance cache/rate limits)");
-    }
     if (!process.env.STRIPE_SECRET_KEY?.trim()) {
       optionalProductionWarnings.push("STRIPE_SECRET_KEY (billing disabled)");
     } else if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) {
       optionalProductionWarnings.push("STRIPE_WEBHOOK_SECRET (required when Stripe billing is enabled)");
     }
     if (!process.env.VITE_SENTRY_DSN?.trim() && !process.env.SENTRY_DSN?.trim()) {
-      optionalProductionWarnings.push("VITE_SENTRY_DSN or SENTRY_DSN for client error capture");
+      optionalProductionWarnings.push("VITE_SENTRY_DSN for client error capture");
     }
   }
 
@@ -30,7 +26,7 @@ export function validateProductionEnvAtBoot(): void {
     if (optionalProductionWarnings.length > 0 && env === "production") {
       console.warn(
         `[boot] Production running degraded — optional env missing: ${optionalProductionWarnings.join("; ")}. ` +
-          "See GET /api/health/backend productionProof checklist.",
+          "See GET /api/health/backend productionProof checklist (staff-only).",
       );
     }
     return;

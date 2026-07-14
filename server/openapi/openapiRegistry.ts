@@ -586,12 +586,20 @@ openapiRegistry.registerPath({
 openapiRegistry.registerPath({
   method: "get",
   path: "/api/health/backend",
-  summary: "Backend ops health and production-readiness checklist",
+  summary: "Backend ops health and production-readiness checklist (staff-only)",
   tags: ["Health"],
   responses: {
     200: {
       description: "Health report",
       content: { "application/json": { schema: HealthBackendSchema } },
+    },
+    401: {
+      description: "Missing or invalid auth",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    403: {
+      description: "Staff access required",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });

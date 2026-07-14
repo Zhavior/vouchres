@@ -8,10 +8,10 @@ import type { RequestWithContext } from "./requestContext";
  *
  * Uses Upstash Redis when UPSTASH_REDIS_REST_URL/TOKEN are set (multi-instance safe).
  * Falls back to in-memory counters in local dev.
+ *
+ * Client identity uses Express `req.ip`, which honors `app.set("trust proxy", N)`.
+ * Do NOT key off the leftmost X-Forwarded-For hop — clients can spoof infinite buckets.
  */
-
-const TRUST_PROXY = Number(process.env.TRUST_PROXY ?? 1);
-void TRUST_PROXY;
 
 type RateLimitOptions = {
   windowMs: number;
@@ -26,17 +26,15 @@ type HitState = { count: number; resetAt: number };
 
 const memoryHits = new Map<string, HitState>();
 
+/** Resolve client IP from Express (trusted proxy hops only). */
+export function clientIpKey(req: Request): string {
+  return `ip:${req.ip ?? "unknown"}`;
+}
+
 function keyGenerator(req: Request): string {
   const uid = (req as Request & { user?: { id?: string } }).user?.id;
   if (uid) return `u:${uid}`;
-
-  const xff = req.headers["x-forwarded-for"];
-  if (typeof xff === "string") {
-    const ip = xff.split(",")[0].trim();
-    if (ip) return `ip:${ip}`;
-  }
-
-  return `ip:${req.ip ?? "unknown"}`;
+  return clientIpKey(req);
 }
 
 function memoryHit(key: string, windowMs: number): number {
@@ -101,10 +99,8 @@ export const globalLimiter = rateLimit({
   limit: 200,
   keyGenerator,
   handler,
-  skip: (req) =>
-    req.path === "/api/health"
-    || req.path === "/api/health/backend"
-    || req.path === "/api/health/metrics",
+  // Public liveness only — staff ops telemetry stays rate-limited.
+  skip: (req) => req.path === "/api/health" || req.path === "/api/health/ready",
 });
 
 export const aiLimiter = rateLimit({
@@ -159,8 +155,7 @@ export const betaSignupLimiter = rateLimit({
   name: "beta_signup",
   windowMs: 60 * 60 * 1000,
   limit: 3,
-  keyGenerator: (req: Request) =>
-    `ip:${(req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.ip ?? "unknown"}`,
+  keyGenerator: clientIpKey,
   handler,
 });
 

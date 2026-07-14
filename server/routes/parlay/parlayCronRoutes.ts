@@ -23,14 +23,17 @@ import { finalizeDueTrustLocks } from "../../services/parlays/userParlayService"
 /**
  * Cron-only parlay maintenance routes.
  *
- * Schedule (Vercel): see vercel.json → crons → `/api/cron/parlays/grade-due`
- *   - Default: `0 10 * * *` UTC (daily morning pass after West-coast finals)
- *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized)
+ * Schedule: Render cron → `node dist/gradeJob.cjs` (canonical). HTTP path remains
+ * for manual/ops triggers with Bearer CRON_SECRET. Vercel Cron is disabled
+ * (`vercel.json` → `"crons": []`) while Render owns scheduling — see
+ * docs/PRODUCTION_HOSTING.md.
  *
  * Multi-instance safety:
  *   - gradePendingPicks() uses process-local coalescing + Upstash distributed lock
- *     (`grading:pending-picks` in server/lib/distributedLock.ts) when Redis is configured.
+ *     (`grading:pending-picks` in server/lib/distributedLock.ts) when Redis is configured
+ *     (required in production boot).
  *   - Re-runs are idempotent: only `status=pending` picks are graded.
+ *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized / timingSafeEqual).
  */
 export const parlayCronRoutes = Router();
 

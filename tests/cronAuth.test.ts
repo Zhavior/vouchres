@@ -51,4 +51,20 @@ describe("cron auth", () => {
       isAuthorizedCronRequest(mockRequest({ query: { token: "secret-token" } })),
     ).toBe(false);
   });
+
+  it("rejects wrong-length bearer tokens without authorizing", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "secret-token");
+
+    expect(
+      isAuthorizedCronRequest(
+        mockRequest({ headers: { authorization: "Bearer short" } }),
+      ),
+    ).toBe(false);
+    expect(
+      isAuthorizedCronRequest(
+        mockRequest({ headers: { authorization: "Bearer secret-tokenX" } }),
+      ),
+    ).toBe(false);
+  });
 });

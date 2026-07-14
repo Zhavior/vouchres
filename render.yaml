@@ -114,16 +114,6 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
 
-# NOTE: Delete vercel.json from your repo before deploying to Render.
-# The existing vercel.json config is incompatible with this Render setup —
-# it would deploy the frontend as a static SPA without the backend, breaking
-# every /api/* call. Pick ONE deployment target.
-
-# If you genuinely want a split deployment (Vercel frontend + Render backend):
-#   1. Keep this render.yaml for the backend
-#   2. Replace vercel.json with a frontend-only config that sets
-#      VITE_API_BASE_URL to the Render backend URL
-#   3. Add CORS_ALLOWED_ORIGINS to Render env vars including the Vercel URL
-#   4. Understand that the Vercel free tier has 100s-of-ms cold starts on
-#      serverless functions — fine for a static frontend, but plan to
-#      migrate to Vercel Pro before scaling.
+# NOTE: Single cron host — Render owns grade/delete cron jobs below.
+# Keep vercel.json → "crons": [] while these Render crons are enabled.
+# See docs/PRODUCTION_HOSTING.md. Do not enable Vercel Cron + Render Cron together.

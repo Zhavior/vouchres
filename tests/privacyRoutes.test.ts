@@ -73,6 +73,7 @@ describe("privacy routes", () => {
         message: 'Send { "confirm": "DELETE MY ACCOUNT" } to confirm deletion.',
       },
     });
+    expect(body.error.details).toEqual({ error: "confirmation_required" });
   });
 
   it("returns unified envelope when canceling with no schedule", async () => {

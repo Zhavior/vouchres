@@ -142,8 +142,9 @@ export function registerApiRoutes(app: Express): void {
   // Readiness — can this instance actually serve requests (dependencies
   // reachable)? Returns 503 when the database is unreachable so an uptime
   // monitor / load balancer readiness probe stops routing to a broken
-  // instance instead of seeing a blind 200. Redis is optional (the app
-  // degrades to in-memory), so it's reported but never fails readiness.
+  // instance instead of seeing a blind 200. Redis is required in production
+  // boot, but readiness still only fails on database so a transient Redis
+  // blip does not flap the load balancer.
   app.get("/api/health/ready", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const checks: Record<string, { ok: boolean; detail?: string }> = {};
 
@@ -174,12 +175,13 @@ export function registerApiRoutes(app: Express): void {
     });
   }));
 
-  app.get("/api/health/backend", (req: RequestWithContext, res: Response) => {
+  // Ops telemetry — staff-only. Keep /api/health (and /ready) public for load balancers.
+  app.get("/api/health/backend", requireAuth, requireStaff, (req: RequestWithContext, res: Response) => {
     const report = getBackendHealthReport();
     res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
   });
 
-  app.get("/api/health/metrics", (req: RequestWithContext, res: Response) => {
+  app.get("/api/health/metrics", requireAuth, requireStaff, (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
     const parlayGrade = getParlayGradeMetricsSnapshot();
     res.json(apiOkFlat(req, {

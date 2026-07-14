@@ -215,10 +215,19 @@ describe("API contract over HTTP", () => {
   });
 
   it("returns request meta on public MLB health endpoints", async () => {
-    const response = await requestJson("/api/health/backend");
+    const response = await requestJson("/api/health");
 
     expect(response.status).toBe(200);
     expect(response.body.ok).toBe(true);
+    expect(typeof response.headers.get("x-request-id")).toBe("string");
+  });
+
+  it("staff-gates backend ops health", async () => {
+    const response = await requestJson("/api/health/backend");
+
+    expect(response.status).toBe(401);
+    expect(response.body.ok).toBe(false);
+    expect(response.body.error.code).toBe("missing_token");
     expect(typeof response.headers.get("x-request-id")).toBe("string");
   });
 });

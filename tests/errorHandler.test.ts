@@ -77,6 +77,7 @@ describe("api error handler", () => {
         status: 500,
         code: "internal_server_error",
         message: "Database exploded.",
+        details: { sql: "SELECT * FROM secrets" },
         expose: false,
       }),
     );
@@ -94,7 +95,78 @@ describe("api error handler", () => {
         timestamp: expect.any(String),
       },
     });
+    expect(res.body.error.details).toBeUndefined();
     expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps curated operational 503 codes with safe messages", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 503,
+        code: "upstream_unavailable",
+        message: "Lineup data unavailable.",
+        expose: true,
+      }),
+    );
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.error).toMatchObject({
+      code: "upstream_unavailable",
+      message: "Lineup data unavailable.",
+      requestId: "req_test_1",
+    });
+    expect(res.body.error.details).toBeUndefined();
+  });
+
+  it("opaque message for non-operational 503 with expose false", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "MLB feed timed out.",
+        expose: false,
+      }),
+    );
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.error).toMatchObject({
+      code: "external_service_error",
+      message: "Internal server error.",
+      requestId: "req_test_1",
+    });
+  });
+
+  it("never exposes message or details for 5xx even when expose is true", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Database exploded with stack.",
+        details: { stack: "Error: at foo" },
+        expose: true,
+      }),
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error.message).toBe("Internal server error.");
+    expect(res.body.error.requestId).toBe("req_test_1");
+    expect(res.body.error.details).toBeUndefined();
+  });
+
+  it("still returns details for client 4xx AppErrors", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 400,
+        code: "bad_request",
+        message: "Invalid date.",
+        details: { field: "date" },
+        expose: true,
+      }),
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error.message).toBe("Invalid date.");
+    expect(res.body.error.details).toEqual({ field: "date" });
   });
 
   it("skips Sentry capture when Sentry is disabled", () => {
