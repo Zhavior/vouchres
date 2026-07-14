@@ -99,6 +99,43 @@ describe("api error handler", () => {
     expect(captureException).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps curated operational 503 codes with safe messages", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 503,
+        code: "upstream_unavailable",
+        message: "Lineup data unavailable.",
+        expose: true,
+      }),
+    );
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.error).toMatchObject({
+      code: "upstream_unavailable",
+      message: "Lineup data unavailable.",
+      requestId: "req_test_1",
+    });
+    expect(res.body.error.details).toBeUndefined();
+  });
+
+  it("opaque message for non-operational 503 with expose false", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "MLB feed timed out.",
+        expose: false,
+      }),
+    );
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.error).toMatchObject({
+      code: "external_service_error",
+      message: "Internal server error.",
+      requestId: "req_test_1",
+    });
+  });
+
   it("never exposes message or details for 5xx even when expose is true", () => {
     const { res } = runErrorHandler(
       new AppError({
