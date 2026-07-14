@@ -63,6 +63,7 @@ export async function signUpWithEmail(opts: {
     email: opts.email,
     password: opts.password,
     options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: {
         handle,
         username: handle,
