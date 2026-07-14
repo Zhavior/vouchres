@@ -51,7 +51,7 @@ jobs:
           NODE_ENV=development PORT=3010 node dist/server.cjs &
           SERVER_PID=$!
           for i in $(seq 1 45); do
-            if curl -sf http://127.0.0.1:3010/api/health/backend > /dev/null; then
+            if curl -sf http://127.0.0.1:3010/api/health > /dev/null; then
               break
             fi
             sleep 1
@@ -97,7 +97,7 @@ jobs:
           NODE_ENV=development PORT=3011 node dist/server.cjs &
           SERVER_PID=$!
           for i in $(seq 1 45); do
-            if curl -sf http://127.0.0.1:3011/api/health/backend > /dev/null; then
+            if curl -sf http://127.0.0.1:3011/api/health > /dev/null; then
               break
             fi
             sleep 1

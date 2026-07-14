@@ -6,6 +6,9 @@ import { captureException, isSentryEnabled } from "../lib/sentry";
 import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "./requestContext";
 
+/** Curated 5xx codes that may return a safe, non-leaking operational message. */
+const OPERATIONAL_5XX_CODES = new Set(["upstream_unavailable", "external_service_error"]);
+
 function statusFromUnknown(error: unknown): number {
   const status = Number((error as { status?: unknown; statusCode?: unknown })?.status ?? (error as { statusCode?: unknown })?.statusCode);
   return status >= 400 && status < 600 ? status : 500;
@@ -36,6 +39,10 @@ function normalizeError(error: unknown): AppError {
   });
 }
 
+function isOperationalServerError(error: AppError): boolean {
+  return error.status >= 500 && OPERATIONAL_5XX_CODES.has(error.code);
+}
+
 export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithContext, res, next) => {
   if (res.headersSent) return next(error);
 
@@ -43,12 +50,16 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
   const requestId = req.requestId ?? "unknown";
   const status = normalized.status >= 400 && normalized.status < 600 ? normalized.status : 500;
   const isServerError = status >= 500;
+  const operational = isOperationalServerError(normalized);
 
-  // 5xx stays opaque — ignore expose:true / details / exception messages at the edge.
+  // True internal 5xx: opaque message, internal_server_error code, no details.
+  // Operational 5xx (upstream unavailable): curated message + semantic code, still no details.
   const clientMessage = isServerError
-    ? "Internal server error."
+    ? (operational && normalized.expose ? normalized.message : "Internal server error.")
     : (normalized.expose ? normalized.message : "Request failed.");
-  const clientCode = isServerError ? "internal_server_error" : normalized.code;
+  const clientCode = isServerError
+    ? (operational ? normalized.code : "internal_server_error")
+    : normalized.code;
   const clientDetails = isServerError ? undefined : normalized.details;
 
   structuredLog({
