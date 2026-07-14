@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PickStatusSchema } from "./pickSchemas";
+import { isValidJurisdictionCode, normalizeJurisdictionCode } from "../lib/jurisdictionPolicy";
 
 export const BetaSignupSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -7,7 +8,13 @@ export const BetaSignupSchema = z.object({
 
 export const LegalConfirmSchema = z.object({
   age_confirmed: z.literal(true),
-  jurisdiction: z.string().trim().min(2).max(10),
+  jurisdiction: z
+    .string()
+    .trim()
+    .min(2)
+    .max(10)
+    .transform(normalizeJurisdictionCode)
+    .refine(isValidJurisdictionCode, "Jurisdiction must use ISO-like codes (e.g. US-NV, CA)."),
 });
 
 export const GradePickSchema = z.object({

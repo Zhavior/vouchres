@@ -13,6 +13,7 @@ import { routeTiming } from "./server/middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled, captureException } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
+import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
@@ -21,6 +22,7 @@ dotenv.config({ path: ".env.local", override: true });
 syncDevSupabaseEnv();
 logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
+logWorldChatEphemeralBootNotice();
 
 export async function createApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();

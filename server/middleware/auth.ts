@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
+import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -245,22 +246,12 @@ export function requireLegalConfirmed(
   if (!p.jurisdiction_confirmed_at || !p.jurisdiction) {
     return next(new AppError({ status: 403, code: "forbidden", message: "Jurisdiction confirmation is required." }));
   }
-  // Block jurisdictions where sports betting is illegal (US list, update as law changes)
-  const blockedJurisdictions = [
-    "US-CA", "US-TX", "US-FL", "US-NY", "US-IL", "US-MA", "US-MN", "US-MO",
-    "US-OH", "US-AL", "US-AK", "US-HI", "US-ID", "US-UT", "US-SC", "US-GA",
-    "US-MS", "US-NC", "US-OK", "US-OR", "US-DE", "US-VT", "US-RI", "US-CT",
-    "US-KY", "US-LA", "US-MD", "US-ME", "US-MT", "US-NE", "US-NH", "US-NJ",
-    "US-NM", "US-ND", "US-SD", "US-TN", "US-WA", "US-WV", "US-WI", "US-WY",
-    "US-CO", "US-AZ", "US-IA", "US-IN", "US-KS", "US-MI", "US-NV", "US-PA",
-    "US-VA", "US-AR", "US-DC"
-  ];
-  // NOTE: This is a non-exhaustive blocklist. Consult counsel. Above list is
-  // intentionally conservative — it blocks almost every US state. Adjust to
-  // your actual legal exposure. Outside the US, geofence by IP at the edge
-  // (Cloudflare / Vercel middleware) before requests reach this layer.
-  if (blockedJurisdictions.includes(p.jurisdiction)) {
-    return next(new AppError({ status: 403, code: "forbidden", message: "This jurisdiction is blocked." }));
+
+  try {
+    assertJurisdictionAllowed(p.jurisdiction);
+  } catch (error) {
+    return next(error);
   }
+
   next();
 }
