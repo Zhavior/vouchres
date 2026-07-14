@@ -87,8 +87,14 @@ describe("backend health report", () => {
     const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
 
     expect(report.status).toBe("degraded");
+    expect(report.warnings.join(" ")).toContain("Missing required production config");
     expect(report.warnings.join(" ")).toContain("SENTRY_DSN");
-    expect(report.warnings.join(" ")).toContain("Upstash Redis");
+    expect(report.warnings.join(" ")).toContain("UPSTASH_REDIS");
+    expect(report.config.find((c) => c.name === "SENTRY_DSN")?.requiredInProduction).toBe(true);
+    expect(
+      report.config.find((c) => c.name === "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN")
+        ?.requiredInProduction,
+    ).toBe(true);
   });
 
   it("requires Stripe webhook secret in production when Stripe secret is configured", () => {

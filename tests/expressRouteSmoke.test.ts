@@ -74,41 +74,17 @@ describe("API route smoke envelopes", () => {
     await requestJson("/api/health");
     const response = await requestJson("/api/health/metrics");
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(401);
     expect(response.body).toMatchObject({
-      ok: true,
-      service: "vouchedge-backend",
-      schema: "route_metrics_v2",
-      metrics: {
-        startedAt: expect.any(String),
-        uptimeMs: expect.any(Number),
-        totals: expect.objectContaining({
-          requests: expect.any(Number),
-        }),
-        latencyMs: expect.objectContaining({
-          avg: expect.any(Number),
-          p95: expect.any(Number),
-          max: expect.any(Number),
-        }),
-        statusClasses: expect.objectContaining({
-          "2xx": expect.any(Number),
-          "4xx": expect.any(Number),
-          "5xx": expect.any(Number),
-        }),
-        routes: expect.any(Array),
-        recent: expect.any(Array),
+      ok: false,
+      error: {
+        code: expect.stringMatching(/missing_token|unauthorized|invalid_token/),
+        requestId: expect.any(String),
       },
-      parlayGrade: expect.objectContaining({
-        contractVersion: "grade_parlay_v1",
-        totals: expect.objectContaining({
-          requests: expect.any(Number),
-        }),
-      }),
     });
-    expect(response.body.metrics.totals.requests).toBeGreaterThan(0);
   });
 
-  it("exposes backend production health with route metrics", async () => {
+  it("keeps public liveness open while staff-gating backend health", async () => {
     const coreHealth = await requestJson("/api/system/core-health");
     expect(coreHealth.status).toBe(200);
     expect(coreHealth.body).toMatchObject({
@@ -117,41 +93,24 @@ describe("API route smoke envelopes", () => {
       service: "vouchedge-core",
     });
 
-    await requestJson("/api/health");
+    const liveness = await requestJson("/api/health");
+    expect(liveness.status).toBe(200);
+    expect(liveness.body).toMatchObject({
+      ok: true,
+      status: "ok",
+      service: "vouchedge-backend",
+    });
+
     const response = await requestJson("/api/health/backend");
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(401);
     expect(response.body).toMatchObject({
-      ok: true,
-      service: "vouchedge-backend",
-      dependencies: {
-        redis: expect.objectContaining({
-          enabled: expect.any(Boolean),
-          mode: expect.any(String),
-        }),
-        sentry: expect.objectContaining({
-          enabled: expect.any(Boolean),
-          configured: expect.any(Boolean),
-        }),
-        sportsHttp: expect.objectContaining({
-          requests: expect.any(Number),
-          cacheSize: expect.any(Number),
-        }),
+      ok: false,
+      error: {
+        code: expect.stringMatching(/missing_token|unauthorized|invalid_token/),
+        requestId: expect.any(String),
       },
-      api: {
-        totals: expect.objectContaining({
-          requests: expect.any(Number),
-        }),
-        statusClasses: expect.objectContaining({
-          "2xx": expect.any(Number),
-          "4xx": expect.any(Number),
-          "5xx": expect.any(Number),
-        }),
-        routes: expect.any(Array),
-      },
-      warnings: expect.any(Array),
     });
-    expect(response.body.api.totals.requests).toBeGreaterThan(0);
   });
 
   it("normalizes public MLB validation errors", async () => {

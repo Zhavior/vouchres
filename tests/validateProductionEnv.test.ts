@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { validateProductionEnvAtBoot } from "../server/lib/validateProductionEnv";
 
+function stubRequiredProductionEnv() {
+  vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("CRON_SECRET", "cron-secret");
+  vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key");
+  vi.stubEnv("SENTRY_DSN", "https://example.ingest.sentry.io/1");
+  vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+  vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
+}
+
 describe("validateProductionEnvAtBoot", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -12,19 +22,29 @@ describe("validateProductionEnvAtBoot", () => {
   });
 
   it("throws in production when CRON_SECRET is missing", () => {
-    vi.stubEnv("NODE_ENV", "production");
+    stubRequiredProductionEnv();
     vi.stubEnv("CRON_SECRET", "");
-    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
-    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key");
 
     expect(() => validateProductionEnvAtBoot()).toThrow(/CRON_SECRET/);
   });
 
+  it("throws in production when Upstash Redis is missing", () => {
+    stubRequiredProductionEnv();
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
+
+    expect(() => validateProductionEnvAtBoot()).toThrow(/UPSTASH_REDIS/);
+  });
+
+  it("throws in production when SENTRY_DSN is missing", () => {
+    stubRequiredProductionEnv();
+    vi.stubEnv("SENTRY_DSN", "");
+
+    expect(() => validateProductionEnvAtBoot()).toThrow(/SENTRY_DSN/);
+  });
+
   it("passes in production when required config is present", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("CRON_SECRET", "cron-secret");
-    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
-    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key");
+    stubRequiredProductionEnv();
 
     expect(() => validateProductionEnvAtBoot()).not.toThrow();
   });

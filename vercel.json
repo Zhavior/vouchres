@@ -85,30 +85,5 @@
       "destination": "/index.html"
     }
   ],
-  "crons": [
-    {
-      "path": "/api/cron/parlays/grade-due",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/parlays/repair-identity?dryRun=false&limit=100",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/parlays/anchor-ots?limit=25",
-      "schedule": "30 6 * * *"
-    },
-    {
-      "path": "/api/cron/parlays/finalize-trust-locks?limit=50",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/parlays/live-hr-sync",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/intelligence/brain/mlb",
-      "schedule": "*/30 0-2,16-23 * * *"
-    }
-  ]
+  "crons": []
 }

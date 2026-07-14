@@ -43,8 +43,8 @@ publicRoutes.post(
       throw new AppError({
         status: 500,
         code: "internal_server_error",
-        message: error?.message ?? "Failed to save AI Judge picks",
-        expose: true,
+        message: "Failed to save AI Judge picks.",
+        expose: false,
         cause: error,
       });
     }

@@ -42,11 +42,18 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
   const normalized = normalizeError(error);
   const requestId = req.requestId ?? "unknown";
   const status = normalized.status >= 400 && normalized.status < 600 ? normalized.status : 500;
-  const message = normalized.expose ? normalized.message : "Internal server error.";
+  const isServerError = status >= 500;
+
+  // 5xx stays opaque — ignore expose:true / details / exception messages at the edge.
+  const clientMessage = isServerError
+    ? "Internal server error."
+    : (normalized.expose ? normalized.message : "Request failed.");
+  const clientCode = isServerError ? "internal_server_error" : normalized.code;
+  const clientDetails = isServerError ? undefined : normalized.details;
 
   structuredLog({
-    level: status >= 500 ? "error" : "warn",
-    event: status >= 500 ? "error" : "warn",
+    level: isServerError ? "error" : "warn",
+    event: isServerError ? "error" : "warn",
     requestId,
     method: req.method,
     route: req.originalUrl,
@@ -56,25 +63,23 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
     ...(normalized.details !== undefined ? { details: normalized.details } : {}),
   });
 
-  if (status >= 500) {
-    if (isSentryEnabled()) {
-      captureException(normalized.cause ?? normalized, {
-        requestId,
-        method: req.method,
-        path: req.originalUrl,
-        code: normalized.code,
-      });
-    }
+  if (isServerError && isSentryEnabled()) {
+    captureException(normalized.cause ?? normalized, {
+      requestId,
+      method: req.method,
+      path: req.originalUrl,
+      code: normalized.code,
+    });
   }
 
   res.setHeader("x-request-id", requestId);
 
   return res.status(status).json(
     buildApiErrorResponse({
-      code: normalized.code,
-      message,
+      code: clientCode,
+      message: clientMessage,
       requestId,
-      details: normalized.details,
+      details: clientDetails,
     }),
   );
 };
