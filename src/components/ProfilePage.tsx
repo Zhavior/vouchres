@@ -307,7 +307,7 @@ export default function ProfilePage({
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
                         disabled={isUploadingAvatar}
-                        className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[#07111a] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
+                        className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[hsl(var(--ve-bg-deep))] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
                         aria-label="Change profile photo"
                         title="Change profile photo"
                       >
