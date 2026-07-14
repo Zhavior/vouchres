@@ -6,6 +6,8 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
+import { validate } from "../middleware/validation";
+import { FollowCreateSchema, FollowDeleteSchema } from "../validators/mutationSchemas";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 import {
   getRelationshipForTarget,
@@ -419,30 +421,23 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
   return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
 }));
 
-publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+publicRoutes.post(
+  "/follow",
+  requireAuth,
+  validate({ body: FollowCreateSchema }),
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const {
     following_profile_id,
     following_capper_id,
     relationship_type,
     notify_enabled,
-  } = req.body ?? {};
+  } = req.body as {
+    following_profile_id?: string | null;
+    following_capper_id?: string | null;
+    relationship_type?: RelationshipType;
+    notify_enabled?: boolean;
+  };
 
-  if (!following_profile_id && !following_capper_id) {
-    throw new AppError({
-      status: 400,
-      code: "bad_request",
-      message: "Must specify a follow target.",
-      details: { error: "must_specify_target" },
-    });
-  }
-  if (following_profile_id && following_capper_id) {
-    throw new AppError({
-      status: 400,
-      code: "bad_request",
-      message: "Only one follow target is allowed.",
-      details: { error: "only_one_target" },
-    });
-  }
   if (following_profile_id === req.user!.id) {
     throw new AppError({
       status: 400,
@@ -452,15 +447,7 @@ publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest
     });
   }
 
-  const relationshipType = String(relationship_type ?? "follow").trim().toLowerCase() as RelationshipType;
-  if (!["follow", "tail", "subscribe"].includes(relationshipType)) {
-    throw new AppError({
-      status: 400,
-      code: "bad_request",
-      message: "Invalid relationship type.",
-      details: { error: "invalid_relationship_type" },
-    });
-  }
+  const relationshipType = (relationship_type ?? "follow") as RelationshipType;
 
   const result = await upsertFollow({
     followerId: req.user!.id,
@@ -477,8 +464,15 @@ publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest
   }));
 }));
 
-publicRoutes.delete("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const { following_profile_id, following_capper_id } = req.body ?? {};
+publicRoutes.delete(
+  "/follow",
+  requireAuth,
+  validate({ body: FollowDeleteSchema }),
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const { following_profile_id, following_capper_id } = req.body as {
+    following_profile_id?: string | null;
+    following_capper_id?: string | null;
+  };
 
   await removeFollow({
     followerId: req.user!.id,

@@ -37,10 +37,13 @@ describe('buildHrBoardApiPayload', () => {
       ],
     });
 
+    expect(payload.candidates).toHaveLength(1);
+    expect(payload.candidates[0].playerName).toBe('Confirmed Slugger');
     expect(payload.confirmedCandidates).toHaveLength(1);
     expect(payload.candidateBuckets.confirmed).toHaveLength(1);
     expect(payload.counts.confirmedCandidates).toBe(1);
     expect(payload.rows[0].playerName).toBe('Confirmed Slugger');
     expect(payload.dataQuality).toBe('confirmed');
+    expect(payload.projectedCandidates[0].warnings?.some((w: string) => w.includes('Official lineup not posted yet'))).toBe(true);
   });
 });

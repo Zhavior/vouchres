@@ -98,7 +98,28 @@ describe("mlb hr board routes", () => {
       },
     });
     expect(Array.isArray(body.rows)).toBe(true);
+    expect(Array.isArray(body.candidates)).toBe(true);
+    expect(body.candidates).toEqual(body.confirmedCandidates);
     expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
+  });
+
+  it("walls off deep board so it cannot claim confirmed candidates", async () => {
+    const { getCachedDeepHrBoard } = await import("../server/services/hubs/hrBoardHub");
+    (getCachedDeepHrBoard as any).mockResolvedValueOnce({
+      date: "2026-07-09",
+      games: [{ rows: [{ playerName: "Deep Only" }] }],
+      dataQuality: "partial",
+    });
+
+    const response = await fetch(`${baseUrl}/api/mlb/hr-board/today/deep`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.candidates).toEqual([]);
+    expect(body.confirmedCandidates).toEqual([]);
+    expect(body.isConfirmedBoard).toBe(false);
+    expect(body.confirmedSource).toBe("/api/mlb/hr-board/today");
+    expect(String(body.warning)).toMatch(/research-only/i);
   });
 
   it("propagates inbound x-request-id through requestContext", async () => {

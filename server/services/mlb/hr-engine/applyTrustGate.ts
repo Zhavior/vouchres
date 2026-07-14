@@ -1,25 +1,39 @@
 import type { HrCandidate } from "./hrEngineTypes";
+import {
+  TEAM_MISMATCH_REASON,
+  hasTeamAssignmentMismatch,
+  teamAssignmentMismatchDetail,
+} from "../teamAssignmentSafety";
 
-const BAD_PAIRINGS = new Set([
-  "Pete Alonso|BAL",
-  "Willson Contreras|BOS",
-  "Bo Bichette|NYM",
-  "Alex Bregman|CHC",
-  "Brandon Lowe|PIT",
-  "Rhys Hoskins|CLE",
-  "Rob Refsnyder|SEA",
-]);
-
+/**
+ * Preview trust gate for HR Engine Pro.
+ * Blocks stale/mismatched team assignments via structured team IDs — never a name handlist.
+ * This path never promotes rows into candidates[]; callers keep candidates: [].
+ */
 export function applyTrustGate(candidates: HrCandidate[]) {
   const accepted: HrCandidate[] = [];
   const blocked: string[] = [];
   let pitcherMissingBlocked = 0;
+  let trueTeamMismatchBlocked = 0;
 
   for (const candidate of candidates) {
-    const badPairKey = `${candidate.playerName}|${candidate.team}`;
-
-    if (BAD_PAIRINGS.has(badPairKey)) {
-      blocked.push(badPairKey);
+    if (
+      hasTeamAssignmentMismatch({
+        teamId: candidate.teamId,
+        sourceTeamId: candidate.sourceTeamId,
+        activeRosterTeamId: candidate.activeRosterTeamId,
+        currentTeamId: candidate.currentTeamId,
+      })
+    ) {
+      trueTeamMismatchBlocked += 1;
+      blocked.push(
+        `${candidate.playerName}|${candidate.team}|${teamAssignmentMismatchDetail({
+          teamId: candidate.teamId,
+          sourceTeamId: candidate.sourceTeamId,
+          activeRosterTeamId: candidate.activeRosterTeamId,
+          currentTeamId: candidate.currentTeamId,
+        })}`,
+      );
       continue;
     }
 
@@ -44,6 +58,9 @@ export function applyTrustGate(candidates: HrCandidate[]) {
     accepted,
     debug: {
       badPairingAuditBlocked: blocked,
+      teamMismatchBlocked: blocked,
+      teamMismatchReason: TEAM_MISMATCH_REASON,
+      trueTeamMismatchBlocked,
       pitcherMissingBlocked,
     },
   };

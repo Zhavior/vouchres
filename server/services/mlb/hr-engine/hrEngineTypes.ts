@@ -88,6 +88,10 @@ export type HrEligibleHitter = {
   teamId: number;
   team: string;
   teamName: string;
+  /** Provenance — set from the roster fetch team; used by applyTrustGate. */
+  sourceTeamId?: number;
+  activeRosterTeamId?: number;
+  currentTeamId?: number | null;
 
   opponentTeamId: number;
   opponent: string;
@@ -120,6 +124,9 @@ export type HrCandidate = {
 
   team: string;
   teamId: number;
+  sourceTeamId?: number;
+  activeRosterTeamId?: number;
+  currentTeamId?: number | null;
   opponent: string;
   opponentTeam: string;
   opponentTeamId: number;
@@ -160,6 +167,7 @@ export type HrEngineDebug = {
   registryConflictWarnings: number;
   pitcherMissingBlocked: number;
   hitterStatsMissingBlocked: number;
+  /** @deprecated alias — structured team mismatch keys, not a name handlist */
   badPairingAuditBlocked: string[];
   warnings: string[];
 };

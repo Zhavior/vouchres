@@ -184,6 +184,7 @@ export interface HrDebugResponse {
     playerName: string;
     team: string;
     source: "candidates" | "projectedCandidates" | "blockedPlayers" | "pool";
+    reason?: string;
   }>;
   badPairingAuditBlocked?: Array<{
     playerName: string;

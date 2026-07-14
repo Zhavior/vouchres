@@ -53,7 +53,7 @@ export async function buildHrBoardResponse(input: HrEngineInput = {}): Promise<H
 
     debug: {
       runtime: "hr_engine_pro_v2",
-      trueTeamMismatchBlocked: 0,
+      trueTeamMismatchBlocked: trustGate.debug.trueTeamMismatchBlocked,
       registryConflictWarnings: 0,
       pitcherMissingBlocked: trustGate.debug.pitcherMissingBlocked,
       hitterStatsMissingBlocked: 0,
