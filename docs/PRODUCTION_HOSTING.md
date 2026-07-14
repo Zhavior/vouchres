@@ -71,14 +71,18 @@ Supabase → **Authentication** → **URL Configuration**:
 # Dry-run — prints exact PATCH body + Vite env mirror checklist
 npm run configure:supabase-auth-urls
 
-# Apply to remote project (needs SUPABASE_ACCESS_TOKEN)
-SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply
+# Apply production Site URL (force --site-url so .env.local localhost cannot win)
+SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- \
+  --apply --site-url=https://vouchedge.app
 
 # Verify without writing
-SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --verify
+SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- \
+  --verify --site-url=https://vouchedge.app
 ```
 
 Resolves `SUPABASE_PROJECT_REF` from `SUPABASE_URL` when unset.
+`--apply` / `--verify` refuse localhost Site URLs unless you pass `--allow-localhost`.
+Shell exports beat `.env` / `.env.local` (dotenv does not clobber existing env).
 
 ### Mirror on Vercel (frontend build)
 

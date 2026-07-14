@@ -16,13 +16,15 @@
  * Optional:
  *   FRONTEND_URL          — production SPA origin (default https://vouchedge.app)
  *   SUPABASE_STAGING_URL  — extra origin for staging previews
+ *   --site-url=<origin>   — force Site URL (wins over FRONTEND_URL / .env.local)
  */
 
 import dotenv from "dotenv";
 import path from "node:path";
 
+// Load files without clobbering vars already set in the shell.
 dotenv.config({ path: path.join(process.cwd(), ".env") });
-dotenv.config({ path: path.join(process.cwd(), ".env.local"), override: true });
+dotenv.config({ path: path.join(process.cwd(), ".env.local") });
 
 const MANAGEMENT_API = "https://api.supabase.com/v1";
 
@@ -183,6 +185,19 @@ function resolveProjectRef(): string {
   );
 }
 
+/** Read `--name=value` or `--name value` from process.argv. */
+export function readCliValue(name: string): string | undefined {
+  const prefix = `--${name}=`;
+  const inline = process.argv.find((arg) => arg.startsWith(prefix));
+  if (inline) return inline.slice(prefix.length).trim() || undefined;
+  const index = process.argv.indexOf(`--${name}`);
+  if (index >= 0) {
+    const next = process.argv[index + 1];
+    if (next && !next.startsWith("--")) return next.trim() || undefined;
+  }
+  return undefined;
+}
+
 function printDryRun(config: AuthUrlConfig, projectRef: string | null) {
   console.log(
     JSON.stringify(
@@ -206,7 +221,7 @@ function printDryRun(config: AuthUrlConfig, projectRef: string | null) {
           redirectUrls: config.redirectEntries,
         },
         applyCommand:
-          "SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply",
+          "SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply --site-url=https://vouchedge.app",
       },
       null,
       2,
@@ -217,7 +232,18 @@ function printDryRun(config: AuthUrlConfig, projectRef: string | null) {
 async function main() {
   const apply = process.argv.includes("--apply");
   const verifyOnly = process.argv.includes("--verify");
-  const config = buildAuthUrlConfig();
+  const allowLocalhost = process.argv.includes("--allow-localhost");
+  const siteUrlArg = readCliValue("site-url");
+  const config = buildAuthUrlConfig({
+    frontendUrl: siteUrlArg || process.env.FRONTEND_URL || undefined,
+  });
+
+  if ((apply || verifyOnly) && /localhost|127\.0\.0\.1/i.test(config.siteUrl) && !allowLocalhost) {
+    throw new Error(
+      `Refusing to ${apply ? "apply" : "verify"} with localhost Site URL (${config.siteUrl}). ` +
+        "Pass --site-url=https://vouchedge.app (recommended) or --allow-localhost for intentional local-only config.",
+    );
+  }
 
   let projectRef: string | null = null;
   try {
