@@ -39,13 +39,20 @@ vi.mock("../server/services/share/vouchShareCard", () => ({
 }));
 
 vi.mock("sharp", () => ({
-  default: vi.fn(),
+  default: vi.fn(() => ({
+    png: vi.fn(() => ({
+      toBuffer: vi.fn(async () => Buffer.from("png")),
+    })),
+  })),
 }));
 
 import { getPublicVouch } from "../server/services/persistence/vouchService";
+import { getCachedValidatedHrBoard } from "../server/services/hubs/hrBoardHub";
 import {
   HrShareCardRequestError,
   parseHrShareCardParams,
+  findHrShareCardCandidate,
+  renderHrShareCardSvg,
 } from "../server/services/share/hrShareCard";
 
 let server: Server;
@@ -107,5 +114,34 @@ describe("share routes", () => {
         message: "playerId required",
       },
     });
+  });
+
+  it("searches confirmed HR candidates before projected previews", async () => {
+    const confirmed = [{ playerId: 592450, playerName: "Aaron Judge" }];
+    const projected = [{ playerId: 999, playerName: "Preview Only" }];
+    const lookupPools: unknown[][] = [];
+
+    vi.mocked(getCachedValidatedHrBoard).mockResolvedValueOnce({
+      date: "2026-07-14",
+      candidates: confirmed,
+      projectedCandidates: projected,
+    } as any);
+    vi.mocked(parseHrShareCardParams).mockReturnValueOnce({
+      playerId: 592450,
+      date: "2026-07-14",
+      theme: "dark",
+    } as any);
+    vi.mocked(findHrShareCardCandidate).mockImplementation((pool) => {
+      lookupPools.push(pool as unknown[]);
+      return (pool as typeof confirmed)[0] ?? null;
+    });
+    vi.mocked(renderHrShareCardSvg).mockReturnValueOnce("<svg />");
+
+    const response = await fetch(`${baseUrl}/api/share/hr-card?playerId=592450`);
+
+    expect(response.status).toBe(200);
+    expect(lookupPools).toHaveLength(1);
+    expect(lookupPools[0]).toEqual(confirmed);
+    expect(renderHrShareCardSvg).toHaveBeenCalled();
   });
 });

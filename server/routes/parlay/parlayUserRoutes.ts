@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { AuthedRequest, getSupabaseAdmin, requireAuth, optionalAuth } from "../../middleware/auth";
+import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../../middleware/auth";
 import { requireTierOrQuota, incrementQuota } from "../../middleware/entitlements";
 import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
@@ -80,8 +80,8 @@ parlayUserRoutes.post(
 
 parlayUserRoutes.post(
   "/parlays/grade",
+  requireAuth,
   gradingLimiter,
-  optionalAuth,
   beginParlayGradeObservability,
   validateParlayGradeBody,
   asyncHandler(async (req: ParlayGradeRequest, res: Response) => {
