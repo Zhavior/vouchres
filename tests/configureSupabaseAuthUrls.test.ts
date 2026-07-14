@@ -11,6 +11,11 @@ describe("configureSupabaseAuthUrls", () => {
     expect(normalizeOrigin("https://www.vouchedge.app")).toBe("https://www.vouchedge.app");
   });
 
+  it("adds https when scheme is missing", () => {
+    expect(normalizeOrigin("vouchres.vercel.app")).toBe("https://vouchres.vercel.app");
+    expect(normalizeOrigin("vouchedge.app")).toBe("https://vouchedge.app");
+  });
+
   it("extracts project ref from Supabase URL", () => {
     expect(extractProjectRef("https://abcdefgh.supabase.co")).toBe("abcdefgh");
     expect(extractProjectRef("not-a-url")).toBeNull();

@@ -37,8 +37,14 @@ export interface AuthUrlConfig {
 export function normalizeOrigin(raw: string): string {
   const trimmed = raw.trim().replace(/\/$/, "");
   if (!trimmed) return "";
+  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
   try {
-    const url = new URL(trimmed);
+    const url = new URL(withScheme);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return trimmed;
+    }
     return `${url.protocol}//${url.host}`;
   } catch {
     return trimmed;
