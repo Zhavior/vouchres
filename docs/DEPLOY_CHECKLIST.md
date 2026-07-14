@@ -11,7 +11,7 @@ Canonical hosting model: **Render API + Render cron**, Vercel frontend-only (`ve
 - [x] P0–P4 hardening on `main` (#79–#84)
 - [x] CI green baseline (#82)
 - [x] Staging soak parlay auth gates (#85)
-- [ ] Supabase auth URLs + `/auth/callback` + deploy checklist (#86)
+- [x] Supabase auth URLs + `/auth/callback` + deploy checklist (#86)
 
 ### Render — `vouchedge-api` (required env)
 
