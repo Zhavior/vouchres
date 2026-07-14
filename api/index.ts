@@ -19,6 +19,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       error: "vercel_api_boot_failed",
       message: err?.message || "Unknown Express boot error",
+      // Booleans only — helps diagnose env visibility without leaking secrets.
+      diagnostics: {
+        vercel: process.env.VERCEL === "1",
+        nodeEnv: process.env.NODE_ENV || null,
+        sentryDsnPresent: Boolean(process.env.SENTRY_DSN?.trim()),
+        viteSentryDsnPresent: Boolean(process.env.VITE_SENTRY_DSN?.trim()),
+        supabaseUrlPresent: Boolean(
+          process.env.SUPABASE_URL?.trim() || process.env.VITE_SUPABASE_URL?.trim(),
+        ),
+        cronSecretPresent: Boolean(process.env.CRON_SECRET?.trim()),
+        upstashPresent: Boolean(
+          process.env.UPSTASH_REDIS_REST_URL?.trim()
+          && process.env.UPSTASH_REDIS_REST_TOKEN?.trim(),
+        ),
+      },
     });
   }
 }
