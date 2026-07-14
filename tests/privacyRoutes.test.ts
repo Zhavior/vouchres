@@ -69,15 +69,11 @@ describe("privacy routes", () => {
     expect(body).toMatchObject({
       ok: false,
       error: {
-        code: "validation_error",
-        message: "Request validation failed.",
+        code: "bad_request",
+        message: 'Send { "confirm": "DELETE MY ACCOUNT" } to confirm deletion.',
       },
     });
-    expect(body.error.details).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: "confirm" }),
-      ]),
-    );
+    expect(body.error.details).toEqual({ error: "confirmation_required" });
   });
 
   it("returns unified envelope when canceling with no schedule", async () => {
