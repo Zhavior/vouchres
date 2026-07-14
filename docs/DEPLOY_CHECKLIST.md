@@ -12,10 +12,32 @@ Canonical hosting model: **Render API + Render cron**, Vercel frontend-only (`ve
 - [x] CI green baseline (#82)
 - [x] Staging soak parlay auth gates (#85)
 - [x] Supabase auth URLs + `/auth/callback` + deploy checklist (#86)
+- [x] Production smoke on live host (health + auth gates)
+- [x] `SENTRY_DSN` on Vercel Production (non-sensitive) + API boot healthy
+- [x] CORS preflight smoke Origin fix (#93)
+
+### Live API (current: `https://vouchres.vercel.app`)
+
+Verified:
+
+- [x] `GET /api/health` → 200
+- [x] Parlay grade / live-progress → 401 without auth
+- [x] Cron / staff backend → 401 without secrets
+- [x] `production-smoke` with `FRONTEND_URL=https://vouchres.vercel.app`
+
+Still optional / operator:
+
+- [ ] `FRONTEND_URL=https://vouchres.vercel.app` on Vercel (docs / Stripe redirects)
+- [ ] `VITE_SENTRY_DSN` on Vercel (browser Sentry)
+- [ ] `BASE_URL=… CRON_SECRET=… npm run production-smoke` (unskip cron auth probe)
+- [ ] Staff JWT → `productionProof.envReady`
+- [ ] Custom domain `vouchedge.app` + `CORS_ALLOWED_ORIGINS` when ready
+- [ ] Render cutover (canonical) vs stay on Vercel API
+- [ ] Manual soak: Stats API kill-switch + multi-instance Redis
 
 ### Render — `vouchedge-api` (required env)
 
-Boot **fails closed** without these:
+Boot **fails closed** without these (use if/when moving off Vercel API):
 
 - [ ] `NODE_ENV=production`
 - [ ] `SUPABASE_URL`
@@ -25,8 +47,8 @@ Boot **fails closed** without these:
 - [ ] `CRON_SECRET` (long random; `openssl rand -hex 32`)
 - [ ] `SENTRY_DSN`
 - [ ] `TRUST_PROXY=1` (already in `render.yaml`)
-- [ ] `FRONTEND_URL` (e.g. `https://vouchedge.app`)
-- [ ] `CORS_ALLOWED_ORIGINS` (e.g. `https://vouchedge.app,https://www.vouchedge.app`)
+- [ ] `FRONTEND_URL` (e.g. `https://vouchedge.app` or `https://vouchres.vercel.app`)
+- [ ] `CORS_ALLOWED_ORIGINS` (match SPA origin(s))
 
 Optional product / billing:
 
