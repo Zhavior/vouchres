@@ -111,24 +111,28 @@ function validateMlbRoute({ status, body, strict = STRICT, validate200, allow503
 /** @type {{ id: string; path: string; localOnly?: boolean; validate: (ctx: { status: number; body: unknown }) => string | null }} */
 const CHECKS = [
   {
-    id: "health-backend",
-    path: "/api/health/backend",
+    id: "health-liveness",
+    path: "/api/health",
     localOnly: true,
     validate({ status, body }) {
       if (status !== 200) return `expected HTTP 200, got ${status}`;
       const row = /** @type {Record<string, unknown>} */ (body);
       if (row.ok !== true) return "body.ok !== true";
       if (row.service !== "vouchedge-backend") return `unexpected service: ${row.service}`;
-      if (!row.dependencies || typeof row.dependencies !== "object") return "missing dependencies";
-      if (!row.api || typeof row.api !== "object") return "missing api metrics";
-      const proof = row.productionProof;
-      if (!isRecord(proof) || !Array.isArray(proof.soakPending)) return "missing productionProof.soakPending";
-      const fallback = proof.soakPending.find(
-        (item) => isRecord(item) && item.id === "upstream_fallback_coverage",
-      );
-      if (!isRecord(fallback)) return "missing upstream_fallback_coverage soak item";
-      const detail = typeof fallback.detail === "string" ? fallback.detail : "";
-      if (!detail.includes("Redis L2")) return "upstream_fallback_coverage missing Redis L2 note";
+      return null;
+    },
+  },
+  {
+    id: "health-backend-staff-gate",
+    path: "/api/health/backend",
+    localOnly: true,
+    validate({ status, body }) {
+      if (status !== 401) return `expected HTTP 401 (staff-gated), got ${status}`;
+      const row = /** @type {Record<string, unknown>} */ (body);
+      if (row.ok !== false) return "expected ok:false for unauthenticated ops health";
+      const error = row.error;
+      if (!isRecord(error)) return "missing error envelope";
+      if (typeof error.requestId !== "string") return "missing error.requestId";
       return null;
     },
   },
