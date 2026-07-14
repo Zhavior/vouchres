@@ -25,6 +25,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         nodeEnv: process.env.NODE_ENV || null,
         sentryDsnPresent: Boolean(process.env.SENTRY_DSN?.trim()),
         viteSentryDsnPresent: Boolean(process.env.VITE_SENTRY_DSN?.trim()),
+        sentryRelatedKeys: Object.keys(process.env)
+          .filter((key) => /sentry/i.test(key))
+          .sort(),
         supabaseUrlPresent: Boolean(
           process.env.SUPABASE_URL?.trim() || process.env.VITE_SUPABASE_URL?.trim(),
         ),
