@@ -21,6 +21,9 @@ jobs while Render crons are enabled.
 See **[DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md)** for the ordered ship list
 (Render env, cron services, Supabase URLs, post-deploy smoke).
 
+Paste-ready env keys: **[RENDER_ENV_TEMPLATE.env](./RENDER_ENV_TEMPLATE.env)**
+(fill secrets in the Render dashboard — never commit real values).
+
 Automated probes:
 
 ```bash
