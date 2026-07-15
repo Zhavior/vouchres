@@ -10,7 +10,8 @@ import {
   Crown,
 } from 'lucide-react';
 import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
-import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
+import { getDailyVaiPersona, getVaiEntitlements, normalizeVaiTier, type VaiAccessTier } from '../lib/vai/vaiEntitlements';
+import { useEntitlements } from '../features/hr/hooks/useEntitlements';
 
 import { MLBPlayer, FeedPost } from '../types';
 import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
@@ -65,25 +66,43 @@ export default function SmartAiEngine({
   const [aiAgreementAccepted, setAiAgreementAccepted] = useState(false);
   const { realCandidates, candidatesLoading } = useSmartAiCandidates();
 
-  // V.A.I Rooms shell: frontend/dev adapter for now.
-  // Final paid access enforcement should move to the server route.
   const vaiTodayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const [vaiAccessTier, setVaiAccessTier] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'pro';
-    return window.localStorage.getItem('vouchedge_vai_tier') ?? 'pro';
+  // Server-verified access is the source of truth for V.A.I room unlocks. The tier
+  // comes from /api/auth/me via useEntitlements and cannot be changed from the
+  // client, so paid rooms actually require a paid (or staff) account.
+  const entitlements = useEntitlements();
+  const serverVaiTier: VaiAccessTier = useMemo(() => {
+    if (entitlements.isStaff) return 'admin';
+    if (entitlements.isCreator) return 'research_seller_pro';
+    if (entitlements.isPro) return 'pro';
+    return 'free';
+  }, [entitlements.isStaff, entitlements.isCreator, entitlements.isPro]);
+
+  // Dev-only preview override so local development can exercise each room without a
+  // real paid account. In a production build the preview buttons are hidden and any
+  // stored value is ignored — it can never grant access to real users.
+  const [devPreviewTier, setDevPreviewTier] = useState<VaiAccessTier | null>(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+    const stored = window.localStorage.getItem('vouchedge_vai_tier');
+    return stored ? normalizeVaiTier(stored) : null;
   });
 
   const handleVaiAccessTierChange = (tier: string) => {
-    setVaiAccessTier(tier);
+    if (!import.meta.env.DEV) return;
+    const normalized = normalizeVaiTier(tier);
+    setDevPreviewTier(normalized);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('vouchedge_vai_tier', tier);
+      window.localStorage.setItem('vouchedge_vai_tier', normalized);
     }
   };
 
+  const effectiveVaiTier: VaiAccessTier =
+    import.meta.env.DEV && devPreviewTier ? devPreviewTier : serverVaiTier;
+
   const vaiEntitlements = useMemo(
-    () => getVaiEntitlements({ tier: vaiAccessTier, dateKey: vaiTodayKey }),
-    [vaiAccessTier, vaiTodayKey]
+    () => getVaiEntitlements({ tier: effectiveVaiTier, dateKey: vaiTodayKey }),
+    [effectiveVaiTier, vaiTodayKey]
   );
 
   const [selectedVaiPersonaId, setSelectedVaiPersonaId] = useState<VaiPersonaId>(() =>
@@ -260,27 +279,34 @@ export default function SmartAiEngine({
             <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
             <div className="font-bold text-white">{vaiEntitlements.reason}</div>
 
-            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="V.A.I access preview">
-              {[
-                ['free', 'Free'],
-                ['pro', 'Pro'],
-                ['research_seller_pro', 'Seller Pro'],
-                ['admin', 'Admin'],
-              ].map(([tier, label]) => (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => handleVaiAccessTierChange(tier)}
-                  className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
-                    vaiAccessTier === tier
-                      ? 'border-sky-300/60 bg-sky-400/15 text-sky-100'
-                      : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:border-slate-500 hover:text-slate-200'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {import.meta.env.DEV && (
+              <div className="mt-3" aria-label="V.A.I access preview (dev only)">
+                <span className="mb-1 block font-mono text-[9px] uppercase tracking-wider text-amber-400/80">
+                  Dev preview — not shown in production
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    ['free', 'Free'],
+                    ['pro', 'Pro'],
+                    ['research_seller_pro', 'Seller Pro'],
+                    ['admin', 'Admin'],
+                  ].map(([tier, label]) => (
+                    <button
+                      key={tier}
+                      type="button"
+                      onClick={() => handleVaiAccessTierChange(tier)}
+                      className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                        effectiveVaiTier === tier
+                          ? 'border-sky-300/60 bg-sky-400/15 text-sky-100'
+                          : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
