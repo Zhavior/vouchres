@@ -42,6 +42,9 @@ interface CustomPlayerSelection {
   customExplanation?: string;
 }
 
+// Illustrative sample roster for the simulator only. These are NOT live AI
+// predictions — the confidence values are example slider inputs a user can edit,
+// and the explanations are generic placeholders, not real-time analysis.
 const DEFAULT_PLAYERS: CustomPlayerSelection[] = [
   {
     player: MLB_PLAYER_RECORDS[0],
@@ -49,7 +52,7 @@ const DEFAULT_PLAYERS: CustomPlayerSelection[] = [
     customVal: 'Over 0.5 HRs',
     aiConfidence: 94,
     playerConfidence: 90,
-    customExplanation: 'Ohtani enjoys exceptional launch rate with high humidity coefficients tonight.',
+    customExplanation: 'Sample input — illustrates a high-power hitter profile in the simulator.',
   },
   {
     player: MLB_PLAYER_RECORDS[1],
@@ -57,7 +60,7 @@ const DEFAULT_PLAYERS: CustomPlayerSelection[] = [
     customVal: 'Over 1.5 Hits',
     aiConfidence: 91,
     playerConfidence: 85,
-    customExplanation: 'Judge’s high target index velocity coefficients suggest reliable hard-hit contact rates.',
+    customExplanation: 'Sample input — illustrates a high-contact hitter profile in the simulator.',
   },
   {
     player: MLB_PLAYER_RECORDS[2],
@@ -65,7 +68,7 @@ const DEFAULT_PLAYERS: CustomPlayerSelection[] = [
     customVal: 'Over 0.5 Runs',
     aiConfidence: 88,
     playerConfidence: 92,
-    customExplanation: 'Betts serves as elite lead-off on base catalyst with high Dodger leverage ratios tonight.',
+    customExplanation: 'Sample input — illustrates a lead-off run-scoring profile in the simulator.',
   },
 ];
 
@@ -526,7 +529,7 @@ export default function PortfolioAnalyticsPanel({
                 Active Circle Roster ({selectedPlayers.length})
               </h3>
               <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-                Represented stars in the portfolio simulation. Modify sliders to re-calculate risk weightings.
+                Sample roster — illustrative example inputs for the simulator, not live AI predictions. Modify sliders to re-calculate risk weightings.
               </p>
             </div>
 

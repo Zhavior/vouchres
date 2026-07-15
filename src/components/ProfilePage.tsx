@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, ShieldCheck, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
+import { Shield, ShieldCheck, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import FeedPostCard from '../social/feed/FeedPostCard';
 import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
@@ -280,19 +280,13 @@ export default function ProfilePage({
                   
                   {/* Dynamic Followers and Tailing count belt */}
                   <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-white/45 font-medium ${Z8_TABULAR}`}>
-                    <div className="whitespace-nowrap">
-                      <strong className="text-white/90">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? '241' : '38'}
-                      </strong>{' '}
+                    <div className="whitespace-nowrap" title="Follower counts are not tracked yet — shown once real data is available.">
+                      <strong className="text-white/90">—</strong>{' '}
                       <span className="text-white/35">followers</span>
                     </div>
-                    <div className="whitespace-nowrap">
-                      <strong className="text-white/90 font-bold">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? '156' : '15'}
-                      </strong>{' '}
-                      <span className="text-white/35">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers (tails)' : 'subscribers'}
-                      </span>
+                    <div className="whitespace-nowrap" title="Subscriber counts are not tracked yet — shown once real data is available.">
+                      <strong className="text-white/90 font-bold">—</strong>{' '}
+                      <span className="text-white/35">subscribers</span>
                     </div>
                     <div className="whitespace-nowrap">
                       <strong className="text-white/90">{followingCount}</strong>{' '}
@@ -388,10 +382,10 @@ export default function ProfilePage({
                 </p>
               )}
 
-              {/* Joined date */}
+              {/* Verification status — real, derived from profile.verified (no fabricated date) */}
               <div className="flex items-center gap-1.5 text-white/35 text-[10px] font-medium font-mono pb-2.5 border-b border-white/10">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Member registered verification: June 19, 2026</span>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{profile.verified ? 'Verified member' : 'Verification pending'}</span>
               </div>
 
               {/* Verified Metrics Strip Grid */}

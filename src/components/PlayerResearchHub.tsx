@@ -340,7 +340,8 @@ export default function PlayerResearchHub({
   const runAIResearch = async (player: MLBPlayer) => {
     if (aiReports[player.id]) return;
     setResearching(player.id);
-    // Simulated AI research (the real API call would go to /api/ai/player-research)
+    // Rule-based summary generated on-device from the player's official season stats.
+    // This is NOT a live AI model call (a real model call would go to /api/ai/player-research).
     setTimeout(() => {
       setAiReports((prev) => ({
         ...prev,
@@ -960,7 +961,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
     { id: "overview", label: "Overview", icon: Activity },
     { id: "splits", label: "Splits", icon: BarChart3 },
     { id: "gamelog", label: "Game Log", icon: TrendingUp },
-    { id: "ai", label: "AI Report", icon: Sparkles },
+    { id: "ai", label: "Stat Report", icon: Sparkles },
     { id: "markets", label: "Markets", icon: Crosshair },
   ];
 
@@ -1167,12 +1168,12 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[var(--ve-accent)]" />
-          <span className="text-xs font-bold text-[var(--ve-accent)] uppercase tracking-wider">AI Research Report</span>
+          <span className="text-xs font-bold text-[var(--ve-accent)] uppercase tracking-wider">Automated Stat Summary</span>
         </div>
         <div className="p-4 rounded-xl text-sm text-white/65 leading-relaxed" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
           {report}
         </div>
-        <p className="text-[10px] text-white/35">Probability-based research for entertainment — not betting advice.</p>
+        <p className="text-[10px] text-white/35">Generated from official season stats — not a live AI model. Probability-based research for entertainment, not betting advice.</p>
       </div>
     );
   }
@@ -1180,14 +1181,15 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <Sparkles className="w-10 h-10 text-[var(--ve-accent)]/40 mb-4" />
-      <p className="text-sm text-white/45 mb-4">Run AI research on {player.name}</p>
+      <p className="text-sm text-white/45 mb-1">Generate a stat summary for {player.name}</p>
+      <p className="text-[10px] text-white/35 mb-4">Built from official season stats — not a live AI model.</p>
       <button
         onClick={onRun}
         disabled={researching}
         className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 disabled:opacity-50 inline-flex items-center gap-2"
         style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}
       >
-        {researching ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Researching...</> : <><Sparkles className="w-3.5 h-3.5" /> Generate Report</>}
+        {researching ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Generating...</> : <><Sparkles className="w-3.5 h-3.5" /> Generate Summary</>}
       </button>
     </div>
   );

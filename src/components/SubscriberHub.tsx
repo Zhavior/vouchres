@@ -132,7 +132,8 @@ export default function SubscriberHub({
     ];
   });
 
-  // Default Cappers
+  // Real capper only — the current creator's own hub. No fabricated demo cappers
+  // are seeded; additional cappers appear once backed by real subscriber data.
   const [cappers, setCappers] = useState<SubscriberCapper[]>([
     {
       id: 'c-user-current',
@@ -144,28 +145,6 @@ export default function SubscriberHub({
       monthlyFee: 0,
       subscriberCount: 0,
       badge: '👑 OWNER'
-    },
-    {
-      id: 'c-alpha-guru',
-      name: 'Demo Capper A',
-      username: 'alphaguru',
-      winRate: 0,
-      totalPicks: 0,
-      bio: 'Correlated multi-leg strikeout props & platoon-adjusted moneyline vectors.',
-      monthlyFee: 50,
-      subscriberCount: 0,
-      badge: '⚡ VIP_EDGE'
-    },
-    {
-      id: 'c-parabolics',
-      name: 'Demo Capper B',
-      username: 'homer_parabola',
-      winRate: 0,
-      totalPicks: 0,
-      bio: 'Exit velocity predictions and heavy batter-vs-pitcher stadium variables.',
-      monthlyFee: 80,
-      subscriberCount: 0,
-      badge: '🏮 LAUNCH_PAD'
     }
   ]);
 
@@ -210,52 +189,17 @@ export default function SubscriberHub({
       const cachedMsgs = localStorage.getItem('vouchedge_sub_messages');
       if (cachedMsgs) {
         setMessages(JSON.parse(cachedMsgs));
-      } else {
-        const initialMsgs: Record<string, ChatMessage[]> = {
-          'c-user-current': [
-            { id: 'm1', userId: 'usr-9', displayName: 'Preview Guest', username: 'preview_only', text: 'Preview message — create an account to unlock real subscriber chat.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'm2', userId: 'usr-8', displayName: 'Preview Guest 2', username: 'preview_only_2', text: 'Preview-only layout message. No real user data shown.', timestamp: new Date(Date.now() - 18000000).toISOString() },
-            { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome to the subscriber chat. This is a demo — real messages appear once subscribers join.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
-          ],
-          'c-alpha-guru': [
-            { id: 'ag1', userId: 'usr-2', displayName: 'Preview Guest 3', username: 'preview_only_3', text: 'Preview question — real subscriber messages appear after login.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Demo Capper A', username: 'alphaguru', text: 'Demo response — subscriber chat is in development.', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
-          ],
-          'c-parabolics': [
-            { id: 'hp1', userId: 'usr-5', displayName: 'Preview Guest 4', username: 'preview_only_4', text: 'Preview-only message. No real user data shown.', timestamp: new Date(Date.now() - 20000000).toISOString() }
-          ]
-        };
-        setMessages(initialMsgs);
-        localStorage.setItem('vouchedge_sub_messages', JSON.stringify(initialMsgs));
       }
+      // No fabricated preview chat is seeded — the empty state renders until real
+      // subscriber messages exist.
 
       // Premium parlays seed
       const cachedPremClass = localStorage.getItem('vouchedge_subscriber_parlays');
       if (cachedPremClass) {
         setPremiumParlays(JSON.parse(cachedPremClass));
-      } else {
-        // Build initial seed parlay
-        const initialPrem: Parlay[] = [
-          {
-            id: 'prem-parlay-seed-1',
-            title: '🔥 PREMIUM MLB ELITE TRIFECTA 🔥',
-            legs: [
-              { id: 'l1', sport: 'MLB', game: 'SD @ LAD', market: 'Strikeouts Over', selection: 'Shohei Ohtani Over 1.5 Hits', odds: 1.85, status: 'PENDING' },
-              { id: 'l2', sport: 'MLB', game: 'BOS @ NYY', market: 'Total Runs Over', selection: 'Aaron Judge Over 0.5 HRs', odds: 3.10, status: 'PENDING' }
-            ],
-            totalOdds: '+475',
-            oddsValue: 5.75,
-            riskTier: 'HIGH',
-            status: 'PENDING',
-            bookie: 'Capper Premium Hub',
-            wagerAmount: 300,
-            payoutAmount: 1725,
-            createdAt: new Date().toISOString()
-          }
-        ];
-        setPremiumParlays(initialPrem);
-        localStorage.setItem('vouchedge_subscriber_parlays', JSON.stringify(initialPrem));
       }
+      // No fabricated premium parlay is seeded — the empty state renders until the
+      // capper publishes real slips.
 
       // Parlay Reactions
       const cachedReacts = localStorage.getItem('vouchedge_subs_parlay_reactions');
@@ -267,22 +211,9 @@ export default function SubscriberHub({
       const cachedAnnounce = localStorage.getItem('vouchedge_capper_announcements');
       if (cachedAnnounce) {
         setAnnouncements(JSON.parse(cachedAnnounce));
-      } else {
-        const defaultAnnounce: Record<string, string[]> = {
-          'c-user-current': [
-            '📢 CUSTOMER VOUCHER RELEASE: Users who tailed the Red Sox parlay yesterday have earned +100 capper vouch tokens automatically!',
-            '⚾ MODEL RE-GRID: Tonight’s weather report indicates 12mph blowing out at Dodger Stadium. Platoon models are re-generating active scores.'
-          ],
-          'c-alpha-guru': [
-            '📢 OUTLANDISH SPREE: 7 wins in our last 8 premium shared summaries! Thank you for backing the metrics.'
-          ],
-          'c-parabolics': [
-            '📢 Exit velocity charts updated. High density hitters look favorable with current dew index.'
-          ]
-        };
-        setAnnouncements(defaultAnnounce);
-        localStorage.setItem('vouchedge_capper_announcements', JSON.stringify(defaultAnnounce));
       }
+      // No fabricated performance/announcement claims are seeded — the empty state
+      // renders until the capper publishes real announcements.
     } catch (e) {
       console.error(e);
     }
