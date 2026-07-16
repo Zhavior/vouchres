@@ -26,6 +26,14 @@ export interface HrBuckets {
   Sleepers: HrWatchRow[];
 }
 
+type BoardFreshness = 'fresh' | 'delayed' | 'stale';
+
+function parseDate(value: unknown): Date | null {
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 /** Engine risk tiers → board display columns. Blocked rows never render on the board. */
 const DISPLAY_TIER: Record<HrWatchRow['riskTier'], keyof HrBuckets | null> = {
   Elite: 'Elite',
@@ -70,6 +78,17 @@ export function useHrBoardViewModel() {
 
   const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(date);
   const hrResults = useHrResultsForDate(date);
+  const generatedAt = parseDate(rawBoard?.generatedAt);
+  const loadedAt = parseDate(rawBoard?.loadedAt);
+  const freshnessReference = generatedAt ?? loadedAt;
+
+  const freshness = useMemo<BoardFreshness>(() => {
+    if (!freshnessReference) return 'stale';
+    const ageMs = Date.now() - freshnessReference.getTime();
+    if (ageMs > 90 * 60_000) return 'stale';
+    if (ageMs > 25 * 60_000) return 'delayed';
+    return 'fresh';
+  }, [freshnessReference]);
 
   const getHrResult = useCallback((playerId: string | number | null): HrResult => {
     if (playerId == null || hrResults.loading) return null;
@@ -138,10 +157,35 @@ export function useHrBoardViewModel() {
     all: board?.all.length ?? 0,
   }), [board]);
 
+  const responseWarnings = useMemo(() => {
+    const rootWarnings = Array.isArray((rawBoard as { warnings?: unknown[] } | null)?.warnings)
+      ? ((rawBoard as { warnings?: unknown[] }).warnings ?? []).filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      : [];
+    const metaWarnings = Array.isArray((rawBoard as { meta?: { warnings?: unknown[] } } | null)?.meta?.warnings)
+      ? ((rawBoard as { meta?: { warnings?: unknown[] } }).meta?.warnings ?? []).filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      : [];
+
+    return [...new Set([...rootWarnings, ...metaWarnings, ...(board?.warnings ?? [])])];
+  }, [board?.warnings, rawBoard]);
+
+  const slate = useMemo(() => ({
+    gameCount: typeof rawBoard?.gameCount === 'number' ? rawBoard.gameCount : 0,
+    generatedAt,
+    loadedAt,
+    freshness,
+    dataQuality: rawBoard?.dataQuality ?? null,
+    warnings: responseWarnings,
+    truthMessage: board?.truthMessage ?? null,
+    note: board?.note ?? null,
+    disclaimer: board?.disclaimer ?? null,
+    hasGames: typeof rawBoard?.gameCount === 'number' ? rawBoard.gameCount > 0 : (board?.counts.totalVisiblePool ?? 0) > 0,
+  }), [board?.counts.totalVisiblePool, board?.disclaimer, board?.note, board?.truthMessage, freshness, generatedAt, loadedAt, rawBoard?.dataQuality, rawBoard?.gameCount, responseWarnings]);
+
   return {
     buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
     autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
     date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,
+    slate,
   };
 }

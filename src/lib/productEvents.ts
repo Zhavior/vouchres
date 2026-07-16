@@ -17,6 +17,26 @@ async function send(
 }
 
 export const ProductEvents = {
+  flagshipBoardViewed(properties?: Record<string, unknown>) {
+    void send("flagship_board_viewed", properties);
+  },
+
+  playerCardOpened(properties?: Record<string, unknown>) {
+    void send("player_card_opened", properties);
+  },
+
+  playerResearchViewed(properties?: Record<string, unknown>) {
+    void send("player_research_viewed", properties);
+  },
+
+  slipBuildStarted(properties?: Record<string, unknown>) {
+    void send("slip_build_started", properties);
+  },
+
+  slipResultsViewed(properties?: Record<string, unknown>) {
+    void send("saved_slip_result_viewed", properties);
+  },
+
   proGateViewed(feature: string) {
     void send("pro_gate_viewed", { feature });
   },

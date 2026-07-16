@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, Brain, ChartNoAxesCombined } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, Brain, ChartNoAxesCombined, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
 import {
   Z8_LABEL,
   Z8_PAGE,
@@ -20,6 +20,7 @@ import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
 import { summarizeHrLens } from '../engine/hrLensModel';
 import { localISODate } from '../utils/localDate';
+import { ProductEvents } from '../../../lib/productEvents';
 import '../../../styles/z8-hr-lens.css';
 
 interface MiniStatChipProps {
@@ -39,6 +40,24 @@ const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorCl
     </div>
   </div>
 );
+
+const statusTone = {
+  fresh: {
+    label: 'Fresh',
+    className: 'border-[hsl(var(--ve-success)/0.22)] bg-[hsl(var(--ve-success)/0.08)] text-[#7dffc5]',
+    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+  },
+  delayed: {
+    label: 'Delayed',
+    className: 'border-vouch-amber/25 bg-vouch-amber/10 text-vouch-amber',
+    icon: <Clock3 className="h-3.5 w-3.5" />,
+  },
+  stale: {
+    label: 'Stale',
+    className: 'border-red-500/25 bg-red-500/10 text-red-300',
+    icon: <TriangleAlert className="h-3.5 w-3.5" />,
+  },
+} as const;
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -188,11 +207,73 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
   const lensSummary = useMemo(() => summarizeHrLens(vm.rows ?? []), [vm.rows]);
+  const topPlayer = vm.rows?.[0] ?? null;
+  const freshnessTone = statusTone[vm.slate.freshness];
+  const warningList = vm.slate.warnings.slice(0, 3);
+  const noGamesToday = !vm.loading && !vm.slate.hasGames && (vm.slate.gameCount === 0 || totalCount === 0);
 
   const handleRefresh = React.useCallback(() => {
     vm.refresh?.();
     setLastUpdated(new Date());
   }, [vm]);
+
+  React.useEffect(() => {
+    ProductEvents.flagshipBoardViewed({
+      section: 'daily_players',
+      date: vm.date,
+      mode: vm.mode,
+      total_rows: vm.rows?.length ?? 0,
+      game_count: vm.slate.gameCount,
+      freshness: vm.slate.freshness,
+      data_quality: vm.slate.dataQuality ?? 'unknown',
+    });
+  }, [vm.date, vm.mode, vm.rows?.length, vm.slate.dataQuality, vm.slate.freshness, vm.slate.gameCount]);
+
+  const openPlayerDrawer = React.useCallback((player: typeof topPlayer) => {
+    if (!player) return;
+    ProductEvents.playerCardOpened({
+      date: vm.date,
+      mode: vm.mode,
+      player_id: player.playerId == null ? null : String(player.playerId),
+      player_name: player.playerName,
+      truth_status: player.truthStatus,
+      hr_score: player.hrScore,
+    });
+    vm.setSelectedPlayer(player);
+    setIsDrawerOpen(true);
+  }, [vm, topPlayer]);
+
+  const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
+    if (!player) return;
+    ProductEvents.playerResearchViewed({
+      date: vm.date,
+      mode: vm.mode,
+      player_id: player.playerId == null ? null : String(player.playerId),
+      player_name: player.playerName,
+      truth_status: player.truthStatus,
+      hr_score: player.hrScore,
+    });
+    vm.setSelectedPlayer(player);
+    setIsProfileOpen(true);
+  }, [vm, topPlayer]);
+
+  const goToBuild = React.useCallback(() => {
+    ProductEvents.slipBuildStarted({
+      entrypoint: 'hr_daily_loop',
+      date: vm.date,
+      top_player: topPlayer?.playerName ?? null,
+      top_player_id: topPlayer?.playerId == null ? null : String(topPlayer.playerId),
+    });
+    onSectionChange?.('build');
+  }, [onSectionChange, topPlayer, vm.date]);
+
+  const goToResults = React.useCallback(() => {
+    ProductEvents.slipResultsViewed({
+      entrypoint: 'hr_daily_loop',
+      date: vm.date,
+    });
+    onSectionChange?.('results');
+  }, [onSectionChange, vm.date]);
 
   // 'cards' and 'treemap' both consume vm.buckets (cards data shape); only
   // 'table' needs the ViewModel to switch its underlying fetch/shape.
@@ -223,6 +304,38 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
                 <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Explainable score</span>
                 <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Alert-safe</span>
               </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => openPlayerProfile(topPlayer)}
+                  disabled={!topPlayer}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-vouch-emerald transition hover:border-vouch-emerald/55 hover:bg-vouch-emerald/14 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  Research Top Signal
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToBuild}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/12 bg-black/30 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/72 transition hover:border-vouch-cyan/35 hover:text-white"
+                >
+                  Build Slip
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToResults}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/10 bg-black/20 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/48 transition hover:border-white/18 hover:text-white/82"
+                >
+                  Results Ledger
+                </button>
+              </div>
+              {topPlayer && (
+                <p className="mt-4 max-w-2xl text-xs leading-5 text-white/45 sm:text-sm">
+                  Strongest next step: inspect <span className="font-semibold text-white">{topPlayer.playerName}</span> first,
+                  then decide if the signal belongs in today&apos;s slip.
+                </p>
+              )}
               {onSectionChange && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => onSectionChange('brain_picks')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-vouch-emerald/30 bg-vouch-emerald/8 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-vouch-emerald hover:border-vouch-emerald/55"><Brain className="h-3.5 w-3.5" /> Brain Picks</button><button type="button" onClick={() => onSectionChange('brain_performance')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-white/10 bg-black/25 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-white/55 hover:border-vouch-cyan/30 hover:text-white"><ChartNoAxesCombined className="h-3.5 w-3.5" /> Performance</button></div>}
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
@@ -240,6 +353,94 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             </div>
           </div>
         </section>
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
+            <p className={Z8_LABEL}>Slate Status</p>
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-black text-white">
+                  {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'} on board`}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-white/42">
+                  {noGamesToday
+                    ? 'Nothing is backfilled when the slate is empty.'
+                    : vm.mode === 'confirmed'
+                      ? 'Official lineup board first. Preview stays labeled until lineups post.'
+                      : 'Preview mode is active because confirmed batting orders are limited or not posted yet.'}
+                </p>
+              </div>
+              <Activity className="mt-1 h-4 w-4 shrink-0 text-vouch-cyan" />
+            </div>
+          </div>
+
+          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
+            <p className={Z8_LABEL}>Freshness</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${freshnessTone.className}`}>
+                {freshnessTone.icon}
+                {freshnessTone.label}
+              </span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-white">
+              Source updated {vm.slate.generatedAt ? formatRelativeTime(vm.slate.generatedAt) : 'unknown'}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-white/42">
+              {vm.slate.freshness === 'fresh'
+                ? 'Board timing looks healthy for today’s decision loop.'
+                : vm.slate.freshness === 'delayed'
+                  ? 'Use the board, but verify late context before saving a slip.'
+                  : 'Treat this board as degraded until the next successful refresh.'}
+            </p>
+          </div>
+
+          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
+            <p className={Z8_LABEL}>Confirmation</p>
+            <p className="mt-2 text-lg font-black text-white">
+              {(vm.modeCounts?.confirmed ?? 0) > 0 ? `${vm.modeCounts.confirmed} confirmed signals` : 'Waiting on official lineups'}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-white/42">
+              {(vm.modeCounts?.confirmed ?? 0) > 0
+                ? 'Candidates in the official board are batting-order players only.'
+                : `Preview pool available: ${vm.modeCounts?.curated ?? 0}. Official lineup not posted yet rows remain explicitly unconfirmed.`}
+            </p>
+          </div>
+
+          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
+            <p className={Z8_LABEL}>Next Step</p>
+            <p className="mt-2 text-lg font-black text-white">
+              {topPlayer ? `Start with ${topPlayer.playerName}` : 'Wait for a qualified signal'}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-white/42">
+              {topPlayer
+                ? `${topPlayer.pitcherName ?? 'Pitcher TBD'} · ${topPlayer.truthStatus === 'official' ? 'official' : 'projected'} context · one tap into research.`
+                : 'No qualifying signal is being invented to fill the gap.'}
+            </p>
+          </div>
+        </section>
+
+        {(warningList.length > 0 || vm.slate.truthMessage || vm.slate.note) && (
+          <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+            <div className="glass-command border border-vouch-amber/18 bg-vouch-amber/6 p-4">
+              <div className="flex items-start gap-3">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-vouch-amber" />
+                <div>
+                  <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-vouch-amber">Decision warnings</p>
+                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-white/70">
+                    {warningList.map((warning) => (
+                      <p key={warning}>{warning}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="glass-command border border-white/10 bg-black/25 p-4">
+              <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Truth note</p>
+              <p className="mt-2 text-sm leading-6 text-white/68">
+                {vm.slate.truthMessage ?? vm.slate.note ?? 'Missing context stays labeled as missing rather than being guessed.'}
+              </p>
+            </div>
+          </section>
+        )}
         <HrCommandCenter
           mode={vm.mode}
           viewMode={viewMode}
@@ -281,16 +482,14 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           <HrSpreadsheet
             rows={(vm.rows ?? []) as any}
             onSelectPlayer={(player) => {
-              vm.setSelectedPlayer(player);
-              setIsProfileOpen(true);
+              openPlayerProfile(player);
             }}
           />
         ) : viewMode === 'treemap' ? (
           <HrTreemap
             buckets={vm.buckets}
             onSelectPlayer={(player) => {
-              vm.setSelectedPlayer(player);
-              setIsProfileOpen(true);
+              openPlayerProfile(player);
             }}
             getHrResult={vm.getHrResult}
           />
@@ -299,12 +498,10 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             <HrBoard
               buckets={vm.buckets}
               onSelectPlayer={(player) => {
-                vm.setSelectedPlayer(player);
-                setIsDrawerOpen(true);
+                openPlayerDrawer(player);
               }}
               onViewProfile={(player) => {
-                vm.setSelectedPlayer(player);
-                setIsProfileOpen(true);
+                openPlayerProfile(player);
               }}
               getHrResult={vm.getHrResult}
             />
