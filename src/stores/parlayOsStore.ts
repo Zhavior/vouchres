@@ -13,14 +13,22 @@ import type { MLBPlayer, Vouch } from "../types";
 import type { ResearchProp } from "./appCommandStore";
 import type { ParlayMarketFamilyId } from "../lib/parlays/parlayMarketCatalog";
 import type { TierOddsQuote } from "../lib/parlays/parlayTierOddsResolver";
+import type { ParlayAddSnapshot } from "../lib/parlays/parlayAddContract";
 
 export type ParlayPickerContext = {
-  player: MLBPlayer;
+  player: ParlayPickerPlayer;
   propHint?: ResearchProp;
   vouch?: Vouch;
   initialFamily?: ParlayMarketFamilyId;
   isPitcher?: boolean;
+  addSnapshot?: ParlayAddSnapshot;
 };
+
+export type ParlayPickerPlayer = Pick<MLBPlayer, "id" | "name" | "team" | "position" | "propositions"> &
+  Partial<Pick<MLBPlayer, "headshot">> & {
+    resolvedGamePk?: string | null;
+    teamId?: string | number | null;
+  };
 
 type ParlayOsState = {
   pickerOpen: boolean;

@@ -9,6 +9,7 @@ import {
   ClipboardCopy,
   Filter,
   Flame,
+  Plus,
   RefreshCcw,
   ShieldAlert,
   Target,
@@ -18,6 +19,7 @@ import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { apiClient } from '../../lib/apiClient';
 import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
+import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
 
@@ -456,6 +458,37 @@ export default function TeamMatchupLabPage() {
     }
   };
 
+  const handleAddPitcher = (row: MatchupMatrixRow) => {
+    if (row.pitcherId == null || row.dataQuality.probablePitcher === 'unknown') return;
+    openParlayAdd({
+      player: {
+        id: String(row.pitcherId),
+        name: row.pitcherName,
+        team: row.team,
+        position: 'P',
+        headshot: '',
+        propositions: [],
+        resolvedGamePk: String(row.gameId),
+      },
+      propHint: {
+        id: `pitcher-${row.gameId}-${row.pitcherId}`,
+        market: 'Pitcher Strikeouts',
+        odds: null,
+        spec: `${row.pitcherName} strikeouts`,
+        gamePk: row.gameId,
+        playerId: row.pitcherId,
+      },
+      initialFamily: 'pitcher',
+      isPitcher: true,
+      source: 'pitcher_research',
+      dataStatus: row.dataQuality.probablePitcher === 'official' ? 'official' : 'projected',
+      reasoningSnapshot: row.score == null
+        ? `Pitcher matchup research available against ${row.opponent}.`
+        : `Matchup score ${Math.round(row.score)}/100 against ${row.opponent}.`,
+      riskSnapshot: 'Current odds and the final strikeout line still require confirmation.',
+    });
+  };
+
   return (
     <main className={`${Z8_PAGE} relative overflow-hidden px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="relative mx-auto max-w-7xl space-y-4">
@@ -740,6 +773,7 @@ export default function TeamMatchupLabPage() {
                           <td className="max-w-48 border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 text-xs text-[hsl(var(--ve-text-secondary))]">{displayValue(row.metrics.weather)}</td>
                           <td className={`border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-black ${confidenceClass(row.confidence)}`}>{row.confidence}</td>
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3">
+                            <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={(event) => {
@@ -765,6 +799,19 @@ export default function TeamMatchupLabPage() {
                                   : 'Copy Research'
                                 : 'Unlock Research'}
                             </button>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleAddPitcher(row);
+                              }}
+                              disabled={row.pitcherId == null || row.dataQuality.probablePitcher === 'unknown'}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 py-2 text-xs font-black text-vouch-emerald hover:border-vouch-emerald/50 disabled:cursor-not-allowed disabled:opacity-35"
+                              title={row.pitcherId == null ? 'Official pitcher ID unavailable' : 'Add a supported pitcher market'}
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Slip
+                            </button>
+                            </div>
                           </td>
                         </tr>
                       );

@@ -9,6 +9,7 @@ import {
 import { resolveTierOdds, mergeTierOddsQuote } from "./parlayTierOddsResolver";
 import { useParlayOsStore } from "../../stores/parlayOsStore";
 import type { DraftParlayLeg } from "../../stores/parlayCommandStore";
+import type { ParlayAddSnapshot } from "./parlayAddContract";
 import {
   findPlayerLiveGame,
   resolveLiveGamePk,
@@ -20,6 +21,7 @@ export type ParlayLegBuildContext = {
   player: PlayerTeamFields;
   propHint?: ResearchProp;
   liveGames: LiveGameRef[];
+  addSnapshot?: ParlayAddSnapshot;
 };
 
 function buildEventKey(parts: {
@@ -131,6 +133,7 @@ export function buildLegsFromTier(
           : "parlayos_picker",
       eventKey: leg.eventKey,
       tags: ["#ParlayOS", `#${t.shortLabel.replace(/\s+/g, "")}`],
+      addSnapshot: ctx.addSnapshot,
     };
 
     return { leg, draft };

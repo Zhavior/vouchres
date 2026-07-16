@@ -19,8 +19,7 @@ import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
-import { useParlayOsStore } from '../../../stores/parlayOsStore';
-import type { MLBPlayer } from '../../../types';
+import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
 import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
@@ -330,8 +329,8 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     setIsProfileOpen(false);
     vm.setSelectedPlayer(null);
 
-    useParlayOsStore.getState().openPicker({
-      player: toHrParlayPickerPlayer(player) as MLBPlayer,
+    openParlayAdd({
+      player: toHrParlayPickerPlayer(player),
       propHint: {
         id: `hr-watch-${player.stableId}`,
         market: 'Home Runs',
@@ -342,6 +341,10 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
       },
       initialFamily: 'home_runs',
       isPitcher: false,
+      source: 'hr_intelligence',
+      dataStatus: player.truthStatus === 'official' ? 'official' : player.truthStatus === 'projected' ? 'projected' : 'unknown',
+      reasoningSnapshot: player.reasons[0] ?? null,
+      riskSnapshot: player.warnings[0] ?? null,
     });
   }, [vm, topPlayer]);
 

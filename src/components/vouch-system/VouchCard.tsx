@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Vouch, Parlay, CreatorProofProfile, FeedPost } from '../../types';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
-import { useParlayOsStore } from '../../stores/parlayOsStore';
+import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 import { vouchToPlayer } from '../../lib/parlays/parlayOsLegBuilder';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../../lib/parlays/parlayMarketCatalog';
 
@@ -159,7 +159,7 @@ export default React.memo(function VouchCard({
       triggerToast('Open this player in Research first — ParlayOS needs an official playerId.');
       return;
     }
-    useParlayOsStore.getState().openPicker({
+    openParlayAdd({
       player,
       vouch,
       propHint: parlayLeg?.gamePk || parlayLeg?.playerId ? {
@@ -176,6 +176,10 @@ export default React.memo(function VouchCard({
         marketHint: vouch.market,
         specHint: vouch.selection ?? vouch.line,
       }) === "pitcher",
+      source: 'vouch_card',
+      dataStatus: 'unknown',
+      reasoningSnapshot: vouch.userNote || vouch.longerBreakdown || null,
+      riskSnapshot: vouch.riskTier ? `${vouch.riskTier} risk` : null,
     });
     triggerToast('Opening ParlayOS prop picker…');
   };

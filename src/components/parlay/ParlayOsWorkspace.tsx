@@ -31,7 +31,7 @@ import React, {
 } from 'react';
 import {
   Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
-  ChevronUp, ChevronDown, X, AlertTriangle,
+  ChevronUp, ChevronDown, X, AlertTriangle, Clock3, Archive, ListPlus,
 } from 'lucide-react';
 import ParlayTrustLockModal from './ParlayTrustLockModal';
 import { useAppCommandStore } from '../../stores/appCommandStore';
@@ -42,7 +42,6 @@ import type { TrustAudience } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
 const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
-import ParlayOsMobileSlipDock from './hub/ParlayOsMobileSlipDock';
 import ParlayOsTemplatesRow from './hub/ParlayOsTemplatesRow';
 import ParlayOsTemplateGuide from './hub/ParlayOsTemplateGuide';
 import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
@@ -226,7 +225,8 @@ interface DraftLegCardProps {
 
 const _DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
   const record = leg as Record<string, unknown>;
-  const confidence = Number(record.confidence ?? record.edgeScore ?? null);
+  const confidenceRaw = record.confidence ?? record.edgeScore;
+  const confidence = typeof confidenceRaw === 'number' ? confidenceRaw : Number.NaN;
   const hasConf = Number.isFinite(confidence);
   const dfsCtx = record.dfsContext as DfsLegContext | undefined;
   const liveProgress =
@@ -337,10 +337,12 @@ function JudgeVerdictDrawer({
   verdict,
   open,
   onToggle,
+  onMoveToWaiting,
 }: {
   verdict: JudgeVerdict;
   open: boolean;
   onToggle: () => void;
+  onMoveToWaiting?: (legId: string, reason: string) => void;
 }) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -416,32 +418,52 @@ function JudgeVerdictDrawer({
           className="bg-[hsl(var(--ve-bg-panel))] border rounded-b-xl p-4 flex flex-col gap-3"
           style={{ borderColor: withAlpha(tierColor, 0.3) }}
         >
-          <ul className="flex flex-col gap-1.5">
-            {verdict.reasons.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-[hsl(var(--ve-text-primary)/0.85)]">
-                <span aria-hidden="true" className="mt-0.5 shrink-0" style={{ color: tierColor }}>
-                  {verdict.tier === 'excellent' || verdict.tier === 'solid' ? '✓' : '⚠'}
-                </span>
-                {r}
-              </li>
-            ))}
-          </ul>
-
-          {verdict.correlations.length > 0 && (
-            <div className="flex flex-col gap-1.5 pt-2 border-t border-[hsl(var(--ve-border)/0.3)]">
-              {verdict.correlations.map((c, i) => (
-                <div key={i} className={[
-                  'flex items-start gap-2 px-2.5 py-2 rounded-lg text-xs border',
-                  c.flag === 'intentional_stack'
-                    ? 'bg-vouch-amber/10 border-vouch-amber/30 text-vouch-amber'
-                    : 'bg-[hsl(var(--ve-warning)/0.08)] border-[hsl(var(--ve-warning)/0.3)] text-[hsl(var(--ve-warning))]',
-                ].join(' ')}>
-                  <span aria-hidden="true">{c.flag === 'intentional_stack' ? '🔥' : '⚠'}</span>
-                  {c.message}
-                </div>
-              ))}
+          <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/38">Highest-risk leg</p>
+              {verdict.highestRiskLeg ? (
+                <>
+                  <p className="mt-2 text-sm font-black text-white">{verdict.highestRiskLeg.label}</p>
+                  <ul className="mt-2 space-y-1">
+                    {verdict.highestRiskLeg.reasons.map((reason) => (
+                      <li key={reason} className="text-[10px] leading-4 text-amber-100/70">{reason}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : <p className="mt-2 text-xs leading-5 text-white/48">No leg is structurally weaker from the data currently available.</p>}
             </div>
-          )}
+
+            <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/38">Required checks</p>
+                <span className="font-mono text-[10px] font-black text-white/60">{verdict.findings.length}</span>
+              </div>
+              <ul className="mt-2 max-h-28 space-y-1.5 overflow-y-auto">
+                {verdict.findings.length > 0 ? verdict.findings.map((finding) => (
+                  <li key={finding.id} className={`text-[10px] leading-4 ${finding.severity === 'high' ? 'text-rose-200/80' : 'text-amber-100/70'}`}>
+                    {finding.message}
+                  </li>
+                )) : <li className="text-[10px] leading-4 text-vouch-emerald/75">No structural checks are currently open.</li>}
+              </ul>
+            </div>
+          </div>
+
+          {verdict.saferConstruction && onMoveToWaiting ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-vouch-cyan/20 bg-vouch-cyan/[0.055] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-vouch-cyan">Lower-risk structure</p>
+                <p className="mt-1 text-xs font-bold text-white/85">{verdict.saferConstruction.title}</p>
+                <p className="mt-1 text-[10px] leading-4 text-white/45">{verdict.saferConstruction.description}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onMoveToWaiting(verdict.saferConstruction!.moveToWaitingLegId, verdict.highestRiskLeg?.reasons.join('; ') ?? 'Judge Review')}
+                className="min-h-10 shrink-0 rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 text-[9px] font-black uppercase tracking-wide text-vouch-cyan hover:bg-vouch-cyan/15"
+              >
+                Move to Waiting
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
@@ -450,24 +472,179 @@ function JudgeVerdictDrawer({
 
 // ─── Empty state components (Judge 1) ────────────────────────────────────────
 
-function EmptyBuildSlip() {
-  const openSheet = useParlayOsStore((s) => s.openSheet);
+function EmptyBuildSlip({ onSectionChange }: { onSectionChange?: (section: string) => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-4 text-center px-4">
-      <div className="text-5xl" aria-hidden="true">🎯</div>
-      <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">Build with ParlayOS</h3>
-      <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-sm leading-relaxed">
-        Open <strong className="text-white/70">Player Research</strong>, tap <strong className="text-cyan-300">+</strong> on any prop,
-        or try <strong className="text-white/70">AI Picks</strong> for V.A.I-suggested legs.
-      </p>
-      <button
-        type="button"
-        onClick={() => openSheet(true)}
-        className="min-h-[2.75rem] px-5 rounded-xl border border-cyan-400/35 bg-cyan-500/10 text-[11px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20"
-      >
-        Open slip
-      </button>
+    <div className="flex min-h-[260px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-white/10 bg-black/20 px-5 py-10 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan" aria-hidden="true">
+        <ListPlus className="h-6 w-6" />
+      </div>
+      <div>
+        <h3 className="text-base font-black text-white">Build from your research</h3>
+        <p className="mt-2 max-w-md text-xs leading-5 text-white/48">
+          Add hitters from HR Intelligence or supported pitcher targets from Pitchers Matchup. Keep uncertain targets in the Watchlist until the data confirms them.
+        </p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => onSectionChange?.('hr_board')}
+          className="min-h-[2.75rem] rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald hover:bg-vouch-emerald/15"
+        >
+          Browse HR Signals
+        </button>
+        <button
+          type="button"
+          onClick={() => onSectionChange?.('team_matchup_lab')}
+          className="min-h-[2.75rem] rounded-xl border border-white/15 bg-white/[0.025] px-4 text-[11px] font-black uppercase tracking-wide text-white/65 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
+        >
+          Browse Pitchers
+        </button>
+      </div>
     </div>
+  );
+}
+
+type WatchlistTab = 'targets' | 'waiting' | 'removed';
+
+function WatchlistFoundation({ onSectionChange }: { onSectionChange?: (section: string) => void }) {
+  const [activeTab, setActiveTab] = useState<WatchlistTab>('targets');
+  const waitingTargets = useParlayCommandStore((state) => state.waitingTargets);
+  const removedTargets = useParlayCommandStore((state) => state.removedTargets);
+  const promoteWaitingTarget = useParlayCommandStore((state) => state.promoteWaitingTarget);
+  const removeWaitingTarget = useParlayCommandStore((state) => state.removeWaitingTarget);
+  const restoreRemovedTarget = useParlayCommandStore((state) => state.restoreRemovedTarget);
+  const clearRemovedTargets = useParlayCommandStore((state) => state.clearRemovedTargets);
+  const announce = useAnnounce();
+  const tabs: Array<{ id: WatchlistTab; label: string; icon: typeof Layers3 }> = [
+    { id: 'targets', label: 'Targets', icon: Layers3 },
+    { id: 'waiting', label: 'Waiting', icon: Clock3 },
+    { id: 'removed', label: 'Removed', icon: Archive },
+  ];
+  const activeItems = activeTab === 'waiting' ? waitingTargets : activeTab === 'removed' ? removedTargets : [];
+  const totalTargets = waitingTargets.length;
+
+  return (
+    <aside className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-2xl border border-white/12 bg-[radial-gradient(circle_at_top_right,rgba(0,255,148,0.07),transparent_38%),linear-gradient(160deg,#091520_0%,#050b12_65%)] shadow-[0_22px_60px_rgba(0,0,0,0.28)] lg:min-h-[560px]" aria-labelledby="parlayos-watchlist-heading">
+      <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[#07101a]/95 px-4 pt-4 backdrop-blur-xl">
+        <div className="flex items-start justify-between gap-3 pb-3">
+          <div>
+            <p className={`${Z8_LABEL} text-vouch-emerald`}>Research queue</p>
+            <h2 id="parlayos-watchlist-heading" className="mt-1 text-lg font-black text-white">Watchlist</h2>
+          </div>
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] font-black text-white/45">{totalTargets} waiting</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1" role="tablist" aria-label="Watchlist states">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const selected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setActiveTab(tab.id)}
+                className={`z8-control flex min-h-10 items-center justify-center gap-1.5 border-b-2 px-2 text-[10px] font-bold transition ${
+                  selected ? 'border-vouch-emerald text-vouch-emerald' : 'border-transparent text-white/38 hover:text-white/70'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={`flex flex-1 p-4 ${activeItems.length === 0 ? 'items-center justify-center text-center' : 'items-start'}`} role="tabpanel">
+        {activeItems.length === 0 ? <div>
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.025] text-white/30">
+            {activeTab === 'targets' ? <Layers3 className="h-5 w-5" /> : activeTab === 'waiting' ? <Clock3 className="h-5 w-5" /> : <Archive className="h-5 w-5" />}
+          </div>
+          <h3 className="mt-4 text-sm font-black text-white/80">
+            {activeTab === 'targets' ? 'Nothing under review yet' : activeTab === 'waiting' ? 'Nothing waiting for confirmation' : 'No removed targets'}
+          </h3>
+          <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-white/42">
+            {activeTab === 'targets'
+              ? 'Add players you are considering without committing them to your slip.'
+              : activeTab === 'waiting'
+                ? 'Targets blocked by lineup, pitcher, or odds confirmation will appear here.'
+                : 'Removed targets stay here so an accidental removal is recoverable.'}
+          </p>
+          {activeTab === 'targets' ? (
+            <button
+              type="button"
+              onClick={() => onSectionChange?.('hr_board')}
+              className="z8-control mt-5 min-h-10 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald"
+            >
+              Find targets
+            </button>
+          ) : null}
+        </div> : (
+          <div className="w-full space-y-2">
+            {activeItems.map((target) => (
+              <article key={target.id} className="rounded-xl border border-white/[0.09] bg-black/20 p-3 text-left transition hover:border-vouch-cyan/25">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-black text-white">{target.leg.playerName ?? target.leg.selection}</p>
+                    <p className="mt-1 truncate text-[10px] text-white/45">
+                      {[target.leg.teamLabel, target.leg.marketLabel ?? target.leg.marketCode].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[10px] font-bold text-vouch-emerald">{target.leg.odds ?? 'TBD'}</span>
+                </div>
+                {target.reason ? <p className="mt-2 text-[10px] leading-4 text-amber-100/65">Waiting for: {target.reason}</p> : null}
+                {target.leg.note ? <p className="mt-1.5 text-[10px] leading-4 text-white/48">Note: {target.leg.note}</p> : null}
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === 'waiting') {
+                        promoteWaitingTarget(target.id);
+                        announce('Target promoted to the active slip.');
+                      } else {
+                        restoreRemovedTarget(target.id);
+                        announce('Removed target restored.');
+                      }
+                    }}
+                    className="min-h-9 rounded-lg border border-vouch-emerald/25 bg-vouch-emerald/[0.07] text-[9px] font-black uppercase tracking-wide text-vouch-emerald"
+                  >
+                    {activeTab === 'waiting' ? 'Add to Slip' : 'Restore'}
+                  </button>
+                  {activeTab === 'waiting' ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeWaitingTarget(target.id, 'Removed from Waiting');
+                        announce('Target moved to removed history.');
+                      }}
+                      className="min-h-9 rounded-lg border border-white/10 text-[9px] font-black uppercase tracking-wide text-white/45 hover:border-rose-300/25 hover:text-rose-200"
+                    >
+                      Remove
+                    </button>
+                  ) : <span aria-hidden="true" />}
+                </div>
+              </article>
+            ))}
+            {activeTab === 'removed' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  clearRemovedTargets();
+                  announce('Removed history cleared.');
+                }}
+                className="min-h-10 w-full rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-wide text-white/38 hover:border-rose-300/25 hover:text-rose-200"
+              >
+                Clear removed history
+              </button>
+            ) : null}
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-white/[0.07] px-4 py-3 text-[10px] leading-4 text-white/35">
+        Waiting targets never affect active-slip odds or risk calculations.
+      </div>
+    </aside>
   );
 }
 
@@ -545,18 +722,21 @@ const _StakePayout = function StakePayout({
 
 interface BuildSlipPanelProps {
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
+  onSectionChange?: (section: string) => void;
 }
 
-function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
+function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) {
   const draftLegs       = useParlayCommandStore(selectDraftLegs);
   const draftMode       = useParlayCommandStore((s) => s.draftMode);
+  const slipNote        = useParlayCommandStore((s) => s.slipNote);
+  const setSlipNote     = useParlayCommandStore((s) => s.setSlipNote);
   const removeDraftLeg  = useParlayCommandStore((s) => s.removeDraftLeg);
+  const moveDraftLegToWaiting = useParlayCommandStore((s) => s.moveDraftLegToWaiting);
   const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
   const batchRepairDraftLegs = useParlayCommandStore((s) => s.batchRepairDraftLegs);
   const liveGames = useAppCommandStore((s) => s.liveGames);
   useAutoRepairDraftIdentity(draftLegs.length > 0);
   const openLegEditor   = useParlayOsStore((s) => s.openLegEditor);
-  const openSheet       = useParlayOsStore((s) => s.openSheet);
   const buildTemplateId = useParlayOsStore((s) => s.buildTemplateId);
   const setBuildTemplate = useParlayOsStore((s) => s.setBuildTemplate);
   const announce        = useAnnounce();
@@ -570,21 +750,31 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const [trustModalOpen, setTrustModalOpen]  = useState(false);
   const [riskMode, setRiskMode]              = useState<ParlayRiskMode>('balanced');
   const [verdictOpen, setVerdictOpen]        = useState(false);
+  const [mobileView, setMobileView]          = useState<'slip' | 'watchlist' | 'review'>('slip');
   const [stake, setStake]                    = useState(10);
   // One-time responsible agreement per session (Judge 10)
   const [agreedSession, setAgreedSession]   = useState(false);
   const [identityExplainerOpen, setIdentityExplainerOpen] = useState(false);
 
   const verdict = useMemo(() => computeJudgeVerdict(
-    draftLegs.map((l) => ({
-      id: l.id,
-      confidence: Number((l as Record<string, unknown>).confidence ?? null),
-      gameId: l.gameId ?? l.gamePk,
-      gamePk: l.gamePk ?? l.gameId,
-      teamId: l.teamId,
-      marketCode: l.marketCode,
-      source: l.source,
-    }))
+    draftLegs.map((leg) => {
+      const confidenceValue = (leg as Record<string, unknown>).confidence;
+      return {
+        id: leg.id,
+        playerName: leg.playerName,
+        selection: leg.selection,
+        playerId: leg.playerId,
+        confidence: typeof confidenceValue === 'number' && Number.isFinite(confidenceValue) ? confidenceValue : null,
+        gameId: leg.gameId ?? leg.gamePk,
+        gamePk: leg.gamePk ?? leg.gameId,
+        teamId: leg.teamId,
+        marketCode: leg.marketCode,
+        odds: leg.odds,
+        dataStatus: leg.addSnapshot?.dataStatus ?? 'unknown',
+        riskSnapshot: leg.addSnapshot?.riskSnapshot,
+        source: leg.source,
+      };
+    })
   ), [draftLegs]);
 
   const combinedOdds = useMemo(() => computeCombinedOdds(draftLegs), [draftLegs]);
@@ -617,6 +807,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   function buildDraftParlay() {
     const draftId = `draft-${Date.now()}`;
+    const capturedAt = new Date().toISOString();
     return normalizeParlaySlip({
       id: draftId,
       clientRef: draftId,
@@ -627,7 +818,18 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
       status: 'pending',
       wagerAmount: stake,
       legs: draftLegs.map((l) => normalizeParlayLeg(l)),
-      createdAt: new Date().toISOString(),
+      createdAt: capturedAt,
+      metadata: {
+        savedContext: {
+          slipNote: slipNote.trim() || null,
+          capturedAt,
+          legs: draftLegs.map((leg) => ({
+            id: leg.id,
+            note: leg.note ?? null,
+            addSnapshot: leg.addSnapshot ?? null,
+          })),
+        },
+      },
     });
   }
 
@@ -711,6 +913,22 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   const railFooterExtra = (
     <div className="space-y-3 mb-4">
+      {draftLegs.length > 0 ? (
+        <div className="space-y-1.5">
+          <label htmlFor="parlay-slip-note" className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/42">
+            Why I built this slip <span className="normal-case text-white/28">(optional)</span>
+          </label>
+          <textarea
+            id="parlay-slip-note"
+            value={slipNote}
+            onChange={(event) => setSlipNote(event.target.value)}
+            rows={2}
+            placeholder="Capture your decision before the result is known"
+            className="w-full resize-none rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-xs leading-5 text-white/72 placeholder:text-white/25 focus:border-vouch-cyan/35 focus:outline-none"
+          />
+          <p className="text-right font-mono text-[9px] text-white/28">{slipNote.length}/500</p>
+        </div>
+      ) : null}
       {draftLegs.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <ParlayIdentityBadge
@@ -821,7 +1039,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 min-h-0 relative pb-36 xl:pb-8 xl:pr-80">
+    <div className="flex min-h-0 flex-col gap-4 pb-8">
       <ParlayOsTemplatesRow
         activeTemplateId={buildTemplateId}
         onSelect={(id) => {
@@ -836,10 +1054,43 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
       {templateProgress ? <ParlayOsTemplateGuide progress={templateProgress} /> : null}
 
-      {draftLegs.length === 0 ? <EmptyBuildSlip /> : null}
+      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="ParlayOS mobile workspace">
+        {(['slip', 'watchlist', 'review'] as const).map((view) => (
+          <button
+            key={view}
+            type="button"
+            role="tab"
+            aria-selected={mobileView === view}
+            onClick={() => setMobileView(view)}
+            className={`min-h-11 rounded-xl px-2 text-[10px] font-black uppercase tracking-[0.12em] transition ${
+              mobileView === view
+                ? 'border border-vouch-cyan/35 bg-vouch-cyan/12 text-vouch-cyan shadow-[inset_0_0_18px_rgba(0,240,255,0.08)]'
+                : 'border border-transparent text-white/42'
+            }`}
+          >
+            {view === 'slip' ? `Slip (${draftLegs.length})` : view}
+          </button>
+        ))}
+      </div>
 
-      {draftLegs.length > 0 ? (
-        <>
+      <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(300px,1fr)]">
+        <section className={`${mobileView === 'slip' ? 'block' : 'hidden'} min-w-0 space-y-4 rounded-2xl border border-vouch-cyan/25 bg-[radial-gradient(circle_at_top_left,rgba(0,240,255,0.08),transparent_34%),linear-gradient(155deg,#07131d_0%,#040a11_68%)] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-4 lg:block`} aria-labelledby="parlayos-slip-builder-heading">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+            <div>
+              <p className={`${Z8_LABEL} text-vouch-cyan`}>Primary workspace</p>
+              <h2 id="parlayos-slip-builder-heading" className="mt-1 text-lg font-black text-white">Slip Builder</h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-white/55">{draftLegs.length} legs</span>
+              <span className="rounded-full border border-vouch-cyan/20 bg-vouch-cyan/[0.07] px-2.5 py-1 text-vouch-cyan">{displayTotalOdds} combined</span>
+              <span className="rounded-full border border-amber-300/20 bg-amber-300/[0.07] px-2.5 py-1 text-amber-200">{riskMeta.label} mode</span>
+            </div>
+          </div>
+
+          {draftLegs.length === 0 ? <EmptyBuildSlip onSectionChange={onSectionChange} /> : null}
+
+          {draftLegs.length > 0 ? (
+            <>
       {draftMode === 'ai_locked' && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-vouch-emerald/10 border border-vouch-emerald/30">
           <Bot className="h-3.5 w-3.5 text-vouch-emerald" aria-hidden="true" />
@@ -878,16 +1129,22 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         })}
       </div>
 
-      {/* Desktop xl+ fixed builder rail */}
-      <ParlayBuilderRail {...sharedRailProps} layout="fixed" />
+      <ParlayBuilderRail {...sharedRailProps} layout="inline" title="Active Draft" />
 
       {/* Judge Verdict peek drawer (Judge 3) */}
       {draftLegs.length > 0 && (
-        <JudgeVerdictDrawer
-          verdict={verdict}
-          open={verdictOpen}
-          onToggle={() => setVerdictOpen((v) => !v)}
-        />
+        <div className="hidden lg:block">
+          <JudgeVerdictDrawer
+            verdict={verdict}
+            open={verdictOpen}
+            onToggle={() => setVerdictOpen((v) => !v)}
+            onMoveToWaiting={(legId, reason) => {
+              moveDraftLegToWaiting(legId, reason);
+              announce('Highest-risk leg moved to Waiting.');
+              setVerdictOpen(false);
+            }}
+          />
+        </div>
       )}
 
       {identityExplainerOpen ? (
@@ -906,21 +1163,62 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         canUseSubscriber={isCreator}
       />
 
-      <ParlayOsMobileSlipDock
-        legCount={draftLegs.length}
-        totalOdds={displayTotalOdds}
-        identity={draftIdentity}
-        canSave={canSave && agreedSession}
-        saveBlockReason={saveBlockReason}
-        canLock={canShare}
-        isSaving={isSaving}
-        isSharing={isSharing}
-        onOpenSlip={() => openSheet(true)}
-        onSave={handleSave}
-        onLock={() => setTrustModalOpen(true)}
-      />
-        </>
-      ) : null}
+            </>
+          ) : null}
+        </section>
+
+        <div className={`${mobileView === 'watchlist' ? 'block' : 'hidden'} min-w-0 lg:block`}>
+          <WatchlistFoundation onSectionChange={onSectionChange} />
+        </div>
+
+        <section className={`${mobileView === 'review' ? 'block' : 'hidden'} rounded-2xl border border-amber-300/20 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.08),transparent_42%),#060c13] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.3)] lg:hidden`} aria-labelledby="parlayos-mobile-review-heading">
+          <p className={`${Z8_LABEL} text-amber-200`}>Decision check</p>
+          <div className="mt-2 flex items-start justify-between gap-4">
+            <div>
+              <h2 id="parlayos-mobile-review-heading" className="text-lg font-black text-white">Judge Review</h2>
+              <p className="mt-1 text-xs leading-5 text-white/52">{verdict.headline}</p>
+            </div>
+            <div className="text-right">
+              <span className="flex h-12 min-w-12 items-center justify-center rounded-2xl border border-amber-300/25 bg-amber-300/10 font-mono text-lg font-black text-amber-200">{verdict.score}</span>
+              <span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/32">{verdict.reviewLabel}</span>
+            </div>
+          </div>
+          {draftLegs.length === 0 ? (
+            <p className="mt-6 rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-xs leading-5 text-white/42">Add at least one player to receive a slip-specific risk review.</p>
+          ) : (
+            <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
+              {verdict.highestRiskLeg ? (
+                <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3">
+                  <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">Highest-risk leg</p>
+                  <p className="mt-1.5 text-sm font-black text-white">{verdict.highestRiskLeg.label}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-white/52">{verdict.highestRiskLeg.reasons.join(' · ')}</p>
+                </div>
+              ) : null}
+              <ul className="space-y-2">
+              {verdict.findings.map((finding) => (
+                <li key={finding.id} className="flex gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 text-xs leading-5 text-white/68">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-200" aria-hidden="true" />
+                  {finding.message}
+                </li>
+              ))}
+              </ul>
+              {verdict.saferConstruction ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    moveDraftLegToWaiting(verdict.saferConstruction!.moveToWaitingLegId, verdict.highestRiskLeg?.reasons.join('; ') ?? 'Judge Review');
+                    announce('Highest-risk leg moved to Waiting.');
+                    setMobileView('watchlist');
+                  }}
+                  className="min-h-11 w-full rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 text-[10px] font-black uppercase tracking-wide text-vouch-cyan"
+                >
+                  {verdict.saferConstruction.title}
+                </button>
+              ) : null}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -943,7 +1241,7 @@ function AiPicksPanel() {
 
       {aiPicks.map((pick) => {
         const record = pick as Record<string, unknown>;
-        const confidence = Number(record.confidence ?? null);
+        const confidence = typeof record.confidence === 'number' ? record.confidence : Number.NaN;
         const hasConf = Number.isFinite(confidence);
 
         return (
@@ -1030,7 +1328,7 @@ function TabContent({
 }) {
   switch (activePanel) {
     case 'build':
-      return <BuildSlipPanel onSaveParlay={onSaveParlay} />;
+      return <BuildSlipPanel onSaveParlay={onSaveParlay} onSectionChange={onSectionChange} />;
     case 'ai':
       return (
         <PanelErrorBoundary>
@@ -1210,7 +1508,7 @@ export default function ParlayOsWorkspace({
               id={`${tablistId}-panel-${tab.id}`}
               aria-labelledby={`${tablistId}-tab-${tab.id}`}
               hidden={activePanel !== tab.id}
-              className="px-4 py-5 sm:px-6 lg:px-8 max-w-4xl mx-auto"
+              className={`px-4 py-5 sm:px-6 lg:px-8 mx-auto ${tab.id === 'build' ? 'max-w-[1440px]' : 'max-w-4xl'}`}
             >
               {activePanel === tab.id && (
                 <PanelErrorBoundary>

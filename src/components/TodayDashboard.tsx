@@ -26,6 +26,8 @@ import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
 import { buildTodayDecision, type TodayAttentionItem } from './today/todayDecisionModel';
 import TodayDecisionReel, { type BriefingFilter } from './today/TodayDecisionReel';
 import { buildTodayReelSlides } from './today/todayDecisionReelModel';
+import { toHrParlayPickerPlayer } from '../features/hr/utils/hrDecisionBrief';
+import { openParlayAdd } from '../lib/parlays/parlayAddContract';
 
 const FollowingHubPage = React.lazy(() => import('../pages/FollowingHubPage'));
 
@@ -104,6 +106,29 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
     () => buildTodayReelSlides({ decision, report, topPlayer: featuredPlayer }),
     [decision, featuredPlayer, report],
   );
+  const addFeaturedPlayerToSlip = React.useCallback(() => {
+    if (!featuredPlayer || featuredPlayer.playerId == null || featuredPlayer.truthStatus === 'blocked') {
+      onSectionChange('hr_board');
+      return;
+    }
+    openParlayAdd({
+      player: toHrParlayPickerPlayer(featuredPlayer),
+      propHint: {
+        id: `today-hr-${featuredPlayer.stableId}`,
+        market: 'Home Runs',
+        odds: featuredPlayer.bookOdds ?? null,
+        spec: `${featuredPlayer.playerName} 1+ Home Run`,
+        gamePk: featuredPlayer.gamePk ?? undefined,
+        playerId: featuredPlayer.playerId,
+      },
+      initialFamily: 'home_runs',
+      isPitcher: false,
+      source: 'today',
+      dataStatus: featuredPlayer.truthStatus === 'official' ? 'official' : 'projected',
+      reasoningSnapshot: featuredPlayer.reasons[0] ?? null,
+      riskSnapshot: featuredPlayer.warnings[0] ?? null,
+    });
+  }, [featuredPlayer, onSectionChange]);
   const activeSlip = pendingSlipList[0] ?? null;
   const isLoading = dailyReportQuery.isLoading || hrBoardQuery.loading;
   const isDegraded = dailyReportQuery.isError || hrBoardQuery.error || report?.dataQuality === 'limited';
@@ -199,6 +224,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
             pendingSlip={activeSlip}
             filter={briefingFilter}
             onSectionChange={onSectionChange}
+            onAddFeaturedPlayer={addFeaturedPlayerToSlip}
           />
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Briefing filters">
             {BRIEFING_FILTERS.map((filter) => (

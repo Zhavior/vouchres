@@ -7,6 +7,11 @@ import {
 } from "../lib/parlayDisplay";
 import { repairDraftLegIdentity, repairDraftLegsIdentity } from "../lib/parlays/repairDraftLegIdentity";
 import type { LiveGameRef } from "../lib/parlays/parlayLegValidator";
+import type { ParlayAddSnapshot } from "../lib/parlays/parlayAddContract";
+import { accountStorageKey } from "../lib/accountStorage";
+
+const PARLAY_DRAFT_STORAGE_KEY = "vouchedge_parlayos_draft_v1";
+const DRAFT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
 export type ParlayCommandPanel = "build" | "ai" | "vai_ledger" | "live" | "premium";
 
@@ -31,6 +36,23 @@ export type DraftParlayLeg = {
   externalProvider?: string | null;
   eventKey?: string | null;
   tags?: string[];
+  addSnapshot?: ParlayAddSnapshot;
+  note?: string | null;
+};
+
+export type WaitingParlayTarget = {
+  id: string;
+  leg: DraftParlayLeg;
+  reason: string | null;
+  movedAt: string;
+};
+
+export type RemovedParlayTarget = {
+  id: string;
+  leg: DraftParlayLeg;
+  reason: string | null;
+  removedAt: string;
+  previousState: "draft" | "waiting";
 };
 
 export type AiRecommendedLeg = DraftParlayLeg & {
@@ -51,6 +73,9 @@ type DraftMode = "manual" | "ai_locked";
 type ParlayCommandState = {
   activePanel: ParlayCommandPanel;
   draftLegs: DraftParlayLeg[];
+  slipNote: string;
+  waitingTargets: WaitingParlayTarget[];
+  removedTargets: RemovedParlayTarget[];
   draftMode: DraftMode;
   aiPicks: AiRecommendedLeg[];
   savedSlips: PublicParlaySlip[];
@@ -60,10 +85,18 @@ type ParlayCommandState = {
   setActivePanel: (panel: ParlayCommandPanel) => void;
   addDraftLeg: (leg: DraftParlayLeg) => void;
   addAiLegToDraft: (leg: AiRecommendedLeg) => void;
-  removeDraftLeg: (id: string) => void;
+  removeDraftLeg: (id: string, reason?: string | null) => void;
   updateDraftLeg: (id: string, patch: Partial<DraftParlayLeg>) => void;
   replaceDraftLeg: (id: string, leg: DraftParlayLeg) => void;
+  setSlipNote: (note: string) => void;
+  moveDraftLegToWaiting: (id: string, reason?: string | null) => void;
+  promoteWaitingTarget: (id: string) => void;
+  removeWaitingTarget: (id: string, reason?: string | null) => void;
+  restoreRemovedTarget: (id: string) => void;
+  clearRemovedTargets: () => void;
   clearDraft: () => void;
+  hydrateDraftSession: () => void;
+  resetDraftSession: () => void;
   setAiPicks: (legs: AiRecommendedLeg[]) => void;
   hydrateSavedSlips: (rawSlips: unknown[]) => void;
   addOptimisticSlip: (rawSlip: unknown) => string;
@@ -105,9 +138,92 @@ const normalizeDraftLeg = (leg: DraftParlayLeg, liveGames: LiveGameRef[] = []): 
   };
 };
 
+type PersistedDraftSession = {
+  version: 1;
+  savedAt: string;
+  draftLegs: DraftParlayLeg[];
+  slipNote: string;
+  waitingTargets: WaitingParlayTarget[];
+  removedTargets: RemovedParlayTarget[];
+  draftMode: DraftMode;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isDraftLeg(value: unknown): value is DraftParlayLeg {
+  return isRecord(value)
+    && typeof value.id === "string"
+    && typeof value.source === "string"
+    && typeof value.sport === "string"
+    && typeof value.selection === "string";
+}
+
+function validWaitingTarget(value: unknown): value is WaitingParlayTarget {
+  return isRecord(value)
+    && typeof value.id === "string"
+    && isDraftLeg(value.leg)
+    && typeof value.movedAt === "string";
+}
+
+function validRemovedTarget(value: unknown): value is RemovedParlayTarget {
+  return isRecord(value)
+    && typeof value.id === "string"
+    && isDraftLeg(value.leg)
+    && typeof value.removedAt === "string"
+    && (value.previousState === "draft" || value.previousState === "waiting");
+}
+
+function parsePersistedDraftSession(raw: string | null): PersistedDraftSession | null {
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || parsed.version !== 1 || typeof parsed.savedAt !== "string") return null;
+    const savedAt = Date.parse(parsed.savedAt);
+    if (!Number.isFinite(savedAt) || Date.now() - savedAt > DRAFT_MAX_AGE_MS) return null;
+
+    const draftLegs = Array.isArray(parsed.draftLegs) ? parsed.draftLegs.filter(isDraftLeg).slice(0, 12) : [];
+    const waitingTargets = Array.isArray(parsed.waitingTargets) ? parsed.waitingTargets.filter(validWaitingTarget).slice(0, 25) : [];
+    const removedTargets = Array.isArray(parsed.removedTargets) ? parsed.removedTargets.filter(validRemovedTarget).slice(0, 25) : [];
+    return {
+      version: 1,
+      savedAt: parsed.savedAt,
+      draftLegs,
+      slipNote: typeof parsed.slipNote === "string" ? parsed.slipNote.slice(0, 500) : "",
+      waitingTargets,
+      removedTargets,
+      draftMode: parsed.draftMode === "ai_locked" && draftLegs.length > 0 ? "ai_locked" : "manual",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeDraftSession(state: ParlayCommandState): void {
+  if (typeof localStorage === "undefined") return;
+  const payload: PersistedDraftSession = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    draftLegs: state.draftLegs.slice(0, 12),
+    slipNote: state.slipNote.slice(0, 500),
+    waitingTargets: state.waitingTargets.slice(0, 25),
+    removedTargets: state.removedTargets.slice(0, 25),
+    draftMode: state.draftMode,
+  };
+  try {
+    localStorage.setItem(accountStorageKey(PARLAY_DRAFT_STORAGE_KEY), JSON.stringify(payload));
+  } catch {
+    // Browser storage can be unavailable or full; the in-memory draft still works.
+  }
+}
+
 export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => ({
   activePanel: "build",
   draftLegs: [],
+  slipNote: "",
+  waitingTargets: [],
+  removedTargets: [],
   draftMode: "manual",
   aiPicks: [],
   savedSlips: [],
@@ -156,12 +272,21 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
       };
     }),
 
-  removeDraftLeg: (id) =>
+  removeDraftLeg: (id, reason = null) =>
     set((state) => {
+      const removedLeg = state.draftLegs.find((leg) => leg.id === id);
+      if (!removedLeg) return state;
       const nextDraftLegs = state.draftLegs.filter((leg) => leg.id !== id);
 
       return {
         draftLegs: nextDraftLegs,
+        removedTargets: [{
+          id: `removed-${Date.now()}-${removedLeg.id}`,
+          leg: removedLeg,
+          reason,
+          removedAt: new Date().toISOString(),
+          previousState: "draft" as const,
+        }, ...state.removedTargets].slice(0, 25),
         draftMode: nextDraftLegs.length === 0 ? "manual" : state.draftMode,
       };
     }),
@@ -176,11 +301,123 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
   replaceDraftLeg: (id, leg) =>
     set((state) => ({
       draftLegs: state.draftLegs.map((existing) =>
-        existing.id === id ? normalizeDraftLeg({ ...leg, id: existing.id }) : existing,
+        existing.id === id
+          ? normalizeDraftLeg({
+              ...existing,
+              ...leg,
+              id: existing.id,
+              addSnapshot: leg.addSnapshot ?? existing.addSnapshot,
+              note: Object.prototype.hasOwnProperty.call(leg, "note") ? leg.note : existing.note,
+            })
+          : existing,
       ),
     })),
 
-  clearDraft: () => set({ draftLegs: [], draftMode: "manual" }),
+  setSlipNote: (note) => set({ slipNote: note.slice(0, 500) }),
+
+  moveDraftLegToWaiting: (id, reason = null) =>
+    set((state) => {
+      const leg = state.draftLegs.find((candidate) => candidate.id === id);
+      if (!leg) return state;
+      const nextDraftLegs = state.draftLegs.filter((candidate) => candidate.id !== id);
+      return {
+        draftLegs: nextDraftLegs,
+        waitingTargets: [{
+          id: `waiting-${Date.now()}-${leg.id}`,
+          leg,
+          reason,
+          movedAt: new Date().toISOString(),
+        }, ...state.waitingTargets],
+        draftMode: nextDraftLegs.length === 0 ? "manual" : state.draftMode,
+      };
+    }),
+
+  promoteWaitingTarget: (id) =>
+    set((state) => {
+      const target = state.waitingTargets.find((candidate) => candidate.id === id);
+      if (!target || state.draftLegs.some((leg) => leg.id === target.leg.id)) return state;
+      return {
+        draftLegs: [...state.draftLegs, normalizeDraftLeg(target.leg)],
+        waitingTargets: state.waitingTargets.filter((candidate) => candidate.id !== id),
+      };
+    }),
+
+  removeWaitingTarget: (id, reason = null) =>
+    set((state) => {
+      const target = state.waitingTargets.find((candidate) => candidate.id === id);
+      if (!target) return state;
+      return {
+        waitingTargets: state.waitingTargets.filter((candidate) => candidate.id !== id),
+        removedTargets: [{
+          id: `removed-${Date.now()}-${target.leg.id}`,
+          leg: target.leg,
+          reason: reason ?? target.reason,
+          removedAt: new Date().toISOString(),
+          previousState: "waiting" as const,
+        }, ...state.removedTargets].slice(0, 25),
+      };
+    }),
+
+  restoreRemovedTarget: (id) =>
+    set((state) => {
+      const target = state.removedTargets.find((candidate) => candidate.id === id);
+      if (!target) return state;
+      const removedTargets = state.removedTargets.filter((candidate) => candidate.id !== id);
+      if (target.previousState === "waiting") {
+        return {
+          removedTargets,
+          waitingTargets: [{
+            id: `waiting-${Date.now()}-${target.leg.id}`,
+            leg: target.leg,
+            reason: target.reason,
+            movedAt: new Date().toISOString(),
+          }, ...state.waitingTargets],
+        };
+      }
+      if (state.draftLegs.some((leg) => leg.id === target.leg.id)) return { removedTargets };
+      return {
+        removedTargets,
+        draftLegs: [...state.draftLegs, normalizeDraftLeg(target.leg)],
+      };
+    }),
+
+  clearRemovedTargets: () => set({ removedTargets: [] }),
+
+  clearDraft: () => set({ draftLegs: [], slipNote: "", draftMode: "manual" }),
+
+  hydrateDraftSession: () => {
+    if (typeof localStorage === "undefined") return;
+    let restored: PersistedDraftSession | null = null;
+    try {
+      restored = parsePersistedDraftSession(localStorage.getItem(accountStorageKey(PARLAY_DRAFT_STORAGE_KEY)));
+    } catch {
+      restored = null;
+    }
+    set(restored ? {
+      draftLegs: restored.draftLegs.map((leg) => normalizeDraftLeg(leg)),
+      slipNote: restored.slipNote,
+      waitingTargets: restored.waitingTargets,
+      removedTargets: restored.removedTargets,
+      draftMode: restored.draftMode,
+    } : {
+      draftLegs: [],
+      slipNote: "",
+      waitingTargets: [],
+      removedTargets: [],
+      draftMode: "manual",
+    });
+  },
+
+  resetDraftSession: () => {
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.removeItem(accountStorageKey(PARLAY_DRAFT_STORAGE_KEY));
+      } catch {
+        // Ignore storage failures and still reset in-memory state.
+      }
+    }
+    set({ draftLegs: [], slipNote: "", waitingTargets: [], removedTargets: [], draftMode: "manual" });
+  },
 
   setAiPicks: (legs) => set({ aiPicks: legs.map((leg) => normalizeDraftLeg(leg)) }),
 
@@ -260,6 +497,18 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
       };
     }),
 }));
+
+useParlayCommandStore.subscribe((state, previous) => {
+  if (
+    state.draftLegs !== previous.draftLegs
+    || state.slipNote !== previous.slipNote
+    || state.waitingTargets !== previous.waitingTargets
+    || state.removedTargets !== previous.removedTargets
+    || state.draftMode !== previous.draftMode
+  ) {
+    writeDraftSession(state);
+  }
+});
 
 export const selectActiveParlayPanel = (state: ParlayCommandState) => state.activePanel;
 export const selectDraftLegs = (state: ParlayCommandState) => state.draftLegs;

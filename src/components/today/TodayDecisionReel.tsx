@@ -20,6 +20,7 @@ interface Props {
   pendingSlip?: Parlay | null;
   filter?: BriefingFilter;
   onSectionChange: (section: string) => void;
+  onAddFeaturedPlayer?: () => void;
 }
 
 const ACCENTS = {
@@ -55,6 +56,7 @@ export default function TodayDecisionReel({
   pendingSlip = null,
   filter = 'all',
   onSectionChange,
+  onAddFeaturedPlayer,
 }: Props) {
   const railRef = useRef<HTMLDivElement>(null);
   const filteredSlides = slides.filter((slide) => slideMatchesFilter(slide, filter));
@@ -88,6 +90,7 @@ export default function TodayDecisionReel({
             slide={slide}
             priority={index === 0}
             onSectionChange={onSectionChange}
+            onAddFeaturedPlayer={onAddFeaturedPlayer}
           />
         ))}
         {showSlip && pendingSlip ? (
@@ -123,13 +126,15 @@ function BriefingCard({
   slide,
   priority,
   onSectionChange,
+  onAddFeaturedPlayer,
 }: {
   slide: TodayReelSlide;
   priority: boolean;
   onSectionChange: (section: string) => void;
+  onAddFeaturedPlayer?: () => void;
 }) {
   if (slide.visual.type === 'portrait') {
-    return <PlayerSignalCard slide={slide} visual={slide.visual} onSectionChange={onSectionChange} />;
+    return <PlayerSignalCard slide={slide} visual={slide.visual} onSectionChange={onSectionChange} onAddToSlip={onAddFeaturedPlayer} />;
   }
 
   const accent = ACCENTS[slide.tone];
@@ -173,10 +178,12 @@ function PlayerSignalCard({
   slide,
   visual,
   onSectionChange,
+  onAddToSlip,
 }: {
   slide: TodayReelSlide;
   visual: Extract<TodayReelVisual, { type: 'portrait' }>;
   onSectionChange: (section: string) => void;
+  onAddToSlip?: () => void;
 }) {
   const isOfficial = /official|confirmed/i.test(slide.kicker);
 
@@ -243,10 +250,11 @@ function PlayerSignalCard({
           </button>
           <button
             type="button"
-            onClick={() => onSectionChange('hr_board')}
+            onClick={() => onAddToSlip?.()}
+            disabled={!onAddToSlip}
             className="z8-control inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-vouch-emerald/40 bg-vouch-emerald/12 px-2 text-[11px] font-black text-vouch-emerald hover:bg-vouch-emerald/18"
           >
-            <Plus className="h-4 w-4" /> Add to Slip
+            <Plus className="h-4 w-4" /> {onAddToSlip ? 'Add to Slip' : 'Unavailable'}
           </button>
         </div>
       </div>

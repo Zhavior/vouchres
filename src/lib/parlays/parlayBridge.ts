@@ -175,6 +175,12 @@ function cleanString(value: unknown): string | undefined {
   return text || undefined;
 }
 
+function recordValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
 function makeId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -321,8 +327,11 @@ export function normalizeParlayLeg(input: any, source: ParlaySource = "manual_bu
     status: (cleanString(input?.status) as ParlayLegStatus) || "pending",
     actual: input?.actual ?? null,
     metadata: {
+      ...recordValue(input?.metadata),
       rawSource: source,
       headshot: input?.headshot,
+      note: input?.note ?? input?.metadata?.note ?? null,
+      addSnapshot: input?.addSnapshot ?? input?.metadata?.addSnapshot ?? null,
       original: input,
     },
   };
@@ -353,6 +362,7 @@ export function normalizeParlaySlip(input: any, source: ParlaySource = "manual_b
 
     createdAt: cleanString(input?.createdAt) || new Date().toISOString(),
     metadata: {
+      ...recordValue(input?.metadata),
       rawSource: source,
       totalOdds: input?.totalOdds,
       oddsValue: input?.oddsValue,
@@ -361,6 +371,29 @@ export function normalizeParlaySlip(input: any, source: ParlaySource = "manual_b
       original: input,
     },
   };
+}
+
+export function buildParlayDecisionExplanation(slip: CanonicalParlaySlip): string {
+  const savedContext = recordValue(slip.metadata?.savedContext);
+  const slipNote = cleanString(savedContext.slipNote);
+  const lines: string[] = slipNote ? [`Slip note: ${slipNote}`] : [];
+
+  for (const leg of slip.legs) {
+    const metadata = recordValue(leg.metadata);
+    const snapshot = recordValue(metadata.addSnapshot);
+    const note = cleanString(metadata.note);
+    const why = cleanString(snapshot.reasoningSnapshot);
+    const risk = cleanString(snapshot.riskSnapshot);
+    if (!note && !why && !risk) continue;
+    const details = [
+      note ? `Note: ${note}` : null,
+      why ? `Why: ${why}` : null,
+      risk ? `Risk: ${risk}` : null,
+    ].filter(Boolean).join(" | ");
+    lines.push(`${leg.playerName ?? leg.selection}: ${details}`);
+  }
+
+  return (lines.join("\n") || slip.title).slice(0, 2000);
 }
 
 export function isImportableLiveLeg(leg: CanonicalParlayLeg): boolean {
@@ -375,6 +408,8 @@ export function buildSaveParlayPayload(slip: CanonicalParlaySlip) {
     mode: slip.mode,
     status: slip.status,
     wagerAmount: slip.wagerAmount,
+    explanation: buildParlayDecisionExplanation(slip),
+    savedContext: slip.metadata?.savedContext,
     aiGenerated: slip.metadata?.aiGenerated === true,
     source: slip.source,
     sport: slip.sport,

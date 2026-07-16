@@ -129,7 +129,7 @@ export function AppShell({
                           navigateSection('build');
                         }}
                         navigateSection={navigateSection}
-                        suppressFloatingDock={false}
+                        suppressFloatingDock={activeSection === 'build' || activeSection === 'live_parlays'}
                       />
                     </Suspense>
                   )}

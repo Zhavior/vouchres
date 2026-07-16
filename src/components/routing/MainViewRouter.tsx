@@ -243,7 +243,7 @@ function MainViewRouter({
     case 'live_parlays':
       return (
         <LazyRoute>
-          <ParlayShell key="live_parlays" panel="live" navigateSection={navigateSection} />
+          <ParlayShell key="live_parlays" panel="build" navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'parlay_proof':

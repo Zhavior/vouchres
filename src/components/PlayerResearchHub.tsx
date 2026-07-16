@@ -24,7 +24,7 @@ import {
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
 import { apiClient } from "../lib/apiClient";
-import { useParlayOsStore } from "../stores/parlayOsStore";
+import { openParlayAdd } from "../lib/parlays/parlayAddContract";
 import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
 import {
   Z8_ACTIVE,
@@ -1057,7 +1057,8 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
 }) {
   const openParlayPicker = (initialFamily: "home_runs" | "hits" | "rbi" | "stolen_base" | "pitcher" = "home_runs") => {
     const hrProp = player.propositions.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
-    useParlayOsStore.getState().openPicker({
+    const isPitcher = resolveParlayPlayerRole({ position: player.position }) === "pitcher";
+    openParlayAdd({
       player,
       propHint: hrProp
         ? {
@@ -1069,7 +1070,9 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
           }
         : undefined,
       initialFamily,
-      isPitcher: resolveParlayPlayerRole({ position: player.position }) === "pitcher",
+      isPitcher,
+      source: isPitcher ? "pitcher_research" : "player_research",
+      dataStatus: "unknown",
     });
   };
 

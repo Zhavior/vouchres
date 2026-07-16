@@ -90,6 +90,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
       useSlipsStore.getState().hydrateFromStorage();
       useProfileStore.getState().hydrateFromStorage();
       useVouchesStore.getState().hydrateFromStorage();
+      useParlayCommandStore.getState().hydrateDraftSession();
       syncAnalyticsProfile('guest', selectProfile(useProfileStore.getState()));
       return;
     }
@@ -106,6 +107,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
       const userId = String(data?.id ?? '');
       if (cancelled || !userId) return;
       setAccountStorageScope(userId);
+      useParlayCommandStore.getState().hydrateDraftSession();
       queryClient.removeQueries({ queryKey: queryKeys.myParlays() });
       queryClient.removeQueries({ queryKey: queryKeys.myVouches() });
       queryClient.removeQueries({ queryKey: queryKeys.feed() });

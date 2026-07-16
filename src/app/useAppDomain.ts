@@ -8,9 +8,10 @@ import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
 import type { DraftParlayLeg } from '../stores/parlayCommandStore';
-import { findPlayerLiveGame, validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
+import { findPlayerLiveGame, validateParlayLegBatch, type PlayerTeamFields } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
+import { openParlayAdd } from '../lib/parlays/parlayAddContract';
 import { useFeedStore } from '../stores/feedStore';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useProfileStore } from '../stores/profileStore';
@@ -106,6 +107,7 @@ export function useAppDomain({
     useSlipsStore.getState().resetSlips();
     useVouchesStore.getState().resetVouches();
     useProfileStore.getState().resetProfile();
+    useParlayCommandStore.getState().resetDraftSession();
   }, []);
 
   const commitBuiltLegsToSlip = useCallback((built: Array<{ leg: Leg; draft: DraftParlayLeg }>) => {
@@ -125,22 +127,24 @@ export function useAppDomain({
     if (!ctx?.player) return;
 
     const editLegId = useParlayOsStore.getState().editLegId;
+    const pickerPlayer = ctx.player as PlayerTeamFields;
 
-    const matchedGame = findPlayerLiveGame(ctx.player, liveGames);
+    const matchedGame = findPlayerLiveGame(pickerPlayer, liveGames);
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
       notify({ kind: 'info', title: 'Cannot add legs', body: 'Player\'s game is already final.' });
       return;
     }
 
     const built = buildLegsFromTier(tier, {
-      player: ctx.player,
+      player: pickerPlayer,
       propHint: ctx.propHint,
       liveGames,
+      addSnapshot: ctx.addSnapshot,
     });
 
     const validation = validateParlayLegBatch(
       built.map((entry) => entry.leg),
-      ctx.player,
+      pickerPlayer,
       liveGames,
     );
     if (!validation.valid) {
@@ -208,11 +212,13 @@ export function useAppDomain({
       marketHint: prop.market,
       specHint: prop.spec,
     }) === "pitcher";
-    useParlayOsStore.getState().openPicker({
+    openParlayAdd({
       player,
       propHint: prop,
       initialFamily: inferFamilyFromText(`${prop.market} ${prop.spec}`),
       isPitcher,
+      source: isPitcher ? 'pitcher_research' : 'player_research',
+      dataStatus: 'unknown',
     });
   }, [liveGames]);
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Minus, Plus, RefreshCw, X } from "lucide-react";
+import { Clock3, Minus, Plus, RefreshCw, X } from "lucide-react";
 import type { DraftParlayLeg } from "../../../stores/parlayCommandStore";
 import {
   CUSTOM_STAT_LIMITS,
@@ -15,12 +15,14 @@ export default function ParlayLegEditorSheet({
   onClose,
   onSave,
   onSwapPlayer,
+  onMoveToWaiting,
 }: {
   leg: DraftParlayLeg | null;
   open: boolean;
   onClose: () => void;
   onSave: (updated: DraftParlayLeg) => void;
   onSwapPlayer?: (leg: DraftParlayLeg) => void;
+  onMoveToWaiting?: (updated: DraftParlayLeg, reason: string | null) => void;
 }) {
   const familyId = leg ? inferFamilyFromLeg(leg) : null;
   const limits = familyId ? CUSTOM_STAT_LIMITS[familyId] : null;
@@ -28,11 +30,15 @@ export default function ParlayLegEditorSheet({
 
   const initialTarget = leg?.statTarget != null ? Number(leg.statTarget) : limits?.min ?? 1;
   const [statTarget, setStatTarget] = useState(initialTarget);
+  const [note, setNote] = useState(leg?.note ?? "");
+  const [waitingReason, setWaitingReason] = useState(leg?.addSnapshot?.riskSnapshot ?? "");
   const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (open && leg) {
       setStatTarget(leg.statTarget != null ? Number(leg.statTarget) : limits?.min ?? 1);
+      setNote(leg.note ?? "");
+      setWaitingReason(leg.addSnapshot?.riskSnapshot ?? "");
       setError(null);
     }
   }, [open, leg, limits?.min]);
@@ -54,19 +60,36 @@ export default function ParlayLegEditorSheet({
     setError(null);
   }
 
+  function buildUpdatedLeg(): DraftParlayLeg | null {
+    if (!leg) return null;
+    let updated = leg;
+    if (familyId && !isPresetOnlyLeg) {
+      const check = validateCustomStatTarget(familyId, statTarget);
+      if (!check.valid) {
+        setError(check.reason ?? "Invalid line.");
+        return null;
+      }
+      const result = applyLegStatTargetEdit(leg, statTarget);
+      if (result.error) {
+        setError(result.error);
+        return null;
+      }
+      updated = result.leg;
+    }
+    return { ...updated, note: note.trim() || null };
+  }
+
   function handleSave() {
-    if (!leg || !familyId) return;
-    const check = validateCustomStatTarget(familyId, statTarget);
-    if (!check.valid) {
-      setError(check.reason ?? "Invalid line.");
-      return;
-    }
-    const result = applyLegStatTargetEdit(leg, statTarget);
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-    onSave(result.leg);
+    const updated = buildUpdatedLeg();
+    if (!updated) return;
+    onSave(updated);
+    onClose();
+  }
+
+  function handleMoveToWaiting() {
+    const updated = buildUpdatedLeg();
+    if (!updated || !onMoveToWaiting) return;
+    onMoveToWaiting(updated, waitingReason.trim() || null);
     onClose();
   }
 
@@ -148,6 +171,43 @@ export default function ParlayLegEditorSheet({
             </div>
           ) : null}
 
+          <div className="space-y-2">
+            <label htmlFor="parlay-leg-note" className="text-[10px] uppercase tracking-wide text-white/45">
+              Decision note <span className="normal-case text-white/30">(optional)</span>
+            </label>
+            <textarea
+              id="parlay-leg-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value.slice(0, 280))}
+              rows={3}
+              placeholder="Why this leg belongs in your slip"
+              className="w-full resize-none rounded-xl border border-white/12 bg-black/25 px-3 py-2.5 text-sm leading-5 text-white/80 placeholder:text-white/25 focus:border-cyan-300/40 focus:outline-none"
+            />
+            <p className="text-right font-mono text-[9px] text-white/30">{note.length}/280</p>
+          </div>
+
+          {onMoveToWaiting ? (
+            <div className="space-y-2 rounded-xl border border-amber-300/15 bg-amber-300/[0.035] p-3">
+              <label htmlFor="parlay-waiting-reason" className="text-[10px] font-bold uppercase tracking-wide text-amber-100/75">
+                Waiting for
+              </label>
+              <input
+                id="parlay-waiting-reason"
+                value={waitingReason}
+                onChange={(event) => setWaitingReason(event.target.value.slice(0, 180))}
+                placeholder="Lineup, pitcher, odds, or weather confirmation"
+                className="min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-xs text-white/75 placeholder:text-white/25 focus:border-amber-300/35 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleMoveToWaiting}
+                className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-amber-300/25 bg-amber-300/[0.07] text-[10px] font-bold uppercase tracking-wide text-amber-100 hover:bg-amber-300/12"
+              >
+                <Clock3 className="h-3.5 w-3.5" /> Move to Waiting
+              </button>
+            </div>
+          ) : null}
+
           {error ? (
             <p role="alert" className="text-xs text-amber-200/90">{error}</p>
           ) : null}
@@ -166,10 +226,10 @@ export default function ParlayLegEditorSheet({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isPresetOnlyLeg || !limits || Boolean(preview?.error)}
+              disabled={Boolean(preview?.error)}
               className="w-full min-h-[2.75rem] rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-[11px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-40"
             >
-              Apply changes
+              Save leg
             </button>
           </div>
         </div>

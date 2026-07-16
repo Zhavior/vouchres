@@ -185,6 +185,9 @@ export async function saveUserParlay(input: {
   const body = input.body as SaveMeParlayInput & Record<string, any>;
   const rawLegs = body.legs as Record<string, any>[];
   const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
+  const explanation = typeof body.explanation === "string" && body.explanation.trim()
+    ? body.explanation.trim().slice(0, 2000)
+    : title;
   const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
   const wagerAmount =
     typeof body.wagerAmount === "number" && body.wagerAmount > 0
@@ -262,7 +265,7 @@ export async function saveUserParlay(input: {
       p_odds_decimal: combinedOdds,
       p_stake_units: wagerAmount,
       p_confidence: confidence,
-      p_explanation: title,
+      p_explanation: explanation,
       p_is_demo: mode === "PRACTICE",
       p_source: source,
       p_client_ref: clientRef,
@@ -302,7 +305,7 @@ export async function saveUserParlay(input: {
       odds_decimal: combinedOdds,
       stake_units: wagerAmount,
       confidence,
-      explanation: title,
+      explanation,
       is_demo: mode === "PRACTICE",
       status: "pending",
       source,

@@ -138,6 +138,7 @@ export async function handleSaveParlaySlip(
     oddsValue: 'oddsValue' in parlayToSave ? Number(parlayToSave.oddsValue || 0) : 0,
     riskTier: 'riskTier' in parlayToSave ? parlayToSave.riskTier : 'LOW',
     aiGenerated: 'aiGenerated' in parlayToSave ? Boolean(parlayToSave.aiGenerated) : false,
+    metadata: parlayToSave.metadata,
   });
   savedParlay.lockNotified = false;
   savedParlay.backendSyncState = 'saving';
@@ -209,6 +210,7 @@ export async function handleCommitParlayTrust(input: {
       oddsValue: working.oddsValue,
       riskTier: working.riskTier,
       aiGenerated: working.aiGenerated,
+      metadata: working.metadata,
     }).legs,
   };
 

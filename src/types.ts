@@ -43,6 +43,8 @@ export interface Leg {
   // ── Player enrichment (optional; for headshots on parlay cards) ──
   /** Pre-resolved headshot URL. ID-based headshots are preferred. */
   headshotUrl?: string | null;
+  /** Decision context captured when this leg was added or edited. */
+  metadata?: Record<string, unknown>;
 }
 
 export interface Parlay {
@@ -91,6 +93,8 @@ export interface Parlay {
   backendSyncedAt?: string;
   /** Most recent backend sync error, if any. */
   backendSyncError?: string;
+  /** Slip-level research context captured before results are known. */
+  metadata?: Record<string, unknown>;
 }
 
 export type ParlayLifecycle = 'upcoming' | 'live' | 'final';

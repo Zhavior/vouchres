@@ -38,6 +38,7 @@ export function canonicalToParlay(slip: CanonicalParlaySlip): Parlay {
     externalProvider: leg.externalProvider,
     actual: leg.actual != null ? Number(leg.actual) : null,
     gameStartTime: leg.gameStartTime,
+    metadata: leg.metadata,
   }));
 
   return {
@@ -54,6 +55,7 @@ export function canonicalToParlay(slip: CanonicalParlaySlip): Parlay {
     aiGenerated: Boolean(meta.aiGenerated),
     backendPickId: slip.backendPickId,
     wagerAmount: slip.wagerAmount,
+    metadata: slip.metadata,
   };
 }
 
@@ -83,6 +85,7 @@ export function draftLegsToParlay(
     aiGenerated?: boolean;
     status?: Parlay["status"];
     createdAt?: string;
+    metadata?: Record<string, unknown>;
   },
 ): Parlay {
   const canonical = normalizeParlaySlip(
@@ -96,6 +99,7 @@ export function draftLegsToParlay(
       totalOdds: input.totalOdds,
       oddsValue: input.oddsValue,
       riskTier: input.riskTier,
+      metadata: input.metadata,
       legs: input.legs,
     },
     input.aiGenerated ? "ai_pick" : "manual_builder",
