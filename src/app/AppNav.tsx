@@ -1,4 +1,4 @@
-import { Menu, Flame, Brain, Home, BadgeCheck } from 'lucide-react';
+import { Menu, Flame, LayoutDashboard, Home, BadgeCheck } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 
@@ -12,7 +12,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
   const feedActive = activeSection === 'feed';
   const proActive = activeSection === 'pro_command_center';
   const vouchActive = activeSection === 'board';
-  const brainActive = activeSection === 'brain_picks';
+  const todayActive = activeSection === 'today';
 
   return (
     <nav
@@ -43,11 +43,11 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
           centerAction
         />
         <DockButton
-          label="Brain Picks"
-          active={brainActive}
-          icon={Brain}
-          onClick={() => onNavigate('brain_picks')}
-          onPreload={() => preloadSection('brain_picks')}
+          label="Today"
+          active={todayActive}
+          icon={LayoutDashboard}
+          onClick={() => onNavigate('today')}
+          onPreload={() => preloadSection('today')}
         />
         <button
           type="button"
