@@ -20,6 +20,17 @@ describe('HR player research route state', () => {
     expect(isHrResearchHistoryEntry()).toBe(true);
   });
 
+  it('moves an HR profile off the stale Today path before opening it', () => {
+    window.history.replaceState({ section: 'today' }, '', '/today?mode=curated');
+
+    pushHrResearchPlayer(665742);
+
+    expect(window.location.pathname).toBe('/hr-board');
+    expect(readHrResearchPlayerId()).toBe('665742');
+    expect(new URLSearchParams(window.location.search).get('mode')).toBe('curated');
+    expect(isHrResearchHistoryEntry()).toBe(true);
+  });
+
   it('clears only player research state for direct-link close behavior', () => {
     window.history.replaceState(null, '', '/hr-board?mode=confirmed&hrPlayer=592450');
 

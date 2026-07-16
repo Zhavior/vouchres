@@ -7,6 +7,17 @@ export function readHrResearchPlayerId(search = window.location.search): string 
 }
 
 export function pushHrResearchPlayer(playerId: string | number): void {
+  const currentUrl = new URL(window.location.href);
+
+  // Section navigation can change React state while leaving /today in the
+  // address bar. Make HR Board the owning history entry before adding the
+  // profile entry, so closing the profile cannot navigate back to Today.
+  if (currentUrl.pathname.toLowerCase() !== '/hr-board') {
+    currentUrl.pathname = '/hr-board';
+    currentUrl.searchParams.delete(HR_RESEARCH_PLAYER_PARAM);
+    window.history.replaceState(window.history.state, '', currentUrl);
+  }
+
   const url = new URL(window.location.href);
   url.searchParams.set(HR_RESEARCH_PLAYER_PARAM, String(playerId));
   window.history.pushState(

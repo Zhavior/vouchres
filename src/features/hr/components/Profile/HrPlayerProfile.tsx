@@ -18,9 +18,10 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
-  BarChart2, Target, Users, Activity,
+  BarChart2, Target, Users, Activity, AlertTriangle, Clock3, Plus, ShieldCheck,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
+import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { generateBvPLogs, bvpCareerTotals } from '../../utils/bvpSimulated';
 import { useRealGameLog } from '../../hooks/useRealGameLog';
@@ -47,6 +48,10 @@ export interface HrPlayerProfileProps {
   player: HrWatchRow | null;
   isOpen: boolean;
   onClose: () => void;
+  onAddToSlip: (player: HrWatchRow) => void;
+  boardFreshness: HrBoardFreshness;
+  boardGeneratedAt: Date | null;
+  slipActionAvailable: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -164,7 +169,15 @@ function getLayers(p: HrWatchRow | null): LayerRow[] {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen, onClose }) => {
+export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
+  player,
+  isOpen,
+  onClose,
+  onAddToSlip,
+  boardFreshness,
+  boardGeneratedAt,
+  slipActionAvailable,
+}) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
   const { logs: realLog, state: realLogState } = useRealGameLog(player?.playerId, isOpen);
@@ -216,6 +229,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   const teamTB  = teamLogs.length > 0 ? +(teamLogs.reduce((s, g) => s + g.totalBases, 0) / teamLogs.length).toFixed(1) : 0;
   const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
   const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
+  const decision = buildHrDecisionBrief(player, boardFreshness, boardGeneratedAt, slipActionAvailable);
 
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
@@ -411,12 +425,62 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
       <>
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeSection === 'overview' && (
-          <HrOverviewDossier
-            player={player}
-            formLogs={formLogs}
-            logState={realLogState}
-            variant="full"
-          />
+          <div className="flex flex-col gap-5">
+            <section className="ve-hr-decision-brief" aria-label="Player decision brief">
+              <div className="ve-hr-decision-brief__header">
+                <div>
+                  <p className="ve-hr-decision-brief__eyebrow">Decision brief</p>
+                  <h3 className="ve-hr-decision-brief__title">The case, the risk, and what is confirmed.</h3>
+                </div>
+                <span className="ve-hr-decision-brief__score">{Math.round(player.hrScore)}</span>
+              </div>
+
+              <div className="ve-hr-decision-brief__read">
+                <article className="ve-hr-decision-brief__case">
+                  <span className="ve-hr-decision-brief__icon ve-hr-decision-brief__icon--positive">
+                    <ShieldCheck className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="ve-hr-decision-brief__label">Why this player</p>
+                    <p className="ve-hr-decision-brief__copy">{decision.reason}</p>
+                  </div>
+                </article>
+                <article className="ve-hr-decision-brief__case">
+                  <span className="ve-hr-decision-brief__icon ve-hr-decision-brief__icon--risk">
+                    <AlertTriangle className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="ve-hr-decision-brief__label">Biggest risk</p>
+                    <p className="ve-hr-decision-brief__copy">{decision.risk}</p>
+                  </div>
+                </article>
+              </div>
+
+              <div className="ve-hr-decision-brief__status" aria-label="Signal verification status">
+                <span>{decision.lineupLabel}</span>
+                <span>vs {decision.pitcherLabel}</span>
+                <span><Clock3 className="h-3 w-3" /> {decision.freshnessLabel}</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onAddToSlip(player)}
+                disabled={!decision.canAddToSlip}
+                className="ve-hr-decision-brief__cta"
+                title={decision.addToSlipBlockReason ?? undefined}
+              >
+                <Plus className="h-4 w-4" />
+                {decision.canAddToSlip ? 'Choose HR prop' : decision.addToSlipBlockReason}
+              </button>
+            </section>
+
+            <HrOverviewDossier
+              player={player}
+              formLogs={formLogs}
+              logState={realLogState}
+              variant="full"
+            />
+          </div>
         )}
 
         {/* ── 12 LAYERS ──────────────────────────────────────────────────────── */}

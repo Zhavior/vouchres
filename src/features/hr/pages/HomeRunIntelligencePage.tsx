@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, Brain, ChartNoAxesCombined, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
 import {
   Z8_LABEL,
   Z8_PAGE,
@@ -16,6 +16,9 @@ import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
+import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
+import { useParlayOsStore } from '../../../stores/parlayOsStore';
+import type { MLBPlayer } from '../../../types';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
 import { summarizeHrLens } from '../engine/hrLensModel';
 import { localISODate } from '../utils/localDate';
@@ -50,17 +53,17 @@ const statusTone = {
   fresh: {
     label: 'Fresh',
     className: 'border-[hsl(var(--ve-success)/0.22)] bg-[hsl(var(--ve-success)/0.08)] text-[#7dffc5]',
-    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+    icon: <CheckCircle2 className="h-2.5 w-2.5" />,
   },
   delayed: {
     label: 'Delayed',
     className: 'border-vouch-amber/25 bg-vouch-amber/10 text-vouch-amber',
-    icon: <Clock3 className="h-3.5 w-3.5" />,
+    icon: <Clock3 className="h-2.5 w-2.5" />,
   },
   stale: {
     label: 'Stale',
     className: 'border-red-500/25 bg-red-500/10 text-red-300',
-    icon: <TriangleAlert className="h-3.5 w-3.5" />,
+    icon: <TriangleAlert className="h-2.5 w-2.5" />,
   },
 } as const;
 
@@ -288,6 +291,33 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     vm.setSelectedPlayer(null);
   }, [vm]);
 
+  const addPlayerToSlip = React.useCallback((player: NonNullable<typeof topPlayer>) => {
+    ProductEvents.slipBuildStarted({
+      entrypoint: 'hr_player_intelligence',
+      date: vm.date,
+      top_player: player.playerName,
+      top_player_id: player.playerId == null ? null : String(player.playerId),
+    });
+
+    clearHrResearchPlayer();
+    setIsProfileOpen(false);
+    vm.setSelectedPlayer(null);
+
+    useParlayOsStore.getState().openPicker({
+      player: toHrParlayPickerPlayer(player) as MLBPlayer,
+      propHint: {
+        id: `hr-watch-${player.stableId}`,
+        market: 'Home Runs',
+        odds: player.bookOdds ?? null,
+        spec: `${player.playerName} 1+ Home Run`,
+        gamePk: player.gamePk ?? undefined,
+        playerId: player.playerId ?? undefined,
+      },
+      initialFamily: 'home_runs',
+      isPitcher: false,
+    });
+  }, [vm, topPlayer]);
+
   const goToBuild = React.useCallback(() => {
     ProductEvents.slipBuildStarted({
       entrypoint: 'hr_daily_loop',
@@ -321,130 +351,121 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   return (
     <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell min-h-0 min-w-0 overflow-x-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1720px] flex-col ${Z8_PAGE_GAP}`}>
-        <section className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-4 py-6 sm:px-7 sm:py-8 lg:px-10">
+        <section className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
           <div className="z8-hr-hero__aperture" aria-hidden="true" />
-          <div className="relative grid gap-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+          <div className="relative grid gap-3 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
-              <div className="flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[#00ff94]">
-                <ScanSearch className="h-4 w-4" /> Z8 Home Run Intelligence
+              <div className="flex items-center gap-1 font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[#00ff94]">
+                <ScanSearch className="h-3 w-3" /> Z8 Home Run Intelligence
               </div>
-              <h1 className="mt-4 max-w-3xl text-3xl font-black leading-[.98] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl">See the power.<br /><span className="text-[#00ff94]">Understand the signal.</span></h1>
-              <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52 sm:text-base">Every candidate is resolved through observable power, pitcher vulnerability, park context and recent form. No hidden certainty. No projected lineup presented as official.</p>
-              <div className="mt-5 flex flex-wrap gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
-                <span className="border border-[hsl(var(--ve-success)/0.2)] bg-[hsl(var(--ve-success)/0.06)] px-2.5 py-1.5 text-[#7dffc5]">Official data first</span>
-                <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Explainable score</span>
-                <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Alert-safe</span>
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <h1 className="mt-2 max-w-3xl text-[17px] font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-[25px] lg:text-[34px]">See the power. <span className="text-[#00ff94]">Understand the signal.</span></h1>
+              <p className="mt-2 max-w-2xl text-[10px] leading-4 text-white/52 sm:text-xs">Power, pitcher risk, park, form, and lineup truth in one decision.</p>
+              <p className="mt-1.5 font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/38">
+                <span className="text-[#7dffc5]">Official data first</span> · Explainable score · Alert-safe
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => openPlayerProfile(topPlayer)}
                   disabled={!topPlayer}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-vouch-emerald transition hover:border-vouch-emerald/55 hover:bg-vouch-emerald/14 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="col-span-2 inline-flex min-h-8 items-center justify-center gap-1.5 border border-vouch-emerald/35 bg-vouch-emerald/10 px-2.5 font-mono text-[8px] font-black uppercase tracking-[0.1em] text-vouch-emerald transition hover:border-vouch-emerald/55 hover:bg-vouch-emerald/14 disabled:cursor-not-allowed disabled:opacity-45 sm:col-auto"
                 >
                   Research Top Signal
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
                   onClick={goToBuild}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/12 bg-black/30 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/72 transition hover:border-vouch-cyan/35 hover:text-white"
+                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/12 bg-black/30 px-2 font-mono text-[8px] font-black uppercase tracking-[0.09em] text-white/72 transition hover:border-vouch-cyan/35 hover:text-white"
                 >
                   Build Slip
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
                   onClick={goToResults}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/10 bg-black/20 px-4 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/48 transition hover:border-white/18 hover:text-white/82"
+                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/10 bg-black/20 px-2 font-mono text-[8px] font-black uppercase tracking-[0.09em] text-white/48 transition hover:border-white/18 hover:text-white/82"
                 >
                   Results Ledger
                 </button>
               </div>
-              {topPlayer && (
-                <p className="mt-4 max-w-2xl text-xs leading-5 text-white/45 sm:text-sm">
-                  Strongest next step: inspect <span className="font-semibold text-white">{topPlayer.playerName}</span> first,
-                  then decide if the signal belongs in today&apos;s slip.
-                </p>
-              )}
-              {onSectionChange && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => onSectionChange('brain_picks')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-vouch-emerald/30 bg-vouch-emerald/8 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-vouch-emerald hover:border-vouch-emerald/55"><Brain className="h-3.5 w-3.5" /> Brain Picks</button><button type="button" onClick={() => onSectionChange('brain_performance')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-white/10 bg-black/25 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-white/55 hover:border-vouch-cyan/30 hover:text-white"><ChartNoAxesCombined className="h-3.5 w-3.5" /> Performance</button></div>}
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
               {[
-                ['Official', lensSummary.official, <ShieldCheck className="h-3.5 w-3.5" />],
-                ['Preview', lensSummary.projected, <Aperture className="h-3.5 w-3.5" />],
-                ['Full stack', lensSummary.complete, <Database className="h-3.5 w-3.5" />],
-                ['Confidence', lensSummary.averageConfidence == null ? '—' : `${lensSummary.averageConfidence}%`, <BellRing className="h-3.5 w-3.5" />],
+                ['Official', lensSummary.official, <ShieldCheck className="h-3 w-3" />],
+                ['Preview', lensSummary.projected, <Aperture className="h-3 w-3" />],
+                ['Full stack', lensSummary.complete, <Database className="h-3 w-3" />],
+                ['Confidence', lensSummary.averageConfidence == null ? '—' : `${lensSummary.averageConfidence}%`, <BellRing className="h-3 w-3" />],
               ].map(([label, value, icon]) => (
-                <div key={String(label)} className="border border-white/10 bg-black/35 px-3 py-3 backdrop-blur-sm">
-                  <div className="flex items-center gap-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-white/35">{icon}{label}</div>
-                  <div className="mt-1 font-mono text-xl font-black tabular-nums text-white">{value}</div>
+                <div key={String(label)} className="flex min-w-0 items-center justify-between gap-1.5 border border-white/10 bg-black/35 px-2 py-1.5 backdrop-blur-sm">
+                  <div className="flex min-w-0 items-center gap-1 font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/35">{icon}<span className="truncate">{label}</span></div>
+                  <div className="shrink-0 font-mono text-xs font-black tabular-nums text-white">{value}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
-            <p className={Z8_LABEL}>Slate Status</p>
-            <div className="mt-2 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-black text-white">
+        <section className="grid grid-cols-2 gap-1.5 xl:grid-cols-4" aria-label="Board status summary">
+          <div className={`${Z8_PANEL_PREMIUM} min-w-0 border-white/10 bg-black/30 p-2.5`}>
+            <div className="flex items-center justify-between gap-1.5">
+              <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-white/40">Slate Status</p>
+              <Activity className="h-2.5 w-2.5 shrink-0 text-vouch-cyan" />
+            </div>
+            <div className="mt-1 min-w-0">
+                <p className="truncate text-[10px] font-black text-white sm:text-[11px]">
                   {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'} on board`}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-white/42">
+                <p className="mt-0.5 line-clamp-2 text-[7px] leading-3 text-white/42 sm:text-[8px]">
                   {noGamesToday
-                    ? 'Nothing is backfilled when the slate is empty.'
+                    ? 'No slate is backfilled.'
                     : vm.mode === 'confirmed'
-                      ? 'Official lineup board first. Preview stays labeled until lineups post.'
-                      : 'Preview mode is active because confirmed batting orders are limited or not posted yet.'}
+                      ? 'Official board; previews stay labeled.'
+                      : 'Preview active; lineups are pending.'}
                 </p>
-              </div>
-              <Activity className="mt-1 h-4 w-4 shrink-0 text-vouch-cyan" />
             </div>
           </div>
 
-          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
-            <p className={Z8_LABEL}>Freshness</p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${freshnessTone.className}`}>
+          <div className={`${Z8_PANEL_PREMIUM} min-w-0 border-white/10 bg-black/30 p-2.5`}>
+            <div className="flex items-center justify-between gap-1.5">
+              <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-white/40">Freshness</p>
+              <span className={`inline-flex items-center gap-0.5 rounded-full border px-1 py-0.5 text-[7px] font-bold uppercase tracking-[0.08em] ${freshnessTone.className}`}>
                 {freshnessTone.icon}
                 {freshnessTone.label}
               </span>
             </div>
-            <p className="mt-2 text-sm font-semibold text-white">
-              Source updated {vm.slate.generatedAt ? formatRelativeTime(vm.slate.generatedAt) : 'unknown'}
+            <p className="mt-1 truncate text-[10px] font-black text-white sm:text-[11px]">
+              Updated {vm.slate.generatedAt ? formatRelativeTime(vm.slate.generatedAt) : 'unknown'}
             </p>
-            <p className="mt-1 text-xs leading-5 text-white/42">
+            <p className="mt-0.5 line-clamp-2 text-[7px] leading-3 text-white/42 sm:text-[8px]">
               {vm.slate.freshness === 'fresh'
-                ? 'Board timing looks healthy for today’s decision loop.'
+                ? 'Board timing is healthy.'
                 : vm.slate.freshness === 'delayed'
-                  ? 'Use the board, but verify late context before saving a slip.'
-                  : 'Treat this board as degraded until the next successful refresh.'}
+                  ? 'Verify context before saving.'
+                  : 'Degraded until the next refresh.'}
             </p>
           </div>
 
-          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
-            <p className={Z8_LABEL}>Confirmation</p>
-            <p className="mt-2 text-lg font-black text-white">
+          <div className={`${Z8_PANEL_PREMIUM} min-w-0 border-white/10 bg-black/30 p-2.5`}>
+            <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-white/40">Confirmation</p>
+            <p className="mt-1 line-clamp-2 text-[10px] font-black leading-[14px] text-white sm:text-[11px]">
               {(vm.modeCounts?.confirmed ?? 0) > 0 ? `${vm.modeCounts.confirmed} confirmed signals` : 'Waiting on official lineups'}
             </p>
-            <p className="mt-1 text-xs leading-5 text-white/42">
+            <p className="mt-0.5 line-clamp-2 text-[7px] leading-3 text-white/42 sm:text-[8px]">
               {(vm.modeCounts?.confirmed ?? 0) > 0
-                ? 'Candidates in the official board are batting-order players only.'
-                : `Preview pool available: ${vm.modeCounts?.curated ?? 0}. Official lineup not posted yet rows remain explicitly unconfirmed.`}
+                ? 'Official batting-order players only.'
+                : `${vm.modeCounts?.curated ?? 0} preview signals remain unconfirmed.`}
             </p>
           </div>
 
-          <div className={`${Z8_PANEL_PREMIUM} border-white/10 bg-black/30 p-4`}>
-            <p className={Z8_LABEL}>Next Step</p>
-            <p className="mt-2 text-lg font-black text-white">
+          <div className={`${Z8_PANEL_PREMIUM} min-w-0 border-white/10 bg-black/30 p-2.5`}>
+            <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-white/40">Next Step</p>
+            <p className="mt-1 line-clamp-2 text-[10px] font-black leading-[14px] text-white sm:text-[11px]">
               {topPlayer ? `Start with ${topPlayer.playerName}` : 'Wait for a qualified signal'}
             </p>
-            <p className="mt-1 text-xs leading-5 text-white/42">
+            <p className="mt-0.5 line-clamp-2 text-[7px] leading-3 text-white/42 sm:text-[8px]">
               {topPlayer
-                ? `${topPlayer.pitcherName ?? 'Pitcher TBD'} · ${topPlayer.truthStatus === 'official' ? 'official' : 'projected'} context · one tap into research.`
-                : 'No qualifying signal is being invented to fill the gap.'}
+                ? `vs ${topPlayer.pitcherName ?? 'Pitcher TBD'} · ${topPlayer.truthStatus === 'official' ? 'official' : 'projected'}`
+                : 'No signal is invented to fill the gap.'}
             </p>
           </div>
         </section>
@@ -540,9 +561,13 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         )}
 
         <HrPlayerProfile
-          player={vm.selectedPlayer as any}
+          player={vm.selectedPlayer}
           isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
           onClose={closePlayerProfile}
+          onAddToSlip={addPlayerToSlip}
+          boardFreshness={vm.slate.freshness}
+          boardGeneratedAt={vm.slate.generatedAt}
+          slipActionAvailable={Boolean(onSectionChange)}
         />
       </div>
     </div>

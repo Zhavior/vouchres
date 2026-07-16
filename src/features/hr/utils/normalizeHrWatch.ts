@@ -60,12 +60,15 @@ function clampScore(value: number): number {
 
 function truthStatus(row: UnknownRecord, mode: HrWatchMode): TruthStatus {
   if (mode === 'blocked') return 'blocked';
+  // Bucket provenance wins over stale row-level labels. The API guarantees
+  // curated/all pools are projection previews, even when an upstream row still
+  // carries an old "confirmed" lineupStatus value.
+  if (mode === 'curated' || mode === 'all') return 'projected';
   const status = firstString(row, ['lineupStatus', 'truthStatus', 'status'], '').toLowerCase();
   if (status.includes('official') || status.includes('confirmed')) return 'official';
   if (status.includes('projected') || status.includes('unconfirmed')) return 'projected';
   const official = row.officialLineup ?? row.isOfficialLineup ?? row.confirmedLineup;
   if (official === true) return 'official';
-  if (mode === 'curated' || mode === 'all') return 'projected';
   return 'unknown';
 }
 
