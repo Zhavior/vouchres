@@ -1,4 +1,4 @@
-import { Menu, Flame, Brain } from 'lucide-react';
+import { Menu, Flame, Brain, Home, BadgeCheck } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 
@@ -9,43 +9,91 @@ type AppNavProps = {
 
 export function AppNav({ activeSection, onNavigate }: AppNavProps) {
   const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
+  const feedActive = activeSection === 'feed';
+  const proActive = activeSection === 'pro_command_center';
+  const vouchActive = activeSection === 'board';
+  const brainActive = activeSection === 'brain_picks';
 
   return (
-    <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:bottom-8 md:right-8 md:gap-0">
-      <button
-        type="button"
-        onClick={openMobileDrawer}
-        aria-label="Open navigation menu"
-        title="Menu"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
-      >
-        <Menu className="ve-edge-island-trigger-icon h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => onNavigate('pro_command_center')}
-        onPointerDown={() => preloadSection('pro_command_center')}
-        onMouseEnter={() => preloadSection('pro_command_center')}
-        onFocus={() => preloadSection('pro_command_center')}
-        aria-label="Go to Pro Edges"
-        title="Pro Edges"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
-      >
-        <Flame className="ve-edge-island-trigger-icon h-4 w-4" />
-      </button>
+    <nav
+      className="ve-mobile-app-dock ve-safe-bottom fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-[#05070b]/95 backdrop-blur-xl md:hidden"
+      aria-label="Mobile app navigation"
+    >
+      <div className="mx-auto grid h-14 max-w-md grid-cols-5 items-stretch px-2">
+        <DockButton
+          label="Home Feed"
+          active={feedActive}
+          icon={Home}
+          onClick={() => onNavigate('feed')}
+          onPreload={() => preloadSection('feed')}
+        />
+        <DockButton
+          label="Pro Edges"
+          active={proActive}
+          icon={Flame}
+          onClick={() => onNavigate('pro_command_center')}
+          onPreload={() => preloadSection('pro_command_center')}
+        />
+        <DockButton
+          label="Vouch Board"
+          active={vouchActive}
+          icon={BadgeCheck}
+          onClick={() => onNavigate('board')}
+          onPreload={() => preloadSection('board')}
+          centerAction
+        />
+        <DockButton
+          label="Brain Picks"
+          active={brainActive}
+          icon={Brain}
+          onClick={() => onNavigate('brain_picks')}
+          onPreload={() => preloadSection('brain_picks')}
+        />
+        <button
+          type="button"
+          onClick={openMobileDrawer}
+          aria-label="Open navigation menu"
+          title="Menu"
+          className="ve-touch-target z8-interactive flex min-w-0 items-center justify-center text-white/55 transition-colors active:scale-95 active:text-white"
+        >
+          <Menu className="h-6 w-6" strokeWidth={1.9} />
+        </button>
+      </div>
+    </nav>
+  );
+}
 
-      <button
-        type="button"
-        onClick={() => onNavigate('brain_picks')}
-        onPointerDown={() => preloadSection('brain_picks')}
-        onMouseEnter={() => preloadSection('brain_picks')}
-        onFocus={() => preloadSection('brain_picks')}
-        aria-label="Go to Brain Picks"
-        title="Brain Picks"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
-      >
-        <Brain className="ve-edge-island-trigger-icon h-4 w-4" />
-      </button>
-    </div>
+function DockButton({
+  label,
+  active,
+  icon: Icon,
+  onClick,
+  onPreload,
+  centerAction = false,
+}: {
+  label: string;
+  active: boolean;
+  icon: typeof Home;
+  onClick: () => void;
+  onPreload: () => void;
+  centerAction?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onPointerDown={onPreload}
+      onMouseEnter={onPreload}
+      onFocus={onPreload}
+      aria-label={`Go to ${label}`}
+      aria-current={active ? 'page' : undefined}
+      title={label}
+      className={`ve-touch-target z8-interactive relative flex min-w-0 items-center justify-center transition active:scale-95 ${active ? 'text-white' : 'text-white/55'}`}
+    >
+      <span className={centerAction ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-white/60' : undefined}>
+        <Icon className="h-6 w-6" strokeWidth={active ? 2.6 : 1.9} />
+      </span>
+      {active ? <span className="absolute bottom-1 h-1 w-1 rounded-full bg-white" aria-hidden="true" /> : null}
+    </button>
   );
 }
