@@ -98,8 +98,8 @@ describe('HR board projected preview warnings', () => {
       />,
     );
 
-    expect(
-      screen.getByText(/No confirmed lineups posted yet — showing preview candidates from projected lineups instead/i),
-    ).toBeTruthy();
+    expect(screen.getByText('Preview mode')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Map' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
   });
 });

@@ -7,19 +7,21 @@ const source = readFileSync(
 );
 
 describe('Today decision-first layout', () => {
-  it('leads with one state-driven decision and a limited attention list', () => {
+  it('leads with the real slate summary and compact briefing rail', () => {
     expect(source).toContain("buildTodayDecision({");
     expect(source).toContain('<TodayDecisionReel');
-    expect(source).toContain('Three things, maximum');
+    expect(source).toContain("Today&apos;s Briefing");
+    expect(source).toContain('Your edge in 60 seconds.');
+    expect(source).toContain('Today slate status');
   });
 
-  it('keeps the quick launcher compact and routes to canonical workspaces', () => {
+  it('routes the six quick-access cards to canonical workspaces', () => {
     expect(source).toContain("section: 'hr_board'");
-    expect(source).toContain("section: 'live_parlays'");
+    expect(source).toContain("section: 'team_matchup_lab'");
+    expect(source).toContain("section: 'daily_players'");
+    expect(source).toContain("section: 'research'");
     expect(source).toContain("section: 'results'");
-    expect(source).not.toContain('Browse all specialist tools');
-    expect(source).not.toContain('Top HR Intelligence');
-    expect(source).not.toContain('Top Pitcher Targets');
+    expect(source).toContain("section: 'live_games'");
   });
 
   it('uses the shared touch-safe control contract', () => {
@@ -29,6 +31,14 @@ describe('Today decision-first layout', () => {
   it('does not expose a mode switch that leaves the Today brief unchanged', () => {
     expect(source).not.toContain('ModeToggle');
     expect(source).not.toContain('useMode');
+  });
+
+  it('uses real slip and report data instead of simulated news or weather', () => {
+    expect(source).toContain('pendingSlipList[0]');
+    expect(source).toContain('Updates &amp; Impact');
+    expect(source).toContain('Verified inputs only');
+    expect(source).not.toContain('Trade rumor');
+    expect(source).not.toContain('Weather update:');
   });
 
   it('shows the VE brand mark only below the small-screen breakpoint', () => {

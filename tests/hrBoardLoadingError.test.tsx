@@ -10,12 +10,26 @@ vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
+const defaultSlate = {
+  gameCount: 0,
+  generatedAt: null,
+  loadedAt: null,
+  freshness: 'stale',
+  dataQuality: null,
+  warnings: [],
+  truthMessage: null,
+  note: null,
+  disclaimer: null,
+  hasGames: false,
+} as const;
 
 describe('HomeRunIntelligencePage honest states', () => {
   it('shows loading skeleton while board fetch is in flight', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
+      researchRows: [],
+      slate: { ...defaultSlate },
       stats: { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: true,
@@ -48,6 +62,8 @@ describe('HomeRunIntelligencePage honest states', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
+      researchRows: [],
+      slate: { ...defaultSlate },
       stats: { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: false,
@@ -81,7 +97,9 @@ describe('HomeRunIntelligencePage honest states', () => {
   it('warns when preview mode is active with no confirmed lineups', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
-      rows: [{ playerName: 'Preview Player' }],
+      rows: [],
+      researchRows: [],
+      slate: { ...defaultSlate, gameCount: 1, hasGames: true },
       stats: { total: 1, elite: 0, strong: 1, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: false,

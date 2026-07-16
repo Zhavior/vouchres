@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
+import { logoByTeamName } from '../../../lib/teamLogos';
 import {
   Z8_LABEL,
   Z8_PAGE,
@@ -11,8 +13,8 @@ import {
 } from '../../../theme/z8Tokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
-import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
+import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
@@ -20,7 +22,7 @@ import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import type { MLBPlayer } from '../../../types';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
-import { summarizeHrLens } from '../engine/hrLensModel';
+import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
 import {
   clearHrResearchPlayer,
@@ -48,6 +50,21 @@ const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorCl
     </div>
   </div>
 );
+
+function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const resolvedLogo = logoUrl || logoByTeamName(team);
+
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/45">
+      {resolvedLogo && !imageFailed ? (
+        <img src={resolvedLogo} alt="" className="h-5 w-5 object-contain" loading="lazy" decoding="async" onError={() => setImageFailed(true)} />
+      ) : (
+        <span className="font-mono text-[7px] font-black text-white/55">{team.slice(0, 3).toUpperCase()}</span>
+      )}
+    </span>
+  );
+}
 
 const statusTone = {
   fresh: {
@@ -194,6 +211,17 @@ const EmptyState: React.FC<{
   );
 };
 
+type ToolbarTier = 'elite' | 'strong' | 'watch' | 'sleeper';
+
+function toToolbarTier(tier: string): ToolbarTier {
+  const normalized = tier.toLowerCase();
+  return normalized === 'sleepers' ? 'sleeper' : normalized as ToolbarTier;
+}
+
+function toBoardTier(tier: ToolbarTier): string {
+  return tier === 'sleeper' ? 'Sleepers' : tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
 const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -213,7 +241,6 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   const lastUpdatedLabel = formatRelativeTime(lastUpdated);
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
-  const lensSummary = useMemo(() => summarizeHrLens(vm.rows ?? []), [vm.rows]);
   const topPlayer = vm.rows?.[0] ?? null;
   const freshnessTone = statusTone[vm.slate.freshness];
   const warningList = vm.slate.warnings.slice(0, 3);
@@ -336,76 +363,173 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     onSectionChange?.('results');
   }, [onSectionChange, vm.date]);
 
-  // 'cards' and 'treemap' both consume vm.buckets (cards data shape); only
-  // 'table' needs the ViewModel to switch its underlying fetch/shape.
+  // Only the finished card and table views are public during the paid beta.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
     if (typeof window === 'undefined') return 'cards';
-    return 'cards';
+    try {
+      const savedMode = window.localStorage.getItem('vouchedge_hr_view_mode');
+      if (savedMode === 'table' || savedMode === 'cards') return savedMode;
+      if (savedMode === 'treemap' && HR_MAP_ENABLED) return savedMode;
+      return 'cards';
+    } catch {
+      return 'cards';
+    }
   });
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
+    if (mode === 'treemap' && !HR_MAP_ENABLED) return;
     setLocalViewMode(mode);
+    try {
+      window.localStorage.setItem('vouchedge_hr_view_mode', mode);
+    } catch {
+      // The selected view still works for this session when storage is blocked.
+    }
     vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
 
   return (
     <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell min-h-0 min-w-0 overflow-x-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1720px] flex-col ${Z8_PAGE_GAP}`}>
-        <section className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
+        <HrHeader
+          mode={vm.mode}
+          onRefresh={handleRefresh}
+          isRefreshing={vm.loading}
+          lastUpdated={lastUpdated}
+          date={vm.date}
+          isToday={isToday}
+          onDateChange={vm.setDate}
+        />
+
+        <HrTopSignalPanel
+          player={topPlayer}
+          freshness={vm.slate.freshness}
+          generatedAt={vm.slate.generatedAt}
+          dateLabel={isToday ? 'Today' : vm.date}
+          onResearch={openPlayerProfile}
+          onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+          onOpenBuild={goToBuild}
+        />
+
+        <section hidden className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
           <div className="z8-hr-hero__aperture" aria-hidden="true" />
-          <div className="relative grid gap-3 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
-            <div>
+          <div className="z8-hr-hero__field" aria-hidden="true" />
+          <div className="z8-hr-hero__flight" aria-hidden="true" />
+          <div className="relative grid gap-3 lg:grid-cols-[1fr_0.92fr] lg:items-stretch">
+            <div className="flex flex-col justify-center">
               <div className="flex items-center gap-1 font-mono text-[8px] font-black uppercase tracking-[0.14em] text-[#00ff94]">
                 <ScanSearch className="h-3 w-3" /> Z8 Home Run Intelligence
               </div>
               <h1 className="mt-2 max-w-3xl text-[17px] font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-[25px] lg:text-[34px]">See the power. <span className="text-[#00ff94]">Understand the signal.</span></h1>
-              <p className="mt-2 max-w-2xl text-[10px] leading-4 text-white/52 sm:text-xs">Power, pitcher risk, park, form, and lineup truth in one decision.</p>
-              <p className="mt-1.5 font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/38">
+              <p className="mt-2 hidden max-w-2xl text-[10px] leading-4 text-white/52 sm:block sm:text-xs">Power, pitcher risk, park, form, and lineup truth in one decision.</p>
+              <p className="mt-1.5 hidden font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/38 sm:block">
                 <span className="text-[#7dffc5]">Official data first</span> · Explainable score · Alert-safe
               </p>
-              <div className="mt-3 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+              <div className="mt-2.5 grid grid-cols-3 gap-1 sm:mt-3 sm:flex sm:flex-wrap sm:gap-1.5">
                 <button
                   type="button"
                   onClick={() => openPlayerProfile(topPlayer)}
                   disabled={!topPlayer}
-                  className="col-span-2 inline-flex min-h-8 items-center justify-center gap-1.5 border border-vouch-emerald/35 bg-vouch-emerald/10 px-2.5 font-mono text-[8px] font-black uppercase tracking-[0.1em] text-vouch-emerald transition hover:border-vouch-emerald/55 hover:bg-vouch-emerald/14 disabled:cursor-not-allowed disabled:opacity-45 sm:col-auto"
+                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-vouch-emerald/35 bg-vouch-emerald/10 px-1 font-mono text-[7px] font-black uppercase tracking-[0.07em] text-vouch-emerald transition hover:border-vouch-emerald/55 hover:bg-vouch-emerald/14 disabled:cursor-not-allowed disabled:opacity-45 sm:px-2.5 sm:text-[8px] sm:tracking-[0.1em]"
                 >
-                  Research Top Signal
-                  <ArrowRight className="h-3 w-3" />
+                  <span className="sm:hidden">Top Signal</span><span className="hidden sm:inline">Research Top Signal</span>
+                  <ArrowRight className="hidden h-3 w-3 sm:block" />
                 </button>
                 <button
                   type="button"
-                  onClick={goToBuild}
-                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/12 bg-black/30 px-2 font-mono text-[8px] font-black uppercase tracking-[0.09em] text-white/72 transition hover:border-vouch-cyan/35 hover:text-white"
+                  onClick={() => topPlayer && onSectionChange ? addPlayerToSlip(topPlayer) : goToBuild()}
+                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/12 bg-black/30 px-1 font-mono text-[7px] font-black uppercase tracking-[0.07em] text-white/72 transition hover:border-vouch-cyan/35 hover:text-white sm:px-2 sm:text-[8px] sm:tracking-[0.09em]"
                 >
-                  Build Slip
-                  <ChevronRight className="h-3 w-3" />
+                  {topPlayer ? 'Add to Slip' : 'Build Slip'}
+                  {topPlayer ? <Plus className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 </button>
                 <button
                   type="button"
                   onClick={goToResults}
-                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/10 bg-black/20 px-2 font-mono text-[8px] font-black uppercase tracking-[0.09em] text-white/48 transition hover:border-white/18 hover:text-white/82"
+                  className="inline-flex min-h-8 items-center justify-center gap-1 border border-white/10 bg-black/20 px-1 font-mono text-[7px] font-black uppercase tracking-[0.07em] text-white/48 transition hover:border-white/18 hover:text-white/82 sm:px-2 sm:text-[8px] sm:tracking-[0.09em]"
                 >
-                  Results Ledger
+                  <span className="sm:hidden">Results</span><span className="hidden sm:inline">Results Ledger</span>
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
+            {topPlayer ? (
+              <button
+                type="button"
+                onClick={() => openPlayerProfile(topPlayer)}
+                className="z8-hr-hero__spotlight group relative min-w-0 overflow-hidden border border-white/10 bg-black/35 p-2.5 text-left transition hover:border-[#00ff94]/35 hover:bg-black/45"
+                aria-label={`Research top signal ${topPlayer.playerName}`}
+              >
+                <div className="z8-hr-hero__scan" aria-hidden="true" />
+                <div className="relative flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 font-mono text-[7px] font-black uppercase tracking-[0.13em] text-[#75ffc5]"><Crosshair className="h-2.5 w-2.5" /> Today&apos;s top signal</span>
+                  <span className={`font-mono text-[7px] font-black uppercase tracking-[0.09em] ${topPlayer.truthStatus === 'official' ? 'text-[#75ffc5]' : topPlayer.truthStatus === 'projected' ? 'text-amber-200' : 'text-white/35'}`}>
+                    {topPlayer.truthStatus === 'official' ? 'Confirmed' : topPlayer.truthStatus === 'projected' ? 'Projected' : 'Unverified'}
+                  </span>
+                </div>
+
+                <div className="relative mt-2 flex min-w-0 items-center gap-2.5">
+                  <div className="z8-hr-hero__headshot relative flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-full">
+                    <PlayerHeadshot name={topPlayer.playerName} playerId={topPlayer.playerId} headshotUrl={topPlayer.headshotUrl} size={54} priority />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-black leading-none tracking-[-0.025em] text-white sm:text-lg">{topPlayer.playerName}</p>
+                    <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                      <div className="flex -space-x-1.5">
+                        <HeroTeamMark key={topPlayer.team} team={topPlayer.team} logoUrl={topPlayer.teamLogoUrl} />
+                        <HeroTeamMark key={topPlayer.opponent} team={topPlayer.opponent} logoUrl={topPlayer.opponentLogoUrl} />
+                      </div>
+                      <p className="truncate font-mono text-[8px] font-bold uppercase tracking-[0.07em] text-white/42">{topPlayer.team} vs {topPlayer.opponent}</p>
+                    </div>
+                    <p className="mt-1 truncate text-[9px] text-white/38">vs {topPlayer.pitcherName || 'probable pitcher unavailable'}</p>
+                  </div>
+                  <div
+                    className="z8-hr-hero__score-ring flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full"
+                    style={{ '--hr-score': `${Math.max(0, Math.min(100, topPlayer.hrScore))}%` } as React.CSSProperties}
+                  >
+                    <span className="flex h-[46px] w-[46px] flex-col items-center justify-center rounded-full bg-[#07100f] font-mono">
+                      <strong className="text-lg leading-none tabular-nums text-white">{Math.round(topPlayer.hrScore)}</strong>
+                      <span className="mt-0.5 text-[6px] font-black uppercase tracking-[0.08em] text-white/35">Signal /100</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative mt-2 grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-2">
+                  <div className="min-w-0 border-l-2 border-[#00ff94]/45 pl-2">
+                    <p className="font-mono text-[7px] font-black uppercase tracking-[0.08em] text-[#75ffc5]">Why it matters</p>
+                    <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/62">{topPlayer.reasons[0] || 'No model rationale was supplied.'}</p>
+                  </div>
+                  <div className="min-w-0 border-l-2 border-amber-300/35 pl-2">
+                    <p className="font-mono text-[7px] font-black uppercase tracking-[0.08em] text-amber-200">What could change</p>
+                    <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/52">{topPlayer.warnings[0] || 'Verify the lineup and market before saving.'}</p>
+                  </div>
+                </div>
+              </button>
+            ) : (
+              <div className="z8-hr-hero__spotlight flex min-h-[132px] items-center justify-center border border-white/10 bg-black/30 p-4 text-center">
+                <div><Crosshair className="mx-auto h-5 w-5 text-white/22" /><p className="mt-2 font-mono text-[8px] font-black uppercase tracking-[0.12em] text-white/35">Scanning today&apos;s slate</p></div>
+              </div>
+            )}
+          </div>
+
+          {topPlayer ? (
+            <div className="relative mt-2 grid grid-cols-3 border border-white/[0.08] bg-black/28 sm:grid-cols-6">
               {[
-                ['Official', lensSummary.official, <ShieldCheck className="h-3 w-3" />],
-                ['Preview', lensSummary.projected, <Aperture className="h-3 w-3" />],
-                ['Full stack', lensSummary.complete, <Database className="h-3 w-3" />],
-                ['Confidence', lensSummary.averageConfidence == null ? '—' : `${lensSummary.averageConfidence}%`, <BellRing className="h-3 w-3" />],
-              ].map(([label, value, icon]) => (
-                <div key={String(label)} className="flex min-w-0 items-center justify-between gap-1.5 border border-white/10 bg-black/35 px-2 py-1.5 backdrop-blur-sm">
-                  <div className="flex min-w-0 items-center gap-1 font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/35">{icon}<span className="truncate">{label}</span></div>
-                  <div className="shrink-0 font-mono text-xs font-black tabular-nums text-white">{value}</div>
+                ['Power', topPlayer.hitterPower == null ? '-' : Math.round(topPlayer.hitterPower), 'Batter profile'],
+                ['Pitcher matchup', topPlayer.pitcherVulnerability == null ? '-' : Math.round(topPlayer.pitcherVulnerability), topPlayer.pitcherName || 'Pitcher unavailable'],
+                ['Park factor', topPlayer.parkFactor == null ? '-' : Math.round(topPlayer.parkFactor), topPlayer.venue || 'Venue unavailable'],
+                ['Lineup status', topPlayer.truthStatus === 'official' ? 'Confirmed' : topPlayer.truthStatus === 'projected' ? 'Projected' : 'Unverified', topPlayer.truthStatus === 'official' ? 'Official order' : 'Awaiting official order'],
+                ['Data confidence', topPlayer.dataConfidence == null ? '-' : `${Math.round(topPlayer.dataConfidence)}%`, vm.slate.freshness],
+                ['Updated', vm.slate.generatedAt ? formatRelativeTime(vm.slate.generatedAt) : 'Unknown', isToday ? 'Today' : vm.date],
+              ].map(([label, value, detail], index) => (
+                <div key={String(label)} className={`min-w-0 px-2 py-2.5 ${index > 0 ? 'border-l border-white/[0.07]' : ''} ${index > 2 ? 'border-t border-white/[0.07] sm:border-t-0' : ''}`}>
+                  <p className="truncate font-mono text-[7px] font-bold uppercase tracking-[0.08em] text-white/35">{label}</p>
+                  <p className="mt-1 truncate font-mono text-[11px] font-black tabular-nums text-white/85">{value}</p>
+                  <p className="mt-0.5 truncate text-[7px] capitalize text-white/34">{detail}</p>
                 </div>
               ))}
             </div>
-          </div>
+          ) : null}
         </section>
-        <section className="grid grid-cols-2 gap-1.5 xl:grid-cols-4" aria-label="Board status summary">
+        <section hidden className="grid grid-cols-2 gap-1.5 xl:hidden" aria-label="Board status summary">
           <div className={`${Z8_PANEL_PREMIUM} min-w-0 border-white/10 bg-black/30 p-2.5`}>
             <div className="flex items-center justify-between gap-1.5">
               <p className="font-mono text-[7px] font-black uppercase tracking-[0.12em] text-white/40">Slate Status</p>
@@ -471,7 +595,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         </section>
 
         {(warningList.length > 0 || vm.slate.truthMessage || vm.slate.note) && (
-          <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+          <section hidden className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="glass-command border border-vouch-amber/18 bg-vouch-amber/6 p-4">
               <div className="flex items-start gap-3">
                 <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-vouch-amber" />
@@ -513,8 +637,8 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           searchValue={vm.search}
           onSearchChange={vm.setSearch}
           onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
-          activeTiers={(vm.selectedTiers ?? []).map((t: string) => t.toLowerCase()) as ('elite' | 'strong' | 'watch' | 'sleeper')[]}
-          onToggleTier={(t) => vm.onToggleTier(t.charAt(0).toUpperCase() + t.slice(1))}
+          activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+          onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
           visibleCount={vm.rows?.length ?? totalCount}
           rows={(vm.rows ?? []) as unknown[]}
         />
@@ -533,6 +657,9 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         ) : viewMode === 'table' ? (
           <HrSpreadsheet
             rows={(vm.rows ?? []) as any}
+            freshness={vm.slate.freshness}
+            generatedAt={vm.slate.generatedAt}
+            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
             onSelectPlayer={(player) => {
               openPlayerProfile(player);
             }}
@@ -555,10 +682,22 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
               onViewProfile={(player) => {
                 openPlayerProfile(player);
               }}
+              onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
               getHrResult={vm.getHrResult}
             />
           </div>
         )}
+
+        <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            {vm.mode === 'curated'
+              ? 'Preview mode: No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Lineups are subject to change.'
+              : vm.mode === 'confirmed'
+                ? 'Confirmed mode: Only players from official batting orders are shown.'
+                : 'All signals: Confirmed and projected players remain clearly labeled.'}
+          </p>
+          <span className="shrink-0 text-white/55">Learn about our scoring <span className="ml-2">-&gt;</span></span>
+        </footer>
 
         <HrPlayerProfile
           player={vm.selectedPlayer}

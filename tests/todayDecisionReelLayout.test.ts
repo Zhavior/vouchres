@@ -7,29 +7,46 @@ const source = readFileSync(
 );
 
 describe('Today decision reel layout stability', () => {
-  it('uses one fixed responsive carousel track', () => {
-    expect(source).toContain('h-[760px] overflow-hidden sm:h-[720px] lg:h-[520px]');
-    expect(source).toContain('grid-rows-[260px_500px]');
-    expect(source).toContain('sm:grid-rows-[300px_420px]');
+  it('uses a horizontally scrollable snap rail instead of one oversized slide', () => {
+    expect(source).toContain('snap-x snap-mandatory');
+    expect(source).toContain('overflow-x-auto');
+    expect(source).toContain('scrollBy({ left: direction * 328');
+    expect(source).not.toContain('h-[760px]');
   });
 
-  it('gives every visual type the same reserved mobile height and places it first', () => {
-    const matches = source.match(/order-1 flex h-\[260px\] min-h-0/g) ?? [];
-    expect(matches).toHaveLength(3);
-    expect(source).toContain('order-2 flex h-full');
-    expect(source).toContain('lg:order-1');
-    expect(source).toContain('lg:order-2');
+  it('keeps every card and visual stage at a stable size', () => {
+    expect(source).toContain("height: 468, width: 'min(304px, calc(100vw - 40px))'");
+    expect(source).toContain('style={{ height: 180 }}');
+    expect(source).toContain('max-w-[320px] shrink-0 snap-start');
   });
 
   it('clamps variable copy so it cannot resize the track', () => {
-    expect(source).toContain('line-clamp-2 max-w-3xl');
-    expect(source).toContain('line-clamp-3 max-w-xl');
+    expect(source).toContain('line-clamp-2 text-xl');
+    expect(source).toContain('line-clamp-2 min-h-10');
+    expect(source).toContain('line-clamp-2 text-[11px]');
   });
 
   it('centers player headshots inside their reserved frame', () => {
-    expect(source).toContain('h-full w-full object-contain object-center');
-    expect(source).toContain('h-[260px] min-h-0 items-center justify-center');
+    expect(source).toContain('style={{ height: 140, width: 168 }}');
+    expect(source).toContain('style={{ height: 92, width: 92 }}');
+    expect(source).toContain('style={{ height: 150, width: 190 }}');
+    expect(source).toContain('className="object-contain object-bottom"');
     expect(source).not.toContain('object-[center_18%]');
-    expect(source).not.toContain('h-[260px] min-h-0 items-end justify-center');
+  });
+
+  it('gives the top HR signal a dedicated evidence-first player card', () => {
+    expect(source).toContain('function PlayerSignalCard');
+    expect(source).toContain('Top HR signal');
+    expect(source).toContain('Official lineup');
+    expect(source).toContain('Lineup unconfirmed');
+    expect(source).toContain('Add to Slip');
+    expect(source).toContain("gridTemplateColumns: '0.9fr 1.1fr'");
+  });
+
+  it('keeps briefing filters functional and slip activity truthful', () => {
+    expect(source).toContain("filter === 'signals'");
+    expect(source).toContain("filter === 'activity'");
+    expect(source).toContain('pendingSlip');
+    expect(source).toContain('Odds unavailable');
   });
 });

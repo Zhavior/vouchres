@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2, LayoutDashboard } from 'lucide-react';
+import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2, LayoutDashboard, ChevronDown } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrRiskTier } from '../Cards/HrPlayerCard';
+import { HR_EXPORT_ENABLED, HR_MAP_ENABLED } from '../../featureAvailability';
 
 export type HrSourceMode = 'confirmed' | 'preview' | 'all';
 export type HrViewMode = 'cards' | 'table' | 'treemap';
@@ -38,10 +39,10 @@ const MODE_OPTIONS: { key: HrSourceMode; label: string }[] = [
 ];
 
 const TIER_ACTIVE_CLASSES: Record<string, string> = {
-  elite: 'border-ve-ion/55 bg-ve-ion/12 text-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.18)]',
-  strong: 'border-vouch-emerald/45 bg-vouch-emerald/10 text-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.12)]',
+  elite: 'border-ve-ion/45 bg-ve-ion/10 text-ve-ion',
+  strong: 'border-vouch-emerald/40 bg-vouch-emerald/8 text-vouch-emerald',
   watch: 'border-ve-fuse/55 bg-ve-graphite/50 text-ve-flash',
-  sleeper: 'border-vouch-amber/40 bg-vouch-amber/10 text-vouch-amber',
+  sleeper: 'border-vouch-amber/35 bg-vouch-amber/8 text-vouch-amber',
 };
 
 function csvEscape(value: string | number | null | undefined): string {
@@ -130,7 +131,7 @@ function TierFilterButtons({
   className?: string;
 }) {
   return (
-    <div className={`grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2 ${className}`}>
+    <div className={`grid grid-cols-2 gap-2 sm:flex sm:h-10 sm:flex-nowrap sm:items-stretch sm:gap-0 sm:border sm:border-white/10 sm:bg-black/30 sm:p-1 ${className}`}>
       {TIER_OPTIONS.map((tier) => {
         const active = activeTiers.includes(tier.key);
         return (
@@ -138,7 +139,7 @@ function TierFilterButtons({
             key={tier.key}
             type="button"
             onClick={() => onToggleTier(tier.key)}
-            className={`min-h-11 min-w-0 border px-3 py-2 text-[11px] font-bold uppercase tracking-wide transition duration-200 sm:min-h-0 sm:px-3.5 sm:py-1.5 sm:text-xs ${
+            className={`min-h-11 min-w-0 border px-3 py-2 text-[11px] font-bold uppercase tracking-wide transition duration-200 sm:h-8 sm:min-h-0 sm:border sm:px-3 sm:py-0 sm:text-[10px] ${
               active
                 ? TIER_ACTIVE_CLASSES[tier.key] || 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                 : 'border-white/10 bg-black/25 text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
@@ -163,13 +164,13 @@ function SourceModeButtons({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center border border-white/10 bg-black/30 p-1 ${className}`}>
+    <div className={`flex h-10 items-stretch border border-white/10 bg-black/30 p-1 ${className}`}>
       {MODE_OPTIONS.map((opt) => (
         <button
           key={opt.key}
           type="button"
           onClick={() => onSourceModeChange(opt.key)}
-          className={`min-h-11 flex-1 border px-2 py-2 text-[10px] font-bold uppercase tracking-wide transition duration-200 sm:min-h-0 sm:flex-none sm:px-3 sm:py-1.5 sm:text-xs ${
+          className={`min-h-11 flex-1 border px-2 py-2 text-[10px] font-bold uppercase tracking-wide transition duration-200 sm:h-8 sm:min-h-0 sm:flex-none sm:px-3 sm:py-0 sm:text-[10px] ${
             sourceMode === opt.key
               ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
               : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
@@ -221,7 +222,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
 
   return (
     <>
-      <div className="glass-command flex w-full min-w-0 flex-col gap-3 border border-ve-fuse/45 p-3 font-mono sm:p-4">
+      <div className="flex w-full min-w-0 flex-col gap-2.5 border border-white/[0.08] bg-black/20 p-3 font-mono shadow-[inset_0_1px_rgba(255,255,255,0.025)] md:border-0 md:bg-transparent md:p-0 md:shadow-none">
         {/* Mobile: compact search row + filter sheet trigger */}
         <div className="flex items-center gap-2 md:hidden">
           <div className="relative min-w-0 flex-1">
@@ -268,16 +269,16 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
           )}
         </div>
 
-        {/* Desktop: full toolbar */}
-        <div className="hidden flex-col gap-3 md:flex md:flex-row md:flex-wrap md:items-center">
-          <div className="relative w-full min-w-0 md:flex-1 md:min-w-[220px]">
+        {/* Desktop: two balanced rows when space is tight, one line on wide screens. */}
+        <div className="hidden min-w-0 gap-2 md:grid md:grid-cols-[minmax(0,1fr)_auto] 2xl:grid-cols-[minmax(210px,1fr)_auto_auto_auto]">
+          <div className="relative h-10 min-w-0">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-vouch-cyan/60" />
             <input
               type="text"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search players, teams, pitchers..."
-              className="w-full border border-white/10 bg-black/30 py-2.5 pl-9 pr-9 text-sm text-slate-100 placeholder:text-zinc-600 outline-none transition duration-200 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/25"
+              placeholder="Search players, teams..."
+              className="h-10 w-full border border-white/[0.1] bg-black/25 pl-9 pr-9 text-[11px] text-slate-100 placeholder:text-zinc-600 outline-none transition duration-200 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20"
             />
             {searchValue.length > 0 && (
               <button
@@ -291,76 +292,79 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             )}
           </div>
 
-          <SourceModeButtons sourceMode={sourceMode} onSourceModeChange={onSourceModeChange} className="w-auto" />
+          <SourceModeButtons sourceMode={sourceMode} onSourceModeChange={onSourceModeChange} className="w-auto justify-self-end" />
 
-          <div
-            className="flex items-center border border-white/10 bg-black/30 p-1"
-            role="group"
-            aria-label="View mode"
-          >
-            <button
-              type="button"
-              onClick={() => onViewModeChange('cards')}
-              aria-pressed={viewMode === 'cards'}
-              title="Card view"
-              className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
-                viewMode === 'cards'
-                  ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                  : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
-              }`}
+          <TierFilterButtons activeTiers={activeTiers} onToggleTier={onToggleTier} className="w-auto" />
+
+          <div className="flex min-w-0 items-stretch justify-self-end gap-2">
+            <div
+              className="flex h-10 items-stretch border border-white/10 bg-black/30 p-1"
+              role="group"
+              aria-label="View mode"
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Cards
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange('table')}
-              aria-pressed={viewMode === 'table'}
-              title="Table view"
-              className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
-                viewMode === 'table'
-                  ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                  : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
-              }`}
-            >
-              <Table2 className="h-3.5 w-3.5" />
-              Table
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange('treemap')}
-              aria-pressed={viewMode === 'treemap'}
-              title="Treemap view"
-              className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
-                viewMode === 'treemap'
-                  ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                  : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
-              }`}
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              Map
-            </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange('cards')}
+                aria-pressed={viewMode === 'cards'}
+                title="Card view"
+                className={`flex h-8 items-center gap-1.5 border px-3 text-[10px] font-bold uppercase tracking-wide transition duration-200 ${
+                  viewMode === 'cards'
+                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                    : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Cards
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange('table')}
+                aria-pressed={viewMode === 'table'}
+                title="Table view"
+                className={`flex h-8 items-center gap-1.5 border px-3 text-[10px] font-bold uppercase tracking-wide transition duration-200 ${
+                  viewMode === 'table'
+                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                    : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
+                }`}
+              >
+                <Table2 className="h-3.5 w-3.5" />
+                Table
+              </button>
+              {HR_MAP_ENABLED ? (
+                <button
+                  type="button"
+                  onClick={() => onViewModeChange('treemap')}
+                  aria-pressed={viewMode === 'treemap'}
+                  title="Treemap view"
+                  className={`flex h-8 items-center gap-1.5 border px-3 text-[10px] font-bold uppercase tracking-wide transition duration-200 ${
+                    viewMode === 'treemap'
+                      ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                      : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
+                  }`}
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  Map
+                </button>
+              ) : null}
+            </div>
+
+            {HR_EXPORT_ENABLED ? (
+              <button
+                type="button"
+                onClick={() => downloadCsv(rows)}
+                disabled={exportDisabled}
+                className="flex h-10 items-center gap-1.5 border border-white/10 bg-black/25 px-3 text-[10px] font-bold uppercase tracking-wide text-zinc-400 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export
+              </button>
+            ) : null}
           </div>
-
-          <button
-            type="button"
-            onClick={() => downloadCsv(rows)}
-            disabled={exportDisabled}
-            className="flex items-center gap-1.5 border border-white/10 bg-black/30 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-zinc-300 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export CSV
-          </button>
         </div>
 
-        <div className="hidden flex-wrap items-center justify-between gap-3 md:flex">
-          <div className="flex flex-wrap items-center gap-2">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-vouch-cyan/60" />
-            <TierFilterButtons activeTiers={activeTiers} onToggleTier={onToggleTier} className="w-auto" />
-          </div>
-          <span className="border border-white/10 bg-black/30 px-3 py-1 text-xs font-bold uppercase tracking-wide text-zinc-400">
-            {countLabel}
-          </span>
+        <div className="hidden items-center justify-between md:flex">
+          <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-500">{countLabel} found</span>
+          <span className="flex items-center gap-2 text-[10px] text-zinc-500">Sorted by Signal Score <ChevronDown className="h-3.5 w-3.5" /></span>
         </div>
       </div>
 
@@ -412,7 +416,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                     { key: 'cards' as const, label: 'Cards', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
                     { key: 'table' as const, label: 'Table', icon: <Table2 className="h-3.5 w-3.5" /> },
                     { key: 'treemap' as const, label: 'Map', icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
-                  ]).map((opt) => (
+                  ].filter((opt) => opt.key !== 'treemap' || HR_MAP_ENABLED)).map((opt) => (
                     <button
                       key={opt.key}
                       type="button"
@@ -433,15 +437,17 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             </div>
 
             <div className="flex items-center gap-2 border-t border-white/10 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <button
-                type="button"
-                onClick={() => downloadCsv(rows)}
-                disabled={exportDisabled}
-                className="flex min-h-11 flex-1 items-center justify-center gap-1.5 border border-white/10 bg-black/30 text-xs font-bold uppercase tracking-wide text-zinc-300 disabled:opacity-40"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Export
-              </button>
+              {viewMode === 'table' && HR_EXPORT_ENABLED ? (
+                <button
+                  type="button"
+                  onClick={() => downloadCsv(rows)}
+                  disabled={exportDisabled}
+                  className="flex min-h-11 flex-1 items-center justify-center gap-1.5 border border-white/10 bg-black/30 text-xs font-bold uppercase tracking-wide text-zinc-300 disabled:opacity-40"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setFiltersOpen(false)}

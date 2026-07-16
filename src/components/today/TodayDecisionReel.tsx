@@ -4,285 +4,334 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  CircleDot,
+  ClipboardCheck,
   Gauge,
-  Sparkles,
+  Plus,
 } from 'lucide-react';
+import type { Parlay } from '../../types';
 import { getPlayerInitials } from '../../lib/mlbHeadshot';
-import { Z8_ACTIVE, Z8_LABEL } from '../../theme/z8Tokens';
+import { Z8_LABEL } from '../../theme/z8Tokens';
 import type { TodayReelSlide, TodayReelVisual } from './todayDecisionReelModel';
 
-const AUTO_ADVANCE_MS = 8_000;
-const SWIPE_THRESHOLD = 48;
+export type BriefingFilter = 'all' | 'signals' | 'alerts' | 'activity';
+
+interface Props {
+  slides: TodayReelSlide[];
+  pendingSlip?: Parlay | null;
+  filter?: BriefingFilter;
+  onSectionChange: (section: string) => void;
+}
 
 const ACCENTS = {
   cyan: {
     text: 'text-vouch-cyan',
-    border: 'border-vouch-cyan/35',
-    bg: 'bg-vouch-cyan/10',
-    glow: 'rgba(0,240,255,0.22)',
-    solid: 'bg-vouch-cyan',
+    border: 'border-vouch-cyan/45',
+    glow: 'from-vouch-cyan/20',
+    button: 'border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan hover:bg-vouch-cyan/15',
   },
   emerald: {
     text: 'text-vouch-emerald',
-    border: 'border-vouch-emerald/35',
-    bg: 'bg-vouch-emerald/10',
-    glow: 'rgba(0,255,148,0.2)',
-    solid: 'bg-vouch-emerald',
+    border: 'border-vouch-emerald/45',
+    glow: 'from-vouch-emerald/20',
+    button: 'border-vouch-emerald/35 bg-vouch-emerald/10 text-vouch-emerald hover:bg-vouch-emerald/15',
   },
   amber: {
     text: 'text-amber-300',
-    border: 'border-amber-300/30',
-    bg: 'bg-amber-300/10',
-    glow: 'rgba(251,191,36,0.2)',
-    solid: 'bg-amber-300',
+    border: 'border-amber-300/35',
+    glow: 'from-amber-300/15',
+    button: 'border-amber-300/30 bg-amber-300/10 text-amber-200 hover:bg-amber-300/15',
   },
 } as const;
 
-interface Props {
-  slides: TodayReelSlide[];
-  onSectionChange: (section: string) => void;
+function slideMatchesFilter(slide: TodayReelSlide, filter: BriefingFilter) {
+  if (filter === 'all') return true;
+  if (filter === 'signals') return slide.id === 'hr-player' || slide.id === 'run-environment' || slide.id === 'pitcher';
+  if (filter === 'alerts') return slide.id === 'decision';
+  return false;
 }
 
-export default function TodayDecisionReel({ slides, onSectionChange }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+export default function TodayDecisionReel({
+  slides,
+  pendingSlip = null,
+  filter = 'all',
+  onSectionChange,
+}: Props) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const filteredSlides = slides.filter((slide) => slideMatchesFilter(slide, filter));
+  const showSlip = Boolean(pendingSlip) && (filter === 'all' || filter === 'activity');
+  const itemCount = filteredSlides.length + (showSlip ? 1 : 0);
 
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReducedMotion(query.matches);
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
-
-  useEffect(() => {
-    if (activeIndex < slides.length) return;
-    setActiveIndex(0);
-  }, [activeIndex, slides.length]);
-
-  useEffect(() => {
-    if (paused || reducedMotion || slides.length < 2) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % slides.length);
-    }, AUTO_ADVANCE_MS);
-    return () => window.clearInterval(timer);
-  }, [paused, reducedMotion, slides.length]);
-
-  const activeSlide = slides[activeIndex] ?? slides[0];
-  if (!activeSlide) return null;
-
-  const accent = ACCENTS[activeSlide.tone];
-  const goTo = (nextIndex: number) => {
-    setActiveIndex((nextIndex + slides.length) % slides.length);
-    setPaused(true);
+  const scroll = (direction: -1 | 1) => {
+    railRef.current?.scrollBy({ left: direction * 328, behavior: 'smooth' });
   };
 
-  const onTouchEnd = (clientX: number) => {
-    if (touchStartX.current === null) return;
-    const delta = clientX - touchStartX.current;
-    if (delta < -SWIPE_THRESHOLD) goTo(activeIndex + 1);
-    if (delta > SWIPE_THRESHOLD) goTo(activeIndex - 1);
-    touchStartX.current = null;
-  };
+  if (itemCount === 0) {
+    return (
+      <div className="flex min-h-44 items-center justify-center border border-white/[0.08] bg-white/[0.02] px-6 text-center">
+        <div>
+          <p className="text-sm font-bold text-white/70">Nothing in this briefing category yet.</p>
+          <p className="mt-1 text-xs text-white/42">VouchEdge will show it when verified slate data is available.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="relative h-[760px] overflow-hidden sm:h-[720px] lg:h-[520px]"
-      aria-roledescription="carousel"
-      aria-label="Today decision reel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false);
-      }}
-      onTouchStart={(event) => {
-        event.stopPropagation();
-        touchStartX.current = event.touches[0]?.clientX ?? null;
-      }}
-      onTouchEnd={(event) => {
-        event.stopPropagation();
-        onTouchEnd(event.changedTouches[0]?.clientX ?? 0);
-      }}
-    >
+    <div className="relative" aria-label="Today's briefing">
       <div
-        className="pointer-events-none absolute inset-0 opacity-80"
-        style={{
-          backgroundImage: `radial-gradient(circle at 78% 42%, ${accent.glow}, transparent 30%), linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
-          backgroundSize: 'auto, 34px 34px, 34px 34px',
-        }}
-      />
-      <div className="pointer-events-none absolute -right-16 -top-20 h-72 w-72 rounded-full border border-white/[0.04] sm:h-96 sm:w-96" />
-      <div className="pointer-events-none absolute -right-4 top-0 h-56 w-56 rounded-full border border-white/[0.04] sm:h-72 sm:w-72" />
-
-      <div
-        key={activeSlide.id}
-        className="relative grid h-full grid-rows-[260px_500px] animate-[fadeIn_350ms_ease-out] motion-reduce:animate-none sm:grid-rows-[300px_420px] lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,0.95fr)] lg:grid-rows-1"
-        role="group"
-        aria-roledescription="slide"
-        aria-label={`${activeIndex + 1} of ${slides.length}`}
+        ref={railRef}
+        className="ve-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
       >
-        <div className="relative z-10 order-2 flex h-full min-h-0 flex-col justify-between overflow-hidden p-4 sm:p-6 lg:order-1 lg:p-9">
-          <div>
-            <p className={`flex items-center gap-2 ${Z8_LABEL} ${accent.text}`}>
-              <Sparkles className="h-3.5 w-3.5" />
-              {activeSlide.kicker}
-            </p>
-            <h1 className="mt-3 line-clamp-2 max-w-3xl font-mono text-3xl font-black uppercase leading-[1.03] tracking-[-0.045em] text-white sm:mt-4 sm:text-4xl lg:mt-5 lg:text-5xl">
-              {activeSlide.title}
-            </h1>
-            <p className="mt-4 line-clamp-3 max-w-xl text-sm leading-6 text-white/55 sm:line-clamp-2 sm:text-base">
-              {activeSlide.description}
-            </p>
+        {filteredSlides.map((slide, index) => (
+          <BriefingCard
+            key={slide.id}
+            slide={slide}
+            priority={index === 0}
+            onSectionChange={onSectionChange}
+          />
+        ))}
+        {showSlip && pendingSlip ? (
+          <SlipBriefingCard slip={pendingSlip} onSectionChange={onSectionChange} />
+        ) : null}
+      </div>
 
-            <div className="mt-4 grid max-w-2xl grid-cols-2 gap-2 sm:mt-5">
-              <EvidenceLine icon={CheckCircle2} label="Why it matters" text={activeSlide.evidence} tone={accent.text} />
-              <EvidenceLine icon={AlertTriangle} label="What could change" text={activeSlide.risk} tone="text-amber-300" />
-            </div>
-          </div>
+      {itemCount > 1 ? (
+        <div className="mt-2 flex items-center justify-end gap-2 sm:absolute sm:-top-14 sm:right-0 sm:mt-0">
+          <button
+            type="button"
+            onClick={() => scroll(-1)}
+            className="z8-control flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white"
+            aria-label="Previous briefing cards"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll(1)}
+            className="z8-control flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white"
+            aria-label="Next briefing cards"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
-          <div className="mt-5 flex flex-col gap-2 sm:mt-7 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <button
-              type="button"
-              onClick={() => onSectionChange(activeSlide.ctaSection)}
-              className={`z8-control inline-flex items-center justify-center gap-2 border px-5 py-3 ${Z8_ACTIVE} ${Z8_LABEL}`}
-            >
-              {activeSlide.ctaLabel}
-              <ArrowRight className="h-4 w-4" />
-            </button>
+function BriefingCard({
+  slide,
+  priority,
+  onSectionChange,
+}: {
+  slide: TodayReelSlide;
+  priority: boolean;
+  onSectionChange: (section: string) => void;
+}) {
+  if (slide.visual.type === 'portrait') {
+    return <PlayerSignalCard slide={slide} visual={slide.visual} onSectionChange={onSectionChange} />;
+  }
 
-            {slides.length > 1 ? (
-              <div className="flex items-center gap-2" aria-label="Decision reel controls">
-                <button
-                  type="button"
-                  onClick={() => goTo(activeIndex - 1)}
-                  className="z8-control flex h-10 w-10 items-center justify-center border border-white/10 bg-black/25 text-white/55 hover:border-white/25 hover:text-white sm:h-11 sm:w-11"
-                  aria-label="Previous decision"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div className="flex items-center gap-1.5">
-                  {slides.map((slide, index) => (
-                    <button
-                      key={slide.id}
-                      type="button"
-                      onClick={() => goTo(index)}
-                      className="z8-control group flex h-10 w-8 items-center justify-center sm:h-11 sm:w-11"
-                      aria-label={`Show decision ${index + 1}: ${slide.kicker}`}
-                      aria-current={index === activeIndex ? 'true' : undefined}
-                    >
-                      <span className={`h-1.5 rounded-full transition-[width,background-color] ${
-                        index === activeIndex ? `w-7 ${accent.solid}` : 'w-2 bg-white/20 group-hover:bg-white/40'
-                      }`} />
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => goTo(activeIndex + 1)}
-                  className="z8-control flex h-10 w-10 items-center justify-center border border-white/10 bg-black/25 text-white/55 hover:border-white/25 hover:text-white sm:h-11 sm:w-11"
-                  aria-label="Next decision"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
-          </div>
+  const accent = ACCENTS[slide.tone];
+
+  return (
+    <article
+      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
+      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#07111b] shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
+        priority ? accent.border : 'border-white/[0.09]'
+      }`}
+    >
+      <div className={`pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b ${accent.glow} to-transparent opacity-70`} />
+      <div style={{ height: 180 }} className="relative shrink-0 overflow-hidden border-b border-white/[0.07]">
+        <p className={`absolute left-4 top-4 z-20 ${Z8_LABEL} ${accent.text}`}>{slide.kicker}</p>
+        <CompactVisual visual={slide.visual} tone={slide.tone} />
+      </div>
+
+      <div className="relative flex min-h-0 flex-1 flex-col p-4">
+        <h3 className="line-clamp-2 text-xl font-black leading-tight tracking-[-0.025em] text-white">{slide.title}</h3>
+        <p className="mt-1.5 line-clamp-2 min-h-10 text-xs leading-5 text-white/55">{slide.description}</p>
+
+        <div className="mt-4 space-y-3 border-t border-white/[0.07] pt-3">
+          <Evidence icon={CheckCircle2} label="Why it matters" text={slide.evidence} tone="text-vouch-emerald" />
+          <Evidence icon={AlertTriangle} label="Main risk" text={slide.risk} tone="text-amber-300" />
         </div>
 
-        <VisualStage visual={activeSlide.visual} tone={activeSlide.tone} />
+        <button
+          type="button"
+          onClick={() => onSectionChange(slide.ctaSection)}
+          className={`z8-control mt-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-xs font-black ${accent.button}`}
+        >
+          {slide.ctaLabel}
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </button>
       </div>
-    </div>
+    </article>
   );
 }
 
-function EvidenceLine({
-  icon: Icon,
-  label,
-  text,
-  tone,
+function PlayerSignalCard({
+  slide,
+  visual,
+  onSectionChange,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  text: string;
-  tone: string;
+  slide: TodayReelSlide;
+  visual: Extract<TodayReelVisual, { type: 'portrait' }>;
+  onSectionChange: (section: string) => void;
 }) {
-  return (
-    <div className="border border-white/[0.07] bg-black/20 p-3">
-      <p className={`flex items-center gap-1.5 ${Z8_LABEL} ${tone}`}>
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-      </p>
-      <p className="mt-1.5 line-clamp-2 text-[11px] leading-4 text-white/45">{text}</p>
-    </div>
-  );
-}
+  const isOfficial = /official|confirmed/i.test(slide.kicker);
 
-function VisualStage({ visual, tone }: { visual: TodayReelVisual; tone: keyof typeof ACCENTS }) {
-  if (visual.type === 'matchup') {
-    return (
-      <div className="relative order-1 flex h-[260px] min-h-0 items-center justify-center overflow-hidden border-b border-white/[0.06] bg-black/20 p-5 sm:h-[300px] lg:order-2 lg:h-full lg:border-b-0 lg:border-l">
-        <div className="absolute inset-x-6 top-6 flex items-center justify-between">
-          <span className={`${Z8_LABEL} text-white/30`}>Featured matchup</span>
-          <span className={`inline-flex items-center gap-1.5 ${Z8_LABEL} ${ACCENTS[tone].text}`}>
-            <CircleDot className="h-3 w-3" />
-            {visual.status}
+  return (
+    <article
+      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
+      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,148,0.13),transparent_34%)]" />
+
+      <div style={{ height: 176 }} className="relative shrink-0 overflow-hidden border-b border-white/[0.08] bg-gradient-to-br from-[#071d29] via-[#07131d] to-[#050a10]">
+        <div className="absolute inset-x-4 top-3 z-20 flex items-center justify-between gap-3">
+          <p className={`${Z8_LABEL} text-vouch-emerald`}>Top HR signal</p>
+          <span className={`rounded-full border px-2 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] ${
+            isOfficial
+              ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'
+              : 'border-amber-300/30 bg-amber-300/10 text-amber-200'
+          }`}>
+            {isOfficial ? 'Confirmed' : 'Projected'}
           </span>
         </div>
-        <div className="relative flex items-center gap-5 sm:gap-8">
-          <TeamMark logo={visual.awayLogo} name={visual.awayName} />
-          <div className="text-center">
-            <span className="block font-mono text-[10px] font-black uppercase tracking-[0.24em] text-white/25">versus</span>
-            <span className="mt-1 block font-mono text-3xl font-black text-white/65">@</span>
-          </div>
-          <TeamMark logo={visual.homeLogo} name={visual.homeName} />
+
+        {visual.teamLogo ? (
+          <img src={visual.teamLogo} alt="" className="absolute -left-5 bottom-0 h-32 w-32 object-contain opacity-[0.08]" />
+        ) : null}
+
+        <div style={{ height: 140, width: 168 }} className="absolute bottom-0 left-3 flex items-end justify-center overflow-hidden">
+          <Portrait src={visual.headshotUrl} name={visual.name} />
+        </div>
+
+        <div style={{ height: 92, width: 92 }} className="absolute bottom-5 right-4 z-10 flex flex-col items-center justify-center rounded-full border border-vouch-emerald/40 bg-[#05141a]/95 shadow-[0_0_36px_-12px_rgba(0,255,148,0.9)]">
+          <strong className="font-mono text-4xl font-black leading-none text-vouch-emerald">{visual.score}</strong>
+          <span className="mt-1 font-mono text-[8px] font-black uppercase tracking-[0.12em] text-vouch-emerald/70">Signal /100</span>
+        </div>
+      </div>
+
+      <div className="relative flex min-h-0 flex-1 flex-col p-4">
+        <h3 className="shrink-0 truncate text-xl font-black leading-tight tracking-[-0.025em] text-white">{slide.title}</h3>
+        <p className="mt-1 shrink-0 truncate text-[11px] font-medium text-white/55">{slide.description}</p>
+
+        <div className="mt-2.5 flex items-center gap-2">
+          <span className={`rounded-md border px-2 py-1 text-[9px] font-bold ${
+            isOfficial
+              ? 'border-vouch-emerald/25 bg-vouch-emerald/[0.08] text-vouch-emerald'
+              : 'border-amber-300/25 bg-amber-300/[0.08] text-amber-200'
+          }`}>
+            {isOfficial ? 'Official lineup' : 'Lineup unconfirmed'}
+          </span>
+          <span className="text-[9px] font-medium text-white/35">Score updated with current board</span>
+        </div>
+
+        <div className="mt-3 grid gap-2 border-y border-white/[0.08] py-3">
+          <Evidence icon={CheckCircle2} label="Why it matters" text={slide.evidence} tone="text-vouch-emerald" />
+          <Evidence icon={AlertTriangle} label="Main risk" text={slide.risk} tone="text-amber-300" />
+        </div>
+
+        <div style={{ gridTemplateColumns: '0.9fr 1.1fr' }} className="mt-auto grid shrink-0 gap-2 pt-3">
+          <button
+            type="button"
+            onClick={() => onSectionChange(slide.ctaSection)}
+            className="z8-control inline-flex min-h-10 items-center justify-center rounded-lg border border-white/18 bg-white/[0.025] px-2 text-[11px] font-black text-white/80 hover:border-vouch-cyan/40 hover:text-vouch-cyan"
+          >
+            Research
+          </button>
+          <button
+            type="button"
+            onClick={() => onSectionChange('hr_board')}
+            className="z8-control inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-vouch-emerald/40 bg-vouch-emerald/12 px-2 text-[11px] font-black text-vouch-emerald hover:bg-vouch-emerald/18"
+          >
+            <Plus className="h-4 w-4" /> Add to Slip
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionChange: (section: string) => void }) {
+  const visibleLegs = slip.legs.slice(0, 2);
+  return (
+    <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
+      <div style={{ height: 180 }} className="relative flex shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-vouch-cyan/15 via-[#08182a] to-transparent">
+        <p className={`absolute left-4 top-4 ${Z8_LABEL} text-vouch-cyan`}>My slip update</p>
+        <ClipboardCheck className="h-20 w-20 text-vouch-cyan/80 drop-shadow-[0_0_28px_rgba(0,240,255,0.24)]" />
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <h3 className="text-xl font-black text-white">{slip.legs.length}-leg slip in progress</h3>
+        <p className="mt-1 text-xs text-white/50">Saved at {formatTime(slip.createdAt)} · {slip.totalOdds || 'Odds unavailable'}</p>
+        <div className="mt-4 space-y-2 border-y border-white/[0.07] py-3">
+          {visibleLegs.map((leg) => (
+            <div key={leg.id} className="flex items-start justify-between gap-3 text-xs">
+              <span className="line-clamp-2 text-white/70">{leg.selection}</span>
+              <span className="shrink-0 font-mono font-bold text-vouch-emerald">{formatOdds(leg.odds)}</span>
+            </div>
+          ))}
+          {slip.legs.length > visibleLegs.length ? (
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">+{slip.legs.length - visibleLegs.length} more leg</p>
+          ) : null}
+        </div>
+        <p className="mt-3 text-xs leading-5 text-white/45">Track status, review concentration, and see verified results after grading.</p>
+        <button
+          type="button"
+          onClick={() => onSectionChange('live_parlays')}
+          className="z8-control mt-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/15"
+        >
+          View my slips
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function CompactVisual({ visual, tone }: { visual: TodayReelVisual; tone: keyof typeof ACCENTS }) {
+  if (visual.type === 'portrait') {
+    return (
+      <div className="absolute inset-0 flex items-end justify-center">
+        {visual.teamLogo ? <img src={visual.teamLogo} alt="" className="absolute right-3 top-8 h-28 w-28 object-contain opacity-[0.08]" /> : null}
+        <Portrait src={visual.headshotUrl} name={visual.name} />
+        <div className="absolute bottom-3 right-3 z-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-vouch-emerald/35 bg-[#06141a]/90 shadow-[0_0_30px_-12px_rgba(0,255,148,0.75)]">
+          <strong className="font-mono text-3xl font-black text-vouch-emerald">{visual.score}</strong>
+          <span className="text-[8px] font-black uppercase tracking-wider text-vouch-emerald/75">/100</span>
         </div>
       </div>
     );
   }
 
-  if (visual.type === 'portrait') {
+  if (visual.type === 'matchup') {
     return (
-      <div className="relative order-1 flex h-[260px] min-h-0 items-center justify-center overflow-hidden border-b border-white/[0.06] bg-black/20 sm:h-[300px] lg:order-2 lg:h-full lg:border-b-0 lg:border-l">
-        {visual.teamLogo ? (
-          <img src={visual.teamLogo} alt="" className="pointer-events-none absolute right-5 top-8 h-44 w-44 object-contain opacity-[0.08] sm:h-56 sm:w-56" />
-        ) : null}
-        <div className="absolute left-5 top-5 z-20 border border-white/10 bg-black/35 px-3 py-2 backdrop-blur-sm">
-          <span className={`${Z8_LABEL} text-white/35`}>{visual.scoreLabel}</span>
-          <strong className={`ml-3 font-mono text-xl ${ACCENTS[tone].text}`}>{visual.score}</strong>
-        </div>
-        <Portrait src={visual.headshotUrl} name={visual.name} />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute bottom-5 left-5 right-5 z-20 flex items-end justify-between gap-4">
-          <div>
-            <span className={`${Z8_LABEL} text-white/30`}>Featured research</span>
-            <p className="mt-1 font-mono text-lg font-black uppercase text-white">{visual.name}</p>
-          </div>
-          <Gauge className={`h-6 w-6 ${ACCENTS[tone].text}`} />
-        </div>
+      <div className="absolute inset-x-0 bottom-0 top-9 flex items-center justify-center gap-4">
+        <TeamMark logo={visual.awayLogo} name={visual.awayName} />
+        <span className="font-mono text-xl font-black text-white/35">@</span>
+        <TeamMark logo={visual.homeLogo} name={visual.homeName} />
       </div>
     );
   }
 
   return (
-      <div className="relative order-1 flex h-[260px] min-h-0 items-center justify-center overflow-hidden border-b border-white/[0.06] bg-black/20 p-5 sm:h-[300px] lg:order-2 lg:h-full lg:border-b-0 lg:border-l">
-      <div className="absolute inset-x-6 top-6 flex items-center justify-between">
-        <span className={`${Z8_LABEL} text-white/30`}>{visual.label}</span>
-        <Gauge className={`h-5 w-5 ${ACCENTS[tone].text}`} />
+    <div className="absolute inset-x-0 bottom-0 top-9 flex items-center justify-center">
+      {visual.awayLogo ? <img src={visual.awayLogo} alt="" className="absolute left-7 h-16 w-16 object-contain opacity-35" /> : null}
+      <div className="relative z-10 flex h-28 w-28 flex-col items-center justify-center rounded-full border border-white/10 bg-black/45 shadow-[0_0_40px_-18px_rgba(0,240,255,0.8)]">
+        <Gauge className={`mb-1 h-4 w-4 ${ACCENTS[tone].text}`} />
+        <strong className={`font-mono text-4xl font-black ${ACCENTS[tone].text}`}>{visual.value || '—'}</strong>
+        <span className="text-[8px] font-black uppercase tracking-wider text-white/40">{visual.label}</span>
       </div>
-      <div className="relative flex items-center justify-center">
-        <div className={`flex h-40 w-40 items-center justify-center rounded-full border sm:h-48 sm:w-48 ${ACCENTS[tone].border} ${ACCENTS[tone].bg} shadow-[0_0_80px_-30px_currentColor]`}>
-          <div className="text-center">
-            <strong className={`block font-mono text-6xl font-black ${ACCENTS[tone].text}`}>{visual.value || '—'}</strong>
-            <span className={`${Z8_LABEL} text-white/35`}>out of 100</span>
-          </div>
-        </div>
-        {visual.awayLogo ? <img src={visual.awayLogo} alt="" className="absolute -left-12 top-3 h-16 w-16 object-contain opacity-70" /> : null}
-        {visual.homeLogo ? <img src={visual.homeLogo} alt="" className="absolute -right-12 bottom-3 h-16 w-16 object-contain opacity-70" /> : null}
-      </div>
+      {visual.homeLogo ? <img src={visual.homeLogo} alt="" className="absolute right-7 h-16 w-16 object-contain opacity-35" /> : null}
+    </div>
+  );
+}
+
+function Evidence({ icon: Icon, label, text, tone }: { icon: React.ComponentType<{ className?: string }>; label: string; text: string; tone: string }) {
+  return (
+    <div>
+      <p className={`flex items-center gap-1.5 ${Z8_LABEL} ${tone}`}><Icon className="h-3 w-3" />{label}</p>
+      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/50">{text}</p>
     </div>
   );
 }
@@ -290,37 +339,31 @@ function VisualStage({ visual, tone }: { visual: TodayReelVisual; tone: keyof ty
 function TeamMark({ logo, name }: { logo: string | null; name: string }) {
   return (
     <div className="text-center">
-      <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] p-4 shadow-[0_20px_70px_-30px_rgba(0,240,255,0.5)] sm:h-32 sm:w-32 sm:p-5">
-        {logo ? <img src={logo} alt="" className="h-full w-full object-contain" /> : <span className="font-mono text-2xl font-black text-white/60">{name.slice(0, 3)}</span>}
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] p-2.5">
+        {logo ? <img src={logo} alt="" className="h-full w-full object-contain" /> : <span className="font-mono text-sm font-black text-white/60">{name.slice(0, 3)}</span>}
       </div>
-      <p className="mt-3 font-mono text-sm font-black text-white">{name}</p>
+      <p className="mt-2 font-mono text-xs font-black text-white/75">{name}</p>
     </div>
   );
 }
 
 function Portrait({ src, name }: { src: string | null; name: string }) {
   const [failed, setFailed] = useState(false);
-
   useEffect(() => setFailed(false), [src]);
 
   if (!src || failed) {
-    return (
-      <div className="mb-16 flex h-48 w-48 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-5xl font-black text-white/25">
-        {getPlayerInitials(name)}
-      </div>
-    );
+    return <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-3xl font-black text-white/30">{getPlayerInitials(name)}</div>;
   }
 
-  return (
-    <div
-      className="relative z-10 h-[240px] w-full max-w-[340px] overflow-hidden border-x border-t border-white/10 bg-black/25 drop-shadow-[0_22px_50px_rgba(0,0,0,0.65)] sm:h-[280px] lg:h-[300px] lg:max-w-[360px]"
-    >
-      <img
-        src={src}
-        alt={name}
-        onError={() => setFailed(true)}
-        className="h-full w-full object-contain object-center"
-      />
-    </div>
-  );
+  return <img src={src} alt={name} onError={() => setFailed(true)} style={{ height: 150, width: 190 }} className="object-contain object-bottom" />;
+}
+
+function formatTime(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 'time unavailable' : parsed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function formatOdds(odds: number | null) {
+  if (odds === null || !Number.isFinite(odds)) return 'TBD';
+  return odds > 0 ? `+${odds}` : String(odds);
 }
