@@ -1,32 +1,33 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
+  Activity,
   ArrowRight,
-  BarChart3,
-  Bell,
-  Bot,
-  Brush,
-  ClipboardList,
-  ChevronRight,
+  CheckCircle2,
+  CircleDot,
+  Clock3,
   Flame,
   LayoutDashboard,
-  LineChart,
-  MessageSquare,
   Radar,
   Search,
   ShieldCheck,
   Sliders,
-  Sparkles,
   Trophy,
-  UserCircle,
   Users,
 } from 'lucide-react';
 import type { CreatorProofProfile, Parlay } from '../types';
-import TodaySliders from './today/TodaySliders';
-import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
+import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
+import { buildBoard } from '../features/hr/utils/normalizeHrWatch';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
+import { todayISO } from '../hooks/queries/hrBoardQuery';
 import { motion } from '../lib/motion';
-import { useMode } from '../lib/useMode';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
+import {
+  buildTodayDecision,
+  type TodayAttentionItem,
+  type TodayDecisionTone,
+} from './today/todayDecisionModel';
+import TodayDecisionReel from './today/TodayDecisionReel';
+import { buildTodayReelSlides } from './today/todayDecisionReelModel';
 
 const FollowingHubPage = React.lazy(() => import('../pages/FollowingHubPage'));
 
@@ -41,154 +42,92 @@ interface Props {
   isLoggedIn?: boolean;
 }
 
-type DashboardCard = {
+type QuickRoute = {
   icon: React.ComponentType<{ className?: string }>;
   section: string;
-  title: string;
-  eyebrow: string;
-  description: string;
-  accent: 'cyan' | 'gold' | 'indigo';
-  meta?: string;
+  label: string;
+  detail: string;
 };
 
-const TODAY_TOOLS: DashboardCard[] = [
-  {
-    icon: Users,
-    section: 'daily_players',
-    title: 'Daily Players',
-    eyebrow: 'Lineups',
-    description: 'Scan every MLB matchup, projected starters, and hitter availability.',
-    accent: 'cyan',
-  },
-  {
-    icon: Flame,
-    section: 'hr_board',
-    title: 'Home Run Intelligence',
-    eyebrow: 'Power',
-    description: 'Ranked home run research with pitcher, park, form, and data status.',
-    accent: 'cyan',
-  },
-  {
-    icon: ShieldCheck,
-    section: 'board',
-    title: 'VouchBoard',
-    eyebrow: 'Proof',
-    description: 'Review saved vouches, proof cards, and posted research receipts.',
-    accent: 'indigo',
-  },
-  {
-    icon: Sliders,
-    section: 'build',
-    title: 'ParlayOS',
-    eyebrow: 'Builder',
-    description: 'Build slips from research legs and track them into the ledger.',
-    accent: 'cyan',
-  },
-  {
-    icon: LineChart,
-    section: 'pro_graphs_lab',
-    title: 'Pro Graphs Lab',
-    eyebrow: 'Pro',
-    description: 'Trend charts and advanced graphing tools for deeper research.',
-    accent: 'gold',
-  },
+const QUICK_ROUTES: QuickRoute[] = [
+  { icon: Flame, section: 'hr_board', label: 'HR Intelligence', detail: 'Compare today\'s signals' },
+  { icon: Search, section: 'research', label: 'Player Research', detail: 'Study one player deeply' },
+  { icon: Sliders, section: 'live_parlays', label: 'ParlayOS', detail: 'Build and monitor slips' },
+  { icon: Activity, section: 'live_games', label: 'Live Games', detail: 'Follow the current slate' },
+  { icon: Trophy, section: 'results', label: 'Results', detail: 'See the verified record' },
 ];
 
-const INTELLIGENCE_TOOLS: DashboardCard[] = [
-  {
-    icon: Bot,
-    section: 'ai_engine',
-    title: 'AI Research',
-    eyebrow: 'Engine',
-    description: 'Generate research-backed parlays and compare model rationale.',
-    accent: 'indigo',
+const TONE_STYLES: Record<TodayDecisionTone, { text: string; border: string; bg: string; glow: string }> = {
+  cyan: {
+    text: 'text-vouch-cyan',
+    border: 'border-vouch-cyan/35',
+    bg: 'bg-vouch-cyan/10',
+    glow: 'via-vouch-cyan/70',
   },
-  {
-    icon: Search,
-    section: 'research',
-    title: 'Player Research',
-    eyebrow: 'Profiles',
-    description: 'Deep dive on players, props, splits, and add legs from one screen.',
-    accent: 'cyan',
+  emerald: {
+    text: 'text-vouch-emerald',
+    border: 'border-vouch-emerald/35',
+    bg: 'bg-vouch-emerald/10',
+    glow: 'via-vouch-emerald/70',
   },
-  {
-    icon: Radar,
-    section: 'team_matchup_lab',
-    title: 'Matchup Lab',
-    eyebrow: 'Pitchers',
-    description: 'Professional pitcher and team matchup research for today’s slate.',
-    accent: 'gold',
+  amber: {
+    text: 'text-amber-300',
+    border: 'border-amber-300/30',
+    bg: 'bg-amber-300/10',
+    glow: 'via-amber-300/60',
   },
-];
+};
 
-const PROOF_TOOLS: DashboardCard[] = [
-  {
-    icon: MessageSquare,
-    section: 'feed',
-    title: 'Home Feed',
-    eyebrow: 'Social',
-    description: 'Post research, follow vouches, and keep the public proof loop moving.',
-    accent: 'cyan',
-  },
-  {
-    icon: Trophy,
-    section: 'results',
-    title: 'Results Ledger',
-    eyebrow: 'Grading',
-    description: 'Track pending, won, lost, push, and void outcomes without hiding misses.',
-    accent: 'gold',
-  },
-  {
-    icon: Bell,
-    section: 'notifications',
-    title: 'Notifications',
-    eyebrow: 'Alerts',
-    description: 'Review home run alerts, parlay updates, and unread activity.',
-    accent: 'indigo',
-  },
-];
-
-const ACCOUNT_TOOLS: DashboardCard[] = [
-  {
-    icon: Brush,
-    section: 'themestore',
-    title: 'Theme Store',
-    eyebrow: 'Customize',
-    description: 'Open cosmetic customization and theme options for your account.',
-    accent: 'indigo',
-  },
-  {
-    icon: UserCircle,
-    section: 'profile',
-    title: 'Profile',
-    eyebrow: 'Account',
-    description: 'Manage your capper identity, history, and visible profile details.',
-    accent: 'cyan',
-  },
-];
-
-export default function TodayDashboard({ onSectionChange, savedSlips = [], profile, isLoggedIn = false }: Props) {
-  const [mode, , toggleMode] = useMode();
+export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Props) {
   const [activePanel, setActivePanel] = useState<TodayPanel>('overview');
   const touchStartX = useRef<number | null>(null);
   const dailyReportQuery = useDailyReport();
+  const hrBoardQuery = useDailyHrBoard(todayISO());
   const report = dailyReportQuery.data ?? null;
-  const loading = dailyReportQuery.isLoading;
+  const hrBoard = useMemo(
+    () => hrBoardQuery.data ? buildBoard(hrBoardQuery.data) : null,
+    [hrBoardQuery.data],
+  );
+  const visibleHrRows = useMemo(() => {
+    if (!hrBoard) return [];
+    if (hrBoard.confirmed.length > 0) return hrBoard.confirmed;
+    if (hrBoard.curated.length > 0) return hrBoard.curated;
+    return hrBoard.all;
+  }, [hrBoard]);
 
   const pendingSlips = useMemo(
     () => savedSlips.filter((slip) => String(slip.status || 'PENDING').toUpperCase() === 'PENDING').length,
     [savedSlips],
   );
 
-  const topHr = report?.hrTargets?.[0];
-  const topEnvironment = report?.runEnvironments?.[0];
-  const vulnerablePitcher = report?.vulnerablePitchers?.[0];
-  const reportStatus = loading ? 'Syncing' : report ? report.dataQuality || 'Projected' : 'Limited';
-  const activeIndex = TODAY_PANELS.indexOf(activePanel);
+  const decision = useMemo(
+    () => buildTodayDecision({
+      report,
+      loading: dailyReportQuery.isLoading,
+      hasError: dailyReportQuery.isError,
+      savedSlips: savedSlips.length,
+      pendingSlips,
+      hrSignalCount: hrBoard ? visibleHrRows.length : null,
+      hrSignalsLoading: hrBoardQuery.loading,
+    }),
+    [dailyReportQuery.isError, dailyReportQuery.isLoading, hrBoard, hrBoardQuery.loading, pendingSlips, report, savedSlips.length, visibleHrRows.length],
+  );
 
-  const onTouchStart = (clientX: number) => {
-    touchStartX.current = clientX;
-  };
+  const featuredPlayer = useMemo(() => {
+    const hasOfficialLineup = Boolean(hrBoard?.confirmed.length);
+    const row = visibleHrRows[0] ?? null;
+
+    if (!row || hasOfficialLineup || row.truthStatus !== 'official') return row;
+    return { ...row, truthStatus: 'projected' as const };
+  }, [hrBoard?.confirmed.length, visibleHrRows]);
+
+  const reelSlides = useMemo(
+    () => buildTodayReelSlides({ decision, report, topPlayer: featuredPlayer }),
+    [decision, featuredPlayer, report],
+  );
+
+  const activeIndex = TODAY_PANELS.indexOf(activePanel);
+  const tone = TONE_STYLES[decision.tone];
 
   const onTouchEnd = (clientX: number) => {
     if (touchStartX.current === null) return;
@@ -202,58 +141,16 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian text-ve-flash px-3 py-4 sm:px-4 lg:py-5`}>
-      <div className="mx-auto max-w-[1320px] space-y-4">
-        <div className={`${Z8_PANEL} glass-command ve-premium-panel p-3 sm:p-4`}>
-          <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today dashboard pages">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activePanel === 'overview'}
-              onClick={() => setActivePanel('overview')}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-                activePanel === 'overview'
-                  ? 'border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan'
-                  : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
-              }`}
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              Command Center
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activePanel === 'following'}
-              onClick={() => setActivePanel('following')}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-                activePanel === 'following'
-                  ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
-                  : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" />
-              Following
-            </button>
-          </div>
-          <div className="mt-3 flex justify-center gap-1.5" aria-hidden>
-            {TODAY_PANELS.map((panel, i) => (
-              <span
-                key={panel}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'
-                }`}
-              />
-            ))}
-          </div>
-          <p className="mt-2 text-center text-[10px] font-mono text-white/35">
-            Swipe left/right or tap tabs to switch pages
-          </p>
-        </div>
+    <main className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian px-3 py-4 text-ve-flash sm:px-4 lg:py-5`}>
+      <div className="mx-auto max-w-[1240px] space-y-4">
+        <TodayNavigation activePanel={activePanel} setActivePanel={setActivePanel} activeIndex={activeIndex} />
 
         <div
           className="overflow-x-hidden touch-pan-y"
-          onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
-          onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
+          onTouchStart={(event) => {
+            touchStartX.current = event.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(event) => onTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         >
           <motion.div
             className="flex items-start"
@@ -272,161 +169,88 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-        <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
+              <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden`}>
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${tone.glow} to-transparent`} />
 
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-stretch">
-            <div className="flex flex-col justify-between gap-5">
-              <div>
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Today&apos;s decision brief
-                  </span>
-                  <span className={`border border-ve-fuse/40 bg-ve-graphite/30 px-3 py-1 ${Z8_LABEL} text-ve-ion/40`}>
-                    {reportStatus}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-3 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 border px-2.5 py-1 ${Z8_LABEL} ${tone.border} ${tone.bg} ${tone.text}`}>
+                      <CircleDot className="h-3 w-3" />
+                      {decision.statusLabel}
+                    </span>
+                    <span className={`${Z8_LABEL} text-white/35`}>
+                      {report
+                        ? `${report.gameCount} games · ${decision.liveGames} live · ${decision.finalGames} final`
+                        : 'Slate status unavailable'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-white/30">
+                    {formatUpdatedAt(report?.generatedAt)}
                   </span>
                 </div>
 
-                <h1 className="max-w-4xl text-3xl font-black tracking-tight text-ve-flash sm:text-4xl lg:text-5xl font-mono uppercase">
-                  What needs your attention today
-                </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55 sm:text-base font-mono">
-                  Review the strongest available signal, verify its data status, then move directly into research or tracking.
-                </p>
-              </div>
+                <TodayDecisionReel slides={reelSlides} onSectionChange={onSectionChange} />
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} primary />
-                <CommandButton label="Open Live Games" section="live_games" onSectionChange={onSectionChange} />
-                <CommandButton label="Open ParlayOS" section="live_parlays" onSectionChange={onSectionChange} />
-              </div>
-            </div>
+                <aside className="border-t border-white/[0.07] bg-black/20 p-4 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className={`${Z8_LABEL} text-white/35`}>Needs attention</p>
+                      <h2 className="mt-1 text-lg font-black text-white">Three things, maximum</h2>
+                    </div>
+                    <ShieldCheck className={`h-5 w-5 ${tone.text}`} />
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-3">
+                    {decision.attention.map((item, index) => (
+                      <AttentionRow
+                        key={item.id}
+                        item={item}
+                        index={index + 1}
+                        onSectionChange={onSectionChange}
+                      />
+                    ))}
+                  </div>
+                </aside>
+              </section>
 
-            <div className={`${Z8_PANEL} ve-surface-card p-3`}>
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">Live Brief</p>
-                  <h2 className="mt-0.5 text-sm font-black text-[hsl(var(--ve-text-primary))]">MLB slate signals</h2>
-                </div>
-                <ModeToggle mode={mode} toggleMode={toggleMode} />
-              </div>
+              <section className="grid gap-4 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+                <button
+                  type="button"
+                  onClick={() => onSectionChange(decision.resumeSection)}
+                  className={`${Z8_PANEL} ve-premium-panel group relative overflow-hidden p-5 text-left sm:p-6`}
+                >
+                  <div className="pointer-events-none absolute bottom-0 left-0 h-px w-2/3 bg-gradient-to-r from-vouch-cyan/80 to-transparent" />
+                  <p className={`${Z8_LABEL} text-vouch-cyan`}>{decision.resumeLabel}</p>
+                  <h2 className="mt-3 text-xl font-black text-white">{decision.resumeTitle}</h2>
+                  <p className="mt-2 max-w-lg text-xs leading-5 text-white/45">{decision.resumeDetail}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-black text-white/70 transition group-hover:text-vouch-cyan">
+                    Continue
+                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  </span>
+                </button>
 
-              <div className="grid gap-2">
-                <SignalRow
-                  icon={Flame}
-                  label="Top HR Target"
-                  value={topHr ? `${topHr.team} vs ${topHr.opposingPitcher}` : 'No HR target loaded'}
-                  detail={topHr ? `HR score ${topHr.hrScore}` : 'Open the board when live data is available.'}
-                  accent="cyan"
-                  loading={loading}
-                  onClick={() => onSectionChange('hr_board')}
-                />
-                <SignalRow
-                  icon={LineChart}
-                  label="Best Environment"
-                  value={topEnvironment ? topEnvironment.matchup : 'No run environment loaded'}
-                  detail={topEnvironment ? `Run environment ${topEnvironment.runEnvironmentScore}/100` : 'Check live games for current slate context.'}
-                  accent="cyan"
-                  loading={loading}
-                  onClick={() => onSectionChange('live_games')}
-                />
-                <SignalRow
-                  icon={BarChart3}
-                  label="Vulnerable Pitcher"
-                  value={vulnerablePitcher ? vulnerablePitcher.pitcherName : 'No probable pitcher loaded'}
-                  detail={vulnerablePitcher ? `${vulnerablePitcher.team} · vulnerability ${vulnerablePitcher.vulnerabilityScore}/100` : 'Probables may post closer to first pitch.'}
-                  accent="indigo"
-                  loading={loading}
-                  onClick={() => onSectionChange('team_matchup_lab')}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+                <section className={`${Z8_PANEL} ve-premium-panel p-4 sm:p-5`} aria-labelledby="today-tools-heading">
+                  <div className="mb-3 flex items-end justify-between gap-3">
+                    <div>
+                      <p className={`${Z8_LABEL} text-white/35`}>Open a tool</p>
+                      <h2 id="today-tools-heading" className="mt-1 text-lg font-black text-white">Go deeper when you choose</h2>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                    {QUICK_ROUTES.map((route) => (
+                      <QuickRouteButton key={route.section} route={route} onSectionChange={onSectionChange} />
+                    ))}
+                  </div>
+                </section>
+              </section>
 
-        <section className="grid gap-3 md:grid-cols-3">
-          <MetricTile label="Saved Parlays" value={savedSlips.length} detail={`${pendingSlips} pending`} />
-          <MetricTile label="Research Mode" value={mode === 'beginner' ? 'Beginner' : 'Advanced'} detail="Toggle in command header" />
-          <MetricTile label="Daily Report" value={loading ? 'Syncing' : report ? 'Ready' : 'Limited'} detail="MLB data powered" />
-        </section>
-
-        <TodaySliders onSectionChange={onSectionChange} />
-
-        <details className="z8-data-surface group p-3 sm:p-4">
-          <summary className="z8-control flex cursor-pointer list-none items-center justify-between px-2 text-sm font-black text-white marker:content-none">
-            Browse all specialist tools
-            <ChevronRight className="h-4 w-4 text-white/45 transition group-open:rotate-90" />
-          </summary>
-          <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-          <DashboardSection
-            title="Today’s MLB Tools"
-            subtitle="Specialist destinations for deeper research."
-            cards={TODAY_TOOLS.map((card) =>
-              card.section === 'build'
-                ? { ...card, section: 'live_parlays', meta: savedSlips.length ? `${savedSlips.length} saved slips` : 'No saved slips yet' }
-                : card,
-            )}
-            onSectionChange={onSectionChange}
-          />
-
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
-          <div className="space-y-4">
-            <DashboardSection
-              title="Intelligence And AI"
-              subtitle="Move from board-level signals into deeper player and matchup analysis."
-              cards={INTELLIGENCE_TOOLS}
-              onSectionChange={onSectionChange}
-              columns="md:grid-cols-3"
-            />
-
-            <DashboardSection
-              title="Social Proof And Results"
-              subtitle="Publish research, save receipts, and check graded outcomes."
-              cards={PROOF_TOOLS}
-              onSectionChange={onSectionChange}
-              columns="md:grid-cols-3"
-            />
-          </div>
-
-          <aside className="glass-command ve-premium-panel rounded-3xl p-4">
-            <div className="mb-3">
-              <p className="ve-section-kicker">Account Status</p>
-              <h2 className="mt-1 text-lg font-black">Workspace Controls</h2>
-              <p className="mt-1 text-xs leading-5 text-[hsl(var(--ve-text-muted))]">
-                Personalize the research surface, check alerts, and manage profile details.
+              <p className="pb-2 text-center text-[10px] font-medium text-white/30">
+                Probability-based sports research. No guaranteed outcomes.
               </p>
-            </div>
-
-            <div className="grid gap-2">
-              {ACCOUNT_TOOLS.map((card) => (
-                <MiniLinkCard key={card.section} card={card} onSectionChange={onSectionChange} />
-              ))}
-              <MiniLinkCard
-                card={{
-                  icon: Bell,
-                  section: 'notifications',
-                  title: 'Alerts Inbox',
-                  eyebrow: 'Unread',
-                  description: 'Open notification center.',
-                  accent: 'gold',
-                }}
-                onSectionChange={onSectionChange}
-              />
-            </div>
-          </aside>
-          </div>
-          </div>
-        </details>
-
-        <p className="pb-2 text-center text-[10px] font-medium text-[hsl(var(--ve-text-muted))]">
-          Probability-based sports research. No guaranteed outcomes.
-        </p>
             </div>
 
             <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
               {activePanel === 'following' && (
-                <React.Suspense fallback={<PortfolioPanelSkeleton />}>
+                <React.Suspense fallback={<FollowingPanelSkeleton />}>
                   <FollowingHubPage />
                 </React.Suspense>
               )}
@@ -438,241 +262,148 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   );
 }
 
-function PortfolioPanelSkeleton() {
+function TodayNavigation({
+  activePanel,
+  setActivePanel,
+  activeIndex,
+}: {
+  activePanel: TodayPanel;
+  setActivePanel: (panel: TodayPanel) => void;
+  activeIndex: number;
+}) {
   return (
-    <div className={`${Z8_PANEL} min-h-[360px] animate-pulse rounded-3xl p-5`} role="status" aria-label="Loading portfolio analytics">
+    <div className={`${Z8_PANEL} glass-command ve-premium-panel relative px-2 py-1.5`}>
+      <span
+        className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center border border-vouch-emerald/35 bg-vouch-emerald/10 font-mono text-[10px] font-black tracking-[-0.08em] text-vouch-emerald sm:hidden"
+        aria-label="VouchEdge"
+      >
+        VE
+      </span>
+      <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today pages">
+        <TodayTab active={activePanel === 'overview'} onClick={() => setActivePanel('overview')} icon={LayoutDashboard}>
+          Today
+        </TodayTab>
+        <TodayTab active={activePanel === 'following'} onClick={() => setActivePanel('following')} icon={Users} emerald>
+          Following
+        </TodayTab>
+      </div>
+      <div className="mt-1 flex justify-center gap-1" aria-hidden="true">
+        {TODAY_PANELS.map((panel, index) => (
+          <span key={panel} className={`h-0.5 rounded-full transition-all ${index === activeIndex ? 'w-4 bg-vouch-cyan' : 'w-1 bg-white/15'}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TodayTab({
+  active,
+  onClick,
+  icon: Icon,
+  emerald = false,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  emerald?: boolean;
+  children: React.ReactNode;
+}) {
+  const activeClasses = emerald
+    ? 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald'
+    : 'border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan';
+
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`z8-control inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+        active ? activeClasses : 'border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70'
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {children}
+    </button>
+  );
+}
+
+function AttentionRow({
+  item,
+  index,
+  onSectionChange,
+}: {
+  item: TodayAttentionItem;
+  index: number;
+  onSectionChange: (section: string) => void;
+}) {
+  const icons = { data: CheckCircle2, slate: Clock3, action: Radar };
+  const Icon = icons[item.kind];
+  const content = (
+    <>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 bg-white/[0.03] text-white/50">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="font-mono text-[9px] font-black text-white/25">0{index}</span>
+          <span className={`${Z8_LABEL} text-white/35`}>{item.label}</span>
+        </span>
+        <span className="mt-1 block text-sm font-black text-white">{item.value}</span>
+        <span className="mt-0.5 block text-[11px] leading-4 text-white/40">{item.detail}</span>
+      </span>
+      {item.section ? <ArrowRight className="h-4 w-4 shrink-0 text-white/25 transition group-hover:translate-x-0.5 group-hover:text-vouch-cyan" /> : null}
+    </>
+  );
+
+  if (!item.section) {
+    return <div className="flex items-center gap-3 border border-white/[0.07] bg-black/20 p-3">{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSectionChange(item.section as string)}
+      className="group flex items-center gap-3 border border-white/[0.07] bg-black/20 p-3 text-left transition hover:border-vouch-cyan/30 hover:bg-vouch-cyan/[0.04]"
+    >
+      {content}
+    </button>
+  );
+}
+
+function QuickRouteButton({ route, onSectionChange }: { route: QuickRoute; onSectionChange: (section: string) => void }) {
+  const Icon = route.icon;
+  return (
+    <button
+      type="button"
+      onClick={() => onSectionChange(route.section)}
+      className="group flex min-h-[96px] flex-col justify-between border border-white/[0.08] bg-black/20 p-3 text-left transition hover:-translate-y-0.5 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/[0.04]"
+    >
+      <span className="flex items-start justify-between gap-2">
+        <Icon className="h-4 w-4 text-vouch-cyan/80" />
+        <ArrowRight className="h-3.5 w-3.5 text-white/20 transition group-hover:translate-x-0.5 group-hover:text-vouch-cyan" />
+      </span>
+      <span>
+        <span className="block text-xs font-black text-white">{route.label}</span>
+        <span className="mt-1 block text-[10px] leading-4 text-white/35">{route.detail}</span>
+      </span>
+    </button>
+  );
+}
+
+function FollowingPanelSkeleton() {
+  return (
+    <div className={`${Z8_PANEL} min-h-[360px] animate-pulse p-5`} role="status" aria-label="Loading followed accounts">
       <div className="h-4 w-40 rounded bg-white/10" />
       <div className="mt-5 h-56 rounded-2xl bg-white/5" />
     </div>
   );
 }
 
-function accentClasses(accent: DashboardCard['accent']) {
-  if (accent === 'gold') {
-    return {
-      text: 'text-vouch-emerald',
-      bg: 'bg-vouch-emerald/10',
-      border: 'border-vouch-emerald/30',
-      hover: 'hover:border-vouch-emerald/44',
-    };
-  }
-
-  if (accent === 'indigo') {
-    return {
-      text: 'text-vouch-cyan',
-      bg: 'bg-vouch-cyan/10',
-      border: 'border-vouch-cyan/30',
-      hover: 'hover:border-vouch-cyan/44',
-    };
-  }
-
-  return {
-    text: 'text-vouch-cyan',
-    bg: 'bg-vouch-cyan/10',
-    border: 'border-vouch-cyan/30',
-    hover: 'hover:border-vouch-cyan/44',
-  };
-}
-
-function CommandButton({
-  label,
-  section,
-  primary,
-  icon: Icon,
-  onSectionChange,
-}: {
-  label: string;
-  section: string;
-  primary?: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-  onSectionChange: (section: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onSectionChange(section)}
-      className={
-        primary
-          ? `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
-          : `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
-      }
-    >
-      {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" /> : null}
-      {label}
-      <ArrowRight className="h-4 w-4" />
-    </button>
-  );
-}
-
-function ModeToggle({ mode, toggleMode }: { mode: string; toggleMode: () => void }) {
-  return (
-    <div className={`flex items-center gap-1 border border-white/10 bg-black/25 p-1 ${Z8_LABEL}`}>
-      {(['beginner', 'advanced'] as const).map((item) => (
-        <button
-          key={item}
-          type="button"
-          onClick={() => item !== mode && toggleMode()}
-          className={`z8-control px-2.5 py-1 capitalize transition border ${
-            mode === item
-              ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-              : 'border-transparent text-white/40 hover:text-white/65'
-          }`}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function SignalRow({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  accent,
-  loading,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  detail: string;
-  accent: DashboardCard['accent'];
-  loading: boolean;
-  onClick: () => void;
-}) {
-  const tone = accentClasses(accent);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 border border-white/10 bg-black/25 p-3 text-left transition font-z8 ${tone.hover}`}
-    >
-      <span className={`flex h-10 w-10 items-center justify-center border ${tone.border} ${tone.bg}`}>
-        <Icon className={`h-4 w-4 ${tone.text}`} />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[10px] font-black uppercase tracking-[0.14em] text-[hsl(var(--ve-text-muted))]">{label}</span>
-        <span className={`mt-0.5 block truncate text-sm font-black ${loading ? 'animate-pulse text-[hsl(var(--ve-text-muted))]' : 'text-[hsl(var(--ve-text-primary))]'}`}>
-          {loading ? 'Loading live signal' : value}
-        </span>
-        <span className="mt-0.5 block truncate text-[11px] text-[hsl(var(--ve-text-muted))]">{detail}</span>
-      </span>
-      <ArrowRight className="h-4 w-4 text-[hsl(var(--ve-text-muted))] transition group-hover:translate-x-0.5 group-hover:text-[hsl(var(--ve-text-secondary))]" />
-    </button>
-  );
-}
-
-function MetricTile({ label, value, detail }: { label: string; value: string | number; detail: string }) {
-  return (
-    <div className={`${Z8_PANEL} ve-stat-card px-4 py-3`}>
-      <p className={`${Z8_LABEL} text-white/40`}>{label}</p>
-      <div className="mt-1 flex items-end justify-between gap-3">
-        <strong className="text-2xl font-black text-white font-mono">{value}</strong>
-        <span className="text-xs font-semibold text-white/40 font-mono">{detail}</span>
-      </div>
-    </div>
-  );
-}
-
-function DashboardSection({
-  title,
-  subtitle,
-  cards,
-  onSectionChange,
-  columns = 'sm:grid-cols-2 xl:grid-cols-4',
-}: {
-  title: string;
-  subtitle: string;
-  cards: DashboardCard[];
-  onSectionChange: (section: string) => void;
-  columns?: string;
-}) {
-  return (
-    <section className={`${Z8_PANEL} ve-premium-panel p-4`}>
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-white font-mono uppercase">{title}</h2>
-          <p className="mt-0.5 text-xs leading-5 text-white/40 font-mono">{subtitle}</p>
-        </div>
-      </div>
-      <div className={`grid gap-3 ${columns}`}>
-        {cards.map((card) => (
-          <FeatureCard key={card.section} card={card} onSectionChange={onSectionChange} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function FeatureCard({
-  card,
-  onSectionChange,
-}: {
-  card: DashboardCard;
-  onSectionChange: (section: string) => void;
-}) {
-  const Icon = card.icon;
-  const tone = accentClasses(card.accent);
-  const isHrBoard = card.section === 'hr_board';
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSectionChange(card.section)}
-      className={`${Z8_PANEL} ve-tool-card group flex min-h-[154px] flex-col justify-between p-3.5 text-left font-z8 ${tone.hover}`}
-    >
-      <span className="flex items-start justify-between gap-3">
-        {isHrBoard ? (
-          <HrBrandIcon />
-        ) : (
-          <span className={`flex h-11 w-11 items-center justify-center border ${tone.border} ${tone.bg}`}>
-            <Icon className={`h-5 w-5 ${tone.text}`} />
-          </span>
-        )}
-        <span className={`rounded-full border ${tone.border} ${tone.bg} px-2 py-1 text-[9px] font-black uppercase tracking-wide ${tone.text}`}>
-          {card.eyebrow}
-        </span>
-      </span>
-
-      <span>
-        <span className="mt-4 flex items-center justify-between gap-2 text-base font-black text-[hsl(var(--ve-text-primary))]">
-          {card.title}
-          <ArrowRight className="h-4 w-4 text-[hsl(var(--ve-text-muted))] transition group-hover:translate-x-0.5 group-hover:text-[hsl(var(--ve-text-secondary))]" />
-        </span>
-        <span className="mt-1 block text-xs leading-5 text-[hsl(var(--ve-text-muted))]">{card.description}</span>
-        {card.meta && <span className="mt-2 block text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-secondary))]">{card.meta}</span>}
-      </span>
-    </button>
-  );
-}
-
-function MiniLinkCard({
-  card,
-  onSectionChange,
-}: {
-  card: DashboardCard;
-  onSectionChange: (section: string) => void;
-}) {
-  const Icon = card.icon;
-  const tone = accentClasses(card.accent);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSectionChange(card.section)}
-      className={`ve-tool-card group grid grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl p-3 text-left ${tone.hover}`}
-    >
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${tone.border} ${tone.bg}`}>
-        <Icon className={`h-4 w-4 ${tone.text}`} />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">{card.title}</span>
-        <span className="block truncate text-[11px] text-[hsl(var(--ve-text-muted))]">{card.description}</span>
-      </span>
-      <ArrowRight className="h-4 w-4 text-[hsl(var(--ve-text-muted))] transition group-hover:translate-x-0.5 group-hover:text-[hsl(var(--ve-text-secondary))]" />
-    </button>
-  );
+function formatUpdatedAt(value?: string) {
+  if (!value) return 'Update time unavailable';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Update time unavailable';
+  return `Updated ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }

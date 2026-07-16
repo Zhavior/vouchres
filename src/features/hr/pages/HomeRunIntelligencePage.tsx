@@ -15,11 +15,16 @@ import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
-import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
 import { summarizeHrLens } from '../engine/hrLensModel';
 import { localISODate } from '../utils/localDate';
+import {
+  clearHrResearchPlayer,
+  isHrResearchHistoryEntry,
+  pushHrResearchPlayer,
+  readHrResearchPlayerId,
+} from '../utils/hrResearchRoute';
 import { ProductEvents } from '../../../lib/productEvents';
 import '../../../styles/z8-hr-lens.css';
 
@@ -188,7 +193,6 @@ const EmptyState: React.FC<{
 
 const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -229,7 +233,27 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     });
   }, [vm.date, vm.mode, vm.rows?.length, vm.slate.dataQuality, vm.slate.freshness, vm.slate.gameCount]);
 
-  const openPlayerDrawer = React.useCallback((player: typeof topPlayer) => {
+  React.useEffect(() => {
+    const syncResearchFromUrl = () => {
+      const playerId = readHrResearchPlayerId();
+      if (!playerId) {
+        setIsProfileOpen(false);
+        vm.setSelectedPlayer(null);
+        return;
+      }
+
+      const player = vm.researchRows.find((row) => String(row.playerId) === playerId);
+      if (!player) return;
+      vm.setSelectedPlayer(player);
+      setIsProfileOpen(true);
+    };
+
+    syncResearchFromUrl();
+    window.addEventListener('popstate', syncResearchFromUrl);
+    return () => window.removeEventListener('popstate', syncResearchFromUrl);
+  }, [vm.researchRows, vm.setSelectedPlayer]);
+
+  const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
     if (!player) return;
     ProductEvents.playerCardOpened({
       date: vm.date,
@@ -239,12 +263,6 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
       truth_status: player.truthStatus,
       hr_score: player.hrScore,
     });
-    vm.setSelectedPlayer(player);
-    setIsDrawerOpen(true);
-  }, [vm, topPlayer]);
-
-  const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
-    if (!player) return;
     ProductEvents.playerResearchViewed({
       date: vm.date,
       mode: vm.mode,
@@ -255,7 +273,20 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     });
     vm.setSelectedPlayer(player);
     setIsProfileOpen(true);
+    if (player.playerId != null && readHrResearchPlayerId() !== String(player.playerId)) {
+      pushHrResearchPlayer(player.playerId);
+    }
   }, [vm, topPlayer]);
+
+  const closePlayerProfile = React.useCallback(() => {
+    if (readHrResearchPlayerId() && isHrResearchHistoryEntry()) {
+      window.history.back();
+      return;
+    }
+    clearHrResearchPlayer();
+    setIsProfileOpen(false);
+    vm.setSelectedPlayer(null);
+  }, [vm]);
 
   const goToBuild = React.useCallback(() => {
     ProductEvents.slipBuildStarted({
@@ -498,7 +529,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             <HrBoard
               buckets={vm.buckets}
               onSelectPlayer={(player) => {
-                openPlayerDrawer(player);
+                openPlayerProfile(player);
               }}
               onViewProfile={(player) => {
                 openPlayerProfile(player);
@@ -508,22 +539,10 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           </div>
         )}
 
-        <HrPlayerDrawer
-          player={vm.selectedPlayer as any}
-          isOpen={isDrawerOpen && Boolean(vm.selectedPlayer)}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            vm.setSelectedPlayer(null);
-          }}
-        />
-
         <HrPlayerProfile
           player={vm.selectedPlayer as any}
           isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-          onClose={() => {
-            setIsProfileOpen(false);
-            vm.setSelectedPlayer(null);
-          }}
+          onClose={closePlayerProfile}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { HrPlayerCard } from '../src/features/hr/components/Cards/HrPlayerCard';
 import { HrCommandCenter } from '../src/features/hr/components/CommandCenter/HrCommandCenter';
 import type { HrWatchRow } from '../src/features/hr/types/hrWatch';
@@ -56,6 +56,17 @@ describe('HR board projected preview warnings', () => {
 
     expect(screen.getByText('Confirmed lineup')).toBeTruthy();
     expect(screen.queryByText('Official lineup not posted yet')).toBeNull();
+  });
+
+  it('labels and opens the player research action explicitly', () => {
+    const onViewProfile = vi.fn();
+    const player = makeProjectedRow();
+
+    render(<HrPlayerCard player={player} onViewProfile={onViewProfile} />);
+    fireEvent.click(screen.getByRole('button', { name: /open player research/i }));
+
+    expect(onViewProfile).toHaveBeenCalledOnce();
+    expect(onViewProfile).toHaveBeenCalledWith(player);
   });
 
   it('shows auto-preview banner when confirmed lineups are not posted', () => {

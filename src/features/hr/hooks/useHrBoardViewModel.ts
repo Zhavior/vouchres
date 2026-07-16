@@ -116,6 +116,19 @@ export function useHrBoardViewModel() {
 
   const rows = useMemo(() => board ? rowsForMode(board, mode) : [], [board, mode]);
 
+  const researchRows = useMemo(() => {
+    const byPlayer = new Map<string, HrWatchRow>();
+    const candidates = [
+      ...(board?.all ?? []),
+      ...(board?.curated ?? []),
+      ...(board?.confirmed ?? []),
+    ];
+    for (const row of candidates) {
+      byPlayer.set(String(row.playerId ?? row.stableId), row);
+    }
+    return [...byPlayer.values()];
+  }, [board]);
+
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
     return rows.filter((row) => {
@@ -182,7 +195,7 @@ export function useHrBoardViewModel() {
   }), [board?.counts.totalVisiblePool, board?.disclaimer, board?.note, board?.truthMessage, freshness, generatedAt, loadedAt, rawBoard?.dataQuality, rawBoard?.gameCount, responseWarnings]);
 
   return {
-    buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
+    buckets, rows: filteredRows, researchRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
     autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
     date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,

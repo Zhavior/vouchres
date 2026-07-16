@@ -353,7 +353,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
             }}
             className="flex w-full items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/75 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
           >
-            Full Profile
+            Open Player Research
             <ChevronRight className="h-3 w-3" />
           </button>
         )}
