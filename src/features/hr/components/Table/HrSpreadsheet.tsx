@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
   ChevronLeft,
@@ -313,10 +313,29 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
   const groups = buildHrMatchupGroups(rows);
   const [selectedGameKey, setSelectedGameKey] = useState('all');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
+  const matchupRailRef = useRef<HTMLDivElement | null>(null);
   const selectedGameIndex = groups.findIndex((group) => group.key === selectedGameKey);
   const activeGameKey = selectedGameIndex >= 0 ? selectedGameKey : 'all';
-  const visibleGroups = selectedGameIndex >= 0 ? [groups[selectedGameIndex]] : groups;
+  const activeGroup = selectedGameIndex >= 0 ? groups[selectedGameIndex] : null;
+  const visibleGroups = activeGroup ? [activeGroup] : groups;
   const showMarket = rows.some(hasMarketData);
+  const previousGroup = groups.length > 0
+    ? groups[selectedGameIndex >= 0 ? (selectedGameIndex - 1 + groups.length) % groups.length : groups.length - 1]
+    : null;
+  const nextGroup = groups.length > 0
+    ? groups[selectedGameIndex >= 0 ? (selectedGameIndex + 1) % groups.length : 0]
+    : null;
+
+  useEffect(() => {
+    if (activeGameKey === 'all') return;
+    const rail = matchupRailRef.current;
+    const target = rail?.querySelector<HTMLElement>(`[data-matchup-key="${activeGameKey}"]`);
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center',
+    });
+  }, [activeGameKey]);
 
   const toggleExpanded = (stableId: string) => {
     setExpandedRows((current) => {
@@ -359,38 +378,162 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
       ) : null}
 
       {groups.length > 1 ? (
-        <div className="border border-white/[0.11] bg-black/25 p-1.5" aria-label="Choose a matchup">
-          <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
-            <div>
-              <p className="font-mono text-[9px] font-black uppercase tracking-[0.12em] text-white/65">Slate matchups</p>
-              <p className="mt-0.5 text-[10px] text-white/55">Swipe or use arrows to choose a game.</p>
+        <section className="border border-white/[0.11] bg-black/30" aria-label="Choose a matchup">
+          <div className="grid gap-2 border-b border-white/[0.09] p-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-mono text-[9px] font-black uppercase tracking-[0.12em] text-white/55">
+                  Matchup navigator
+                </p>
+                <span className="border border-white/10 bg-black/30 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-[0.08em] text-white/45">
+                  {activeGroup ? `Game ${selectedGameIndex + 1} of ${groups.length}` : `${groups.length} games`}
+                </span>
+              </div>
+
+              {activeGroup ? (
+                <div className="mt-2 flex min-w-0 items-center gap-3">
+                  <div className="flex -space-x-2">
+                    <TeamMark team={activeGroup.primaryTeam} logoUrl={activeGroup.primaryLogoUrl} />
+                    <TeamMark team={activeGroup.opponent} logoUrl={activeGroup.opponentLogoUrl} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[15px] font-black tracking-tight text-white">
+                      {activeGroup.primaryTeam}
+                      <span className="mx-1.5 font-mono text-[9px] text-white/35">VS</span>
+                      {activeGroup.opponent}
+                    </p>
+                    <p className="mt-0.5 truncate font-mono text-[9px] uppercase tracking-[0.05em] text-white/48">
+                      {gameTimeLabel(activeGroup.gameTime)}
+                      {activeGroup.venue ? ` / ${activeGroup.venue}` : ''}
+                      {` / ${activeGroup.rows.length} players`}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <p className="text-[14px] font-black text-white">All slate matchups</p>
+                  <p className="mt-0.5 text-[10px] text-white/50">
+                    Select a game card to isolate one matchup.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-1">
-              <button type="button" onClick={() => selectAdjacentGame(-1)} aria-label="Previous matchup" className="flex h-8 w-8 items-center justify-center border border-white/12 bg-black/30 text-white/55 transition hover:border-white/25 hover:text-white"><ChevronLeft className="h-4 w-4" /></button>
-              <button type="button" onClick={() => selectAdjacentGame(1)} aria-label="Next matchup" className="flex h-8 w-8 items-center justify-center border border-white/12 bg-black/30 text-white/55 transition hover:border-white/25 hover:text-white"><ChevronRight className="h-4 w-4" /></button>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => selectAdjacentGame(-1)}
+                aria-label={previousGroup ? `Previous matchup: ${previousGroup.primaryTeam} vs ${previousGroup.opponent}` : 'Previous matchup'}
+                className="group flex min-h-10 min-w-0 items-center gap-2 border border-white/12 bg-black/30 px-2.5 text-left transition hover:border-[#00f0ff]/35 hover:bg-[#00f0ff]/[0.05]"
+              >
+                <ChevronLeft className="h-4 w-4 shrink-0 text-white/45 group-hover:text-[#00f0ff]" />
+                <span className="min-w-0">
+                  <span className="block font-mono text-[7px] font-black uppercase tracking-[0.08em] text-white/35">Previous</span>
+                  <span className="block truncate text-[10px] font-black text-white/72">
+                    {previousGroup ? `${previousGroup.primaryTeam} vs ${previousGroup.opponent}` : 'Matchup'}
+                  </span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectAdjacentGame(1)}
+                aria-label={nextGroup ? `Next matchup: ${nextGroup.primaryTeam} vs ${nextGroup.opponent}` : 'Next matchup'}
+                className="group flex min-h-10 min-w-0 items-center justify-end gap-2 border border-white/12 bg-black/30 px-2.5 text-right transition hover:border-[#00f0ff]/35 hover:bg-[#00f0ff]/[0.05]"
+              >
+                <span className="min-w-0">
+                  <span className="block font-mono text-[7px] font-black uppercase tracking-[0.08em] text-white/35">Next</span>
+                  <span className="block truncate text-[10px] font-black text-white/72">
+                    {nextGroup ? `${nextGroup.primaryTeam} vs ${nextGroup.opponent}` : 'Matchup'}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/45 group-hover:text-[#00f0ff]" />
+              </button>
             </div>
           </div>
-          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Team versus team matchups">
-            <button type="button" onClick={() => setSelectedGameKey('all')} aria-pressed={activeGameKey === 'all'} className={`min-h-[50px] min-w-[112px] snap-start border px-3 py-1.5 text-left transition ${activeGameKey === 'all' ? 'border-[#00ff94]/35 bg-[#00ff94]/10 shadow-[inset_0_-2px_#00ff94]' : 'border-white/12 bg-black/25 hover:border-white/24'}`}>
-              <p className={`font-mono text-[9px] font-black uppercase tracking-[0.1em] ${activeGameKey === 'all' ? 'text-[#75ffc5]' : 'text-white/55'}`}>All slate</p>
-              <p className="mt-1 text-sm font-black tabular-nums text-white">{groups.length} games</p>
+
+          <div
+            ref={matchupRailRef}
+            className="flex snap-x snap-mandatory gap-2 overflow-x-auto p-2 touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            role="group"
+            aria-label="Team versus team matchups"
+          >
+            <button
+              type="button"
+              data-matchup-key="all"
+              onClick={() => setSelectedGameKey('all')}
+              aria-pressed={activeGameKey === 'all'}
+              aria-current={activeGameKey === 'all' ? 'true' : undefined}
+              className={`min-h-[76px] min-w-[136px] snap-center border px-3 py-2 text-left transition ${
+                activeGameKey === 'all'
+                  ? 'border-[#00ff94]/45 bg-[#00ff94]/10 shadow-[inset_0_-3px_#00ff94,0_0_24px_rgba(0,255,148,.08)]'
+                  : 'border-white/12 bg-black/25 hover:border-white/24'
+              }`}
+            >
+              <p className={`font-mono text-[8px] font-black uppercase tracking-[0.1em] ${activeGameKey === 'all' ? 'text-[#75ffc5]' : 'text-white/45'}`}>
+                All slate
+              </p>
+              <p className="mt-1 text-base font-black tabular-nums text-white">{groups.length} games</p>
+              <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.05em] text-white/38">{rows.length} players</p>
             </button>
-            {groups.map((group) => {
+
+            {groups.map((group, index) => {
               const selected = activeGameKey === group.key;
               return (
-                <button key={group.key} type="button" onClick={() => setSelectedGameKey(group.key)} aria-label={`Show ${group.primaryTeam} vs ${group.opponent}`} aria-pressed={selected} className={`min-h-[50px] min-w-[176px] snap-start border px-2.5 py-1.5 text-left transition ${selected ? 'border-[#00f0ff]/40 bg-[#00f0ff]/[0.09] shadow-[inset_0_-2px_#00f0ff]' : 'border-white/12 bg-black/25 hover:border-white/24'}`}>
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-1.5"><TeamMark team={group.primaryTeam} logoUrl={group.primaryLogoUrl} /><TeamMark team={group.opponent} logoUrl={group.opponentLogoUrl} /></div>
+                <button
+                  key={group.key}
+                  type="button"
+                  data-matchup-key={group.key}
+                  onClick={() => setSelectedGameKey(group.key)}
+                  aria-label={`Show ${group.primaryTeam} vs ${group.opponent}`}
+                  aria-pressed={selected}
+                  aria-current={selected ? 'true' : undefined}
+                  className={`min-h-[76px] snap-center border px-3 py-2 text-left transition ${
+                    selected
+                      ? 'min-w-[240px] border-[#00f0ff]/55 bg-[#00f0ff]/[0.1] shadow-[inset_0_-3px_#00f0ff,0_0_28px_rgba(0,240,255,.1)]'
+                      : 'min-w-[198px] border-white/12 bg-black/25 hover:border-white/24 hover:bg-white/[0.035]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex -space-x-1.5">
+                      <TeamMark team={group.primaryTeam} logoUrl={group.primaryLogoUrl} />
+                      <TeamMark team={group.opponent} logoUrl={group.opponentLogoUrl} />
+                    </div>
+
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[12px] font-black ${selected ? 'text-white' : 'text-white/75'}`}>{group.primaryTeam} <span className="font-mono text-[8px] text-white/35">VS</span> {group.opponent}</p>
-                      <p className="mt-0.5 font-mono text-[8px] uppercase tracking-[0.05em] text-white/42">{gameTimeLabel(group.gameTime)} / {group.rows.length} players</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`truncate text-[13px] font-black ${selected ? 'text-white' : 'text-white/78'}`}>
+                          {group.primaryTeam}
+                          <span className="mx-1 font-mono text-[8px] text-white/35">VS</span>
+                          {group.opponent}
+                        </p>
+                        <span className="shrink-0 font-mono text-[7px] font-black uppercase tracking-[0.08em] text-white/30">
+                          {index + 1}/{groups.length}
+                        </span>
+                      </div>
+
+                      <p className="mt-1 truncate font-mono text-[8px] uppercase tracking-[0.05em] text-white/45">
+                        {gameTimeLabel(group.gameTime)}
+                        {group.venue ? ` / ${group.venue}` : ''}
+                      </p>
+
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="font-mono text-[8px] font-black uppercase tracking-[0.05em] text-[#75ffc5]/75">
+                          {group.rows.length} players
+                        </span>
+                        {selected ? (
+                          <span className="border border-[#00f0ff]/30 bg-[#00f0ff]/10 px-1.5 py-0.5 font-mono text-[7px] font-black uppercase tracking-[0.08em] text-[#00f0ff]">
+                            Active
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 </button>
               );
             })}
           </div>
-        </div>
+        </section>
       ) : null}
 
       {visibleGroups.map((group) => (

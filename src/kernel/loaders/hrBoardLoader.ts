@@ -1,10 +1,11 @@
 import { HrBoardRepository } from '../../repositories/HrBoardRepository';
 import type { HrBoardContract } from '../contracts/hrBoard';
+import { localISODate } from '../../features/hr/utils/localDate';
 
 const PREVIEW_LIMIT = 120;
 
 export async function loadHrBoard(date: string, previewLimit = PREVIEW_LIMIT): Promise<HrBoardContract> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate();
 
   const response =
     date === today

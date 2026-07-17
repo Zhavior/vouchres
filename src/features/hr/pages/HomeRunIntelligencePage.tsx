@@ -20,7 +20,7 @@ import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
-import { HrTreemap } from '../components/Treemap/HrTreemap';
+import { HrSignalField } from '../components/SignalField/HrSignalField';
 import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
 import {
@@ -391,8 +391,8 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   };
 
   return (
-    <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell min-h-0 min-w-0 overflow-x-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex max-w-[1720px] flex-col ${Z8_PAGE_GAP}`}>
+    <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell h-[100dvh] max-h-[100dvh] min-h-0 min-w-0 overflow-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex h-full min-h-0 max-w-[1720px] flex-col overflow-hidden ${Z8_PAGE_GAP}`}>
         <HrHeader
           mode={vm.mode}
           onRefresh={handleRefresh}
@@ -646,6 +646,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           rows={(vm.rows ?? []) as unknown[]}
         />
 
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
         {vm.loading && !vm.rows?.length ? (
           <LoadingSkeleton />
         ) : vm.error ? (
@@ -668,11 +669,12 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             }}
           />
         ) : viewMode === 'treemap' ? (
-          <HrTreemap
+          <HrSignalField
             buckets={vm.buckets}
             onSelectPlayer={(player) => {
               openPlayerProfile(player);
             }}
+            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
             getHrResult={vm.getHrResult}
           />
         ) : (
@@ -701,6 +703,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           </p>
           <span className="shrink-0 text-white/55">Learn about our scoring <span className="ml-2">-&gt;</span></span>
         </footer>
+        </div>
 
         <HrPlayerProfile
           player={vm.selectedPlayer}

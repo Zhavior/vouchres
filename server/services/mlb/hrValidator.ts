@@ -1,3 +1,4 @@
+import { todayISO } from "./mlbClient";
 /**
  * HR Board Validation Engine — validateHrCandidate()
  *
@@ -155,7 +156,7 @@ function validateCandidateInternal(
   }
 
   // CHECK 6: gameDate matches today
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   if (player.gameDate !== today && player.gameDate !== game.gameDate) {
     return {
       valid: false,

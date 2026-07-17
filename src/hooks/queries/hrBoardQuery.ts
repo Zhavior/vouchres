@@ -4,9 +4,10 @@ import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../../lib/hrBoardSlice";
 import type { HrBoardResponse } from "../../types/hrBoard";
 import { queryKeys } from "./queryKeys";
+import { localISODate } from "../../features/hr/utils/localDate";
 
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
 
 export function getHrBoardBootInitialData(date: string): HrBoardResponse | undefined {
