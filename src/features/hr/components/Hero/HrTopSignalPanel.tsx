@@ -114,7 +114,7 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
 
       <div className="z8-hr-judge-metrics grid overflow-hidden border border-white/[0.09] sm:grid-cols-2 lg:grid-cols-7">
         <MetricCell label="Power" value={numberLabel(player.hitterPower)} detail="Batter profile" icon={<Zap className="h-5 w-5" />} />
-        <MetricCell label="Pitcher matchup" value={numberLabel(player.pitcherVulnerability)} detail={player.pitcherName || 'Unavailable'} icon={<Shield className="h-5 w-5" />} />
+        <MetricCell label="Pitcher vulnerability" value={numberLabel(player.pitcherVulnerability)} detail={player.pitcherName || 'Unavailable'} icon={<Shield className="h-5 w-5" />} />
         <MetricCell label="Park factor" value={numberLabel(player.parkFactor)} detail={player.venue || 'Venue unavailable'} icon={<Landmark className="h-5 w-5" />} />
         <MetricCell label="Lineup status" value={lineupValue} detail={lineupDetail} icon={<Users className="h-5 w-5" />} />
         <MetricCell label="Weather" value={weatherValue} detail={weatherDetail} icon={<Cloud className="h-5 w-5" />} />

@@ -155,7 +155,7 @@ function ExpandedDetails({ row, freshness, generatedAt, showMarket }: {
         <p className="mb-2 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-[#00f0ff]/75">Signal inputs</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Metric label="Power" value={row.hitterPower} />
-          <Metric label="Pitcher" value={row.pitcherVulnerability} />
+          <Metric label="Pitcher vulnerability" value={row.pitcherVulnerability} />
           <Metric label="Park" value={row.parkFactor} />
           <Metric label="Form" value={row.recentForm} />
           <Metric label="Data confidence" value={row.dataConfidence} />

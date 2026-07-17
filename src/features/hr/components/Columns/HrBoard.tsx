@@ -78,7 +78,7 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
       <div className="grid grid-cols-3 border-b border-white/[0.08] bg-black/20 py-2">
         {[
           ['Power', player.hitterPower],
-          ['Pitcher', player.pitcherVulnerability],
+          ['Pitcher vulnerability', player.pitcherVulnerability],
           ['Park', player.parkFactor],
         ].map(([label, value], index) => (
           <div key={String(label)} className={`text-center ${index > 0 ? 'border-l border-white/[0.08]' : ''}`}>

@@ -365,6 +365,65 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
 
 /* ============ Score validated candidates ============ */
 
+/**
+ * Canonical pitcher vulnerability for the live HR board.
+ *
+ * Real MLB season inputs only:
+ * - HR/9 is the primary HR-risk signal
+ * - BB/9, WHIP, and ERA add command/run-pressure context
+ * - K/9 suppresses vulnerability
+ * - small samples are blended back toward neutral
+ *
+ * Missing or unusable statistics return a neutral 50/100.
+ */
+function calculateLivePitcherVulnerability(
+  stats: PitcherSeasonStats | null
+): {
+  score: number;
+  hr9: number | null;
+  k9: number | null;
+  bb9: number | null;
+  reliability: number;
+} {
+  if (!stats || !Number.isFinite(stats.inningsPitched) || stats.inningsPitched < 1) {
+    return {
+      score: 50,
+      hr9: null,
+      k9: null,
+      bb9: null,
+      reliability: 0,
+    };
+  }
+
+  const innings = stats.inningsPitched;
+  const hr9 = Number.isFinite(stats.homeRunsPer9) ? stats.homeRunsPer9 : 0;
+  const k9 = innings > 0 ? (stats.strikeOuts / innings) * 9 : 0;
+  const bb9 = innings > 0 ? (stats.baseOnBalls / innings) * 9 : 0;
+  const whip = stats.whip != null && Number.isFinite(stats.whip) ? stats.whip : 1.25;
+  const era = Number.isFinite(stats.era) ? stats.era : 4.2;
+
+  let rawScore = 44;
+  rawScore += Math.min(22, Math.max(0, hr9) * 10);
+  rawScore += Math.min(8, Math.max(0, bb9) * 1.6);
+  rawScore += Math.min(6, Math.max(0, whip - 1.15) * 14);
+  rawScore += Math.min(6, Math.max(0, era - 3.75) * 2.5);
+
+  if (k9 >= 10) rawScore -= 7;
+  else if (k9 >= 8.5) rawScore -= 4;
+
+  // Under 10 IP is highly unstable. By 40 IP, use the full score.
+  const reliability = clamp((innings - 10) / 30, 0, 1);
+  const reliabilityAdjusted = 50 + (rawScore - 50) * reliability;
+
+  return {
+    score: clamp(Math.round(reliabilityAdjusted), 30, 82),
+    hr9,
+    k9,
+    bb9,
+    reliability,
+  };
+}
+
 function scoreCandidate(
   player: TodayPlayer,
   hitterStats: HitterStats | null,
@@ -427,8 +486,11 @@ function scoreCandidate(
     }
   }
 
-  // Pitcher vulnerability component.
-  const pitcherHr9 = pitcherStats?.homeRunsPer9 || 0;
+  // Canonical pitcher vulnerability component.
+  const pitcherRisk = calculateLivePitcherVulnerability(pitcherStats);
+  const pitcherHr9 = pitcherRisk.hr9 ?? 0;
+  const pitcherVulnerability = pitcherRisk.score;
+
   let pitcherBoostScale = 1;
   const strongRecentPowerSignal = recentHr >= 2 || recentHrGames >= 2;
   const enoughSlugSample = plateAppearances >= 120 || atBats >= 90;
@@ -444,16 +506,17 @@ function scoreCandidate(
   }
 
   if (pitcherStats) {
-    const hr9 = pitcherHr9 || 1.1;
-    const kPer9 = pitcherStats.inningsPitched > 0 ? (pitcherStats.strikeOuts / pitcherStats.inningsPitched) * 9 : 0;
-    const bbPer9 = pitcherStats.inningsPitched > 0 ? (pitcherStats.baseOnBalls / pitcherStats.inningsPitched) * 9 : 0;
-    const pitcherBoost =
-      clamp((hr9 - 1.0) * 18, -6, 18) +
-      clamp((3.1 - kPer9) * 2.1, -4, 6) +
-      clamp((bbPer9 - 2.4) * 1.3, 0, 4);
+    // Convert the canonical 30–82 vulnerability score into a controlled
+    // contribution to the hitter's total HR score.
+    const pitcherBoost = clamp((pitcherVulnerability - 50) * 0.38, -6, 12);
     hrScore += pitcherBoost * pitcherBoostScale;
+
     if (pitcherBoostScale < 0.7 && pitcherBoost > 0) {
       penaltyReasons.push("Pitcher boost capped due to limited hitter power");
+    }
+
+    if (pitcherRisk.reliability < 1) {
+      penaltyReasons.push("Pitcher vulnerability regressed toward neutral due to limited innings");
     }
   }
 
@@ -522,15 +585,6 @@ function scoreCandidate(
     (slug * 35) +
     (seasonHR * 1.2) +
     (recentHr * 5),
-    0,
-    100
-  );
-
-  const pitcherVulnerability = clamp(
-    ((pitcherHr9 || 1.0) * 34) +
-    ((pitcherStats?.inningsPitched ?? 0) > 0
-      ? (((pitcherStats?.baseOnBalls ?? 0) / (pitcherStats?.inningsPitched ?? 1)) * 9) * 3
-      : 0),
     0,
     100
   );
@@ -619,8 +673,11 @@ function scoreCandidate(
   if (hitterStats?.season) {
     reasons.push(`${hitterStats.season.homeRuns} HR this season, .${(hitterStats.season.slg * 1000).toFixed(0).padStart(3, "0")} SLG`);
   }
-  if (pitcherStats) {
-    reasons.push(`${pitcher?.pitcherName} HR/9 = ${pitcherStats.homeRunsPer9.toFixed(2)}`);
+  if (pitcherStats && pitcherRisk.hr9 != null && pitcherRisk.k9 != null && pitcherRisk.bb9 != null) {
+    reasons.push(
+      `${pitcher?.pitcherName} vulnerability ${pitcherVulnerability}/100 ` +
+      `(HR/9 ${pitcherRisk.hr9.toFixed(2)}, K/9 ${pitcherRisk.k9.toFixed(2)}, BB/9 ${pitcherRisk.bb9.toFixed(2)})`
+    );
   }
   if (player.lineupStatus === "confirmed") {
     reasons.push(`Confirmed in lineup${player.battingOrder ? ` (#${player.battingOrder})` : ""}`);

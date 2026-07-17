@@ -43,7 +43,7 @@ function firstPublicText(values: readonly string[], excludeSharedLineup = false)
 export function getHrTableReason(row: HrWatchRow): string {
   const factors = [
     finiteMetric(row.hitterPower) == null ? null : `power ${finiteMetric(row.hitterPower)}`,
-    finiteMetric(row.pitcherVulnerability) == null ? null : `pitcher matchup ${finiteMetric(row.pitcherVulnerability)}`,
+    finiteMetric(row.pitcherVulnerability) == null ? null : `pitcher vulnerability ${finiteMetric(row.pitcherVulnerability)}`,
     finiteMetric(row.parkFactor) == null ? null : `park ${finiteMetric(row.parkFactor)}`,
     finiteMetric(row.recentForm) == null ? null : `recent form ${finiteMetric(row.recentForm)}`,
   ].filter((value): value is string => Boolean(value));
@@ -65,7 +65,7 @@ export function getHrTableRisk(row: HrWatchRow): string {
   if (confidence != null && confidence < 65) return `Player data confidence is limited at ${confidence}/100.`;
 
   const pitcherMatchup = finiteMetric(row.pitcherVulnerability);
-  if (pitcherMatchup != null && pitcherMatchup < 60) return `The pitcher matchup is this player's weakest signal at ${pitcherMatchup}/100.`;
+  if (pitcherMatchup != null && pitcherMatchup < 60) return `Pitcher vulnerability is this player's weakest signal at ${pitcherMatchup}/100.`;
 
   return 'No player-specific risk is flagged; review the expanded matchup inputs before deciding.';
 }

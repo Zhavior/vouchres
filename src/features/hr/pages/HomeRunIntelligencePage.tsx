@@ -517,7 +517,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             <div className="relative mt-2 grid grid-cols-3 border border-white/[0.08] bg-black/28 sm:grid-cols-6">
               {[
                 ['Power', topPlayer.hitterPower == null ? '-' : Math.round(topPlayer.hitterPower), 'Batter profile'],
-                ['Pitcher matchup', topPlayer.pitcherVulnerability == null ? '-' : Math.round(topPlayer.pitcherVulnerability), topPlayer.pitcherName || 'Pitcher unavailable'],
+                ['Pitcher vulnerability', topPlayer.pitcherVulnerability == null ? '-' : Math.round(topPlayer.pitcherVulnerability), topPlayer.pitcherName || 'Pitcher unavailable'],
                 ['Park factor', topPlayer.parkFactor == null ? '-' : Math.round(topPlayer.parkFactor), topPlayer.venue || 'Venue unavailable'],
                 ['Lineup status', topPlayer.truthStatus === 'official' ? 'Confirmed' : topPlayer.truthStatus === 'projected' ? 'Projected' : 'Unverified', topPlayer.truthStatus === 'official' ? 'Official order' : 'Awaiting official order'],
                 ['Data confidence', topPlayer.dataConfidence == null ? '-' : `${Math.round(topPlayer.dataConfidence)}%`, vm.slate.freshness],
