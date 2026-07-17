@@ -87,7 +87,6 @@ export const SaveMeParlaySchema = z
     title: z.string().max(200).optional(),
     mode: z.enum(["REAL", "PRACTICE"]).optional(),
     source: z.string().max(80).optional(),
-    status: z.enum(["pending", "live", "won", "lost", "void", "partially_void", "cancelled"]).optional(),
     sport: z.string().max(32).optional(),
     wagerAmount: z.number().finite().min(0).max(100000).optional(),
     stake_units: z.number().finite().min(0).max(100000).optional(),
