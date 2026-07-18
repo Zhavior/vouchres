@@ -45,8 +45,9 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.03" />
+          <stop offset="0%" stopColor="#020617" stopOpacity="0.55" />
+          <stop offset="40%" stopColor="#00E5FF" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#020617" stopOpacity="0.45" />
         </linearGradient>
         <linearGradient id="veMarkLetter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F8FEFF" />
@@ -73,13 +74,13 @@ export function VouchEdgeMark({
         strokeLinecap="square"
         strokeMiterlimit={2}
       >
-        <path className="letter-v" d="M280 320 L456 700 L632 320" />
+        <path className="letter-v" d="M270 310 L456 710 L642 310" />
         <path
           className="letter-e"
-          d="M560 320 V700
-             M560 320 H760
-             M560 510 H720
-             M560 700 H760"
+          d="M548 310 V710
+             M548 310 H730
+             M548 510 H700
+             M548 710 H730"
         />
       </g>
 
