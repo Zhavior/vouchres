@@ -10,7 +10,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Scale,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { getPrimaryProductNavigation } from '../../app/productNavigation';
@@ -27,7 +27,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, Scale,
 };
 
 /** HR nav items use Flame per featureConfig. */

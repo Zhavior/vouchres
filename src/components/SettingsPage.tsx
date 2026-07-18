@@ -29,6 +29,7 @@ import {
   startStripeCheckout,
   tierToSubscriptionTier,
 } from '../lib/billingClient';
+import { subscribeToPush, unsubscribeFromPush } from '../lib/pushNotifications';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
 interface SettingsPageProps {
@@ -838,8 +839,22 @@ export default function SettingsPage({
 
                 <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
                   <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
-                    <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
-                      <Toggle checked={pushAlerts} onChange={setPushAlerts} />
+                    <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts. Asks the browser for permission when enabled.">
+                      <Toggle
+                        checked={pushAlerts}
+                        onChange={(value) => {
+                          setPushAlerts(value);
+                          void (async () => {
+                            const result = value ? await subscribeToPush() : await unsubscribeFromPush();
+                            if (!result.ok) {
+                              setPushAlerts(false);
+                              showToast(result.warning ?? 'Could not enable push notifications.', 'err');
+                              return;
+                            }
+                            if (result.warning) showToast(result.warning, 'ok');
+                          })();
+                        }}
+                      />
                     </PrefRow>
                     <PrefRow label="Following alerts" detail="Posts and activity from people you follow. Turned on automatically when you follow someone.">
                       <Toggle

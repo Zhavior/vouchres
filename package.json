@@ -45,7 +45,10 @@
     "quality:strict": "npm run typecheck && npm run lint:strict && npm run build",
     "knip": "knip",
     "knip:production": "knip --production",
-    "analyze": "vite build --mode analyze"
+    "analyze": "vite build --mode analyze",
+    "cap:sync": "npm run build && npx --yes @capacitor/cli@latest sync",
+    "cap:open:ios": "npx --yes @capacitor/cli@latest open ios",
+    "cap:open:android": "npx --yes @capacitor/cli@latest open android"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",

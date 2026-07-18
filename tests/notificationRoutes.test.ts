@@ -59,6 +59,24 @@ afterAll(async () => {
 });
 
 describe("notification routes", () => {
+  it("exposes VAPID public key without auth", async () => {
+    const previous = process.env.VAPID_PUBLIC_KEY;
+    process.env.VAPID_PUBLIC_KEY = "test-vapid-public-key";
+    try {
+      const response = await fetch(`${baseUrl}/api/notifications/push/vapid-public-key`);
+      const body = await response.json();
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        ok: true,
+        publicKey: "test-vapid-public-key",
+        configured: true,
+      });
+    } finally {
+      if (previous === undefined) delete process.env.VAPID_PUBLIC_KEY;
+      else process.env.VAPID_PUBLIC_KEY = previous;
+    }
+  });
+
   it("returns ok envelope for notification list", async () => {
     const response = await fetch(`${baseUrl}/api/notifications`);
     const body = await response.json();

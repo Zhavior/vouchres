@@ -183,7 +183,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
           </div>
 
           <div ref={plotScrollRef} className="overflow-x-auto" aria-label="Scroll within the Signal Field on smaller screens">
-            <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="block min-w-[680px]" role="img" aria-label={`${selectedGame.awayTeam} at ${selectedGame.homeTeam} HR signals plotted by hitter power and pitcher vulnerability`}>
+            <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="block w-full min-w-[320px] max-md:min-w-full md:min-w-[680px]" role="img" aria-label={`${selectedGame.awayTeam} at ${selectedGame.homeTeam} HR signals plotted by hitter power and pitcher vulnerability`}>
               <defs>
                 <radialGradient id="signal-field-surface" cx="50%" cy="48%" r="70%">
                   <stop offset="0%" stopColor="#0b2730" stopOpacity="0.38" />

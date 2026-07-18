@@ -1,0 +1,14 @@
+{
+  "appId": "app.vouchedge.mobile",
+  "appName": "VouchEdge",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#020617"
+    }
+  }
+}

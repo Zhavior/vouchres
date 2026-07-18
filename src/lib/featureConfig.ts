@@ -64,6 +64,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 11.5, group: "Pro Labs" },
 
   // AI — V.A.I pilot tools
+  { id: "judge_home", label: "Judge Home", icon: "Scale", enabled: true, order: 11.55, group: "AI", sports: ALL_SPORTS, locked: true },
   { id: "ai_pilot", label: "V.A.I Dynamic Creator", icon: "Cpu", enabled: true, order: 11.6, group: "AI", sports: ALL_SPORTS, locked: true },
   { id: "ai_engine", label: "V.A.I Research Center", icon: "Activity", enabled: true, order: 11.7, group: "AI", sports: ALL_SPORTS },
   { id: "brain_picks", label: "Brain Picks", icon: "Crosshair", enabled: true, order: 11.8, group: "AI", sports: ["mlb"], locked: true },

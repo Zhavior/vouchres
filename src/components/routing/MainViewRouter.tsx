@@ -43,6 +43,7 @@ const TeamMatchupLabPage = lazy(() => import('../../pages/pro/TeamMatchupLabPage
 const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
+const JudgeHomePage = lazy(() => import('../../pages/JudgeHomePage'));
 const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
@@ -250,6 +251,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ParlayProofShell />
+        </LazyRoute>
+      );
+    case 'judge_home':
+      return (
+        <LazyRoute>
+          <JudgeHomePage navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'pro_command_center':

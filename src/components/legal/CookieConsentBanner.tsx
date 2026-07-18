@@ -41,6 +41,7 @@ const DEFAULT_CONSENT: ConsentState = {
 
 export function CookieConsentBanner() {
   const [consent, setConsent] = useState<ConsentState | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const [showDetailed, setShowDetailed] = useState(false);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export function CookieConsentBanner() {
           setConsent(parsed);
           // Apply consent immediately on load
           applyConsent(parsed);
+          setHydrated(true);
           return;
         }
       }
@@ -64,6 +66,7 @@ export function CookieConsentBanner() {
       // Corrupted storage — treat as no consent
     }
     setConsent(null);
+    setHydrated(true);
   }, []);
 
   function saveConsent(state: ConsentState) {
@@ -104,43 +107,48 @@ export function CookieConsentBanner() {
     });
   }
 
-  // Already consented (or expired consent re-prompted) — don't show banner
-  if (consent) return null;
+  // Wait for localStorage hydrate to avoid first-paint flash; hide once consented.
+  if (!hydrated || consent) return null;
 
   return (
-    <div className="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <div
+      className="cookie-banner fixed inset-x-0 bottom-0 z-[110] border-t border-white/10 bg-[#0b0f19]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white shadow-2xl backdrop-blur-xl md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-2xl md:border"
+      role="dialog"
+      aria-live="polite"
+      aria-label="Cookie consent"
+    >
       {!showDetailed ? (
-        <div className="cookie-banner__simple">
-          <div className="cookie-banner__text">
-            <strong>We value your privacy.</strong>
-            <p>
+        <div className="cookie-banner__simple space-y-3">
+          <div className="cookie-banner__text text-sm text-white/70">
+            <strong className="block text-white">We value your privacy.</strong>
+            <p className="mt-1">
               We use essential cookies to keep you logged in and remember your
               preferences. With your consent, we also use analytics cookies to
               understand how VouchEdge is used and improve the service. We never
               sell your data or use advertising cookies. See our{" "}
-              <a href="/privacy">Privacy Policy</a>.
+              <a href="/privacy" className="underline decoration-white/40 underline-offset-2">Privacy Policy</a>.
             </p>
           </div>
-          <div className="cookie-banner__actions">
-            <button onClick={handleRejectAll} className="cookie-banner__btn cookie-banner__btn--secondary">
+          <div className="cookie-banner__actions flex flex-wrap gap-2">
+            <button onClick={handleRejectAll} className="cookie-banner__btn cookie-banner__btn--secondary ve-touch-target rounded-lg border border-white/20 px-3 py-2 text-sm">
               Reject non-essential
             </button>
-            <button onClick={() => setShowDetailed(true)} className="cookie-banner__btn cookie-banner__btn--secondary">
+            <button onClick={() => setShowDetailed(true)} className="cookie-banner__btn cookie-banner__btn--secondary ve-touch-target rounded-lg border border-white/20 px-3 py-2 text-sm">
               Customize
             </button>
-            <button onClick={handleAcceptAll} className="cookie-banner__btn cookie-banner__btn--primary">
+            <button onClick={handleAcceptAll} className="cookie-banner__btn cookie-banner__btn--primary ve-touch-target rounded-lg bg-white px-3 py-2 text-sm font-bold text-black">
               Accept all
             </button>
           </div>
         </div>
       ) : (
-        <form className="cookie-banner__detailed" onSubmit={handleSaveDetailed}>
-          <h3>Cookie preferences</h3>
+        <form className="cookie-banner__detailed space-y-3" onSubmit={handleSaveDetailed}>
+          <h3 className="text-base font-bold">Cookie preferences</h3>
 
-          <label className="cookie-banner__category cookie-banner__category--required">
+          <label className="cookie-banner__category cookie-banner__category--required flex items-start justify-between gap-3 text-sm">
             <div>
               <strong>Essential</strong>
-              <p>
+              <p className="text-white/55">
                 Required for login, theme selection, and draft content. Cannot
                 be disabled.
               </p>
@@ -148,10 +156,10 @@ export function CookieConsentBanner() {
             <input type="checkbox" checked disabled />
           </label>
 
-          <label className="cookie-banner__category">
+          <label className="cookie-banner__category flex items-start justify-between gap-3 text-sm">
             <div>
               <strong>Analytics</strong>
-              <p>
+              <p className="text-white/55">
                 Anonymous usage data via PostHog (if enabled). Helps us
                 understand which features are used and find bugs.
               </p>
@@ -159,10 +167,10 @@ export function CookieConsentBanner() {
             <input type="checkbox" name="analytics" defaultChecked={false} />
           </label>
 
-          <label className="cookie-banner__category">
+          <label className="cookie-banner__category flex items-start justify-between gap-3 text-sm">
             <div>
               <strong>Marketing</strong>
-              <p>
+              <p className="text-white/55">
                 We do not currently use marketing cookies. If we add them in
                 the future, you'll be re-prompted.
               </p>
@@ -170,11 +178,11 @@ export function CookieConsentBanner() {
             <input type="checkbox" name="marketing" disabled />
           </label>
 
-          <div className="cookie-banner__actions">
-            <button type="button" onClick={() => setShowDetailed(false)} className="cookie-banner__btn cookie-banner__btn--secondary">
+          <div className="cookie-banner__actions flex flex-wrap gap-2">
+            <button type="button" onClick={() => setShowDetailed(false)} className="cookie-banner__btn cookie-banner__btn--secondary ve-touch-target rounded-lg border border-white/20 px-3 py-2 text-sm">
               Back
             </button>
-            <button type="submit" className="cookie-banner__btn cookie-banner__btn--primary">
+            <button type="submit" className="cookie-banner__btn cookie-banner__btn--primary ve-touch-target rounded-lg bg-white px-3 py-2 text-sm font-bold text-black">
               Save preferences
             </button>
           </div>

@@ -27,6 +27,13 @@ const BETTING_LEGAL_STATES = new Set([
   "PA","RI","SD","TN","VT","VA","WA","WV","WY",
 ]);
 
+function jurisdictionLooksPermitted(code: string): boolean {
+  if (!code) return false;
+  if (code.startsWith("CA-")) return true;
+  if (code.startsWith("US-")) return BETTING_LEGAL_STATES.has(code.slice(3));
+  return BETTING_LEGAL_STATES.has(code);
+}
+
 export function LegalGate() {
   const { user, refresh } = useAuth();
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -36,7 +43,7 @@ export function LegalGate() {
 
   if (!user) return null;
 
-  const isLegal = BETTING_LEGAL_STATES.has(jurisdiction);
+  const isLegal = jurisdictionLooksPermitted(jurisdiction);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,18 +74,24 @@ export function LegalGate() {
   }
 
   return (
-    <div className="legal-gate">
-      <div className="legal-gate__card">
-        <h2>Before you continue</h2>
-        <p>
+    <div className="legal-gate fixed inset-0 z-[120] flex items-end justify-center bg-black/80 p-3 backdrop-blur-sm sm:items-center">
+      <div
+        className="legal-gate__card max-h-[min(92vh,720px)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-[#0b0f19] p-5 text-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="legal-gate-title"
+      >
+        <h2 id="legal-gate-title" className="text-xl font-black tracking-tight">Before you continue</h2>
+        <p className="mt-2 text-sm text-white/65">
           VouchEdge provides probability-based sports research for entertainment
           purposes. To use this app, you must confirm:
         </p>
 
-        <form onSubmit={handleSubmit}>
-          <label className="legal-gate__checkbox">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <label className="legal-gate__checkbox flex items-start gap-3 text-sm text-white/80">
             <input
               type="checkbox"
+              className="mt-1 h-4 w-4 accent-emerald-400"
               checked={ageConfirmed}
               onChange={(e) => setAgeConfirmed(e.target.checked)}
             />
@@ -87,12 +100,13 @@ export function LegalGate() {
             </span>
           </label>
 
-          <label className="legal-gate__select">
-            <span>State / Country of residence</span>
+          <label className="legal-gate__select flex flex-col gap-1.5 text-sm">
+            <span className="text-white/70">State / Country of residence</span>
             <select
               value={jurisdiction}
               onChange={(e) => setJurisdiction(e.target.value)}
               required
+              className="rounded-lg border border-white/15 bg-black/50 px-3 py-2 text-white"
             >
               <option value="">Select…</option>
               <optgroup label="United States">
@@ -110,22 +124,26 @@ export function LegalGate() {
           </label>
 
           {jurisdiction && !isLegal && (
-            <div className="legal-gate__warning">
+            <div className="legal-gate__warning rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
               Sports betting is not legal in your jurisdiction. You may browse
               public content but cannot post or track picks.
             </div>
           )}
 
-          <div className="legal-gate__disclaimer">
-            <strong>Disclaimer:</strong> Predictions on VouchEdge are
+          <div className="legal-gate__disclaimer rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-relaxed text-white/55">
+            <strong className="text-white/80">Disclaimer:</strong> Predictions on VouchEdge are
             probability-based research for entertainment only. They are not
             betting advice or guarantees of outcome. You are solely responsible
             for any decisions you make based on this content.
           </div>
 
-          {error && <div className="legal-gate__error">{error}</div>}
+          {error && <div className="legal-gate__error text-sm text-red-300">{error}</div>}
 
-          <button type="submit" disabled={submitting || !ageConfirmed || !jurisdiction}>
+          <button
+            type="submit"
+            disabled={submitting || !ageConfirmed || !jurisdiction}
+            className="ve-touch-target w-full rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+          >
             {submitting ? "Saving…" : "I understand — continue"}
           </button>
         </form>

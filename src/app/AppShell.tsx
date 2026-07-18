@@ -18,6 +18,9 @@ const DeployUpdateBanner = lazy(() =>
 );
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
 const ParlayOsLayer = lazy(() => import('../components/parlay/os/ParlayOsLayer'));
+const LegalComplianceHost = lazy(() =>
+  import('../components/legal/LegalComplianceHost').then((module) => ({ default: module.LegalComplianceHost })),
+);
 
 export type AppShellProps = {
   activeSection: string;
@@ -133,6 +136,10 @@ export function AppShell({
                       />
                     </Suspense>
                   )}
+
+                  <Suspense fallback={null}>
+                    <LegalComplianceHost isLoggedIn={isLoggedIn} />
+                  </Suspense>
 
                 </NotificationProvider>
               </AppErrorBoundary>

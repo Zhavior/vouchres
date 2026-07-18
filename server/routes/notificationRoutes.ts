@@ -104,6 +104,15 @@ notificationRoutes.post("/notifications/read-all", requireAuth, asyncHandler(asy
   return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
+/** Public key only — safe to expose; private VAPID key stays server-side. */
+notificationRoutes.get("/notifications/push/vapid-public-key", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  const publicKey = String(process.env.VAPID_PUBLIC_KEY ?? "").trim();
+  return res.json(apiOkFlat(req, {
+    publicKey,
+    configured: Boolean(publicKey),
+  }));
+}));
+
 notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const body = req.body ?? {};
   if (typeof body.endpoint !== "string" || typeof body.keys?.p256dh !== "string" || typeof body.keys?.auth !== "string") {
