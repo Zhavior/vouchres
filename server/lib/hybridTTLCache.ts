@@ -4,6 +4,7 @@ import { isUpstashEnabled, redisGetJson, redisSetJson } from "./upstashRedis";
 /**
  * L1 in-memory TTL cache with optional L2 Upstash Redis for cross-instance sharing.
  * Falls back to memory-only when Redis is disabled or errors.
+ * Hot keys hit L1 first to avoid an Upstash RTT on every read.
  */
 export class HybridTTLCache<T> {
   private readonly memory: TTLCache<T>;
@@ -19,6 +20,11 @@ export class HybridTTLCache<T> {
   async getOrSet(key: string, producer: () => Promise<T>, ttlMs?: number): Promise<T> {
     const effectiveTtlMs = ttlMs ?? this.defaultTtlMs;
     const redisKey = `${this.redisKeyPrefix}:${key}`;
+
+    const local = this.memory.get(key);
+    if (local !== undefined) {
+      return local;
+    }
 
     if (isUpstashEnabled()) {
       try {

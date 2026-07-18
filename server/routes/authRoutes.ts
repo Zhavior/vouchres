@@ -133,6 +133,16 @@ authRoutes.patch(
       .single();
 
     if (error) {
+      // Unique index race: two clients can pass availability check then one loses.
+      if ((error as { code?: string }).code === "23505") {
+        throw new AppError({
+          status: 409,
+          code: "conflict",
+          message: "That handle is already taken.",
+          details: { error: "handle_taken" },
+          cause: error,
+        });
+      }
       console.error("[auth] profile update failed", error);
       throw new AppError({
         status: 500,

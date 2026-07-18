@@ -103,11 +103,17 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     expect(second.lastGoodWarnings).toContain(
       "Serving last good snapshot — upstream temporarily unavailable",
     );
-    expect(second.candidates).toEqual(first.candidates);
+    // Honesty: last-good must not re-publish stale confirmed candidates[].
+    expect(second.candidates).toEqual([]);
+    expect(second.projectedCandidates.some((row) => row.playerName === "Aaron Judge")).toBe(true);
+    expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.dataQuality).toBe(
+      "projection_preview",
+    );
     expect(second.projectedCandidates[0]?.dataQuality).toBe("projection_preview");
     expect(second.debug?.staleDataWarnings).toContain(
       "Serving last good snapshot — upstream temporarily unavailable",
     );
+    expect(first.candidates).toHaveLength(1);
   });
 
   it("throws an honest error when upstream fails and no last-good snapshot exists", async () => {
