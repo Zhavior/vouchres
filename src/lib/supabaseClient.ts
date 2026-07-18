@@ -88,6 +88,10 @@ export function persistAuthSession(session: { access_token?: string; user?: { id
   } catch {
     // ignore storage failures
   }
+  // Keep app chrome (sidebar) in sync — login must not wait for a later remount.
+  void import('./authSessionSync').then(({ notifyAuthSessionChanged }) => {
+    notifyAuthSessionChanged();
+  });
 }
 
 /**

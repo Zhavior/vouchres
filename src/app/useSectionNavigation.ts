@@ -13,6 +13,7 @@ import {
   isPublicFrontPage,
 } from './sectionNavigation';
 import { persistAuthSession, supabase } from '../lib/supabaseClient';
+import { notifyAuthSessionChanged, useIsLoggedIn } from '../lib/authSessionSync';
 
 export function useSectionNavigation() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
@@ -95,7 +96,13 @@ export function useSectionNavigation() {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         persistAuthSession(data.session);
+      } else {
+        // Token may already be in storage from AuthModal — still refresh chrome.
+        notifyAuthSessionChanged();
       }
+
+      // Ensure authenticated shell chunk is ready before route swap (avoids sidebar flash).
+      await import('./AuthenticatedApp');
 
       let destination = SIGNED_IN_HOME;
       try {
@@ -158,7 +165,7 @@ export function useSectionNavigation() {
     };
   }, []);
 
-  const isLoggedIn = hasRealAuthToken();
+  const isLoggedIn = useIsLoggedIn();
   const isPublicFrontPageView = isPublicFrontPage(activeSection, isLoggedIn);
   const showGlobalAppChrome = !isPublicFrontPageView;
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, lazy } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
@@ -14,34 +14,66 @@ function isAuthCallbackPath(): boolean {
   return window.location.pathname.toLowerCase() === '/auth/callback';
 }
 
+/**
+ * Shell is preloaded on the public landing so login does not remount into an empty
+ * Suspense gap (that was wiping the sidebar). Lazy still keeps the cold path light.
+ */
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
 
-function RouteFallback() {
+/** Chrome-preserving fallback — keeps a left rail so login never “loses” the sidebar. */
+function ChromePreservingFallback() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(true), 160);
+    const timer = window.setTimeout(() => setVisible(true), 120);
     return () => window.clearTimeout(timer);
   }, []);
 
   return (
-    <div
-      className="ve-route-suspense-fallback flex min-h-[45vh] items-center justify-center px-5"
-      role={visible ? 'status' : undefined}
-      aria-live={visible ? 'polite' : undefined}
-      aria-hidden={!visible}
-    >
-      {visible && (
-        <div className="w-full max-w-sm rounded-2xl border border-vouch-cyan/20 bg-black/35 p-6 text-center shadow-[0_0_40px_rgba(0,240,255,0.08)]">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-vouch-cyan" />
-          <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
-            Loading VouchEdge
-          </p>
+    <div className="z8-app-shell ve-theme-transition font-z8" style={{ background: '#000' }}>
+      <div
+        className="ve-layout-frame ve-layout-wide w-full min-h-screen relative z-10"
+        id="layout-inner-frame"
+      >
+        <div className="ve-edge-rail ve-edge-rail-left" aria-hidden>
+          <aside
+            id="z8-feed-sidebar"
+            className="flex h-full w-full min-w-0 flex-col border-r border-white/5 bg-black/40"
+          >
+            <div className="px-3 py-4">
+              <div className="h-3 w-20 rounded bg-white/10" />
+              <div className="mt-4 space-y-2">
+                <div className="h-9 rounded bg-white/5" />
+                <div className="h-9 rounded bg-white/5" />
+                <div className="h-9 rounded bg-white/5" />
+              </div>
+            </div>
+          </aside>
         </div>
-      )}
+        <main
+          className="flex flex-1 min-h-0 min-w-0 flex-col items-center justify-center px-5"
+          id="center-main-content-column"
+        >
+          <div
+            className="ve-route-suspense-fallback w-full max-w-sm rounded-2xl border border-vouch-cyan/20 bg-black/35 p-6 text-center shadow-[0_0_40px_rgba(0,240,255,0.08)]"
+            role={visible ? 'status' : undefined}
+            aria-live={visible ? 'polite' : undefined}
+            aria-hidden={!visible}
+          >
+            {visible && (
+              <>
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-vouch-cyan" />
+                <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
+                  Loading VouchEdge
+                </p>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
@@ -53,6 +85,8 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
       queryKey: queryKeys.liveGames(),
       queryFn: () => vouchedgeApi.liveGames(),
     });
+    // Warm authenticated shell so login does not flash away chrome.
+    void import('./app/AuthenticatedApp');
   }, []);
 
   return (
@@ -84,7 +118,7 @@ function MainAppRoutes() {
   }
 
   return (
-    <Suspense fallback={<RouteFallback />}>
+    <Suspense fallback={<ChromePreservingFallback />}>
       <AuthenticatedApp navigation={navigation} />
     </Suspense>
   );

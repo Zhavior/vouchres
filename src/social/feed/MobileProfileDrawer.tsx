@@ -4,8 +4,7 @@
  * Opened via the Menu FAB in AppNav. Avatar ring is driven by profile.subscriptionTier.
  * Notifications and logout each appear once here (no duplicate top header chrome).
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from '../../lib/motion';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
@@ -14,8 +13,9 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { getPrimaryProductNavigation } from '../../app/productNavigation';
+import { MobileNavDrawer } from '../../app/chrome';
 import {
-  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
+  Z8_LABEL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
 import { performAppLogout } from '../../lib/appLogout';
@@ -120,20 +120,6 @@ function MobileProfileDrawer({
   const { data: liveGamesPayload } = useLiveGames({ enabled: open });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
   const groups = useMemo(() => {
     if (!open) return [];
     const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
@@ -160,23 +146,8 @@ function MobileProfileDrawer({
   }, [onClose, onLogoutComplete, signingOut]);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[90] md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-          <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.aside
-            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${Z8_SIDEBAR_SHELL} shadow-[4px_0_40px_rgba(0,0,0,0.45)]`}
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-          >
+    <MobileNavDrawer open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+          <>
             {/* Profile header — real token-identity data only */}
             <div className="px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
               <div className="flex items-start justify-between pt-1">
@@ -297,10 +268,8 @@ function MobileProfileDrawer({
                 {signingOut ? 'Leaving…' : 'Log out'}
               </button>
             </div>
-          </motion.aside>
-        </div>
-      )}
-    </AnimatePresence>
+          </>
+    </MobileNavDrawer>
   );
 }
 

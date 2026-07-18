@@ -15,7 +15,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
+  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
 import {
@@ -23,9 +23,10 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut,
+  Command, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
 import { getPrimaryProductNavigation } from '../../app/productNavigation';
+import { SidebarNavGroup, useSidebarCollapseStore } from '../../app/chrome';
 import { preloadSection } from '../../lib/routePreload';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
@@ -41,17 +42,6 @@ import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 const SIDEBAR_GROUPS = ['Daily', 'Pro Labs', 'AI', 'Build & Track', 'Social', 'Account'] as const;
 
-/**
- * Groups that are collapsed by default.
- * User overrides are persisted to localStorage so the state survives refreshes.
- */
-const DEFAULT_COLLAPSED: Record<string, boolean> = {
-  'Account': false,
-  'Social': false,
-};
-
-const COLLAPSED_KEY = 've-sidebar-collapsed';
-
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
@@ -61,16 +51,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
 const HR_NAV_IDS = new Set(['hr_board']);
-
-/** Group → Z8 accent class used for the group header label colour. Disciplined two-accent system: emerald for proof/action groups, cyan for everything else. */
-const GROUP_ACCENT: Record<string, string> = {
-  Daily: 'text-vouch-cyan',
-  'Pro Labs': 'text-vouch-cyan',
-  AI: 'text-vouch-cyan',
-  'Build & Track': 'text-vouch-cyan',
-  Social: 'text-vouch-cyan',
-  Account: 'text-white/40',
-};
 
 const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>) => {
   const profile = state.profile;
@@ -89,20 +69,6 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
     isDeveloper: profile.isDeveloper,
   };
 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function loadCollapsedState(): Record<string, boolean> {
-  try {
-    const raw = localStorage.getItem(COLLAPSED_KEY);
-    if (raw) return { ...DEFAULT_COLLAPSED, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return { ...DEFAULT_COLLAPSED };
-}
-
-function saveCollapsedState(state: Record<string, boolean>) {
-  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state)); } catch { /* ignore */ }
-}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -182,8 +148,6 @@ interface SidebarGroupProps {
   items: Array<{ id: string; label: string; icon: string }>;
   activeSection: string;
   onNavigate: (id: string) => void;
-  collapsed: boolean;
-  onToggle: () => void;
   liveGamesActive?: boolean;
 }
 
@@ -192,61 +156,32 @@ const SidebarGroup = React.memo(function SidebarGroup({
   items,
   activeSection,
   onNavigate,
-  collapsed,
-  onToggle,
   liveGamesActive = false,
 }: SidebarGroupProps) {
-  const accentClass = GROUP_ACCENT[group] || 'text-white/40';
-  const hasActive = items.some(i => i.id === activeSection);
+  const collapsed = useSidebarCollapseStore((s) => Boolean(s.groupsCollapsed[group]));
+  const setGroupCollapsed = useSidebarCollapseStore((s) => s.setGroupCollapsed);
+  const hasActive = items.some((i) => i.id === activeSection);
 
   return (
-    <div className={['transition-all overflow-hidden', Z8_SIDEBAR_PANEL, hasActive ? 'shadow-[0_0_24px_rgba(0,240,255,0.08)]' : ''].join(' ')}>
-      <button
-        onClick={onToggle}
-        className={`w-full flex items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-vouch-cyan/5 outline-none ${Z8_LABEL}`}
-        aria-expanded={!collapsed}
-      >
-        <span className={['hidden xl:block', accentClass].join(' ')}>
-          {group}
-        </span>
-        <span className="xl:hidden flex items-center justify-center w-5 h-5 bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <span className={['block w-1.5 h-1.5 bg-current', accentClass].join(' ')} />
-        </span>
-        <span className="hidden xl:flex items-center gap-1.5">
-          <span className="text-[9px] text-white/30">
-            {items.length}
-          </span>
-          <ChevronDown
-            className={[
-              'h-3 w-3 text-white/40 transition-transform',
-              collapsed ? '-rotate-90' : 'rotate-0',
-            ].join(' ')}
-          />
-        </span>
-      </button>
-
-      <div
-        className={[
-          'overflow-hidden transition-all duration-300',
-          collapsed ? 'max-h-0 opacity-0' : 'max-h-[1200px] opacity-100',
-        ].join(' ')}
-        aria-hidden={collapsed}
-      >
-        <div className="px-2 pb-2.5 pt-2 space-y-1">
-          {items.map(f => (
-            <NavItem
-              key={f.id}
-              id={f.id}
-              label={f.label}
-              icon={f.icon}
-              isActive={activeSection === f.id}
-              onNavigate={onNavigate}
-              showLiveOnAir={liveGamesActive && f.id === 'live_games'}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+    <SidebarNavGroup
+      group={group}
+      open={!collapsed}
+      onOpenChange={(open) => setGroupCollapsed(group, !open)}
+      itemCount={items.length}
+      hasActive={hasActive}
+    >
+      {items.map((f) => (
+        <NavItem
+          key={f.id}
+          id={f.id}
+          label={f.label}
+          icon={f.icon}
+          isActive={activeSection === f.id}
+          onNavigate={onNavigate}
+          showLiveOnAir={liveGamesActive && f.id === 'live_games'}
+        />
+      ))}
+    </SidebarNavGroup>
   );
 });
 
@@ -267,21 +202,12 @@ function FeedSidebar({
 }: FeedSidebarProps) {
   const profile = useProfileStore(useShallow(selectSidebarProfile));
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
   const [signingOut, setSigningOut] = useState(false);
   useEffect(() => onSportChange(setActiveSportState), []);
 
   const handleSportClick = useCallback((id: SportId) => {
     setActiveSport(id);
     setActiveSportState(id);
-  }, []);
-
-  const toggleGroup = useCallback((group: string) => {
-    setCollapsed(prev => {
-      const next = { ...prev, [group]: !prev[group] };
-      saveCollapsedState(next);
-      return next;
-    });
   }, []);
 
   const handleNavigate = useCallback((id: string) => {
@@ -484,8 +410,6 @@ function FeedSidebar({
               items={items}
               activeSection={activeSection}
               onNavigate={handleNavigate}
-              collapsed={!!collapsed[group]}
-              onToggle={() => toggleGroup(group)}
               liveGamesActive={liveGamesActive}
             />
           ))}

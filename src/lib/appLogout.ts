@@ -40,6 +40,9 @@ export async function performAppLogout(onLogoutComplete?: () => void) {
     clearVouchEdgeLocalAuth();
     resetToLandingScreen();
     window.history.replaceState(null, '', '/');
+    void import('./authSessionSync').then(({ notifyAuthSessionChanged }) => {
+      notifyAuthSessionChanged();
+    });
     onLogoutComplete?.();
   }
 }
