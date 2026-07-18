@@ -15,7 +15,7 @@ describe('customer-facing product navigation', () => {
   it('exposes exactly five stable product concepts', () => {
     expect(getPrimaryProductNavigation().map((item) => item.label)).toEqual([
       'Today',
-      'Intelligence',
+      'HR Intelligence',
       'Players',
       'Parlays',
       'Profile',

@@ -39,7 +39,7 @@ const DailyPlayersPage = lazy(() => import('../../pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('../LiveGamesPro'));
 const NotificationsPage = lazy(() => import('../notifications/NotificationsPage'));
 const PlayerEdgeLabPage = lazy(() => import('../../pages/pro/PlayerEdgeLabPage'));
-const TeamMatchupLabPage = lazy(() => import('../../pages/pro/TeamMatchupLabPage'));
+const PitcherMatchupIntelligencePage = lazy(() => import('../../pages/pro/PitcherMatchupIntelligencePage'));
 const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
@@ -268,11 +268,12 @@ function MainViewRouter({
           </ProGateShell>
         </LazyRoute>
       );
+    case 'pitcher_matchup_intelligence':
     case 'team_matchup_lab':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Pitchers Matchup" navigateSection={navigateSection}>
-            <TeamMatchupLabPage />
+          <ProGateShell featureName="Pitcher Matchup Intelligence" navigateSection={navigateSection}>
+            <PitcherMatchupIntelligencePage />
           </ProGateShell>
         </LazyRoute>
       );

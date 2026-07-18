@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, RefreshCw, Users } from 'lucide-react';
+import {
+  Calendar,
+  ChevronRight,
+  Crosshair,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from 'lucide-react';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { bootDataStore } from '../lib/boot/bootDataStore';
 import { MLB_HEADSHOT_IMG_CLASS } from '../lib/mlbHeadshot';
@@ -1532,6 +1540,399 @@ function DailyMatchupTheater({
 }
 
 
+
+function isProjectedDailyPlayer(player: any): boolean {
+  return String(player?.source || '').toLowerCase().includes('projected');
+}
+
+function numericDailyLineupSpot(player: any, fallbackIndex: number): number {
+  const raw =
+    player?.battingOrder ??
+    player?.lineupSpot ??
+    player?.batting_order ??
+    player?.order ??
+    fallbackIndex + 1;
+
+  const digits = String(raw).replace(/\D/g, '');
+  const numeric = Number(digits);
+
+  if (!Number.isFinite(numeric) || numeric <= 0) return fallbackIndex + 1;
+
+  if (numeric >= 100) {
+    const encoded = Math.floor(numeric / 100);
+    if (encoded >= 1 && encoded <= 9) return encoded;
+  }
+
+  return numeric >= 1 && numeric <= 9 ? numeric : fallbackIndex + 1;
+}
+
+function DailyContextPlayer({
+  label,
+  detail,
+  player,
+}: {
+  label: string;
+  detail: string;
+  player: any | null;
+}) {
+  const name = player ? getDailyPlayerName(player) : 'Not available';
+  const image = player ? getDailyPlayerHeadshotUrl(player) : '';
+  const position = player ? getDailyPlayerPosition(player) : '—';
+  const hand = player ? getDailyPlayerHand(player) : '';
+  const projected = player ? isProjectedDailyPlayer(player) : false;
+
+  return (
+    <div className="relative overflow-hidden border border-white/10 bg-black/20 p-3">
+      <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.38),transparent)]" />
+
+      <div className="text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">
+        {label}
+      </div>
+
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[0.04]">
+          {image ? (
+            <img
+              src={image}
+              alt=""
+              width={44}
+              height={44}
+              className={MLB_HEADSHOT_IMG_CLASS}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span className="font-mono text-xs font-black text-white/40">
+              {name.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-black text-white">{name}</div>
+
+          <div className="mt-1 flex flex-wrap gap-1">
+            <span className="border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] font-black uppercase text-white/50">
+              {position}
+            </span>
+
+            {hand && (
+              <span className="border border-vouch-cyan/20 bg-vouch-cyan/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-black uppercase text-vouch-cyan/80">
+                Bats {hand}
+              </span>
+            )}
+
+            {player && (
+              <span
+                className={`border px-1.5 py-0.5 text-[9px] font-black uppercase ${
+                  projected
+                    ? 'border-vouch-amber/20 bg-vouch-amber/[0.06] text-vouch-amber'
+                    : 'border-vouch-emerald/20 bg-vouch-emerald/[0.06] text-vouch-emerald'
+                }`}
+              >
+                {projected ? 'Projected' : 'Confirmed'}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-3 text-[11px] leading-relaxed text-white/44">{detail}</p>
+    </div>
+  );
+}
+
+function DailyPlayerIntelligenceLayer({
+  selectedGame,
+  selectedGameIndex,
+  games,
+  onSelectGame,
+}: {
+  selectedGame: any;
+  selectedGameIndex: number;
+  games: any[];
+  onSelectGame: (index: number) => void;
+}) {
+  if (!selectedGame) return null;
+
+  const away = resolveDailyTeam(selectedGame, 'away');
+  const home = resolveDailyTeam(selectedGame, 'home');
+  const awayPlayers = getDailyPlayersForSide(selectedGame, 'away');
+  const homePlayers = getDailyPlayersForSide(selectedGame, 'home');
+  const allPlayers = [...awayPlayers, ...homePlayers];
+
+  const orderedPlayers = [...allPlayers].sort((a, b) => {
+    const aIndex = allPlayers.indexOf(a);
+    const bIndex = allPlayers.indexOf(b);
+
+    return (
+      numericDailyLineupSpot(a, aIndex) -
+      numericDailyLineupSpot(b, bIndex)
+    );
+  });
+
+  const leadoff =
+    orderedPlayers.find(
+      (player, index) => numericDailyLineupSpot(player, index) === 1,
+    ) ?? null;
+
+  const heartOfOrder =
+    orderedPlayers.find((player, index) => {
+      const spot = numericDailyLineupSpot(player, index);
+      return spot === 3 || spot === 4;
+    }) ?? null;
+
+  const platoonOption =
+    orderedPlayers.find((player) => {
+      const hand = getDailyPlayerHand(player);
+      return hand === 'L' || hand === 'S';
+    }) ?? null;
+
+  const featured = heartOfOrder ?? leadoff ?? orderedPlayers[0] ?? null;
+  const featuredName = featured
+    ? getDailyPlayerName(featured)
+    : 'Lineup pending';
+  const featuredImage = featured
+    ? getDailyPlayerHeadshotUrl(featured)
+    : '';
+  const featuredPosition = featured
+    ? getDailyPlayerPosition(featured)
+    : '—';
+  const featuredHand = featured
+    ? getDailyPlayerHand(featured)
+    : '';
+  const status = getDailyStatus(selectedGame);
+
+  return (
+    <section className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden p-4 sm:p-5`}>
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.68),transparent)]" />
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-vouch-cyan/10 blur-3xl" />
+
+          <div className="relative">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-2 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-vouch-cyan">
+                  <Crosshair className="h-3.5 w-3.5" />
+                  Selected Matchup Intelligence
+                </div>
+
+                <p className="mt-2 text-xs text-white/44">
+                  Lineup-order context only. No unsupported statistics are inferred.
+                </p>
+              </div>
+
+              <span
+                className={`border px-2.5 py-1 text-[10px] font-black uppercase ${
+                  String(status).toLowerCase().includes('confirm')
+                    ? 'border-vouch-emerald/25 bg-vouch-emerald/[0.08] text-vouch-emerald'
+                    : 'border-vouch-cyan/25 bg-vouch-cyan/[0.08] text-vouch-cyan'
+                }`}
+              >
+                {status}
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-vouch-cyan/25 bg-vouch-cyan/[0.07] shadow-[0_0_34px_rgba(0,240,255,0.12)]">
+                  {featuredImage ? (
+                    <img
+                      src={featuredImage}
+                      alt=""
+                      width={80}
+                      height={80}
+                      className={MLB_HEADSHOT_IMG_CLASS}
+                      loading="eager"
+                      decoding="async"
+                    />
+                  ) : (
+                    <Users className="h-7 w-7 text-vouch-cyan/55" />
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="text-[10px] font-black uppercase tracking-[0.16em] text-white/38">
+                    Featured lineup position
+                  </div>
+
+                  <h2 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
+                    {featuredName}
+                  </h2>
+
+                  <p className="mt-1 font-mono text-sm font-black text-vouch-cyan">
+                    {away.name} @ {home.name}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-[9px] font-black uppercase text-white/55">
+                      {featuredPosition}
+                    </span>
+
+                    {featuredHand && (
+                      <span className="border border-vouch-cyan/20 bg-vouch-cyan/[0.06] px-2 py-1 text-[9px] font-black uppercase text-vouch-cyan/80">
+                        Bats {featuredHand}
+                      </span>
+                    )}
+
+                    <span className="border border-white/10 bg-white/[0.04] px-2 py-1 text-[9px] font-black uppercase text-white/55">
+                      Matchup {selectedGameIndex + 1} of {games.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  ['Away hitters', awayPlayers.length],
+                  ['Home hitters', homePlayers.length],
+                  ['Total listed', allPlayers.length],
+                  [
+                    'Game time',
+                    formatGameTime(
+                      selectedGame?.gameTime || selectedGame?.startTime,
+                    ),
+                  ],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="border border-white/10 bg-black/20 px-3 py-2.5"
+                  >
+                    <div className="text-[9px] font-black uppercase tracking-wider text-white/35">
+                      {label}
+                    </div>
+                    <div className="mt-1 font-mono text-sm font-black text-white">
+                      {value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 border border-vouch-cyan/15 bg-vouch-cyan/[0.04] p-3">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-vouch-cyan">
+                <ShieldCheck className="h-4 w-4" />
+                Truth status
+              </div>
+
+              <p className="mt-2 text-sm leading-relaxed text-white/56">
+                Projected roster previews remain projected. They are never presented as official batting orders.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden p-4`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
+                Lineup Context
+              </div>
+              <p className="mt-1 text-[11px] text-white/38">
+                Sourced batting-order and handedness context.
+              </p>
+            </div>
+
+            <Sparkles className="h-5 w-5 text-vouch-cyan" />
+          </div>
+
+          <div className="mt-4 grid gap-2">
+            <DailyContextPlayer
+              label="Leadoff Watch"
+              detail="First lineup position when an order is available."
+              player={leadoff}
+            />
+
+            <DailyContextPlayer
+              label="Heart of Order"
+              detail="Third or fourth lineup position. This is lineup context, not a performance prediction."
+              player={heartOfOrder}
+            />
+
+            <DailyContextPlayer
+              label="Platoon Option"
+              detail="First available left-handed or switch hitter. Pitcher-handedness advantage is not inferred."
+              player={platoonOption}
+            />
+          </div>
+        </article>
+      </div>
+
+      <article className={`${Z8_PANEL_PREMIUM} overflow-hidden p-3`}>
+        <div className="flex items-center justify-between gap-3 px-1">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
+              Matchup Navigator
+            </div>
+            <p className="mt-1 text-[11px] text-white/38">
+              Select any matchup without leaving the player board.
+            </p>
+          </div>
+
+          <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan">
+            {games.length} games
+          </span>
+        </div>
+
+        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+          {games.map((game, index) => {
+            const gameAway = resolveDailyTeam(game, 'away');
+            const gameHome = resolveDailyTeam(game, 'home');
+            const gamePlayers = getGamePlayers(game);
+            const active = index === selectedGameIndex;
+
+            return (
+              <button
+                key={`${game?.gamePk || game?.id || index}-intel-nav`}
+                type="button"
+                onClick={() => onSelectGame(index)}
+                aria-current={active ? 'true' : undefined}
+                className={`min-w-[230px] snap-center border p-3 text-left transition ${
+                  active
+                    ? 'border-vouch-cyan/45 bg-vouch-cyan/[0.09] shadow-[0_0_26px_rgba(0,240,255,0.10)]'
+                    : 'border-white/10 bg-black/20 hover:border-vouch-cyan/25 hover:bg-vouch-cyan/[0.03]'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span
+                    className={`text-[9px] font-black uppercase ${
+                      active ? 'text-vouch-cyan' : 'text-white/38'
+                    }`}
+                  >
+                    Matchup {index + 1}
+                  </span>
+
+                  <span className="font-mono text-[9px] font-black text-white/38">
+                    {formatGameTime(game?.gameTime || game?.startTime)}
+                  </span>
+                </div>
+
+                <div className="mt-3 truncate text-sm font-black text-white">
+                  {gameAway.name} @ {gameHome.name}
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold text-white/38">
+                    {gamePlayers.length} players
+                  </span>
+
+                  <ChevronRight
+                    className={`h-4 w-4 ${
+                      active ? 'text-vouch-cyan' : 'text-white/25'
+                    }`}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </article>
+    </section>
+  );
+}
+
+
 function getBootDailyPlayersBoard(): DailyBoardResponse | null {
   const bootBoard = bootDataStore.get<DailyBoardResponse>("dailyPlayers");
   if (bootBoard?.games?.length) return bootBoard;
@@ -1779,7 +2180,15 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
         )}
 
         {!loading && games.length > 0 && (
-          <DailyMatchupTheater
+          <>
+            <DailyPlayerIntelligenceLayer
+              selectedGame={selectedGame}
+              selectedGameIndex={selectedGameIndex}
+              games={games}
+              onSelectGame={setSelectedGameIndex}
+            />
+
+            <DailyMatchupTheater
             games={games}
             selectedGame={selectedGame}
             selectedGameIndex={selectedGameIndex}
@@ -1788,6 +2197,7 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
             goToNextGame={goToNextGame}
             search={search}
           />
+          </>
         )}
       </div>
     </main>

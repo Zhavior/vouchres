@@ -167,56 +167,103 @@ export async function getPlayerEdgeResearch(
   options?: { pitcherId?: number; opponentAbbr?: string; gamePk?: number },
 ): Promise<PlayerEdgeResearch> {
   const warnings: string[] = [];
+  const requestStartedAt = Date.now();
+  const timings: Record<string, number> = {};
 
-  const [hitterStats, gameLog, statcastMap, sprayMap, disciplineMap, pitchMixMap] = await Promise.all([
-    getHitterStats(playerId).catch((err) => {
+  const timed = async <T>(
+    label: string,
+    task: () => Promise<T>,
+  ): Promise<T> => {
+    const startedAt = Date.now();
+
+    try {
+      return await task();
+    } finally {
+      timings[label] = Date.now() - startedAt;
+    }
+  };
+
+  const pitcherId = options?.pitcherId;
+  const gamePk = options?.gamePk;
+
+  const [
+    hitterStats,
+    gameLog,
+    statcastMap,
+    sprayMap,
+    disciplineMap,
+    pitchMixMap,
+    batterVsPitcher,
+    weather,
+  ] = await Promise.all([
+    timed("hitterStats", () => getHitterStats(playerId).catch((err) => {
       console.warn(`[playerEdgeResearch] hitter stats failed ${playerId}:`, (err as Error).message);
       warnings.push("Season hitting stats unavailable from MLB Stats API.");
       return null;
-    }),
-    fetchFullGameLog(playerId).catch((err) => {
+    })),
+    timed("gameLog", () => fetchFullGameLog(playerId).catch((err) => {
       console.warn(`[playerEdgeResearch] game log failed ${playerId}:`, (err as Error).message);
       warnings.push("Game log unavailable from MLB Stats API.");
       return [] as PlayerGameLogRow[];
-    }),
-    getStatcastBatterMap().catch((err) => {
+    })),
+    timed("statcast", () => getStatcastBatterMap().catch((err) => {
       console.warn("[playerEdgeResearch] statcast map failed:", (err as Error).message);
       warnings.push("Statcast season leaderboard unavailable.");
       return {} as Record<number, StatcastBatterQuality>;
-    }),
-    getBattedBallProfileMap().catch((err) => {
+    })),
+    timed("sprayProfile", () => getBattedBallProfileMap().catch((err) => {
       console.warn("[playerEdgeResearch] spray profile failed:", (err as Error).message);
       warnings.push("Savant batted-ball spray profile unavailable.");
       return {} as Record<number, StatcastBattedBallProfile>;
-    }),
-    getPlateDisciplineMap().catch((err) => {
+    })),
+    timed("plateDiscipline", () => getPlateDisciplineMap().catch((err) => {
       console.warn("[playerEdgeResearch] plate discipline failed:", (err as Error).message);
       warnings.push("Savant plate discipline leaderboard unavailable.");
       return {} as Record<number, StatcastPlateDiscipline>;
-    }),
-    getPitchMixMap().catch((err) => {
+    })),
+    timed("pitchMix", () => getPitchMixMap().catch((err) => {
       console.warn("[playerEdgeResearch] pitch mix failed:", (err as Error).message);
       warnings.push("Savant pitch-type breakdown unavailable.");
       return {} as Record<number, StatcastPitchMixRow[]>;
-    }),
+    })),
+    pitcherId && pitcherId > 0
+      ? timed(
+          "bvp",
+          () => getBatterVsPitcher(playerId, pitcherId).catch((err) => {
+            console.warn(
+              `[playerEdgeResearch] BvP failed ${playerId} vs ${pitcherId}:`,
+              (err as Error).message,
+            );
+            warnings.push("Batter-vs-pitcher lookup failed.");
+            return null;
+          }),
+        )
+      : Promise.resolve(null),
+    gamePk && gamePk > 0
+      ? timed(
+          "weather",
+          () => getGameWeather(gamePk).catch((err) => {
+            console.warn(
+              `[playerEdgeResearch] weather failed gamePk=${gamePk}:`,
+              (err as Error).message,
+            );
+            warnings.push("Game weather forecast unavailable.");
+            return null;
+          }),
+        )
+      : Promise.resolve(null),
   ]);
 
   if (!gameLog.length) {
     warnings.push("No game log rows returned for this season.");
   }
 
-  let batterVsPitcher: Awaited<ReturnType<typeof getBatterVsPitcher>> = null;
-  const pitcherId = options?.pitcherId;
   if (pitcherId && pitcherId > 0) {
-    batterVsPitcher = await getBatterVsPitcher(playerId, pitcherId).catch((err) => {
-      console.warn(`[playerEdgeResearch] BvP failed ${playerId} vs ${pitcherId}:`, (err as Error).message);
-      warnings.push("Batter-vs-pitcher lookup failed.");
-      return null;
-    });
     if (!batterVsPitcher?.ab) {
       warnings.push("No recorded career history vs this pitcher.");
     }
   } else {
+    timings.bvp = 0;
     warnings.push("Opposing pitcher ID unavailable — BvP needs today's probable pitcher.");
   }
 
@@ -254,20 +301,23 @@ export async function getPlayerEdgeResearch(
     warnings.push("Rolling 14-day edge needs at least one game in the season log.");
   }
 
-  let weather: GameWeather | null = null;
-  const gamePk = options?.gamePk;
   if (gamePk && gamePk > 0) {
-    weather = await getGameWeather(gamePk).catch((err) => {
-      console.warn(`[playerEdgeResearch] weather failed gamePk=${gamePk}:`, (err as Error).message);
-      warnings.push("Game weather forecast unavailable.");
-      return null;
-    });
     if (!weather) {
       warnings.push("No verified weather row for this gamePk on today's slate.");
     }
   } else {
+    timings.weather = 0;
     warnings.push("gamePk unavailable — weather impact needs today's scheduled game.");
   }
+
+  console.log(
+    "[playerEdgeResearch:timing]",
+    JSON.stringify({
+      playerId,
+      ...timings,
+      total: Date.now() - requestStartedAt,
+    }),
+  );
 
   return {
     playerId,

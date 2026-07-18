@@ -237,8 +237,8 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
   const palette = getTierPalette(player.hrScore);
   const badge = truthBadge(player.truthStatus);
   const avatarBg = teamColor(player.team);
-  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
-  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
+  const teamLogo = logoByTeamName(player.team) || player.teamLogoUrl;
+  const oppLogo = logoByTeamName(player.opponent) || player.opponentLogoUrl;
   const layers = getLayers(player);
 
   // Vegas edge calculation

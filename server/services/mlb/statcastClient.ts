@@ -32,6 +32,13 @@ export interface StatcastBatterQuality {
 const MIN_PA = 25;
 const statcastCache = new TTLCache<unknown>(12 * 60 * 60_000, "mlb:statcast");
 
+type StatcastBatterMap = Record<number, StatcastBatterQuality>;
+
+const statcastBatterInflight = new Map<
+  number,
+  Promise<StatcastBatterMap>
+>();
+
 /** Minimal CSV line parser that respects double-quoted fields ("Last, First"). */
 function parseCsvLine(line: string): string[] {
   const out: string[] = [];
@@ -99,26 +106,40 @@ function seasonYear(): number {
 /** Season Statcast quality for all qualified batters (>= MIN_PA), keyed by MLB player id.
  *  Success is cached 12h (daily data); a failed fetch caches an empty map for
  *  30 minutes so we retry soon without hammering Savant. */
-export async function getStatcastBatterMap(year = seasonYear()): Promise<Record<number, StatcastBatterQuality>> {
+export async function getStatcastBatterMap(
+  year = seasonYear(),
+): Promise<StatcastBatterMap> {
   const cacheKey = `batters:${year}`;
   const cached = statcastCache.get(cacheKey);
-  if (cached !== undefined) return cached as Record<number, StatcastBatterQuality>;
 
-  try {
-    const [expected, statcast] = await Promise.all([
+  if (cached !== undefined) {
+    return cached as StatcastBatterMap;
+  }
+
+  const existingRequest = statcastBatterInflight.get(year);
+
+  if (existingRequest) {
+    console.log(`[statcastClient] awaiting in-flight batter map for ${year}`);
+    return existingRequest;
+  }
+
+  const request = (async (): Promise<StatcastBatterMap> => {
+    try {
+      const [expected, statcast] = await Promise.all([
         fetchCsv(
-          `https://baseballsavant.mlb.com/leaderboard/expected_statistics?type=batter&year=${year}&position=&team=&min=${MIN_PA}&csv=true`
+          `https://baseballsavant.mlb.com/leaderboard/expected_statistics?type=batter&year=${year}&position=&team=&min=${MIN_PA}&csv=true`,
         ),
         fetchCsv(
-          `https://baseballsavant.mlb.com/leaderboard/statcast?type=batter&year=${year}&min=${MIN_PA}&csv=true`
+          `https://baseballsavant.mlb.com/leaderboard/statcast?type=batter&year=${year}&min=${MIN_PA}&csv=true`,
         ),
       ]);
 
-      const map: Record<number, StatcastBatterQuality> = {};
+      const map: StatcastBatterMap = {};
 
       for (const row of expected) {
         const playerId = num(row.player_id);
         if (!playerId) continue;
+
         map[playerId] = {
           playerId,
           pa: num(row.pa),
@@ -137,6 +158,7 @@ export async function getStatcastBatterMap(year = seasonYear()): Promise<Record<
       for (const row of statcast) {
         const playerId = num(row.player_id);
         if (!playerId) continue;
+
         const existing = map[playerId] ?? {
           playerId,
           pa: null,
@@ -150,20 +172,35 @@ export async function getStatcastBatterMap(year = seasonYear()): Promise<Record<
           hardHitPct: null,
           avgExitVelo: null,
         };
+
         existing.barrelPct = num(row.brl_percent);
         existing.hardHitPct = num(row.ev95percent);
         existing.avgExitVelo = num(row.avg_hit_speed);
         map[playerId] = existing;
       }
 
-      console.log(`[statcastClient] loaded ${Object.keys(map).length} batters for ${year}`);
-      statcastCache.set(cacheKey, map); // success → default 12h TTL
+      statcastCache.set(cacheKey, map);
+      console.log(
+        `[statcastClient] loaded ${Object.keys(map).length} batters for ${year}`,
+      );
+
       return map;
-  } catch (err) {
-    console.warn("[statcastClient] leaderboard fetch failed:", (err as Error).message);
-    statcastCache.set(cacheKey, {}, 30 * 60_000); // failure → empty map, retry in 30 min
-    return {};
-  }
+    } catch (err) {
+      console.warn(
+        "[statcastClient] leaderboard fetch failed:",
+        err instanceof Error ? err.message : String(err),
+      );
+
+      const emptyMap: StatcastBatterMap = {};
+      statcastCache.set(cacheKey, emptyMap, 30 * 60_000);
+      return emptyMap;
+    } finally {
+      statcastBatterInflight.delete(year);
+    }
+  })();
+
+  statcastBatterInflight.set(year, request);
+  return request;
 }
 
 export const STATCAST_MIN_PA = MIN_PA;

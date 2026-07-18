@@ -9,7 +9,9 @@ import { AlertTriangle, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { RealGameLog } from '../../utils/realGameLogs';
 import { logoByTeamName } from '../../../../lib/teamLogos';
-import { HrActivityChart, GameLogEmpty, GameLogLoading } from './HrProfileCharts';
+import { GameLogEmpty, GameLogLoading } from './HrProfileCharts';
+import { HrImpactTimeline } from './HrImpactTimeline';
+import { HrDecisionDelta } from './HrDecisionDelta';
 import type { RealGameLogState } from '../../hooks/useRealGameLog';
 
 export interface HrOverviewDossierProps {
@@ -83,8 +85,8 @@ export const HrOverviewDossier: React.FC<HrOverviewDossierProps> = ({
   variant = 'drawer',
 }) => {
   const tier = tierMeta(player.hrScore);
-  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
-  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
+  const teamLogo = logoByTeamName(player.team) || player.teamLogoUrl;
+  const oppLogo = logoByTeamName(player.opponent) || player.opponentLogoUrl;
   const drivers = useMemo(() => topDrivers(player), [player]);
   const isOfficial = player.truthStatus === 'official';
   const isProjected = player.truthStatus === 'projected';
@@ -137,37 +139,12 @@ export const HrOverviewDossier: React.FC<HrOverviewDossierProps> = ({
         </div>
       </div>
 
-      {/* Model vs market — single editorial row, not 8 boxes */}
-      <div className="ve-hr-dossier-market">
-        <div className="ve-hr-dossier-market-col">
-          <span className="ve-hr-dossier-kicker">Model</span>
-          <span className="ve-hr-dossier-market-value">{fmtPct(player.hrProbability)}</span>
-          <span className="ve-hr-dossier-market-sub">HR probability</span>
-        </div>
-        <div className="ve-hr-dossier-market-divider" aria-hidden="true" />
-        <div className="ve-hr-dossier-market-col">
-          <span className="ve-hr-dossier-kicker">Book</span>
-          <span className="ve-hr-dossier-market-value">{fmtOdds(player.bookOdds)}</span>
-          <span className="ve-hr-dossier-market-sub">{fmtPct(player.impliedProbability)} implied</span>
-        </div>
-        {edge != null && (
-          <>
-            <div className="ve-hr-dossier-market-divider" aria-hidden="true" />
-            <div className="ve-hr-dossier-market-col">
-              <span className="ve-hr-dossier-kicker">Edge</span>
-              <span
-                className={[
-                  've-hr-dossier-market-value',
-                  edgePositive ? 'text-emerald-400/95' : edgeNegative ? 'text-rose-400/95' : 'text-white/55',
-                ].join(' ')}
-              >
-                {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(1)}%
-              </span>
-              <span className="ve-hr-dossier-market-sub">model − book</span>
-            </div>
-          </>
-        )}
-      </div>
+      <HrDecisionDelta
+        modelProbability={player.hrProbability}
+        impliedProbability={player.impliedProbability}
+        bookOdds={player.bookOdds}
+        dataConfidence={player.dataConfidence}
+      />
 
       {/* Lineup truth + confidence — quiet, not another widget grid */}
       <div className="ve-hr-dossier-meta">
@@ -200,34 +177,40 @@ export const HrOverviewDossier: React.FC<HrOverviewDossierProps> = ({
         )}
       </div>
 
-      {/* Recent form — game pips + whisper chart, not a labeled API panel */}
-      <section className="ve-hr-dossier-section">
-        <div className="ve-hr-dossier-section-head">
-          <h3 className="ve-hr-dossier-section-title">Recent box scores</h3>
-          {logState === 'ready' && formLogs.length > 0 && (
-            <span className="font-mono text-[10px] tabular-nums text-white/35">
-              {formHRs} HR · last {formLogs.length} G
-            </span>
-          )}
-        </div>
-        {logState === 'loading' && <GameLogLoading />}
-        {logState === 'unavailable' && <GameLogEmpty message="Season log not available yet." />}
-        {logState === 'ready' && formLogs.length === 0 && (
-          <GameLogEmpty message="No games logged this season." />
-        )}
-        {logState === 'ready' && formLogs.length > 0 && (
-          <div className="ve-hr-dossier-form">
-            <div className="flex flex-wrap justify-between gap-2 px-1">
-              {formLogs.map((g, i) => (
-                <GamePip key={`${g.date}-${i}`} log={g} />
-              ))}
-            </div>
-            <div className="mt-3 opacity-80">
-              <HrActivityChart logs={formLogs} height={48} />
-            </div>
+      {/* Keep the compact form preview in drawers only.
+          The full profile has a dedicated Recent Form section below. */}
+      {variant === 'drawer' && (
+        <section className="ve-hr-dossier-section">
+          <div className="ve-hr-dossier-section-head">
+            <h3 className="ve-hr-dossier-section-title">Recent box scores</h3>
+            {logState === 'ready' && formLogs.length > 0 && (
+              <span className="font-mono text-[10px] tabular-nums text-white/35">
+                {formHRs} HR · last {formLogs.length} G
+              </span>
+            )}
           </div>
-        )}
-      </section>
+
+          {logState === 'loading' && <GameLogLoading />}
+
+          {logState === 'unavailable' && (
+            <GameLogEmpty message="Season log not available yet." />
+          )}
+
+          {logState === 'ready' && formLogs.length === 0 && (
+            <GameLogEmpty message="No games logged this season." />
+          )}
+
+          {logState === 'ready' && formLogs.length > 0 && (
+            <div className="ve-hr-dossier-form">
+              <HrImpactTimeline
+                logs={formLogs}
+                variant="compact"
+                title="Recent impact"
+              />
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Top 3 drivers only — overview tease, full breakdown lives on Layers tab */}
       {drivers.length > 0 && (

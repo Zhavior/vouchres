@@ -23,22 +23,16 @@ import {
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
-import { generateBvPLogs, bvpCareerTotals } from '../../utils/bvpSimulated';
-import { useRealGameLog } from '../../hooks/useRealGameLog';
+import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
 import {
-  BvPSeasonChart,
-  FormTrendChart,
   GameLogEmpty,
   GameLogLoading,
-  HrActivityChart,
-  LayerHorizontalChart,
-  LayerRadarChart,
-  ProductionBarChart,
-  SimulatedBadge,
   type LayerChartRow,
 } from './HrProfileCharts';
+import { HrMatchupPressureMatrix } from './HrMatchupPressureMatrix';
+import { HrImpactTimeline } from './HrImpactTimeline';
 import { HrOverviewDossier } from './HrOverviewDossier';
 import '../../../../styles/hr-profile.css';
 
@@ -51,6 +45,7 @@ export interface HrPlayerProfileProps {
   onAddToSlip: (player: HrWatchRow) => void;
   boardFreshness: HrBoardFreshness;
   boardGeneratedAt: Date | null;
+  boardDate: string;
   slipActionAvailable: boolean;
 }
 
@@ -128,13 +123,12 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
 
 // ─── Sub-section header ────────────────────────────────────────────────────────
 
-const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simulated?: boolean }> = ({ icon, title, sub, simulated }) => (
+const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string }> = ({ icon, title, sub }) => (
   <div className="flex items-center gap-2.5 mb-4">
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.03]">{icon}</div>
     <div>
       <div className="flex items-center gap-2">
         <p className="text-sm font-black uppercase tracking-[0.16em] text-white">{title}</p>
-        {simulated && <SimulatedBadge />}
       </div>
       {sub && <p className="text-[10px] text-white/40">{sub}</p>}
     </div>
@@ -169,6 +163,79 @@ function getLayers(p: HrWatchRow | null): LayerRow[] {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
+type CanonicalGameLogRow = {
+  date: string;
+  opponentAbbr: string;
+  opponentName: string;
+  ab: number;
+  hits: number;
+  hrs: number;
+  rbi: number;
+  doubles: number;
+  triples: number;
+  totalBases: number;
+  strikeOuts: number;
+  bb: number;
+  result: 'HR' | 'Hit' | 'Out';
+};
+
+function recordNumber(
+  value: Record<string, number | string | null> | null,
+  key: string,
+): number | null {
+  if (!value) return null;
+
+  const raw = value[key];
+
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === 'string' && raw.trim()) {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function formatRate(value: number | null): string {
+  return value === null ? '—' : value.toFixed(3);
+}
+
+function canonicalGameLogs(
+  timeline: Array<{
+    date: string;
+    opponent: string | null;
+    atBats: number | null;
+    hits: number | null;
+    homeRuns: number | null;
+    totalBases: number | null;
+    strikeOuts: number | null;
+  }>,
+): CanonicalGameLogRow[] {
+  return timeline.map((game) => ({
+    date: game.date,
+    opponentAbbr: game.opponent ?? '—',
+    opponentName: game.opponent ?? 'Unknown',
+    ab: game.atBats ?? 0,
+    hits: game.hits ?? 0,
+    hrs: game.homeRuns ?? 0,
+    rbi: 0,
+    doubles: 0,
+    triples: 0,
+    totalBases: game.totalBases ?? 0,
+    strikeOuts: game.strikeOuts ?? 0,
+    bb: 0,
+    result:
+      (game.homeRuns ?? 0) > 0
+        ? 'HR'
+        : (game.hits ?? 0) > 0
+          ? 'Hit'
+          : 'Out',
+  }));
+}
+
 export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
   player,
   isOpen,
@@ -176,11 +243,16 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
   onAddToSlip,
   boardFreshness,
   boardGeneratedAt,
+  boardDate,
   slipActionAvailable,
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
-  const { logs: realLog, state: realLogState } = useRealGameLog(player?.playerId, isOpen);
+  const {
+    research,
+    loading: researchLoading,
+    error: researchError,
+  } = useHrResearch(player?.playerId, boardDate, isOpen);
 
   useEffect(() => {
     if (isOpen) { setImgErr(false); setActiveSection('overview'); }
@@ -202,11 +274,60 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const bvpLogs  = useMemo(() => player ? generateBvPLogs(player.playerName, player.pitcherName ?? '') : [], [player?.playerName, player?.pitcherName]);
-  const formLogs = useMemo(() => lastNGames(realLog ?? [], 10), [realLog]);
-  const teamLogs = useMemo(() => player ? gamesAgainstOpponent(realLog ?? [], player.opponent, 5) : [], [realLog, player?.opponent]);
+  const canonicalLogs = useMemo(
+    () => canonicalGameLogs(research?.charts.signalTimeline ?? []),
+    [research?.charts.signalTimeline],
+  );
 
-  const bvpCareer = useMemo(() => bvpCareerTotals(bvpLogs), [bvpLogs]);
+  const formLogs = useMemo(
+    () => lastNGames(canonicalLogs, 10),
+    [canonicalLogs],
+  );
+
+  const teamLogs = useMemo(
+    () => player
+      ? gamesAgainstOpponent(canonicalLogs, player.opponent, 5)
+      : [],
+    [canonicalLogs, player?.opponent],
+  );
+
+  const bvpCareer = useMemo(() => {
+    const row = research?.context.batterVsPitcher ?? null;
+    const ab = recordNumber(row, 'ab');
+    const sampleSize = recordNumber(row, 'sampleSize');
+    const pa = sampleSize ?? ab;
+    const hrs = recordNumber(row, 'hr');
+    const avg = recordNumber(row, 'avg');
+    const slg = recordNumber(row, 'slg');
+    const ops = recordNumber(row, 'ops');
+    const hits = recordNumber(row, 'h');
+    const walks = recordNumber(row, 'bb');
+    const strikeouts = recordNumber(row, 'k');
+
+    return {
+      available: row !== null,
+      pa,
+      ab,
+      hrs,
+      avg,
+      slg,
+      ops,
+      hits,
+      walks,
+      strikeouts,
+      hrPct:
+        pa !== null && pa > 0 && hrs !== null
+          ? Number(((hrs / pa) * 100).toFixed(1))
+          : null,
+    };
+  }, [research?.context.batterVsPitcher]);
+
+  const realLogState: 'loading' | 'ready' | 'unavailable' =
+    researchLoading
+      ? 'loading'
+      : researchError || !research
+        ? 'unavailable'
+        : 'ready';
 
   const compositeScore = useMemo(() => {
     const ls = getLayers(player);
@@ -227,9 +348,10 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
   const formTB  = formLogs.length > 0 ? +(formLogs.reduce((s, g) => s + g.totalBases, 0) / formLogs.length).toFixed(1) : 0;
   const teamHRs = teamLogs.reduce((s, g) => s + g.hrs, 0);
   const teamTB  = teamLogs.length > 0 ? +(teamLogs.reduce((s, g) => s + g.totalBases, 0) / teamLogs.length).toFixed(1) : 0;
-  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
-  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
+  const teamLogo = logoByTeamName(player.team) || player.teamLogoUrl;
+  const oppLogo = logoByTeamName(player.opponent) || player.opponentLogoUrl;
   const decision = buildHrDecisionBrief(player, boardFreshness, boardGeneratedAt, slipActionAvailable);
+
 
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
@@ -264,7 +386,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
             className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
-            <div className="ve-hr-profile-sidebar relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
+            <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
@@ -275,9 +397,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               </button>
 
               {/* Hero identity block */}
-              <div className="relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:pt-8">
+              <div className="ve-player-intelligence-rail__identity relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:pt-8">
                 {/* Avatar */}
-                <div className="relative shrink-0">
+                <div className="ve-player-intelligence-rail__portrait relative shrink-0">
                   <div
                     className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 lg:h-24 lg:w-24"
                     style={{ background: `hsl(${hue} 45% 16%)`, ['--tw-ring-color' as string]: `hsl(${hue} 55% 30%)` } as React.CSSProperties}
@@ -298,7 +420,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 </div>
 
                 {/* Name + meta */}
-                <div className="flex-1 min-w-0 lg:mt-2">
+                <div className="ve-player-intelligence-rail__name flex-1 min-w-0 lg:mt-2">
                   <h2 className="text-xl font-black leading-tight tracking-tight text-white lg:text-2xl">
                     {player.playerName}
                   </h2>
@@ -341,7 +463,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               </div>
 
               {/* Sidebar composite — replaces 6-arc wall */}
-              <div className="ve-hr-sidebar-composite hidden px-5 lg:block">
+              <div className="ve-hr-sidebar-composite ve-player-intelligence-rail__scorecard hidden px-5 lg:block">
                 <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">Weighted composite</p>
                 <p className="ve-hr-sidebar-composite-score mt-1">{compositeScore}</p>
                 <div className="ve-hr-sidebar-composite-row">
@@ -362,7 +484,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               </div>
 
               {/* Nav — desktop vertical list */}
-              <nav className="mt-auto hidden lg:block px-3 pb-5 pt-4">
+              <nav className="ve-player-intelligence-rail__nav mt-auto hidden lg:block px-3 pb-3 pt-4" aria-label="Player research sections">
                 <div className="flex flex-col gap-0.5">
                   {NAV.map(n => (
                     <button
@@ -399,7 +521,34 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                   </button>
                 ))}
               </div>
-            </div>
+
+              <div className="ve-player-intelligence-rail__action hidden px-4 pb-5 lg:block">
+                <button
+                  type="button"
+                  onClick={() => onAddToSlip(player)}
+                  disabled={!decision.canAddToSlip}
+                  className="ve-player-intelligence-rail__cta"
+                  title={decision.addToSlipBlockReason ?? undefined}
+                >
+                  <span>
+                    <small>Home run market</small>
+                    <strong>
+                      {decision.canAddToSlip
+                        ? 'Choose HR prop'
+                        : decision.addToSlipBlockReason}
+                    </strong>
+                  </span>
+
+                  <Plus className="h-4 w-4" />
+                </button>
+
+                <p className="ve-player-intelligence-rail__truth">
+                  {decision.lineupLabel}
+                  <span>·</span>
+                  {decision.freshnessLabel}
+                </p>
+              </div>
+            </aside>
 
             {/* ── RIGHT CONTENT AREA ──────────────────────────────────────────── */}
             <div className="ve-hr-profile-content flex-1 overflow-y-auto">
@@ -486,57 +635,16 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
         {/* ── 12 LAYERS ──────────────────────────────────────────────────────── */}
         {activeSection === 'layers' && (
           <div className="flex flex-col gap-6">
-            <Sec icon={<BarChart2 className="h-4 w-4 text-cyan-400" />} title="12-Layer Score Breakdown" sub="Recharts radar + bars · dashed line = league average" />
+            <Sec
+              icon={<BarChart2 className="h-4 w-4 text-cyan-400" />}
+              title="12-Layer Intelligence"
+              sub="Signal strength, model weight, and composite influence"
+            />
 
-            <div className="ve-hr-chart-panel mb-4">
-              <LayerRadarChart layers={layers} height={280} />
-            </div>
-
-            <div className="ve-hr-chart-panel mb-4">
-              <LayerHorizontalChart layers={layers} height={340} />
-            </div>
-
-            <div className="rounded-2xl overflow-hidden border border-white/10">
-              {layers.map((l, idx) => {
-                const val = l.value;
-                const rank = val == null ? '—' : val >= 75 ? 'Elite' : val >= 60 ? 'Above Avg' : val >= 40 ? 'Avg' : 'Below';
-                const rankColor = val == null ? 'rgba(255,255,255,0.4)' : val >= 75 ? '#00FF94' : val >= 60 ? '#00FF94' : val >= 40 ? 'rgba(255,255,255,0.4)' : '#fb7185';
-                return (
-                  <div
-                    key={l.id}
-                    className="flex items-center gap-3 px-4 py-3.5"
-                    style={{
-                      background: idx % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)',
-                      borderBottom: idx < layers.length - 1 ? '1px solid rgba(255,255,255,0.12)' : 'none',
-                    }}
-                  >
-                    <span className="w-6 text-center text-base shrink-0">{l.icon}</span>
-                    <div className="w-36 shrink-0 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: '#ffffff' }}>{l.label}</p>
-                      <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{l.weight > 0 ? `${l.weight}% weight` : 'Validator'}</p>
-                    </div>
-                    {/* Wide rank bar — fills all available space */}
-                    <div className="flex-1 min-w-0">
-                      <RankBar value={val} avg={l.avg} color={l.color} />
-                    </div>
-                    <div className="w-20 flex flex-col items-end shrink-0">
-                      <span className="text-sm font-extrabold tabular-nums" style={{ color: rankColor }}>{val == null ? '—' : Math.round(val)}</span>
-                      <span className="text-[9px] font-semibold" style={{ color: rankColor, opacity: 0.75 }}>{rank}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Composite callout */}
-            <div className="flex items-center justify-between rounded-2xl px-6 py-5" style={{ background: `rgba(${tier.rgb}, 0.10)`, border: `1px solid rgba(${tier.rgb}, 0.3)` }}>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: tier.color }}>Weighted Composite Score</p>
-                <p className="text-5xl font-black mt-1" style={{ color: tier.color }}>{compositeScore}</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Based on {layers.filter(l => l.weight > 0 && l.value != null).length} of 11 weighted layers</p>
-              </div>
-              <Arc value={compositeScore} color={tier.color} label="" size={96} />
-            </div>
+            <HrMatchupPressureMatrix
+              layers={layers}
+              compositeScore={compositeScore}
+            />
           </div>
         )}
 
@@ -545,68 +653,177 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
           <div className="flex flex-col gap-6">
             <Sec
               icon={<Target className="h-4 w-4" style={{ color: '#00F0FF' }} />}
-              title={`vs ${player.pitcherName ?? 'Pitcher'}`}
-              sub="Simulated — no pitcher ID available to fetch real BvP history"
-              simulated
+              title={`vs ${research?.matchup.pitcher.name ?? player.pitcherName ?? 'Pitcher'}`}
+              sub={
+                researchLoading
+                  ? 'Loading official batter-versus-pitcher history'
+                  : researchError
+                    ? 'Official BvP history is temporarily unavailable'
+                    : bvpCareer.available
+                      ? 'Official MLB career batter-versus-pitcher results'
+                      : 'No recorded MLB career history against this pitcher'
+              }
             />
 
-            {/* Career summary chips */}
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {[
-                { label: 'Career PA',  value: bvpCareer.pa,          color: '#ffffff' },
-                { label: 'Career HR',  value: bvpCareer.hrs,          color: '#fbbf24' },
-                { label: 'Career AVG', value: bvpCareer.avg,          color: '#ffffff' },
-                { label: 'Career SLG', value: bvpCareer.slg,          color: '#00FF94' },
-                { label: 'HR / PA',    value: `${bvpCareer.hrPct}%`,  color: '#00F0FF' },
-              ].map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
+            {researchLoading && <GameLogLoading />}
+
+            {!researchLoading && researchError && (
+              <GameLogEmpty message="The official BvP feed could not be loaded. No simulated values are shown." />
+            )}
+
+            {!researchLoading && !researchError && !bvpCareer.available && (
+              <GameLogEmpty
+                message={`No recorded career plate appearances against ${
+                  research?.matchup.pitcher.name
+                    ?? player.pitcherName
+                    ?? 'this pitcher'
+                }. This is missing evidence, not a negative matchup signal.`}
+              />
+            )}
+
+            {!researchLoading && !researchError && bvpCareer.available && (
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  {[
+                    {
+                      label: 'Career PA',
+                      value: bvpCareer.pa ?? '—',
+                      color: '#ffffff',
+                    },
+                    {
+                      label: 'Career HR',
+                      value: bvpCareer.hrs ?? '—',
+                      color: '#fbbf24',
+                    },
+                    {
+                      label: 'Career AVG',
+                      value: formatRate(bvpCareer.avg),
+                      color: '#ffffff',
+                    },
+                    {
+                      label: 'Career SLG',
+                      value: formatRate(bvpCareer.slg),
+                      color: '#00FF94',
+                    },
+                    {
+                      label: 'HR / PA',
+                      value:
+                        bvpCareer.hrPct === null
+                          ? '—'
+                          : `${bvpCareer.hrPct}%`,
+                      color: '#00F0FF',
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3"
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                      }}
+                    >
+                      <span
+                        className="text-2xl font-extrabold tabular-nums"
+                        style={{ color: item.color }}
+                      >
+                        {item.value}
+                      </span>
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-wide"
+                        style={{ color: 'rgba(255,255,255,0.4)' }}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* BvP bar chart */}
-            <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">AVG + OBP + SLG by season (Recharts)</p>
-              <BvPSeasonChart logs={bvpLogs} height={170} />
-            </div>
+                <div
+                  className="overflow-hidden rounded-2xl"
+                  style={{ border: '1px solid rgba(255,255,255,0.35)' }}
+                >
+                  <div
+                    className="grid grid-cols-4 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]"
+                    style={{
+                      background: '#050505',
+                      color: 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    <span>Hits</span>
+                    <span className="text-right">Walks</span>
+                    <span className="text-right">Strikeouts</span>
+                    <span className="text-right">OPS</span>
+                  </div>
 
-            {/* Season table */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div className="grid grid-cols-6 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
-                <span>Season</span><span className="text-right">PA</span><span className="text-right">HR</span><span className="text-right">AVG</span><span className="text-right">SLG</span><span className="text-right">OBP</span>
-              </div>
-              {bvpLogs.map((row, i) => (
-                <div key={row.season} className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                  <span className="text-sm font-bold" style={{ color: '#ffffff' }}>{row.season}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{row.pa}</span>
-                  <span className="text-right text-sm font-bold tabular-nums" style={{ color: row.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{row.hrs}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.avg.toFixed(3)}</span>
-                  <span className="text-right text-sm font-semibold tabular-nums" style={{ color: row.slg > 0.450 ? '#00FF94' : '#ffffff' }}>{row.slg.toFixed(3)}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.obp.toFixed(3)}</span>
+                  <div
+                    className="grid grid-cols-4 gap-0 px-4 py-4"
+                    style={{
+                      background: '#0A0A0A',
+                      borderTop: '1px solid rgba(255,255,255,0.12)',
+                    }}
+                  >
+                    <span className="text-sm font-bold text-white">
+                      {bvpCareer.hits ?? '—'}
+                    </span>
+                    <span className="text-right text-sm tabular-nums text-white">
+                      {bvpCareer.walks ?? '—'}
+                    </span>
+                    <span className="text-right text-sm tabular-nums text-white">
+                      {bvpCareer.strikeouts ?? '—'}
+                    </span>
+                    <span className="text-right text-sm font-semibold tabular-nums text-white">
+                      {formatRate(bvpCareer.ops)}
+                    </span>
+                  </div>
                 </div>
-              ))}
-              <div className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: '#050505', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
-                <span className="text-xs font-black uppercase" style={{ color: '#00F0FF' }}>Career</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#00F0FF' }}>{bvpCareer.pa}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>{bvpCareer.hrs}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.avg}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.slg}</span>
-                <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
-              </div>
-            </div>
 
-            {/* Verdict */}
-            <div className="flex items-center gap-4 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              {Number(bvpCareer.hrs) >= 2 ? <TrendingUp className="h-6 w-6 shrink-0" style={{ color: '#00FF94' }} /> : Number(bvpCareer.hrs) === 0 ? <TrendingDown className="h-6 w-6 shrink-0" style={{ color: '#fb7185' }} /> : <Minus className="h-6 w-6 shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-              <div>
-                <p className="text-sm font-bold" style={{ color: '#ffffff' }}>
-                  {Number(bvpCareer.hrs) >= 2 ? `Owns This Pitcher — ${bvpCareer.hrs} career HRs` : Number(bvpCareer.hrs) === 1 ? 'One career HR against this pitcher' : 'No career HRs against this pitcher'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{bvpCareer.hrPct}% HR rate · {bvpCareer.pa} career PA</p>
-              </div>
-            </div>
+                <div
+                  className="flex items-center gap-4 rounded-2xl p-4"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.35)',
+                  }}
+                >
+                  {(bvpCareer.hrs ?? 0) >= 2 ? (
+                    <TrendingUp
+                      className="h-6 w-6 shrink-0"
+                      style={{ color: '#00FF94' }}
+                    />
+                  ) : (bvpCareer.hrs ?? 0) === 0 ? (
+                    <Minus
+                      className="h-6 w-6 shrink-0"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                    />
+                  ) : (
+                    <TrendingUp
+                      className="h-6 w-6 shrink-0"
+                      style={{ color: '#fbbf24' }}
+                    />
+                  )}
+
+                  <div>
+                    <p className="text-sm font-bold text-white">
+                      {(bvpCareer.hrs ?? 0) >= 2
+                        ? `${bvpCareer.hrs} recorded career HRs against this pitcher`
+                        : (bvpCareer.hrs ?? 0) === 1
+                          ? 'One recorded career HR against this pitcher'
+                          : 'No recorded career HR against this pitcher'}
+                    </p>
+
+                    <p
+                      className="mt-0.5 text-xs"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                    >
+                      {bvpCareer.hrPct === null
+                        ? 'HR rate unavailable'
+                        : `${bvpCareer.hrPct}% HR rate`}
+                      {' · '}
+                      {bvpCareer.pa ?? 'Unknown'} career PA
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -646,11 +863,11 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               ))}
             </div>
 
-            {/* Production bar chart */}
-            <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={teamLogs} height={130} />
-            </div>
+            <HrImpactTimeline
+              logs={teamLogs}
+              variant="full"
+              title={`Impact against ${player.opponent}`}
+            />
 
             {/* Game log table */}
             <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
@@ -708,36 +925,11 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               ))}
             </div>
 
-            {/* Production bar chart */}
-            <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={formLogs} height={130} />
-            </div>
-
-            {/* Production trend charts */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="ve-hr-chart-panel">
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">TB Trend + HR line</p>
-                <FormTrendChart logs={formLogs} height={110} />
-              </div>
-              <div className="ve-hr-chart-panel">
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">HR Activity</p>
-                <HrActivityChart logs={formLogs} height={72} />
-              </div>
-            </div>
-
-            {/* Result dots */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Game Results (gold = HR)</p>
-              <div className="flex flex-wrap items-end gap-4">
-                {formLogs.map((g, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
-                    <Dot hrs={g.hrs} />
-                    <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.opponentAbbr}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <HrImpactTimeline
+              logs={formLogs}
+              variant="full"
+              title="Recent production rhythm"
+            />
 
             {/* Game-by-game table */}
             <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>

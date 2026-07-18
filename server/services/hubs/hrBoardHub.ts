@@ -2,6 +2,9 @@ import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashR
 import { buildHrBoardResponse } from "../mlb/hr-engine/buildHrBoardResponse";
 import { buildValidatedHrBoard } from "../mlb/hrPipeline";
 import { buildHrBoard } from "../mlb/dailyHrBoardService";
+import { getTodayGamesWeather } from "../mlb/weatherService";
+import { getMaterializedHrResearch } from "../mlb/hrResearchSnapshotService";
+import { limitConcurrency } from "../../lib/cache";
 
 const LAST_GOOD_WARNING = "Serving last good snapshot — upstream temporarily unavailable";
 const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000);
@@ -86,6 +89,61 @@ type DeepCacheEntry = {
 const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
 const localValidatedHrBoardBuilds = new Map<string, Promise<ValidatedHrBoardSnapshot>>();
 const lastGoodValidatedHrBoards = new Map<string, { board: ValidatedHrBoardSnapshot; storedAt: number }>();
+
+type ValidatedPlayerCandidate = Record<string, unknown>;
+
+type ValidatedPlayerIndexEntry = {
+  expiresAt: number;
+  generatedAt: string | null;
+  candidates: Map<number, ValidatedPlayerCandidate>;
+};
+
+const localValidatedPlayerIndex = new Map<string, ValidatedPlayerIndexEntry>();
+
+function buildValidatedPlayerIndex(
+  key: string,
+  board: ValidatedHrBoardSnapshot,
+  expiresAt: number,
+): void {
+  const candidatePools = [
+    Array.isArray(board.candidates) ? board.candidates : [],
+    Array.isArray(board.projectedCandidates) ? board.projectedCandidates : [],
+    Array.isArray((board as any).allProjectedCandidates)
+      ? (board as any).allProjectedCandidates
+      : [],
+  ];
+
+  const candidates = new Map<number, ValidatedPlayerCandidate>();
+
+  for (const row of candidatePools.flat()) {
+    if (!row || typeof row !== "object") continue;
+
+    const playerId = Number((row as Record<string, unknown>).playerId);
+    if (!Number.isInteger(playerId) || playerId <= 0) continue;
+
+    // Preserve first occurrence: confirmed candidates are indexed before previews.
+    if (!candidates.has(playerId)) {
+      candidates.set(playerId, row as ValidatedPlayerCandidate);
+    }
+  }
+
+  const generatedAt =
+    typeof (board as any).updatedAt === "string"
+      ? (board as any).updatedAt
+      : typeof (board as any).generatedAt === "string"
+        ? (board as any).generatedAt
+        : null;
+
+  localValidatedPlayerIndex.set(key, {
+    expiresAt,
+    generatedAt,
+    candidates,
+  });
+
+  console.log(
+    `[HR_BOARD_HUB] indexed ${candidates.size} validated/projected players key=${key}`,
+  );
+}
 const LAST_GOOD_REDIS_PREFIX = "validated-hr-board:last-good";
 const VALIDATED_HOT_REDIS_PREFIX = "validated-hr-board:hot";
 
@@ -176,6 +234,7 @@ export function resetValidatedHrBoardHubForTests(): void {
   localValidatedHrBoardCache.clear();
   localValidatedHrBoardBuilds.clear();
   lastGoodValidatedHrBoards.clear();
+  localValidatedPlayerIndex.clear();
 }
 
 /** Test-only: force a rebuild on next fetch while keeping last-good snapshots. */
@@ -186,8 +245,24 @@ export function expireValidatedHrBoardHubCacheForTests(): void {
 const localDeepHrBoardCache = new Map<string, DeepCacheEntry>();
 const localDeepHrBoardBuilds = new Map<string, Promise<DeepHrBoardSnapshot>>();
 
+function currentMlbDate(): string {
+  // MLB slate dates should follow Eastern Time rather than server UTC.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 function validatedKey(date?: string | null): string {
-  return `validated-hr-board:${date ?? "today"}`;
+  const normalizedDate = date?.trim() || null;
+  const canonicalDate =
+    !normalizedDate || normalizedDate === currentMlbDate()
+      ? "today"
+      : normalizedDate;
+
+  return `validated-hr-board:${canonicalDate}`;
 }
 
 function deepKey(date?: string | null): string {
@@ -219,6 +294,7 @@ async function loadValidatedHotFromRedis(key: string): Promise<ValidatedCacheEnt
     if (remote.expiresAt <= Date.now()) return null;
 
     localValidatedHrBoardCache.set(key, remote);
+    buildValidatedPlayerIndex(key, remote.board, remote.expiresAt);
     console.log(`[HR_BOARD_HUB] validated redis hot hit key=${key}`);
     return remote;
   } catch (error) {
@@ -230,13 +306,133 @@ async function loadValidatedHotFromRedis(key: string): Promise<ValidatedCacheEnt
   }
 }
 
+type ProfilePrewarmCandidate = {
+  playerId: number;
+  candidate: Record<string, unknown>;
+};
+
+function positiveNumber(value: unknown): number | undefined {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function profilePrewarmCandidates(
+  board: ValidatedHrBoardSnapshot,
+): ProfilePrewarmCandidate[] {
+  const configuredLimit = Number(process.env.HR_PROFILE_PREWARM_LIMIT ?? 6);
+  const limit = Math.max(0, Math.min(12, configuredLimit));
+
+  if (limit === 0) return [];
+
+  const candidatePools = [
+    Array.isArray(board.candidates) ? board.candidates : [],
+    Array.isArray(board.projectedCandidates) ? board.projectedCandidates : [],
+  ];
+
+  const seen = new Set<number>();
+  const selected: ProfilePrewarmCandidate[] = [];
+
+  for (const row of candidatePools.flat()) {
+    if (!row || typeof row !== "object") continue;
+
+    const candidate = row as unknown as Record<string, unknown>;
+    const playerId = positiveNumber(candidate.playerId);
+
+    if (!playerId || seen.has(playerId)) continue;
+
+    seen.add(playerId);
+
+    selected.push({
+      playerId,
+      candidate,
+    });
+
+    if (selected.length >= limit) break;
+  }
+
+  return selected;
+}
+
+function scheduleProfileResearchPrewarm(
+  key: string,
+  board: ValidatedHrBoardSnapshot,
+): void {
+  const candidates = profilePrewarmCandidates(board);
+  if (!candidates.length) return;
+
+  const configuredConcurrency = Number(
+    process.env.HR_PROFILE_PREWARM_CONCURRENCY ?? 2,
+  );
+  const concurrency = Math.max(1, Math.min(4, configuredConcurrency));
+  const startedAt = Date.now();
+
+  void limitConcurrency(
+    candidates,
+    concurrency,
+    async (candidate) => {
+      try {
+        await getMaterializedHrResearch({
+          candidate: candidate.candidate,
+          generatedAt:
+            typeof board.generatedAt === "string"
+              ? board.generatedAt
+              : null,
+        });
+
+        return true;
+      } catch (error) {
+        console.warn(
+          `[HR_BOARD_HUB] profile prewarm failed key=${key} playerId=${candidate.playerId}:`,
+          error instanceof Error ? error.message : String(error),
+        );
+        return false;
+      }
+    },
+  )
+    .then((results) => {
+      const warmed = results.filter(Boolean).length;
+
+      console.log(
+        `[HR_BOARD_HUB] profile prewarm complete key=${key} warmed=${warmed}/${candidates.length} durationMs=${Date.now() - startedAt}`,
+      );
+    })
+    .catch((error) => {
+      console.warn(
+        `[HR_BOARD_HUB] profile prewarm batch failed key=${key}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    });
+}
+
 async function buildFreshValidatedBoard(
   key: string,
   date: string | null | undefined,
   ttlSeconds: number,
 ): Promise<ValidatedHrBoardResult> {
   console.log(`[HR_BOARD_HUB] validated building key=${key}`);
-  const board = await buildValidatedHrBoard(date ?? undefined);
+
+  const weatherPrewarm = getTodayGamesWeather(date ?? undefined)
+    .then((rows) => {
+      console.log(
+        `[HR_BOARD_HUB] weather prewarm complete key=${key} games=${rows.length}`,
+      );
+      return rows;
+    })
+    .catch((error) => {
+      // Weather is supporting research context, not a board truth prerequisite.
+      // Keep the validated board available when the forecast provider is degraded.
+      console.warn(
+        `[HR_BOARD_HUB] weather prewarm failed key=${key}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return [];
+    });
+
+  const [board] = await Promise.all([
+    buildValidatedHrBoard(date ?? undefined),
+    weatherPrewarm,
+  ]);
+
   rememberLastGoodValidatedBoard(key, board);
 
   const entry: ValidatedCacheEntry = {
@@ -244,9 +440,14 @@ async function buildFreshValidatedBoard(
     board,
   };
   localValidatedHrBoardCache.set(key, entry);
+  buildValidatedPlayerIndex(key, board, entry.expiresAt);
   void persistValidatedHotToRedis(key, entry);
 
   console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
+
+  // Background-only warmup. Never delay board availability.
+  scheduleProfileResearchPrewarm(key, board);
+
   return board;
 }
 
@@ -271,6 +472,51 @@ function scheduleValidatedRefresh(
   void buildPromise.finally(() => {
     localValidatedHrBoardBuilds.delete(key);
   });
+}
+
+export async function getCachedValidatedHrCandidate(
+  playerId: number,
+  date?: string | null,
+): Promise<{
+  candidate: ValidatedPlayerCandidate | null;
+  generatedAt: string | null;
+  source: "player_index" | "board_fallback";
+}> {
+  const key = validatedKey(date);
+  const indexed = localValidatedPlayerIndex.get(key);
+
+  if (indexed && indexed.expiresAt > Date.now()) {
+    const candidate = indexed.candidates.get(playerId) ?? null;
+
+    if (candidate) {
+      console.log(
+        `[HR_BOARD_HUB] validated player index hit key=${key} playerId=${playerId}`,
+      );
+
+      return {
+        candidate,
+        generatedAt: indexed.generatedAt,
+        source: "player_index",
+      };
+    }
+  }
+
+  const board = await getCachedValidatedHrBoard(date);
+  const cached = localValidatedHrBoardCache.get(key);
+
+  buildValidatedPlayerIndex(
+    key,
+    board,
+    cached?.expiresAt ?? Date.now() + 60_000,
+  );
+
+  const refreshed = localValidatedPlayerIndex.get(key);
+
+  return {
+    candidate: refreshed?.candidates.get(playerId) ?? null,
+    generatedAt: refreshed?.generatedAt ?? null,
+    source: "board_fallback",
+  };
 }
 
 export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardResult> {

@@ -225,6 +225,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   const vm = useHrBoardViewModel();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
   const eliteCount: number = vm.stats?.elite ?? vm.buckets?.Elite?.length ?? 0;
   const strongCount: number = vm.stats?.strong ?? vm.buckets?.Strong?.length ?? 0;
@@ -249,6 +250,12 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     vm.refresh?.();
     setLastUpdated(new Date());
   }, [vm]);
+
+  React.useEffect(() => {
+    if (!vm.syncing) {
+      setResearchNotice(null);
+    }
+  }, [vm.syncing]);
 
   React.useEffect(() => {
     ProductEvents.flagshipBoardViewed({
@@ -284,6 +291,16 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
 
   const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
     if (!player) return;
+
+    if (vm.syncing) {
+      setResearchNotice(
+        'Preparing validated player intelligence. Research will be ready momentarily.',
+      );
+      return;
+    }
+
+    setResearchNotice(null);
+
     ProductEvents.playerCardOpened({
       date: vm.date,
       mode: vm.mode,
@@ -705,6 +722,24 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         </footer>
         </div>
 
+        {researchNotice ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-5 left-1/2 z-[120] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border border-vouch-cyan/25 bg-[#071017]/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
+          >
+            <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-vouch-cyan" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-vouch-cyan">
+                Validating board
+              </p>
+              <p className="mt-0.5 text-xs text-white/70">
+                {researchNotice}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <HrPlayerProfile
           player={vm.selectedPlayer}
           isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
@@ -712,6 +747,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           onAddToSlip={addPlayerToSlip}
           boardFreshness={vm.slate.freshness}
           boardGeneratedAt={vm.slate.generatedAt}
+          boardDate={vm.date}
           slipActionAvailable={Boolean(onSectionChange)}
         />
       </div>

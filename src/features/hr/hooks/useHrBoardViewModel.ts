@@ -76,7 +76,7 @@ export function useHrBoardViewModel() {
     setDateState(next > todayISO() ? todayISO() : next);
   }, []);
 
-  const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(date);
+  const { data: rawBoard, loading, syncing, error, refresh } = useDailyHrBoard(date);
   const hrResults = useHrResultsForDate(date);
   const generatedAt = parseDate(rawBoard?.generatedAt);
   const loadedAt = parseDate(rawBoard?.loadedAt);
@@ -199,6 +199,7 @@ export function useHrBoardViewModel() {
     autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
     date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,
+    syncing,
     slate,
   };
 }

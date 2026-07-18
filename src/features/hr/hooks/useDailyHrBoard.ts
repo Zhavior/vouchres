@@ -20,6 +20,7 @@ export function useDailyHrBoard(date: string) {
   return {
     data: contract,
     loading: query.isLoading && !query.data,
+    syncing: query.isFetching,
     error: query.isError ? 'Data unavailable right now.' : null,
     lastUpdated: query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : null,
     refresh: async () => {

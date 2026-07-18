@@ -231,8 +231,12 @@ export function resolveDevSectionFromLocation() {
     return 'player_edge_lab';
   }
 
-  if (target === 'team-matchup-lab' || target === '/team-matchup-lab') {
-    return 'team_matchup_lab';
+  if (
+    target === 'pitcher-matchup' || target === '/pitcher-matchup' ||
+    target === 'pitcher-matchup-intelligence' || target === '/pitcher-matchup-intelligence' ||
+    target === 'team-matchup-lab' || target === '/team-matchup-lab'
+  ) {
+    return 'pitcher_matchup_intelligence';
   }
 
   if (target === 'pro-graphs-lab' || target === '/pro-graphs-lab') {
