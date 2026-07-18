@@ -6,7 +6,7 @@
 }
 
 .ve-mark-idle .ve-mark-glow {
-  transform-origin: 512px 470px;
+  transform-origin: 512px 460px;
   animation: veMarkGlow 3.6s ease-in-out infinite;
 }
 
@@ -16,22 +16,32 @@
 }
 
 .ve-mark-boot .ve-mark-shield {
-  stroke-dasharray: 2200;
-  stroke-dashoffset: 2200;
-  animation: veMarkDrawShield 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  stroke-dasharray: 2600;
+  stroke-dashoffset: 2600;
+  animation: veMarkDrawShield 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-mark-boot .ve-mark-seal {
+  opacity: 0;
+  animation: veMarkSealIn 0.55s ease-out 0.45s forwards;
 }
 
 .ve-mark-boot .ve-mark-identity {
   opacity: 0;
   transform-origin: 512px 500px;
-  transform: scale(0.72);
-  animation: veMarkPopIdentity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+  transform: scale(0.78);
+  animation: veMarkPopIdentity 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
 }
 
 .ve-mark-boot .ve-mark-glow {
   opacity: 0;
-  transform-origin: 512px 470px;
-  animation: veMarkGlowIn 1.2s ease-out 0.2s forwards;
+  transform-origin: 512px 460px;
+  animation: veMarkGlowIn 1.15s ease-out 0.15s forwards;
+}
+
+.ve-mark-boot .ve-mark-facet {
+  opacity: 0;
+  animation: veMarkFacetFlash 0.7s ease-out 0.95s forwards;
 }
 
 @keyframes veMarkDrawShield {
@@ -53,6 +63,24 @@
   }
 }
 
+@keyframes veMarkSealIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes veMarkFacetFlash {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
 @keyframes veMarkGlow {
   0%,
   100% {
@@ -60,7 +88,7 @@
     opacity: 0.85;
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.05);
     opacity: 1;
   }
 }
@@ -79,8 +107,10 @@
   .ve-mark-idle .ve-mark-glow,
   .ve-mark-idle .ve-mark-identity,
   .ve-mark-boot .ve-mark-shield,
+  .ve-mark-boot .ve-mark-seal,
   .ve-mark-boot .ve-mark-identity,
-  .ve-mark-boot .ve-mark-glow {
+  .ve-mark-boot .ve-mark-glow,
+  .ve-mark-boot .ve-mark-facet {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

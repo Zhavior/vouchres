@@ -1,6 +1,6 @@
 /**
- * Render HD VouchEdge brand PNGs from the master SVG for PWA + Capacitor.
- * Usage: node scripts/generateBrandAssets.mjs
+ * Render HD / 4K VouchEdge brand PNGs from the master SVG for PWA + Capacitor.
+ * Usage: npm run brand:assets
  */
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
@@ -10,11 +10,17 @@ const ROOT = resolve(process.cwd());
 const SVG = readFileSync(resolve(ROOT, 'public/brand/vouchedge-mark.svg'), 'utf8');
 
 const outputs = [
+  // Recognition ladder (store grid → home screen → marketing)
+  { file: 'public/brand/previews/vouchedge-48.png', size: 48 },
+  { file: 'public/brand/previews/vouchedge-128.png', size: 128 },
   { file: 'public/icons/vouchedge-180.png', size: 180 },
   { file: 'public/icons/vouchedge-192.png', size: 192 },
   { file: 'public/icons/vouchedge-512.png', size: 512 },
   { file: 'assets/icon-only.png', size: 1024 },
   { file: 'assets/icon-foreground.png', size: 1024 },
+  { file: 'public/brand/vouchedge-1024.png', size: 1024 },
+  // True 4K master for App Store / Play / press kits
+  { file: 'public/brand/vouchedge-4k.png', size: 4096 },
   { file: 'assets/splash.png', size: 2732, splash: true },
   { file: 'assets/splash-dark.png', size: 2732, splash: true },
 ];
@@ -33,7 +39,7 @@ function htmlFor(size, splash = false) {
 async function main() {
   mkdirSync(resolve(ROOT, 'assets'), { recursive: true });
   mkdirSync(resolve(ROOT, 'public/icons'), { recursive: true });
-  mkdirSync(resolve(ROOT, 'public/brand'), { recursive: true });
+  mkdirSync(resolve(ROOT, 'public/brand/previews'), { recursive: true });
 
   const browser = await chromium.launch({ headless: true });
   for (const out of outputs) {
@@ -42,7 +48,7 @@ async function main() {
       deviceScaleFactor: 1,
     });
     await page.setContent(htmlFor(out.size, Boolean(out.splash)), { waitUntil: 'load' });
-    await page.waitForTimeout(80);
+    await page.waitForTimeout(100);
     const buf = await page.screenshot({ type: 'png', omitBackground: false });
     const dest = resolve(ROOT, out.file);
     writeFileSync(dest, buf);
@@ -50,16 +56,9 @@ async function main() {
     await page.close();
   }
 
-  // PWA / apple aliases
-  copyFileSync(resolve(ROOT, 'assets/icon-only.png'), resolve(ROOT, 'public/brand/vouchedge-1024.png'));
   copyFileSync(resolve(ROOT, 'public/brand/vouchedge-mark.svg'), resolve(ROOT, 'public/vouchedge-icon.svg'));
   copyFileSync(resolve(ROOT, 'public/brand/vouchedge-mark.svg'), resolve(ROOT, 'public/favicon.svg'));
-
-  // Adaptive icon background tile
-  writeFileSync(
-    resolve(ROOT, 'assets/icon-background.png'),
-    readFileSync(resolve(ROOT, 'assets/icon-only.png')),
-  );
+  copyFileSync(resolve(ROOT, 'assets/icon-only.png'), resolve(ROOT, 'assets/icon-background.png'));
 
   await browser.close();
   console.log('done — run: npx capacitor-assets generate --android (optional)');

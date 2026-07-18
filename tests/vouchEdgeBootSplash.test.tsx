@@ -54,10 +54,20 @@ describe('VouchEdge splash + brand mark', () => {
     expect(gate).toContain('shouldRunBoot && !boot.ready');
   });
 
-  it('ships a master SVG source for Capacitor assets', () => {
+  it('ships a master SVG with trust shield + check-V metaphor', () => {
     const svg = readFileSync(resolve(process.cwd(), 'public/brand/vouchedge-mark.svg'), 'utf8');
     expect(svg).toContain('viewBox="0 0 1024 1024"');
     expect(svg).toContain('#020617');
     expect(svg).toContain('#00E5FF');
+    expect(svg).toMatch(/Check-V|check-V|vouch edge/i);
+    expect(svg).toContain('ve-mark-identity');
+  });
+
+  it('exports a 4K PNG master for store / press', () => {
+    const png = readFileSync(resolve(process.cwd(), 'public/brand/vouchedge-4k.png'));
+    expect(png.length).toBeGreaterThan(50_000);
+    // PNG IHDR width/height at bytes 16–23 are big-endian 4096
+    expect(png.readUInt32BE(16)).toBe(4096);
+    expect(png.readUInt32BE(20)).toBe(4096);
   });
 });

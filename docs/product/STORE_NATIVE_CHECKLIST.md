@@ -36,7 +36,9 @@ npx cap open ios       # Xcode (macOS)
 | `HelloScreen` | ~1.1s after login |
 | `VouchEdgeBootScreen` | Animated mark + progress while boot jobs warm |
 
-HD sources: `public/brand/vouchedge-mark.svg` (1024 viewBox), `assets/icon-only.png` (1024), `assets/splash.png` (2732).
+HD sources: `public/brand/vouchedge-mark.svg` (vector), `public/brand/vouchedge-4k.png` (4096), `assets/icon-only.png` (1024), `assets/splash.png` (2732).
+
+Mark psychology: one silhouette — shield (trust) + check-V (vouch / verified edge). Cyan on navy for competence; avoids privacy-person and sportsbook clichés.
 
 ## Positioning (do not break)
 
