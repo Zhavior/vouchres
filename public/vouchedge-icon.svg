@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
-  data-optical-letter-height="276"
-  data-optical-gap="44"
-  data-optical-margin="88"
+  data-optical-letter-height="268"
+  data-optical-gap="40"
+  data-optical-margin="96"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 optical:letterHeight=276 optical:gap=44 optical:margin=88 noGimmick=1
-    Optical lockup: VE centered in shield with equal stem weight, classic E mid-bar (82%),
-    restrained glow, no arrow/glitch tips. Trust shield frames the monogram — letters lead.
+    craft:level=2 optical:letterHeight=268 optical:gap=40 optical:margin=96 noGimmick=1
+    Optical lockup: VE fully inside shield safe zone (max x ≤720). Equal stem weight.
+    Classic E mid-bar (~80%). Restrained glow. No gimmick tips.
   -->
   <defs>
     <linearGradient id="ve-plate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
@@ -24,7 +24,7 @@
       <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.10"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.02"/>
     </linearGradient>
-    <linearGradient id="ve-letter" x1="300" y1="380" x2="760" y2="720" gradientUnits="userSpaceOnUse">
+    <linearGradient id="ve-letter" x1="320" y1="390" x2="720" y2="700" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#F8FEFF"/>
       <stop offset="55%" stop-color="#7DD3FC"/>
       <stop offset="100%" stop-color="#2DD4BF"/>
@@ -39,46 +39,40 @@
   <rect width="1024" height="1024" rx="224" fill="url(#ve-plate)"/>
   <circle class="ve-mark-glow" cx="512" cy="468" r="300" fill="url(#ve-glow)"/>
 
-  <!-- Trust shield — refined stroke, generous letter safe zone -->
   <path
     class="ve-mark-shield"
-    d="M512 176
-       C598 176 708 228 748 278
-       V528
-       C748 662 646 788 512 856
-       C378 788 276 662 276 528
-       V278
-       C316 228 426 176 512 176 Z"
+    d="M512 168
+       C602 168 718 222 760 274
+       V530
+       C760 668 652 798 512 868
+       C372 798 264 668 264 530
+       V274
+       C306 222 422 168 512 168 Z"
     fill="url(#ve-shield-fill)"
     stroke="url(#ve-shield-stroke)"
     stroke-width="30"
     stroke-linejoin="round"
   />
 
-  <!--
-    VE optical lockup (ve-mark-optical)
-    Stem ~56px · letter height 276 · inter-letter gap 44 · shield margin ≥88
-  -->
+  <!-- VE fully inside shield (safe max ≈720) -->
   <g class="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
-    <!-- V — single tip, matched stem weight -->
     <path
       class="letter-v"
-      d="M318 402
-         L430 678
-         L494 678
-         L606 402
-         L542 402
-         L462 618
-         L382 402
+      d="M332 408
+         L428 676
+         L490 676
+         L586 408
+         L526 408
+         L459 612
+         L392 408
          Z"
       fill="url(#ve-letter)"
     />
-    <!-- E — classic proportions, mid-bar ~82% width, no gimmick tip -->
     <g class="letter-e">
-      <path d="M650 402 H706 V678 H650 Z" fill="url(#ve-letter)"/>
-      <path d="M706 402 H790 V458 H706 Z" fill="url(#ve-letter)"/>
-      <path d="M706 512 H772 V568 H706 Z" fill="url(#ve-letter)"/>
-      <path d="M706 622 H790 V678 H706 Z" fill="url(#ve-letter)"/>
+      <path d="M626 408 H678 V676 H626 Z" fill="url(#ve-letter)"/>
+      <path d="M678 408 H748 V460 H678 Z" fill="url(#ve-letter)"/>
+      <path d="M678 516 H728 V568 H678 Z" fill="url(#ve-letter)"/>
+      <path d="M678 624 H748 V676 H678 Z" fill="url(#ve-letter)"/>
     </g>
   </g>
 </svg>

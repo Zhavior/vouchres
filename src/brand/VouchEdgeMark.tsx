@@ -1,5 +1,5 @@
 /**
- * VouchEdge brand mark — craft level 2 optical VE lockup.
+ * VouchEdge brand mark — craft level 2 optical VE lockup (letters inside shield).
  * Mirrors /public/brand/vouchedge-mark.svg
  */
 import React from 'react';
@@ -47,7 +47,7 @@ export function VouchEdgeMark({
           <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.02" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="300" y1="380" x2="760" y2="720" gradientUnits="userSpaceOnUse">
+        <linearGradient id="veMarkLetter" x1="320" y1="390" x2="720" y2="700" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F8FEFF" />
           <stop offset="55%" stopColor="#7DD3FC" />
           <stop offset="100%" stopColor="#2DD4BF" />
@@ -64,13 +64,13 @@ export function VouchEdgeMark({
 
       <path
         className="ve-mark-shield"
-        d="M512 176
-           C598 176 708 228 748 278
-           V528
-           C748 662 646 788 512 856
-           C378 788 276 662 276 528
-           V278
-           C316 228 426 176 512 176 Z"
+        d="M512 168
+           C602 168 718 222 760 274
+           V530
+           C760 668 652 798 512 868
+           C372 798 264 668 264 530
+           V274
+           C306 222 422 168 512 168 Z"
         fill="url(#veMarkShieldFill)"
         stroke="url(#veMarkStroke)"
         strokeWidth="30"
@@ -80,21 +80,21 @@ export function VouchEdgeMark({
       <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
         <path
           className="letter-v"
-          d="M318 402
-             L430 678
-             L494 678
-             L606 402
-             L542 402
-             L462 618
-             L382 402
+          d="M332 408
+             L428 676
+             L490 676
+             L586 408
+             L526 408
+             L459 612
+             L392 408
              Z"
           fill="url(#veMarkLetter)"
         />
         <g className="letter-e">
-          <path d="M650 402 H706 V678 H650 Z" fill="url(#veMarkLetter)" />
-          <path d="M706 402 H790 V458 H706 Z" fill="url(#veMarkLetter)" />
-          <path d="M706 512 H772 V568 H706 Z" fill="url(#veMarkLetter)" />
-          <path d="M706 622 H790 V678 H706 Z" fill="url(#veMarkLetter)" />
+          <path d="M626 408 H678 V676 H626 Z" fill="url(#veMarkLetter)" />
+          <path d="M678 408 H748 V460 H678 Z" fill="url(#veMarkLetter)" />
+          <path d="M678 516 H728 V568 H678 Z" fill="url(#veMarkLetter)" />
+          <path d="M678 624 H748 V676 H678 Z" fill="url(#veMarkLetter)" />
         </g>
       </g>
     </svg>
