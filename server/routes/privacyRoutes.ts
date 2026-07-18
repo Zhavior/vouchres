@@ -211,7 +211,7 @@ export async function processScheduledDeletions(): Promise<{
 
       await supabaseAdmin.rpc("anonymize_user_picks", { p_user_id: user.id });
 
-      await Promise.all([
+      const deleteJobs = await Promise.all([
         supabaseAdmin.from("post_likes").delete().eq("profile_id", user.id),
         supabaseAdmin.from("post_comments").delete().eq("author_id", user.id),
         supabaseAdmin.from("posts").delete().eq("author_id", user.id),
@@ -221,8 +221,15 @@ export async function processScheduledDeletions(): Promise<{
         supabaseAdmin.from("subscriptions").delete().eq("profile_id", user.id),
         supabaseAdmin.from("beta_signups").delete().eq("activated_user_id", user.id),
       ]);
+      const deleteFailure = deleteJobs.find((job) => job.error);
+      if (deleteFailure?.error) {
+        throw new Error(`related-row delete failed: ${deleteFailure.error.message}`);
+      }
 
-      await supabaseAdmin.from("profiles").delete().eq("id", user.id);
+      const profileDelete = await supabaseAdmin.from("profiles").delete().eq("id", user.id);
+      if (profileDelete.error) {
+        throw new Error(`profile delete failed: ${profileDelete.error.message}`);
+      }
 
       const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
       if (authErr) {

@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
+import { TTLCache } from "../lib/cache";
 import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
 
 /**
@@ -71,8 +73,24 @@ export interface AuthedRequest extends Request {
       age_confirmed_at: string | null;
       jurisdiction_confirmed_at: string | null;
       jurisdiction: string | null;
+      deletion_scheduled_at?: string | null;
     };
   };
+}
+
+type CachedAuthSession = NonNullable<AuthedRequest["user"]>;
+
+/** Short-lived auth session cache — cuts Auth API + profile round-trips under load. */
+const AUTH_SESSION_TTL_MS = 30_000;
+const authSessionCache = new TTLCache<CachedAuthSession>(AUTH_SESSION_TTL_MS, "auth:session");
+
+function authTokenCacheKey(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/** Test-only: clear cached sessions between cases. */
+export function resetAuthSessionCacheForTests(): void {
+  authSessionCache.clear();
 }
 
 export async function requireAuth(
@@ -88,6 +106,23 @@ export async function requireAuth(
     }
 
     const token = header.slice(7);
+    const cacheKey = authTokenCacheKey(token);
+    const cached = authSessionCache.get(cacheKey);
+    if (cached) {
+      if (cached.profile.is_banned) {
+        if (cached.profile.deletion_scheduled_at) {
+          return next(new AppError({
+            status: 403,
+            code: "forbidden",
+            message: "Your account is scheduled for deletion. Visit Settings to cancel.",
+            details: { deletion_scheduled_at: cached.profile.deletion_scheduled_at },
+          }));
+        }
+        return next(new AppError({ status: 403, code: "forbidden", message: "Account is banned." }));
+      }
+      req.user = cached;
+      return next();
+    }
 
     // Verify the JWT via Supabase auth admin API
     const supabaseAdmin = await getSupabaseAdmin();
@@ -162,6 +197,7 @@ export async function requireAuth(
       email: data.user.email,
       profile,
     };
+    authSessionCache.set(cacheKey, req.user, AUTH_SESSION_TTL_MS);
 
     next();
   } catch (error) {
