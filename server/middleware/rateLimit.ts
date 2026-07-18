@@ -53,6 +53,7 @@ function memoryHit(key: string, windowMs: number): number {
 function rateLimitUnavailable(req: RequestWithContext, res: Response) {
   const requestId = req.requestId ?? "unknown";
   res.setHeader("x-request-id", requestId);
+  res.setHeader("Retry-After", "5");
   return res.status(503).json(
     buildApiErrorResponse({
       code: "upstream_unavailable",
@@ -66,15 +67,29 @@ function shouldFailClosedOnRedisError(): boolean {
   return process.env.NODE_ENV === "production" && isUpstashEnabled();
 }
 
+function setRateLimitHeaders(
+  res: Response,
+  input: { limit: number; remaining: number; retryAfterSeconds?: number },
+) {
+  res.setHeader("X-RateLimit-Limit", String(input.limit));
+  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, input.remaining)));
+  if (input.retryAfterSeconds != null) {
+    res.setHeader("Retry-After", String(input.retryAfterSeconds));
+  }
+}
+
 function handler(req: RequestWithContext, res: Response) {
   const requestId = req.requestId ?? "unknown";
   res.setHeader("x-request-id", requestId);
+  if (!res.getHeader("Retry-After")) {
+    res.setHeader("Retry-After", "60");
+  }
   return res.status(429).json(
     buildApiErrorResponse({
       code: "rate_limited",
       message: "Too many requests. Slow down or upgrade to a paid tier.",
       requestId,
-      details: { retry_after_seconds: 60 },
+      details: { retry_after_seconds: Number(res.getHeader("Retry-After") ?? 60) },
     }),
   );
 }
@@ -92,6 +107,12 @@ function rateLimit(options: RateLimitOptions) {
       try {
         const count = await redisIncr(redisKey, ttlSeconds);
         if (count !== null) {
+          const remaining = Math.max(0, options.limit - count);
+          setRateLimitHeaders(res, {
+            limit: options.limit,
+            remaining,
+            retryAfterSeconds: count > options.limit ? ttlSeconds : undefined,
+          });
           if (count > options.limit) return options.handler(req, res);
           return next();
         }
@@ -110,6 +131,12 @@ function rateLimit(options: RateLimitOptions) {
     }
 
     const count = memoryHit(redisKey, options.windowMs);
+    const remaining = Math.max(0, options.limit - count);
+    setRateLimitHeaders(res, {
+      limit: options.limit,
+      remaining,
+      retryAfterSeconds: count > options.limit ? ttlSeconds : undefined,
+    });
     if (count > options.limit) return options.handler(req, res);
     return next();
   };

@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
 import { TTLCache } from "../lib/cache";
 import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -80,12 +81,43 @@ export interface AuthedRequest extends Request {
 
 type CachedAuthSession = NonNullable<AuthedRequest["user"]>;
 
-/** Short-lived auth session cache — cuts Auth API + profile round-trips under load. */
+/** Short-lived auth session cache — L1 memory + optional L2 Redis for multi-instance. */
 const AUTH_SESSION_TTL_MS = 30_000;
+const AUTH_SESSION_TTL_SECONDS = 30;
 const authSessionCache = new TTLCache<CachedAuthSession>(AUTH_SESSION_TTL_MS, "auth:session");
 
 function authTokenCacheKey(token: string): string {
   return createHash("sha256").update(token).digest("hex");
+}
+
+function authRedisKey(tokenHash: string): string {
+  return `auth:session:${tokenHash}`;
+}
+
+async function readAuthSessionCache(tokenHash: string): Promise<CachedAuthSession | null> {
+  const local = authSessionCache.get(tokenHash);
+  if (local) return local;
+
+  if (!isUpstashEnabled()) return null;
+  try {
+    const remote = await redisGetJson<CachedAuthSession>(authRedisKey(tokenHash));
+    if (!remote?.id || !remote.profile) return null;
+    authSessionCache.set(tokenHash, remote, AUTH_SESSION_TTL_MS);
+    return remote;
+  } catch (error) {
+    console.warn("[auth] redis session read failed", (error as Error)?.message ?? error);
+    return null;
+  }
+}
+
+async function writeAuthSessionCache(tokenHash: string, session: CachedAuthSession): Promise<void> {
+  authSessionCache.set(tokenHash, session, AUTH_SESSION_TTL_MS);
+  if (!isUpstashEnabled()) return;
+  try {
+    await redisSetJson(authRedisKey(tokenHash), session, AUTH_SESSION_TTL_SECONDS);
+  } catch (error) {
+    console.warn("[auth] redis session write failed", (error as Error)?.message ?? error);
+  }
 }
 
 /** Test-only: clear cached sessions between cases. */
@@ -107,7 +139,7 @@ export async function requireAuth(
 
     const token = header.slice(7);
     const cacheKey = authTokenCacheKey(token);
-    const cached = authSessionCache.get(cacheKey);
+    const cached = await readAuthSessionCache(cacheKey);
     if (cached) {
       if (cached.profile.is_banned) {
         if (cached.profile.deletion_scheduled_at) {
@@ -197,7 +229,7 @@ export async function requireAuth(
       email: data.user.email,
       profile,
     };
-    authSessionCache.set(cacheKey, req.user, AUTH_SESSION_TTL_MS);
+    await writeAuthSessionCache(cacheKey, req.user);
 
     next();
   } catch (error) {

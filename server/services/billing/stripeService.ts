@@ -407,7 +407,7 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   const effective = effectiveTierForSubscriptionStatus(status, tier);
 
   // Upsert subscription row
-  await supabaseAdmin.from("subscriptions").upsert(
+  const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
     {
       profile_id: profileId,
       stripe_customer_id: subscription.customer as string,
@@ -421,9 +421,10 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
     },
     { onConflict: "stripe_subscription_id" }
   );
+  if (upsertError) throw upsertError;
 
   // Update profile tier
-  await supabaseAdmin
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({
       tier: effective.tier,
@@ -431,8 +432,35 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
     })
     .eq("id", profileId);
+  if (profileError) throw profileError;
 
   console.log(
     `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effective.tier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
   );
+}
+
+/**
+ * Permanently delete a Stripe customer during account teardown.
+ * Treats already-missing customers as success so re-runs stay idempotent.
+ */
+export async function deleteStripeCustomer(customerId: string): Promise<void> {
+  if (!customerId?.trim()) return;
+  if (!isStripeConfigured()) {
+    throw new Error("stripe_secret_key_not_configured");
+  }
+
+  try {
+    await getStripe().customers.del(customerId);
+  } catch (error: unknown) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: string }).code ?? "")
+        : "";
+    const statusCode =
+      error && typeof error === "object" && "statusCode" in error
+        ? Number((error as { statusCode?: number }).statusCode)
+        : NaN;
+    if (code === "resource_missing" || statusCode === 404) return;
+    throw error;
+  }
 }

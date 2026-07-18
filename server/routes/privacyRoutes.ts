@@ -226,6 +226,11 @@ export async function processScheduledDeletions(): Promise<{
         throw new Error(`related-row delete failed: ${deleteFailure.error.message}`);
       }
 
+      if (user.stripe_customer_id) {
+        const { deleteStripeCustomer } = await import("../services/billing/stripeService");
+        await deleteStripeCustomer(String(user.stripe_customer_id));
+      }
+
       const profileDelete = await supabaseAdmin.from("profiles").delete().eq("id", user.id);
       if (profileDelete.error) {
         throw new Error(`profile delete failed: ${profileDelete.error.message}`);
@@ -234,13 +239,6 @@ export async function processScheduledDeletions(): Promise<{
       const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
       if (authErr) {
         throw new Error(`auth delete failed: ${authErr.message}`);
-      }
-
-      if (user.stripe_customer_id) {
-        console.warn(
-          "[privacy] Stripe customer deletion helper is not wired yet; skipping remote customer deletion",
-          { customerId: user.stripe_customer_id },
-        );
       }
 
       processed++;
