@@ -209,7 +209,13 @@ export async function incrementQuota(
 
   if (seed.error) {
     console.error("[entitlements] quota seed failed", seed.error);
-    return;
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: seed.error,
+    });
   }
 
   const increment = await supabaseAdmin.rpc("increment_quota", {
@@ -232,7 +238,13 @@ export async function incrementQuota(
 
   if (current.error) {
     console.error("[entitlements] quota fallback read failed", current.error);
-    return;
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: current.error,
+    });
   }
 
   const nextCount = Number(current.data?.count ?? 0) + 1;
@@ -245,6 +257,13 @@ export async function incrementQuota(
 
   if (fallback.error) {
     console.error("[entitlements] quota fallback increment failed", fallback.error);
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: fallback.error,
+    });
   }
 }
 

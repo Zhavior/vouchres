@@ -5,7 +5,8 @@ const selectEq = vi.fn(() => ({ maybeSingle }));
 const select = vi.fn(() => ({ eq: selectEq }));
 
 const updateSelect = vi.fn();
-const updateEqStatus = vi.fn(() => ({ select: updateSelect }));
+const updateLt = vi.fn(() => ({ select: updateSelect }));
+const updateEqStatus = vi.fn(() => ({ select: updateSelect, lt: updateLt }));
 const updateEqId = vi.fn(() => ({ eq: updateEqStatus }));
 const update = vi.fn(() => ({ eq: updateEqId }));
 
@@ -68,6 +69,35 @@ describe("beginStripeWebhookEvent reclaim race", () => {
       type: "customer.subscription.updated",
     } as any);
 
+    expect(result).toEqual({
+      shouldProcess: true,
+      duplicate: true,
+      status: "processing",
+    });
+  });
+
+  it("reclaims stale processing webhooks after TTL", async () => {
+    insert.mockResolvedValueOnce({
+      error: { code: "23505", message: "duplicate" },
+    });
+    maybeSingle.mockResolvedValueOnce({
+      data: {
+        status: "processing",
+        received_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+      },
+      error: null,
+    });
+    updateSelect.mockResolvedValueOnce({ data: [{ id: "evt_stale" }], error: null });
+
+    const { beginStripeWebhookEvent } = await import(
+      "../server/services/billing/stripeService"
+    );
+    const result = await beginStripeWebhookEvent({
+      id: "evt_stale",
+      type: "customer.subscription.updated",
+    } as any);
+
+    expect(updateLt).toHaveBeenCalled();
     expect(result).toEqual({
       shouldProcess: true,
       duplicate: true,

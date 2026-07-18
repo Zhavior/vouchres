@@ -247,9 +247,11 @@ export function renderHrShareCardSvg(
   const breakdown = candidate.scoreBreakdown;
   const recent = candidate.recentForm;
 
-  const warning = candidate.lineupStatus === "projected_unconfirmed"
-    ? "Projection preview — official lineup not posted yet."
-    : "Confirmed lineup data available.";
+  // Trust-first: only exact confirmed status may claim confirmed lineup copy.
+  const isConfirmed = candidate.lineupStatus === "confirmed";
+  const warning = isConfirmed
+    ? "Confirmed lineup data available."
+    : "Official lineup not posted yet.";
 
   const risk = candidate.riskTier ?? "N/A";
   const matchup = `${candidate.team ?? "TBD"} vs ${candidate.opponent ?? "TBD"}`;

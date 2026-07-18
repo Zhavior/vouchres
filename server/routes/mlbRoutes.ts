@@ -122,9 +122,9 @@ export function registerMlbRoutes(app: Express): void {
 
   app.get("/api/mlb/lineup/today", mlbReadLimiter, asyncHandler(lineupTodayHandler));
   app.get("/api/mlb/daily-player-board", mlbReadLimiter, asyncHandler(lineupTodayHandler));
-  app.get("/api/daily-players", asyncHandler(lineupTodayHandler));
+  app.get("/api/daily-players", mlbReadLimiter, asyncHandler(lineupTodayHandler));
 
-  app.get("/api/mlb/games/date/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/games/date/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
     const games = await getScheduleByDate(date);
@@ -141,7 +141,7 @@ export function registerMlbRoutes(app: Express): void {
     logEndpoint(req, "/api/mlb/games/date/:date", start);
   }));
 
-  app.get("/api/mlb/game/:gamePk", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/game/:gamePk", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
     const feed = await getGameFeed(gamePk);
@@ -158,7 +158,7 @@ export function registerMlbRoutes(app: Express): void {
     logEndpoint(req, "/api/mlb/game/:gamePk", start);
   }));
 
-  app.get("/api/mlb/probable-pitchers/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/probable-pitchers/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
     res.json(apiOkFlat(req, {

@@ -273,7 +273,7 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
 
   const { data, error: lookupError } = await supabaseAdmin
     .from("stripe_webhook_events")
-    .select("status")
+    .select("status, received_at")
     .eq("id", event.id)
     .maybeSingle();
   if (lookupError) throw lookupError;
@@ -292,6 +292,30 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
       .eq("status", "failed");
     if (retry.error) throw retry.error;
     return { shouldProcess: true, duplicate: true, status: "queued" };
+  }
+
+  // Crash mid-handler can leave status=processing forever — reclaim after TTL.
+  if (data?.status === "processing") {
+    const staleMs = Number(process.env.STRIPE_WEBHOOK_STALE_MS ?? 15 * 60_000);
+    const receivedAtMs = Date.parse(String(data.received_at ?? ""));
+    const isStale = Number.isFinite(receivedAtMs) && Date.now() - receivedAtMs >= staleMs;
+    if (isStale) {
+      const cutoff = new Date(Date.now() - staleMs).toISOString();
+      const retry = await supabaseAdmin
+        .from("stripe_webhook_events")
+        .update({ status: "processing", type: event.type, last_error: null, received_at: now })
+        .eq("id", event.id)
+        .eq("status", "processing")
+        .lt("received_at", cutoff)
+        .select("id");
+      if (retry.error) throw retry.error;
+      if (!retry.data?.length) {
+        console.log(`[stripe] stale processing reclaim lost race event=${event.id}`);
+        return { shouldProcess: false, duplicate: true, status: "processing" };
+      }
+      console.warn(`[stripe] reclaimed stale processing webhook event=${event.id}`);
+      return { shouldProcess: true, duplicate: true, status: "processing" };
+    }
   }
 
   console.log(`[stripe] duplicate webhook skipped event=${event.id} status=${data?.status ?? "unknown"}`);
@@ -431,6 +455,10 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
     })
     .eq("id", profileId);
   if (profileError) throw profileError;
+
+  // Tier changes must invalidate the 30s auth session cache immediately.
+  const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+  await bumpAuthUserEpoch(profileId);
 
   console.log(
     `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effective.tier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`

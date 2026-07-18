@@ -117,7 +117,7 @@ export async function getPublicParlayProof(id: string, baseUrl?: string): Promis
     locked_at: parlay.locked_at ? String(parlay.locked_at) : null,
     proof_hash: proofHash,
     ots_stamped_at: parlay.ots_stamped_at ? String(parlay.ots_stamped_at) : null,
-    has_ots_proof: Boolean(parlay.ots_proof),
+    has_ots_proof: Boolean(parlay.ots_proof) || Boolean(parlay.ots_stamped_at),
     lock_reason: parlay.lock_reason ? String(parlay.lock_reason) : null,
     committed_at: parlay.committed_at ? String(parlay.committed_at) : null,
     legs,

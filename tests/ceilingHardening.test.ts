@@ -28,4 +28,22 @@ describe("backend ceiling hardening invariants", () => {
     const share = readFileSync("server/routes/shareRoutes.ts", "utf8");
     expect(share).toMatch(/share\/hr-card[\s\S]*mlbReadLimiter|mlbReadLimiter[\s\S]*share\/hr-card/);
   });
+
+  it("privacy cancel/status allow pending deletion auth", () => {
+    const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
+    expect(privacy).toContain("requireAuthAllowPendingDeletion");
+    expect(privacy).toMatch(/cancel-deletion[\s\S]*requireAuthAllowPendingDeletion|requireAuthAllowPendingDeletion[\s\S]*cancel-deletion/);
+  });
+
+  it("quota increments fail closed", () => {
+    const entitlements = readFileSync("server/middleware/entitlements.ts", "utf8");
+    expect(entitlements).toContain("Quota tracking is temporarily unavailable.");
+    expect(entitlements).not.toMatch(/quota seed failed[\s\S]{0,80}return;/);
+  });
+
+  it("stripe sync invalidates auth session cache", () => {
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(stripe).toContain("bumpAuthUserEpoch");
+    expect(stripe).toContain("reclaimed stale processing webhook");
+  });
 });

@@ -145,10 +145,13 @@ export async function deleteParlayById(parlayId: string): Promise<void> {
 }
 
 export async function findPublicParlayById(parlayId: string): Promise<ParlayRow | null> {
+  const { PUBLIC_PICK_COLUMNS } = await import("../lib/publicPickDto");
+  // Explicit columns — never pull ots_proof blobs onto the public proof path.
+  const columns = `${PUBLIC_PICK_COLUMNS}, lock_reason, committed_at`;
   const supabaseAdmin = await admin();
   const { data, error } = await supabaseAdmin
     .from("picks")
-    .select("*")
+    .select(columns)
     .eq("id", parlayId)
     .eq("leg_type", "parlay")
     .eq("visibility", "public")
@@ -159,7 +162,7 @@ export async function findPublicParlayById(parlayId: string): Promise<ParlayRow 
     if (error.code === "42703" || error.code === "PGRST204") {
       const { data: row, error: rowError } = await supabaseAdmin
         .from("picks")
-        .select("*")
+        .select(columns)
         .eq("id", parlayId)
         .eq("leg_type", "parlay")
         .is("user_hidden_at", null)
@@ -172,12 +175,12 @@ export async function findPublicParlayById(parlayId: string): Promise<ParlayRow 
         .eq("pick_id", parlayId)
         .limit(1)
         .maybeSingle();
-      return postLink ? row : null;
+      return postLink ? (row as ParlayRow) : null;
     }
     throw error;
   }
 
-  return data ?? null;
+  return (data as ParlayRow | null) ?? null;
 }
 
 export async function setPickVisibilityPublic(pickId: string, userId: string): Promise<void> {

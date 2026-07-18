@@ -1,6 +1,12 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, bumpAuthUserEpoch, requireAuth, supabaseAdmin } from "../middleware/auth";
+import {
+  AuthedRequest,
+  bumpAuthUserEpoch,
+  requireAuth,
+  requireAuthAllowPendingDeletion,
+  supabaseAdmin,
+} from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
@@ -136,7 +142,7 @@ privacyRoutes.post(
   }));
 }));
 
-privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+privacyRoutes.post("/cancel-deletion", requireAuthAllowPendingDeletion, asyncHandler(async (req: PrivacyReq, res: Response) => {
   if (!(req.user!.profile as any).deletion_scheduled_at) {
     throw new AppError({
       status: 400,
@@ -175,7 +181,7 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Pri
   return res.json(apiOkFlat(req, { message: "Account deletion canceled." }));
 }));
 
-privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+privacyRoutes.get("/deletion-status", requireAuthAllowPendingDeletion, asyncHandler(async (req: PrivacyReq, res: Response) => {
   return res.json(apiOkFlat(req, {
     deletion_scheduled_at: (req.user!.profile as any).deletion_scheduled_at ?? null,
     grace_period_days: 30,

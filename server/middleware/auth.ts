@@ -190,123 +190,136 @@ export function resetAuthSessionCacheForTests(): void {
   authEpochL1.clear();
 }
 
-export async function requireAuth(
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
-    }
+type RequireAuthOptions = {
+  /** Allow users with deletion_scheduled_at to reach cancel/status privacy routes. */
+  allowPendingDeletion?: boolean;
+};
 
-    const token = header.slice(7);
-    const cacheKey = authTokenCacheKey(token);
-    const cached = await readAuthSessionCache(cacheKey);
-    if (cached) {
-      if (cached.profile.is_banned) {
-        if (cached.profile.deletion_scheduled_at) {
-          return next(new AppError({
-            status: 403,
-            code: "forbidden",
-            message: "Your account is scheduled for deletion. Visit Settings to cancel.",
-            details: { deletion_scheduled_at: cached.profile.deletion_scheduled_at },
-          }));
-        }
-        return next(new AppError({ status: 403, code: "forbidden", message: "Account is banned." }));
+function bannedAuthError(profile: NonNullable<AuthedRequest["user"]>["profile"]) {
+  if (profile.deletion_scheduled_at) {
+    return new AppError({
+      status: 403,
+      code: "forbidden",
+      message: "Your account is scheduled for deletion. Visit Settings to cancel.",
+      details: { deletion_scheduled_at: profile.deletion_scheduled_at },
+    });
+  }
+  return new AppError({ status: 403, code: "forbidden", message: "Account is banned." });
+}
+
+function createRequireAuth(options: RequireAuthOptions = {}) {
+  return async function requireAuthImpl(
+    req: AuthedRequest,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const header = req.headers.authorization;
+      if (!header?.startsWith("Bearer ")) {
+        console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
       }
-      req.user = cached;
-      return next();
-    }
 
-    // Verify the JWT via Supabase auth admin API
-    const supabaseAdmin = await getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data.user) {
-      console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 401, code: "invalid_token", message: "Authentication token is invalid." }));
-    }
+      const token = header.slice(7);
+      const cacheKey = authTokenCacheKey(token);
+      const cached = await readAuthSessionCache(cacheKey);
+      if (cached) {
+        if (cached.profile.is_banned) {
+          const pendingDeletion = Boolean(cached.profile.deletion_scheduled_at);
+          if (!(options.allowPendingDeletion && pendingDeletion)) {
+            return next(bannedAuthError(cached.profile));
+          }
+        }
+        req.user = cached;
+        return next();
+      }
 
-    const PROFILE_COLUMNS = `
+      // Verify the JWT via Supabase auth admin API
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (error || !data.user) {
+        console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 401, code: "invalid_token", message: "Authentication token is invalid." }));
+      }
+
+      const PROFILE_COLUMNS = `
     id, username, handle, tier, is_banned, is_staff, is_demo,
     age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
     deletion_scheduled_at
   `;
 
-    // Load profile from public.profiles (bypasses RLS via service role)
-    let { data: profile, error: pErr } = await supabaseAdmin
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .eq("id", data.user.id)
-      .maybeSingle();
-
-  // Lazy provisioning: if the auth user has no profile row yet (the
-  // handle_new_user trigger is missing or didn't run for this account),
-  // create a minimal one now so a valid logged-in user is never locked out.
-  // Idempotent — a concurrent insert just falls back to a re-select.
-    if (!pErr && !profile) {
-      const shortId = data.user.id.replace(/-/g, "").slice(0, 8);
-      const handle = `user_${shortId}`;
-      const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
-
-      const { data: created, error: cErr } = await supabaseAdmin
+      // Load profile from public.profiles (bypasses RLS via service role)
+      let { data: profile, error: pErr } = await supabaseAdmin
         .from("profiles")
-        .insert({ id: data.user.id, username: handle, handle, display_name: displayName })
         .select(PROFILE_COLUMNS)
-        .single();
+        .eq("id", data.user.id)
+        .maybeSingle();
 
-      if (created) {
-        profile = created;
-      } else if (cErr) {
-        // Likely a race (unique violation) — the row now exists; re-read it.
-        const reread = await supabaseAdmin
+      // Lazy provisioning: if the auth user has no profile row yet (the
+      // handle_new_user trigger is missing or didn't run for this account),
+      // create a minimal one now so a valid logged-in user is never locked out.
+      // Idempotent — a concurrent insert just falls back to a re-select.
+      if (!pErr && !profile) {
+        const shortId = data.user.id.replace(/-/g, "").slice(0, 8);
+        const handle = `user_${shortId}`;
+        const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
+
+        const { data: created, error: cErr } = await supabaseAdmin
           .from("profiles")
+          .insert({ id: data.user.id, username: handle, handle, display_name: displayName })
           .select(PROFILE_COLUMNS)
-          .eq("id", data.user.id)
-          .maybeSingle();
-        profile = reread.data ?? null;
-        pErr = reread.error ?? cErr;
+          .single();
+
+        if (created) {
+          profile = created;
+        } else if (cErr) {
+          // Likely a race (unique violation) — the row now exists; re-read it.
+          const reread = await supabaseAdmin
+            .from("profiles")
+            .select(PROFILE_COLUMNS)
+            .eq("id", data.user.id)
+            .maybeSingle();
+          profile = reread.data ?? null;
+          pErr = reread.error ?? cErr;
+        }
       }
-    }
 
-    if (pErr || !profile) {
-      console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
-    }
-
-    if (profile.is_banned) {
-      // Distinguish "banned by moderator" from "scheduled for deletion"
-      if (profile.deletion_scheduled_at) {
-        return next(new AppError({
-          status: 403,
-          code: "forbidden",
-          message: "Your account is scheduled for deletion. Visit Settings to cancel.",
-          details: { deletion_scheduled_at: profile.deletion_scheduled_at },
-        }));
+      if (pErr || !profile) {
+        console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
       }
-      return next(new AppError({ status: 403, code: "forbidden", message: "Account is banned." }));
+
+      if (profile.is_banned) {
+        const pendingDeletion = Boolean(profile.deletion_scheduled_at);
+        if (!(options.allowPendingDeletion && pendingDeletion)) {
+          return next(bannedAuthError(profile));
+        }
+      }
+
+      req.user = {
+        id: data.user.id,
+        email: data.user.email,
+        profile,
+      };
+      await writeAuthSessionCache(cacheKey, req.user);
+
+      next();
+    } catch (error) {
+      next(new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Authentication check failed.",
+        expose: false,
+        cause: error,
+      }));
     }
-
-    req.user = {
-      id: data.user.id,
-      email: data.user.email,
-      profile,
-    };
-    await writeAuthSessionCache(cacheKey, req.user);
-
-    next();
-  } catch (error) {
-    next(new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Authentication check failed.",
-      expose: false,
-      cause: error,
-    }));
-  }
+  };
 }
+
+export const requireAuth = createRequireAuth();
+
+/** Privacy cancel/status only — scheduled-deletion users must still authenticate. */
+export const requireAuthAllowPendingDeletion = createRequireAuth({ allowPendingDeletion: true });
 
 /**
  * Optional auth — attaches user if token present, does not 401 if absent.
