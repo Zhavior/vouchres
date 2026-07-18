@@ -54,14 +54,14 @@ describe('VouchEdge splash + brand mark', () => {
     expect(gate).toContain('shouldRunBoot && !boot.ready');
   });
 
-  it('ships a master SVG with trust shield + VE letters', () => {
+  it('ships a master SVG with trust shield + check mark', () => {
     const svg = readFileSync(resolve(process.cwd(), 'public/brand/vouchedge-mark.svg'), 'utf8');
     expect(svg).toContain('viewBox="0 0 1024 1024"');
     expect(svg).toContain('#020617');
     expect(svg).toContain('#00E5FF');
-    expect(svg).toContain('ve-mark-letters');
-    expect(svg).toContain('letter-v');
-    expect(svg).toContain('letter-e');
+    expect(svg).toContain('ve-mark-check');
+    expect(svg).toContain('mark-check');
+    expect(svg).not.toContain('ve-mark-letters');
   });
 
   it('exports a 4K PNG master for store / press', () => {

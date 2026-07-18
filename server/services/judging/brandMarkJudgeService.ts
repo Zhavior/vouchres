@@ -1,6 +1,6 @@
 /**
  * Brand Mark Judge panel — strict craft bar for the VouchEdge app icon.
- * Presence alone is not enough: optical lockup, restrained effects, no gimmicks.
+ * Core: trust shield + verification check (vouch). No sportsbook clichés.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -24,14 +24,12 @@ export type BrandMarkVerdict = {
   judgeNotes: string[];
   whatCouldGoWrong: string[];
   marketingRead: string;
-  /** Hard gate — Approved requires craftScore >= CRAFT_APPROVE_MIN */
   craftScore: number;
 };
 
-/** Approved only if craft clears this (raised bar). */
 export const CRAFT_APPROVE_MIN = 85;
 export const FINAL_APPROVE_MIN = 90;
-export const LETTER_APPROVE_MIN = 85;
+export const CORE_APPROVE_MIN = 85;
 
 function has(svg: string, re: RegExp): boolean {
   return re.test(svg);
@@ -46,13 +44,8 @@ function metaInt(svg: string, key: string): number | null {
 }
 
 function shieldStrokeWidth(svg: string): number | null {
-  const m = svg.match(/ve-mark-shield[\s\S]{0,280}?stroke-width="(\d+(?:\.\d+)?)"/i)
-    || svg.match(/class="ve-mark-shield"[^>]*stroke-width="(\d+(?:\.\d+)?)"/i)
-    || svg.match(/stroke-width="(\d+(?:\.\d+)?)"[^>]*class="[^"]*ve-mark-shield/i);
-  // Prefer the stroke near the shield path
   const block = svg.match(/class="ve-mark-shield"[\s\S]{0,400}?stroke-width="(\d+(?:\.\d+)?)"/i);
   if (block) return Number(block[1]);
-  if (m) return Number(m[1]);
   return null;
 }
 
@@ -63,7 +56,6 @@ function maxGlowOpacity(svg: string): number | null {
   return Math.max(...opacities);
 }
 
-/** Silhouette Judge — one readable shape; penalize overbuilt neon. */
 export function judgeBrandSilhouette(svg: string): SubJudgeResult {
   const notes: string[] = [];
   const flags: string[] = [];
@@ -108,7 +100,7 @@ export function judgeBrandSilhouette(svg: string): SubJudgeResult {
   }
 
   const pathCount = (svg.match(/<path\b/gi) ?? []).length;
-  if (pathCount >= 4 && pathCount <= 9) {
+  if (pathCount >= 2 && pathCount <= 8) {
     score += 6;
     notes.push(`Path budget ${pathCount} — clean`);
   } else if (pathCount > 12) {
@@ -121,107 +113,62 @@ export function judgeBrandSilhouette(svg: string): SubJudgeResult {
   return { judge: "SilhouetteJudge", score, notes, flags };
 }
 
-/** Letter Judge — VE must exist AND be optically locked up. */
-export function judgeBrandLetters(svg: string): SubJudgeResult {
+/** Core mark Judge — verification check inside shield (vouch). */
+export function judgeBrandCore(svg: string): SubJudgeResult {
   const notes: string[] = [];
   const flags: string[] = [];
-  let score = 30;
+  let score = 35;
 
-  const hasLettersGroup = has(svg, /ve-mark-letters/i);
-  const hasV = has(svg, /class="[^"]*letter-v/i);
-  const hasE = has(svg, /class="[^"]*letter-e/i);
-  const optical = has(svg, /ve-mark-optical/i);
+  const hasCheck =
+    has(svg, /ve-mark-check|mark-check|markCore=check|data-mark-core="check"/i) &&
+    has(svg, /M340\s+500|L460\s+640|check/i);
 
-  if (hasLettersGroup && hasV && hasE) {
-    score += 22;
-    notes.push("VE letterform group present");
+  if (has(svg, /ve-mark-check|mark-check/i)) {
+    score += 28;
+    notes.push("Verification check mark present");
   } else {
-    score -= 20;
-    flags.push("Missing VE letterform structure");
+    score -= 22;
+    flags.push("Missing check mark — icon must vouch / verify");
   }
 
-  if (optical) {
-    score += 12;
-    notes.push("Optical lockup class present");
-  } else {
-    score -= 12;
-    flags.push("No optical lockup — letters may be cramped or uneven");
-  }
-
-  const behindShield = has(svg, /starwars-outline|ve-mark-starwars/i);
-  const height = metaInt(svg, "optical-letter-height") ?? metaInt(svg, "letterHeight");
-  const gap = metaInt(svg, "optical-gap") ?? metaInt(svg, "gap");
-  const margin = metaInt(svg, "optical-margin") ?? metaInt(svg, "margin");
-
-  // Behind-shield Star Wars lockup is intentionally oversized so the rim crosses letters.
-  const heightOk = height != null && (behindShield ? height >= 240 && height <= 380 : height >= 240 && height <= 320);
-  if (heightOk) {
+  if (has(svg, /stroke-linecap="round"/i) && hasCheck) {
     score += 10;
-    notes.push(`Letter height ${height} in ${behindShield ? "behind-shield" : "premium"} band`);
-  } else {
-    score -= 8;
-    flags.push("Letter height missing or outside optical band");
+    notes.push("Rounded check stroke — clean at small sizes");
   }
 
-  const gapOk = gap != null && (behindShield ? gap >= 20 && gap <= 64 : gap >= 36 && gap <= 64);
-  if (gapOk) {
-    score += 10;
-    notes.push(`Inter-letter gap ${gap} — readable tracking`);
-  } else {
-    score -= 10;
-    flags.push("Gap missing or outside optical band");
-  }
-
-  if (behindShield) {
-    // Low margin is required so the shield rim visibly crosses the letters.
-    if (margin != null && margin <= 64) {
-      score += 10;
-      notes.push(`Margin ${margin} — rim crosses letters (behind-shield depth)`);
-    } else {
-      score -= 8;
-      flags.push("Behind-shield VE needs low margin so the frame crosses letters");
-    }
-  } else if (margin != null && margin >= 72) {
+  if (has(svg, /ve-mark-optical/i)) {
     score += 8;
-    notes.push(`Shield margin ${margin} — letters not kissing the rim`);
-  } else {
-    score -= 10;
-    flags.push("Insufficient shield margin (<72) — crowded lockup");
+    notes.push("Optical lockup class present");
   }
 
-  const maxX = metaInt(svg, "optical-max-x") ?? metaInt(svg, "maxX");
-  // Oversized letters that sit behind the frame may extend under the rim (maxX ≤ 780).
-  const maxXCap = behindShield ? 780 : 700;
-  if (maxX != null && maxX <= maxXCap) {
-    score += 6;
-    notes.push(
-      behindShield
-        ? `Letter max-x ${maxX} — oversized behind-shield lockup (≤${maxXCap})`
-        : `Letter max-x ${maxX} — inside shield body safe zone`,
-    );
-  } else if (maxX != null) {
-    score -= 14;
-    flags.push(`Letter max-x ${maxX} past safe cap (≤${maxXCap})`);
+  const margin = metaInt(svg, "optical-margin") ?? metaInt(svg, "margin");
+  if (margin != null && margin >= 80) {
+    score += 10;
+    notes.push(`Shield margin ${margin} — check not kissing the rim`);
   } else {
     score -= 6;
-    flags.push("Missing optical max-x — cannot prove letter bounds");
+    flags.push("Tight or missing shield margin around check");
   }
 
-  // Gimmick tips / arrow facets — low craft
-  if (has(svg, /letter-e-edge|ve-mark-facet/i)) {
-    score -= 18;
-    flags.push("Gimmick edge tip on E — looks unfinished / glitchy");
+  // Letters inside icon are no longer the brief
+  if (has(svg, /ve-mark-letters|letter-v|letter-e|starwars/i)) {
+    score -= 16;
+    flags.push("Legacy VE letters still in mark — remove for check-core brief");
   } else {
-    score += 8;
-    notes.push("No gimmick tips on letterforms");
+    score += 10;
+    notes.push("No VE letter clutter in icon");
+  }
+
+  if (has(svg, /letter-e-edge|ve-mark-facet/i)) {
+    score -= 12;
+    flags.push("Gimmick facet still present");
   }
 
   score = clamp(Math.round(score), 1, 100);
-  notes.unshift(`Letter craft ${score}/100`);
-  return { judge: "LetterJudge", score, notes, flags };
+  notes.unshift(`Core mark (check) ${score}/100`);
+  return { judge: "CoreMarkJudge", score, notes, flags };
 }
 
-/** Craft Judge — hard bar the old rubber-stamp panel lacked. */
 export function judgeBrandCraft(svg: string): SubJudgeResult {
   const notes: string[] = [];
   const flags: string[] = [];
@@ -244,34 +191,17 @@ export function judgeBrandCraft(svg: string): SubJudgeResult {
     flags.push("Missing no-gimmick craft flag");
   }
 
-  if (has(svg, /Optical lockup|ve-mark-optical/i)) {
-    score += 10;
-    notes.push("Optical lockup documented");
+  if (has(svg, /markCore=check|data-mark-core="check"/i)) {
+    score += 12;
+    notes.push("Mark core declared: check");
   } else {
-    flags.push("Optical lockup not documented");
+    score -= 10;
+    flags.push("Mark core not declared as check");
   }
 
-  // Layer order: letters group must appear before shield (VE behind frame)
-  const lettersIdx = svg.search(/ve-mark-letters/i);
-  const shieldIdx = svg.search(/ve-mark-shield/i);
-  if (lettersIdx >= 0 && shieldIdx > lettersIdx) {
-    score += 8;
-    notes.push("VE drawn behind shield (correct layer order)");
-  } else if (lettersIdx >= 0 && shieldIdx >= 0) {
-    score -= 12;
-    flags.push("VE is in front of shield — put letters behind the frame");
-  }
-
-  if (has(svg, /starwars-outline|ve-mark-starwars/i)) {
-    score += 6;
-    notes.push("Star Wars–style outline letter treatment");
-  }
-
-  // Unified letter fill (one gradient) beats rainbow gimmicks
-  const letterFills = (svg.match(/url\(#ve-letter\)/g) ?? []).length;
-  if (letterFills >= 3) {
-    score += 8;
-    notes.push("Unified letter fill system");
+  if (has(svg, /ve-mark-check/i) && has(svg, /ve-mark-shield/i)) {
+    score += 10;
+    notes.push("Shield + check system present");
   }
 
   if (has(svg, /feGaussianBlur[^>]*stdDeviation="([3-9]|[1-9]\d)/i)) {
@@ -279,29 +209,17 @@ export function judgeBrandCraft(svg: string): SubJudgeResult {
     flags.push("Heavy blur filter — softens mark into mush at small sizes");
   }
 
-  if (has(svg, /drop-shadow|box-shadow/i)) {
-    score -= 6;
-    flags.push("CSS shadow cues in mark source — prefer vector light");
-  }
-
-  // Person-in-shield is a prior failed direction when letters are the brief
-  if (has(svg, /shoulders|vouch identity/i) && !has(svg, /ve-mark-letters/i)) {
-    score -= 15;
-    flags.push("Person glyph instead of letters");
-  }
-
   score = clamp(Math.round(score), 1, 100);
   notes.unshift(`Craft standard ${score}/100`);
   return { judge: "CraftJudge", score, notes, flags };
 }
 
-/** Trust Cue Judge — research brand, not sportsbook / neon casino. */
 export function judgeBrandTrustCues(svg: string): SubJudgeResult {
   const notes: string[] = [];
   const flags: string[] = [];
   let score = 62;
 
-  if (has(svg, /#00E5FF|#22D3EE|#2DD4BF|#7DD3FC/i) && has(svg, /#020617|#06101C/i)) {
+  if (has(svg, /#00E5FF|#22D3EE|#2DD4BF|#67E8F9/i) && has(svg, /#020617|#06101C/i)) {
     score += 10;
     notes.push("Brand palette present");
   } else {
@@ -317,6 +235,11 @@ export function judgeBrandTrustCues(svg: string): SubJudgeResult {
     notes.push("No sportsbook clichés");
   }
 
+  if (has(svg, /check|verif|vouch/i)) {
+    score += 8;
+    notes.push("Verification / vouch language in mark");
+  }
+
   const glow = maxGlowOpacity(svg);
   if (glow != null && glow > 0.28) {
     score -= 12;
@@ -328,7 +251,6 @@ export function judgeBrandTrustCues(svg: string): SubJudgeResult {
   return { judge: "TrustCueJudge", score, notes, flags };
 }
 
-/** Market Fit Judge — assets + brandability (does not inflate craft). */
 export function judgeBrandMarketFit(candidate: BrandMarkCandidate): SubJudgeResult {
   const notes: string[] = [];
   const flags: string[] = [];
@@ -355,9 +277,9 @@ export function judgeBrandMarketFit(candidate: BrandMarkCandidate): SubJudgeResu
     flags.push("Missing 48px preview");
   }
 
-  if (has(svg, /ve-mark-letters/i) && has(svg, /ve-mark-shield/i) && has(svg, /ve-mark-optical/i)) {
+  if (has(svg, /ve-mark-check/i) && has(svg, /ve-mark-shield/i)) {
     score += 12;
-    notes.push("Shield + optical VE lockup — marketable system");
+    notes.push("Shield + check — marketable vouch system");
   } else {
     score -= 8;
     flags.push("Lockup incomplete for marketing system");
@@ -370,11 +292,11 @@ export function judgeBrandMarketFit(candidate: BrandMarkCandidate): SubJudgeResu
 
 function approval(
   final: number,
-  letterScore: number,
+  coreScore: number,
   craftScore: number,
 ): BrandMarkVerdict["approvalStatus"] {
-  if (craftScore < 70 || letterScore < 70) return "Needs more work";
-  if (final >= FINAL_APPROVE_MIN && letterScore >= LETTER_APPROVE_MIN && craftScore >= CRAFT_APPROVE_MIN) {
+  if (craftScore < 70 || coreScore < 70) return "Needs more work";
+  if (final >= FINAL_APPROVE_MIN && coreScore >= CORE_APPROVE_MIN && craftScore >= CRAFT_APPROVE_MIN) {
     return "Approved";
   }
   if (final >= 80 && craftScore >= 75) return "Playable but risky";
@@ -384,17 +306,16 @@ function approval(
 
 export function runBrandMarkJudgePanel(candidate: BrandMarkCandidate): BrandMarkVerdict {
   const silhouette = judgeBrandSilhouette(candidate.svg);
-  const letters = judgeBrandLetters(candidate.svg);
+  const core = judgeBrandCore(candidate.svg);
   const craft = judgeBrandCraft(candidate.svg);
   const trust = judgeBrandTrustCues(candidate.svg);
   const market = judgeBrandMarketFit(candidate);
 
-  const judges = [craft, letters, silhouette, trust, market];
-  // Craft + letters dominate — assets alone cannot buy Approval.
+  const judges = [craft, core, silhouette, trust, market];
   const finalScore = clamp(
     Math.round(
-      craft.score * 0.3 +
-        letters.score * 0.28 +
+      craft.score * 0.28 +
+        core.score * 0.3 +
         silhouette.score * 0.18 +
         trust.score * 0.12 +
         market.score * 0.12,
@@ -407,15 +328,16 @@ export function runBrandMarkJudgePanel(candidate: BrandMarkCandidate): BrandMark
   const judgeNotes = judges.flatMap((j) => j.notes.slice(0, 2));
 
   const marketingRead =
-    craft.score >= CRAFT_APPROVE_MIN && letters.score >= LETTER_APPROVE_MIN
-      ? "First glance: clean VE. Second: trust shield. Brand learn: VouchEdge — craft clears bar."
-      : "Below craft bar — do not ship. Fix optical lockup / gimmicks / heavy neon before approve.";
+    craft.score >= CRAFT_APPROVE_MIN && core.score >= CORE_APPROVE_MIN
+      ? "First glance: verified check. Second: trust shield. Brand learn: VouchEdge."
+      : "Below craft bar — do not ship. Fix check / shield / clutter before approve.";
 
   return {
     finalScore,
     craftScore: craft.score,
-    approvalStatus: approval(finalScore, letters.score, craft.score),
-    confidence: finalScore >= 90 && craft.score >= CRAFT_APPROVE_MIN ? "Strong" : finalScore >= 80 ? "Moderate" : "Speculative",
+    approvalStatus: approval(finalScore, core.score, craft.score),
+    confidence:
+      finalScore >= 90 && craft.score >= CRAFT_APPROVE_MIN ? "Strong" : finalScore >= 80 ? "Moderate" : "Speculative",
     judges,
     judgeNotes,
     whatCouldGoWrong,
@@ -434,4 +356,9 @@ export function judgeRepoBrandMark(root = process.cwd()): BrandMarkVerdict {
       preview48: resolve(root, "public/brand/previews/vouchedge-48.png"),
     },
   });
+}
+
+/** @deprecated use judgeBrandCore — kept for older imports */
+export function judgeBrandLetters(svg: string): SubJudgeResult {
+  return judgeBrandCore(svg);
 }

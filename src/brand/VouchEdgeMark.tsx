@@ -1,5 +1,5 @@
 /**
- * VouchEdge brand mark — oversized Star Wars outline VE BEHIND the trust shield.
+ * VouchEdge brand mark — trust shield + verification check.
  * Mirrors /public/brand/vouchedge-mark.svg
  */
 import React from 'react';
@@ -31,7 +31,7 @@ export function VouchEdgeMark({
       role="img"
       aria-label={title}
       data-craft-level="2"
-      data-letter-style="starwars-outline"
+      data-mark-core="check"
     >
       <title>{title}</title>
       <defs>
@@ -45,17 +45,16 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#020617" stopOpacity="0.42" />
-          <stop offset="45%" stopColor="#020617" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#020617" stopOpacity="0.40" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.02" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="35%" stopColor="#A5F3FC" />
-          <stop offset="100%" stopColor="#22D3EE" />
+        <linearGradient id="veMarkCheck" x1="320" y1="360" x2="720" y2="700" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F8FEFF" />
+          <stop offset="45%" stopColor="#67E8F9" />
+          <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <radialGradient id="veMarkGlow" cx="50%" cy="42%" r="46%">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.14" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.16" />
           <stop offset="70%" stopColor="#00E5FF" stopOpacity="0.04" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
         </radialGradient>
@@ -63,26 +62,6 @@ export function VouchEdgeMark({
 
       <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" className="ve-mark-tile" />
       <circle cx="512" cy="468" r="300" fill="url(#veMarkGlow)" className="ve-mark-glow" />
-
-      <g
-        className="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
-        aria-label="VE"
-        fill="none"
-        stroke="url(#veMarkLetter)"
-        strokeWidth="56"
-        strokeLinejoin="miter"
-        strokeLinecap="square"
-        strokeMiterlimit={2}
-      >
-        <path className="letter-v" d="M270 310 L456 710 L642 310" />
-        <path
-          className="letter-e"
-          d="M548 310 V710
-             M548 310 H730
-             M548 510 H700
-             M548 710 H730"
-        />
-      </g>
 
       <path
         className="ve-mark-shield"
@@ -94,10 +73,22 @@ export function VouchEdgeMark({
            V274
            C306 222 422 168 512 168 Z"
         fill="url(#veMarkShieldFill)"
-        stroke="#67E8F9"
-        strokeWidth="36"
+        stroke="url(#veMarkStroke)"
+        strokeWidth="32"
         strokeLinejoin="round"
       />
+
+      <g className="ve-mark-check ve-mark-identity ve-mark-optical" aria-label="Verified">
+        <path
+          className="mark-check"
+          d="M340 500 L460 640 L700 360"
+          fill="none"
+          stroke="url(#veMarkCheck)"
+          strokeWidth="72"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
     </svg>
   );
 }

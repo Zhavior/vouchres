@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge"
   data-craft-level="2"
-  data-optical-letter-height="340"
-  data-optical-gap="28"
-  data-optical-margin="48"
-  data-optical-max-x="730"
-  data-letter-style="starwars-outline"
+  data-mark-core="check"
+  data-optical-margin="120"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 optical:letterHeight=340 optical:gap=28 optical:margin=48 optical:maxX=760
-    letterStyle=starwars-outline noGimmick=1
-    Oversized hollow Star Wars–style VE drawn FIRST (behind); shield frame painted ON TOP
-    so the rim clearly crosses the letters.
+    craft:level=2 markCore=check optical:margin=120 noGimmick=1
+    Trust shield + verification check (vouch). No VE letters in icon.
   -->
   <defs>
     <linearGradient id="ve-plate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
@@ -24,17 +19,16 @@
       <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <linearGradient id="ve-shield-fill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#020617" stop-opacity="0.42"/>
-      <stop offset="45%" stop-color="#020617" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0.40"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.02"/>
     </linearGradient>
-    <linearGradient id="ve-letter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="35%" stop-color="#A5F3FC"/>
-      <stop offset="100%" stop-color="#22D3EE"/>
+    <linearGradient id="ve-check" x1="320" y1="360" x2="720" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FEFF"/>
+      <stop offset="45%" stop-color="#67E8F9"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <radialGradient id="ve-glow" cx="50%" cy="42%" r="46%">
-      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.14"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.16"/>
       <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.04"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
     </radialGradient>
@@ -43,30 +37,7 @@
   <rect width="1024" height="1024" rx="224" fill="url(#ve-plate)"/>
   <circle class="ve-mark-glow" cx="512" cy="468" r="300" fill="url(#ve-glow)"/>
 
-  <!-- VE BEHIND — oversized so shield rim crosses the letter strokes -->
-  <g
-    class="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
-    aria-label="VE"
-    fill="none"
-    stroke="url(#ve-letter)"
-    stroke-width="56"
-    stroke-linejoin="miter"
-    stroke-linecap="square"
-    stroke-miterlimit="2"
-  >
-    <!-- V — wide cinematic outline -->
-    <path class="letter-v" d="M270 310 L456 710 L642 310" />
-    <!-- E — extended horizontals (Star Wars display feel), under rim -->
-    <path
-      class="letter-e"
-      d="M548 310 V710
-         M548 310 H730
-         M548 510 H700
-         M548 710 H730"
-    />
-  </g>
-
-  <!-- Shield ON TOP of letters -->
+  <!-- Trust shield -->
   <path
     class="ve-mark-shield"
     d="M512 168
@@ -77,8 +48,21 @@
        V274
        C306 222 422 168 512 168 Z"
     fill="url(#ve-shield-fill)"
-    stroke="#67E8F9"
-    stroke-width="36"
+    stroke="url(#ve-shield-stroke)"
+    stroke-width="32"
     stroke-linejoin="round"
   />
+
+  <!-- Verification check (vouch) — centered in shield body -->
+  <g class="ve-mark-check ve-mark-identity ve-mark-optical" aria-label="Verified">
+    <path
+      class="mark-check"
+      d="M340 500 L460 640 L700 360"
+      fill="none"
+      stroke="url(#ve-check)"
+      stroke-width="72"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
 </svg>

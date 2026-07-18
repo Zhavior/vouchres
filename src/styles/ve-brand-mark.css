@@ -21,32 +21,19 @@
   animation: veMarkDrawShield 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.ve-mark-boot .ve-mark-seal {
-  opacity: 0;
-  animation: veMarkSealIn 0.55s ease-out 0.45s forwards;
-}
-
 .ve-mark-boot .ve-mark-identity,
-.ve-mark-boot .ve-mark-letters {
+.ve-mark-boot .ve-mark-check {
   opacity: 0;
-  transform-origin: 512px 520px;
+  transform-origin: 512px 500px;
   transform: scale(0.78);
   animation: veMarkPopIdentity 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
 }
 
-.ve-mark-boot .ve-mark-starwars .letter-v,
-.ve-mark-boot .ve-mark-starwars .letter-e {
-  stroke-dasharray: 1200;
-  stroke-dashoffset: 1200;
+.ve-mark-boot .mark-check {
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
   opacity: 1;
-}
-
-.ve-mark-boot .ve-mark-starwars .letter-v {
-  animation: veMarkDrawLetter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
-}
-
-.ve-mark-boot .ve-mark-starwars .letter-e {
-  animation: veMarkDrawLetter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+  animation: veMarkDrawCheck 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
 }
 
 .ve-mark-boot .ve-mark-glow {
@@ -56,6 +43,12 @@
 }
 
 @keyframes veMarkDrawShield {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes veMarkDrawCheck {
   to {
     stroke-dashoffset: 0;
   }
@@ -71,41 +64,6 @@
 @keyframes veMarkGlowIn {
   to {
     opacity: 1;
-  }
-}
-
-@keyframes veMarkSealIn {
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes veMarkFacetFlash {
-  0% {
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.55;
-  }
-}
-
-@keyframes veMarkLetterIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes veMarkDrawLetter {
-  to {
-    stroke-dashoffset: 0;
   }
 }
 
@@ -135,15 +93,10 @@
   .ve-mark-idle .ve-mark-glow,
   .ve-mark-idle .ve-mark-identity,
   .ve-mark-boot .ve-mark-shield,
-  .ve-mark-boot .ve-mark-seal,
   .ve-mark-boot .ve-mark-identity,
-  .ve-mark-boot .ve-mark-letters,
-  .ve-mark-boot .letter-v,
-  .ve-mark-boot .letter-e,
-  .ve-mark-boot .ve-mark-starwars .letter-v,
-  .ve-mark-boot .ve-mark-starwars .letter-e,
-  .ve-mark-boot .ve-mark-glow,
-  .ve-mark-boot .ve-mark-facet {
+  .ve-mark-boot .ve-mark-check,
+  .ve-mark-boot .mark-check,
+  .ve-mark-boot .ve-mark-glow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
