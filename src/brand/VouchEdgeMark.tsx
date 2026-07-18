@@ -45,9 +45,9 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#020617" stopOpacity="0.55" />
-          <stop offset="40%" stopColor="#00E5FF" stopOpacity="0.12" />
-          <stop offset="100%" stopColor="#020617" stopOpacity="0.45" />
+          <stop offset="0%" stopColor="#020617" stopOpacity="0.72" />
+          <stop offset="45%" stopColor="#04111f" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#020617" stopOpacity="0.68" />
         </linearGradient>
         <linearGradient id="veMarkLetter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F8FEFF" />
@@ -94,8 +94,8 @@ export function VouchEdgeMark({
            V274
            C306 222 422 168 512 168 Z"
         fill="url(#veMarkShieldFill)"
-        stroke="url(#veMarkStroke)"
-        strokeWidth="34"
+        stroke="#67E8F9"
+        strokeWidth="36"
         strokeLinejoin="round"
       />
     </svg>
