@@ -15,7 +15,7 @@ export default function StickyActions({
   return (
     <>
           {/* Action Buttons Lightroom Slate Footer — sticky on mobile */}
-          <div className="ve-studio-sticky-actions bg-ve-obsidian border-t border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-20">
+          <div className="ve-studio-sticky-actions bg-ve-obsidian/95 border-t border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 backdrop-blur-xl">
             <div className="text-left hidden sm:block">
               <span className="text-[8.5px] font-mono text-white/40 block uppercase font-bold">Creator Campaign Operations:</span>
               <p className="text-[10px] text-white/45 mt-0.5">Review, verify projections, and publish this Vouch Board directly to the main feed.</p>

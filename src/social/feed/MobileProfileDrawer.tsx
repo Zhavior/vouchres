@@ -137,10 +137,21 @@ function MobileProfileDrawer({
   const groups = useMemo(() => {
     if (!open) return [];
     const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
-    return [{
-      group: 'Navigate',
-      items: getPrimaryProductNavigation().map((item) => ({ id: item.section, label: item.label, icon: icons[item.id] })),
-    }];
+    return [
+      {
+        group: 'Shortcuts',
+        items: [
+          { id: 'judge_home', label: 'Judge Home', icon: 'Scale' },
+          { id: 'hr_board', label: 'HR Board', icon: 'Flame' },
+          { id: 'board', label: 'Vouch Board', icon: 'ClipboardCheck' },
+          { id: 'feed', label: 'Home Feed', icon: 'Home' },
+        ],
+      },
+      {
+        group: 'Navigate',
+        items: getPrimaryProductNavigation().map((item) => ({ id: item.section, label: item.label, icon: icons[item.id] })),
+      },
+    ];
   }, [open]);
 
   const go = useCallback((section: string) => {

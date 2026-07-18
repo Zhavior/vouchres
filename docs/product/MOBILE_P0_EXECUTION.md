@@ -20,12 +20,13 @@
 - Before P0 execute: **42 / 100**
 - After first P0 code pass: **~58 / 100**
 - After screenshot-driven mobile UI pass (routing + Judge Home + FAB + empty states): **~64 / 100**
+- After Board/Settings/Menu polish + Capacitor deps: **~68 / 100**
 - Next to ~72: `npx cap add ios/android`, splash/icons, TestFlight + Play internal
 - Next to ~82: store listings, counsel legal, IAP decision, reviewer demo
 
 ## Screenshot QA loop
 
-Artifacts: `/opt/cursor/artifacts/screenshots/v3-*.png`
+Artifacts: `/opt/cursor/artifacts/screenshots/v4-*.png`
 
 | Shot | Finding → fix |
 |------|----------------|
@@ -33,6 +34,10 @@ Artifacts: `/opt/cursor/artifacts/screenshots/v3-*.png`
 | Wide ParlayOS pill covered copy | Icon-only FAB on phone; raise above labeled dock |
 | Judge chips scrolled off-screen | 4-up code grid (DS/PH/MR/RA) always visible |
 | Empty feed dead-end | CTAs → Judge Home / Today / HR Board |
+| Board dense desktop chrome | Compact title; hide zoom on phone; sticky publish bar above dock |
+| Settings Privacy tab clipped | 2×2 tab grid + Alerts/Privacy short labels |
+| Menu missing Judges | Shortcuts group with Judge Home / HR / Board / Feed |
+| Capacitor | `@capacitor/core` + `@capacitor/cli` installed; `capacitor.config.json` ready |
 
 ## Remaining before store submit
 

@@ -99,12 +99,41 @@ async function main() {
     ['Go to Judges', '08-dock-judges'],
     ['Go to Home Feed', '09-dock-home'],
     ['Go to Today', '10-dock-today'],
+    ['Go to Vouch Board', '11-dock-board'],
   ]) {
     const tab = page.getByRole('button', { name: label });
     if (await tab.isVisible().catch(() => false)) {
       await tab.click();
       await page.waitForTimeout(900);
       await dismissOverlays(page);
+      const file = resolve(OUT, `${TAG}${fileBase}.png`);
+      await page.screenshot({ path: file, fullPage: false });
+      console.log('wrote', file);
+    }
+  }
+
+  // Menu drawer with Judge Home shortcut
+  const menu = page.getByRole('button', { name: /open navigation menu/i });
+  if (await menu.isVisible().catch(() => false)) {
+    await menu.click();
+    await page.waitForTimeout(600);
+    const file = resolve(OUT, `${TAG}12-menu-drawer.png`);
+    await page.screenshot({ path: file, fullPage: false });
+    console.log('wrote', file);
+  }
+
+  // Settings notifications + privacy tabs
+  await page.goto(`${BASE}/settings`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1000);
+  await dismissOverlays(page);
+  for (const [label, fileBase] of [
+    ['Alerts', '13-settings-alerts'],
+    ['Privacy', '14-settings-privacy'],
+  ]) {
+    const tab = page.getByRole('button', { name: new RegExp(label, 'i') });
+    if (await tab.isVisible().catch(() => false)) {
+      await tab.click();
+      await page.waitForTimeout(500);
       const file = resolve(OUT, `${TAG}${fileBase}.png`);
       await page.screenshot({ path: file, fullPage: false });
       console.log('wrote', file);

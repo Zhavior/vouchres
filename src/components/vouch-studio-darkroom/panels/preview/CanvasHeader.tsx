@@ -61,8 +61,9 @@ export default function CanvasHeader({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:flex items-center gap-1.5 font-mono text-[8.5px] text-white/45">
+            {/* Zoom controls stay desktop/tablet — phones keep Single/Dual only */}
+            <div className="hidden items-center gap-2 sm:flex sm:gap-3">
+              <div className="flex items-center gap-1.5 font-mono text-[8.5px] text-white/45">
                 <span>ZOOM:</span>
                 <span className="text-sky-400 font-black bg-sky-950/40 border border-sky-900/30 px-1.5 rounded">{Math.round(previewScale * 100)}%</span>
               </div>
@@ -73,12 +74,12 @@ export default function CanvasHeader({
                 step="0.05" 
                 value={previewScale}
                 onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-                className="flex-1 sm:w-24 min-h-11 sm:min-h-0 bg-obsidian-700 rounded-lg cursor-pointer accent-sky-500" 
+                className="w-24 bg-obsidian-700 rounded-lg cursor-pointer accent-sky-500" 
               />
               <div className="flex gap-1 shrink-0">
-                <button onClick={() => setPreviewScale(0.65)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">S</button>
-                <button onClick={() => setPreviewScale(0.85)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">M</button>
-                <button onClick={() => setPreviewScale(1.0)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">1:1</button>
+                <button type="button" onClick={() => setPreviewScale(0.65)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">S</button>
+                <button type="button" onClick={() => setPreviewScale(0.85)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">M</button>
+                <button type="button" onClick={() => setPreviewScale(1.0)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">1:1</button>
               </div>
             </div>
           </div>    </>

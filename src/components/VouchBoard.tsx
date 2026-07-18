@@ -485,7 +485,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen ve-page-shell bg-ve-obsidian text-ve-flash`} id="vouch-hub-view">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-0 min-w-0 overflow-x-hidden ve-safe-bottom pb-28 md:pb-10 ve-page-shell bg-ve-obsidian text-ve-flash`} id="vouch-hub-view">
       
       {/* Toast HUD */}
       {visualToast && (
@@ -502,11 +502,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
             <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
           </span>
-          <h2 className={`${Z8_DISPLAY} mt-1`}>
-            Vouch Board &amp; Graphic Studio
+          <h2 className={`${Z8_DISPLAY} mt-1 text-xl sm:text-inherit`}>
+            Vouch Board
           </h2>
-          <p className="max-w-2xl text-sm text-white/45">
+          <p className="max-w-2xl text-sm text-white/45 max-md:hidden">
             Build bespoke circular player portfolios, customize metrics, toggle sabermeter charts, and generate high-contrast cards for Twitter/X.
+          </p>
+          <p className="max-w-2xl text-[12px] text-white/50 md:hidden">
+            Design share cards, then publish to Feed.
           </p>
           <div className="z8-accent-line mt-3 w-full max-w-md" />
         </div>

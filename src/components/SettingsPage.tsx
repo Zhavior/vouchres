@@ -189,11 +189,11 @@ export default function SettingsPage({
 
   const activeTier = normalizeTier(profile.subscriptionTier);
 
-  const nav: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'account', label: 'Profile', icon: User },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy & Data', icon: Shield },
+  const nav: { id: SettingsTab; label: string; shortLabel: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'account', label: 'Profile', shortLabel: 'Profile', icon: User },
+    { id: 'billing', label: 'Billing', shortLabel: 'Billing', icon: CreditCard },
+    { id: 'notifications', label: 'Notifications', shortLabel: 'Alerts', icon: Bell },
+    { id: 'privacy', label: 'Privacy & Data', shortLabel: 'Privacy', icon: Shield },
   ];
 
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
@@ -411,22 +411,22 @@ export default function SettingsPage({
 
       {/* Body */}
       <div className={`mx-auto max-w-5xl py-5 sm:py-8 ${Z8_PAGE_PAD_X}`}>
-        {/* Mobile tab bar */}
+        {/* Mobile tab bar — 2×2 grid so Privacy is never clipped */}
         <nav className="mb-5 lg:hidden" aria-label="Settings sections">
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
-            {nav.map(({ id, label, icon: Icon }) => (
+          <div className="grid grid-cols-2 gap-1.5">
+            {nav.map(({ id, shortLabel, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
-                className={`ve-touch-target snap-start shrink-0 flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${
+                className={`ve-touch-target flex min-w-0 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors ${
                   activeTab === id
                     ? 'border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.12)]'
                     : 'border-white/10 bg-black/25 text-white/55 hover:border-white/20 hover:text-white'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
-                {label}
+                {shortLabel}
               </button>
             ))}
           </div>
@@ -874,6 +874,16 @@ export default function SettingsPage({
                         }}
                       />
                     </PrefRow>
+                  </div>
+                </Section>
+              </div>
+            )}
+
+            {/* ── PRIVACY ── */}
+            {activeTab === 'privacy' && (
+              <div className="space-y-8">
+                <Section title="Visibility & comfort" subtitle="How you appear publicly and motion preferences.">
+                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
                     <PrefRow label="Public profile" detail="Show your creator profile and stats on public leaderboards.">
                       <Toggle checked={profilePublic} onChange={setProfilePublic} />
                     </PrefRow>
@@ -888,12 +898,9 @@ export default function SettingsPage({
                     </PrefRow>
                   </div>
                 </Section>
-              </div>
-            )}
 
-            {/* ── PRIVACY ── */}
-            {activeTab === 'privacy' && (
-              <div className="space-y-8">
+                <Divider />
+
                 <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
                   <div className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
                     <div className="min-w-0">

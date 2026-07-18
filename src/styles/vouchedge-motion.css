@@ -63,6 +63,11 @@
 
 /* Global motion preferences — keep animations opt-in and accessible */
 /* Mobile-safe utilities — safe areas + touch targets */
+:root {
+  --ve-mobile-chrome-height: 5.5rem;
+  --ve-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .ve-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -70,6 +75,20 @@
 .ve-touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Vouch Studio publish bar — sits above the labeled mobile dock */
+.ve-studio-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+}
+
+@media (max-width: 767px) {
+  .ve-studio-sticky-actions {
+    bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom));
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.45);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

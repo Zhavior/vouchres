@@ -15,7 +15,7 @@ describe('customer-facing product navigation', () => {
   it('exposes exactly five stable product concepts', () => {
     expect(getPrimaryProductNavigation().map((item) => item.label)).toEqual([
       'Today',
-      'Intelligence',
+      'HR Intelligence',
       'Players',
       'Parlays',
       'Profile',
@@ -45,5 +45,11 @@ describe('customer-facing product navigation', () => {
           source.includes('activeSection === f.id'),
       ).toBe(true);
     }
+  });
+
+  it('keeps Judge Home as a mobile Menu shortcut', () => {
+    const drawer = shellSources.find((source) => source.includes('MobileProfileDrawer')) ?? shellSources[1];
+    expect(drawer).toContain("id: 'judge_home'");
+    expect(drawer).toContain('Judge Home');
   });
 });
