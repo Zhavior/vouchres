@@ -1,5 +1,5 @@
 /**
- * VouchEdge brand mark — VE Star Wars–style outline letters BEHIND the trust shield.
+ * VouchEdge brand mark — oversized Star Wars outline VE BEHIND the trust shield.
  * Mirrors /public/brand/vouchedge-mark.svg
  */
 import React from 'react';
@@ -45,10 +45,10 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.07" />
-          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.015" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.03" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="300" y1="330" x2="720" y2="670" gradientUnits="userSpaceOnUse">
+        <linearGradient id="veMarkLetter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F8FEFF" />
           <stop offset="40%" stopColor="#67E8F9" />
           <stop offset="100%" stopColor="#2DD4BF" />
@@ -63,28 +63,26 @@ export function VouchEdgeMark({
       <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" className="ve-mark-tile" />
       <circle cx="512" cy="468" r="300" fill="url(#veMarkGlow)" className="ve-mark-glow" />
 
-      {/* Letters first = behind shield */}
       <g
         className="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
         aria-label="VE"
         fill="none"
         stroke="url(#veMarkLetter)"
-        strokeWidth="42"
+        strokeWidth="48"
         strokeLinejoin="miter"
         strokeLinecap="square"
         strokeMiterlimit={2}
       >
-        <path className="letter-v" d="M336 360 L456 620 L576 360" />
+        <path className="letter-v" d="M280 320 L456 700 L632 320" />
         <path
           className="letter-e"
-          d="M618 360 V620
-             M618 360 H710
-             M618 490 H688
-             M618 620 H710"
+          d="M560 320 V700
+             M560 320 H760
+             M560 510 H720
+             M560 700 H760"
         />
       </g>
 
-      {/* Shield on top */}
       <path
         className="ve-mark-shield"
         d="M512 168
@@ -96,7 +94,7 @@ export function VouchEdgeMark({
            C306 222 422 168 512 168 Z"
         fill="url(#veMarkShieldFill)"
         stroke="url(#veMarkStroke)"
-        strokeWidth="30"
+        strokeWidth="34"
         strokeLinejoin="round"
       />
     </svg>

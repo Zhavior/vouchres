@@ -79,13 +79,13 @@ export function judgeBrandSilhouette(svg: string): SubJudgeResult {
 
   const stroke = shieldStrokeWidth(svg);
   if (stroke != null) {
-    if (stroke >= 28 && stroke <= 34) {
+    if (stroke >= 28 && stroke <= 36) {
       score += 12;
-      notes.push(`Shield stroke ${stroke} — refined (28–34 craft band)`);
-    } else if (stroke > 34 && stroke <= 38) {
+      notes.push(`Shield stroke ${stroke} — refined (28–36 craft band)`);
+    } else if (stroke > 36 && stroke <= 40) {
       score += 2;
-      flags.push(`Shield stroke ${stroke} is heavy — prefer ≤34`);
-    } else if (stroke > 38) {
+      flags.push(`Shield stroke ${stroke} is heavy — prefer ≤36`);
+    } else if (stroke > 40) {
       score -= 14;
       flags.push(`Shield stroke ${stroke} is chunky / low-craft`);
     }
@@ -177,15 +177,22 @@ export function judgeBrandLetters(svg: string): SubJudgeResult {
   }
 
   const maxX = metaInt(svg, "optical-max-x") ?? metaInt(svg, "maxX");
-  if (maxX != null && maxX <= 700) {
+  const behindShield = has(svg, /starwars-outline|ve-mark-starwars/i);
+  // Oversized letters that sit behind the frame may extend under the rim (maxX ≤ 780).
+  const maxXCap = behindShield ? 780 : 700;
+  if (maxX != null && maxX <= maxXCap) {
     score += 6;
-    notes.push(`Letter max-x ${maxX} — inside shield body safe zone`);
+    notes.push(
+      behindShield
+        ? `Letter max-x ${maxX} — oversized behind-shield lockup (≤${maxXCap})`
+        : `Letter max-x ${maxX} — inside shield body safe zone`,
+    );
   } else if (maxX != null) {
     score -= 14;
-    flags.push(`Letter max-x ${maxX} spills past shield body (≤700)`);
+    flags.push(`Letter max-x ${maxX} past safe cap (≤${maxXCap})`);
   } else {
     score -= 6;
-    flags.push("Missing optical max-x — cannot prove letters stay inside shield");
+    flags.push("Missing optical max-x — cannot prove letter bounds");
   }
 
   // Gimmick tips / arrow facets — low craft

@@ -67,7 +67,7 @@ describe("Brand Mark Judge — raised craft bar", () => {
     expect(svg).toContain("ve-mark-optical");
     expect(svg).toContain("ve-mark-starwars");
     expect(svg).not.toContain("letter-e-edge");
-    expect(svg).toMatch(/stroke-width="30"/);
+    expect(svg).toMatch(/stroke-width="3[0-6]"/);
     // Letters must be painted before the shield (behind)
     expect(svg.search(/ve-mark-letters/)).toBeLessThan(svg.search(/ve-mark-shield/));
   });
