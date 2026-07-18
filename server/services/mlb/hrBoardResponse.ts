@@ -134,9 +134,17 @@ function normalizePool(raw: unknown): HrCandidateLike[] {
 function sanitizeConfirmed(candidates: HrCandidateLike[]): HrCandidateLike[] {
   return candidates.filter((c) => {
     if (reasonsIncludeTeamMismatch(c)) return false;
-    if (isProjectedLike(c) && !c.isConfirmed) return false;
+    // isConfirmed cannot override projected-like evidence — honesty first.
+    if (isProjectedLike(c)) return false;
     return true;
   });
+}
+
+/** Display fallback rows: drop team mismatches; label anything projected-like. */
+function sanitizeDisplayRows(candidates: HrCandidateLike[]): HrCandidateLike[] {
+  return candidates
+    .filter((c) => !reasonsIncludeTeamMismatch(c))
+    .map((row) => (isProjectedLike(row) || !row.isConfirmed ? withPreviewWarning({ ...row, isConfirmed: false }) : row));
 }
 
 function dedupeAndSort(candidates: HrCandidateLike[]): HrCandidateLike[] {
@@ -201,6 +209,7 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
   ).map(withPreviewWarning);
 
   // Display fallback may show projected rows, but candidates[] stays confirmed-only.
+  // Never put unsanitized rawRows into the board — mismatch/preview rules still apply.
   const rows =
     confirmedCandidates.length > 0
       ? confirmedCandidates
@@ -209,7 +218,7 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
         : allProjectedCandidates.length > 0
           ? allProjectedCandidates
           : rawRows.length > 0
-            ? rawRows.map((row) => (isProjectedLike(row) ? withPreviewWarning(row) : row))
+            ? sanitizeDisplayRows(rawRows)
             : [];
 
   const { candidates: _ignoredCandidates, ...inputWithoutCandidates } = isRecord(input) ? input : {};

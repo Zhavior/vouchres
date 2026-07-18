@@ -129,9 +129,31 @@ export function captureException(err: Error | unknown, context?: SentryCaptureCo
         scope.setTag(key, value);
       }
     }
-    if (context?.extra) {
-      scope.setExtras(context.extra);
+    // Promote first-class fields used by errorHandler / grading into tags+extras.
+    // Previously only nested `tags`/`extra` were applied, so requestId/path/code were dropped.
+    if (context?.requestId) scope.setTag("request_id", context.requestId);
+    if (context?.method) scope.setTag("http_method", context.method);
+    if (context?.path) scope.setTag("http_path", context.path);
+    if (context?.code) scope.setTag("error_code", context.code);
+    if (context?.userId) {
+      scope.setTag("user_id", context.userId);
+      scope.setUser({ id: context.userId });
     }
+    if (context?.vouchId) scope.setTag("vouch_id", context.vouchId);
+
+    const promotedExtra: Record<string, unknown> = {
+      ...(context?.extra ?? {}),
+    };
+    if (context?.requestId) promotedExtra.requestId = context.requestId;
+    if (context?.method) promotedExtra.method = context.method;
+    if (context?.path) promotedExtra.path = context.path;
+    if (context?.code) promotedExtra.code = context.code;
+    if (context?.userId) promotedExtra.userId = context.userId;
+    if (context?.vouchId) promotedExtra.vouchId = context.vouchId;
+    if (Object.keys(promotedExtra).length) {
+      scope.setExtras(promotedExtra);
+    }
+
     Sentry.captureException(err);
   });
 }

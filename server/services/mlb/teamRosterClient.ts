@@ -6,6 +6,7 @@
  */
 import { TTLCache, limitConcurrency } from "../../lib/cache";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { todayISO } from "./mlbClient";
 import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
 import { parseMlbPeopleResponse, parseMlbRosterResponse, parseMlbTeamsResponse, type MlbRosterEntry } from "./mlbStatsApiSchemas";
 
@@ -148,8 +149,9 @@ async function getTeamActiveHitters(team: { id: number; name: string; abbreviati
 }
 
 
+/** America/New_York calendar date — must match mlbClient.todayISO(), not UTC. */
 function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayISO();
 }
 
 async function getTodayTeamIds(): Promise<number[]> {

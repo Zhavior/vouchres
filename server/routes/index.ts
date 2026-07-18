@@ -42,7 +42,7 @@ import { getLegacyRouteMetricsSnapshot } from "../lib/observability/legacyRouteM
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
-import { isUpstashEnabled } from "../lib/upstashRedis";
+import { isUpstashEnabled, redisPing } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
@@ -166,10 +166,18 @@ export function registerApiRoutes(app: Express): void {
       checks.database = { ok: false, detail: (err as Error)?.message ?? "unreachable" };
     }
 
-    checks.redis = isUpstashEnabled()
-      ? { ok: true, detail: "upstash" }
-      : { ok: true, detail: "not configured (degraded to in-memory)" };
+    if (isUpstashEnabled()) {
+      const redisOk = await redisPing();
+      checks.redis = redisOk
+        ? { ok: true, detail: "upstash pong" }
+        : { ok: false, detail: "upstash unreachable" };
+    } else {
+      // Not configured is fine for readiness — prod boot validates Redis separately.
+      checks.redis = { ok: true, detail: "not configured (degraded to in-memory)" };
+    }
 
+    // Fail readiness only on database. Redis check is observational so a blip
+    // does not flap the load balancer.
     const ready = checks.database.ok;
     res.status(ready ? 200 : 503).json({
       ok: ready,

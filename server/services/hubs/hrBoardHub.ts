@@ -7,7 +7,10 @@ import { getMaterializedHrResearch } from "../mlb/hrResearchSnapshotService";
 import { limitConcurrency } from "../../lib/cache";
 
 const LAST_GOOD_WARNING = "Serving last good snapshot — upstream temporarily unavailable";
-const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000);
+const LAST_GOOD_STALE_CONFIRMED_WARNING =
+  "Last-good snapshot may be stale — confirmed lineup rows demoted until a fresh board builds.";
+/** Default 15m (was 60m) so scratched/posted lineups cannot look official for an hour. */
+const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 15 * 60_000);
 
 type HrBoardSnapshot = Awaited<ReturnType<typeof buildHrBoardResponse>>;
 
@@ -217,13 +220,39 @@ async function serveLastGoodValidatedBoard(key: string, cause: unknown): Promise
   );
 
   const staleDataWarnings = Array.from(
-    new Set([...(lastGood.board.debug?.staleDataWarnings ?? []), LAST_GOOD_WARNING]),
+    new Set([
+      ...(lastGood.board.debug?.staleDataWarnings ?? []),
+      LAST_GOOD_WARNING,
+      LAST_GOOD_STALE_CONFIRMED_WARNING,
+    ]),
   );
+
+  // Honesty: never re-serve prior confirmed batting-order rows as fresh candidates[].
+  // Demote them into projected preview so clients cannot treat last-good as official.
+  const priorConfirmed = Array.isArray(lastGood.board.candidates) ? lastGood.board.candidates : [];
+  const priorProjected = Array.isArray(lastGood.board.projectedCandidates)
+    ? lastGood.board.projectedCandidates
+    : [];
+  const demotedConfirmed = priorConfirmed.map((row) => ({
+    ...row,
+    lineupStatus: "projected_unconfirmed" as const,
+    dataQuality: "projection_preview" as const,
+    warnings: Array.from(
+      new Set([
+        ...(Array.isArray(row.warnings) ? row.warnings.filter((w): w is string => typeof w === "string") : []),
+        "Official lineup not posted yet. Do not treat as confirmed.",
+        LAST_GOOD_STALE_CONFIRMED_WARNING,
+      ]),
+    ),
+  }));
+  const projectedCandidates = [...demotedConfirmed, ...priorProjected];
 
   return {
     ...lastGood.board,
     servedFromLastGood: true,
-    lastGoodWarnings: [LAST_GOOD_WARNING],
+    lastGoodWarnings: [LAST_GOOD_WARNING, LAST_GOOD_STALE_CONFIRMED_WARNING],
+    candidates: [],
+    projectedCandidates,
     debug: {
       ...lastGood.board.debug,
       staleDataWarnings,

@@ -1,11 +1,12 @@
 import type { HrEligibleHitter, HrSlateGame } from "./hrEngineTypes";
 import { sportsFetchJson } from "../../../lib/sports/sportsHttpClient";
+import { TEAM_MISMATCH_REASON } from "../teamAssignmentSafety";
 
-const MLB_API = "https://statsapi.mlb.com/api/v1";
+const MLB_API = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "") + "/v1";
 
-async function fetchJson(url: string) {
+async function fetchJson(url: string, cacheKey: string) {
   return sportsFetchJson<any>(url, {
-    cacheKey: `hrEngine:${url}`,
+    cacheKey,
     ttlMs: 5 * 60_000,
     timeoutMs: 8_000,
     retries: 1,
@@ -22,7 +23,7 @@ function isHitter(positionType: string, positionName: string) {
 
 async function fetchActiveHittersForTeam(teamId: number) {
   const url = `${MLB_API}/teams/${teamId}/roster?rosterType=active`;
-  const data: any = await fetchJson(url);
+  const data: any = await fetchJson(url, `hrEngine:roster:${teamId}`);
   const roster = data?.roster ?? [];
 
   return roster
@@ -37,9 +38,38 @@ async function fetchActiveHittersForTeam(teamId: number) {
     .filter((player: any) => player.playerId && player.playerName);
 }
 
+/** Batch people.currentTeam.id so trust gate can catch stale roster assignments. */
+async function fetchCurrentTeamIds(playerIds: number[]): Promise<Map<number, number>> {
+  const result = new Map<number, number>();
+  if (!playerIds.length) return result;
+
+  const BATCH = 50;
+  for (let i = 0; i < playerIds.length; i += BATCH) {
+    const batch = playerIds.slice(i, i + BATCH);
+    try {
+      const url = `${MLB_API}/people?personIds=${batch.join(",")}&hydrate=currentTeam`;
+      const data: any = await fetchJson(url, `hrEngine:people:current-team:${batch.join(",")}`);
+      for (const person of data?.people ?? []) {
+        const playerId = Number(person?.id);
+        const currentTeamId = Number(person?.currentTeam?.id);
+        if (Number.isFinite(playerId) && Number.isFinite(currentTeamId) && currentTeamId > 0) {
+          result.set(playerId, currentTeamId);
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `[hrEngine] people currentTeam verify failed:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+  return result;
+}
+
 export async function buildEligiblePlayerPool(games: HrSlateGame[]) {
   const hitters: HrEligibleHitter[] = [];
   const warnings: string[] = [];
+  let droppedMismatch = 0;
 
   await Promise.all(
     games.map(async (game) => {
@@ -69,8 +99,15 @@ export async function buildEligiblePlayerPool(games: HrSlateGame[]) {
       for (const side of sides) {
         try {
           const teamHitters = await fetchActiveHittersForTeam(side.teamId);
+          const currentTeams = await fetchCurrentTeamIds(teamHitters.map((h) => h.playerId));
 
           for (const hitter of teamHitters) {
+            const currentTeamId = currentTeams.get(hitter.playerId) ?? null;
+            if (currentTeamId != null && currentTeamId !== side.teamId) {
+              droppedMismatch += 1;
+              continue;
+            }
+
             hitters.push({
               ...hitter,
               teamId: side.teamId,
@@ -78,7 +115,7 @@ export async function buildEligiblePlayerPool(games: HrSlateGame[]) {
               teamName: side.teamName,
               sourceTeamId: side.teamId,
               activeRosterTeamId: side.teamId,
-              currentTeamId: null,
+              currentTeamId,
               opponentTeamId: side.opponentTeamId,
               opponent: side.opponent,
               opponentName: side.opponentName,
@@ -96,6 +133,10 @@ export async function buildEligiblePlayerPool(games: HrSlateGame[]) {
       }
     })
   );
+
+  if (droppedMismatch > 0) {
+    warnings.push(`${droppedMismatch} players dropped: ${TEAM_MISMATCH_REASON}`);
+  }
 
   return {
     hitters,
