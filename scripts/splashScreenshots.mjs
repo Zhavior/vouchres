@@ -3,21 +3,18 @@
  * Usage: SHOT_TAG=v6 node scripts/splashScreenshots.mjs
  */
 import { chromium } from 'playwright';
-import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const OUT = '/opt/cursor/artifacts/screenshots';
 const TAG = process.env.SHOT_TAG || 'splash';
 const ROOT = process.cwd();
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="120" height="120">
-  <rect width="1024" height="1024" rx="224" fill="#020617"/>
-  <path d="M512 168 L780 304 V552 C780 690 668 812 512 880 C356 812 244 690 244 552 V304 Z"
-    stroke="#00E5FF" stroke-width="36" stroke-linejoin="round" fill="rgba(0,229,255,0.06)"/>
-  <circle cx="512" cy="430" r="92" fill="#00E5FF"/>
-  <path d="M360 620 C392 560 444 528 512 528 C580 528 632 560 664 620"
-    stroke="#00E5FF" stroke-width="48" stroke-linecap="round" fill="none"/>
-</svg>`;
+// Always use the shipping master mark so QA shots match production.
+const svg = readFileSync(resolve(ROOT, 'public/brand/vouchedge-mark.svg'), 'utf8').replace(
+  '<svg ',
+  '<svg width="120" height="120" ',
+);
 
 async function shot(page, name, body) {
   await page.setViewportSize({ width: 390, height: 844 });
