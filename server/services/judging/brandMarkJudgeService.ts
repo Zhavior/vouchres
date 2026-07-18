@@ -209,8 +209,13 @@ export function judgeBrandCraft(svg: string): SubJudgeResult {
   }
 
   if (has(svg, /ve-mark-letters/i) && has(svg, /ve-mark-shield/i)) {
-    score += 10;
+    score += 8;
     notes.push("Shield + VE system present");
+  }
+
+  if (has(svg, /data-material="enamel"|material=enamel/i) && has(svg, /data-texture="grain"|feTurbulence/i)) {
+    score += 8;
+    notes.push("Enamel + grain material system declared");
   }
 
   if (has(svg, /feGaussianBlur[^>]*stdDeviation="([3-9]|[1-9]\d)/i)) {
@@ -228,31 +233,47 @@ export function judgeBrandTrustCues(svg: string): SubJudgeResult {
   const flags: string[] = [];
   let score = 62;
 
-  if (has(svg, /#00E5FF|#22D3EE|#2DD4BF|#67E8F9|#A5F3FC/i) && has(svg, /#020617|#06101C/i)) {
-    score += 10;
-    notes.push("Brand palette present");
+  const hasInkDesk =
+    has(svg, /#0B1016|#121820|#1A2330|#0A2E2B|#145A52|#1F6F66|#2A9D8F/i) &&
+    has(svg, /#F0E6D6|#FFF8EF|#E7F6F2|#F5F0E6/i);
+  const hasLegacyNeon = has(svg, /#00E5FF/i) && has(svg, /stop-opacity="0\.(1[4-9]|[2-9])/i);
+
+  if (hasInkDesk || has(svg, /data-palette="ink-desk"|palette=ink-desk/i)) {
+    score += 12;
+    notes.push("Ink-desk enamel palette (graphite + sea-glass + bone)");
+  } else if (has(svg, /#00E5FF|#22D3EE|#2DD4BF|#67E8F9|#A5F3FC/i) && has(svg, /#020617|#06101C/i)) {
+    score += 4;
+    flags.push("Legacy neon-cyber palette — prefer ink-desk enamel");
   } else {
     score -= 14;
     flags.push("Brand palette incomplete");
+  }
+
+  if (has(svg, /data-material="enamel"|material=enamel|ve-grain|feTurbulence/i)) {
+    score += 8;
+    notes.push("Material texture present (enamel / grain)");
   }
 
   if (has(svg, /dice|chip|dollar|sportsbook|betting|🎰/i)) {
     score -= 40;
     flags.push("Sportsbook cue — hard fail");
   } else {
-    score += 8;
+    score += 6;
     notes.push("No sportsbook clichés");
   }
 
   if (has(svg, /ve-mark-letters|letter-v|VouchEdge|aria-label="VE"/i)) {
-    score += 8;
+    score += 6;
     notes.push("Letter identity reads as VouchEdge");
   }
 
   const glow = maxGlowOpacity(svg);
-  if (glow != null && glow > 0.28) {
-    score -= 12;
+  if (glow != null && glow > 0.22) {
+    score -= 14;
     flags.push("Over-glow reads as generic cyber-security template");
+  } else if (hasLegacyNeon) {
+    score -= 10;
+    flags.push("Neon #00E5FF wash — AI-default look");
   }
 
   score = clamp(Math.round(score), 1, 100);

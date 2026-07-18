@@ -29,9 +29,9 @@ function htmlFor(size, splash = false) {
   const logo = Math.round(splash ? size * 0.28 : size);
   const pad = splash ? Math.round((size - logo) / 2) : 0;
   return `<!doctype html><html><head><style>
-    html,body{margin:0;background:#020617;width:${size}px;height:${size}px;overflow:hidden}
+    html,body{margin:0;background:#0B1016;width:${size}px;height:${size}px;overflow:hidden}
     .wrap{width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;
-      background:radial-gradient(ellipse 70% 50% at 50% 42%,rgba(0,229,255,0.14),transparent 62%),#020617}
+      background:radial-gradient(ellipse 70% 50% at 50% 42%,rgba(42,157,143,0.12),transparent 62%),#0B1016}
     svg{width:${logo}px;height:${logo}px;display:block${splash ? `;margin:${pad}px` : ''}}
   </style></head><body><div class="wrap">${SVG}</div></body></html>`;
 }
