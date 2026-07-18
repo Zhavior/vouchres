@@ -1,16 +1,9 @@
 /**
- * HrPlayerProfile — Full-screen Pro player profile overlay (v2)
+ * HrPlayerProfile — Full-screen HD research dossier (v3)
  *
- * Layout:
- *   Desktop (lg+): fixed left sidebar (hero + score arcs + nav) + scrollable right content
- *   Mobile:        stacked — hero strip at top, horizontal nav, scrollable content below
- *
- * Design:
- *   - True full-screen (inset-0), no narrow max-w pocket
- *   - Rich SVG graphs: grouped bar chart for BvP, EV bar chart for team/form,
- *     wide horizontal rank bars for layers, big sparklines
- *   - Full CSS token system — zero hardcoded hex
- *   - Framer Motion slide-up entry + ESC to close
+ * One continuous research page (Overview → Layers → BvP → vs Team → Form).
+ * Sidebar / mobile strip jumps scroll to sections; IntersectionObserver keeps
+ * the active nav item in sync. Game logs fetch only for the selected player.
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -40,6 +33,7 @@ import {
   type LayerChartRow,
 } from './HrProfileCharts';
 import { HrOverviewDossier } from './HrOverviewDossier';
+import { useResearchScrollSpy, type ResearchSectionId } from './useResearchScrollSpy';
 import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -70,12 +64,6 @@ function teamHue(team: string): number {
 
 function fmtScore(v: number | null | undefined): string {
   return v == null ? '—' : Math.round(v).toString();
-}
-
-function fmtPct(v: number | null | undefined): string {
-  if (v == null) return '—';
-  const pct = v <= 1 ? v * 100 : v;
-  return `${pct.toFixed(1)}%`;
 }
 
 function fmtOdds(v: number | null | undefined): string {
@@ -179,11 +167,14 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
   slipActionAvailable,
 }) => {
   const [imgErr, setImgErr] = useState(false);
-  const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
   const { logs: realLog, state: realLogState } = useRealGameLog(player?.playerId, isOpen);
+  const { activeSection, contentRef, setSectionRef, scrollToSection } = useResearchScrollSpy(
+    isOpen,
+    player?.stableId ?? null,
+  );
 
   useEffect(() => {
-    if (isOpen) { setImgErr(false); setActiveSection('overview'); }
+    if (isOpen) setImgErr(false);
   }, [isOpen, player?.stableId]);
 
   useEffect(() => {
@@ -231,12 +222,12 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
   const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
   const decision = buildHrDecisionBrief(player, boardFreshness, boardGeneratedAt, slipActionAvailable);
 
-  const NAV = [
-    { id: 'overview' as const, label: 'Overview' },
-    { id: 'layers'   as const, label: '12 Layers' },
-    { id: 'bvp'      as const, label: `vs ${player.pitcherName?.split(' ').pop() ?? 'Pitcher'}` },
-    { id: 'team'     as const, label: `vs ${player.opponent}` },
-    { id: 'form'     as const, label: 'Recent Form' },
+  const NAV: Array<{ id: ResearchSectionId; label: string }> = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'layers', label: '12 Layers' },
+    { id: 'bvp', label: `vs ${player.pitcherName?.split(' ').pop() ?? 'Pitcher'}` },
+    { id: 'team', label: `vs ${player.opponent}` },
+    { id: 'form', label: 'Recent Form' },
   ];
 
   return createPortal(
@@ -361,13 +352,17 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 })()}
               </div>
 
-              {/* Nav — desktop vertical list */}
-              <nav className="mt-auto hidden lg:block px-3 pb-5 pt-4">
+              {/* Nav — desktop vertical list (scroll jumps) */}
+              <nav className="mt-auto hidden lg:block px-3 pb-5 pt-4" aria-label="Research sections">
+                <p className="mb-2 px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">
+                  Jump to research
+                </p>
                 <div className="flex flex-col gap-0.5">
                   {NAV.map(n => (
                     <button
                       key={n.id}
-                      onClick={() => setActiveSection(n.id)}
+                      type="button"
+                      onClick={() => scrollToSection(n.id)}
                       className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-all"
                       style={{
                         background: activeSection === n.id ? `rgba(${tier.rgb}, 0.12)` : 'transparent',
@@ -382,13 +377,12 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               </nav>
 
               {/* Nav — mobile horizontal scroll strip */}
-              <div
-                className="ve-hr-nav-scroll border-t border-white/10 px-2 lg:hidden"
-              >
+              <div className="ve-hr-nav-scroll border-t border-white/10 px-2 lg:hidden" aria-label="Research sections">
                 {NAV.map(n => (
                   <button
                     key={n.id}
-                    onClick={() => setActiveSection(n.id)}
+                    type="button"
+                    onClick={() => scrollToSection(n.id)}
                     className="ve-hr-profile-nav-btn relative flex-shrink-0 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] transition-colors"
                     style={{ color: activeSection === n.id ? tier.color : 'rgba(255,255,255,0.4)' }}
                   >
@@ -401,14 +395,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               </div>
             </div>
 
-            {/* ── RIGHT CONTENT AREA ──────────────────────────────────────────── */}
-            <div className="ve-hr-profile-content flex-1 overflow-y-auto">
-              <div className="hidden h-full border-l border-white/10 lg:block">
-                <div className="p-6 xl:p-8">
-                  {renderContent()}
-                </div>
-              </div>
-              <div className="lg:hidden p-4">
+            {/* ── RIGHT CONTENT — one continuous research page ───────────────── */}
+            <div ref={contentRef} className="ve-hr-profile-content flex-1 overflow-y-auto scroll-smooth">
+              <div className="border-l border-white/10 p-4 lg:p-6 xl:p-8">
                 {renderContent()}
               </div>
             </div>
@@ -419,12 +408,17 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
     document.body,
   );
 
-  // ─── Content renderer ────────────────────────────────────────────────────────
+  // ─── One-page research content ───────────────────────────────────────────────
   function renderContent() {
     return (
-      <>
+      <div className="ve-hr-research-page flex flex-col gap-10 lg:gap-12">
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
-        {activeSection === 'overview' && (
+        <section
+          ref={setSectionRef('overview')}
+          data-research-section="overview"
+          className="ve-hr-research-section scroll-mt-4"
+          aria-label="Overview research"
+        >
           <div className="flex flex-col gap-5">
             <section className="ve-hr-decision-brief" aria-label="Player decision brief">
               <div className="ve-hr-decision-brief__header">
@@ -481,22 +475,28 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               variant="full"
             />
           </div>
-        )}
+        </section>
 
         {/* ── 12 LAYERS ──────────────────────────────────────────────────────── */}
-        {activeSection === 'layers' && (
-          <div className="flex flex-col gap-6">
-            <Sec icon={<BarChart2 className="h-4 w-4 text-cyan-400" />} title="12-Layer Score Breakdown" sub="Recharts radar + bars · dashed line = league average" />
+        <section
+          ref={setSectionRef('layers')}
+          data-research-section="layers"
+          className="ve-hr-research-section scroll-mt-4"
+          aria-label="12-layer score research"
+        >
+          <div className="flex flex-col gap-5">
+            <Sec icon={<BarChart2 className="h-4 w-4 text-cyan-400" />} title="12-Layer Score Breakdown" sub="Radar + weighted bars · tick = league average" />
 
-            <div className="ve-hr-chart-panel mb-4">
-              <LayerRadarChart layers={layers} height={280} />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="ve-hr-chart-panel">
+                <LayerRadarChart layers={layers} height={260} />
+              </div>
+              <div className="ve-hr-chart-panel">
+                <LayerHorizontalChart layers={layers} height={260} />
+              </div>
             </div>
 
-            <div className="ve-hr-chart-panel mb-4">
-              <LayerHorizontalChart layers={layers} height={340} />
-            </div>
-
-            <div className="rounded-2xl overflow-hidden border border-white/10">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
               {layers.map((l, idx) => {
                 const val = l.value;
                 const rank = val == null ? '—' : val >= 75 ? 'Elite' : val >= 60 ? 'Above Avg' : val >= 40 ? 'Avg' : 'Below';
@@ -504,22 +504,21 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 return (
                   <div
                     key={l.id}
-                    className="flex items-center gap-3 px-4 py-3.5"
+                    className="flex items-center gap-3 px-4 py-3"
                     style={{
                       background: idx % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)',
                       borderBottom: idx < layers.length - 1 ? '1px solid rgba(255,255,255,0.12)' : 'none',
                     }}
                   >
-                    <span className="w-6 text-center text-base shrink-0">{l.icon}</span>
-                    <div className="w-36 shrink-0 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: '#ffffff' }}>{l.label}</p>
-                      <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{l.weight > 0 ? `${l.weight}% weight` : 'Validator'}</p>
+                    <span className="w-6 shrink-0 text-center text-base">{l.icon}</span>
+                    <div className="w-36 min-w-0 shrink-0">
+                      <p className="truncate text-xs font-semibold text-white">{l.label}</p>
+                      <p className="text-[9px] text-white/40">{l.weight > 0 ? `${l.weight}% weight` : 'Validator'}</p>
                     </div>
-                    {/* Wide rank bar — fills all available space */}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <RankBar value={val} avg={l.avg} color={l.color} />
                     </div>
-                    <div className="w-20 flex flex-col items-end shrink-0">
+                    <div className="flex w-20 shrink-0 flex-col items-end">
                       <span className="text-sm font-extrabold tabular-nums" style={{ color: rankColor }}>{val == null ? '—' : Math.round(val)}</span>
                       <span className="text-[9px] font-semibold" style={{ color: rankColor, opacity: 0.75 }}>{rank}</span>
                     </div>
@@ -528,21 +527,25 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               })}
             </div>
 
-            {/* Composite callout */}
-            <div className="flex items-center justify-between rounded-2xl px-6 py-5" style={{ background: `rgba(${tier.rgb}, 0.10)`, border: `1px solid rgba(${tier.rgb}, 0.3)` }}>
+            <div className="flex items-center justify-between rounded-2xl px-5 py-4" style={{ background: `rgba(${tier.rgb}, 0.10)`, border: `1px solid rgba(${tier.rgb}, 0.3)` }}>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: tier.color }}>Weighted Composite Score</p>
-                <p className="text-5xl font-black mt-1" style={{ color: tier.color }}>{compositeScore}</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Based on {layers.filter(l => l.weight > 0 && l.value != null).length} of 11 weighted layers</p>
+                <p className="mt-1 text-4xl font-black lg:text-5xl" style={{ color: tier.color }}>{compositeScore}</p>
+                <p className="mt-1 text-xs text-white/40">Based on {layers.filter(l => l.weight > 0 && l.value != null).length} of 11 weighted layers</p>
               </div>
-              <Arc value={compositeScore} color={tier.color} label="" size={96} />
+              <Arc value={compositeScore} color={tier.color} label="" size={88} />
             </div>
           </div>
-        )}
+        </section>
 
         {/* ── BvP ─────────────────────────────────────────────────────────────── */}
-        {activeSection === 'bvp' && (
-          <div className="flex flex-col gap-6">
+        <section
+          ref={setSectionRef('bvp')}
+          data-research-section="bvp"
+          className="ve-hr-research-section scroll-mt-4"
+          aria-label="Batter vs pitcher research"
+        >
+          <div className="flex flex-col gap-5">
             <Sec
               icon={<Target className="h-4 w-4" style={{ color: '#00F0FF' }} />}
               title={`vs ${player.pitcherName ?? 'Pitcher'}`}
@@ -550,218 +553,218 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               simulated
             />
 
-            {/* Career summary chips */}
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
               {[
-                { label: 'Career PA',  value: bvpCareer.pa,          color: '#ffffff' },
-                { label: 'Career HR',  value: bvpCareer.hrs,          color: '#fbbf24' },
-                { label: 'Career AVG', value: bvpCareer.avg,          color: '#ffffff' },
-                { label: 'Career SLG', value: bvpCareer.slg,          color: '#00FF94' },
-                { label: 'HR / PA',    value: `${bvpCareer.hrPct}%`,  color: '#00F0FF' },
+                { label: 'Career PA', value: bvpCareer.pa, color: '#ffffff' },
+                { label: 'Career HR', value: bvpCareer.hrs, color: '#fbbf24' },
+                { label: 'Career AVG', value: bvpCareer.avg, color: '#ffffff' },
+                { label: 'Career SLG', value: bvpCareer.slg, color: '#00FF94' },
+                { label: 'HR / PA', value: `${bvpCareer.hrPct}%`, color: '#00F0FF' },
               ].map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
+                <div key={s.label} className="ve-hr-stat-chip flex flex-col items-center gap-1 rounded-2xl px-3 py-3">
                   <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-white/40">{s.label}</span>
                 </div>
               ))}
             </div>
 
-            {/* BvP bar chart */}
             <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">AVG + OBP + SLG by season (Recharts)</p>
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">AVG + OBP + SLG by season</p>
               <BvPSeasonChart logs={bvpLogs} height={170} />
             </div>
 
-            {/* Season table */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div className="grid grid-cols-6 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
+            <div className="overflow-hidden rounded-2xl border border-white/15">
+              <div className="grid grid-cols-6 gap-0 bg-black/60 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">
                 <span>Season</span><span className="text-right">PA</span><span className="text-right">HR</span><span className="text-right">AVG</span><span className="text-right">SLG</span><span className="text-right">OBP</span>
               </div>
               {bvpLogs.map((row, i) => (
                 <div key={row.season} className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                  <span className="text-sm font-bold" style={{ color: '#ffffff' }}>{row.season}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{row.pa}</span>
+                  <span className="text-sm font-bold text-white">{row.season}</span>
+                  <span className="text-right text-sm tabular-nums text-white/40">{row.pa}</span>
                   <span className="text-right text-sm font-bold tabular-nums" style={{ color: row.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{row.hrs}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.avg.toFixed(3)}</span>
+                  <span className="text-right text-sm tabular-nums text-white">{row.avg.toFixed(3)}</span>
                   <span className="text-right text-sm font-semibold tabular-nums" style={{ color: row.slg > 0.450 ? '#00FF94' : '#ffffff' }}>{row.slg.toFixed(3)}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.obp.toFixed(3)}</span>
+                  <span className="text-right text-sm tabular-nums text-white">{row.obp.toFixed(3)}</span>
                 </div>
               ))}
-              <div className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: '#050505', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
-                <span className="text-xs font-black uppercase" style={{ color: '#00F0FF' }}>Career</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#00F0FF' }}>{bvpCareer.pa}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>{bvpCareer.hrs}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.avg}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.slg}</span>
-                <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
+              <div className="grid grid-cols-6 gap-0 border-t border-white/20 bg-black/70 px-4 py-3">
+                <span className="text-xs font-black uppercase text-cyan-300">Career</span>
+                <span className="text-right text-sm font-bold tabular-nums text-cyan-300">{bvpCareer.pa}</span>
+                <span className="text-right text-sm font-bold tabular-nums text-amber-300">{bvpCareer.hrs}</span>
+                <span className="text-right text-sm font-bold tabular-nums text-white">{bvpCareer.avg}</span>
+                <span className="text-right text-sm font-bold tabular-nums text-white">{bvpCareer.slg}</span>
+                <span className="text-right text-sm tabular-nums text-white/40">—</span>
               </div>
             </div>
 
-            {/* Verdict */}
-            <div className="flex items-center gap-4 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              {Number(bvpCareer.hrs) >= 2 ? <TrendingUp className="h-6 w-6 shrink-0" style={{ color: '#00FF94' }} /> : Number(bvpCareer.hrs) === 0 ? <TrendingDown className="h-6 w-6 shrink-0" style={{ color: '#fb7185' }} /> : <Minus className="h-6 w-6 shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }} />}
+            <div className="ve-hr-stat-chip flex items-center gap-4 rounded-2xl p-4">
+              {Number(bvpCareer.hrs) >= 2 ? <TrendingUp className="h-6 w-6 shrink-0 text-emerald-400" /> : Number(bvpCareer.hrs) === 0 ? <TrendingDown className="h-6 w-6 shrink-0 text-rose-400" /> : <Minus className="h-6 w-6 shrink-0 text-white/40" />}
               <div>
-                <p className="text-sm font-bold" style={{ color: '#ffffff' }}>
+                <p className="text-sm font-bold text-white">
                   {Number(bvpCareer.hrs) >= 2 ? `Owns This Pitcher — ${bvpCareer.hrs} career HRs` : Number(bvpCareer.hrs) === 1 ? 'One career HR against this pitcher' : 'No career HRs against this pitcher'}
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{bvpCareer.hrPct}% HR rate · {bvpCareer.pa} career PA</p>
+                <p className="mt-0.5 text-xs text-white/40">{bvpCareer.hrPct}% HR rate · {bvpCareer.pa} career PA · illustrative until pitcher ID lands</p>
               </div>
             </div>
           </div>
-        )}
+        </section>
 
         {/* ── vs TEAM ──────────────────────────────────────────────────────────── */}
-        {activeSection === 'team' && (
-          <div className="flex flex-col gap-6">
+        <section
+          ref={setSectionRef('team')}
+          data-research-section="team"
+          className="ve-hr-research-section scroll-mt-4"
+          aria-label="Versus opponent team research"
+        >
+          <div className="flex flex-col gap-5">
             <Sec
-              icon={<Users className="h-4 w-4" style={{ color: '#fbbf24' }} />}
+              icon={<Users className="h-4 w-4 text-amber-300" />}
               title={`vs ${player.opponent}`}
               sub="Real box-score games this season — total bases per game"
             />
 
             {realLogState === 'loading' && <GameLogLoading />}
-
             {realLogState === 'unavailable' && (
               <GameLogEmpty message="No real game log available for this player right now." />
             )}
-
             {realLogState === 'ready' && teamLogs.length === 0 && (
               <GameLogEmpty message={`No games logged against ${player.opponent} yet this season.`} />
             )}
 
             {realLogState === 'ready' && teamLogs.length > 0 && (
               <>
-            {/* Summary chips */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: 'HRs',      value: teamHRs,                                         color: '#fbbf24' },
-                { label: 'Total H',  value: teamLogs.reduce((s, g) => s + g.hits, 0),         color: '#ffffff' },
-                { label: 'Total AB', value: teamLogs.reduce((s, g) => s + g.ab, 0),           color: 'rgba(255,255,255,0.4)' },
-                { label: 'Avg TB',   value: teamTB,                                           color: '#00F0FF' },
-              ].map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: 'HRs', value: teamHRs, color: '#fbbf24' },
+                    { label: 'Total H', value: teamLogs.reduce((s, g) => s + g.hits, 0), color: '#ffffff' },
+                    { label: 'Total AB', value: teamLogs.reduce((s, g) => s + g.ab, 0), color: 'rgba(255,255,255,0.4)' },
+                    { label: 'Avg TB', value: teamTB, color: '#00F0FF' },
+                  ].map(s => (
+                    <div key={s.label} className="ve-hr-stat-chip flex flex-col items-center gap-1 rounded-2xl px-3 py-3">
+                      <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-white/40">{s.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Production bar chart */}
-            <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={teamLogs} height={130} />
-            </div>
+                <div className="ve-hr-chart-panel">
+                  <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
+                  <ProductionBarChart logs={teamLogs} height={140} />
+                </div>
 
-            {/* Game log table */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div className="grid grid-cols-6 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
-                <span>Date</span><span className="text-right">AB</span><span className="text-right">H</span><span className="text-right">HR</span><span className="text-right">RBI</span><span className="text-right">TB</span>
-              </div>
-              {teamLogs.map((g, i) => (
-                <div key={i} className="grid grid-cols-6 items-center gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                  <div className="flex items-center gap-2">
-                    <Dot hrs={g.hrs} />
-                    <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.date}</span>
+                <div className="overflow-hidden rounded-2xl border border-white/15">
+                  <div className="grid grid-cols-6 gap-0 bg-black/60 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">
+                    <span>Date</span><span className="text-right">AB</span><span className="text-right">H</span><span className="text-right">HR</span><span className="text-right">RBI</span><span className="text-right">TB</span>
                   </div>
-                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.ab}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{g.hits}</span>
-                  <span className="text-right text-sm font-bold tabular-nums" style={{ color: g.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{g.hrs > 0 ? g.hrs : '—'}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{g.rbi}</span>
-                  <span className="text-right text-sm font-semibold tabular-nums" style={{ color: g.totalBases >= 4 ? '#fbbf24' : g.totalBases >= 2 ? '#00FF94' : 'rgba(255,255,255,0.4)' }}>{g.totalBases}</span>
+                  {teamLogs.map((g, i) => (
+                    <div key={i} className="grid grid-cols-6 items-center gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                      <div className="flex items-center gap-2">
+                        <Dot hrs={g.hrs} />
+                        <span className="text-xs font-semibold text-white/40">{g.date}</span>
+                      </div>
+                      <span className="text-right text-sm tabular-nums text-white/40">{g.ab}</span>
+                      <span className="text-right text-sm tabular-nums text-white">{g.hits}</span>
+                      <span className="text-right text-sm font-bold tabular-nums" style={{ color: g.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{g.hrs > 0 ? g.hrs : '—'}</span>
+                      <span className="text-right text-sm tabular-nums text-white">{g.rbi}</span>
+                      <span className="text-right text-sm font-semibold tabular-nums" style={{ color: g.totalBases >= 4 ? '#fbbf24' : g.totalBases >= 2 ? '#00FF94' : 'rgba(255,255,255,0.4)' }}>{g.totalBases}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
               </>
             )}
           </div>
-        )}
+        </section>
 
         {/* ── RECENT FORM ───────────────────────────────────────────────────────── */}
-        {activeSection === 'form' && (
-          <div className="flex flex-col gap-6">
+        <section
+          ref={setSectionRef('form')}
+          data-research-section="form"
+          className="ve-hr-research-section scroll-mt-4"
+          aria-label="Recent form research"
+        >
+          <div className="flex flex-col gap-5">
             <Sec
-              icon={<Activity className="h-4 w-4" style={{ color: '#00FF94' }} />}
+              icon={<Activity className="h-4 w-4 text-emerald-400" />}
               title="Recent Form"
               sub={realLogState === 'ready' ? `Last ${formLogs.length} games — real box-score production` : 'Real box-score production'}
             />
 
             {realLogState === 'loading' && <GameLogLoading />}
-
             {realLogState === 'unavailable' && (
               <GameLogEmpty message="No real game log available for this player right now." />
             )}
 
             {realLogState === 'ready' && formLogs.length > 0 && (
               <>
-            {/* Summary chips */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: 'HRs',     value: formHRs,                                          color: '#fbbf24' },
-                { label: 'Total H', value: formLogs.reduce((s, g) => s + g.hits, 0),         color: '#ffffff' },
-                { label: 'Avg TB',  value: formTB,                                           color: '#00F0FF' },
-                { label: 'HR Rate', value: `${((formHRs / formLogs.length) * 100).toFixed(0)}%`, color: '#00FF94' },
-              ].map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: 'HRs', value: formHRs, color: '#fbbf24' },
+                    { label: 'Total H', value: formLogs.reduce((s, g) => s + g.hits, 0), color: '#ffffff' },
+                    { label: 'Avg TB', value: formTB, color: '#00F0FF' },
+                    { label: 'HR Rate', value: `${((formHRs / formLogs.length) * 100).toFixed(0)}%`, color: '#00FF94' },
+                  ].map(s => (
+                    <div key={s.label} className="ve-hr-stat-chip flex flex-col items-center gap-1 rounded-2xl px-3 py-3">
+                      <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-white/40">{s.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Production bar chart */}
-            <div className="ve-hr-chart-panel">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={formLogs} height={130} />
-            </div>
-
-            {/* Production trend charts */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="ve-hr-chart-panel">
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">TB Trend + HR line</p>
-                <FormTrendChart logs={formLogs} height={110} />
-              </div>
-              <div className="ve-hr-chart-panel">
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">HR Activity</p>
-                <HrActivityChart logs={formLogs} height={72} />
-              </div>
-            </div>
-
-            {/* Result dots */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Game Results (gold = HR)</p>
-              <div className="flex flex-wrap items-end gap-4">
-                {formLogs.map((g, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
-                    <Dot hrs={g.hrs} />
-                    <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.opponentAbbr}</span>
+                <div className="ve-hr-chart-panel ve-hr-chart-panel--hd">
+                  <div className="mb-3 flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Production trend</p>
+                      <p className="mt-1 text-sm font-semibold text-white/80">Total bases by game · amber rings mark HR games</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Game-by-game table */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div className="grid grid-cols-5 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
-                <span>Opp</span><span className="text-right">AB</span><span className="text-right">H</span><span className="text-right">HR</span><span className="text-right">TB</span>
-              </div>
-              {formLogs.map((g, i) => (
-                <div key={i} className="grid grid-cols-5 items-center gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                  <div className="flex items-center gap-2">
-                    <Dot hrs={g.hrs} />
-                    <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.opponentAbbr}</span>
-                  </div>
-                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{g.ab}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{g.hits}</span>
-                  <span className="text-right text-sm font-bold tabular-nums" style={{ color: g.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{g.hrs > 0 ? '💥' : '—'}</span>
-                  <span className="text-right text-sm font-semibold tabular-nums" style={{ color: g.totalBases >= 4 ? '#fbbf24' : g.totalBases >= 2 ? '#00FF94' : 'rgba(255,255,255,0.4)' }}>{g.totalBases}</span>
+                  <FormTrendChart logs={formLogs} height={176} />
                 </div>
-              ))}
-            </div>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="ve-hr-chart-panel">
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game</p>
+                    <ProductionBarChart logs={formLogs} height={140} />
+                  </div>
+                  <div className="ve-hr-chart-panel">
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">HR Activity</p>
+                    <HrActivityChart logs={formLogs} height={140} />
+                  </div>
+                </div>
+
+                <div className="ve-hr-stat-chip rounded-2xl p-4">
+                  <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Game Results (gold = HR)</p>
+                  <div className="flex flex-wrap items-end gap-4">
+                    {formLogs.map((g, i) => (
+                      <div key={i} className="flex flex-col items-center gap-1.5">
+                        <Dot hrs={g.hrs} />
+                        <span className="text-[8px] text-white/40">{g.opponentAbbr}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-white/15">
+                  <div className="grid grid-cols-5 gap-0 bg-black/60 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">
+                    <span>Opp</span><span className="text-right">AB</span><span className="text-right">H</span><span className="text-right">HR</span><span className="text-right">TB</span>
+                  </div>
+                  {formLogs.map((g, i) => (
+                    <div key={i} className="grid grid-cols-5 items-center gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                      <div className="flex items-center gap-2">
+                        <Dot hrs={g.hrs} />
+                        <span className="text-xs font-semibold text-white/40">{g.opponentAbbr}</span>
+                      </div>
+                      <span className="text-right text-sm tabular-nums text-white/40">{g.ab}</span>
+                      <span className="text-right text-sm tabular-nums text-white">{g.hits}</span>
+                      <span className="text-right text-sm font-bold tabular-nums" style={{ color: g.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{g.hrs > 0 ? g.hrs : '—'}</span>
+                      <span className="text-right text-sm font-semibold tabular-nums" style={{ color: g.totalBases >= 4 ? '#fbbf24' : g.totalBases >= 2 ? '#00FF94' : 'rgba(255,255,255,0.4)' }}>{g.totalBases}</span>
+                    </div>
+                  ))}
+                </div>
               </>
             )}
           </div>
-        )}
-      </>
+        </section>
+      </div>
     );
   }
 };

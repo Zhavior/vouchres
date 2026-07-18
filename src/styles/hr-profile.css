@@ -491,3 +491,96 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ── One-page research dossier ───────────────────────────────── */
+
+.ve-hr-research-page {
+  max-width: 58rem;
+}
+
+.ve-hr-research-section {
+  position: relative;
+}
+
+.ve-hr-research-section + .ve-hr-research-section::before {
+  content: '';
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.ve-hr-stat-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ve-hr-chart-panel--hd {
+  border-color: rgba(34, 211, 238, 0.16);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(34, 211, 238, 0.08), transparent 42%),
+    var(--ve-hr-panel-raised);
+}
+
+.ve-hr-hd-chart {
+  position: relative;
+  width: 100%;
+}
+
+.ve-hr-hd-chart__line {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 0;
+  animation: ve-hr-hd-draw 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ve-hr-hd-chart__area {
+  opacity: 0;
+  animation: ve-hr-hd-fade 500ms ease 180ms both;
+}
+
+.ve-hr-hd-chart__tooltip {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-width: min(16rem, 70%);
+  padding: 0.4rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  background: rgba(13, 18, 25, 0.94);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.625rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ve-hr-hd-chart__tooltip-date {
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@keyframes ve-hr-hd-draw {
+  from { stroke-dashoffset: 1200; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ve-hr-hd-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-hr-hd-chart__line,
+  .ve-hr-hd-chart__area {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}

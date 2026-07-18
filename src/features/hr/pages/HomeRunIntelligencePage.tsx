@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
@@ -15,12 +15,8 @@ import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
-import { HrBoard } from '../components/Columns/HrBoard';
-import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
-import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
-import { HrSignalField } from '../components/SignalField/HrSignalField';
 import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
 import {
@@ -29,6 +25,12 @@ import {
   pushHrResearchPlayer,
   readHrResearchPlayerId,
 } from '../utils/hrResearchRoute';
+
+/** Board views + research dossier load on demand so inactive views don't tax the first paint. */
+const HrBoard = lazy(() => import('../components/Columns/HrBoard').then((m) => ({ default: m.HrBoard })));
+const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then((m) => ({ default: m.HrSpreadsheet })));
+const HrSignalField = lazy(() => import('../components/SignalField/HrSignalField').then((m) => ({ default: m.HrSignalField })));
+const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then((m) => ({ default: m.HrPlayerProfile })));
 import { ProductEvents } from '../../../lib/productEvents';
 import '../../../styles/z8-hr-lens.css';
 
@@ -658,39 +660,43 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             previewCount={vm.modeCounts?.curated ?? 0}
             onShowPreview={() => vm.setMode('curated')}
           />
-        ) : viewMode === 'table' ? (
-          <HrSpreadsheet
-            rows={(vm.rows ?? []) as any}
-            freshness={vm.slate.freshness}
-            generatedAt={vm.slate.generatedAt}
-            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-            onSelectPlayer={(player) => {
-              openPlayerProfile(player);
-            }}
-          />
-        ) : viewMode === 'treemap' ? (
-          <HrSignalField
-            buckets={vm.buckets}
-            onSelectPlayer={(player) => {
-              openPlayerProfile(player);
-            }}
-            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-            getHrResult={vm.getHrResult}
-          />
         ) : (
-          <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
-            <HrBoard
-              buckets={vm.buckets}
-              onSelectPlayer={(player) => {
-                openPlayerProfile(player);
-              }}
-              onViewProfile={(player) => {
-                openPlayerProfile(player);
-              }}
-              onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-              getHrResult={vm.getHrResult}
-            />
-          </div>
+          <Suspense fallback={<LoadingSkeleton />}>
+            {viewMode === 'table' ? (
+              <HrSpreadsheet
+                rows={(vm.rows ?? []) as any}
+                freshness={vm.slate.freshness}
+                generatedAt={vm.slate.generatedAt}
+                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                onSelectPlayer={(player) => {
+                  openPlayerProfile(player);
+                }}
+              />
+            ) : viewMode === 'treemap' ? (
+              <HrSignalField
+                buckets={vm.buckets}
+                onSelectPlayer={(player) => {
+                  openPlayerProfile(player);
+                }}
+                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                getHrResult={vm.getHrResult}
+              />
+            ) : (
+              <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
+                <HrBoard
+                  buckets={vm.buckets}
+                  onSelectPlayer={(player) => {
+                    openPlayerProfile(player);
+                  }}
+                  onViewProfile={(player) => {
+                    openPlayerProfile(player);
+                  }}
+                  onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  getHrResult={vm.getHrResult}
+                />
+              </div>
+            )}
+          </Suspense>
         )}
 
         <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
@@ -705,15 +711,19 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         </footer>
         </div>
 
-        <HrPlayerProfile
-          player={vm.selectedPlayer}
-          isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-          onClose={closePlayerProfile}
-          onAddToSlip={addPlayerToSlip}
-          boardFreshness={vm.slate.freshness}
-          boardGeneratedAt={vm.slate.generatedAt}
-          slipActionAvailable={Boolean(onSectionChange)}
-        />
+        {isProfileOpen && vm.selectedPlayer && (
+          <Suspense fallback={null}>
+            <HrPlayerProfile
+              player={vm.selectedPlayer}
+              isOpen
+              onClose={closePlayerProfile}
+              onAddToSlip={addPlayerToSlip}
+              boardFreshness={vm.slate.freshness}
+              boardGeneratedAt={vm.slate.generatedAt}
+              slipActionAvailable={Boolean(onSectionChange)}
+            />
+          </Suspense>
+        )}
       </div>
     </div>
   );
