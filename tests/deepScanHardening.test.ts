@@ -73,12 +73,14 @@ describe("deep-scan backend hardening", () => {
     expect(src).toMatch(/postedPicks[\s\S]*visibility", "public"/);
   });
 
-  it("feed share forces pick public before post insert and strips private embeds", () => {
+  it("feed share locks and forces public before post insert and strips private embeds", () => {
     const posts = readFileSync("server/routes/postRoutes.ts", "utf8");
-    expect(posts).toContain("Force public BEFORE inserting the post");
+    expect(posts).toContain("Lock + public BEFORE insert");
     expect(posts).toContain("sanitizePostPickEmbed");
+    expect(posts).toContain("pick_lock_required");
     expect(posts).toContain("pick_visibility_required");
     expect(posts).toContain("visibility !== \"public\"");
+    expect(posts).not.toContain("parlay lock failed");
   });
 
   it("quota gate reserves under a per-user lock before the handler", () => {

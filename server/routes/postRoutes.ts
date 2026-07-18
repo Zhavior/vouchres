@@ -176,6 +176,46 @@ postRoutes.post(
           details: { error: "pick_not_owned" },
         });
       }
+      // Lock + public BEFORE insert so a feed share is never editable/public without a lock,
+      // and feed/detail never race a private embed.
+      let locked;
+      try {
+        locked = await lockParlayOnFeedShare({
+          userId: req.user!.id,
+          parlayId: pick_id,
+        });
+      } catch (err) {
+        throw new AppError({
+          status: 503,
+          code: "external_service_error",
+          message: "Could not lock pick for feed share. Post was not created.",
+          details: { error: "pick_lock_required" },
+          expose: true,
+          cause: err,
+        });
+      }
+      if (!locked) {
+        throw new AppError({
+          status: 503,
+          code: "external_service_error",
+          message: "Could not lock pick for feed share. Post was not created.",
+          details: { error: "pick_lock_required" },
+          expose: true,
+        });
+      }
+
+      try {
+        await setPickVisibilityPublic(pick_id, req.user!.id);
+      } catch (err) {
+        throw new AppError({
+          status: 503,
+          code: "external_service_error",
+          message: "Could not make pick public for feed share. Post was not created.",
+          details: { error: "pick_visibility_required" },
+          expose: true,
+          cause: err,
+        });
+      }
     }
 
     if (vouch_id) {
@@ -220,16 +260,13 @@ postRoutes.post(
     }
 
     if (pick_id) {
+      // The pick is already locked and public. Attach the post id for audit linkage.
       await lockParlayOnFeedShare({
         userId: req.user!.id,
         parlayId: pick_id,
         postId: String(data.id),
       }).catch((err) => {
-        console.warn("[posts] parlay lock failed", (err as Error)?.message);
-      });
-      // Always force public visibility after a feed share (including already-locked picks).
-      await setPickVisibilityPublic(pick_id, req.user!.id).catch((err) => {
-        console.warn("[posts] visibility public failed", (err as Error)?.message);
+        console.warn("[posts] post lock linkage failed", (err as Error)?.message);
       });
     }
 
