@@ -76,7 +76,15 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
       vi.advanceTimersByTime(901_000);
 
       const second = await getCachedValidatedHrBoard();
-      expect(second.candidates[0]?.playerName).toBe("Aaron Judge");
+      // Expired SWR: demote confirmed → projected; never keep stale candidates[].
+      expect(second.candidates).toEqual([]);
+      expect(second.projectedCandidates.some((row) => row.playerName === "Aaron Judge")).toBe(true);
+      expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.dataQuality).toBe(
+        "projection_preview",
+      );
+      expect(second.debug?.staleDataWarnings).toContain(
+        "Cached board expired — confirmed lineup rows demoted until a fresh board builds.",
+      );
 
       await vi.runAllTimersAsync();
 
