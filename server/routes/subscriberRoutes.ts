@@ -17,6 +17,31 @@ import { PUBLIC_PICK_COLUMNS, toPublicPickDto } from "../lib/publicPickDto";
 
 export const subscriberRoutes = Router();
 
+/** Follower-gated delivery: public + subscriber. Never expose private. */
+const FOLLOWER_PICK_VISIBILITIES = ["public", "subscriber"] as const;
+
+function isFollowerVisiblePick(visibility: unknown): boolean {
+  return visibility === "public" || visibility === "subscriber";
+}
+
+async function loadFollowingIds(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("follows")
+    .select("following_profile_id, following_capper_id")
+    .eq("follower_id", userId);
+
+  if (error) throw error;
+
+  const profileIds = (data ?? [])
+    .map((row: { following_profile_id?: string | null }) => row.following_profile_id)
+    .filter(Boolean) as string[];
+  const capperIds = (data ?? [])
+    .map((row: { following_capper_id?: string | null }) => row.following_capper_id)
+    .filter(Boolean) as string[];
+
+  return { profileIds, capperIds };
+}
+
 async function assertFollowsCapper(userId: string, capperId: string): Promise<void> {
   const allowed = await canViewerAccessCapperSubscriberContent(userId, capperId);
   if (!allowed) {
@@ -84,7 +109,7 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
     .select(PUBLIC_PICK_COLUMNS)
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
-    .eq("visibility", "public")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -124,12 +149,13 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
 
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
 
-  // Public/shared parlays only: visibility=public when available, else linked to a feed post.
+  // Follower-gated shared parlays: public + subscriber. Private never. Feed-linked fallback stays public-only.
   const query = supabaseAdmin
     .from("picks")
     .select(PUBLIC_PICK_COLUMNS)
     .eq("user_id", profileId)
     .eq("leg_type", "parlay")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -145,7 +171,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
   }
 
   // Fail closed: if visibility column is missing/unavailable, never dump all parlays.
-  // Fall through to feed-linked picks only (posts prove intentional share).
+  // Fall through to feed-linked picks only (posts prove intentional public share).
   let rows: Record<string, unknown>[] = [];
   if (error?.code === "42703" || error?.code === "PGRST204") {
     console.warn(
@@ -153,7 +179,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     );
     rows = [];
   } else {
-    rows = (data ?? []).filter((row: { visibility?: string }) => row.visibility === "public");
+    rows = (data ?? []).filter((row: { visibility?: string }) => isFollowerVisiblePick(row.visibility));
   }
 
   if (rows.length === 0) {
@@ -281,7 +307,7 @@ async function loadCapperAnnouncementPosts(capperId: string, limit: number) {
     .select("id, explanation, selection, created_at, status")
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
-    .eq("visibility", "public")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);

@@ -8,10 +8,14 @@ describe("deep-scan backend hardening", () => {
     expect(src).toContain("refusing unfiltered capper picks");
   });
 
-  it("capper announcements require visibility=public", () => {
+  it("follower-gated subscriber routes deliver public and subscriber visibility", () => {
     const src = readFileSync("server/routes/subscriberRoutes.ts", "utf8");
+    expect(src).toContain('FOLLOWER_PICK_VISIBILITIES = ["public", "subscriber"]');
+    expect(src).toContain("isFollowerVisiblePick");
+    expect(src).toContain('.in("visibility", [...FOLLOWER_PICK_VISIBILITIES])');
     expect(src).toContain("loadCapperAnnouncementPosts");
-    expect(src).toMatch(/loadCapperAnnouncementPosts[\s\S]*visibility", "public"/);
+    // Open feed/public embeds stay public-only; feed-linked fallback stays public-only.
+    expect(src).toMatch(/postedPicks[\s\S]*\.eq\("visibility", "public"\)/);
   });
 
   it("schedules Stripe cancel on account deletion", () => {
@@ -70,7 +74,7 @@ describe("deep-scan backend hardening", () => {
   it("feed-linked profile parlays require visibility=public", () => {
     const src = readFileSync("server/routes/subscriberRoutes.ts", "utf8");
     expect(src).toContain("refusing unfiltered feed-linked parlays");
-    expect(src).toMatch(/postedPicks[\s\S]*visibility", "public"/);
+    expect(src).toMatch(/postedPicks[\s\S]*\.eq\("visibility", "public"\)/);
   });
 
   it("feed share locks and forces public before post insert and strips private embeds", () => {
