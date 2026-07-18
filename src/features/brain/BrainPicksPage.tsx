@@ -155,7 +155,7 @@ export default function BrainPicksPage({
   const stolenBaseReviews = useMemo(
     () =>
       new Map(
-        (picksQuery.data?.aiReviews.stolen_base?.reviews ?? []).map(
+        (picksQuery.data?.aiReviews?.stolen_base?.reviews ?? []).map(
           (review) => [review.subjectId, review],
         ),
       ),
@@ -164,7 +164,7 @@ export default function BrainPicksPage({
   const pitcherKReviews = useMemo(
     () =>
       new Map(
-        (picksQuery.data?.aiReviews.pitcher_strikeouts?.reviews ?? []).map(
+        (picksQuery.data?.aiReviews?.pitcher_strikeouts?.reviews ?? []).map(
           (review) => [review.subjectId, review],
         ),
       ),
