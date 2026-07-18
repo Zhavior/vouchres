@@ -29,13 +29,7 @@
   animation: veMarkPopIdentity 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
 }
 
-.ve-mark-boot .letter-v,
-.ve-mark-boot .letter-e {
-  stroke-dasharray: 1200;
-  stroke-dashoffset: 1200;
-  opacity: 1;
-  animation: veMarkDrawLetters 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
-}
+/* Filled type — no stroke draw; identity pop handles reveal */
 
 .ve-mark-boot .ve-mark-glow {
   opacity: 0;
@@ -44,12 +38,6 @@
 }
 
 @keyframes veMarkDrawShield {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes veMarkDrawLetters {
   to {
     stroke-dashoffset: 0;
   }
@@ -96,8 +84,6 @@
   .ve-mark-boot .ve-mark-shield,
   .ve-mark-boot .ve-mark-identity,
   .ve-mark-boot .ve-mark-letters,
-  .ve-mark-boot .letter-v,
-  .ve-mark-boot .letter-e,
   .ve-mark-boot .ve-mark-glow {
     animation: none !important;
     opacity: 1 !important;

@@ -1,6 +1,6 @@
 /**
- * VouchEdge brand mark — trust shield + VE monogram.
- * Mirrors /public/brand/vouchedge-mark.svg
+ * VouchEdge brand mark — trust shield + filled VE type.
+ * Mirrors /public/brand/vouchedge-mark.svg (font-outlined paths).
  */
 import React from 'react';
 
@@ -48,13 +48,13 @@ export function VouchEdgeMark({
           <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.08" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.02" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="260" y1="300" x2="760" y2="720" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="35%" stopColor="#A5F3FC" />
-          <stop offset="100%" stopColor="#22D3EE" />
+        <linearGradient id="veMarkLetter" x1="300" y1="300" x2="740" y2="740" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F8FEFF" />
+          <stop offset="45%" stopColor="#67E8F9" />
+          <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <radialGradient id="veMarkGlow" cx="50%" cy="42%" r="46%">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.16" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.14" />
           <stop offset="70%" stopColor="#00E5FF" stopOpacity="0.04" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
         </radialGradient>
@@ -65,37 +65,16 @@ export function VouchEdgeMark({
 
       <path
         className="ve-mark-shield"
-        d="M512 168
-           C602 168 718 222 760 274
-           V530
-           C760 668 652 798 512 868
-           C372 798 264 668 264 530
-           V274
-           C306 222 422 168 512 168 Z"
+        d="M512 168 C602 168 718 222 760 274 V530 C760 668 652 798 512 868 C372 798 264 668 264 530 V274 C306 222 422 168 512 168 Z"
         fill="url(#veMarkShieldFill)"
         stroke="url(#veMarkStroke)"
         strokeWidth="32"
         strokeLinejoin="round"
       />
 
-      <g
-        className="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
-        aria-label="VE"
-        fill="none"
-        stroke="url(#veMarkLetter)"
-        strokeWidth="52"
-        strokeLinejoin="miter"
-        strokeLinecap="square"
-        strokeMiterlimit={2}
-      >
-        <path className="letter-v" d="M300 330 L456 710 L612 330" />
-        <path
-          className="letter-e"
-          d="M548 330 V710
-             M548 330 H730
-             M548 520 H700
-             M548 710 H730"
-        />
+      <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE" fill="url(#veMarkLetter)">
+        <path className="letter-v" d="M467.6 577.80L414.71 577.80L347.22 418.20L405.13 418.20L443.21 511.45L482.19 418.20L535.09 418.2" />
+        <path className="letter-e" d="M676.78 577.80L544.09 577.80L544.09 418.20L673.82 418.20L673.82 458.78L596.98 458.78L596.98 477.48L664.47 477.48L664.47 516.24L596.98 516.24L596.98 537.22L676.78 537.22" />
       </g>
     </svg>
   );

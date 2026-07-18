@@ -1,17 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
   data-mark-core="ve"
-  data-optical-letter-height="380"
-  data-optical-gap="28"
-  data-optical-margin="96"
-  data-optical-max-x="730"
-  data-letter-style="starwars-outline"
+  data-letter-font="MontserratBlack"
+  data-letter-style="filled-type"
+  data-optical-letter-height="160"
+  data-optical-margin="83"
+  data-optical-max-x="677"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 markCore=ve optical:letterHeight=380 optical:gap=28 optical:margin=96 optical:maxX=730
-    letterStyle=starwars-outline noGimmick=1
-    Trust shield + cinematic VE monogram lockup (VouchEdge).
+    craft:level=2 markCore=ve letterFont=MontserratBlack letterStyle=filled-type
+    Font-outlined VE (Montserrat Black) inside trust shield. No stroke-overlap junk.
   -->
   <defs>
     <linearGradient id="ve-plate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
@@ -27,13 +26,13 @@
       <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.08"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.02"/>
     </linearGradient>
-    <linearGradient id="ve-letter" x1="260" y1="300" x2="760" y2="720" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="35%" stop-color="#A5F3FC"/>
-      <stop offset="100%" stop-color="#22D3EE"/>
+    <linearGradient id="ve-letter" x1="300" y1="300" x2="740" y2="740" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FEFF"/>
+      <stop offset="45%" stop-color="#67E8F9"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <radialGradient id="ve-glow" cx="50%" cy="42%" r="46%">
-      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.16"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.14"/>
       <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.04"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
     </radialGradient>
@@ -42,42 +41,17 @@
   <rect width="1024" height="1024" rx="224" fill="url(#ve-plate)"/>
   <circle class="ve-mark-glow" cx="512" cy="468" r="300" fill="url(#ve-glow)"/>
 
-  <!-- Trust shield -->
   <path
     class="ve-mark-shield"
-    d="M512 168
-       C602 168 718 222 760 274
-       V530
-       C760 668 652 798 512 868
-       C372 798 264 668 264 530
-       V274
-       C306 222 422 168 512 168 Z"
+    d="M512 168 C602 168 718 222 760 274 V530 C760 668 652 798 512 868 C372 798 264 668 264 530 V274 C306 222 422 168 512 168 Z"
     fill="url(#ve-shield-fill)"
     stroke="url(#ve-shield-stroke)"
     stroke-width="32"
     stroke-linejoin="round"
   />
 
-  <!-- VE monogram — cinematic outline, inside shield safe zone -->
-  <g
-    class="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
-    aria-label="VE"
-    fill="none"
-    stroke="url(#ve-letter)"
-    stroke-width="52"
-    stroke-linejoin="miter"
-    stroke-linecap="square"
-    stroke-miterlimit="2"
-  >
-    <!-- V -->
-    <path class="letter-v" d="M300 330 L456 710 L612 330" />
-    <!-- E — extended horizontals -->
-    <path
-      class="letter-e"
-      d="M548 330 V710
-         M548 330 H730
-         M548 520 H700
-         M548 710 H730"
-    />
+  <g class="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE" fill="url(#ve-letter)">
+    <path class="letter-v" d="M467.6 577.80L414.71 577.80L347.22 418.20L405.13 418.20L443.21 511.45L482.19 418.20L535.09 418.2"/>
+    <path class="letter-e" d="M676.78 577.80L544.09 577.80L544.09 418.20L673.82 418.20L673.82 458.78L596.98 458.78L596.98 477.48L664.47 477.48L664.47 516.24L596.98 516.24L596.98 537.22L676.78 537.22"/>
   </g>
 </svg>

@@ -131,9 +131,12 @@ export function judgeBrandCore(svg: string): SubJudgeResult {
     flags.push("Missing VE monogram — icon must read as VouchEdge");
   }
 
-  if (has(svg, /ve-mark-starwars|starwars-outline|letter-style="starwars/i)) {
-    score += 8;
-    notes.push("Cinematic outline letter style");
+  if (has(svg, /filled-type|letter-style="filled-type"|data-letter-font=/i)) {
+    score += 10;
+    notes.push("Filled type lockup (font-outlined)");
+  } else if (has(svg, /ve-mark-starwars|starwars-outline|letter-style="starwars/i)) {
+    score -= 10;
+    flags.push("Stroke-outline VE — looks broken at App Store sizes; use filled type");
   }
 
   if (has(svg, /ve-mark-optical/i)) {
