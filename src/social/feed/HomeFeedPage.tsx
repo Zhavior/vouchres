@@ -29,7 +29,19 @@ import {
   Feather,
 } from 'lucide-react';
 
-function FeedEmptyState({ id, icon, title, body }: { id: string; icon: React.ReactNode; title: string; body: React.ReactNode }) {
+function FeedEmptyState({
+  id,
+  icon,
+  title,
+  body,
+  actions,
+}: {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  body: React.ReactNode;
+  actions?: Array<{ label: string; onClick: () => void; primary?: boolean }>;
+}) {
   return (
     <div className="feed-empty-state px-6 py-12 text-center flex flex-col items-center justify-center gap-3" id={id}>
       <div className="w-12 h-12 rounded-full bg-white/[0.04] text-white/50 flex items-center justify-center">
@@ -39,6 +51,24 @@ function FeedEmptyState({ id, icon, title, body }: { id: string; icon: React.Rea
         <h3 className="font-bold text-[15px] text-white">{title}</h3>
         <p className="text-[13px] text-white/45 mt-1.5 max-w-sm mx-auto leading-relaxed">{body}</p>
       </div>
+      {actions && actions.length > 0 ? (
+        <div className="mt-2 flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:justify-center">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className={`ve-touch-target rounded-xl px-3 py-2.5 text-[13px] font-bold active:scale-[0.98] ${
+                action.primary
+                  ? 'border border-cyan-300/40 bg-cyan-300/15 text-cyan-100'
+                  : 'border border-white/15 bg-white/[0.04] text-white/75'
+              }`}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -513,7 +543,22 @@ function HomeFeedPage({
             id="empty-feed-placeholder-slate"
             icon={<AlertTriangle className="w-6 h-6" />}
             title="No posts yet"
-            body="Be the first to post a pick, vouch, parlay, result, or research note."
+            body="Start with today's research, then post a pick, vouch, parlay, result, or note."
+            actions={[
+              {
+                label: 'Open Judge Home',
+                primary: true,
+                onClick: () => onSectionChange?.('judge_home'),
+              },
+              {
+                label: 'Today slate',
+                onClick: () => onSectionChange?.('today'),
+              },
+              {
+                label: 'HR Board',
+                onClick: () => onSectionChange?.('hr_board'),
+              },
+            ]}
           />
         ) : algorithmPosts.length === 0 ? (
           /* Posts exist, but the current filter/search/tab matches none of them */

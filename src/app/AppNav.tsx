@@ -95,13 +95,23 @@ function DockButton({
       aria-label={`Go to ${label}`}
       aria-current={active ? 'page' : undefined}
       title={label}
-      className={`ve-touch-target z8-interactive relative flex min-w-0 flex-col items-center justify-center gap-0.5 transition active:scale-95 ${active ? 'text-white' : 'text-white/55'}`}
+      className={`ve-touch-target z8-interactive relative flex min-w-0 flex-col items-center justify-center gap-0.5 transition active:scale-95 ${active ? 'text-white' : 'text-white/45'}`}
     >
-      <span className={centerAction ? 'flex h-7 w-7 items-center justify-center rounded-lg border border-white/60' : undefined}>
+      <span
+        className={
+          centerAction
+            ? `flex h-7 w-7 items-center justify-center rounded-lg border ${active ? 'border-cyan-300/70 bg-cyan-300/10' : 'border-white/40'}`
+            : active
+              ? 'rounded-lg bg-white/10 px-2 py-0.5'
+              : undefined
+        }
+      >
         <Icon className="h-5 w-5" strokeWidth={active ? 2.6 : 1.9} />
       </span>
-      <span className="max-w-full truncate px-0.5 text-[9px] font-semibold leading-none">{shortLabel}</span>
-      {active ? <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-white" aria-hidden="true" /> : null}
+      <span className={`max-w-full truncate px-0.5 text-[9px] font-semibold leading-none ${active ? 'text-white' : ''}`}>
+        {shortLabel}
+      </span>
+      {active ? <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-cyan-300" aria-hidden="true" /> : null}
     </button>
   );
 }

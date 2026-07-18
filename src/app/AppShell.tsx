@@ -132,7 +132,12 @@ export function AppShell({
                           navigateSection('build');
                         }}
                         navigateSection={navigateSection}
-                        suppressFloatingDock={activeSection === 'build' || activeSection === 'live_parlays'}
+                        suppressFloatingDock={
+                          activeSection === 'build'
+                          || activeSection === 'live_parlays'
+                          || activeSection === 'judge_home'
+                          || activeSection === 'settings'
+                        }
                       />
                     </Suspense>
                   )}

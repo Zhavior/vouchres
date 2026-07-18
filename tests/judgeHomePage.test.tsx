@@ -49,14 +49,16 @@ describe('JudgeHomePage', () => {
 
     expect(screen.getByRole('heading', { name: 'Judge Home' })).toBeTruthy();
     expect(screen.getAllByText('Data Scout').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Power Hunter')).toBeTruthy();
-    expect(screen.getByText('Momentum Reader')).toBeTruthy();
-    expect(screen.getByText('Risk Auditor')).toBeTruthy();
+    expect(screen.getByRole('tablist', { name: /select judge/i }).textContent).toMatch(/DS/);
+    expect(screen.getByRole('tablist', { name: /select judge/i }).textContent).toMatch(/PH/);
+    expect(screen.getByRole('tablist', { name: /select judge/i }).textContent).toMatch(/MR/);
+    expect(screen.getByRole('tablist', { name: /select judge/i }).textContent).toMatch(/RA/);
     expect(screen.getAllByText('62%').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Example Hitter')).toBeTruthy();
     expect(screen.getByText(/not a sportsbook/i)).toBeTruthy();
+    expect(screen.getByText(/board leader|trust leader/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open HR Board' }));
+    fireEvent.click(screen.getByRole('button', { name: /hr board/i }));
     expect(navigateSection).toHaveBeenCalledWith('hr_board');
   });
 });

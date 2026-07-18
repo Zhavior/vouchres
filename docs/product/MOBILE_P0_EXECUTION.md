@@ -18,9 +18,21 @@
 ## Score movement (estimate)
 
 - Before P0 execute: **42 / 100**
-- After this pass (code + tests green): **~58 / 100**
+- After first P0 code pass: **~58 / 100**
+- After screenshot-driven mobile UI pass (routing + Judge Home + FAB + empty states): **~64 / 100**
 - Next to ~72: `npx cap add ios/android`, splash/icons, TestFlight + Play internal
 - Next to ~82: store listings, counsel legal, IAP decision, reviewer demo
+
+## Screenshot QA loop
+
+Artifacts: `/opt/cursor/artifacts/screenshots/v3-*.png`
+
+| Shot | Finding → fix |
+|------|----------------|
+| v1 judge-home showed HR Board | Deep-link routing missing → `resolveDevSectionFromLocation` + `sectionToPath` |
+| Wide ParlayOS pill covered copy | Icon-only FAB on phone; raise above labeled dock |
+| Judge chips scrolled off-screen | 4-up code grid (DS/PH/MR/RA) always visible |
+| Empty feed dead-end | CTAs → Judge Home / Today / HR Board |
 
 ## Remaining before store submit
 

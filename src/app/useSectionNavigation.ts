@@ -9,6 +9,7 @@ import {
   resolvePublicSection,
   resolveDevSectionFromLocation,
   saveActiveSection,
+  sectionToPath,
   requiresLogin,
   isPublicFrontPage,
 } from './sectionNavigation';
@@ -47,6 +48,14 @@ export function useSectionNavigation() {
     startTransition(() => {
       saveActiveSection(target);
       setActiveSection(target);
+      try {
+        const nextPath = sectionToPath(target);
+        if (typeof window !== 'undefined' && window.location.pathname !== nextPath) {
+          window.history.pushState(null, '', nextPath);
+        }
+      } catch {
+        // ignore history failures
+      }
     });
   }, []);
 

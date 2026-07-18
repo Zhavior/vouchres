@@ -251,7 +251,62 @@ export function resolveDevSectionFromLocation() {
     return 'live_games';
   }
 
+  if (
+    target === 'judge-home' || target === '/judge-home' ||
+    target === 'judge_home' || target === '/judge_home' ||
+    target === 'judges' || target === '/judges'
+  ) {
+    return 'judge_home';
+  }
+
+  if (target === 'feed' || target === '/feed' || target === 'home' || target === '/home') {
+    return 'feed';
+  }
+
+  if (target === 'board' || target === '/board' || target === 'vouch-board' || target === '/vouch-board') {
+    return 'board';
+  }
+
+  if (target === 'settings' || target === '/settings') {
+    return 'settings';
+  }
+
+  if (target === 'profile' || target === '/profile') {
+    return 'profile';
+  }
+
+  if (target === 'leaderboard' || target === '/leaderboard' || target === 'top-cappers' || target === '/top-cappers') {
+    return 'leaderboard';
+  }
+
+  if (target === 'results' || target === '/results') {
+    return 'results';
+  }
+
+  if (
+    target === 'ai-engine' || target === '/ai-engine' ||
+    target === 'ai_engine' || target === '/ai_engine'
+  ) {
+    return 'ai_engine';
+  }
+
+  // Generic fallback: /foo-bar or /foo_bar → foo_bar when it looks like a section id.
+  const rawPath = pathname.replace(/^\//, '').split('/')[0] ?? '';
+  if (rawPath && !rawPath.includes('.')) {
+    const normalized = rawPath.replace(/-/g, '_');
+    if (/^[a-z][a-z0-9_]{1,64}$/.test(normalized)) {
+      return normalized;
+    }
+  }
+
   return null;
+}
+
+/** Canonical browser path for a section id (kebab-case). */
+export function sectionToPath(section: string): string {
+  if (section === 'vouchedge_intro') return '/vouchedge';
+  if (section === 'welcome') return '/today';
+  return `/${section.replace(/_/g, '-')}`;
 }
 
 export function isPublicFrontPage(activeSection: string, isLoggedIn: boolean) {
