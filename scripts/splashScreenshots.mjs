@@ -21,11 +21,11 @@ async function shot(page, name, body) {
   await page.setContent(
     `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"/>
     <style>
-      html,body{margin:0;height:100%;background:#0B1016;color:#fff;
+      html,body{margin:0;height:100%;background:#0B0618;color:#fff;
         font-family:ui-sans-serif,system-ui,sans-serif}
       .shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-        background:radial-gradient(ellipse 80% 50% at 50% 35%,rgba(42,157,143,.14),transparent 60%),linear-gradient(165deg,#1A2330,#0B1016 55%,#080C11);padding:24px;text-align:center}
-      .mark{width:120px;height:120px;margin-bottom:28px;filter:drop-shadow(0 10px 28px rgba(4,31,28,.45))}
+        background:radial-gradient(ellipse 55% 45% at 40% 55%,rgba(34,211,238,.16),transparent 60%),radial-gradient(ellipse 45% 40% at 78% 22%,rgba(192,38,211,.18),transparent 55%),linear-gradient(165deg,#2B1F54,#1A1035 45%,#0B0618);padding:24px;text-align:center}
+      .mark{width:120px;height:120px;margin-bottom:28px;filter:drop-shadow(0 0 28px rgba(34,211,238,.35))}
       .mark svg{width:120px;height:120px;display:block}
       h1{font-size:28px;font-weight:900;margin:0}
       p{color:rgba(255,255,255,.55);margin:8px 0 0;font-size:14px}

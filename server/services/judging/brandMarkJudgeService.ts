@@ -213,9 +213,12 @@ export function judgeBrandCraft(svg: string): SubJudgeResult {
     notes.push("Shield + VE system present");
   }
 
-  if (has(svg, /data-material="enamel"|material=enamel/i) && has(svg, /data-texture="grain"|feTurbulence/i)) {
+  if (
+    has(svg, /data-material="night-city"|data-material="enamel"|material=night-city/i) &&
+    has(svg, /data-texture=|feTurbulence/i)
+  ) {
     score += 8;
-    notes.push("Enamel + grain material system declared");
+    notes.push("Material + texture system declared");
   }
 
   if (has(svg, /feGaussianBlur[^>]*stdDeviation="([3-9]|[1-9]\d)/i)) {
@@ -233,25 +236,31 @@ export function judgeBrandTrustCues(svg: string): SubJudgeResult {
   const flags: string[] = [];
   let score = 62;
 
+  const hasNightCity =
+    has(svg, /#1A1035|#2B1F54|#0B0618|#2E1065|#4C1D95|#C026D3|#7C3AED/i) &&
+    has(svg, /#22D3EE|#67E8F9|#FFFFFF|#F59E0B/i);
   const hasInkDesk =
     has(svg, /#0B1016|#121820|#1A2330|#0A2E2B|#145A52|#1F6F66|#2A9D8F/i) &&
     has(svg, /#F0E6D6|#FFF8EF|#E7F6F2|#F5F0E6/i);
   const hasLegacyNeon = has(svg, /#00E5FF/i) && has(svg, /stop-opacity="0\.(1[4-9]|[2-9])/i);
 
-  if (hasInkDesk || has(svg, /data-palette="ink-desk"|palette=ink-desk/i)) {
+  if (hasNightCity || has(svg, /data-palette="socialize-ref"|palette=socialize-ref/i)) {
     score += 12;
-    notes.push("Ink-desk enamel palette (graphite + sea-glass + bone)");
+    notes.push("Night-city palette (violet + cyan + magenta + white type)");
+  } else if (hasInkDesk || has(svg, /data-palette="ink-desk"|palette=ink-desk/i)) {
+    score += 10;
+    notes.push("Ink-desk enamel palette");
   } else if (has(svg, /#00E5FF|#22D3EE|#2DD4BF|#67E8F9|#A5F3FC/i) && has(svg, /#020617|#06101C/i)) {
     score += 4;
-    flags.push("Legacy neon-cyber palette — prefer ink-desk enamel");
+    flags.push("Legacy flat neon palette — prefer night-city ref");
   } else {
     score -= 14;
     flags.push("Brand palette incomplete");
   }
 
-  if (has(svg, /data-material="enamel"|material=enamel|ve-grain|feTurbulence/i)) {
+  if (has(svg, /data-material="night-city"|data-material="enamel"|ve-grain|feTurbulence|painterly/i)) {
     score += 8;
-    notes.push("Material texture present (enamel / grain)");
+    notes.push("Material texture present (night-city / grain)");
   }
 
   if (has(svg, /dice|chip|dollar|sportsbook|betting|🎰/i)) {

@@ -1,81 +1,83 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
   data-mark-core="ve"
-  data-letter-font="MontserratBlack"
+  data-letter-font="OrbitronBlack"
   data-letter-style="filled-type"
-  data-material="enamel"
-  data-palette="ink-desk"
-  data-texture="grain"
-  data-optical-letter-height="154"
-  data-optical-margin="80"
-  data-optical-max-x="680"
+  data-material="night-city"
+  data-palette="socialize-ref"
+  data-texture="painterly-grain"
+  data-optical-letter-height="131"
+  data-optical-margin="86"
+  data-optical-max-x="674"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 markCore=ve material=enamel palette=ink-desk texture=grain
-    letterFont=MontserratBlack letterStyle=filled-type
-    Graphite plate + sea-glass enamel shield + bone VE. No neon-cyber glow.
+    craft:level=2 markCore=ve material=night-city palette=socialize-ref
+    letterFont=OrbitronBlack — geometric white VE over violet/cyan night-city wash.
+    Reference: SOCIALIZE night-city reel (cyan trail · magenta haze · amber spark).
   -->
   <defs>
-    <!-- Plate: graphite ink with a quiet warm lift at the top -->
-    <linearGradient id="ve-plate" x1="180" y1="0" x2="860" y2="1024" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1A2330"/>
-      <stop offset="42%" stop-color="#121820"/>
-      <stop offset="100%" stop-color="#0B1016"/>
+    <!-- Plate: deep indigo / violet night -->
+    <linearGradient id="ve-plate" x1="120" y1="0" x2="900" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2B1F54"/>
+      <stop offset="40%" stop-color="#1A1035"/>
+      <stop offset="100%" stop-color="#0B0618"/>
     </linearGradient>
-    <linearGradient id="ve-plate-sheen" x1="200" y1="80" x2="820" y2="900" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2A3A48" stop-opacity="0.35"/>
-      <stop offset="55%" stop-color="#2A3A48" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#0E3D38" stop-opacity="0.18"/>
-    </linearGradient>
-
-    <!-- Soft desk wash — not a neon orb -->
-    <radialGradient id="ve-glow" cx="48%" cy="40%" r="52%">
-      <stop offset="0%" stop-color="#2A9D8F" stop-opacity="0.10"/>
-      <stop offset="55%" stop-color="#1B4332" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#0B1016" stop-opacity="0"/>
+    <!-- Magenta haze (upper right) -->
+    <radialGradient id="ve-haze-magenta" cx="78%" cy="22%" r="48%">
+      <stop offset="0%" stop-color="#C026D3" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#7C3AED" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0B0618" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Cyan city core wash -->
+    <radialGradient id="ve-glow" cx="42%" cy="55%" r="55%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.18"/>
+      <stop offset="40%" stop-color="#0891B2" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0B0618" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Amber spark (mech warmth from ref) -->
+    <radialGradient id="ve-amber" cx="62%" cy="58%" r="28%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Enamel body -->
+    <!-- Shield: violet glass + cyan rim -->
     <linearGradient id="ve-shield-fill" x1="512" y1="170" x2="520" y2="860" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1F6F66"/>
-      <stop offset="38%" stop-color="#145A52"/>
-      <stop offset="72%" stop-color="#0E3F3A"/>
-      <stop offset="100%" stop-color="#0A2E2B"/>
+      <stop offset="0%" stop-color="#4C1D95"/>
+      <stop offset="45%" stop-color="#2E1065"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
     </linearGradient>
-    <linearGradient id="ve-shield-inner" x1="400" y1="220" x2="640" y2="720" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.16"/>
-      <stop offset="45%" stop-color="#2A9D8F" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#041F1C" stop-opacity="0.35"/>
+    <linearGradient id="ve-shield-inner" x1="360" y1="220" x2="680" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67E8F9" stop-opacity="0.18"/>
+      <stop offset="40%" stop-color="#A855F7" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0B0618" stop-opacity="0.45"/>
     </linearGradient>
-
-    <!-- Brushed metal rim -->
-    <linearGradient id="ve-shield-stroke" x1="280" y1="160" x2="740" y2="860" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E7F6F2"/>
-      <stop offset="28%" stop-color="#9BD5C8"/>
-      <stop offset="62%" stop-color="#4FA896"/>
-      <stop offset="100%" stop-color="#2F6F63"/>
+    <linearGradient id="ve-shield-stroke" x1="260" y1="160" x2="760" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E0F7FA"/>
+      <stop offset="35%" stop-color="#67E8F9"/>
+      <stop offset="70%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#A855F7"/>
     </linearGradient>
 
-    <!-- Bone type with cool edge -->
+    <!-- SOCIALIZE-style white type -->
     <linearGradient id="ve-letter" x1="360" y1="400" x2="680" y2="600" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFF8EF"/>
-      <stop offset="48%" stop-color="#F0E6D6"/>
-      <stop offset="100%" stop-color="#C9DED7"/>
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="70%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#CFFAFE"/>
     </linearGradient>
     <linearGradient id="ve-letter-shade" x1="512" y1="410" x2="512" y2="590" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#0A2E2B" stop-opacity="0.18"/>
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.12"/>
     </linearGradient>
 
-    <!-- Film grain / paper tooth -->
     <filter id="ve-grain" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.85  0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0.055 0" in="n" result="g"/>
-      <feBlend in="SourceGraphic" in2="g" mode="overlay"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.25" numOctaves="3" seed="19" result="n"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.7  0 0 0 0 0.55  0 0 0 0 0.9  0 0 0 0.045 0" in="n" result="g"/>
+      <feBlend in="SourceGraphic" in2="g" mode="soft-light"/>
     </filter>
-    <filter id="ve-letter-depth" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#041F1C" flood-opacity="0.45"/>
+    <filter id="ve-letter-depth" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#22D3EE" flood-opacity="0.45"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#0B0618" flood-opacity="0.55"/>
     </filter>
 
     <clipPath id="ve-shield-clip">
@@ -83,13 +85,12 @@
     </clipPath>
   </defs>
 
-  <!-- Graphite tile -->
   <rect class="ve-mark-tile" width="1024" height="1024" rx="224" fill="url(#ve-plate)"/>
-  <rect width="1024" height="1024" rx="224" fill="url(#ve-plate-sheen)"/>
-  <rect class="ve-mark-grain" width="1024" height="1024" rx="224" fill="url(#ve-plate)" filter="url(#ve-grain)" opacity="0.55"/>
-  <ellipse class="ve-mark-glow" cx="512" cy="455" rx="310" ry="280" fill="url(#ve-glow)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#ve-haze-magenta)"/>
+  <ellipse class="ve-mark-glow" cx="430" cy="560" rx="340" ry="300" fill="url(#ve-glow)"/>
+  <ellipse cx="620" cy="580" rx="200" ry="170" fill="url(#ve-amber)"/>
+  <rect class="ve-mark-grain" width="1024" height="1024" rx="224" fill="url(#ve-plate)" filter="url(#ve-grain)" opacity="0.5"/>
 
-  <!-- Enamel shield -->
   <path
     class="ve-mark-shield"
     d="M512 168 C602 168 718 222 760 274 V530 C760 668 652 798 512 868 C372 798 264 668 264 530 V274 C306 222 422 168 512 168 Z"
@@ -100,15 +101,13 @@
   />
   <g clip-path="url(#ve-shield-clip)">
     <path d="M512 168 C602 168 718 222 760 274 V530 C760 668 652 798 512 868 C372 798 264 668 264 530 V274 C306 222 422 168 512 168 Z" fill="url(#ve-shield-inner)"/>
-    <!-- top lip catch-light -->
-    <ellipse cx="512" cy="250" rx="168" ry="54" fill="#E7F6F2" opacity="0.10"/>
+    <ellipse cx="512" cy="245" rx="170" ry="56" fill="#E0F7FA" opacity="0.12"/>
   </g>
 
-  <!-- Bone VE -->
   <g class="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE" filter="url(#ve-letter-depth)">
-    <path class="letter-v" d="M460.23 575L409.19 575L344.07 421L399.95 421L436.69 510.98L474.31 421L525.35 421" fill="url(#ve-letter)"/>
-    <path class="letter-e" d="M679.93 575L551.89 575L551.89 421L677.07 421L677.07 460.16L602.93 460.16L602.93 478.20L668.05 478.20L668.05 515.60L602.93 515.60L602.93 535.84L679.93 535.84" fill="url(#ve-letter)"/>
-    <path class="letter-v" d="M460.23 575L409.19 575L344.07 421L399.95 421L436.69 510.98L474.31 421L525.35 421" fill="url(#ve-letter-shade)" opacity="0.55"/>
-    <path class="letter-e" d="M679.93 575L551.89 575L551.89 421L677.07 421L677.07 460.16L602.93 460.16L602.93 478.20L668.05 478.20L668.05 515.60L602.93 515.60L602.93 535.84L679.93 535.84" fill="url(#ve-letter-shade)" opacity="0.55"/>
+    <path class="letter-v" d="M448.95 563.52L425.47 563.52L349.57 432.48L382.33 432.48L437.3 527.67L492.26 432.48L524.84 432.48" fill="url(#ve-letter)"/>
+    <path class="letter-e" d="M674.43 563.52L553.4 563.52L553.4 432.48L674.43 432.48L674.43 460.87L581.97 460.87L581.97 483.80L656.41 483.80L656.41 512.20L581.97 512.20L581.97 535.13L674.43 535.13" fill="url(#ve-letter)"/>
+    <path class="letter-v" d="M448.95 563.52L425.47 563.52L349.57 432.48L382.33 432.48L437.3 527.67L492.26 432.48L524.84 432.48" fill="url(#ve-letter-shade)" opacity="0.5"/>
+    <path class="letter-e" d="M674.43 563.52L553.4 563.52L553.4 432.48L674.43 432.48L674.43 460.87L581.97 460.87L581.97 483.80L656.41 483.80L656.41 512.20L581.97 512.20L581.97 535.13L674.43 535.13" fill="url(#ve-letter-shade)" opacity="0.5"/>
   </g>
 </svg>

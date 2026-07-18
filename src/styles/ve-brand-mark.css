@@ -95,9 +95,10 @@
 /* Full-screen splash shell */
 .ve-splash-shell {
   background:
-    radial-gradient(ellipse 80% 50% at 50% 35%, rgba(42, 157, 143, 0.14), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(15, 61, 56, 0.35), transparent 55%),
-    linear-gradient(165deg, #1A2330 0%, #0B1016 55%, #080C11 100%);
+    radial-gradient(ellipse 55% 45% at 40% 55%, rgba(34, 211, 238, 0.16), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 78% 22%, rgba(192, 38, 211, 0.18), transparent 55%),
+    radial-gradient(ellipse 40% 35% at 62% 60%, rgba(245, 158, 11, 0.08), transparent 50%),
+    linear-gradient(165deg, #2B1F54 0%, #1A1035 45%, #0B0618 100%);
 }
 
 .ve-splash-progress {

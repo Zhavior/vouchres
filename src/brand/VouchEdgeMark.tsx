@@ -1,6 +1,6 @@
 /**
- * VouchEdge brand mark — enamel shield + bone VE on graphite ink.
- * Mirrors /public/brand/vouchedge-mark.svg
+ * VouchEdge brand mark — night-city shield + geometric white VE.
+ * Mirrors /public/brand/vouchedge-mark.svg (SOCIALIZE ref palette).
  */
 import React from 'react';
 
@@ -35,64 +35,63 @@ export function VouchEdgeMark({
       aria-label={title}
       data-craft-level="2"
       data-mark-core="ve"
-      data-material="enamel"
-      data-palette="ink-desk"
+      data-material="night-city"
+      data-palette="socialize-ref"
     >
       <title>{title}</title>
       <defs>
-        <linearGradient id="veMarkPlate" x1="180" y1="0" x2="860" y2="1024" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#1A2330" />
-          <stop offset="42%" stopColor="#121820" />
-          <stop offset="100%" stopColor="#0B1016" />
+        <linearGradient id="veMarkPlate" x1="120" y1="0" x2="900" y2="1024" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#2B1F54" />
+          <stop offset="40%" stopColor="#1A1035" />
+          <stop offset="100%" stopColor="#0B0618" />
         </linearGradient>
-        <linearGradient id="veMarkPlateSheen" x1="200" y1="80" x2="820" y2="900" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#2A3A48" stopOpacity="0.35" />
-          <stop offset="55%" stopColor="#2A3A48" stopOpacity="0" />
-          <stop offset="100%" stopColor="#0E3D38" stopOpacity="0.18" />
-        </linearGradient>
-        <radialGradient id="veMarkGlow" cx="48%" cy="40%" r="52%">
-          <stop offset="0%" stopColor="#2A9D8F" stopOpacity="0.10" />
-          <stop offset="55%" stopColor="#1B4332" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="#0B1016" stopOpacity="0" />
+        <radialGradient id="veMarkHaze" cx="78%" cy="22%" r="48%">
+          <stop offset="0%" stopColor="#C026D3" stopOpacity="0.38" />
+          <stop offset="55%" stopColor="#7C3AED" stopOpacity="0.14" />
+          <stop offset="100%" stopColor="#0B0618" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="veMarkGlow" cx="42%" cy="55%" r="55%">
+          <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.28" />
+          <stop offset="40%" stopColor="#0891B2" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#0B0618" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="veMarkAmber" cx="62%" cy="58%" r="28%">
+          <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="170" x2="520" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#1F6F66" />
-          <stop offset="38%" stopColor="#145A52" />
-          <stop offset="72%" stopColor="#0E3F3A" />
-          <stop offset="100%" stopColor="#0A2E2B" />
+          <stop offset="0%" stopColor="#4C1D95" />
+          <stop offset="45%" stopColor="#2E1065" />
+          <stop offset="100%" stopColor="#1E1B4B" />
         </linearGradient>
-        <linearGradient id="veMarkShieldInner" x1="400" y1="220" x2="640" y2="720" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#5EEAD4" stopOpacity="0.16" />
-          <stop offset="45%" stopColor="#2A9D8F" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="#041F1C" stopOpacity="0.35" />
+        <linearGradient id="veMarkShieldInner" x1="360" y1="220" x2="680" y2="760" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#67E8F9" stopOpacity="0.18" />
+          <stop offset="40%" stopColor="#A855F7" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#0B0618" stopOpacity="0.45" />
         </linearGradient>
-        <linearGradient id="veMarkStroke" x1="280" y1="160" x2="740" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#E7F6F2" />
-          <stop offset="28%" stopColor="#9BD5C8" />
-          <stop offset="62%" stopColor="#4FA896" />
-          <stop offset="100%" stopColor="#2F6F63" />
+        <linearGradient id="veMarkStroke" x1="260" y1="160" x2="760" y2="860" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#E0F7FA" />
+          <stop offset="35%" stopColor="#67E8F9" />
+          <stop offset="70%" stopColor="#22D3EE" />
+          <stop offset="100%" stopColor="#A855F7" />
         </linearGradient>
         <linearGradient id="veMarkLetter" x1="360" y1="400" x2="680" y2="600" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFF8EF" />
-          <stop offset="48%" stopColor="#F0E6D6" />
-          <stop offset="100%" stopColor="#C9DED7" />
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="70%" stopColor="#F8FAFC" />
+          <stop offset="100%" stopColor="#CFFAFE" />
         </linearGradient>
         <linearGradient id="veMarkLetterShade" x1="512" y1="410" x2="512" y2="590" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.14" />
-          <stop offset="100%" stopColor="#0A2E2B" stopOpacity="0.18" />
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.20" />
+          <stop offset="100%" stopColor="#22D3EE" stopOpacity="0.12" />
         </linearGradient>
         <filter id="veMarkGrain" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n" />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0.85  0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0.055 0"
-            in="n"
-            result="g"
-          />
-          <feBlend in="SourceGraphic" in2="g" mode="overlay" />
+          <feTurbulence type="fractalNoise" baseFrequency="1.25" numOctaves="3" seed="19" result="n" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.7  0 0 0 0 0.55  0 0 0 0 0.9  0 0 0 0.045 0" in="n" result="g" />
+          <feBlend in="SourceGraphic" in2="g" mode="soft-light" />
         </filter>
-        <filter id="veMarkLetterDepth" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="2.2" floodColor="#041F1C" floodOpacity="0.45" />
+        <filter id="veMarkLetterDepth" x="-35%" y="-35%" width="170%" height="170%">
+          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#22D3EE" floodOpacity="0.45" />
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#0B0618" floodOpacity="0.55" />
         </filter>
         <clipPath id="veMarkShieldClip">
           <path d={SHIELD_D} />
@@ -100,40 +99,22 @@ export function VouchEdgeMark({
       </defs>
 
       <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" className="ve-mark-tile" />
-      <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlateSheen)" />
-      <rect
-        width="1024"
-        height="1024"
-        rx="224"
-        fill="url(#veMarkPlate)"
-        filter="url(#veMarkGrain)"
-        opacity="0.55"
-        className="ve-mark-grain"
-      />
-      <ellipse cx="512" cy="455" rx="310" ry="280" fill="url(#veMarkGlow)" className="ve-mark-glow" />
+      <rect width="1024" height="1024" rx="224" fill="url(#veMarkHaze)" />
+      <ellipse cx="430" cy="560" rx="340" ry="300" fill="url(#veMarkGlow)" className="ve-mark-glow" />
+      <ellipse cx="620" cy="580" rx="200" ry="170" fill="url(#veMarkAmber)" />
+      <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" filter="url(#veMarkGrain)" opacity="0.5" className="ve-mark-grain" />
 
-      <path
-        className="ve-mark-shield"
-        d={SHIELD_D}
-        fill="url(#veMarkShieldFill)"
-        stroke="url(#veMarkStroke)"
-        strokeWidth="30"
-        strokeLinejoin="round"
-      />
+      <path className="ve-mark-shield" d={SHIELD_D} fill="url(#veMarkShieldFill)" stroke="url(#veMarkStroke)" strokeWidth="30" strokeLinejoin="round" />
       <g clipPath="url(#veMarkShieldClip)">
         <path d={SHIELD_D} fill="url(#veMarkShieldInner)" />
-        <ellipse cx="512" cy="250" rx="168" ry="54" fill="#E7F6F2" opacity="0.10" />
+        <ellipse cx="512" cy="245" rx="170" ry="56" fill="#E0F7FA" opacity="0.12" />
       </g>
 
-      <g
-        className="ve-mark-letters ve-mark-identity ve-mark-optical"
-        aria-label="VE"
-        filter="url(#veMarkLetterDepth)"
-      >
-        <path className="letter-v" d="M460.23 575L409.19 575L344.07 421L399.95 421L436.69 510.98L474.31 421L525.35 421" fill="url(#veMarkLetter)" />
-        <path className="letter-e" d="M679.93 575L551.89 575L551.89 421L677.07 421L677.07 460.16L602.93 460.16L602.93 478.20L668.05 478.20L668.05 515.60L602.93 515.60L602.93 535.84L679.93 535.84" fill="url(#veMarkLetter)" />
-        <path className="letter-v" d="M460.23 575L409.19 575L344.07 421L399.95 421L436.69 510.98L474.31 421L525.35 421" fill="url(#veMarkLetterShade)" opacity="0.55" />
-        <path className="letter-e" d="M679.93 575L551.89 575L551.89 421L677.07 421L677.07 460.16L602.93 460.16L602.93 478.20L668.05 478.20L668.05 515.60L602.93 515.60L602.93 535.84L679.93 535.84" fill="url(#veMarkLetterShade)" opacity="0.55" />
+      <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE" filter="url(#veMarkLetterDepth)">
+        <path className="letter-v" d="M448.95 563.52L425.47 563.52L349.57 432.48L382.33 432.48L437.3 527.67L492.26 432.48L524.84 432.48" fill="url(#veMarkLetter)" />
+        <path className="letter-e" d="M674.43 563.52L553.4 563.52L553.4 432.48L674.43 432.48L674.43 460.87L581.97 460.87L581.97 483.80L656.41 483.80L656.41 512.20L581.97 512.20L581.97 535.13L674.43 535.13" fill="url(#veMarkLetter)" />
+        <path className="letter-v" d="M448.95 563.52L425.47 563.52L349.57 432.48L382.33 432.48L437.3 527.67L492.26 432.48L524.84 432.48" fill="url(#veMarkLetterShade)" opacity="0.5" />
+        <path className="letter-e" d="M674.43 563.52L553.4 563.52L553.4 432.48L674.43 432.48L674.43 460.87L581.97 460.87L581.97 483.80L656.41 483.80L656.41 512.20L581.97 512.20L581.97 535.13L674.43 535.13" fill="url(#veMarkLetterShade)" opacity="0.5" />
       </g>
     </svg>
   );
