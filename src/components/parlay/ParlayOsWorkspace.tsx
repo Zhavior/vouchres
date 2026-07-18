@@ -525,7 +525,7 @@ function WatchlistFoundation({ onSectionChange }: { onSectionChange?: (section: 
 
   return (
     <aside className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-2xl border border-white/12 bg-[radial-gradient(circle_at_top_right,rgba(0,255,148,0.07),transparent_38%),linear-gradient(160deg,#091520_0%,#050b12_65%)] shadow-[0_22px_60px_rgba(0,0,0,0.28)] lg:min-h-[560px]" aria-labelledby="parlayos-watchlist-heading">
-      <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[#07101a]/95 px-4 pt-4 backdrop-blur-xl">
+      <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-ve-obsidian/95 px-4 pt-4 backdrop-blur-xl">
         <div className="flex items-start justify-between gap-3 pb-3">
           <div>
             <p className={`${Z8_LABEL} text-vouch-emerald`}>Research queue</p>

@@ -490,7 +490,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
                     className="z8-hr-hero__score-ring flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full"
                     style={{ '--hr-score': `${Math.max(0, Math.min(100, topPlayer.hrScore))}%` } as React.CSSProperties}
                   >
-                    <span className="flex h-[46px] w-[46px] flex-col items-center justify-center rounded-full bg-[#07100f] font-mono">
+                    <span className="flex h-[46px] w-[46px] flex-col items-center justify-center rounded-full bg-ve-obsidian font-mono">
                       <strong className="text-lg leading-none tabular-nums text-white">{Math.round(topPlayer.hrScore)}</strong>
                       <span className="mt-0.5 text-[6px] font-black uppercase tracking-[0.08em] text-white/35">Signal /100</span>
                     </span>

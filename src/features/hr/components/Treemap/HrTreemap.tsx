@@ -96,7 +96,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
   }
 
   return (
-    <section className="z8-hr-map overflow-hidden rounded-2xl border border-white/[0.08] bg-[#050a0d] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-label="HR signal map">
+    <section className="z8-hr-map overflow-hidden rounded-2xl border border-white/[0.08] bg-ve-obsidian shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-label="HR signal map">
       <header className="flex flex-col gap-3 border-b border-white/[0.07] bg-white/[0.025] px-4 py-3 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-400">Visual intelligence</p>

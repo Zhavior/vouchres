@@ -104,7 +104,7 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
           type="button"
           onClick={() => onResearch(player)}
           aria-label={`Research ${player.playerName}`}
-          className="flex min-h-9 items-center justify-center gap-1.5 border border-[#00f0ff]/30 bg-[#00f0ff]/[0.055] px-2 text-[10px] font-black text-white/80 transition hover:border-[#00f0ff]/60 hover:text-[#00f0ff]"
+          className="flex min-h-9 items-center justify-center gap-1.5 border border-[#00f0ff]/30 bg-ve-ion/[0.055] px-2 text-[10px] font-black text-white/80 transition hover:border-[#00f0ff]/60 hover:text-[#00f0ff]"
         >
           <Search className="h-3 w-3" /> Research
         </button>
@@ -114,7 +114,7 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
           disabled={!canAdd}
           title={brief.addToSlipBlockReason ?? 'Add player to slip'}
           aria-label={`Add ${player.playerName} to slip`}
-          className="flex min-h-9 items-center justify-center gap-1 border border-[#00ff94]/30 bg-[#00ff94]/[0.055] px-2 text-[10px] font-black text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex min-h-9 items-center justify-center gap-1 border border-[#00ff94]/30 bg-ve-voltage/[0.055] px-2 text-[10px] font-black text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <Plus className="h-3.5 w-3.5" /> Slip
         </button>

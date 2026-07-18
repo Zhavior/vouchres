@@ -20,7 +20,7 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
   },
   {
     id: 'intelligence',
-    label: 'HR Intelligence',
+    label: 'Intelligence',
     description: 'Models, matchups, and verified evidence',
     defaultSection: 'hr_board',
     sections: [

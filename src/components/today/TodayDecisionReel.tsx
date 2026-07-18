@@ -142,7 +142,7 @@ function BriefingCard({
   return (
     <article
       style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
-      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#07111b] shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
+      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-ve-obsidian shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
         priority ? accent.border : 'border-white/[0.09]'
       }`}
     >
@@ -190,7 +190,7 @@ function PlayerSignalCard({
   return (
     <article
       style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
-      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
+      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-ve-obsidian shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,148,0.13),transparent_34%)]" />
 
@@ -214,7 +214,7 @@ function PlayerSignalCard({
           <Portrait src={visual.headshotUrl} name={visual.name} />
         </div>
 
-        <div style={{ height: 92, width: 92 }} className="absolute bottom-5 right-4 z-10 flex flex-col items-center justify-center rounded-full border border-vouch-emerald/40 bg-[#05141a]/95 shadow-[0_0_36px_-12px_rgba(0,255,148,0.9)]">
+        <div style={{ height: 92, width: 92 }} className="absolute bottom-5 right-4 z-10 flex flex-col items-center justify-center rounded-full border border-vouch-emerald/40 bg-ve-graphite/95 shadow-[0_0_36px_-12px_rgba(0,255,148,0.9)]">
           <strong className="font-mono text-4xl font-black leading-none text-vouch-emerald">{visual.score}</strong>
           <span className="mt-1 font-mono text-[8px] font-black uppercase tracking-[0.12em] text-vouch-emerald/70">Signal /100</span>
         </div>
@@ -265,7 +265,7 @@ function PlayerSignalCard({
 function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionChange: (section: string) => void }) {
   const visibleLegs = slip.legs.slice(0, 2);
   return (
-    <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
+    <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-ve-obsidian">
       <div style={{ height: 180 }} className="relative flex shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-vouch-cyan/15 via-[#08182a] to-transparent">
         <p className={`absolute left-4 top-4 ${Z8_LABEL} text-vouch-cyan`}>My slip update</p>
         <ClipboardCheck className="h-20 w-20 text-vouch-cyan/80 drop-shadow-[0_0_28px_rgba(0,240,255,0.24)]" />
@@ -304,7 +304,7 @@ function CompactVisual({ visual, tone }: { visual: TodayReelVisual; tone: keyof 
       <div className="absolute inset-0 flex items-end justify-center">
         {visual.teamLogo ? <img src={visual.teamLogo} alt="" className="absolute right-3 top-8 h-28 w-28 object-contain opacity-[0.08]" /> : null}
         <Portrait src={visual.headshotUrl} name={visual.name} />
-        <div className="absolute bottom-3 right-3 z-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-vouch-emerald/35 bg-[#06141a]/90 shadow-[0_0_30px_-12px_rgba(0,255,148,0.75)]">
+        <div className="absolute bottom-3 right-3 z-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-vouch-emerald/35 bg-ve-graphite/90 shadow-[0_0_30px_-12px_rgba(0,255,148,0.75)]">
           <strong className="font-mono text-3xl font-black text-vouch-emerald">{visual.score}</strong>
           <span className="text-[8px] font-black uppercase tracking-wider text-vouch-emerald/75">/100</span>
         </div>
