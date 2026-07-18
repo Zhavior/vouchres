@@ -22,18 +22,19 @@
 }
 
 .ve-mark-boot .ve-mark-identity,
-.ve-mark-boot .ve-mark-check {
+.ve-mark-boot .ve-mark-letters {
   opacity: 0;
   transform-origin: 512px 500px;
   transform: scale(0.78);
   animation: veMarkPopIdentity 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
 }
 
-.ve-mark-boot .mark-check {
-  stroke-dasharray: 900;
-  stroke-dashoffset: 900;
+.ve-mark-boot .letter-v,
+.ve-mark-boot .letter-e {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
   opacity: 1;
-  animation: veMarkDrawCheck 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+  animation: veMarkDrawLetters 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
 }
 
 .ve-mark-boot .ve-mark-glow {
@@ -48,7 +49,7 @@
   }
 }
 
-@keyframes veMarkDrawCheck {
+@keyframes veMarkDrawLetters {
   to {
     stroke-dashoffset: 0;
   }
@@ -94,8 +95,9 @@
   .ve-mark-idle .ve-mark-identity,
   .ve-mark-boot .ve-mark-shield,
   .ve-mark-boot .ve-mark-identity,
-  .ve-mark-boot .ve-mark-check,
-  .ve-mark-boot .mark-check,
+  .ve-mark-boot .ve-mark-letters,
+  .ve-mark-boot .letter-v,
+  .ve-mark-boot .letter-e,
   .ve-mark-boot .ve-mark-glow {
     animation: none !important;
     opacity: 1 !important;

@@ -27,7 +27,7 @@ const BRAND_MARK_AGENT: CatalogAgent = {
   name: "Brand Mark Judge",
   lane: "brand",
   code: "BM",
-  tagline: "Craft bar for the VouchEdge icon — shield + check, no sportsbook cues.",
+  tagline: "Craft bar for the VouchEdge icon — shield + VE monogram, no sportsbook cues.",
   specialty: "Brand / store icon QA",
   color: "cyan",
   builtin: true,

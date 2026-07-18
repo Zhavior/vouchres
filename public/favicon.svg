@@ -1,12 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
-  data-mark-core="check"
-  data-optical-margin="120"
+  data-mark-core="ve"
+  data-optical-letter-height="380"
+  data-optical-gap="28"
+  data-optical-margin="96"
+  data-optical-max-x="730"
+  data-letter-style="starwars-outline"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 markCore=check optical:margin=120 noGimmick=1
-    Trust shield + verification check (vouch). No VE letters in icon.
+    craft:level=2 markCore=ve optical:letterHeight=380 optical:gap=28 optical:margin=96 optical:maxX=730
+    letterStyle=starwars-outline noGimmick=1
+    Trust shield + cinematic VE monogram lockup (VouchEdge).
   -->
   <defs>
     <linearGradient id="ve-plate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
@@ -19,13 +24,13 @@
       <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <linearGradient id="ve-shield-fill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.10"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.08"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.02"/>
     </linearGradient>
-    <linearGradient id="ve-check" x1="320" y1="360" x2="720" y2="700" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F8FEFF"/>
-      <stop offset="45%" stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#2DD4BF"/>
+    <linearGradient id="ve-letter" x1="260" y1="300" x2="760" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#A5F3FC"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
     </linearGradient>
     <radialGradient id="ve-glow" cx="50%" cy="42%" r="46%">
       <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.16"/>
@@ -53,16 +58,26 @@
     stroke-linejoin="round"
   />
 
-  <!-- Verification check (vouch) — centered in shield body -->
-  <g class="ve-mark-check ve-mark-identity ve-mark-optical" aria-label="Verified">
+  <!-- VE monogram — cinematic outline, inside shield safe zone -->
+  <g
+    class="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
+    aria-label="VE"
+    fill="none"
+    stroke="url(#ve-letter)"
+    stroke-width="52"
+    stroke-linejoin="miter"
+    stroke-linecap="square"
+    stroke-miterlimit="2"
+  >
+    <!-- V -->
+    <path class="letter-v" d="M300 330 L456 710 L612 330" />
+    <!-- E — extended horizontals -->
     <path
-      class="mark-check"
-      d="M340 500 L460 640 L700 360"
-      fill="none"
-      stroke="url(#ve-check)"
-      stroke-width="72"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      class="letter-e"
+      d="M548 330 V710
+         M548 330 H730
+         M548 520 H700
+         M548 710 H730"
     />
   </g>
 </svg>
