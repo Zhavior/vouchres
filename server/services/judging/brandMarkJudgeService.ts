@@ -176,6 +176,18 @@ export function judgeBrandLetters(svg: string): SubJudgeResult {
     flags.push("Insufficient shield margin (<72) — crowded lockup");
   }
 
+  const maxX = metaInt(svg, "optical-max-x") ?? metaInt(svg, "maxX");
+  if (maxX != null && maxX <= 720) {
+    score += 6;
+    notes.push(`Letter max-x ${maxX} — inside shield safe zone`);
+  } else if (maxX != null) {
+    score -= 14;
+    flags.push(`Letter max-x ${maxX} spills past shield safe zone (≤720)`);
+  } else {
+    score -= 6;
+    flags.push("Missing optical max-x — cannot prove letters stay inside shield");
+  }
+
   // Gimmick tips / arrow facets — low craft
   if (has(svg, /letter-e-edge|ve-mark-facet/i)) {
     score -= 18;
