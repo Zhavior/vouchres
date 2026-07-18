@@ -127,16 +127,9 @@ function buildValidatedPlayerIndex(
     }
   }
 
-  const generatedAt =
-    typeof (board as any).updatedAt === "string"
-      ? (board as any).updatedAt
-      : typeof (board as any).generatedAt === "string"
-        ? (board as any).generatedAt
-        : null;
-
   localValidatedPlayerIndex.set(key, {
     expiresAt,
-    generatedAt,
+    generatedAt: board.generatedAt ?? null,
     candidates,
   });
 
@@ -373,10 +366,7 @@ function scheduleProfileResearchPrewarm(
       try {
         await getMaterializedHrResearch({
           candidate: candidate.candidate,
-          generatedAt:
-            typeof board.generatedAt === "string"
-              ? board.generatedAt
-              : null,
+          generatedAt: board.generatedAt ?? null,
         });
 
         return true;

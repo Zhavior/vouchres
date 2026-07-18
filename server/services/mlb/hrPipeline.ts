@@ -740,6 +740,7 @@ export function getHrBoardCacheStats() {
 export async function buildValidatedHrBoard(date = todayISO()): Promise<{
   date: string;
   gameCount: number;
+  generatedAt: string;
   candidates: ScoredHrCandidate[];
   projectedCandidates: ScoredHrCandidate[];
   pool: TodayPlayerPool;
@@ -755,6 +756,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
       return {
         date,
         gameCount: 0,
+        generatedAt: new Date().toISOString(),
         candidates: [],
         projectedCandidates: [],
         pool: {
