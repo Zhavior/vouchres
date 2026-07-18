@@ -59,4 +59,45 @@ describe("deep-scan backend hardening", () => {
       'requireTierOrQuota("gold", 2, "parlay_lab_saves", 50)',
     );
   });
+
+  it("owner subscriber channels require targetId === userId", () => {
+    const src = readFileSync("server/routes/subscriberRoutes.ts", "utf8");
+    expect(src).toContain('kind === "owner"');
+    expect(src).toContain("owner_channel_forbidden");
+    expect(src).toContain("targetId !== userId");
+  });
+
+  it("feed-linked profile parlays require visibility=public", () => {
+    const src = readFileSync("server/routes/subscriberRoutes.ts", "utf8");
+    expect(src).toContain("refusing unfiltered feed-linked parlays");
+    expect(src).toMatch(/postedPicks[\s\S]*visibility", "public"/);
+  });
+
+  it("feed share always forces pick visibility public", () => {
+    const posts = readFileSync("server/routes/postRoutes.ts", "utf8");
+    expect(posts).toContain("Always force public visibility after a feed share");
+    expect(posts).toContain("setPickVisibilityPublic(pick_id, req.user!.id)");
+  });
+
+  it("deletion schedule does not toggle is_banned", () => {
+    const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
+    expect(privacy).not.toContain("is_banned: true");
+    expect(privacy).not.toContain("is_banned: false");
+    const auth = readFileSync("server/middleware/auth.ts", "utf8");
+    expect(auth).toContain("authAccessError");
+    expect(auth).toContain("pendingDeletionAuthError");
+  });
+
+  it("production deletion fails closed when Stripe cancel is incomplete", () => {
+    const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
+    expect(privacy).toContain("isProductionRuntime");
+    expect(privacy).toContain("stripe_cancel_incomplete");
+    expect(privacy).toContain("deletion_scheduled_at: null");
+  });
+
+  it("checkout session creation is serialized per profile", () => {
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(stripe).toContain("runWithDistributedLock");
+    expect(stripe).toContain("`checkout:${opts.profileId}`");
+  });
 });

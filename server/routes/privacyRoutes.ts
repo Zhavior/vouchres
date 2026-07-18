@@ -15,6 +15,7 @@ import type { RequestWithContext } from "../middleware/requestContext";
 import { validate } from "../middleware/validation";
 import { PrivacyDeleteAccountSchema } from "../validators/mutationSchemas";
 import { runWithDistributedLock } from "../lib/distributedLock";
+import { isProductionRuntime } from "../lib/runtime";
 
 /**
  * Privacy routes — GDPR / CCPA / CPRA compliance endpoints.
@@ -91,7 +92,6 @@ privacyRoutes.post(
     .from("profiles")
     .update({
       deletion_scheduled_at: deletionDate.toISOString(),
-      is_banned: true,
     })
     .eq("id", req.user!.id);
 
@@ -115,6 +115,7 @@ privacyRoutes.post(
   await bumpAuthUserEpoch(req.user!.id);
 
   // Stop billing immediately when deletion is scheduled (do not wait 30 days).
+  // Production: fail closed — roll back the schedule if Stripe cancel is incomplete.
   try {
     const { cancelSubscriptionsForProfile } = await import("../services/billing/stripeService");
     const cancelResult = await cancelSubscriptionsForProfile(req.user!.id);
@@ -126,7 +127,22 @@ privacyRoutes.post(
       canceled: cancelResult.canceled,
       warnings: cancelResult.warnings,
     });
+    if (cancelResult.warnings.length > 0 && isProductionRuntime()) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ deletion_scheduled_at: null })
+        .eq("id", req.user!.id);
+      await bumpAuthUserEpoch(req.user!.id);
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Could not cancel billing. Account deletion was not scheduled. Please try again.",
+        details: { error: "stripe_cancel_incomplete", warnings: cancelResult.warnings },
+        expose: true,
+      });
+    }
   } catch (err) {
+    if (isAppError(err)) throw err;
     structuredLog({
       level: "error",
       event: "privacy_stripe_cancel_failed",
@@ -134,6 +150,20 @@ privacyRoutes.post(
       userId: req.user!.id,
       message: err instanceof Error ? err.message : String(err),
     });
+    if (isProductionRuntime()) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ deletion_scheduled_at: null })
+        .eq("id", req.user!.id);
+      await bumpAuthUserEpoch(req.user!.id);
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Could not cancel billing. Account deletion was not scheduled. Please try again.",
+        details: { error: "stripe_cancel_failed" },
+        expose: true,
+      });
+    }
   }
 
   structuredLog({
@@ -167,7 +197,6 @@ privacyRoutes.post("/cancel-deletion", requireAuthAllowPendingDeletion, asyncHan
     .from("profiles")
     .update({
       deletion_scheduled_at: null,
-      is_banned: false,
     })
     .eq("id", req.user!.id);
 

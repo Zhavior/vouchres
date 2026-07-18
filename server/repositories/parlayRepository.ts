@@ -239,7 +239,14 @@ export async function lockPickForFeedShare(input: {
     .maybeSingle();
 
   if (existingError) throw existingError;
-  return existing ?? null;
+  if (!existing) return null;
+
+  // Already locked: still ensure feed-shared picks are public.
+  if ((existing as { visibility?: string }).visibility !== "public") {
+    await setPickVisibilityPublic(input.pickId, input.userId);
+    (existing as { visibility?: string }).visibility = "public";
+  }
+  return existing;
 }
 
 export async function updatePickProofHash(pickId: string, proofHash: string): Promise<void> {

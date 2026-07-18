@@ -200,16 +200,31 @@ type RequireAuthOptions = {
   allowPendingDeletion?: boolean;
 };
 
-function bannedAuthError(profile: NonNullable<AuthedRequest["user"]>["profile"]) {
-  if (profile.deletion_scheduled_at) {
-    return new AppError({
-      status: 403,
-      code: "forbidden",
-      message: "Your account is scheduled for deletion. Visit Settings to cancel.",
-      details: { deletion_scheduled_at: profile.deletion_scheduled_at },
-    });
-  }
+function pendingDeletionAuthError(profile: NonNullable<AuthedRequest["user"]>["profile"]) {
+  return new AppError({
+    status: 403,
+    code: "forbidden",
+    message: "Your account is scheduled for deletion. Visit Settings to cancel.",
+    details: { deletion_scheduled_at: profile.deletion_scheduled_at },
+  });
+}
+
+function bannedAuthError() {
   return new AppError({ status: 403, code: "forbidden", message: "Account is banned." });
+}
+
+/** Deletion schedule and staff bans are independent gates. */
+function authAccessError(
+  profile: NonNullable<AuthedRequest["user"]>["profile"],
+  options: RequireAuthOptions,
+): AppError | null {
+  if (profile.deletion_scheduled_at && !options.allowPendingDeletion) {
+    return pendingDeletionAuthError(profile);
+  }
+  if (profile.is_banned) {
+    return bannedAuthError();
+  }
+  return null;
 }
 
 function createRequireAuth(options: RequireAuthOptions = {}) {
@@ -229,12 +244,8 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
       const cacheKey = authTokenCacheKey(token);
       const cached = await readAuthSessionCache(cacheKey);
       if (cached) {
-        if (cached.profile.is_banned) {
-          const pendingDeletion = Boolean(cached.profile.deletion_scheduled_at);
-          if (!(options.allowPendingDeletion && pendingDeletion)) {
-            return next(bannedAuthError(cached.profile));
-          }
-        }
+        const blocked = authAccessError(cached.profile, options);
+        if (blocked) return next(blocked);
         req.user = cached;
         return next();
       }
@@ -294,12 +305,8 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
         return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
       }
 
-      if (profile.is_banned) {
-        const pendingDeletion = Boolean(profile.deletion_scheduled_at);
-        if (!(options.allowPendingDeletion && pendingDeletion)) {
-          return next(bannedAuthError(profile));
-        }
-      }
+      const blocked = authAccessError(profile, options);
+      if (blocked) return next(blocked);
 
       req.user = {
         id: data.user.id,
@@ -348,7 +355,9 @@ export async function optionalAuth(
     const cacheKey = authTokenCacheKey(token);
     const cached = await readAuthSessionCache(cacheKey);
     if (cached) {
-      if (!cached.profile.is_banned) req.user = cached;
+      if (!cached.profile.is_banned && !cached.profile.deletion_scheduled_at) {
+        req.user = cached;
+      }
       return next();
     }
 
@@ -366,7 +375,7 @@ export async function optionalAuth(
       .eq("id", data.user.id)
       .single();
 
-    if (profile && !profile.is_banned) {
+    if (profile && !profile.is_banned && !profile.deletion_scheduled_at) {
       req.user = { id: data.user.id, email: data.user.email, profile };
       await writeAuthSessionCache(cacheKey, req.user);
     }

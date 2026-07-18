@@ -226,7 +226,10 @@ postRoutes.post(
         postId: String(data.id),
       }).catch((err) => {
         console.warn("[posts] parlay lock failed", (err as Error)?.message);
-        return setPickVisibilityPublic(pick_id, req.user!.id);
+      });
+      // Always force public visibility after a feed share (including already-locked picks).
+      await setPickVisibilityPublic(pick_id, req.user!.id).catch((err) => {
+        console.warn("[posts] visibility public failed", (err as Error)?.message);
       });
     }
 

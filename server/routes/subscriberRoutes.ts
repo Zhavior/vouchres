@@ -175,17 +175,26 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
         .select(PUBLIC_PICK_COLUMNS)
         .in("id", pickIds)
         .eq("leg_type", "parlay")
+        .eq("visibility", "public")
         .is("user_hidden_at", null);
 
       if (postedError) {
-        throw new AppError({
-          status: 500,
-          code: "internal_server_error",
-          message: "Failed to load posted parlays.",
-          cause: postedError,
-        });
+        if (postedError.code === "42703" || postedError.code === "PGRST204") {
+          console.warn(
+            "[subscriber] picks.visibility unavailable — refusing unfiltered feed-linked parlays",
+          );
+          rows = [];
+        } else {
+          throw new AppError({
+            status: 500,
+            code: "internal_server_error",
+            message: "Failed to load posted parlays.",
+            cause: postedError,
+          });
+        }
+      } else {
+        rows = postedPicks ?? [];
       }
-      rows = postedPicks ?? [];
     }
   }
 
@@ -246,6 +255,18 @@ subscriberRoutes.get("/subscriber/me/posts", requireAuth, asyncHandler(async (re
 type SubscriberChannelKind = "owner" | "capper" | "profile";
 
 async function assertCanAccessSubscriberChannel(userId: string, kind: SubscriberChannelKind, targetId: string) {
+  if (kind === "owner") {
+    // Owner channels are private to the account holder — never open to followers.
+    if (targetId !== userId) {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "Owner channel access is restricted to the account holder.",
+        details: { error: "owner_channel_forbidden" },
+      });
+    }
+    return;
+  }
   if (kind === "capper") {
     await assertFollowsCapper(userId, targetId);
     return;
