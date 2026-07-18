@@ -33,12 +33,12 @@ export async function joinWaitlist(email: string): Promise<BetaSignup> {
   // If the row already existed, upsert returns null data on conflict-ignore.
   // Fetch explicitly in that case.
   if (error || !data) {
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from("beta_signups")
       .select("*")
       .eq("email", email)
       .single();
-    if (!existing) throw error ?? new Error("beta_signup_failed");
+    if (!existing) throw existingError ?? error ?? new Error("beta_signup_failed");
     return existing as BetaSignup;
   }
 
@@ -62,13 +62,14 @@ export async function issueInvite(email: string): Promise<BetaSignup | null> {
     .eq("email", email)
     .eq("state", "waitlist")
     .select("*")
-    .single();
+    .maybeSingle();
 
+  // No matching waitlist row is a soft miss (null), not a transport failure.
   if (error) {
     console.error("[beta] issueInvite failed", error);
-    return null;
+    throw error;
   }
-  return data as BetaSignup;
+  return (data as BetaSignup | null) ?? null;
 }
 
 /**
@@ -76,10 +77,11 @@ export async function issueInvite(email: string): Promise<BetaSignup | null> {
  */
 export async function markActivated(email: string, userId: string): Promise<void> {
   const supabaseAdmin = await getSupabaseAdmin();
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("beta_signups")
     .update({ state: "active", activated_user_id: userId })
     .eq("email", email);
+  if (error) throw error;
 }
 
 /**
@@ -87,12 +89,13 @@ export async function markActivated(email: string, userId: string): Promise<void
  */
 export async function validateInviteCode(code: string): Promise<boolean> {
   const supabaseAdmin = await getSupabaseAdmin();
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("beta_signups")
     .select("state, invite_code")
     .eq("invite_code", code)
     .eq("state", "invited")
-    .single();
+    .maybeSingle();
+  if (error) throw error;
   return !!data;
 }
 

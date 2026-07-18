@@ -262,6 +262,13 @@ export async function optionalAuth(
   // feed/leaderboard/profile routes that use it.
   try {
     const token = header.slice(7);
+    const cacheKey = authTokenCacheKey(token);
+    const cached = await readAuthSessionCache(cacheKey);
+    if (cached) {
+      if (!cached.profile.is_banned) req.user = cached;
+      return next();
+    }
+
     const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin.auth.getUser(token);
     if (error || !data.user) return next();
@@ -278,6 +285,7 @@ export async function optionalAuth(
 
     if (profile && !profile.is_banned) {
       req.user = { id: data.user.id, email: data.user.email, profile };
+      await writeAuthSessionCache(cacheKey, req.user);
     }
   } catch (err) {
     // Degrade to anonymous — do not surface the error to the client.

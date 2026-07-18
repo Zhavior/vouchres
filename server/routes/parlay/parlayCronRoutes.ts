@@ -182,11 +182,16 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
 
   const dryRun = boolQuery(req.query.dryRun, true);
   const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
-  const result = await repairLegacyParlayIdentityForSync({
-    dryRun,
-    limit,
-    externalProvider: "repair_identity",
-  });
+  const result = await runWithDistributedLock(
+    "parlays:repair-identity",
+    () =>
+      repairLegacyParlayIdentityForSync({
+        dryRun,
+        limit,
+        externalProvider: "repair_identity",
+      }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     ...result,
@@ -199,11 +204,16 @@ parlayCronRoutes.get("/cron/parlays/repair-identity", asyncHandler(async (req: R
 
   const dryRun = boolQuery(req.query.dryRun, true);
   const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
-  const result = await repairLegacyParlayIdentityForSync({
-    dryRun,
-    limit,
-    externalProvider: "repair_identity",
-  });
+  const result = await runWithDistributedLock(
+    "parlays:repair-identity",
+    () =>
+      repairLegacyParlayIdentityForSync({
+        dryRun,
+        limit,
+        externalProvider: "repair_identity",
+      }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     ...result,
@@ -368,7 +378,11 @@ parlayCronRoutes.get("/cron/parlays/anchor-ots", asyncHandler(async (req: Reques
   assertCronAuthorized(req);
 
   const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
-  const result = await backfillOpenTimestampsForLockedPicks({ limit });
+  const result = await runWithDistributedLock(
+    "parlays:anchor-ots",
+    () => backfillOpenTimestampsForLockedPicks({ limit }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     mode: "anchor_ots",

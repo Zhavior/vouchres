@@ -40,7 +40,10 @@ vi.mock("../server/services/mlb/weatherService", () => ({
 }));
 
 vi.mock("../server/services/mlb/statcastClient", () => ({
-  getStatcastBatterMap: vi.fn(async () => ({ 592450: { pa: 200 } })),
+  getStatcastBatterMapResult: vi.fn(async () => ({
+    map: { 592450: { pa: 200 } },
+    feedStatus: "ok",
+  })),
   STATCAST_MIN_PA: 50,
 }));
 

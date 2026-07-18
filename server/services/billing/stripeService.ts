@@ -392,15 +392,13 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   }
 
   if (!profileId) {
-    console.error("[stripe] subscription has no profile_id metadata", subscription.id);
-    return;
+    throw new Error(`[stripe] subscription ${subscription.id} has no profile_id metadata`);
   }
 
   const priceId = subscription.items.data[0]?.price?.id;
   const tier = priceId ? tierFromPriceId(priceId) : null;
   if (!tier) {
-    console.error("[stripe] could not resolve tier for price", priceId);
-    return;
+    throw new Error(`[stripe] could not resolve tier for price ${priceId ?? "unknown"} on subscription ${subscription.id}`);
   }
 
   const status = subscription.status; // 'active' | 'trialing' | 'past_due' | 'canceled' | etc.

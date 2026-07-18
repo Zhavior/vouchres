@@ -55,8 +55,8 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
     .eq("status", "pending");
 
   if (legsError) {
-    console.warn("[liveHrParlay] pending legs query failed", legsError.message);
-    return [];
+    console.error("[liveHrParlay] pending legs query failed", legsError.message);
+    throw legsError;
   }
 
   const candidateLegs = (pendingLegs ?? []).filter((leg: any) =>

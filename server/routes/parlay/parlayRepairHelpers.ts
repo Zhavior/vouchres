@@ -251,8 +251,8 @@ export function isLegacyManualEventId(value: unknown): boolean {
 export async function countParlayIntegrityRows(query: any): Promise<number> {
   const { count, error } = await query;
   if (error) {
-    console.warn("[parlays/integrity] count failed", error.code, error.message);
-    return -1;
+    console.error("[parlays/integrity] count failed", error.code, error.message);
+    throw error;
   }
   return typeof count === "number" ? count : 0;
 }
