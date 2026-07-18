@@ -242,7 +242,7 @@ export default function ParlayOsLayer({
             <button
               type="button"
               onClick={toggleSheet}
-              className="fixed bottom-20 right-4 z-[90] flex min-h-12 items-center gap-2.5 rounded-2xl border border-cyan-300/35 bg-[#050b12]/95 px-3.5 py-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 lg:bottom-6 lg:right-6 lg:px-4"
+              className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] right-3 z-[90] flex min-h-11 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-2xl border border-cyan-300/35 bg-[#050b12]/95 px-3 py-2 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 sm:right-4 lg:bottom-6 lg:right-6 lg:min-h-12 lg:px-4 lg:py-2.5"
               aria-label={`Open ParlayOS dock${legCount ? `, ${legCount} legs` : ""}`}
             >
               <span className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10">

@@ -61,12 +61,9 @@ const BRIEFING_FILTERS: Array<{ id: BriefingFilter; label: string }> = [
   { id: 'activity', label: 'My Activity' },
 ];
 
-type MobileDeskTab = 'slips' | 'updates';
-
 export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Props) {
   const [showFollowing, setShowFollowing] = useState(false);
   const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>('all');
-  const [mobileDeskTab, setMobileDeskTab] = useState<MobileDeskTab>('slips');
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
   const report = dailyReportQuery.data ?? null;
@@ -157,7 +154,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
 
   return (
     <main
-      className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian px-3 pt-[max(1rem,env(safe-area-inset-top))] text-ve-flash sm:px-5 lg:px-6 lg:pt-6 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-8`}
+      className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian px-3 pt-[max(1rem,env(safe-area-inset-top))] text-ve-flash sm:px-5 lg:px-6 lg:pt-6 pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))] md:pb-8`}
     >
       <div className="mx-auto max-w-[1280px] space-y-4 sm:space-y-5">
         <header className="relative min-w-0">
@@ -251,44 +248,18 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
           </div>
         </section>
 
-        {/* Mobile/Apple: tabbed desk so slips + updates fit one viewport; desktop keeps side-by-side. */}
-        <section className="min-w-0 space-y-3" aria-label="My slips and updates">
-          <div className={`${Z8_PANEL} ve-premium-panel grid grid-cols-2 gap-1 rounded-xl p-1 lg:hidden`} role="tablist" aria-label="Slips and updates">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mobileDeskTab === 'slips'}
-              onClick={() => setMobileDeskTab('slips')}
-              className={`z8-control inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-black uppercase tracking-[0.04em] transition ${
-                mobileDeskTab === 'slips'
-                  ? 'bg-vouch-emerald/15 text-vouch-emerald'
-                  : 'text-white/45 hover:text-white/75'
-              }`}
-            >
-              My Slips
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mobileDeskTab === 'updates'}
-              onClick={() => setMobileDeskTab('updates')}
-              className={`z8-control inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-black uppercase tracking-[0.04em] transition ${
-                mobileDeskTab === 'updates'
-                  ? 'bg-vouch-cyan/15 text-vouch-cyan'
-                  : 'text-white/45 hover:text-white/75'
-              }`}
-            >
-              Updates &amp; Impact
-            </button>
+        {/* Mobile/Apple: one compact desk so slips + updates both stay on-screen; desktop side-by-side. */}
+        <section className="min-w-0" aria-label="My slips and updates">
+          <div className={`${Z8_PANEL} ve-premium-panel overflow-hidden rounded-xl lg:hidden`}>
+            <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} compact nested />
+            <div className="border-t border-white/[0.08]">
+              <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} compact nested />
+            </div>
           </div>
 
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-            <div className={mobileDeskTab === 'slips' ? 'block' : 'hidden lg:block'}>
-              <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} />
-            </div>
-            <div className={mobileDeskTab === 'updates' ? 'block' : 'hidden lg:block'}>
-              <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} />
-            </div>
+          <div className="hidden min-w-0 gap-4 lg:grid lg:grid-cols-[0.92fr_1.08fr]">
+            <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} />
+            <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} />
           </div>
         </section>
 
@@ -317,16 +288,30 @@ function SummaryMetric({ icon: Icon, value, label, tone }: { icon: React.Compone
   );
 }
 
-function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectionChange: (section: string) => void }) {
+function MySlipsPanel({
+  slip,
+  onSectionChange,
+  compact = false,
+  nested = false,
+}: {
+  slip: Parlay | null;
+  onSectionChange: (section: string) => void;
+  compact?: boolean;
+  nested?: boolean;
+}) {
+  const shell = nested
+    ? 'min-h-0 p-3'
+    : `${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`;
+
   return (
-    <section className={`${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`} aria-labelledby="my-slips-heading">
+    <section className={shell} aria-labelledby="my-slips-heading">
       <div className="flex items-center justify-between gap-2 sm:gap-3">
         <h2 id="my-slips-heading" className="min-w-0 truncate text-sm font-black uppercase tracking-[0.03em] text-white sm:text-base">My Slips</h2>
         <button type="button" onClick={() => onSectionChange('live_parlays')} className="z8-control min-h-9 shrink-0 text-xs font-bold text-vouch-cyan">View all</button>
       </div>
       {slip ? (
-        <div className="mt-3 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.02]">
-          <div className="flex flex-col gap-2 border-b border-white/[0.07] px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4">
+        <div className={`mt-2 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.02] ${compact ? '' : 'sm:mt-3'}`}>
+          <div className="flex flex-col gap-1.5 border-b border-white/[0.07] px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4 sm:py-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-black text-white">{slip.title || 'Active Slip'}</p>
               <p className="mt-0.5 text-[11px] text-white/40">{slip.legs.length} legs · {slip.mode === 'REAL' ? 'Tracked' : 'Practice'}</p>
@@ -334,8 +319,8 @@ function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectio
             <span className="shrink-0 font-mono text-sm font-black text-vouch-emerald">{slip.totalOdds || 'Odds TBD'}</span>
           </div>
           <div className="divide-y divide-white/[0.07]">
-            {slip.legs.slice(0, 3).map((leg) => (
-              <div key={leg.id} className="flex items-start justify-between gap-3 px-3 py-2.5 sm:items-center sm:gap-4 sm:px-4 sm:py-3">
+            {slip.legs.slice(0, compact ? 2 : 3).map((leg) => (
+              <div key={leg.id} className="flex items-start justify-between gap-3 px-3 py-2 sm:items-center sm:gap-4 sm:px-4 sm:py-3">
                 <div className="min-w-0">
                   <p className="line-clamp-2 text-xs font-bold text-white/80 sm:truncate">{leg.selection}</p>
                   <p className="mt-0.5 truncate text-[10px] text-white/40">{leg.market} · {leg.game}</p>
@@ -351,11 +336,19 @@ function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectio
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/[0.015] px-4 py-6 text-center sm:min-h-[205px] sm:px-6">
-          <ClipboardList className="h-8 w-8 text-white/20 sm:h-9 sm:w-9" />
-          <p className="mt-3 text-sm font-bold text-white/70">No active slip yet</p>
-          <p className="mt-1 max-w-xs text-xs leading-5 text-white/40">Add a researched signal when you are ready. VouchEdge will keep the saved context visible here.</p>
-          <button type="button" onClick={() => onSectionChange('hr_board')} className="z8-control mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-xs font-black text-vouch-emerald sm:min-h-9">
+        <div className={`mt-2 flex flex-col items-stretch gap-2 rounded-lg border border-dashed border-white/10 bg-white/[0.015] px-3 py-3 sm:mt-3 sm:min-h-[205px] sm:items-center sm:justify-center sm:px-6 sm:py-6 sm:text-center ${compact ? '' : ''}`}>
+          <div className="flex items-start gap-3 sm:flex-col sm:items-center">
+            <ClipboardList className="mt-0.5 h-6 w-6 shrink-0 text-white/20 sm:mt-0 sm:h-9 sm:w-9" />
+            <div className="min-w-0 flex-1 sm:flex-none">
+              <p className="text-sm font-bold text-white/70">No active slip yet</p>
+              <p className="mt-0.5 text-[11px] leading-4 text-white/40 sm:mt-1 sm:max-w-xs sm:text-xs sm:leading-5">
+                {compact
+                  ? 'Add a researched signal when you are ready.'
+                  : 'Add a researched signal when you are ready. VouchEdge will keep the saved context visible here.'}
+              </p>
+            </div>
+          </div>
+          <button type="button" onClick={() => onSectionChange('hr_board')} className="z8-control inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-xs font-black text-vouch-emerald sm:mt-4 sm:min-h-9 sm:w-auto">
             <Sparkles className="h-4 w-4" /> Explore signals
           </button>
         </div>
@@ -364,19 +357,36 @@ function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectio
   );
 }
 
-function ImpactPanel({ attention, report, onSectionChange }: { attention: TodayAttentionItem[]; report: ReturnType<typeof useDailyReport>['data'] | null; onSectionChange: (section: string) => void }) {
+function ImpactPanel({
+  attention,
+  report,
+  onSectionChange,
+  compact = false,
+  nested = false,
+}: {
+  attention: TodayAttentionItem[];
+  report: ReturnType<typeof useDailyReport>['data'] | null;
+  onSectionChange: (section: string) => void;
+  compact?: boolean;
+  nested?: boolean;
+}) {
   const pitcher = report?.vulnerablePitchers?.[0] ?? null;
+  const shell = nested
+    ? 'min-h-0 p-3'
+    : `${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`;
+  const rows = attention.slice(0, compact ? 2 : 3);
+
   return (
-    <section className={`${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`} aria-labelledby="impact-heading">
+    <section className={shell} aria-labelledby="impact-heading">
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <h2 id="impact-heading" className="min-w-0 text-sm font-black uppercase tracking-[0.03em] text-white sm:text-base">Updates &amp; Impact</h2>
         <span className={`${Z8_LABEL} shrink-0 text-white/32`}>Verified inputs only</span>
       </div>
-      <div className="mt-3 divide-y divide-white/[0.07] border-y border-white/[0.07]">
-        {attention.slice(0, 3).map((item) => <ImpactRow key={item.id} item={item} onSectionChange={onSectionChange} />)}
+      <div className={`mt-2 divide-y divide-white/[0.07] border-y border-white/[0.07] ${compact ? '' : 'sm:mt-3'}`}>
+        {rows.map((item) => <ImpactRow key={item.id} item={item} onSectionChange={onSectionChange} compact={compact} />)}
         {pitcher ? (
-          <button type="button" onClick={() => onSectionChange('team_matchup_lab')} className="group flex w-full min-w-0 items-start gap-2.5 py-3 text-left sm:items-center sm:gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/8 text-amber-300"><ShieldAlert className="h-4 w-4" /></span>
+          <button type="button" onClick={() => onSectionChange('team_matchup_lab')} className="group flex w-full min-w-0 items-start gap-2.5 py-2.5 text-left sm:items-center sm:gap-3 sm:py-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/8 text-amber-300 sm:h-9 sm:w-9"><ShieldAlert className="h-4 w-4" /></span>
             <span className="min-w-0 flex-1">
               <span className="block line-clamp-2 text-xs font-bold text-white/80 sm:truncate">{pitcher.pitcherName} matchup flagged</span>
               <span className="mt-0.5 block line-clamp-2 text-[10px] text-white/42 sm:truncate">{pitcher.attackReasons[0] || `${pitcher.riskTier.toLowerCase()} vulnerability context available`}</span>
@@ -385,16 +395,26 @@ function ImpactPanel({ attention, report, onSectionChange }: { attention: TodayA
           </button>
         ) : null}
       </div>
-      <p className="mt-3 text-[10px] leading-4 text-white/35">No fabricated headlines or timestamps. This panel reflects only the current VouchEdge slate and saved activity.</p>
+      {!compact ? (
+        <p className="mt-3 text-[10px] leading-4 text-white/35">No fabricated headlines or timestamps. This panel reflects only the current VouchEdge slate and saved activity.</p>
+      ) : null}
     </section>
   );
 }
 
-function ImpactRow({ item, onSectionChange }: { item: TodayAttentionItem; onSectionChange: (section: string) => void }) {
+function ImpactRow({
+  item,
+  onSectionChange,
+  compact = false,
+}: {
+  item: TodayAttentionItem;
+  onSectionChange: (section: string) => void;
+  compact?: boolean;
+}) {
   const Icon = item.kind === 'data' ? CheckCircle2 : item.kind === 'slate' ? CalendarDays : Activity;
   const body = (
     <>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/20 bg-vouch-cyan/8 text-vouch-cyan">
+      <span className={`flex shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/20 bg-vouch-cyan/8 text-vouch-cyan ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}>
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
@@ -404,9 +424,10 @@ function ImpactRow({ item, onSectionChange }: { item: TodayAttentionItem; onSect
       {item.section ? <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-white/25 transition group-hover:translate-x-0.5 group-hover:text-vouch-cyan sm:mt-0" /> : null}
     </>
   );
-  if (!item.section) return <div className="flex min-w-0 items-start gap-2.5 py-3 sm:items-center sm:gap-3">{body}</div>;
+  const rowClass = `flex min-w-0 items-start gap-2.5 text-left sm:items-center sm:gap-3 ${compact ? 'py-2.5' : 'py-3'}`;
+  if (!item.section) return <div className={rowClass}>{body}</div>;
   return (
-    <button type="button" onClick={() => onSectionChange(item.section!)} className="group flex w-full min-w-0 items-start gap-2.5 py-3 text-left sm:items-center sm:gap-3">
+    <button type="button" onClick={() => onSectionChange(item.section!)} className={`group w-full ${rowClass}`}>
       {body}
     </button>
   );
