@@ -59,7 +59,11 @@ export function resetMlbRequestCount(): void {
   mlbRequestCount = 0;
 }
 
-/** Schedule for a date (YYYY-MM-DD), normalized. Falls back to [] on failure. */
+/**
+ * Schedule for a date (YYYY-MM-DD), normalized.
+ * Throws on upstream failure — never caches an empty slate that looks like
+ * "no games today" when the MLB Stats API was actually down.
+ */
 async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> {
   const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
   try {
@@ -69,7 +73,7 @@ async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> 
     return games.map(normalizeGame);
   } catch (err) {
     console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);
-    return [];
+    throw err;
   }
 }
 

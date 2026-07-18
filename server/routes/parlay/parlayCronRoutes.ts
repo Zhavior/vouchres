@@ -255,21 +255,8 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     };
 
     if (!dryRun) {
-      const { error: pickUpdateError } = await supabaseAdmin
-        .from("picks")
-        .update(pickPatch)
-        .eq("id", pick.id);
-
-      if (pickUpdateError) {
-        skipped.push({
-          pick_id: pick.id,
-          event_id: pick.event_id,
-          reason: "pick_update_failed",
-          message: pickUpdateError.message,
-        });
-        continue;
-      }
-
+      // Legs first, then pick — never leave a void pick with pending legs.
+      // If the pick update fails after legs void, revert legs to pending.
       const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
         .from("pick_legs")
         .update(legPatch)
@@ -292,6 +279,27 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
           pick_id: pick.id,
           event_id: pick.event_id,
           reason: "no_pending_child_legs_updated",
+        });
+        continue;
+      }
+
+      const { error: pickUpdateError } = await supabaseAdmin
+        .from("picks")
+        .update(pickPatch)
+        .eq("id", pick.id)
+        .eq("status", "pending");
+
+      if (pickUpdateError) {
+        const legIds = updatedLegs.map((leg) => leg.id);
+        await supabaseAdmin
+          .from("pick_legs")
+          .update({ status: "pending", graded_at: null })
+          .in("id", legIds);
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "pick_update_failed_reverted_legs",
+          message: pickUpdateError.message,
         });
         continue;
       }

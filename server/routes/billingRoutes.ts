@@ -308,14 +308,16 @@ billingRoutes.post(
         case "customer.subscription.deleted": {
           const sub = event.data.object as Stripe.Subscription;
           await syncSubscription(sub);
-          await supabaseAdmin
+          const canceled = await supabaseAdmin
             .from("subscriptions")
             .update({ status: "canceled" })
             .eq("stripe_subscription_id", sub.id);
-          await supabaseAdmin
+          if (canceled.error) throw canceled.error;
+          const revoked = await supabaseAdmin
             .from("profiles")
             .update({ tier: "free", stripe_subscription_id: null })
             .eq("stripe_subscription_id", sub.id);
+          if (revoked.error) throw revoked.error;
           break;
         }
         case "invoice.payment_failed": {
@@ -369,14 +371,16 @@ billingRoutes.post(
               event: "stripe.access_revoked",
               message: `${event.type} for customer ${customerId} — revoking paid access (tier -> free).`,
             });
-            await supabaseAdmin
+            const canceled = await supabaseAdmin
               .from("subscriptions")
               .update({ status: "canceled" })
               .eq("stripe_customer_id", customerId);
-            await supabaseAdmin
+            if (canceled.error) throw canceled.error;
+            const revoked = await supabaseAdmin
               .from("profiles")
               .update({ tier: "free", stripe_subscription_id: null })
               .eq("stripe_customer_id", customerId);
+            if (revoked.error) throw revoked.error;
           } else {
             structuredLog({
               level: "info",

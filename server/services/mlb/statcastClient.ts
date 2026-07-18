@@ -32,6 +32,23 @@ export interface StatcastBatterQuality {
 const MIN_PA = 25;
 const statcastCache = new TTLCache<unknown>(12 * 60 * 60_000, "mlb:statcast");
 
+export type StatcastFeedStatus = "ok" | "unavailable";
+
+export type StatcastBatterMapResult = {
+  map: Record<number, StatcastBatterQuality>;
+  feedStatus: StatcastFeedStatus;
+  errorMessage?: string;
+};
+
+function isBatterMapResult(value: unknown): value is StatcastBatterMapResult {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "map" in value &&
+      "feedStatus" in value,
+  );
+}
+
 /** Minimal CSV line parser that respects double-quoted fields ("Last, First"). */
 function parseCsvLine(line: string): string[] {
   const out: string[] = [];
@@ -96,74 +113,96 @@ function seasonYear(): number {
   return new Date().getUTCFullYear();
 }
 
-/** Season Statcast quality for all qualified batters (>= MIN_PA), keyed by MLB player id.
- *  Success is cached 12h (daily data); a failed fetch caches an empty map for
- *  30 minutes so we retry soon without hammering Savant. */
-export async function getStatcastBatterMap(year = seasonYear()): Promise<Record<number, StatcastBatterQuality>> {
-  const cacheKey = `batters:${year}`;
+/**
+ * Season Statcast quality for all qualified batters (>= MIN_PA), keyed by MLB player id.
+ * Success is cached 12h; failure caches an empty map tagged `unavailable` for 30 minutes
+ * so callers can distinguish feed-down from a truly empty leaderboard.
+ */
+export async function getStatcastBatterMapResult(
+  year = seasonYear(),
+): Promise<StatcastBatterMapResult> {
+  const cacheKey = `batters:v2:${year}`;
   const cached = statcastCache.get(cacheKey);
-  if (cached !== undefined) return cached as Record<number, StatcastBatterQuality>;
+  if (cached !== undefined) {
+    if (isBatterMapResult(cached)) return cached;
+    // Legacy plain-map cache entries are treated as ok.
+    return { map: cached as Record<number, StatcastBatterQuality>, feedStatus: "ok" };
+  }
 
   try {
     const [expected, statcast] = await Promise.all([
-        fetchCsv(
-          `https://baseballsavant.mlb.com/leaderboard/expected_statistics?type=batter&year=${year}&position=&team=&min=${MIN_PA}&csv=true`
-        ),
-        fetchCsv(
-          `https://baseballsavant.mlb.com/leaderboard/statcast?type=batter&year=${year}&min=${MIN_PA}&csv=true`
-        ),
-      ]);
+      fetchCsv(
+        `https://baseballsavant.mlb.com/leaderboard/expected_statistics?type=batter&year=${year}&position=&team=&min=${MIN_PA}&csv=true`,
+      ),
+      fetchCsv(
+        `https://baseballsavant.mlb.com/leaderboard/statcast?type=batter&year=${year}&min=${MIN_PA}&csv=true`,
+      ),
+    ]);
 
-      const map: Record<number, StatcastBatterQuality> = {};
+    const map: Record<number, StatcastBatterQuality> = {};
 
-      for (const row of expected) {
-        const playerId = num(row.player_id);
-        if (!playerId) continue;
-        map[playerId] = {
-          playerId,
-          pa: num(row.pa),
-          ba: num(row.ba),
-          xba: num(row.est_ba),
-          slg: num(row.slg),
-          xslg: num(row.est_slg),
-          woba: num(row.woba),
-          xwoba: num(row.est_woba),
-          barrelPct: null,
-          hardHitPct: null,
-          avgExitVelo: null,
-        };
-      }
+    for (const row of expected) {
+      const playerId = num(row.player_id);
+      if (!playerId) continue;
+      map[playerId] = {
+        playerId,
+        pa: num(row.pa),
+        ba: num(row.ba),
+        xba: num(row.est_ba),
+        slg: num(row.slg),
+        xslg: num(row.est_slg),
+        woba: num(row.woba),
+        xwoba: num(row.est_woba),
+        barrelPct: null,
+        hardHitPct: null,
+        avgExitVelo: null,
+      };
+    }
 
-      for (const row of statcast) {
-        const playerId = num(row.player_id);
-        if (!playerId) continue;
-        const existing = map[playerId] ?? {
-          playerId,
-          pa: null,
-          ba: null,
-          xba: null,
-          slg: null,
-          xslg: null,
-          woba: null,
-          xwoba: null,
-          barrelPct: null,
-          hardHitPct: null,
-          avgExitVelo: null,
-        };
-        existing.barrelPct = num(row.brl_percent);
-        existing.hardHitPct = num(row.ev95percent);
-        existing.avgExitVelo = num(row.avg_hit_speed);
-        map[playerId] = existing;
-      }
+    for (const row of statcast) {
+      const playerId = num(row.player_id);
+      if (!playerId) continue;
+      const existing = map[playerId] ?? {
+        playerId,
+        pa: null,
+        ba: null,
+        xba: null,
+        slg: null,
+        xslg: null,
+        woba: null,
+        xwoba: null,
+        barrelPct: null,
+        hardHitPct: null,
+        avgExitVelo: null,
+      };
+      existing.barrelPct = num(row.brl_percent);
+      existing.hardHitPct = num(row.ev95percent);
+      existing.avgExitVelo = num(row.avg_hit_speed);
+      map[playerId] = existing;
+    }
 
-      console.log(`[statcastClient] loaded ${Object.keys(map).length} batters for ${year}`);
-      statcastCache.set(cacheKey, map); // success → default 12h TTL
-      return map;
+    console.log(`[statcastClient] loaded ${Object.keys(map).length} batters for ${year}`);
+    const result: StatcastBatterMapResult = { map, feedStatus: "ok" };
+    statcastCache.set(cacheKey, result);
+    return result;
   } catch (err) {
-    console.warn("[statcastClient] leaderboard fetch failed:", (err as Error).message);
-    statcastCache.set(cacheKey, {}, 30 * 60_000); // failure → empty map, retry in 30 min
-    return {};
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.warn("[statcastClient] leaderboard fetch failed:", errorMessage);
+    const result: StatcastBatterMapResult = {
+      map: {},
+      feedStatus: "unavailable",
+      errorMessage,
+    };
+    statcastCache.set(cacheKey, result, 30 * 60_000);
+    return result;
   }
+}
+
+export async function getStatcastBatterMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastBatterQuality>> {
+  const result = await getStatcastBatterMapResult(year);
+  return result.map;
 }
 
 export const STATCAST_MIN_PA = MIN_PA;

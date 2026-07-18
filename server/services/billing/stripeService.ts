@@ -276,12 +276,18 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
   if (lookupError) throw lookupError;
 
   if (data?.status === "failed") {
+    // Atomic reclaim: only one concurrent delivery may flip failed → processing.
     const retry = await supabaseAdmin
       .from("stripe_webhook_events")
       .update({ status: "processing", type: event.type, last_error: null, received_at: now })
       .eq("id", event.id)
-      .eq("status", "failed");
+      .eq("status", "failed")
+      .select("id");
     if (retry.error) throw retry.error;
+    if (!retry.data?.length) {
+      console.log(`[stripe] webhook reclaim lost race event=${event.id}`);
+      return { shouldProcess: false, duplicate: true, status: "processing" };
+    }
     return { shouldProcess: true, duplicate: true, status: "processing" };
   }
 
@@ -300,7 +306,9 @@ export async function finishStripeWebhookEvent(eventId: string, status: "process
     })
     .eq("id", eventId);
   if (error) {
-    console.warn(`[stripe] webhook event finalization failed event=${eventId}`, error.message);
+    // Surface finalize failures so Stripe retries instead of treating a silent
+    // console.warn + HTTP 200 as durable success.
+    throw error;
   }
 }
 
