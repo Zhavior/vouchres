@@ -15,7 +15,7 @@ describe('Today decision reel layout stability', () => {
   });
 
   it('keeps every card and visual stage at a stable size', () => {
-    expect(source).toContain("height: 468, width: 'min(304px, calc(100vw - 40px))'");
+    expect(source).toContain("height: 468, width: 'min(304px, calc(100vw - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)))'");
     expect(source).toContain('style={{ height: 180 }}');
     expect(source).toContain('max-w-[320px] shrink-0 snap-start');
   });

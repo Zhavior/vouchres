@@ -45,4 +45,13 @@ describe('Today decision-first layout', () => {
     expect(source).toContain('aria-label="VouchEdge"');
     expect(source).toContain('text-vouch-emerald sm:hidden');
   });
+
+  it('fits My Slips and Updates on mobile with safe-area padding and a tabbed desk', () => {
+    expect(source).toContain('pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]');
+    expect(source).toContain('overflow-x-hidden');
+    expect(source).toContain('role="tablist"');
+    expect(source).toContain("mobileDeskTab === 'slips'");
+    expect(source).toContain("mobileDeskTab === 'updates'");
+    expect(source).toContain('hidden lg:block');
+  });
 });

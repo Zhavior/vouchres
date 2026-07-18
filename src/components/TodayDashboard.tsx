@@ -61,9 +61,12 @@ const BRIEFING_FILTERS: Array<{ id: BriefingFilter; label: string }> = [
   { id: 'activity', label: 'My Activity' },
 ];
 
+type MobileDeskTab = 'slips' | 'updates';
+
 export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Props) {
   const [showFollowing, setShowFollowing] = useState(false);
   const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>('all');
+  const [mobileDeskTab, setMobileDeskTab] = useState<MobileDeskTab>('slips');
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
   const report = dailyReportQuery.data ?? null;
@@ -153,11 +156,13 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
   }
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-h-0 overflow-hidden bg-ve-obsidian px-3 pb-8 pt-4 text-ve-flash sm:px-5 lg:px-6 lg:pt-6`}>
-      <div className="mx-auto max-w-[1280px] space-y-5">
-        <header className="relative">
-          <div className="mb-4 flex items-start justify-between gap-4">
-            <div className="flex min-w-0 items-start gap-3">
+    <main
+      className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian px-3 pt-[max(1rem,env(safe-area-inset-top))] text-ve-flash sm:px-5 lg:px-6 lg:pt-6 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-8`}
+    >
+      <div className="mx-auto max-w-[1280px] space-y-4 sm:space-y-5">
+        <header className="relative min-w-0">
+          <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4 sm:gap-4">
+            <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
               <span
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-emerald/35 bg-vouch-emerald/10 font-mono text-[10px] font-black tracking-[-0.08em] text-vouch-emerald sm:hidden"
                 aria-label="VouchEdge"
@@ -165,19 +170,19 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
                 VE
               </span>
               <CalendarDays className="mt-1 hidden h-7 w-7 text-white/85 sm:block" />
-              <div>
-                <h1 className="text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">Today</h1>
-                <p className="mt-1 flex items-center gap-2 text-sm text-white/55 sm:text-base">
-                  <CalendarDays className="h-4 w-4 sm:hidden" />
-                  {formatReportDate(report?.date)}
+              <div className="min-w-0">
+                <h1 className="text-[1.75rem] font-black tracking-[-0.04em] text-white sm:text-4xl">Today</h1>
+                <p className="mt-1 flex min-w-0 items-center gap-2 text-sm text-white/55 sm:text-base">
+                  <CalendarDays className="h-4 w-4 shrink-0 sm:hidden" />
+                  <span className="truncate">{formatReportDate(report?.date)}</span>
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2 text-[11px] text-white/48">
-                <span>{formatUpdatedAt(report?.generatedAt)}</span>
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin text-vouch-cyan' : 'text-vouch-cyan'}`} />
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <div className="flex max-w-[9.5rem] items-center gap-1.5 text-[10px] text-white/48 sm:max-w-none sm:text-[11px]">
+                <span className="truncate text-right">{formatUpdatedAt(report?.generatedAt)}</span>
+                <RefreshCw className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin text-vouch-cyan' : 'text-vouch-cyan'}`} />
               </div>
               <button
                 type="button"
@@ -189,16 +194,17 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
             </div>
           </div>
 
-          <section className={`${Z8_PANEL} ve-premium-panel grid gap-0 overflow-hidden rounded-xl border-white/[0.09] sm:grid-cols-[1fr_auto]`} aria-label="Today slate status">
-            <div className="grid grid-cols-2 divide-x divide-y divide-white/[0.07] sm:grid-cols-4 sm:divide-y-0">
+          <section className={`${Z8_PANEL} ve-premium-panel grid min-w-0 gap-0 overflow-hidden rounded-xl border-white/[0.09] sm:grid-cols-[minmax(0,1fr)_auto]`} aria-label="Today slate status">
+            <div className="grid min-w-0 grid-cols-2 divide-x divide-y divide-white/[0.07] sm:grid-cols-4 sm:divide-y-0">
               <SummaryMetric icon={Gamepad2} value={report?.gameCount ?? '—'} label="Games Today" tone="text-vouch-emerald" />
               <SummaryMetric icon={Radio} value={decision.liveGames} label="Live Now" tone="text-rose-400" />
               <SummaryMetric icon={CheckCircle2} value={decision.finalGames} label="Final" tone="text-white/60" />
               <SummaryMetric icon={Activity} value={hrBoard ? visibleHrRows.length : '—'} label="HR Signals" tone="text-vouch-cyan" />
             </div>
-            <div className="flex min-w-[210px] items-center justify-between gap-3 border-t border-white/[0.07] px-4 py-3 sm:border-l sm:border-t-0">
-              <span className={`inline-flex items-center gap-2 text-[11px] font-bold ${statusTone}`}>
-                <CircleDot className="h-3.5 w-3.5" /> {statusLabel}
+            <div className="flex min-w-0 items-center justify-between gap-2 border-t border-white/[0.07] px-3 py-3 sm:min-w-[210px] sm:gap-3 sm:border-l sm:border-t-0 sm:px-4">
+              <span className={`inline-flex min-w-0 items-center gap-2 text-[10px] font-bold sm:text-[11px] ${statusTone}`}>
+                <CircleDot className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{statusLabel}</span>
               </span>
               <button
                 type="button"
@@ -211,8 +217,8 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
           </section>
         </header>
 
-        <section aria-labelledby="today-briefing-heading">
-          <div className="mb-3 flex min-h-10 flex-wrap items-center gap-x-4 gap-y-2 pr-24 sm:pr-20">
+        <section aria-labelledby="today-briefing-heading" className="min-w-0">
+          <div className="mb-3 flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4 sm:pr-20">
             <h2 id="today-briefing-heading" className="flex items-center gap-2 text-base font-black uppercase tracking-[0.02em] text-white sm:text-lg">
               <span className="h-6 w-0.5 bg-vouch-emerald" /> Today&apos;s Briefing
             </h2>
@@ -226,7 +232,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
             onSectionChange={onSectionChange}
             onAddFeaturedPlayer={addFeaturedPlayerToSlip}
           />
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Briefing filters">
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]" aria-label="Briefing filters">
             {BRIEFING_FILTERS.map((filter) => (
               <button
                 key={filter.id}
@@ -245,14 +251,50 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-          <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} />
-          <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} />
+        {/* Mobile/Apple: tabbed desk so slips + updates fit one viewport; desktop keeps side-by-side. */}
+        <section className="min-w-0 space-y-3" aria-label="My slips and updates">
+          <div className={`${Z8_PANEL} ve-premium-panel grid grid-cols-2 gap-1 rounded-xl p-1 lg:hidden`} role="tablist" aria-label="Slips and updates">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileDeskTab === 'slips'}
+              onClick={() => setMobileDeskTab('slips')}
+              className={`z8-control inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-black uppercase tracking-[0.04em] transition ${
+                mobileDeskTab === 'slips'
+                  ? 'bg-vouch-emerald/15 text-vouch-emerald'
+                  : 'text-white/45 hover:text-white/75'
+              }`}
+            >
+              My Slips
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileDeskTab === 'updates'}
+              onClick={() => setMobileDeskTab('updates')}
+              className={`z8-control inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-black uppercase tracking-[0.04em] transition ${
+                mobileDeskTab === 'updates'
+                  ? 'bg-vouch-cyan/15 text-vouch-cyan'
+                  : 'text-white/45 hover:text-white/75'
+              }`}
+            >
+              Updates &amp; Impact
+            </button>
+          </div>
+
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[0.92fr_1.08fr]">
+            <div className={mobileDeskTab === 'slips' ? 'block' : 'hidden lg:block'}>
+              <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} />
+            </div>
+            <div className={mobileDeskTab === 'updates' ? 'block' : 'hidden lg:block'}>
+              <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} />
+            </div>
+          </div>
         </section>
 
-        <section className={`${Z8_PANEL} ve-premium-panel rounded-xl p-4 sm:p-5`} aria-labelledby="quick-access-heading">
+        <section className={`${Z8_PANEL} ve-premium-panel min-w-0 rounded-xl p-3 sm:p-5`} aria-labelledby="quick-access-heading">
           <h2 id="quick-access-heading" className="text-base font-black uppercase tracking-[0.03em] text-white">Quick Access</h2>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-3 xl:grid-cols-6">
             {QUICK_ROUTES.map((route) => <QuickRouteButton key={route.section} route={route} onSectionChange={onSectionChange} />)}
           </div>
         </section>
@@ -265,44 +307,57 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
 
 function SummaryMetric({ icon: Icon, value, label, tone }: { icon: React.ComponentType<{ className?: string }>; value: React.ReactNode; label: string; tone: string }) {
   return (
-    <div className="flex min-h-[72px] items-center gap-3 px-4 py-3">
-      <Icon className={`h-5 w-5 shrink-0 ${tone}`} />
-      <div><strong className="block font-mono text-xl font-black text-white">{value}</strong><span className="text-[10px] font-medium text-white/45">{label}</span></div>
+    <div className="flex min-h-[64px] min-w-0 items-center gap-2 px-3 py-2.5 sm:min-h-[72px] sm:gap-3 sm:px-4 sm:py-3">
+      <Icon className={`h-4 w-4 shrink-0 sm:h-5 sm:w-5 ${tone}`} />
+      <div className="min-w-0">
+        <strong className="block truncate font-mono text-lg font-black text-white sm:text-xl">{value}</strong>
+        <span className="block truncate text-[9px] font-medium text-white/45 sm:text-[10px]">{label}</span>
+      </div>
     </div>
   );
 }
 
 function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectionChange: (section: string) => void }) {
   return (
-    <section className={`${Z8_PANEL} ve-premium-panel min-h-[290px] rounded-xl p-4 sm:p-5`} aria-labelledby="my-slips-heading">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="my-slips-heading" className="text-base font-black uppercase tracking-[0.03em] text-white">My Slips</h2>
-        <button type="button" onClick={() => onSectionChange('live_parlays')} className="z8-control min-h-9 text-xs font-bold text-vouch-cyan">View all</button>
+    <section className={`${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`} aria-labelledby="my-slips-heading">
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
+        <h2 id="my-slips-heading" className="min-w-0 truncate text-sm font-black uppercase tracking-[0.03em] text-white sm:text-base">My Slips</h2>
+        <button type="button" onClick={() => onSectionChange('live_parlays')} className="z8-control min-h-9 shrink-0 text-xs font-bold text-vouch-cyan">View all</button>
       </div>
       {slip ? (
         <div className="mt-3 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.02]">
-          <div className="flex items-start justify-between gap-3 border-b border-white/[0.07] px-4 py-3">
-            <div><p className="text-sm font-black text-white">{slip.title || 'Active Slip'}</p><p className="mt-0.5 text-[11px] text-white/40">{slip.legs.length} legs · {slip.mode === 'REAL' ? 'Tracked' : 'Practice'}</p></div>
-            <span className="font-mono text-sm font-black text-vouch-emerald">{slip.totalOdds || 'Odds TBD'}</span>
+          <div className="flex flex-col gap-2 border-b border-white/[0.07] px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black text-white">{slip.title || 'Active Slip'}</p>
+              <p className="mt-0.5 text-[11px] text-white/40">{slip.legs.length} legs · {slip.mode === 'REAL' ? 'Tracked' : 'Practice'}</p>
+            </div>
+            <span className="shrink-0 font-mono text-sm font-black text-vouch-emerald">{slip.totalOdds || 'Odds TBD'}</span>
           </div>
           <div className="divide-y divide-white/[0.07]">
             {slip.legs.slice(0, 3).map((leg) => (
-              <div key={leg.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                <div className="min-w-0"><p className="truncate text-xs font-bold text-white/80">{leg.selection}</p><p className="mt-0.5 truncate text-[10px] text-white/40">{leg.market} · {leg.game}</p></div>
+              <div key={leg.id} className="flex items-start justify-between gap-3 px-3 py-2.5 sm:items-center sm:gap-4 sm:px-4 sm:py-3">
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-xs font-bold text-white/80 sm:truncate">{leg.selection}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-white/40">{leg.market} · {leg.game}</p>
+                </div>
                 <span className="shrink-0 font-mono text-xs font-bold text-vouch-cyan">{formatOdds(leg.odds)}</span>
               </div>
             ))}
           </div>
-          <div className="flex justify-end border-t border-white/[0.07] px-3 py-2">
-            <button type="button" onClick={() => onSectionChange('live_parlays')} className="z8-control inline-flex min-h-9 items-center gap-2 rounded-lg bg-vouch-emerald px-4 text-xs font-black text-black">View Slip <ArrowRight className="h-4 w-4" /></button>
+          <div className="flex justify-stretch border-t border-white/[0.07] px-3 py-2 sm:justify-end">
+            <button type="button" onClick={() => onSectionChange('live_parlays')} className="z8-control inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-vouch-emerald px-4 text-xs font-black text-black sm:min-h-9 sm:w-auto">
+              View Slip <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex min-h-[205px] flex-col items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/[0.015] px-6 text-center">
-          <ClipboardList className="h-9 w-9 text-white/20" />
+        <div className="mt-3 flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-white/10 bg-white/[0.015] px-4 py-6 text-center sm:min-h-[205px] sm:px-6">
+          <ClipboardList className="h-8 w-8 text-white/20 sm:h-9 sm:w-9" />
           <p className="mt-3 text-sm font-bold text-white/70">No active slip yet</p>
           <p className="mt-1 max-w-xs text-xs leading-5 text-white/40">Add a researched signal when you are ready. VouchEdge will keep the saved context visible here.</p>
-          <button type="button" onClick={() => onSectionChange('hr_board')} className="z8-control mt-4 inline-flex min-h-9 items-center gap-2 rounded-lg border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-xs font-black text-vouch-emerald"><Sparkles className="h-4 w-4" /> Explore signals</button>
+          <button type="button" onClick={() => onSectionChange('hr_board')} className="z8-control mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-xs font-black text-vouch-emerald sm:min-h-9">
+            <Sparkles className="h-4 w-4" /> Explore signals
+          </button>
         </div>
       )}
     </section>
@@ -312,15 +367,21 @@ function MySlipsPanel({ slip, onSectionChange }: { slip: Parlay | null; onSectio
 function ImpactPanel({ attention, report, onSectionChange }: { attention: TodayAttentionItem[]; report: ReturnType<typeof useDailyReport>['data'] | null; onSectionChange: (section: string) => void }) {
   const pitcher = report?.vulnerablePitchers?.[0] ?? null;
   return (
-    <section className={`${Z8_PANEL} ve-premium-panel min-h-[290px] rounded-xl p-4 sm:p-5`} aria-labelledby="impact-heading">
-      <div className="flex items-center justify-between gap-3"><h2 id="impact-heading" className="text-base font-black uppercase tracking-[0.03em] text-white">Updates &amp; Impact</h2><span className={`${Z8_LABEL} text-white/32`}>Verified inputs only</span></div>
+    <section className={`${Z8_PANEL} ve-premium-panel min-h-0 rounded-xl p-3 sm:min-h-[290px] sm:p-5`} aria-labelledby="impact-heading">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+        <h2 id="impact-heading" className="min-w-0 text-sm font-black uppercase tracking-[0.03em] text-white sm:text-base">Updates &amp; Impact</h2>
+        <span className={`${Z8_LABEL} shrink-0 text-white/32`}>Verified inputs only</span>
+      </div>
       <div className="mt-3 divide-y divide-white/[0.07] border-y border-white/[0.07]">
         {attention.slice(0, 3).map((item) => <ImpactRow key={item.id} item={item} onSectionChange={onSectionChange} />)}
         {pitcher ? (
-          <button type="button" onClick={() => onSectionChange('team_matchup_lab')} className="group flex w-full items-center gap-3 py-3 text-left">
+          <button type="button" onClick={() => onSectionChange('team_matchup_lab')} className="group flex w-full min-w-0 items-start gap-2.5 py-3 text-left sm:items-center sm:gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/8 text-amber-300"><ShieldAlert className="h-4 w-4" /></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-white/80">{pitcher.pitcherName} matchup flagged</span><span className="mt-0.5 block truncate text-[10px] text-white/42">{pitcher.attackReasons[0] || `${pitcher.riskTier.toLowerCase()} vulnerability context available`}</span></span>
-            <span className="rounded border border-amber-300/20 bg-amber-300/8 px-2 py-1 text-[9px] font-black uppercase text-amber-300">{pitcher.riskTier}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block line-clamp-2 text-xs font-bold text-white/80 sm:truncate">{pitcher.pitcherName} matchup flagged</span>
+              <span className="mt-0.5 block line-clamp-2 text-[10px] text-white/42 sm:truncate">{pitcher.attackReasons[0] || `${pitcher.riskTier.toLowerCase()} vulnerability context available`}</span>
+            </span>
+            <span className="shrink-0 rounded border border-amber-300/20 bg-amber-300/8 px-2 py-1 text-[9px] font-black uppercase text-amber-300">{pitcher.riskTier}</span>
           </button>
         ) : null}
       </div>
@@ -331,18 +392,33 @@ function ImpactPanel({ attention, report, onSectionChange }: { attention: TodayA
 
 function ImpactRow({ item, onSectionChange }: { item: TodayAttentionItem; onSectionChange: (section: string) => void }) {
   const Icon = item.kind === 'data' ? CheckCircle2 : item.kind === 'slate' ? CalendarDays : Activity;
-  const body = <><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/20 bg-vouch-cyan/8 text-vouch-cyan"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-white/80">{item.value}</span><span className="mt-0.5 block truncate text-[10px] text-white/42">{item.detail}</span></span>{item.section ? <ArrowRight className="h-4 w-4 text-white/25 transition group-hover:translate-x-0.5 group-hover:text-vouch-cyan" /> : null}</>;
-  if (!item.section) return <div className="flex items-center gap-3 py-3">{body}</div>;
-  return <button type="button" onClick={() => onSectionChange(item.section!)} className="group flex w-full items-center gap-3 py-3 text-left">{body}</button>;
+  const body = (
+    <>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/20 bg-vouch-cyan/8 text-vouch-cyan">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block line-clamp-2 text-xs font-bold text-white/80 sm:truncate">{item.value}</span>
+        <span className="mt-0.5 block line-clamp-2 text-[10px] text-white/42 sm:truncate">{item.detail}</span>
+      </span>
+      {item.section ? <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-white/25 transition group-hover:translate-x-0.5 group-hover:text-vouch-cyan sm:mt-0" /> : null}
+    </>
+  );
+  if (!item.section) return <div className="flex min-w-0 items-start gap-2.5 py-3 sm:items-center sm:gap-3">{body}</div>;
+  return (
+    <button type="button" onClick={() => onSectionChange(item.section!)} className="group flex w-full min-w-0 items-start gap-2.5 py-3 text-left sm:items-center sm:gap-3">
+      {body}
+    </button>
+  );
 }
 
 function QuickRouteButton({ route, onSectionChange }: { route: QuickRoute; onSectionChange: (section: string) => void }) {
   const Icon = route.icon;
   return (
-    <button type="button" onClick={() => onSectionChange(route.section)} className="z8-control group flex min-h-[116px] flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.035] to-transparent px-3 py-4 text-center transition hover:-translate-y-0.5 hover:border-vouch-emerald/35 hover:bg-vouch-emerald/[0.04]">
-      <Icon className="h-7 w-7 text-vouch-emerald transition group-hover:scale-105" />
-      <span className="mt-3 text-xs font-black text-white/80">{route.label}</span>
-      <span className="mt-1 text-[10px] leading-4 text-white/38">{route.detail}</span>
+    <button type="button" onClick={() => onSectionChange(route.section)} className="z8-control group flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.035] to-transparent px-2.5 py-3 text-center transition hover:-translate-y-0.5 hover:border-vouch-emerald/35 hover:bg-vouch-emerald/[0.04] sm:min-h-[116px] sm:px-3 sm:py-4">
+      <Icon className="h-6 w-6 text-vouch-emerald transition group-hover:scale-105 sm:h-7 sm:w-7" />
+      <span className="mt-2 text-[11px] font-black text-white/80 sm:mt-3 sm:text-xs">{route.label}</span>
+      <span className="mt-1 line-clamp-2 text-[9px] leading-4 text-white/38 sm:text-[10px]">{route.detail}</span>
     </button>
   );
 }

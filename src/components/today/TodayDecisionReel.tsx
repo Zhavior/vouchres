@@ -82,7 +82,7 @@ export default function TodayDecisionReel({
     <div className="relative" aria-label="Today's briefing">
       <div
         ref={railRef}
-        className="ve-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
+        className="ve-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch]"
       >
         {filteredSlides.map((slide, index) => (
           <BriefingCard
@@ -141,7 +141,7 @@ function BriefingCard({
 
   return (
     <article
-      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
+      style={{ height: 468, width: 'min(304px, calc(100vw - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)))' }}
       className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#07111b] shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
         priority ? accent.border : 'border-white/[0.09]'
       }`}
@@ -189,7 +189,7 @@ function PlayerSignalCard({
 
   return (
     <article
-      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
+      style={{ height: 468, width: 'min(304px, calc(100vw - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)))' }}
       className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,148,0.13),transparent_34%)]" />
@@ -265,7 +265,7 @@ function PlayerSignalCard({
 function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionChange: (section: string) => void }) {
   const visibleLegs = slip.legs.slice(0, 2);
   return (
-    <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
+    <article style={{ height: 468, width: 'min(304px, calc(100vw - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
       <div style={{ height: 180 }} className="relative flex shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-vouch-cyan/15 via-[#08182a] to-transparent">
         <p className={`absolute left-4 top-4 ${Z8_LABEL} text-vouch-cyan`}>My slip update</p>
         <ClipboardCheck className="h-20 w-20 text-vouch-cyan/80 drop-shadow-[0_0_28px_rgba(0,240,255,0.24)]" />
