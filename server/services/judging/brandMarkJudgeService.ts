@@ -148,27 +148,40 @@ export function judgeBrandLetters(svg: string): SubJudgeResult {
     flags.push("No optical lockup — letters may be cramped or uneven");
   }
 
+  const behindShield = has(svg, /starwars-outline|ve-mark-starwars/i);
   const height = metaInt(svg, "optical-letter-height") ?? metaInt(svg, "letterHeight");
   const gap = metaInt(svg, "optical-gap") ?? metaInt(svg, "gap");
   const margin = metaInt(svg, "optical-margin") ?? metaInt(svg, "margin");
 
-  if (height != null && height >= 240 && height <= 320) {
+  // Behind-shield Star Wars lockup is intentionally oversized so the rim crosses letters.
+  const heightOk = height != null && (behindShield ? height >= 240 && height <= 380 : height >= 240 && height <= 320);
+  if (heightOk) {
     score += 10;
-    notes.push(`Letter height ${height} in premium band (240–320)`);
+    notes.push(`Letter height ${height} in ${behindShield ? "behind-shield" : "premium"} band`);
   } else {
     score -= 8;
-    flags.push("Letter height missing or outside 240–320 optical band");
+    flags.push("Letter height missing or outside optical band");
   }
 
-  if (gap != null && gap >= 36 && gap <= 64) {
+  const gapOk = gap != null && (behindShield ? gap >= 20 && gap <= 64 : gap >= 36 && gap <= 64);
+  if (gapOk) {
     score += 10;
     notes.push(`Inter-letter gap ${gap} — readable tracking`);
   } else {
     score -= 10;
-    flags.push("Gap missing or outside 36–64 — cramped or drifting");
+    flags.push("Gap missing or outside optical band");
   }
 
-  if (margin != null && margin >= 72) {
+  if (behindShield) {
+    // Low margin is required so the shield rim visibly crosses the letters.
+    if (margin != null && margin <= 64) {
+      score += 10;
+      notes.push(`Margin ${margin} — rim crosses letters (behind-shield depth)`);
+    } else {
+      score -= 8;
+      flags.push("Behind-shield VE needs low margin so the frame crosses letters");
+    }
+  } else if (margin != null && margin >= 72) {
     score += 8;
     notes.push(`Shield margin ${margin} — letters not kissing the rim`);
   } else {
@@ -177,7 +190,6 @@ export function judgeBrandLetters(svg: string): SubJudgeResult {
   }
 
   const maxX = metaInt(svg, "optical-max-x") ?? metaInt(svg, "maxX");
-  const behindShield = has(svg, /starwars-outline|ve-mark-starwars/i);
   // Oversized letters that sit behind the frame may extend under the rim (maxX ≤ 780).
   const maxXCap = behindShield ? 780 : 700;
   if (maxX != null && maxX <= maxXCap) {
