@@ -26,8 +26,28 @@ describe("profile avatar upload contract", () => {
 
     expect(upload).toContain("crypto.randomUUID()");
     expect(upload).toContain("upsert: false");
-    expect(upload).toContain("MAX_AVATAR_BYTES");
+    expect(upload).toContain("MAX_IMAGE_BYTES");
     expect(domain).toContain("avatar_url = updatedProfile.avatarUrl || null");
     expect(domain).toContain("/api/auth/profile");
+  });
+
+  it("uploads header images under an account-scoped header folder and persists header_url", () => {
+    const upload = readFileSync(resolve(ROOT, "src/lib/profileAvatarUpload.ts"), "utf8");
+    const domain = readFileSync(resolve(ROOT, "src/app/useAppDomain.ts"), "utf8");
+    const profilePage = readFileSync(resolve(ROOT, "src/components/ProfilePageZ8.tsx"), "utf8");
+    const authRoutes = readFileSync(resolve(ROOT, "server/routes/authRoutes.ts"), "utf8");
+    const migration = readFileSync(
+      resolve(ROOT, "supabase/migrations/20260718183000_profile_header_url.sql"),
+      "utf8",
+    );
+
+    expect(upload).toContain("uploadProfileHeader");
+    expect(upload).toContain("${userId}/header/");
+    expect(domain).toContain("header_url = updatedProfile.headerUrl || null");
+    expect(profilePage).toContain("uploadProfileHeader");
+    expect(profilePage).toContain("upload-profile-header-btn");
+    expect(authRoutes).toContain("header_url");
+    expect(authRoutes).toContain("header_customization_requires_gold");
+    expect(migration).toContain("header_url");
   });
 });

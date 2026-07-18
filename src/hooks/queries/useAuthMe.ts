@@ -16,6 +16,7 @@ export interface AuthMeResponse extends AuthMeProfile {
   handle?: string;
   display_name?: string;
   avatar_url?: string | null;
+  header_url?: string | null;
   bio?: string;
   trust_score?: number;
   total_picks?: number;

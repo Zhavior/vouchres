@@ -228,6 +228,8 @@ export interface CreatorProofProfile {
   /** Canonical public @handle — lowercase, unique. Mirrors username when set. */
   handle: string;
   avatarUrl: string;
+  /** Optional cover/banner image URL for the profile header (Gold+). */
+  headerUrl?: string;
   bio: string;
   verified: boolean;
   winRate: number; // Real tracked win rate

@@ -16,6 +16,7 @@ export interface UserProfile {
   handle: string;
   display_name: string;
   avatar_url: string | null;
+  header_url: string | null;
   bio: string;
   tier: SubscriptionTier;
   trust_score: number;
