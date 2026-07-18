@@ -1,4 +1,4 @@
-import { MLBPlayer, GameLog } from '../types';
+import { MLBPlayer } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 
 // Cache in-memory for active players roster to avoid duplicate fetches.
@@ -104,57 +104,56 @@ export function toMLBPlayerStub(p: any): MLBPlayer {
           injuryStatus: 'Cleared / Fully Active',
           injurySeverity: 'NONE' as const,
           injuryNotes: 'Active roster standards checked via real-time MLB API.',
-          batterScore: 78, // default starting score
-          seasonStats: { avg: '.250', hr: '0', rbi: '0', ops: '.700', obp: '.310', slg: '.390' },
+          batterScore: 50,
+          // Never invent season HR/AVG lines before enrichPlayerStats loads live splits.
+          seasonStats: { avg: '—', hr: '—', rbi: '—', ops: '—', obp: '—', slg: '—' },
           bats,
           throws,
-          height: p.height || "6'1\"",
-          weight: p.weight ? `${p.weight} lbs` : "195 lbs",
-          birthdate: p.birthDate ? formatDate(p.birthDate) : "October 10, 1996",
+          height: p.height || '—',
+          weight: p.weight ? `${p.weight} lbs` : '—',
+          birthdate: p.birthDate ? formatDate(p.birthDate) : '—',
           advanced: {
-            barrelPercent: 6.5,
-            launchAngle: 12.0,
-            exitVelocity: 89.5,
-            hardHitPercent: 37.0,
-            chasePercent: 24.5,
-            woba: 0.315,
-            xwoba: 0.320,
-            sweetSpotPercent: 35.0
+            barrelPercent: 0,
+            launchAngle: 0,
+            exitVelocity: 0,
+            hardHitPercent: 0,
+            chasePercent: 0,
+            woba: 0,
+            xwoba: 0,
+            sweetSpotPercent: 0,
           },
           battedBall: {
-            gbPercent: 44.0,
-            ldPercent: 21.0,
-            fbPercent: 35.0
+            gbPercent: 0,
+            ldPercent: 0,
+            fbPercent: 0,
           },
           homeRunStats: {
-            hrfbPercent: 10.0,
-            abhr: 25.0,
-            barrelsCount: 15,
+            hrfbPercent: 0,
+            abhr: 0,
+            barrelsCount: 0,
             noDoubtHrs: 0,
-            xHr: 0
+            xHr: 0,
           },
           splits: {
-            vLHP: { avg: '.245', obp: '.305', slg: '.380', ops: '.685' },
-            vRHP: { avg: '.252', obp: '.312', slg: '.395', ops: '.707' },
-            home: { avg: '.258', obp: '.318', slg: '.405', ops: '.723' },
-            away: { avg: '.242', obp: '.302', slg: '.375', ops: '.677' },
-            last10: { avg: '.250', obp: '.310', slg: '.390', ops: '.700' }
+            vLHP: { avg: '—', obp: '—', slg: '—', ops: '—' },
+            vRHP: { avg: '—', obp: '—', slg: '—', ops: '—' },
+            home: { avg: '—', obp: '—', slg: '—', ops: '—' },
+            away: { avg: '—', obp: '—', slg: '—', ops: '—' },
+            last10: { avg: '—', obp: '—', slg: '—', ops: '—' },
           },
           scoutingReport: {
-            powerText: 'Standard scouting reports from live baseball API files.',
-            contactText: 'Standard hand-to-ball coordination profiles.',
-            disciplineText: 'Moderate awareness at the plates with dynamic batting adjustments.',
-            overallScouting: 'A regular MLB combat player. Dynamic details and Statcast profiles are analyzed via real-time MLB statistics calculations.',
-            hotZones: ['Middle-Middle', 'Low-In'],
-            riskFactor: 'LOW' as const
+            powerText: 'Live season stats load when this batter is opened.',
+            contactText: 'Contact metrics unavailable until MLB season stats resolve.',
+            disciplineText: 'Discipline metrics unavailable until MLB season stats resolve.',
+            overallScouting: 'Identity from MLB roster. Season totals refresh from statsapi — not seed data.',
+            hotZones: ['Data unavailable'],
+            riskFactor: 'MEDIUM' as const,
           },
-          gameLogs: [
-            { opponent: 'Opposing Team', date: 'Recent', result: 'W 5-3', ab: 4, h: 1, hr: 0, rbi: 0, r: 1, batterScore: 78 }
-          ],
+          gameLogs: [],
           propositions: [
-            { id: `prop_mlbapi_${p.id}_hits`, market: 'To Record 1+ Hits', odds: 1.45, spec: `${p.fullName} Over 0.5 Hits` },
-            { id: `prop_mlbapi_${p.id}_bases`, market: 'Total Bases Prop', odds: 1.85, spec: `${p.fullName} Over 1.5 Total Bases` }
-          ]
+            { id: `prop_mlbapi_${p.id}_hits`, market: 'To Record 1+ Hits', odds: null, spec: `${p.fullName} Over 0.5 Hits`, truthLabel: 'Hit market · price unknown' },
+            { id: `prop_mlbapi_${p.id}_bases`, market: 'Total Bases Prop', odds: null, spec: `${p.fullName} Over 1.5 Total Bases`, truthLabel: 'Total-base market · price unknown' },
+          ],
         } as MLBPlayer;
 }
 
@@ -165,25 +164,52 @@ function existsInCurated(p: any): boolean {
   );
 }
 
+/** Seed HR/AVG lines are stale — clear until enrichPlayerStats loads live splits. */
+function stripUnverifiedSeasonStats(player: MLBPlayer): MLBPlayer {
+  return {
+    ...player,
+    seasonStats: { avg: '—', hr: '—', rbi: '—', ops: '—', obp: '—', slg: '—' },
+    gameLogs: [],
+  };
+}
+
+function overlayLiveRosterIdentity(player: MLBPlayer, roster: any[]): MLBPlayer {
+  const fromHeadshot = player.headshot?.match(/\/people\/(\d+)\//)?.[1];
+  const api = roster.find(
+    (p) =>
+      (fromHeadshot && String(p.id) === fromHeadshot)
+      || String(p.fullName ?? '').toLowerCase() === player.name.toLowerCase(),
+  );
+  if (!api) return player;
+  return {
+    ...player,
+    team: api.currentTeam?.name || player.team,
+    position: normalizePosition(api.primaryPosition?.abbreviation || player.position),
+    number: api.primaryNumber || player.number,
+    headshot:
+      fromHeadshot || !api.id
+        ? player.headshot
+        : `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${api.id}/headshot/67/current`,
+  };
+}
+
 /**
  * Returns the entire MLB player universe as MLBPlayer stubs:
- * curated (enriched) records first, then every other active player from the live API,
+ * curated identity first (with live team overlay), then every other active player,
  * sorted alphabetically. Each has a real MLB headshot URL.
  */
 export async function getAllMLBPlayerStubs(): Promise<MLBPlayer[]> {
   const roster = await getActiveMLBRoster();
+  const curated = MLB_PLAYER_RECORDS.map((p) =>
+    stripUnverifiedSeasonStats(overlayLiveRosterIdentity(p, roster)),
+  );
   const apiStubs = roster
     .filter((p) => !existsInCurated(p))
     .map(toMLBPlayerStub)
     .sort((a, b) => a.name.localeCompare(b.name));
-  return [...MLB_PLAYER_RECORDS, ...apiStubs];
+  return [...curated, ...apiStubs];
 }
 
-/**
- * Searches the entire MLB list + curated records and returns matching player stubs.
- * With no/short term, returns the full MLB roster (curated first) so the console
- * browses every active player by default.
- */
 export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
   const normTerm = term.trim().toLowerCase();
 
@@ -196,7 +222,7 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
     }
   }
 
-  // Curated records first (always fast + enriched).
+  // Curated identity first, then overlay live team and clear stale seed HR lines.
   const localMatched = MLB_PLAYER_RECORDS.filter(
     (p) =>
       p.name.toLowerCase().includes(normTerm) ||
@@ -206,6 +232,9 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
 
   try {
     const roster = await getActiveMLBRoster();
+    const localWithLiveTeam = localMatched.map((p) =>
+      stripUnverifiedSeasonStats(overlayLiveRosterIdentity(p, roster)),
+    );
     const apiConverted: MLBPlayer[] = roster
       .filter(
         (p) =>
@@ -215,7 +244,7 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
       )
       .map(toMLBPlayerStub);
 
-    const merged = [...localMatched];
+    const merged = [...localWithLiveTeam];
     for (const ap of apiConverted) {
       if (!merged.some((m) => m.name.toLowerCase() === ap.name.toLowerCase())) {
         merged.push(ap);
@@ -232,27 +261,27 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
  * Fetches the real-time season hitting stats for a given player and enriches they fields
  */
 export async function enrichPlayerStats(player: MLBPlayer): Promise<MLBPlayer> {
-  // If the player doesn't start with "mlbapi_", try to fetch stats anyway if we have their name or ID
+  // Resolve a numeric MLB person id from registry ids, mlbapi_ stubs, curated keys, or headshot URL.
   const isApiPlayer = player.id.startsWith('mlbapi_');
   const rawId = isApiPlayer ? player.id.replace('mlbapi_', '') : null;
+  const numericId = /^\d+$/.test(player.id) ? player.id : null;
+  const headshotId = player.headshot?.match(/\/people\/(\d+)\//)?.[1] ?? null;
 
-  // If we don't have a numeric MLB player ID, let's look up our mapping of local players to their real MLB IDs
-  let mlbIdStr = rawId;
+  let mlbIdStr = rawId || numericId || headshotId;
   if (!mlbIdStr) {
-    // Standard lookup for curated players
     const matchMap: Record<string, string> = {
-      'mlb_ohtani': '660271',
-      'mlb_judge': '592450',
-      'mlb_betts': '605141',
-      'mlb_alvarez': '670541',
-      'mlb_acuna': '660670',
-      'mlb_tatis': '665489',
-      'mlb_tucker': '663656',
-      'mlb_devers': '646240',
-      'mlb_machado': '592518',
-      'mlb_soto': '665742'
+      mlb_ohtani: '660271',
+      mlb_judge: '592450',
+      mlb_betts: '605141',
+      mlb_alvarez: '670541',
+      mlb_acuna: '660670',
+      mlb_tatis: '665489',
+      mlb_tucker: '663656',
+      mlb_devers: '646240',
+      mlb_machado: '592518',
+      mlb_soto: '665742',
     };
-    mlbIdStr = matchMap[player.id];
+    mlbIdStr = matchMap[player.id] ?? null;
   }
 
   if (!mlbIdStr) {
@@ -312,28 +341,22 @@ export async function enrichPlayerStats(player: MLBPlayer): Promise<MLBPlayer> {
     const baseScore = Math.round((opsVal * 70) + (avgVal * 70) + (hrVal / 2));
     const batterScore = Math.min(99, Math.max(30, baseScore));
 
-    // Game logs generation using real average
-    const gameLogs: GameLog[] = generateRealisticGameLogs(player.name, avgVal, hrVal, rbi);
+    // Prefer live team from the season split when MLB provides it (trades/stale seed).
+    const liveTeam =
+      typeof activeSplit?.team?.name === 'string' && activeSplit.team.name.trim()
+        ? activeSplit.team.name.trim()
+        : player.team;
 
-    // Dynamic Propositions
-    const baseHitsOdds = 1.35 + (0.350 - avgVal) * 1.5;
-    const finalHitsOdds = Math.min(2.10, Math.max(1.30, parseFloat(baseHitsOdds.toFixed(2))));
-
-    const hrOdds = Math.max(2.40, 6.50 - (hrVal * 0.08));
-    const finalHrOdds = parseFloat(hrOdds.toFixed(2));
-
-    const totalBasesOdds = 1.50 + (0.900 - opsVal) * 0.8;
-    const finalBasesOdds = Math.min(2.30, Math.max(1.40, parseFloat(totalBasesOdds.toFixed(2))));
-
-    const propositions = [
-      { id: `prop_mlb_${mlbIdStr}_hits`, market: 'To Record 1+ Hits', odds: finalHitsOdds, spec: `${player.name} Over 0.5 Hits` },
-      { id: `prop_mlb_${mlbIdStr}_hr`, market: 'To Hit 1+ Home Run', odds: finalHrOdds, spec: `${player.name} Over 0.5 HRs` },
-      { id: `prop_mlb_${mlbIdStr}_bases`, market: 'Total Bases Prop', odds: finalBasesOdds, spec: `${player.name} Over 1.5 Total Bases` }
-    ];
+    // Keep existing props but never invent sportsbook prices from season rates.
+    const propositions = (player.propositions ?? []).map((prop) => ({
+      ...prop,
+      odds: prop.odds ?? null,
+    }));
 
     // Build the fully enriched active player object
     const enrichedPlayer: MLBPlayer = {
       ...player,
+      team: liveTeam,
       batterScore,
       seasonStats: {
         avg,
@@ -353,7 +376,8 @@ export async function enrichPlayerStats(player: MLBPlayer): Promise<MLBPlayer> {
         xwoba,
         sweetSpotPercent
       },
-      gameLogs,
+      // Do not invent game-by-game HR lines — season totals above are the sourced record.
+      gameLogs: [],
       propositions
     };
 
@@ -374,53 +398,6 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
-}
-
-/**
- * Generates highly realistic looking game logs based on average statistics
- */
-function generateRealisticGameLogs(name: string, avgVal: number, hrVal: number, rbiStr: string): GameLog[] {
-  const opponents = ["NY Yankees", "LA Dodgers", "Boston Red Sox", "SF Giants", "Houston Astros", "SD Padres"];
-  const logs: GameLog[] = [];
-  const hrProb = Math.min(0.2, hrVal / 162);
-  const totalRbis = parseInt(rbiStr) || 40;
-  
-  for (let i = 0; i < 5; i++) {
-    const date = `June ${19 - i}`;
-    const opp = opponents[Math.floor(Math.random() * opponents.length)];
-    const win = Math.random() > 0.5 ? "W" : "L";
-    const score1 = Math.floor(Math.random() * 8) + 1;
-    const score2 = Math.floor(Math.random() * 8) + 1;
-    const result = `${win} ${Math.max(score1, score2)}-${Math.min(score1, score2)}`;
-
-    const ab = Math.floor(Math.random() * 2) + 3; // 3 to 4 at bats
-    let h = 0;
-    for (let hIndex = 0; hIndex < ab; hIndex++) {
-      if (Math.random() < avgVal) h++;
-    }
-    
-    const hitHr = h > 0 && Math.random() < hrProb ? 1 : 0;
-    if (hitHr) h = Math.max(1, h);
-
-    const rbi = hitHr ? Math.floor(Math.random() * 3) + 1 : h > 0 && Math.random() > 0.5 ? 1 : 0;
-    const r = hitHr ? 1 : h > 0 && Math.random() > 0.6 ? 1 : 0;
-
-    const batterScore = Math.min(100, Math.max(40, Math.round((h * 20) + (hitHr * 30) + (rbi * 10) + 40)));
-
-    logs.push({
-      opponent: opp,
-      date,
-      result,
-      ab,
-      h,
-      hr: hitHr,
-      rbi,
-      r,
-      batterScore
-    });
-  }
-
-  return logs;
 }
 
 /**

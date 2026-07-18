@@ -25,6 +25,7 @@ import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
 import StrikeZoneHeatmapMatrix from "./analytics/StrikeZoneHeatmapMatrix";
 import { apiClient } from "../lib/apiClient";
+import { enrichPlayerStats } from "../utils/mlbApi";
 import { openParlayAdd } from "../lib/parlays/parlayAddContract";
 import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
 import {
@@ -96,7 +97,17 @@ interface BackendRegistryPlayer {
   dataSource?: string;
 }
 
-const fallbackByName = new Map(MLB_PLAYER_RECORDS.map((player) => [player.name.toLowerCase(), player]));
+/** Seed data may fill biography fields only when it matches the official MLB id. */
+function seedByMlbId(mlbId: string | number | null | undefined): MLBPlayer | undefined {
+  const id = String(mlbId ?? "").trim();
+  if (!id) return undefined;
+  return MLB_PLAYER_RECORDS.find(
+    (seed) =>
+      seed.id === id
+      || seed.id === `mlbapi_${id}`
+      || seed.headshot?.includes(`/people/${id}/`),
+  );
+}
 
 function normalizeHand(value: string | undefined, fallback: "L" | "R" | "S" = "R"): "L" | "R" | "S" {
   return value === "L" || value === "R" || value === "S" ? value : fallback;
@@ -180,18 +191,24 @@ function fallbackPlayerShell(player: BackendRegistryPlayer): MLBPlayer {
 
 function mapBackendPlayer(player: BackendRegistryPlayer): MLBPlayer {
   const name = player.playerName || player.name || "";
-  const fallback = fallbackByName.get(name.toLowerCase());
+  const mlbId = player.playerId || player.id;
+  const seed = seedByMlbId(mlbId);
   const shell = fallbackPlayerShell(player);
   return {
     ...shell,
-    ...(fallback || {}),
-    id: String(player.playerId || player.id),
-    name: name || fallback?.name || shell.name,
-    team: player.team || fallback?.team || shell.team,
-    position: player.position || fallback?.position || shell.position,
-    headshot: player.headshot || fallback?.headshot || shell.headshot,
-    bats: normalizeHand(player.bats, fallback?.bats || "R"),
-    throws: normalizeThrow(player.throws || fallback?.throws),
+    id: String(mlbId),
+    name: name || shell.name,
+    team: (player.team && player.team.trim()) || "MLB",
+    position: player.position || shell.position,
+    headshot: player.headshot || shell.headshot,
+    bats: normalizeHand(player.bats, seed?.bats || "R"),
+    throws: normalizeThrow(player.throws || seed?.throws),
+    number: seed?.number && seed.number !== "—" ? seed.number : shell.number,
+    height: seed?.height && seed.height !== "—" ? seed.height : shell.height,
+    weight: seed?.weight && seed.weight !== "—" ? seed.weight : shell.weight,
+    birthdate: seed?.birthdate && seed.birthdate !== "—" ? seed.birthdate : shell.birthdate,
+    seasonStats: { avg: "—", hr: "—", rbi: "—", ops: "—" },
+    gameLogs: [],
   };
 }
 
@@ -355,6 +372,14 @@ export default function PlayerResearchHub({
   const openDetail = (player: MLBPlayer, tab: DetailTab = "overview") => {
     setSelectedPlayer(player);
     setDetailTab(tab);
+    void enrichPlayerStats(player)
+      .then((enriched) => {
+        setSelectedPlayer((current) => (current?.id === player.id ? enriched : current));
+        setRegistryPlayers((current) =>
+          current.map((row) => (row.id === player.id ? { ...row, ...enriched } : row)),
+        );
+      })
+      .catch(() => undefined);
   };
 
   const closeDetail = () => setSelectedPlayer(null);
