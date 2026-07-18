@@ -3,9 +3,11 @@ import { judgeRepoBrandMark } from "../server/services/judging/brandMarkJudgeSer
 
 const verdict = judgeRepoBrandMark();
 
-console.log("\n=== VouchEdge Brand Mark Judge Panel ===\n");
-console.log(`Final: ${verdict.finalScore}/100  ·  ${verdict.approvalStatus}  ·  ${verdict.confidence}`);
+console.log("\n=== VouchEdge Brand Mark Judge Panel (strict craft bar) ===\n");
+console.log(`Final: ${verdict.finalScore}/100  ·  Craft: ${verdict.craftScore}/100`);
+console.log(`Status: ${verdict.approvalStatus}  ·  ${verdict.confidence}`);
 console.log(`Read:  ${verdict.marketingRead}\n`);
+console.log(`Approve gate: final≥90 · craft≥85 · letters≥85\n`);
 
 for (const j of verdict.judges) {
   console.log(`— ${j.judge}: ${j.score}/100`);

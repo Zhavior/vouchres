@@ -1,14 +1,12 @@
 /**
- * VouchEdge brand mark — vector source of truth (splash, boot, icons).
- * Geometry mirrors /public/brand/vouchedge-mark.svg
- * Metaphor: trust shield + VE letter monogram (Vouch + Edge).
+ * VouchEdge brand mark — craft level 2 optical VE lockup.
+ * Mirrors /public/brand/vouchedge-mark.svg
  */
 import React from 'react';
 
 export type VouchEdgeMarkProps = {
   size?: number | string;
   className?: string;
-  /** boot = draw-in + pulse; idle = soft breathe; static = no CSS animation */
   variant?: 'boot' | 'idle' | 'static';
   title?: string;
 };
@@ -32,81 +30,71 @@ export function VouchEdgeMark({
       className={`ve-brand-mark ${animClass} ${className}`.trim()}
       role="img"
       aria-label={title}
+      data-craft-level="2"
     >
       <title>{title}</title>
       <defs>
         <linearGradient id="veMarkPlate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#07111F" />
+          <stop offset="0%" stopColor="#06101C" />
           <stop offset="100%" stopColor="#020617" />
         </linearGradient>
-        <linearGradient id="veMarkStroke" x1="200" y1="140" x2="820" y2="900" gradientUnits="userSpaceOnUse">
+        <linearGradient id="veMarkStroke" x1="240" y1="160" x2="780" y2="880" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#A5F3FC" />
-          <stop offset="45%" stopColor="#00E5FF" />
+          <stop offset="50%" stopColor="#22D3EE" />
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
-        <linearGradient id="veMarkShieldFill" x1="512" y1="160" x2="512" y2="900" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.14" />
-          <stop offset="55%" stopColor="#00E5FF" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="#22D3A6" stopOpacity="0.02" />
+        <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.02" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="240" y1="300" x2="820" y2="760" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#F0FDFF" />
-          <stop offset="40%" stopColor="#67E8F9" />
-          <stop offset="75%" stopColor="#00E5FF" />
-          <stop offset="100%" stopColor="#14B8A6" />
-        </linearGradient>
-        <linearGradient id="veMarkFacet" x1="700" y1="500" x2="860" y2="560" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ECFEFF" />
+        <linearGradient id="veMarkLetter" x1="300" y1="380" x2="760" y2="720" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F8FEFF" />
+          <stop offset="55%" stopColor="#7DD3FC" />
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
-        <radialGradient id="veMarkGlow" cx="50%" cy="40%" r="50%">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.32" />
-          <stop offset="55%" stopColor="#00E5FF" stopOpacity="0.10" />
+        <radialGradient id="veMarkGlow" cx="50%" cy="42%" r="46%">
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.16" />
+          <stop offset="70%" stopColor="#00E5FF" stopOpacity="0.04" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
         </radialGradient>
       </defs>
 
       <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" className="ve-mark-tile" />
-      <circle cx="512" cy="460" r="340" fill="url(#veMarkGlow)" className="ve-mark-glow" />
+      <circle cx="512" cy="468" r="300" fill="url(#veMarkGlow)" className="ve-mark-glow" />
 
       <path
         className="ve-mark-shield"
-        d="M512 148
-           C612 148 742 210 786 268
-           V536
-           C786 690 668 820 512 904
-           C356 820 238 690 238 536
-           V268
-           C282 210 412 148 512 148 Z"
+        d="M512 176
+           C598 176 708 228 748 278
+           V528
+           C748 662 646 788 512 856
+           C378 788 276 662 276 528
+           V278
+           C316 228 426 176 512 176 Z"
         fill="url(#veMarkShieldFill)"
         stroke="url(#veMarkStroke)"
-        strokeWidth="40"
+        strokeWidth="30"
         strokeLinejoin="round"
       />
 
-      <g className="ve-mark-letters ve-mark-identity" aria-label="VE">
+      <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
         <path
           className="letter-v"
-          d="M304 410
-             L430 700
-             L500 700
-             L626 410
-             L548 410
-             L465 640
-             L382 410
+          d="M318 402
+             L430 678
+             L494 678
+             L606 402
+             L542 402
+             L462 618
+             L382 402
              Z"
           fill="url(#veMarkLetter)"
         />
         <g className="letter-e">
-          <path d="M640 410 H692 V700 H640 Z" fill="url(#veMarkLetter)" />
-          <path d="M692 410 H760 V470 H692 Z" fill="url(#veMarkLetter)" />
-          <path d="M692 525 H742 V585 H692 Z" fill="url(#veMarkFacet)" />
-          <path d="M692 640 H760 V700 H692 Z" fill="url(#veMarkLetter)" />
-          <path
-            className="ve-mark-facet letter-e-edge"
-            d="M742 525 H768 L778 555 L768 585 H742 Z"
-            fill="url(#veMarkFacet)"
-          />
+          <path d="M650 402 H706 V678 H650 Z" fill="url(#veMarkLetter)" />
+          <path d="M706 402 H790 V458 H706 Z" fill="url(#veMarkLetter)" />
+          <path d="M706 512 H772 V568 H706 Z" fill="url(#veMarkLetter)" />
+          <path d="M706 622 H790 V678 H706 Z" fill="url(#veMarkLetter)" />
         </g>
       </g>
     </svg>

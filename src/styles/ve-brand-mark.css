@@ -50,11 +50,6 @@
   animation: veMarkGlowIn 1.15s ease-out 0.15s forwards;
 }
 
-.ve-mark-boot .ve-mark-facet {
-  opacity: 0;
-  animation: veMarkFacetFlash 0.7s ease-out 0.95s forwards;
-}
-
 @keyframes veMarkDrawShield {
   to {
     stroke-dashoffset: 0;
