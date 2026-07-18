@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, bumpAuthUserEpoch, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
@@ -105,6 +105,8 @@ privacyRoutes.post(
     });
   }
 
+  await bumpAuthUserEpoch(req.user!.id);
+
   if ((req.user!.profile as any).stripe_subscription_id) {
     structuredLog({
       level: "warn",
@@ -159,6 +161,8 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Pri
       cause: error,
     });
   }
+
+  await bumpAuthUserEpoch(req.user!.id);
 
   structuredLog({
     level: "info",

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { z } from "zod";
-import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, bumpAuthUserEpoch, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
@@ -256,6 +256,9 @@ adminRoutes.patch(
         cause: error,
       });
     }
+
+    // Ban/tier/staff changes must not ride a stale 30s auth session cache.
+    await bumpAuthUserEpoch(id);
 
     console.log(
       `[admin] staff ${req.user!.id} updated user ${id}:`,

@@ -32,6 +32,7 @@ import { LIVE_HUB_TTL_MS } from "../services/hubs/liveGameHub";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 import { getMaterializedHrResearch } from "../services/mlb/hrResearchSnapshotService";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { mlbReadLimiter } from "../middleware/rateLimit";
 
 function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 120, 10, 350);
@@ -85,7 +86,7 @@ const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 6
 
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
-  app.get("/api/mlb/hr-feed/today", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-feed/today", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const feed = await getTodayHomeRuns();
     res.json(apiOkFlat(req, {
       count: feed.events.length,
@@ -94,7 +95,7 @@ export function registerHrBoardRoutes(app: Express): void {
       warnings: feed.warnings,
     }));
   }));
-  app.get("/api/mlb/hr-feed/date/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-feed/date/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = requiredYmd(req.params.date);
     const feed = await getTodayHomeRuns(date);
     res.json(apiOkFlat(req, {
@@ -106,7 +107,7 @@ export function registerHrBoardRoutes(app: Express): void {
   }));
 
   // Live at-bat snapshot — pitch-by-pitch data for one game's current AB.
-  app.get("/api/mlb/live-at-bat/:gamePk", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/live-at-bat/:gamePk", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const gamePk = positiveInt(req.params.gamePk, "gamePk");
 
     const snapshot = await getLiveAtBat(gamePk);
@@ -135,7 +136,7 @@ res.json(apiOkFlat(req, {
   }));
 
   /* ============ MAIN: Validated HR Board ============ */
-  app.get("/api/mlb/hr-board/today", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/today", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard();
@@ -153,7 +154,7 @@ res.json(apiOkFlat(req, {
   }));
 
   /* ============ Today Player Pool ============ */
-  app.get("/api/mlb/hr-board/today/pool", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/today/pool", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard();
       res.json(apiOkFlat(req, result.pool as unknown as Record<string, unknown>));
@@ -164,7 +165,7 @@ res.json(apiOkFlat(req, {
   }));
 
   /* ============ Debug endpoint ============ */
-  app.get("/api/mlb/hr-board/today/debug", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/today/debug", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard();
       res.json(apiOkFlat(req, result.debug as unknown as Record<string, unknown>));
@@ -175,7 +176,7 @@ res.json(apiOkFlat(req, {
   }));
 
   /* ============ Deep endpoint — research-only; NEVER a confirmed-candidate source ============ */
-  app.get("/api/mlb/hr-board/today/deep", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/today/deep", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await Promise.race([
         getCachedDeepHrBoard(),
@@ -201,7 +202,7 @@ res.json(apiOkFlat(req, {
     }
   }));
 
-  app.get("/api/mlb/hr-board/date/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/date/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const date = requiredYmd(req.params.date);
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
@@ -219,7 +220,7 @@ res.json(apiOkFlat(req, {
     }
   }));
 
-  app.get("/api/mlb/hr-board/player/:playerId", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/player/:playerId", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const playerId = positiveInt(req.params.playerId, "playerId");
       const date = optionalYmd(req.query.date);

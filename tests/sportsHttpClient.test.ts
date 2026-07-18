@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSportsHttpStats, sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
+import { assertAllowedSportsUrl, getSportsHttpStats, sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
 import { getMlbStatsCircuitBreaker, resetMlbStatsCircuitBreakerForTests } from "../server/lib/sports/circuitBreaker";
 
 describe("sports HTTP client", () => {
@@ -7,6 +7,15 @@ describe("sports HTTP client", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     resetMlbStatsCircuitBreakerForTests();
+    delete process.env.SPORTS_HTTP_ALLOWED_HOSTS;
+  });
+
+  it("blocks non-allowlisted hosts (SSRF guard)", () => {
+    expect(() => assertAllowedSportsUrl("https://169.254.169.254/latest/meta-data")).toThrow(
+      /Blocked sports URL host/,
+    );
+    expect(() => assertAllowedSportsUrl("https://evil.example/api")).toThrow(/Blocked sports URL host/);
+    expect(() => assertAllowedSportsUrl("https://statsapi.mlb.com/api/v1/schedule")).not.toThrow();
   });
 
   it("can serve a bounded stale cache value when an upstream refresh fails", async () => {
@@ -18,7 +27,7 @@ describe("sports HTTP client", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(sportsFetchJson<{ version: number }>("https://example.test/data", {
+    await expect(sportsFetchJson<{ version: number }>("https://statsapi.mlb.com/api/v1/stale-test", {
       cacheKey: "sports-http-stale-test",
       ttlMs: 1_000,
       staleIfErrorMs: 5_000,
@@ -27,7 +36,7 @@ describe("sports HTTP client", () => {
 
     vi.setSystemTime(Date.now() + 1_500);
 
-    await expect(sportsFetchJson<{ version: number }>("https://example.test/data", {
+    await expect(sportsFetchJson<{ version: number }>("https://statsapi.mlb.com/api/v1/stale-test", {
       cacheKey: "sports-http-stale-test",
       ttlMs: 1_000,
       staleIfErrorMs: 5_000,
@@ -44,7 +53,7 @@ describe("sports HTTP client", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await sportsFetchJson("https://example.test/expired", {
+    await sportsFetchJson("https://statsapi.mlb.com/api/v1/expired", {
       cacheKey: "sports-http-expired-stale-test",
       ttlMs: 1_000,
       staleIfErrorMs: 5_000,
@@ -53,7 +62,7 @@ describe("sports HTTP client", () => {
 
     vi.setSystemTime(Date.now() + 7_000);
 
-    await expect(sportsFetchJson("https://example.test/expired", {
+    await expect(sportsFetchJson("https://statsapi.mlb.com/api/v1/expired", {
       cacheKey: "sports-http-expired-stale-test",
       ttlMs: 1_000,
       staleIfErrorMs: 5_000,

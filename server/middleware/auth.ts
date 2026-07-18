@@ -4,7 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
 import { TTLCache } from "../lib/cache";
 import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
-import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
+import { isUpstashEnabled, redisDel, redisGet, redisGetJson, redisSet, redisSetJson } from "../lib/upstashRedis";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -79,12 +79,15 @@ export interface AuthedRequest extends Request {
   };
 }
 
-type CachedAuthSession = NonNullable<AuthedRequest["user"]>;
+type CachedAuthSession = NonNullable<AuthedRequest["user"]> & { authEpoch: number };
 
 /** Short-lived auth session cache — L1 memory + optional L2 Redis for multi-instance. */
 const AUTH_SESSION_TTL_MS = 30_000;
 const AUTH_SESSION_TTL_SECONDS = 30;
+/** Epoch TTL must outlive session cache so ban/tier bumps are visible until sessions expire. */
+const AUTH_EPOCH_TTL_SECONDS = 120;
 const authSessionCache = new TTLCache<CachedAuthSession>(AUTH_SESSION_TTL_MS, "auth:session");
+const authEpochL1 = new Map<string, number>();
 
 function authTokenCacheKey(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -94,27 +97,88 @@ function authRedisKey(tokenHash: string): string {
   return `auth:session:${tokenHash}`;
 }
 
-async function readAuthSessionCache(tokenHash: string): Promise<CachedAuthSession | null> {
-  const local = authSessionCache.get(tokenHash);
-  if (local) return local;
+function authEpochRedisKey(userId: string): string {
+  return `auth:epoch:${userId}`;
+}
 
-  if (!isUpstashEnabled()) return null;
+async function getAuthUserEpoch(userId: string): Promise<number> {
+  const local = authEpochL1.get(userId);
+  if (local !== undefined) return local;
+
+  if (!isUpstashEnabled()) return 0;
   try {
-    const remote = await redisGetJson<CachedAuthSession>(authRedisKey(tokenHash));
-    if (!remote?.id || !remote.profile) return null;
-    authSessionCache.set(tokenHash, remote, AUTH_SESSION_TTL_MS);
-    return remote;
+    const remote = await redisGet(authEpochRedisKey(userId));
+    const n = remote == null ? 0 : Number(remote);
+    const epoch = Number.isFinite(n) ? n : 0;
+    authEpochL1.set(userId, epoch);
+    return epoch;
   } catch (error) {
-    console.warn("[auth] redis session read failed", (error as Error)?.message ?? error);
-    return null;
+    console.warn("[auth] redis epoch read failed", (error as Error)?.message ?? error);
+    return 0;
   }
 }
 
-async function writeAuthSessionCache(tokenHash: string, session: CachedAuthSession): Promise<void> {
-  authSessionCache.set(tokenHash, session, AUTH_SESSION_TTL_MS);
+/**
+ * Invalidate cached auth sessions for a user (ban, tier, staff, deletion schedule).
+ * Next request reloads profile from DB instead of serving a stale 30s cache hit.
+ */
+export async function bumpAuthUserEpoch(userId: string): Promise<void> {
+  if (!userId) return;
+  const current = await getAuthUserEpoch(userId);
+  const next = current + 1;
+  authEpochL1.set(userId, next);
   if (!isUpstashEnabled()) return;
   try {
-    await redisSetJson(authRedisKey(tokenHash), session, AUTH_SESSION_TTL_SECONDS);
+    await redisSet(authEpochRedisKey(userId), String(next), { exSeconds: AUTH_EPOCH_TTL_SECONDS });
+  } catch (error) {
+    console.warn("[auth] redis epoch bump failed", (error as Error)?.message ?? error);
+  }
+}
+
+async function readAuthSessionCache(tokenHash: string): Promise<CachedAuthSession | null> {
+  const local = authSessionCache.get(tokenHash);
+  const candidate = local ?? (isUpstashEnabled()
+    ? await (async () => {
+        try {
+          const remote = await redisGetJson<CachedAuthSession>(authRedisKey(tokenHash));
+          if (!remote?.id || !remote.profile) return null;
+          authSessionCache.set(tokenHash, remote, AUTH_SESSION_TTL_MS);
+          return remote;
+        } catch (error) {
+          console.warn("[auth] redis session read failed", (error as Error)?.message ?? error);
+          return null;
+        }
+      })()
+    : null);
+
+  if (!candidate) return null;
+
+  const epoch = await getAuthUserEpoch(candidate.id);
+  if ((candidate.authEpoch ?? 0) !== epoch) {
+    authSessionCache.delete(tokenHash);
+    if (isUpstashEnabled()) {
+      try {
+        await redisDel(authRedisKey(tokenHash));
+      } catch (error) {
+        console.warn("[auth] redis session delete failed", (error as Error)?.message ?? error);
+      }
+    }
+    return null;
+  }
+
+  return candidate;
+}
+
+async function writeAuthSessionCache(
+  tokenHash: string,
+  session: NonNullable<AuthedRequest["user"]>,
+): Promise<void> {
+  const epoch = await getAuthUserEpoch(session.id);
+  const cached: CachedAuthSession = { ...session, authEpoch: epoch };
+  authSessionCache.set(tokenHash, cached, AUTH_SESSION_TTL_MS);
+  if (!isUpstashEnabled()) return;
+  try {
+    await redisSetJson(authRedisKey(tokenHash), cached, AUTH_SESSION_TTL_SECONDS);
   } catch (error) {
     console.warn("[auth] redis session write failed", (error as Error)?.message ?? error);
   }
@@ -123,6 +187,7 @@ async function writeAuthSessionCache(tokenHash: string, session: CachedAuthSessi
 /** Test-only: clear cached sessions between cases. */
 export function resetAuthSessionCacheForTests(): void {
   authSessionCache.clear();
+  authEpochL1.clear();
 }
 
 export async function requireAuth(

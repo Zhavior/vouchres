@@ -14,6 +14,7 @@ import { renderVouchShareCardSvg, VOUCH_SHARE_CARD_HEADERS } from "../services/s
 import { renderParlayShareCardSvg, PARLAY_SHARE_CARD_HEADERS } from "../services/share/parlayShareCard";
 import { getPublicVouch } from "../services/persistence/vouchService";
 import { getPublicParlayProof, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
+import { getSafePublicOrigin } from "../lib/publicOrigin";
 
 export const shareRoutes = Router();
 
@@ -117,7 +118,7 @@ shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
  * Public share-card image for a parlay proof at /p/:id.
  */
 shareRoutes.get("/share/parlay/:id/card.png", asyncHandler(async (req, res) => {
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const baseUrl = getSafePublicOrigin();
   const proof = await getPublicParlayProof(req.params.id, baseUrl);
   if (!proof) {
     throw new AppError({

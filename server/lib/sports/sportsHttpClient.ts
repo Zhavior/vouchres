@@ -33,6 +33,60 @@ const DEFAULT_TIMEOUT_MS = Number(process.env.SPORTS_HTTP_TIMEOUT_MS ?? 8_000);
 const DEFAULT_RETRIES = Number(process.env.SPORTS_HTTP_RETRIES ?? 1);
 const MAX_CACHE_ENTRIES = Number(process.env.SPORTS_HTTP_MAX_CACHE_ENTRIES ?? 1_000);
 
+/** Default hosts reachable via sportsFetch* — blocks SSRF to internal metadata/IPs. */
+const DEFAULT_ALLOWED_SPORTS_HOSTS = [
+  "statsapi.mlb.com",
+  "baseballsavant.mlb.com",
+] as const;
+
+function getAllowedSportsHosts(): Set<string> {
+  const extra = String(process.env.SPORTS_HTTP_ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set([...DEFAULT_ALLOWED_SPORTS_HOSTS, ...extra]);
+}
+
+function isBlockedSportsHostname(host: string): boolean {
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "0.0.0.0" ||
+    host === "::1" ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal")
+  ) {
+    return true;
+  }
+  // Literal private / link-local IPv4 — never allow IP literals as sports hosts.
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host)) return true;
+  if (host.includes(":")) return true; // IPv6 literal
+  return false;
+}
+
+/** Reject non-allowlisted hosts before any upstream fetch (SSRF guard). */
+export function assertAllowedSportsUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("Invalid sports URL");
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error(`Blocked sports URL protocol: ${parsed.protocol}`);
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (!host || isBlockedSportsHostname(host)) {
+    throw new Error(`Blocked sports URL host: ${host || "(empty)"}`);
+  }
+
+  if (!getAllowedSportsHosts().has(host)) {
+    throw new Error(`Blocked sports URL host: ${host}`);
+  }
+}
+
 function redactUrl(url: string): string {
   try {
     const u = new URL(url);
@@ -47,7 +101,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   const id = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, { signal: controller.signal, redirect: "manual" });
   } finally {
     clearTimeout(id);
   }
@@ -80,6 +134,8 @@ async function sportsFetch<T>(
   parse: (res: Response) => Promise<T>,
   options: SportsFetchOptions = {}
 ): Promise<T> {
+  assertAllowedSportsUrl(url);
+
   const ttlMs = options.ttlMs ?? 0;
   const staleIfErrorMs = options.staleIfErrorMs ?? 0;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
@@ -121,6 +177,11 @@ async function sportsFetch<T>(
         }
 
         const res = await fetchWithTimeout(url, timeoutMs);
+
+        // Manual redirect mode — never follow Location (SSRF via open redirect).
+        if (res.status >= 300 && res.status < 400) {
+          throw new Error(`Refusing redirect (${res.status}) for ${redactUrl(url)}`);
+        }
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status} for ${redactUrl(url)}`);

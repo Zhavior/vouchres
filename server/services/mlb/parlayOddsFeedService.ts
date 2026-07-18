@@ -20,6 +20,17 @@ export type OddsApiMarketSpec = {
 
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4/sports/baseball_mlb";
 
+/** Strip apiKey from Odds API URLs before logging or error messages. */
+export function redactOddsApiUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    if (u.searchParams.has("apiKey")) u.searchParams.set("apiKey", "REDACTED");
+    return u.toString();
+  } catch {
+    return String(url).replace(/([?&]apiKey=)[^&]*/gi, "$1REDACTED");
+  }
+}
+
 function parseAmerican(value: unknown): number | null {
   if (value == null) return null;
   const n = Number(value);
@@ -144,10 +155,21 @@ function findEventForTeam(
 async function fetchMlbEvents(apiKey: string): Promise<OddsApiEvent[]> {
   const url = new URL(`${ODDS_API_BASE}/events`);
   url.searchParams.set("apiKey", apiKey);
-  const res = await fetch(url.toString(), { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return Array.isArray(data) ? (data as OddsApiEvent[]) : [];
+  try {
+    const res = await fetch(url.toString(), { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) {
+      console.warn(`[odds-api] events HTTP ${res.status} ${redactOddsApiUrl(url.toString())}`);
+      return [];
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? (data as OddsApiEvent[]) : [];
+  } catch (error) {
+    console.warn(
+      `[odds-api] events fetch failed ${redactOddsApiUrl(url.toString())}:`,
+      (error as Error)?.message ?? error,
+    );
+    return [];
+  }
 }
 
 function playerNameMatches(needleParts: string[], outcome: Record<string, unknown>): boolean {
@@ -205,12 +227,23 @@ async function fetchEventMarketOdds(
   url.searchParams.set("markets", marketKeys.join(","));
   url.searchParams.set("oddsFormat", "american");
 
-  const res = await fetch(url.toString(), { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) return [];
+  try {
+    const res = await fetch(url.toString(), { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) {
+      console.warn(`[odds-api] event odds HTTP ${res.status} ${redactOddsApiUrl(url.toString())}`);
+      return [];
+    }
 
-  const payload = await res.json() as Record<string, unknown>;
-  const bookmakers = Array.isArray(payload.bookmakers) ? payload.bookmakers : [];
-  return bookmakers as Array<Record<string, unknown>>;
+    const payload = await res.json() as Record<string, unknown>;
+    const bookmakers = Array.isArray(payload.bookmakers) ? payload.bookmakers : [];
+    return bookmakers as Array<Record<string, unknown>>;
+  } catch (error) {
+    console.warn(
+      `[odds-api] event odds fetch failed ${redactOddsApiUrl(url.toString())}:`,
+      (error as Error)?.message ?? error,
+    );
+    return [];
+  }
 }
 
 function tbdQuote(detail: string, provider = "odds_api"): LiveOddsQuote {

@@ -16,6 +16,7 @@ import { setPickVisibilityPublic } from "../repositories/parlayRepository";
 import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
 import { notifyFollowersOfAuthorPost } from "../services/social/followService";
 import { socialOutboxRepository } from "../repositories/socialOutboxRepository";
+import { filterUuids, isUuid } from "../lib/uuid";
 
 async function denyUnlessOwns(
   userId: string,
@@ -86,8 +87,8 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
       .select("following_profile_id")
       .eq("follower_id", req.user.id);
 
-    const followedIds = (follows ?? []).map((f: any) => f.following_profile_id).filter(Boolean);
-    followedIds.push(req.user.id);
+    const followedIds = filterUuids((follows ?? []).map((f: any) => f.following_profile_id));
+    if (isUuid(req.user.id)) followedIds.push(req.user.id);
 
     if (followedIds.length > 1) {
       query = query.or(`author_id.in.(${followedIds.join(",")}),is_demo.eq.true`);

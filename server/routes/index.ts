@@ -49,6 +49,7 @@ import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
 import type { Response } from "express";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { getSafePublicOrigin } from "../lib/publicOrigin";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -215,7 +216,7 @@ export function registerApiRoutes(app: Express): void {
   app.get("/v/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getPublicVouchWithAuthor(req.params.id);
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const baseUrl = getSafePublicOrigin();
 
       if (!result) {
         res.status(404);
@@ -283,7 +284,7 @@ export function registerApiRoutes(app: Express): void {
 
   app.get("/p/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const baseUrl = getSafePublicOrigin();
       const proof = await getPublicParlayProof(req.params.id, baseUrl);
 
       if (!proof) {

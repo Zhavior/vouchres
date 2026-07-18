@@ -201,6 +201,15 @@ export const mlbMutationLimiter = rateLimit({
   handler,
 });
 
+/** Public MLB read endpoints that fan out to Stats API / Savant / odds. */
+export const mlbReadLimiter = rateLimit({
+  name: "mlb_read",
+  windowMs: 60 * 1000,
+  limit: 60,
+  keyGenerator: clientIpKey,
+  handler,
+});
+
 export const worldChatLimiter = rateLimit({
   name: "world_chat",
   windowMs: 60 * 1000,

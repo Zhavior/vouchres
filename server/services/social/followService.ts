@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
+import { assertUuid } from "../../lib/uuid";
 import {
   createFollowedActivityNotification,
   createNewFollowerNotification,
@@ -71,18 +72,19 @@ async function admin() {
 }
 
 async function loadFollowRowsForUser(userId: string): Promise<FollowRow[]> {
+  const safeUserId = assertUuid(userId, "userId");
   const supabaseAdmin = await admin();
   const { data, error } = await supabaseAdmin
     .from("follows")
     .select("follower_id, following_profile_id, following_capper_id, relationship_type, notify_enabled, created_at")
-    .or(`follower_id.eq.${userId},following_profile_id.eq.${userId}`);
+    .or(`follower_id.eq.${safeUserId},following_profile_id.eq.${safeUserId}`);
 
   if (error) {
     if (missingColumn(error)) {
       const fallback = await supabaseAdmin
         .from("follows")
         .select("follower_id, following_profile_id, following_capper_id, created_at")
-        .or(`follower_id.eq.${userId},following_profile_id.eq.${userId}`);
+        .or(`follower_id.eq.${safeUserId},following_profile_id.eq.${safeUserId}`);
       if (fallback.error) throw fallback.error;
       return (fallback.data ?? []).map((row: Record<string, unknown>) => ({
         follower_id: String(row.follower_id),

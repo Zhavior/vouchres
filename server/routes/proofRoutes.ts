@@ -9,11 +9,12 @@ import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
 import { decodeOtsProofBase64 } from "../services/trust/openTimestampService";
 import { getSupabaseAdmin } from "../middleware/auth";
 import { findPublicParlayById } from "../repositories/parlayRepository";
+import { getSafePublicOrigin } from "../lib/publicOrigin";
 
 export const proofRoutes = Router();
 
 proofRoutes.get("/proof/parlay/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const baseUrl = getSafePublicOrigin();
   const proof = await getPublicParlayProof(req.params.id, baseUrl);
   if (!proof) {
     throw new AppError({
@@ -93,7 +94,7 @@ proofRoutes.get("/proof/vouch/:id", asyncHandler(async (req: RequestWithContext,
       created_at: vouch.created_at,
       updated_at: vouch.updated_at,
       author,
-      proof_url: `${req.protocol}://${req.get("host")}/v/${encodeURIComponent(vouch.id)}`,
+      proof_url: `${getSafePublicOrigin()}/v/${encodeURIComponent(vouch.id)}`,
     },
   }));
 }));
