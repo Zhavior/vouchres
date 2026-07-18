@@ -19,17 +19,32 @@ function buildEventKey(match: any): string {
   return `mlb:${gamePk}:${playerId}:home_run:${inning}:${timestamp}`;
 }
 
-function deriveParentStatusFromLegs(legs: Array<{ status: string | null }>): "won" | "lost" | "push" | "void" | null {
+const TERMINAL_LEG_STATUSES = new Set(["won", "lost", "push", "void"]);
+
+/**
+ * Parent status only when every leg is a known terminal state.
+ * Unknown/empty/open statuses must not allow a premature "won".
+ */
+export function deriveParentStatusFromLegs(
+  legs: Array<{ status: string | null }>,
+): "won" | "lost" | "push" | "void" | null {
   if (!legs.length) return null;
 
-  const statuses = legs.map((leg) => String(leg.status ?? "").toLowerCase());
-  const hasOpenLeg = statuses.some((status) => status === "pending" || status === "grading" || status === "live" || status === "open" || status === "active" || status === "in_progress");
+  const statuses = legs.map((leg) => String(leg.status ?? "").trim().toLowerCase());
+  if (statuses.some((status) => !TERMINAL_LEG_STATUSES.has(status))) {
+    return null;
+  }
 
-  if (hasOpenLeg) return null;
   if (statuses.some((status) => status === "lost")) return "lost";
-  if (statuses.some((status) => status === "won")) return "won";
   if (statuses.every((status) => status === "push")) return "push";
   if (statuses.every((status) => status === "void")) return "void";
+  // Parlay win: at least one won, remainder won/push/void, none lost.
+  if (
+    statuses.some((status) => status === "won")
+    && statuses.every((status) => status === "won" || status === "push" || status === "void")
+  ) {
+    return "won";
+  }
 
   return null;
 }

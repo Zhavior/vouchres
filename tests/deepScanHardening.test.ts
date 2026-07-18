@@ -65,6 +65,49 @@ describe("deep-scan backend hardening", () => {
     expect(auth).toContain("Promise<number | null>");
   });
 
+  it("auth epoch L1 expires so Redis bumps propagate across instances", () => {
+    const auth = readFileSync("server/middleware/auth.ts", "utf8");
+    expect(auth).toContain("AUTH_EPOCH_L1_TTL_MS");
+    expect(auth).toContain("expiresAt");
+    expect(auth).toContain("local.expiresAt > Date.now()");
+  });
+
+  it("discover feed is demo-only", () => {
+    const posts = readFileSync("server/routes/postRoutes.ts", "utf8");
+    expect(posts).toMatch(/\/feed\/discover[\s\S]*\.eq\("is_demo", true\)/);
+  });
+
+  it("memory lock uses promise-chain mutex (no thundering herd)", () => {
+    const lock = readFileSync("server/lib/distributedLock.ts", "utf8");
+    expect(lock).toContain("memoryLockTails");
+    expect(lock).toContain("await previous");
+    expect(lock).not.toContain("while (memoryWaiters.has");
+  });
+
+  it("erasure checks anonymize RPC errors and wipes trust_scores", () => {
+    const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
+    const migration = readFileSync(
+      "supabase/migrations/20260718190000_fix_anonymize_user_picks.sql",
+      "utf8",
+    );
+    expect(privacy).toContain("anonymize_user_picks failed");
+    expect(privacy).toContain('.from("trust_scores")');
+    expect(migration).toContain("delete from public.picks");
+    expect(migration).toContain("delete from public.trust_scores");
+  });
+
+  it("live HR matcher and parent settle refuse ambiguous states", () => {
+    const matcher = readFileSync("server/services/grading/liveHrParlayService.ts", "utf8");
+    const parent = readFileSync("server/services/grading/liveHrParlayWriteService.ts", "utf8");
+    const pipeline = readFileSync("server/services/mlb/hrPipeline.ts", "utf8");
+    expect(matcher).toContain("CANONICAL_HR_MARKET_CODES");
+    expect(matcher).not.toContain('haystack.includes("hr")');
+    expect(parent).toContain("TERMINAL_LEG_STATUSES");
+    expect(pipeline).toContain("officialStarterSpot");
+    expect(pipeline).toContain("officialStartersFromBoxscoreTeam");
+    expect(pipeline).not.toContain("batters.forEach((playerId: number, index: number)");
+  });
+
   it("DMs require mutual follow on create and send", () => {
     const hub = readFileSync("server/services/social/followingHubService.ts", "utf8");
     expect(hub).toContain("assertMutualFollowForDm");

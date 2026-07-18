@@ -124,6 +124,7 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
 }));
 
 postRoutes.get("/feed/discover", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  // Public discover is demo-only — never rank private/circle author posts by views.
   const { data, error } = await supabaseAdmin
     .from("posts")
     .select(`
@@ -133,6 +134,7 @@ postRoutes.get("/feed/discover", asyncHandler(async (req: RequestWithContext, re
       likes_count:post_likes(count),
       comments_count:post_comments(count)
     `)
+    .eq("is_demo", true)
     .order("view_count", { ascending: false })
     .limit(20);
 

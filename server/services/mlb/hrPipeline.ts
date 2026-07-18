@@ -115,6 +115,43 @@ function extractInjuryStatus(rosterEntry: any): {
   return { status: "unknown", description: status, source: "MLB roster API" };
 }
 
+/**
+ * Map MLB boxscore battingOrder → official starter spot (1–9).
+ * Accepts 1–9 or 100/200/…/900. Rejects subs (101, 201, …) and missing orders.
+ */
+export function officialStarterSpot(battingOrder: unknown): number | null {
+  const raw =
+    typeof battingOrder === "number"
+      ? battingOrder
+      : typeof battingOrder === "string"
+        ? parseInt(battingOrder, 10)
+        : NaN;
+  if (!Number.isFinite(raw) || raw <= 0) return null;
+  if (raw >= 1 && raw <= 9) return raw;
+  if (raw >= 100 && raw <= 900 && raw % 100 === 0) return raw / 100;
+  return null;
+}
+
+/** Confirmed starters only — never treat batters[] array index as batting order. */
+export function officialStartersFromBoxscoreTeam(team: unknown): Map<number, number> {
+  const out = new Map<number, number>();
+  const side = team as {
+    batters?: unknown;
+    players?: Record<string, { battingOrder?: unknown }>;
+  } | null;
+  if (!side) return out;
+
+  const players = side.players ?? {};
+  const batterIds = Array.isArray(side.batters) ? side.batters : [];
+  for (const playerId of batterIds) {
+    if (typeof playerId !== "number") continue;
+    const entry = players[`ID${playerId}`];
+    const spot = officialStarterSpot(entry?.battingOrder);
+    if (spot != null) out.set(playerId, spot);
+  }
+  return out;
+}
+
 async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Map<number, number>> {
   return await boxscoreLineupCache.getOrSet(
     `boxscore-lineups:${games.map((g) => g.gamePk).join(",")}`,
@@ -136,13 +173,9 @@ async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Ma
             const teams = [boxscore?.teams?.away, boxscore?.teams?.home];
 
             for (const team of teams) {
-              const batters = Array.isArray(team?.batters) ? team.batters : [];
-
-              batters.forEach((playerId: number, index: number) => {
-                if (typeof playerId === "number") {
-                  battingOrderByPlayerId.set(playerId, index + 1);
-                }
-              });
+              for (const [playerId, spot] of officialStartersFromBoxscoreTeam(team)) {
+                battingOrderByPlayerId.set(playerId, spot);
+              }
             }
           } catch (err) {
             // Boxscores are often unavailable before lineups are posted.

@@ -86,8 +86,14 @@ const AUTH_SESSION_TTL_MS = 30_000;
 const AUTH_SESSION_TTL_SECONDS = 30;
 /** Epoch TTL must outlive session cache so ban/tier bumps are visible until sessions expire. */
 const AUTH_EPOCH_TTL_SECONDS = 120;
+/**
+ * Soft L1 for epochs when Redis is on. Must be short so another instance's
+ * bumpAuthUserEpoch is observed quickly (not stuck until the 30s session TTL).
+ */
+const AUTH_EPOCH_L1_TTL_MS = 1_000;
 const authSessionCache = new TTLCache<CachedAuthSession>(AUTH_SESSION_TTL_MS, "auth:session");
-const authEpochL1 = new Map<string, number>();
+type AuthEpochL1Entry = { epoch: number; expiresAt: number };
+const authEpochL1 = new Map<string, AuthEpochL1Entry>();
 
 function authTokenCacheKey(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -107,14 +113,22 @@ function authEpochRedisKey(userId: string): string {
  */
 async function getAuthUserEpoch(userId: string): Promise<number | null> {
   const local = authEpochL1.get(userId);
-  if (local !== undefined) return local;
 
-  if (!isUpstashEnabled()) return 0;
+  // Without Redis, process-local epoch is the source of truth.
+  if (!isUpstashEnabled()) {
+    return local?.epoch ?? 0;
+  }
+
+  // With Redis, only trust a fresh L1 hit — otherwise re-read so cross-instance bumps apply.
+  if (local && local.expiresAt > Date.now()) {
+    return local.epoch;
+  }
+
   try {
     const remote = await redisGet(authEpochRedisKey(userId));
     const n = remote == null ? 0 : Number(remote);
     const epoch = Number.isFinite(n) ? n : 0;
-    authEpochL1.set(userId, epoch);
+    authEpochL1.set(userId, { epoch, expiresAt: Date.now() + AUTH_EPOCH_L1_TTL_MS });
     return epoch;
   } catch (error) {
     console.warn("[auth] redis epoch read failed", (error as Error)?.message ?? error);
@@ -128,9 +142,9 @@ async function getAuthUserEpoch(userId: string): Promise<number | null> {
  */
 export async function bumpAuthUserEpoch(userId: string): Promise<void> {
   if (!userId) return;
-  const current = (await getAuthUserEpoch(userId)) ?? authEpochL1.get(userId) ?? 0;
+  const current = (await getAuthUserEpoch(userId)) ?? authEpochL1.get(userId)?.epoch ?? 0;
   const next = current + 1;
-  authEpochL1.set(userId, next);
+  authEpochL1.set(userId, { epoch: next, expiresAt: Date.now() + AUTH_EPOCH_L1_TTL_MS });
   if (!isUpstashEnabled()) return;
   try {
     await redisSet(authEpochRedisKey(userId), String(next), { exSeconds: AUTH_EPOCH_TTL_SECONDS });

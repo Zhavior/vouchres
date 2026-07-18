@@ -45,6 +45,29 @@ describe("runWithDistributedLock", () => {
     expect(maxActive).toBe(1);
   });
 
+  it("stress: many concurrent memory waiters never overlap (no thundering herd)", async () => {
+    let active = 0;
+    let maxActive = 0;
+    const order: number[] = [];
+
+    const jobs = Array.from({ length: 40 }, (_, i) =>
+      runWithDistributedLock("test:memory-stress", async () => {
+        active += 1;
+        maxActive = Math.max(maxActive, active);
+        order.push(i);
+        await Promise.resolve();
+        active -= 1;
+        return i;
+      }),
+    );
+
+    const results = await Promise.all(jobs);
+    expect(maxActive).toBe(1);
+    expect(results).toHaveLength(40);
+    expect(new Set(results).size).toBe(40);
+    expect(order).toHaveLength(40);
+  });
+
   it("acquires Redis lock with SET NX and releases via atomic token compare-and-delete", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
     let heldToken = "";

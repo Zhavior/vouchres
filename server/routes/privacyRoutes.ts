@@ -268,7 +268,26 @@ async function processScheduledDeletionsUnlocked(): Promise<{
     try {
       console.log(`[deletion] processing user ${user.id} (${user.username})`);
 
-      await supabaseAdmin.rpc("anonymize_user_picks", { p_user_id: user.id });
+      const { error: anonymizeError } = await supabaseAdmin.rpc("anonymize_user_picks", {
+        p_user_id: user.id,
+      });
+      if (anonymizeError) {
+        throw new Error(`anonymize_user_picks failed: ${anonymizeError.message}`);
+      }
+
+      // Belt-and-suspenders: trust_scores has no FK to profiles — always wipe explicitly.
+      const trustWipe = await supabaseAdmin
+        .from("trust_scores")
+        .delete()
+        .eq("subject_type", "user")
+        .eq("subject_id", String(user.id));
+      if (trustWipe.error) {
+        const code = String(trustWipe.error.code ?? "");
+        if (code !== "42P01" && code !== "PGRST205") {
+          throw new Error(`trust_scores wipe failed: ${trustWipe.error.message}`);
+        }
+        console.warn(`[deletion] skip trust_scores: ${trustWipe.error.message}`);
+      }
 
       // Best-effort wipe of user-owned rows. Missing tables are ignored; other errors fail the job.
       const deleteSpecs: Array<{ table: string; column: string }> = [

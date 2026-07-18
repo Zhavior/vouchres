@@ -14,7 +14,8 @@ const DEFAULT_TTL_SECONDS = 600;
 const DEFAULT_WAIT_MS = 30_000;
 const DEFAULT_POLL_MS = 500;
 
-const memoryWaiters = new Map<string, Promise<void>>();
+/** Promise-chain mutex tails — each waiter awaits the previous release only. */
+const memoryLockTails = new Map<string, Promise<void>>();
 
 /**
  * Runs `fn` while holding a cluster-wide lock (Upstash SET NX) or a process-local
@@ -66,21 +67,25 @@ export async function runWithDistributedLock<T>(
   }
 }
 
+/**
+ * Process-local mutex via promise chaining.
+ * Avoids the thundering-herd bug where many waiters wake on one release and all enter.
+ */
 async function runWithMemoryLock<T>(lockName: string, fn: () => Promise<T>): Promise<T> {
-  while (memoryWaiters.has(lockName)) {
-    await memoryWaiters.get(lockName);
-  }
-
+  const previous = memoryLockTails.get(lockName) ?? Promise.resolve();
   let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
+  const mine = new Promise<void>((resolve) => {
     release = resolve;
   });
-  memoryWaiters.set(lockName, gate);
+  memoryLockTails.set(lockName, mine);
 
+  await previous;
   try {
     return await fn();
   } finally {
-    memoryWaiters.delete(lockName);
     release();
+    if (memoryLockTails.get(lockName) === mine) {
+      memoryLockTails.delete(lockName);
+    }
   }
 }
