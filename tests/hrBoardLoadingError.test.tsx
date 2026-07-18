@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
 import HomeRunIntelligencePage from '../src/features/hr/pages/HomeRunIntelligencePage';
 
 vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
@@ -10,6 +12,15 @@ vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
+
+function renderPage(ui: ReactElement = <HomeRunIntelligencePage />) {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
 const defaultSlate = {
   gameCount: 0,
   generatedAt: null,
@@ -53,7 +64,7 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    const { container } = render(<HomeRunIntelligencePage />);
+    const { container } = renderPage();
     expect(container.querySelector('.animate-pulse')).toBeTruthy();
   });
 
@@ -87,7 +98,7 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePage />);
+    renderPage();
     expect(screen.getByText(/Failed to load Home Run Intelligence/i)).toBeTruthy();
     expect(screen.getByText(/Upstream timeout/i)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /retry/i }));
@@ -123,7 +134,7 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePage />);
+    renderPage();
     expect(screen.getByText(/No confirmed lineups posted yet/i)).toBeTruthy();
     expect(screen.getByText(/preview candidates/i)).toBeTruthy();
   });

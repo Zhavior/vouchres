@@ -45,6 +45,27 @@ vi.mock("../server/services/hubs/hrBoardHub", () => ({
     lastGoodWarnings: [],
   })),
   getCachedDeepHrBoard: vi.fn(),
+  getCachedValidatedHrCandidate: vi.fn(async (playerId: number) => {
+    const candidate =
+      sampleBoard.candidates.find((row) => row.playerId === playerId) ?? null;
+    return {
+      candidate,
+      generatedAt: sampleBoard.generatedAt,
+      source: "player_index" as const,
+    };
+  }),
+}));
+
+vi.mock("../server/services/mlb/hrResearchSnapshotService", () => ({
+  getMaterializedHrResearch: vi.fn(async ({ candidate }: { candidate: Record<string, unknown> }) => ({
+    research: {
+      playerId: candidate.playerId,
+      playerName: candidate.playerName,
+      charts: { signalTimeline: [] },
+      context: {},
+    },
+    source: "test_fixture",
+  })),
 }));
 
 let server: Server;
