@@ -7,7 +7,10 @@ export interface BrainTemporalContext {
   phase: BrainEventPhase;
   millisecondsToStart: number;
   sourceAgeMilliseconds: number;
+  /** True only inside the 4h lineup window with fresh pregame evidence — freeze-eligible. */
   canSnapshot: boolean;
+  /** True in the 4–12h monitoring band (or lineup window) with pregame evidence — rank-only, never freeze. */
+  canMonitor: boolean;
   lockReason: string | null;
 }
 
@@ -39,10 +42,15 @@ export function buildBrainTemporalContext(input: {
   else if (millisecondsToStart <= MONITORING_WINDOW_MS) phase = "monitoring";
   else phase = "too_early";
 
+  const eventStarted = phase === "live" || phase === "final" || phase === "locked";
+  const evidenceAfterStart = observed >= scheduled;
+  const evidenceStale = sourceAgeMilliseconds > MAX_SOURCE_AGE_MS;
+  const inMonitorBand = phase === "monitoring" || phase === "lineup_window";
+
   let lockReason: string | null = null;
-  if (phase === "live" || phase === "final" || phase === "locked") lockReason = "Event has started; pregame decisions are locked.";
-  else if (observed >= scheduled) lockReason = "Evidence was observed at or after event start.";
-  else if (sourceAgeMilliseconds > MAX_SOURCE_AGE_MS) lockReason = "Evidence snapshot is stale.";
+  if (eventStarted) lockReason = "Event has started; pregame decisions are locked.";
+  else if (evidenceAfterStart) lockReason = "Evidence was observed at or after event start.";
+  else if (evidenceStale) lockReason = "Evidence snapshot is stale.";
   else if (phase !== "lineup_window") lockReason = "Outside the four-hour decision window.";
 
   return {
@@ -53,6 +61,7 @@ export function buildBrainTemporalContext(input: {
     millisecondsToStart,
     sourceAgeMilliseconds,
     canSnapshot: lockReason === null,
+    canMonitor: !eventStarted && !evidenceAfterStart && !evidenceStale && inMonitorBand,
     lockReason,
   };
 }

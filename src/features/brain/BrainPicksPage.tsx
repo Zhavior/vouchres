@@ -84,6 +84,13 @@ type AiMarketReview = {
   reviews: AiPickReview[];
   createdAt: string;
 };
+type BrainPickProvenance = "ledger" | "live_selection" | "monitoring";
+type BrainPublicationStatus =
+  | "ledger_frozen"
+  | "decision"
+  | "monitoring"
+  | "empty";
+
 type BrainPicksResponse = {
   picks: ServerBrainPick[];
   stolenBase: { picks: ServerBrainPick[] };
@@ -92,9 +99,14 @@ type BrainPicksResponse = {
     Record<"home_run" | "stolen_base" | "pitcher_strikeouts", AiMarketReview>
   >;
   provenance?: {
-    home_run: "ledger" | "live_selection";
-    stolen_base: "ledger" | "live_selection";
-    pitcher_strikeouts: "ledger" | "live_selection";
+    home_run: BrainPickProvenance;
+    stolen_base: BrainPickProvenance;
+    pitcher_strikeouts: BrainPickProvenance;
+  };
+  publicationStatus?: {
+    home_run: BrainPublicationStatus;
+    stolen_base: BrainPublicationStatus;
+    pitcher_strikeouts: BrainPublicationStatus;
   };
   engineVersions?: {
     home_run: string;
@@ -103,6 +115,13 @@ type BrainPicksResponse = {
   };
   doors?: Record<string, { key: string; label: string; source: string }>;
 };
+
+function provenanceLabel(provenance: BrainPickProvenance | null | undefined): string {
+  if (provenance === "ledger") return "frozen ledger";
+  if (provenance === "monitoring") return "monitoring slate (not frozen)";
+  if (provenance === "live_selection") return "live MLB-door selection";
+  return "unavailable";
+}
 type BrainPicksBundle = BrainPicksResponse;
 
 const reviewLabel = (review?: AiPickReview) =>
@@ -184,6 +203,16 @@ export default function BrainPicksPage({
   ).length;
   const scannedPlayers = scanQuery.data?.scan.coverage.playersScanned ?? 0;
   const hrProvenance = picksQuery.data?.provenance?.home_run ?? null;
+  const hrPublication =
+    picksQuery.data?.publicationStatus?.home_run ??
+    (hrProvenance === "monitoring"
+      ? "monitoring"
+      : hrProvenance === "ledger"
+        ? "ledger_frozen"
+        : picks.length
+          ? "decision"
+          : "empty");
+  const isMonitoringSlate = hrPublication === "monitoring";
   const decisionWindowOpen =
     scanQuery.data?.scan.temporal.decisionWindowOpen ?? false;
   const untilWindow =
@@ -431,10 +460,7 @@ export default function BrainPicksPage({
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           {hrProvenance && (
             <div className={`${Z8_LABEL} text-white/40`}>
-              HR source:{" "}
-              {hrProvenance === "ledger"
-                ? "frozen ledger"
-                : "live MLB-door selection"}
+              HR source: {provenanceLabel(hrProvenance)}
             </div>
           )}
           {picksQuery.data?.doors && (
@@ -446,6 +472,15 @@ export default function BrainPicksPage({
                 .join(" · ")}
             </div>
           )}
+        </div>
+      )}
+
+      {isMonitoringSlate && picks.length > 0 && (
+        <div className="brain-callout flex items-start gap-2 p-3 text-sm text-sky-100/80">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-sky-200" />
+          Monitoring slate only — ranked from live MLB doors outside the 4h
+          freeze window. These are not frozen ledger decisions and will change
+          when the lineup window opens.
         </div>
       )}
 
@@ -542,8 +577,8 @@ export default function BrainPicksPage({
             >
               <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <div className={`${Z8_LABEL} text-vouch-emerald`}>
-                    Selected over the slate
+                  <div className={`${Z8_LABEL} ${isMonitoringSlate ? "text-sky-200" : "text-vouch-emerald"}`}>
+                    {isMonitoringSlate ? "Monitoring candidate" : "Selected over the slate"}
                   </div>
                   <h2 className="mt-1 text-2xl font-black text-white">
                     {selected.playerName}

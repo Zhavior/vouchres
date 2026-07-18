@@ -1,4 +1,5 @@
 import type { BrainFeatureSnapshot } from "./featureSchemas";
+import type { BrainSelectionMode, BrainSelectionOptions } from "./selectionPolicy";
 import { buildBrainTemporalContext } from "./temporalPolicy";
 
 export const BRAIN_SB_SELECTION_VERSION = "brain-stolen-base-selection@1";
@@ -10,10 +11,26 @@ function value(snapshot: BrainFeatureSnapshot, key: string): number {
   return typeof candidate === "number" && Number.isFinite(candidate) ? candidate : 0;
 }
 
-export function selectMlbStolenBaseFeatures(snapshots: BrainFeatureSnapshot[], now = new Date()) {
+function passesTemporalGate(snapshot: BrainFeatureSnapshot, now: Date, mode: BrainSelectionMode): boolean {
+  const context = buildBrainTemporalContext({
+    now,
+    observedAt: snapshot.observedAt,
+    scheduledAt: snapshot.scheduledAt,
+  });
+  return mode === "monitoring" ? context.canMonitor : context.canSnapshot;
+}
+
+export function selectMlbStolenBaseFeatures(
+  snapshots: BrainFeatureSnapshot[],
+  now = new Date(),
+  options: BrainSelectionOptions = {},
+) {
+  const mode = options.mode ?? "decision";
+  const minScore = mode === "monitoring" ? 45 : 50;
+
   const ranked = snapshots
     .filter((snapshot) => snapshot.market === "stolen_base" && snapshot.eligibility !== "blocked")
-    .filter((snapshot) => buildBrainTemporalContext({ now, observedAt: snapshot.observedAt, scheduledAt: snapshot.scheduledAt }).canSnapshot)
+    .filter((snapshot) => passesTemporalGate(snapshot, now, mode))
     .map((snapshot) => {
       const score = Math.round(Math.max(0, Math.min(100,
         value(snapshot, "attemptsPerGame") * 170 +
@@ -24,7 +41,7 @@ export function selectMlbStolenBaseFeatures(snapshots: BrainFeatureSnapshot[], n
       )));
       return { snapshot, score };
     })
-    .filter(({ snapshot, score }) => score >= 50 && value(snapshot, "seasonStolenBases") >= 2)
+    .filter(({ snapshot, score }) => score >= minScore && value(snapshot, "seasonStolenBases") >= 2)
     .sort((a, b) => b.score - a.score);
 
   const selected: Array<{ snapshot: BrainFeatureSnapshot; score: number; rank: number }> = [];

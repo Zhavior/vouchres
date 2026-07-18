@@ -4,7 +4,7 @@ import { structuredLog } from "../../../lib/structuredLog";
 import { getGameFeed, getScheduleByDate, todayISO } from "../../mlb/mlbClient";
 import { getTodayHomeRuns } from "../../mlb/hrFeedService";
 import { mlbHrFeatureAdapter } from "./mlbFeatureAdapter";
-import { BRAIN_HR_SELECTION_VERSION, selectMlbHrFeatures } from "./selectionPolicy";
+import { BRAIN_HR_SELECTION_VERSION, selectMlbHrFeatures, type BrainSelectionMode } from "./selectionPolicy";
 import { mlbStolenBaseFeatureAdapter } from "./mlbStolenBaseAdapter";
 import { BRAIN_SB_SELECTION_VERSION, selectMlbStolenBaseFeatures } from "./stolenBaseSelectionPolicy";
 import { mlbPitcherKFeatureAdapter, BRAIN_PITCHER_K_TARGET } from "./mlbPitcherKAdapter";
@@ -12,6 +12,23 @@ import { BRAIN_PITCHER_K_SELECTION_VERSION, selectMlbPitcherKFeatures } from "./
 import { BRAIN_MLB_DOORS } from "./brainDoors";
 
 export const BRAIN_HR_ENGINE_VERSION = BRAIN_HR_SELECTION_VERSION;
+
+export type BrainPickProvenance = "ledger" | "live_selection" | "monitoring";
+export type BrainPublicationStatus = "ledger_frozen" | "decision" | "monitoring" | "empty";
+
+const MONITORING_RISK = "Monitoring only — not a frozen decision. Official freeze opens in the 4h lineup window.";
+
+function withMonitoringRisks(risks: string[], mode: BrainSelectionMode): string[] {
+  if (mode !== "monitoring") return risks.slice(0, 6);
+  return [MONITORING_RISK, ...risks.filter((risk) => risk !== MONITORING_RISK)].slice(0, 6);
+}
+
+function publicationFromProvenance(provenance: BrainPickProvenance, pickCount: number): BrainPublicationStatus {
+  if (!pickCount) return "empty";
+  if (provenance === "ledger") return "ledger_frozen";
+  if (provenance === "live_selection") return "decision";
+  return "monitoring";
+}
 
 export interface BrainLedgerPick {
   id?: string;
@@ -238,7 +255,7 @@ export async function getBrainPitcherKLedger(limit = 100, date?: string): Promis
   return getBrainLedgerByMarket("pitcher_strikeouts", limit, date);
 }
 
-function pendingPerformance(picks: BrainLedgerPick[]): BrainPerformance {
+function pendingPerformance(picks: BrainLedgerPick[], mode: "decision" | "monitoring" = "decision"): BrainPerformance {
   return {
     total: picks.length,
     resolved: 0,
@@ -247,14 +264,22 @@ function pendingPerformance(picks: BrainLedgerPick[]): BrainPerformance {
     misses: 0,
     voids: 0,
     hitRate: null,
-    sampleWarning: picks.length ? "Live selection — outcomes settle after final MLB results." : null,
+    sampleWarning: !picks.length
+      ? null
+      : mode === "monitoring"
+        ? "Monitoring slate — not frozen; will not settle as ledger decisions."
+        : "Live selection — outcomes settle after final MLB results.",
   };
 }
 
 /** Live HR selection from sport adapters (no DB required). */
-export async function buildLiveBrainHrPicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+export async function buildLiveBrainHrPicks(
+  date = todayISO(),
+  options: { mode?: BrainSelectionMode } = {},
+): Promise<BrainLedgerPick[]> {
+  const mode = options.mode ?? "decision";
   const snapshots = await mlbHrFeatureAdapter.build({ date });
-  return selectMlbHrFeatures(snapshots).map(({ snapshot, score, rank }) => ({
+  return selectMlbHrFeatures(snapshots, new Date(), { mode }).map(({ snapshot, score, rank }) => ({
     decisionKey: decisionKey(date, snapshot.eventId, snapshot.subjectId),
     date,
     gameId: snapshot.eventId,
@@ -268,15 +293,22 @@ export async function buildLiveBrainHrPicks(date = todayISO()): Promise<BrainLed
     tier: String(snapshot.features.riskTier ?? "Unrated"),
     evidenceQuality: snapshot.eligibility === "eligible" ? "official" : "preview",
     reasons: snapshot.reasons.slice(0, 6),
-    risks: [...snapshot.risks, ...snapshot.missingFeatures.map((feature) => `Missing: ${feature}`)].slice(0, 6),
+    risks: withMonitoringRisks(
+      [...snapshot.risks, ...snapshot.missingFeatures.map((feature) => `Missing: ${feature}`)],
+      mode,
+    ),
     result: "pending",
   }));
 }
 
 /** Live stolen-base selection from sport adapters (no DB required). */
-export async function buildLiveBrainStolenBasePicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+export async function buildLiveBrainStolenBasePicks(
+  date = todayISO(),
+  options: { mode?: BrainSelectionMode } = {},
+): Promise<BrainLedgerPick[]> {
+  const mode = options.mode ?? "decision";
   const snapshots = await mlbStolenBaseFeatureAdapter.build({ date });
-  return selectMlbStolenBaseFeatures(snapshots).map(({ snapshot, score, rank }) => ({
+  return selectMlbStolenBaseFeatures(snapshots, new Date(), { mode }).map(({ snapshot, score, rank }) => ({
     decisionKey: createHash("sha256")
       .update([BRAIN_SB_SELECTION_VERSION, date, snapshot.eventId, snapshot.subjectId, "stolen_base"].join("|"))
       .digest("hex"),
@@ -292,15 +324,19 @@ export async function buildLiveBrainStolenBasePicks(date = todayISO()): Promise<
     tier: score >= 75 ? "Strong" : "Watch",
     evidenceQuality: snapshot.eligibility === "eligible" ? "official" : "preview",
     reasons: snapshot.reasons.slice(0, 6),
-    risks: snapshot.risks.slice(0, 6),
+    risks: withMonitoringRisks(snapshot.risks, mode),
     result: "pending",
   }));
 }
 
 /** Live pitcher-K selection from sport adapters (no DB required). */
-export async function buildLiveBrainPitcherKPicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+export async function buildLiveBrainPitcherKPicks(
+  date = todayISO(),
+  options: { mode?: BrainSelectionMode } = {},
+): Promise<BrainLedgerPick[]> {
+  const mode = options.mode ?? "decision";
   const snapshots = await mlbPitcherKFeatureAdapter.build({ date });
-  return selectMlbPitcherKFeatures(snapshots).map(({ snapshot, score, confidence, rank }) => ({
+  return selectMlbPitcherKFeatures(snapshots, new Date(), { mode }).map(({ snapshot, score, confidence, rank }) => ({
     decisionKey: createHash("sha256")
       .update([BRAIN_PITCHER_K_SELECTION_VERSION, date, snapshot.eventId, snapshot.subjectId, "pitcher_strikeouts"].join("|"))
       .digest("hex"),
@@ -316,9 +352,20 @@ export async function buildLiveBrainPitcherKPicks(date = todayISO()): Promise<Br
     tier: score >= 75 ? "Strong" : "Watch",
     evidenceQuality: "official",
     reasons: snapshot.reasons.slice(0, 6),
-    risks: snapshot.risks.slice(0, 6),
+    risks: withMonitoringRisks(snapshot.risks, mode),
     result: "pending",
   }));
+}
+
+async function resolveLiveMarketPicks(
+  date: string,
+  builder: (date: string, options?: { mode?: BrainSelectionMode }) => Promise<BrainLedgerPick[]>,
+): Promise<{ picks: BrainLedgerPick[]; provenance: BrainPickProvenance }> {
+  const decision = await builder(date, { mode: "decision" });
+  if (decision.length) return { picks: decision, provenance: "live_selection" };
+  const monitoring = await builder(date, { mode: "monitoring" });
+  if (monitoring.length) return { picks: monitoring, provenance: "monitoring" };
+  return { picks: [], provenance: "live_selection" };
 }
 
 /**
@@ -350,7 +397,8 @@ async function softFreezeLiveSelections(
 /**
  * Brain Picks page source of truth: MLB-door adapters → selection → ledger/live.
  * Prefers frozen ledger rows when they exist for the date; otherwise computes
- * from adapters (MLB Stats API doors) and soft-freezes for the next read.
+ * freeze-eligible decisions and soft-freezes them. Outside the 4h window,
+ * returns a labeled monitoring slate that is never written to the ledger.
  */
 export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Promise<{
   picks: BrainLedgerPick[];
@@ -358,9 +406,14 @@ export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Pr
   stolenBase: { picks: BrainLedgerPick[]; performance: BrainPerformance };
   pitcherStrikeouts: { picks: BrainLedgerPick[]; performance: BrainPerformance };
   provenance: {
-    home_run: "ledger" | "live_selection";
-    stolen_base: "ledger" | "live_selection";
-    pitcher_strikeouts: "ledger" | "live_selection";
+    home_run: BrainPickProvenance;
+    stolen_base: BrainPickProvenance;
+    pitcher_strikeouts: BrainPickProvenance;
+  };
+  publicationStatus: {
+    home_run: BrainPublicationStatus;
+    stolen_base: BrainPublicationStatus;
+    pitcher_strikeouts: BrainPublicationStatus;
   };
   engineVersions: {
     home_run: string;
@@ -381,40 +434,63 @@ export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Pr
   const needSb = !sbLedger?.picks.length;
   const needK = !kLedger?.picks.length;
 
-  const [hrLive, sbLive, kLive] = await Promise.all([
-    needHr ? buildLiveBrainHrPicks(date) : Promise.resolve([] as BrainLedgerPick[]),
-    needSb ? buildLiveBrainStolenBasePicks(date) : Promise.resolve([] as BrainLedgerPick[]),
-    needK ? buildLiveBrainPitcherKPicks(date) : Promise.resolve([] as BrainLedgerPick[]),
+  const [hrResolved, sbResolved, kResolved] = await Promise.all([
+    needHr
+      ? resolveLiveMarketPicks(date, buildLiveBrainHrPicks)
+      : Promise.resolve({ picks: hrLedger!.picks, provenance: "ledger" as const }),
+    needSb
+      ? resolveLiveMarketPicks(date, buildLiveBrainStolenBasePicks)
+      : Promise.resolve({ picks: sbLedger!.picks, provenance: "ledger" as const }),
+    needK
+      ? resolveLiveMarketPicks(date, buildLiveBrainPitcherKPicks)
+      : Promise.resolve({ picks: kLedger!.picks, provenance: "ledger" as const }),
   ]);
 
-  const hrPicks = (needHr ? hrLive : hrLedger!.picks).slice(0, capped);
-  const sbPicks = (needSb ? sbLive : sbLedger!.picks).slice(0, capped);
-  const kPicks = (needK ? kLive : kLedger!.picks).slice(0, capped);
+  const hrPicks = hrResolved.picks.slice(0, capped);
+  const sbPicks = sbResolved.picks.slice(0, capped);
+  const kPicks = kResolved.picks.slice(0, capped);
 
-  // Soft-freeze whatever we had to compute live so cron isn't required for a first ledger row.
-  if ((needHr && hrLive.length) || (needSb && sbLive.length) || (needK && kLive.length)) {
+  // Soft-freeze only freeze-eligible decisions — never monitoring slates.
+  if (
+    (hrResolved.provenance === "live_selection" && hrPicks.length) ||
+    (sbResolved.provenance === "live_selection" && sbPicks.length) ||
+    (kResolved.provenance === "live_selection" && kPicks.length)
+  ) {
     void softFreezeLiveSelections(date, {
-      home_run: needHr && hrLive.length > 0,
-      stolen_base: needSb && sbLive.length > 0,
-      pitcher_strikeouts: needK && kLive.length > 0,
+      home_run: hrResolved.provenance === "live_selection" && hrPicks.length > 0,
+      stolen_base: sbResolved.provenance === "live_selection" && sbPicks.length > 0,
+      pitcher_strikeouts: kResolved.provenance === "live_selection" && kPicks.length > 0,
     });
   }
 
+  const provenance = {
+    home_run: hrResolved.provenance,
+    stolen_base: sbResolved.provenance,
+    pitcher_strikeouts: kResolved.provenance,
+  };
+
   return {
     picks: hrPicks,
-    performance: needHr ? pendingPerformance(hrPicks) : hrLedger!.performance,
+    performance: needHr
+      ? pendingPerformance(hrPicks, provenance.home_run === "monitoring" ? "monitoring" : "decision")
+      : hrLedger!.performance,
     stolenBase: {
       picks: sbPicks,
-      performance: needSb ? pendingPerformance(sbPicks) : sbLedger!.performance,
+      performance: needSb
+        ? pendingPerformance(sbPicks, provenance.stolen_base === "monitoring" ? "monitoring" : "decision")
+        : sbLedger!.performance,
     },
     pitcherStrikeouts: {
       picks: kPicks,
-      performance: needK ? pendingPerformance(kPicks) : kLedger!.performance,
+      performance: needK
+        ? pendingPerformance(kPicks, provenance.pitcher_strikeouts === "monitoring" ? "monitoring" : "decision")
+        : kLedger!.performance,
     },
-    provenance: {
-      home_run: needHr ? "live_selection" : "ledger",
-      stolen_base: needSb ? "live_selection" : "ledger",
-      pitcher_strikeouts: needK ? "live_selection" : "ledger",
+    provenance,
+    publicationStatus: {
+      home_run: publicationFromProvenance(provenance.home_run, hrPicks.length),
+      stolen_base: publicationFromProvenance(provenance.stolen_base, sbPicks.length),
+      pitcher_strikeouts: publicationFromProvenance(provenance.pitcher_strikeouts, kPicks.length),
     },
     engineVersions: {
       home_run: BRAIN_HR_ENGINE_VERSION,

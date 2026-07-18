@@ -51,6 +51,33 @@ describe("ProjectVABrAIns selection policy", () => {
     expect(result).toHaveLength(0);
   });
 
+  it("rejects freeze-mode picks outside the 4h window", () => {
+    const result = selectMlbHrFeatures(
+      [snapshot({ scheduledAt: "2026-07-12T22:00:00.000Z", observedAt: "2026-07-12T11:55:00.000Z" })],
+      new Date("2026-07-12T12:00:00.000Z"),
+      { mode: "decision" },
+    );
+    expect(result).toHaveLength(0);
+  });
+
+  it("ranks a monitoring slate in the 4–12h band without freeze eligibility", () => {
+    const result = selectMlbHrFeatures(
+      [snapshot({ scheduledAt: "2026-07-12T22:00:00.000Z", observedAt: "2026-07-12T11:55:00.000Z" })],
+      new Date("2026-07-12T12:00:00.000Z"),
+      { mode: "monitoring" },
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("still rejects monitoring picks after first pitch", () => {
+    const result = selectMlbHrFeatures(
+      [snapshot()],
+      new Date("2026-07-12T20:01:00.000Z"),
+      { mode: "monitoring" },
+    );
+    expect(result).toHaveLength(0);
+  });
+
   it("enforces team and game concentration limits", () => {
     const candidates = Array.from({ length: 5 }, (_, index) => snapshot({
       subjectId: `player-${index}`,

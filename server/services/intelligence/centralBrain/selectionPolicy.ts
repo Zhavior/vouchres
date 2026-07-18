@@ -5,10 +5,16 @@ export const BRAIN_HR_SELECTION_VERSION = "brain-hr-selection@2";
 const PICK_TARGET = 10;
 const PICK_LIMIT = 12;
 
+export type BrainSelectionMode = "decision" | "monitoring";
+
 export interface SelectedBrainFeature {
   snapshot: BrainFeatureSnapshot;
   score: number;
   rank: number;
+}
+
+export interface BrainSelectionOptions {
+  mode?: BrainSelectionMode;
 }
 
 function numberFeature(snapshot: BrainFeatureSnapshot, key: string, fallback: number): number {
@@ -20,14 +26,28 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+function passesTemporalGate(snapshot: BrainFeatureSnapshot, now: Date, mode: BrainSelectionMode): boolean {
+  const context = buildBrainTemporalContext({
+    now,
+    observedAt: snapshot.observedAt,
+    scheduledAt: snapshot.scheduledAt,
+  });
+  return mode === "monitoring" ? context.canMonitor : context.canSnapshot;
+}
+
 export function selectMlbHrFeatures(
   snapshots: BrainFeatureSnapshot[],
   now = new Date(),
+  options: BrainSelectionOptions = {},
 ): SelectedBrainFeature[] {
+  const mode = options.mode ?? "decision";
+  const minScore = mode === "monitoring" ? 50 : 55;
+  const minConfidence = mode === "monitoring" ? 45 : 55;
+
   const ranked = snapshots
     .filter((snapshot) => snapshot.sport === "mlb" && snapshot.market === "home_run")
     .filter((snapshot) => snapshot.eligibility !== "blocked")
-    .filter((snapshot) => buildBrainTemporalContext({ now, observedAt: snapshot.observedAt, scheduledAt: snapshot.scheduledAt }).canSnapshot)
+    .filter((snapshot) => passesTemporalGate(snapshot, now, mode))
     .map((snapshot) => {
       const score = clamp(
         numberFeature(snapshot, "rawHrScore", 0) * 0.45 +
@@ -39,7 +59,7 @@ export function selectMlbHrFeatures(
       );
       return { snapshot, score };
     })
-    .filter(({ snapshot, score }) => score >= 55 && numberFeature(snapshot, "dataConfidence", 0) >= 55)
+    .filter(({ snapshot, score }) => score >= minScore && numberFeature(snapshot, "dataConfidence", 0) >= minConfidence)
     .sort((a, b) => b.score - a.score || b.snapshot.subjectLabel.localeCompare(a.snapshot.subjectLabel));
 
   const official = ranked.filter(({ snapshot }) => snapshot.eligibility === "eligible");
