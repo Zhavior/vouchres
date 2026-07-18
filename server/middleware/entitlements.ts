@@ -6,6 +6,7 @@ import {
   type TierEntitlements,
 } from "../services/billing/tierConfig";
 import { AppError } from "../errors/AppError";
+import { runWithDistributedLock } from "../lib/distributedLock";
 
 /**
  * Entitlements — server-side feature gates.
@@ -118,51 +119,62 @@ export function requireTierOrQuota(
     const effectiveLimit = isPaid ? (paidDailyLimit as number) : freeDailyLimit;
 
     const day = todayUtc();
-    const { supabaseAdmin } = await import("./auth");
-    const { data, error } = await supabaseAdmin
-      .from("daily_quotas")
-      .select("count")
-      .eq("profile_id", req.user!.id)
-      .eq("quota_key", quotaKey)
-      .eq("day", day)
-      .maybeSingle();
+    const profileId = req.user!.id;
 
-    if (error) {
-      console.error("[entitlements] quota lookup failed", {
-        profileId: req.user!.id,
-        quotaKey,
-        day,
-        error,
-      });
-      return next(new AppError({
-        status: 503,
-        code: "external_service_error",
-        message: "Quota check is temporarily unavailable.",
-        expose: true,
-        cause: error,
-      }));
-    }
+    // Reserve a slot under a per-user lock before the handler runs so parallel
+    // requests cannot all pass a stale check-then-act read.
+    try {
+      const reserved = await runWithDistributedLock(
+        `quota:${profileId}:${quotaKey}:${day}`,
+        async () => {
+          const { supabaseAdmin } = await import("./auth");
+          const { data, error } = await supabaseAdmin
+            .from("daily_quotas")
+            .select("count")
+            .eq("profile_id", profileId)
+            .eq("quota_key", quotaKey)
+            .eq("day", day)
+            .maybeSingle();
 
-    const count = Number(data?.count ?? 0);
-    if (count >= effectiveLimit) {
-      return next(new AppError({
-        status: 429,
-        code: "quota_exceeded",
-        message: isPaid
-          ? "Daily usage limit reached for this feature."
-          : "Daily free quota exceeded.",
-        details: {
-          quotaKey,
-          limit: effectiveLimit,
-          count,
-          requiredTier: normalizeSubscriptionTier(required).tier,
-          currentTier: normalizeSubscriptionTier(profile.tier).tier,
+          if (error) {
+            throw new AppError({
+              status: 503,
+              code: "external_service_error",
+              message: "Quota check is temporarily unavailable.",
+              expose: true,
+              cause: error,
+            });
+          }
+
+          const count = Number(data?.count ?? 0);
+          if (count >= effectiveLimit) {
+            throw new AppError({
+              status: 429,
+              code: "quota_exceeded",
+              message: isPaid
+                ? "Daily usage limit reached for this feature."
+                : "Daily free quota exceeded.",
+              details: {
+                quotaKey,
+                limit: effectiveLimit,
+                count,
+                requiredTier: normalizeSubscriptionTier(required).tier,
+                currentTier: normalizeSubscriptionTier(profile.tier).tier,
+              },
+            });
+          }
+
+          await incrementQuotaCounter(profileId, quotaKey, day);
+          return count + 1;
         },
-      }));
-    }
+        { ttlSeconds: 30, waitMs: 10_000 },
+      );
 
-    req.__quota = { key: quotaKey, day, count, limit: effectiveLimit };
-    return next();
+      req.__quota = { key: quotaKey, day, count: reserved, limit: effectiveLimit };
+      return next();
+    } catch (error) {
+      return next(error);
+    }
   };
 }
 
@@ -190,10 +202,20 @@ export async function getUserEntitlements(userId: string): Promise<TierEntitleme
 }
 
 /**
- * Helper to call after a quota-gated operation succeeds.
- * Increments the daily quota counter.
+ * Legacy helper kept for route call sites. Quota is now reserved atomically
+ * inside requireTierOrQuota before the handler runs — this is a no-op so
+ * successful handlers do not double-count.
  */
 export async function incrementQuota(
+  _profileId: string,
+  _quotaKey: string,
+  _day: string
+): Promise<void> {
+  return;
+}
+
+/** Internal counter bump used by the reserved quota gate. */
+async function incrementQuotaCounter(
   profileId: string,
   quotaKey: string,
   day: string

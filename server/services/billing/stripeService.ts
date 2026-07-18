@@ -92,34 +92,42 @@ export function stripePriceConfigByPriceId(priceId: string): StripePriceConfig |
  */
 export async function ensureStripeCustomer(profileId: string, email: string) {
   assertStripeConfigured();
-  const supabaseAdmin = await getSupabaseAdmin();
-  // Check if profile already has a stripe_customer_id
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("stripe_customer_id")
-    .eq("id", profileId)
-    .single();
 
-  if (profile?.stripe_customer_id) {
-    try {
-      const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
-      if (!existing.deleted) return existing;
-    } catch (err) {
-      // Customer was deleted in Stripe dashboard — fall through to create
-    }
-  }
+  // Serialize customer ensure so portal/checkout races cannot create orphans.
+  return runWithDistributedLock(
+    `stripe-customer:${profileId}`,
+    async () => {
+      const supabaseAdmin = await getSupabaseAdmin();
+      // Check if profile already has a stripe_customer_id
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("stripe_customer_id")
+        .eq("id", profileId)
+        .single();
 
-  const customer = await getStripe().customers.create({
-    email,
-    metadata: { profile_id: profileId },
-  });
+      if (profile?.stripe_customer_id) {
+        try {
+          const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
+          if (!existing.deleted) return existing;
+        } catch {
+          // Customer was deleted in Stripe dashboard — fall through to create
+        }
+      }
 
-  await supabaseAdmin
-    .from("profiles")
-    .update({ stripe_customer_id: customer.id })
-    .eq("id", profileId);
+      const customer = await getStripe().customers.create({
+        email,
+        metadata: { profile_id: profileId },
+      });
 
-  return customer;
+      await supabaseAdmin
+        .from("profiles")
+        .update({ stripe_customer_id: customer.id })
+        .eq("id", profileId);
+
+      return customer;
+    },
+    { ttlSeconds: 60, waitMs: 15_000 },
+  );
 }
 
 /**
@@ -531,6 +539,12 @@ export async function cancelSubscriptionsForProfile(profileId: string): Promise<
     warnings.push("stripe_not_configured");
   }
 
+  // Do not mutate local entitlements when Stripe cancel was incomplete —
+  // callers treat warnings as failure and can retry without a half-downgrade.
+  if (warnings.length > 0) {
+    return { canceled, warnings };
+  }
+
   const { error: subErr } = await supabaseAdmin
     .from("subscriptions")
     .update({ status: "canceled", cancel_at_period_end: true })
@@ -543,8 +557,10 @@ export async function cancelSubscriptionsForProfile(profileId: string): Promise<
     .eq("id", profileId);
   if (profileErr) warnings.push(`local_profile_downgrade_failed:${profileErr.message}`);
 
-  const { bumpAuthUserEpoch } = await import("../../middleware/auth");
-  await bumpAuthUserEpoch(profileId);
+  if (warnings.length === 0) {
+    const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+    await bumpAuthUserEpoch(profileId);
+  }
 
   return { canceled, warnings };
 }

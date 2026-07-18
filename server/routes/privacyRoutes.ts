@@ -88,34 +88,8 @@ privacyRoutes.post(
 
   const deletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-  const { error } = await supabaseAdmin
-    .from("profiles")
-    .update({
-      deletion_scheduled_at: deletionDate.toISOString(),
-    })
-    .eq("id", req.user!.id);
-
-
-  if (error) {
-    structuredLog({
-      level: "error",
-      event: "privacy_schedule_deletion_failed",
-      requestId: req.requestId,
-      userId: req.user!.id,
-      message: error.message,
-    });
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to schedule account deletion.",
-      cause: error,
-    });
-  }
-
-  await bumpAuthUserEpoch(req.user!.id);
-
-  // Stop billing immediately when deletion is scheduled (do not wait 30 days).
-  // Production: fail closed — roll back the schedule if Stripe cancel is incomplete.
+  // Cancel billing BEFORE scheduling deletion so a failed cancel never leaves
+  // a scheduled deletion with inconsistent entitlement state to roll back.
   try {
     const { cancelSubscriptionsForProfile } = await import("../services/billing/stripeService");
     const cancelResult = await cancelSubscriptionsForProfile(req.user!.id);
@@ -128,11 +102,6 @@ privacyRoutes.post(
       warnings: cancelResult.warnings,
     });
     if (cancelResult.warnings.length > 0 && isProductionRuntime()) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ deletion_scheduled_at: null })
-        .eq("id", req.user!.id);
-      await bumpAuthUserEpoch(req.user!.id);
       throw new AppError({
         status: 503,
         code: "external_service_error",
@@ -151,11 +120,6 @@ privacyRoutes.post(
       message: err instanceof Error ? err.message : String(err),
     });
     if (isProductionRuntime()) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ deletion_scheduled_at: null })
-        .eq("id", req.user!.id);
-      await bumpAuthUserEpoch(req.user!.id);
       throw new AppError({
         status: 503,
         code: "external_service_error",
@@ -165,6 +129,31 @@ privacyRoutes.post(
       });
     }
   }
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      deletion_scheduled_at: deletionDate.toISOString(),
+    })
+    .eq("id", req.user!.id);
+
+  if (error) {
+    structuredLog({
+      level: "error",
+      event: "privacy_schedule_deletion_failed",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      message: error.message,
+    });
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to schedule account deletion.",
+      cause: error,
+    });
+  }
+
+  await bumpAuthUserEpoch(req.user!.id);
 
   structuredLog({
     level: "info",

@@ -73,10 +73,25 @@ describe("deep-scan backend hardening", () => {
     expect(src).toMatch(/postedPicks[\s\S]*visibility", "public"/);
   });
 
-  it("feed share always forces pick visibility public", () => {
+  it("feed share forces pick public before post insert and strips private embeds", () => {
     const posts = readFileSync("server/routes/postRoutes.ts", "utf8");
-    expect(posts).toContain("Always force public visibility after a feed share");
-    expect(posts).toContain("setPickVisibilityPublic(pick_id, req.user!.id)");
+    expect(posts).toContain("Force public BEFORE inserting the post");
+    expect(posts).toContain("sanitizePostPickEmbed");
+    expect(posts).toContain("pick_visibility_required");
+    expect(posts).toContain("visibility !== \"public\"");
+  });
+
+  it("quota gate reserves under a per-user lock before the handler", () => {
+    const entitlements = readFileSync("server/middleware/entitlements.ts", "utf8");
+    expect(entitlements).toContain("runWithDistributedLock");
+    expect(entitlements).toContain("`quota:${profileId}:${quotaKey}:${day}`");
+    expect(entitlements).toContain("incrementQuotaCounter");
+  });
+
+  it("Stripe customer ensure is serialized per profile", () => {
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(stripe).toContain("`stripe-customer:${profileId}`");
+    expect(stripe).toContain("Do not mutate local entitlements when Stripe cancel was incomplete");
   });
 
   it("deletion schedule does not toggle is_banned", () => {
