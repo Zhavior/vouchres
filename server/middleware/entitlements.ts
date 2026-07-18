@@ -42,6 +42,8 @@ type QuotaRequest = AuthedRequest & {
     day: string;
     count: number;
     limit: number;
+    /** True when middleware reserved a slot; refunded on non-2xx responses. */
+    pending?: boolean;
   };
 };
 
@@ -170,7 +172,38 @@ export function requireTierOrQuota(
         { ttlSeconds: 30, waitMs: 10_000 },
       );
 
-      req.__quota = { key: quotaKey, day, count: reserved, limit: effectiveLimit };
+      req.__quota = {
+        key: quotaKey,
+        day,
+        count: reserved,
+        limit: effectiveLimit,
+        pending: true,
+      };
+
+      // Refund the reserved slot if the handler fails (keeps race-safe reserve
+      // without permanently burning quota on 4xx/5xx / aborted requests).
+      let settled = false;
+      const maybeRefund = (reason: "finish" | "close") => {
+        if (settled) return;
+        settled = true;
+        const q = req.__quota;
+        if (!q?.pending) return;
+        q.pending = false;
+        const failed =
+          reason === "close"
+            ? !res.writableEnded
+            : res.statusCode < 200 || res.statusCode >= 400;
+        if (!failed) return;
+        void refundQuotaCounter(profileId, quotaKey, day).catch((err) => {
+          console.warn(
+            "[entitlements] quota refund failed",
+            (err as Error)?.message ?? err,
+          );
+        });
+      };
+      res.once("finish", () => maybeRefund("finish"));
+      res.once("close", () => maybeRefund("close"));
+
       return next();
     } catch (error) {
       return next(error);
@@ -202,9 +235,9 @@ export async function getUserEntitlements(userId: string): Promise<TierEntitleme
 }
 
 /**
- * Legacy helper kept for route call sites. Quota is now reserved atomically
- * inside requireTierOrQuota before the handler runs — this is a no-op so
- * successful handlers do not double-count.
+ * Legacy helper kept for route call sites. Quota is reserved atomically inside
+ * requireTierOrQuota before the handler; this remains a no-op so successful
+ * handlers do not double-count. Failed responses refund via the middleware hook.
  */
 export async function incrementQuota(
   _profileId: string,
@@ -287,6 +320,38 @@ async function incrementQuotaCounter(
       cause: fallback.error,
     });
   }
+}
+
+/** Best-effort decrement after a reserved request fails. */
+async function refundQuotaCounter(
+  profileId: string,
+  quotaKey: string,
+  day: string,
+): Promise<void> {
+  await runWithDistributedLock(
+    `quota:${profileId}:${quotaKey}:${day}`,
+    async () => {
+      const { supabaseAdmin } = await import("./auth");
+      const current = await supabaseAdmin
+        .from("daily_quotas")
+        .select("count")
+        .eq("profile_id", profileId)
+        .eq("quota_key", quotaKey)
+        .eq("day", day)
+        .maybeSingle();
+
+      if (current.error) throw current.error;
+      const nextCount = Math.max(0, Number(current.data?.count ?? 0) - 1);
+      const { error } = await supabaseAdmin
+        .from("daily_quotas")
+        .upsert(
+          { profile_id: profileId, quota_key: quotaKey, day, count: nextCount },
+          { onConflict: "profile_id,quota_key,day" },
+        );
+      if (error) throw error;
+    },
+    { ttlSeconds: 30, waitMs: 10_000 },
+  );
 }
 
 /*

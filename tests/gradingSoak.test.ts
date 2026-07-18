@@ -4,13 +4,12 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "../server/errors/AppError";
-import { isUpstashEnabled, redisDel, redisGet, redisSet, sleep } from "../server/lib/upstashRedis";
+import { isUpstashEnabled, redisReleaseLock, redisSet, sleep } from "../server/lib/upstashRedis";
 
 vi.mock("../server/lib/upstashRedis", () => ({
   isUpstashEnabled: vi.fn(() => false),
   redisSet: vi.fn(),
-  redisGet: vi.fn(),
-  redisDel: vi.fn(),
+  redisReleaseLock: vi.fn(),
   sleep: vi.fn(async () => undefined),
 }));
 
@@ -58,10 +57,10 @@ describe("grading soak — multi-instance lock safety", () => {
       heldToken = String(token);
       return true;
     });
-    vi.mocked(redisGet).mockImplementation(async () => heldToken);
-    vi.mocked(redisDel).mockImplementation(async () => {
+    vi.mocked(redisReleaseLock).mockImplementation(async (_key, token) => {
+      if (heldToken !== String(token)) return false;
       heldToken = "";
-      return 1;
+      return true;
     });
 
     const work = async () => {

@@ -25,12 +25,31 @@ describe("deep-scan backend hardening", () => {
     expect(stripe).toContain("export async function cancelSubscriptionsForProfile");
   });
 
-  it("hard deletion clears notifications, vouches, DMs, stories", () => {
+  it("hard deletion clears notifications, vouches, DMs, stories, and join tables", () => {
     const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
     expect(privacy).toContain('table: "notifications"');
     expect(privacy).toContain('table: "vouches"');
     expect(privacy).toContain('table: "dm_participants"');
     expect(privacy).toContain('table: "user_stories"');
+    expect(privacy).toContain('table: "story_views"');
+    expect(privacy).toContain('table: "comment_likes"');
+    expect(privacy).toContain('table: "parlay_tails"');
+  });
+
+  it("distributed lock release is atomic compare-and-delete", () => {
+    const lock = readFileSync("server/lib/distributedLock.ts", "utf8");
+    const redis = readFileSync("server/lib/upstashRedis.ts", "utf8");
+    expect(redis).toContain("export async function redisReleaseLock");
+    expect(redis).toContain('redis.call("get", KEYS[1]) == ARGV[1]');
+    expect(lock).toContain("redisReleaseLock");
+    expect(lock).not.toContain("redisGet(key)");
+  });
+
+  it("quota reservation refunds on failed responses", () => {
+    const entitlements = readFileSync("server/middleware/entitlements.ts", "utf8");
+    expect(entitlements).toContain("refundQuotaCounter");
+    expect(entitlements).toContain('maybeRefund("finish")');
+    expect(entitlements).toContain("pending: true");
   });
 
   it("results grade writes to Postgres persistence", () => {

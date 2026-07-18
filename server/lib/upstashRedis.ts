@@ -81,6 +81,23 @@ export async function redisDel(key: string): Promise<void> {
   await redisCommand(["DEL", key]);
 }
 
+/**
+ * Atomically delete `key` only if its value equals `token`.
+ * Prevents a stale lock holder from deleting a newer holder's lock after TTL expiry.
+ */
+export async function redisReleaseLock(key: string, token: string): Promise<boolean> {
+  if (!isUpstashEnabled()) return false;
+
+  const script = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end`;
+  const result = await redisCommand<number>(["EVAL", script, 1, key, token]);
+  return Number(result) === 1;
+}
+
 /** Lightweight connectivity probe for readiness/ops. Returns false when Redis is down. */
 export async function redisPing(): Promise<boolean> {
   if (!isUpstashEnabled()) return false;

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { AppError } from "../errors/AppError";
-import { isUpstashEnabled, redisDel, redisGet, redisSet, sleep } from "./upstashRedis";
+import { isUpstashEnabled, redisReleaseLock, redisSet, sleep } from "./upstashRedis";
 
 export type DistributedLockOptions = {
   /** Lock TTL — auto-releases if the holder crashes. */
@@ -44,10 +44,8 @@ export async function runWithDistributedLock<T>(
         return await fn();
       } finally {
         try {
-          const current = await redisGet(key);
-          if (current === token) {
-            await redisDel(key);
-          }
+          // Atomic compare-and-delete so a TTL-expired holder cannot DEL a new lock.
+          await redisReleaseLock(key, token);
         } catch (error) {
           console.warn(`[distributed-lock] release-failed ${lockName}`, (error as Error)?.message);
         }
