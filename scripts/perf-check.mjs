@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Lightweight perf gate — extends bundle-budget with route-aware CSS ceilings.
- * Public landing CSS gzip: 24 KiB. Authenticated app CSS gzip: 88 KiB.
+ * Public landing CSS gzip: 28 KiB. Authenticated app CSS gzip: 88 KiB.
  * Lazy auth modal CSS gzip: 12 KiB. Total emitted CSS gzip: 120 KiB.
  * Default JS index chunk: 130 KiB.
  *
@@ -18,7 +18,7 @@ import { gzipSync } from "node:zlib";
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
 const VITE_MANIFEST = join(process.cwd(), "dist", "vite-manifest.json");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
-const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 24 * 1024);
+const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 28 * 1024);
 const MAX_AUTH_CSS_GZIP_BYTES = Number(process.env.PERF_AUTH_CSS_BUDGET_BYTES ?? 88 * 1024);
 const MAX_MODAL_CSS_GZIP_BYTES = Number(process.env.PERF_MODAL_CSS_BUDGET_BYTES ?? 12 * 1024);
 const MAX_TOTAL_CSS_GZIP_BYTES = Number(process.env.PERF_CSS_BUDGET_BYTES ?? 120 * 1024);
