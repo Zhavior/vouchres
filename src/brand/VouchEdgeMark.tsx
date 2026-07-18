@@ -45,14 +45,14 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#020617" stopOpacity="0.72" />
-          <stop offset="45%" stopColor="#04111f" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#020617" stopOpacity="0.68" />
+          <stop offset="0%" stopColor="#020617" stopOpacity="0.42" />
+          <stop offset="45%" stopColor="#020617" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#020617" stopOpacity="0.40" />
         </linearGradient>
         <linearGradient id="veMarkLetter" x1="260" y1="300" x2="780" y2="720" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#F8FEFF" />
-          <stop offset="40%" stopColor="#67E8F9" />
-          <stop offset="100%" stopColor="#2DD4BF" />
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="35%" stopColor="#A5F3FC" />
+          <stop offset="100%" stopColor="#22D3EE" />
         </linearGradient>
         <radialGradient id="veMarkGlow" cx="50%" cy="42%" r="46%">
           <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.14" />
@@ -69,7 +69,7 @@ export function VouchEdgeMark({
         aria-label="VE"
         fill="none"
         stroke="url(#veMarkLetter)"
-        strokeWidth="48"
+        strokeWidth="56"
         strokeLinejoin="miter"
         strokeLinecap="square"
         strokeMiterlimit={2}
