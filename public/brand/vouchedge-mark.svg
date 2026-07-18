@@ -1,15 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
-  data-optical-letter-height="250"
+  data-optical-letter-height="280"
   data-optical-gap="40"
   data-optical-margin="120"
   data-optical-max-x="700"
+  data-letter-style="starwars-outline"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 optical:letterHeight=250 optical:gap=40 optical:margin=120 optical:maxX=700 noGimmick=1
-    Optical lockup: VE in the WIDE body of the shield (not the tip). y≈360–610.
-    Classic E mid-bar (~80%). Restrained glow. No gimmick tips.
+    craft:level=2 optical:letterHeight=280 optical:gap=40 optical:margin=120 optical:maxX=700
+    letterStyle=starwars-outline noGimmick=1
+    VE = hollow outlined Star Wars–style display letters drawn BEHIND the trust shield.
   -->
   <defs>
     <linearGradient id="ve-plate" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
@@ -22,16 +23,16 @@
       <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <linearGradient id="ve-shield-fill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.10"/>
-      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.02"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.015"/>
     </linearGradient>
-    <linearGradient id="ve-letter" x1="320" y1="390" x2="720" y2="700" gradientUnits="userSpaceOnUse">
+    <linearGradient id="ve-letter" x1="300" y1="330" x2="720" y2="670" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#F8FEFF"/>
-      <stop offset="55%" stop-color="#7DD3FC"/>
+      <stop offset="40%" stop-color="#67E8F9"/>
       <stop offset="100%" stop-color="#2DD4BF"/>
     </linearGradient>
     <radialGradient id="ve-glow" cx="50%" cy="42%" r="46%">
-      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.16"/>
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.14"/>
       <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.04"/>
       <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
     </radialGradient>
@@ -40,6 +41,30 @@
   <rect width="1024" height="1024" rx="224" fill="url(#ve-plate)"/>
   <circle class="ve-mark-glow" cx="512" cy="468" r="300" fill="url(#ve-glow)"/>
 
+  <!-- VE BEHIND shield — Star Wars hollow outline letters -->
+  <g
+    class="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
+    aria-label="VE"
+    fill="none"
+    stroke="url(#ve-letter)"
+    stroke-width="42"
+    stroke-linejoin="miter"
+    stroke-linecap="square"
+    stroke-miterlimit="2"
+  >
+    <!-- V -->
+    <path class="letter-v" d="M336 360 L456 620 L576 360" />
+    <!-- E -->
+    <path
+      class="letter-e"
+      d="M618 360 V620
+         M618 360 H710
+         M618 490 H688
+         M618 620 H710"
+    />
+  </g>
+
+  <!-- Trust shield ON TOP -->
   <path
     class="ve-mark-shield"
     d="M512 168
@@ -54,26 +79,4 @@
     stroke-width="30"
     stroke-linejoin="round"
   />
-
-  <!-- VE in shield body (above the tip taper) -->
-  <g class="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
-    <path
-      class="letter-v"
-      d="M330 360
-         L420 610
-         L478 610
-         L568 360
-         L512 360
-         L449 560
-         L386 360
-         Z"
-      fill="url(#ve-letter)"
-    />
-    <g class="letter-e">
-      <path d="M608 360 H656 V610 H608 Z" fill="url(#ve-letter)"/>
-      <path d="M656 360 H700 V408 H656 Z" fill="url(#ve-letter)"/>
-      <path d="M656 456 H686 V504 H656 Z" fill="url(#ve-letter)"/>
-      <path d="M656 562 H700 V610 H656 Z" fill="url(#ve-letter)"/>
-    </g>
-  </g>
 </svg>

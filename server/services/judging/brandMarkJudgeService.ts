@@ -232,6 +232,22 @@ export function judgeBrandCraft(svg: string): SubJudgeResult {
     flags.push("Optical lockup not documented");
   }
 
+  // Layer order: letters group must appear before shield (VE behind frame)
+  const lettersIdx = svg.search(/ve-mark-letters/i);
+  const shieldIdx = svg.search(/ve-mark-shield/i);
+  if (lettersIdx >= 0 && shieldIdx > lettersIdx) {
+    score += 8;
+    notes.push("VE drawn behind shield (correct layer order)");
+  } else if (lettersIdx >= 0 && shieldIdx >= 0) {
+    score -= 12;
+    flags.push("VE is in front of shield — put letters behind the frame");
+  }
+
+  if (has(svg, /starwars-outline|ve-mark-starwars/i)) {
+    score += 6;
+    notes.push("Star Wars–style outline letter treatment");
+  }
+
   // Unified letter fill (one gradient) beats rainbow gimmicks
   const letterFills = (svg.match(/url\(#ve-letter\)/g) ?? []).length;
   if (letterFills >= 3) {

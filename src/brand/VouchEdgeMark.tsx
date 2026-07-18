@@ -1,5 +1,5 @@
 /**
- * VouchEdge brand mark — craft level 2 optical VE lockup (letters inside shield).
+ * VouchEdge brand mark — VE Star Wars–style outline letters BEHIND the trust shield.
  * Mirrors /public/brand/vouchedge-mark.svg
  */
 import React from 'react';
@@ -31,6 +31,7 @@ export function VouchEdgeMark({
       role="img"
       aria-label={title}
       data-craft-level="2"
+      data-letter-style="starwars-outline"
     >
       <title>{title}</title>
       <defs>
@@ -44,16 +45,16 @@ export function VouchEdgeMark({
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <linearGradient id="veMarkShieldFill" x1="512" y1="180" x2="512" y2="860" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.02" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.07" />
+          <stop offset="100%" stopColor="#00E5FF" stopOpacity="0.015" />
         </linearGradient>
-        <linearGradient id="veMarkLetter" x1="320" y1="390" x2="720" y2="700" gradientUnits="userSpaceOnUse">
+        <linearGradient id="veMarkLetter" x1="300" y1="330" x2="720" y2="670" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F8FEFF" />
-          <stop offset="55%" stopColor="#7DD3FC" />
+          <stop offset="40%" stopColor="#67E8F9" />
           <stop offset="100%" stopColor="#2DD4BF" />
         </linearGradient>
         <radialGradient id="veMarkGlow" cx="50%" cy="42%" r="46%">
-          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.16" />
+          <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.14" />
           <stop offset="70%" stopColor="#00E5FF" stopOpacity="0.04" />
           <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
         </radialGradient>
@@ -62,6 +63,28 @@ export function VouchEdgeMark({
       <rect width="1024" height="1024" rx="224" fill="url(#veMarkPlate)" className="ve-mark-tile" />
       <circle cx="512" cy="468" r="300" fill="url(#veMarkGlow)" className="ve-mark-glow" />
 
+      {/* Letters first = behind shield */}
+      <g
+        className="ve-mark-letters ve-mark-identity ve-mark-optical ve-mark-starwars"
+        aria-label="VE"
+        fill="none"
+        stroke="url(#veMarkLetter)"
+        strokeWidth="42"
+        strokeLinejoin="miter"
+        strokeLinecap="square"
+        strokeMiterlimit={2}
+      >
+        <path className="letter-v" d="M336 360 L456 620 L576 360" />
+        <path
+          className="letter-e"
+          d="M618 360 V620
+             M618 360 H710
+             M618 490 H688
+             M618 620 H710"
+        />
+      </g>
+
+      {/* Shield on top */}
       <path
         className="ve-mark-shield"
         d="M512 168
@@ -76,27 +99,6 @@ export function VouchEdgeMark({
         strokeWidth="30"
         strokeLinejoin="round"
       />
-
-      <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
-        <path
-          className="letter-v"
-          d="M330 360
-             L420 610
-             L478 610
-             L568 360
-             L512 360
-             L449 560
-             L386 360
-             Z"
-          fill="url(#veMarkLetter)"
-        />
-        <g className="letter-e">
-          <path d="M608 360 H656 V610 H608 Z" fill="url(#veMarkLetter)" />
-          <path d="M656 360 H700 V408 H656 Z" fill="url(#veMarkLetter)" />
-          <path d="M656 456 H686 V504 H656 Z" fill="url(#veMarkLetter)" />
-          <path d="M656 562 H700 V610 H656 Z" fill="url(#veMarkLetter)" />
-        </g>
-      </g>
     </svg>
   );
 }
