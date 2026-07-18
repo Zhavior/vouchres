@@ -1,3 +1,14 @@
+/**
+ * @deprecated LEGACY CLIENT PROJECTION — DO NOT IMPORT IN RUNTIME UI.
+ *
+ * Server selection is authoritative:
+ *   server/services/intelligence/centralBrain/selectionPolicy.ts
+ *   server/services/intelligence/centralBrain/brainLedgerService.ts
+ *
+ * Kept only so offline policy-comparison tests can still assert historical
+ * client heuristics. BrainPicksPage must never call this.
+ */
+
 import type { HrWatchRow } from '../hr/types/hrWatch';
 
 export type BrainPickTag = {
@@ -57,6 +68,7 @@ function explain(row: HrWatchRow, percentile: number): string {
     `${row.truthStatus === 'official' ? 'The batting order is official.' : 'The lineup is still a preview, so this selection can change.'}`;
 }
 
+/** @deprecated Use server selectionPolicy / getBrainMlbPicksForDate instead. */
 export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
   const ranked = rows
     .filter((row) => row.riskTier !== 'Blocked')

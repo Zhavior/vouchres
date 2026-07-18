@@ -1,3 +1,8 @@
+/**
+ * @deprecated LEGACY CLIENT PROJECTION — DO NOT IMPORT IN RUNTIME UI.
+ * Server path: centralBrain/pitcherKSelectionPolicy.ts + getBrainMlbPicksForDate.
+ */
+
 import type { StatPlayerRow } from '../mlb-stats/types/statHubTypes';
 import type { BrainPickTag } from './brainSelection';
 
@@ -7,6 +12,7 @@ export type PitcherKBrainPick = {
   explanation: string;
 };
 
+/** @deprecated Use server pitcherKSelectionPolicy instead. */
 export function selectPitcherKBrainPicks(rows: StatPlayerRow[], limit = 12): PitcherKBrainPick[] {
   const teamCounts = new Map<string, number>();
   const chosen: StatPlayerRow[] = [];

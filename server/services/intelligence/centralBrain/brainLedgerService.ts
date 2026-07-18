@@ -9,6 +9,7 @@ import { mlbStolenBaseFeatureAdapter } from "./mlbStolenBaseAdapter";
 import { BRAIN_SB_SELECTION_VERSION, selectMlbStolenBaseFeatures } from "./stolenBaseSelectionPolicy";
 import { mlbPitcherKFeatureAdapter, BRAIN_PITCHER_K_TARGET } from "./mlbPitcherKAdapter";
 import { BRAIN_PITCHER_K_SELECTION_VERSION, selectMlbPitcherKFeatures } from "./pitcherKSelectionPolicy";
+import { BRAIN_MLB_DOORS } from "./brainDoors";
 
 export const BRAIN_HR_ENGINE_VERSION = BRAIN_HR_SELECTION_VERSION;
 
@@ -321,9 +322,35 @@ export async function buildLiveBrainPitcherKPicks(date = todayISO()): Promise<Br
 }
 
 /**
- * Brain Picks page source of truth: live server selection.
+ * Best-effort freeze of live selections into the immutable ledger.
+ * Never blocks the picks response — ledger write failures stay degraded.
+ */
+async function softFreezeLiveSelections(
+  date: string,
+  markets: { home_run: boolean; stolen_base: boolean; pitcher_strikeouts: boolean },
+): Promise<void> {
+  const jobs: Array<Promise<void>> = [];
+  if (markets.home_run) jobs.push(snapshotDailyBrainHrPicks(date));
+  if (markets.stolen_base) jobs.push(snapshotDailyBrainStolenBasePicks(date));
+  if (markets.pitcher_strikeouts) jobs.push(snapshotDailyBrainPitcherKPicks(date));
+  if (!jobs.length) return;
+  const results = await Promise.allSettled(jobs);
+  for (const result of results) {
+    if (result.status === "rejected") {
+      structuredLog({
+        level: "warn",
+        event: "brain.live_selection.soft_freeze_failed",
+        date,
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+      });
+    }
+  }
+}
+
+/**
+ * Brain Picks page source of truth: MLB-door adapters → selection → ledger/live.
  * Prefers frozen ledger rows when they exist for the date; otherwise computes
- * from adapters so the Brain page never depends on the HR board UI path.
+ * from adapters (MLB Stats API doors) and soft-freezes for the next read.
  */
 export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Promise<{
   picks: BrainLedgerPick[];
@@ -335,6 +362,12 @@ export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Pr
     stolen_base: "ledger" | "live_selection";
     pitcher_strikeouts: "ledger" | "live_selection";
   };
+  engineVersions: {
+    home_run: string;
+    stolen_base: string;
+    pitcher_strikeouts: string;
+  };
+  doors: typeof BRAIN_MLB_DOORS;
 }> {
   const capped = Math.max(1, Math.min(limit, 250));
 
@@ -358,6 +391,15 @@ export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Pr
   const sbPicks = (needSb ? sbLive : sbLedger!.picks).slice(0, capped);
   const kPicks = (needK ? kLive : kLedger!.picks).slice(0, capped);
 
+  // Soft-freeze whatever we had to compute live so cron isn't required for a first ledger row.
+  if ((needHr && hrLive.length) || (needSb && sbLive.length) || (needK && kLive.length)) {
+    void softFreezeLiveSelections(date, {
+      home_run: needHr && hrLive.length > 0,
+      stolen_base: needSb && sbLive.length > 0,
+      pitcher_strikeouts: needK && kLive.length > 0,
+    });
+  }
+
   return {
     picks: hrPicks,
     performance: needHr ? pendingPerformance(hrPicks) : hrLedger!.performance,
@@ -374,6 +416,12 @@ export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Pr
       stolen_base: needSb ? "live_selection" : "ledger",
       pitcher_strikeouts: needK ? "live_selection" : "ledger",
     },
+    engineVersions: {
+      home_run: BRAIN_HR_ENGINE_VERSION,
+      stolen_base: BRAIN_SB_SELECTION_VERSION,
+      pitcher_strikeouts: BRAIN_PITCHER_K_SELECTION_VERSION,
+    },
+    doors: BRAIN_MLB_DOORS,
   };
 }
 

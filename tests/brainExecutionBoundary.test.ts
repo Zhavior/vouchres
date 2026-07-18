@@ -38,4 +38,19 @@ describe("ProjectVABrAIns execution boundary", () => {
     expect(source).not.toContain("selectBrainPicks");
     expect(source).toContain("/api/intelligence/brain/mlb/picks");
   });
+
+  it("keeps legacy client selectors quarantined from runtime pages", () => {
+    const legacy = readFileSync(resolve(ROOT, "src/features/brain/brainSelection.ts"), "utf8");
+    expect(legacy).toContain("@deprecated LEGACY CLIENT PROJECTION");
+    const pages = [
+      "src/features/brain/BrainPicksPage.tsx",
+      "src/features/brain/BrainPerformancePage.tsx",
+      "src/features/hr/pages/HomeRunIntelligencePage.tsx",
+    ];
+    for (const file of pages) {
+      const source = readFileSync(resolve(ROOT, file), "utf8");
+      expect(source, file).not.toMatch(/from ['\"].*\/brainSelection['\"]/);
+      expect(source, file).not.toMatch(/from ['\"].*\/pitcherKSelection['\"]/);
+    }
+  });
 });

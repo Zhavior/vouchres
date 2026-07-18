@@ -96,6 +96,12 @@ type BrainPicksResponse = {
     stolen_base: "ledger" | "live_selection";
     pitcher_strikeouts: "ledger" | "live_selection";
   };
+  engineVersions?: {
+    home_run: string;
+    stolen_base: string;
+    pitcher_strikeouts: string;
+  };
+  doors?: Record<string, { key: string; label: string; source: string }>;
 };
 type BrainPicksBundle = BrainPicksResponse;
 
@@ -214,8 +220,9 @@ export default function BrainPicksPage({
               Evidence coverage before selection
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-white/50">
-              The scan reviews the eligible slate first. Missing sources reduce
-              confidence; they are never filled with invented data.
+              The scan opens MLB Stats API doors first (schedule, rosters,
+              lineups, pitchers). Missing sources reduce confidence; they are
+              never filled with invented data.
             </p>
           </div>
           {scanQuery.data && (
@@ -226,6 +233,13 @@ export default function BrainPicksPage({
                 {scanQuery.data.scan.coverage.playersScanned} players ·{" "}
                 {scanQuery.data.scan.coverage.games} games
               </span>
+              {picksQuery.data?.engineVersions?.home_run && (
+                <span
+                  className={`${Z8_LABEL} border border-white/10 px-3 py-1.5 text-white/45`}
+                >
+                  {picksQuery.data.engineVersions.home_run}
+                </span>
+              )}
               <span
                 className={`${Z8_LABEL} border px-3 py-1.5 ${scanQuery.data.scan.temporal.decisionWindowOpen ? "border-vouch-emerald/30 bg-vouch-emerald/8 text-vouch-emerald" : "border-white/10 text-white/45"}`}
               >
@@ -413,9 +427,25 @@ export default function BrainPicksPage({
         ))}
       </section>
 
-      {hrProvenance && (
-        <div className={`${Z8_LABEL} text-white/40`}>
-          HR source: {hrProvenance === "ledger" ? "frozen ledger" : "live server selection"}
+      {(hrProvenance || picksQuery.data?.doors) && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          {hrProvenance && (
+            <div className={`${Z8_LABEL} text-white/40`}>
+              HR source:{" "}
+              {hrProvenance === "ledger"
+                ? "frozen ledger"
+                : "live MLB-door selection"}
+            </div>
+          )}
+          {picksQuery.data?.doors && (
+            <div className={`${Z8_LABEL} text-white/35`}>
+              Doors:{" "}
+              {Object.values(picksQuery.data.doors)
+                .slice(0, 4)
+                .map((door) => door.label)
+                .join(" · ")}
+            </div>
+          )}
         </div>
       )}
 

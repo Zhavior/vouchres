@@ -54,6 +54,14 @@ vi.mock("../server/services/intelligence/centralBrain/brainLedgerService", () =>
       performance: { total: 1, resolved: 0, pending: 1, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Small sample" },
     },
     provenance: { home_run: "live_selection", stolen_base: "live_selection", pitcher_strikeouts: "ledger" },
+    engineVersions: {
+      home_run: "brain-hr-selection@2",
+      stolen_base: "brain-stolen-base-selection@1",
+      pitcher_strikeouts: "brain-pitcher-k-selection@1",
+    },
+    doors: {
+      schedule: { key: "schedule", label: "Schedule", source: "MLB Stats API schedule" },
+    },
   })),
 }));
 
@@ -160,6 +168,8 @@ describe("central brain routes", () => {
     const body = await response.json();
     expect(body.aiReviews).toMatchObject({ home_run: { status: "live" } });
     expect(body.provenance).toMatchObject({ home_run: "live_selection" });
+    expect(body.engineVersions).toMatchObject({ home_run: "brain-hr-selection@2" });
+    expect(body.doors.schedule.source).toContain("MLB Stats API");
     expect(body.picks).toMatchObject([{ playerName: "Slugger" }]);
     expect(body.pitcherStrikeouts.picks).toMatchObject([{ playerName: "Starter", result: "pending" }]);
   });
