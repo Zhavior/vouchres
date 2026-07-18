@@ -124,11 +124,12 @@ export async function fetchMlbGameLiveState(gamePk: string): Promise<MlbGameLive
 
 export function getSportsDataGatewayStatus() {
   const http = getSportsHttpStats();
+  // Public status stays lean — no upstream base URLs or architecture notes for recon.
   return {
     gateway: "sports_data_v1",
-    mlbApiBase: MLB_API,
     providers: listDataProviders().map((provider) => ({
-      ...provider,
+      id: provider.id,
+      label: provider.label,
       configured:
         provider.id === "odds_api"
           ? isOddsProviderConfigured()
@@ -136,17 +137,10 @@ export function getSportsDataGatewayStatus() {
             ? Boolean(process.env.SUPABASE_URL)
             : true,
     })),
-    sportsHttp: http,
-    architecture: {
-      hrBoardCanonical: "validated_pipeline",
-      parlayReadModel: "smart_parlay_slip",
-      clientDirectMlbFallback: "disabled_in_production_by_default",
-      parlayLiveProgress: "sport_dispatched",
-      parlaySportsReady: {
-        mlb: "full",
-        nfl: "save_and_grade_preview_only",
-        nba: "save_and_grade_preview_only",
-      },
+    sportsHttp: {
+      cacheSize: http.cacheSize,
+      maxCacheEntries: http.maxCacheEntries,
+      inflight: http.inflight,
     },
   };
 }

@@ -33,6 +33,7 @@ import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 import { getMaterializedHrResearch } from "../services/mlb/hrResearchSnapshotService";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { mlbReadLimiter } from "../middleware/rateLimit";
+import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/auth";
 
 function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 120, 10, 350);
@@ -164,16 +165,22 @@ res.json(apiOkFlat(req, {
     }
   }));
 
-  /* ============ Debug endpoint ============ */
-  app.get("/api/mlb/hr-board/today/debug", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
-    try {
-      const result = await getCachedValidatedHrBoard();
-      res.json(apiOkFlat(req, result.debug as unknown as Record<string, unknown>));
-    } catch (err: any) {
-      console.error("[hr-board/today/debug] failed:", err?.message);
-      throw upstreamUnavailable("Debug unavailable.", err);
-    }
-  }));
+  /* ============ Debug endpoint (staff-only — pipeline diagnostics, not public) ============ */
+  app.get(
+    "/api/mlb/hr-board/today/debug",
+    requireAuth,
+    requireStaff,
+    mlbReadLimiter,
+    asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+      try {
+        const result = await getCachedValidatedHrBoard();
+        res.json(apiOkFlat(req, result.debug as unknown as Record<string, unknown>));
+      } catch (err: any) {
+        console.error("[hr-board/today/debug] failed:", err?.message);
+        throw upstreamUnavailable("Debug unavailable.", err);
+      }
+    }),
+  );
 
   /* ============ Deep endpoint — research-only; NEVER a confirmed-candidate source ============ */
   app.get("/api/mlb/hr-board/today/deep", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {

@@ -161,10 +161,14 @@ export function registerApiRoutes(app: Express): void {
         new Promise((_, reject) => setTimeout(() => reject(new Error("db probe timed out after 3s")), 3000)),
       ])) as { error?: { message?: string } | null };
       checks.database = probe?.error
-        ? { ok: false, detail: probe.error.message ?? "query error" }
+        ? { ok: false, detail: "database unreachable" }
         : { ok: true };
+      if (probe?.error) {
+        console.warn("[health/ready] database probe failed:", probe.error.message ?? "query error");
+      }
     } catch (err) {
-      checks.database = { ok: false, detail: (err as Error)?.message ?? "unreachable" };
+      console.warn("[health/ready] database probe error:", (err as Error)?.message ?? err);
+      checks.database = { ok: false, detail: "database unreachable" };
     }
 
     if (isUpstashEnabled()) {

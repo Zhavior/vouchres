@@ -55,4 +55,31 @@ describe("captureException context mapping", () => {
     );
     expect(captureExceptionRaw).toHaveBeenCalledTimes(1);
   });
+
+  it("scrubs nested secrets, query strings, and breadcrumb data", async () => {
+    const sentry = await import("../server/lib/sentry");
+    const event = sentry.scrubSentryEvent({
+      request: {
+        data: { password: "x", nested: { apiKey: "secret", ok: true } },
+        query_string: "apiKey=super-secret&date=2026-07-18",
+        headers: { authorization: "Bearer abc", "x-request-id": "r1" },
+      },
+      breadcrumbs: [
+        { message: "fetch apiKey=leak", data: { token: "t", path: "/ok" } },
+      ],
+      extra: { stripeCustomer: "cus_1", route: "/billing" },
+    });
+
+    expect(event.request.data).toEqual({
+      password: "[scrubbed]",
+      nested: { apiKey: "[scrubbed]", ok: true },
+    });
+    expect(event.request.query_string).toContain("apiKey=%5Bscrubbed%5D");
+    expect(event.request.query_string).toContain("date=2026-07-18");
+    expect(event.request.headers.authorization).toBe("[scrubbed]");
+    expect(event.request.headers["x-request-id"]).toBe("r1");
+    expect(event.breadcrumbs[0].message).toBe("[scrubbed]");
+    expect(event.breadcrumbs[0].data).toEqual({ token: "[scrubbed]", path: "/ok" });
+    expect(event.extra).toEqual({ stripeCustomer: "[scrubbed]", route: "/billing" });
+  });
 });

@@ -83,11 +83,19 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
     .select("*")
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
+    .eq("visibility", "public")
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
+    // Missing visibility column → fail closed (no private-capper dump).
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn(
+        "[subscriber] picks.visibility unavailable — refusing unfiltered capper parlays",
+      );
+      return res.json(apiOkFlat(req, { picks: [] }));
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",
@@ -135,25 +143,14 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     });
   }
 
-  let rows = data ?? [];
+  // Fail closed: if visibility column is missing/unavailable, never dump all parlays.
+  // Fall through to feed-linked picks only (posts prove intentional share).
+  let rows: Record<string, unknown>[] = [];
   if (error?.code === "42703" || error?.code === "PGRST204") {
-    const fallback = await supabaseAdmin
-      .from("picks")
-      .select("*")
-      .eq("user_id", profileId)
-      .eq("leg_type", "parlay")
-      .is("user_hidden_at", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (fallback.error) {
-      throw new AppError({
-        status: 500,
-        code: "internal_server_error",
-        message: "Failed to load profile parlays.",
-        cause: fallback.error,
-      });
-    }
-    rows = fallback.data ?? [];
+    console.warn(
+      "[subscriber] picks.visibility unavailable — refusing unfiltered profile parlays; using feed-linked only",
+    );
+    rows = [];
   } else {
     rows = (data ?? []).filter((row: { visibility?: string }) => row.visibility === "public");
   }

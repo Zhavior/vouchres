@@ -368,7 +368,6 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, re
       pushed_picks,
       net_units,
       is_demo,
-      is_staff,
       created_at
     `)
     .eq("id", id)
