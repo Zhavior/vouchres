@@ -37,6 +37,7 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
     <AppShell
       activeSection={navigation.activeSection}
       loggingOut={navigation.loggingOut}
+      loggingIn={navigation.loggingIn}
       isPendingRoute={navigation.isPendingRoute}
       isLoggedIn={navigation.isLoggedIn}
       isPublicFrontPage={navigation.isPublicFrontPage}

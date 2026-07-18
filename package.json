@@ -50,7 +50,9 @@
     "cap:sync:android": "vite build && npx cap sync android",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
-    "screenshots:mobile": "node scripts/mobileScreenshots.mjs"
+    "screenshots:mobile": "node scripts/mobileScreenshots.mjs",
+    "brand:assets": "node scripts/generateBrandAssets.mjs",
+    "screenshots:splash": "node scripts/splashScreenshots.mjs"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
@@ -96,6 +98,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.2",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.51.0",

@@ -1,6 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#0A0E1A"/>
-  <path d="M32 8 L52 18 V38 L32 56 L12 38 V18 Z" stroke="#00D4FF" stroke-width="2.5" fill="rgba(0,212,255,0.08)"/>
-  <circle cx="32" cy="30" r="7" fill="#00D4FF"/>
-  <path d="M22 44 L42 44" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge">
+  <!-- Master HD mark: trust shield + vouch identity. Safe for maskable / app icons. -->
+  <defs>
+    <linearGradient id="ve-shield-stroke" x1="180" y1="120" x2="844" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67E8F9"/>
+      <stop offset="55%" stop-color="#00E5FF"/>
+      <stop offset="100%" stop-color="#22D3A6"/>
+    </linearGradient>
+    <linearGradient id="ve-core-fill" x1="420" y1="300" x2="620" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67E8F9"/>
+      <stop offset="100%" stop-color="#00D4FF"/>
+    </linearGradient>
+    <radialGradient id="ve-glow" cx="50%" cy="42%" r="48%">
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.28"/>
+      <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="#020617"/>
+  <circle cx="512" cy="470" r="320" fill="url(#ve-glow)"/>
+  <!-- Shield -->
+  <path
+    d="M512 168 L780 304 V552 C780 690 668 812 512 880 C356 812 244 690 244 552 V304 Z"
+    stroke="url(#ve-shield-stroke)"
+    stroke-width="36"
+    stroke-linejoin="round"
+    fill="rgba(0,229,255,0.06)"
+  />
+  <!-- Vouch identity: head + shoulders -->
+  <circle cx="512" cy="430" r="92" fill="url(#ve-core-fill)"/>
+  <path
+    d="M360 620 C392 560 444 528 512 528 C580 528 632 560 664 620"
+    stroke="url(#ve-core-fill)"
+    stroke-width="48"
+    stroke-linecap="round"
+    fill="none"
+  />
 </svg>

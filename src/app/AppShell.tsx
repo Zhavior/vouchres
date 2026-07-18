@@ -3,6 +3,7 @@ import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
+import HelloScreen from '../components/auth/HelloScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
 import { TerminalBackground } from '../components/layout/TerminalBackground';
@@ -26,6 +27,7 @@ const LegalComplianceHost = lazy(() =>
 export type AppShellProps = {
   activeSection: string;
   loggingOut: boolean;
+  loggingIn?: boolean;
   isPendingRoute: boolean;
   isLoggedIn: boolean;
   isPublicFrontPage: boolean;
@@ -47,6 +49,7 @@ export type AppShellProps = {
 export function AppShell({
   activeSection,
   loggingOut,
+  loggingIn = false,
   isPendingRoute,
   isLoggedIn,
   isPublicFrontPage,
@@ -92,6 +95,7 @@ export function AppShell({
             <TerminalBackground />
 
             <div className="ve-motion-content">
+              {loggingIn && <HelloScreen />}
               {loggingOut && <GoodbyeScreen />}
               <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
                 <NotificationProvider savedSlips={savedSlips} onNavigate={navigateSection}>

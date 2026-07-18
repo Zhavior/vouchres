@@ -23,10 +23,20 @@ npx cap open ios       # Xcode (macOS)
 
 1. Production `VAPID_*` keys for push
 2. Counsel-reviewed ToS / Privacy URLs on live domain
-3. App icons (1024 / adaptive) + splash screens
+3. App icons (1024 / adaptive) + splash screens — master SVG at `public/brand/vouchedge-mark.svg`; regenerate with `node scripts/generateBrandAssets.mjs` then `npx capacitor-assets generate --android`
 4. Subscription IAP vs Stripe decision for iOS
 5. Reviewer demo account + “research, not a sportsbook” review notes
 6. Privacy Nutrition Labels / Play Data safety form
+
+## Branded entry splash
+
+| Layer | Role |
+|-------|------|
+| Native Capacitor splash | Static `#020617` + mark while WebView boots |
+| `HelloScreen` | ~1.1s after login |
+| `VouchEdgeBootScreen` | Animated mark + progress while boot jobs warm |
+
+HD sources: `public/brand/vouchedge-mark.svg` (1024 viewBox), `assets/icon-only.png` (1024), `assets/splash.png` (2732).
 
 ## Positioning (do not break)
 

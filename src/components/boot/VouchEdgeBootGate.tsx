@@ -5,6 +5,7 @@ import { queryClient } from "../../lib/queryClient";
 import { queryKeys } from "../../hooks/queries/queryKeys";
 import { todayISO } from "../../hooks/queries/hrBoardQuery";
 import type { HrBoardResponse } from "../../types/hrBoard";
+import VouchEdgeBootScreen from "./VouchEdgeBootScreen";
 
 type Props = {
   children: ReactNode;
@@ -54,5 +55,11 @@ export default function VouchEdgeBootGate({
     }
   }, [boot.ready, shouldRunBoot, storageKey]);
 
-  return <>{children}</>;
+  // Keep children mounted under the splash so routes/data can warm while branding plays.
+  return (
+    <>
+      {children}
+      {shouldRunBoot && !boot.ready ? <VouchEdgeBootScreen boot={boot} /> : null}
+    </>
+  );
 }

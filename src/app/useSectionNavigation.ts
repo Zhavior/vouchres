@@ -39,6 +39,7 @@ export function useSectionNavigation() {
   });
   const activeSectionRef = useRef(activeSection);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [isPendingRoute, startTransition] = useTransition();
 
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
@@ -100,6 +101,7 @@ export function useSectionNavigation() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
+    setLoggingIn(true);
     void (async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -114,6 +116,8 @@ export function useSectionNavigation() {
           localStorage.removeItem('vouchedge_after_auth_destination');
         }
         localStorage.removeItem('vouchedge_after_auth_mode');
+        // Force a branded boot splash after login even if a prior session was warm.
+        sessionStorage.removeItem('vouchedge_boot_complete_v1');
       } catch {
         // ignore storage failures
       }
@@ -125,6 +129,7 @@ export function useSectionNavigation() {
       });
       replaceLandingUrl(destination);
       navigateSection(destination);
+      window.setTimeout(() => setLoggingIn(false), 1100);
     })();
   }, [navigateSection]);
 
@@ -175,6 +180,7 @@ export function useSectionNavigation() {
     activeSection,
     activeSectionRef,
     loggingOut,
+    loggingIn,
     isPendingRoute,
     profileViewUserId,
     navigateSection,
