@@ -24,6 +24,28 @@ export interface JudgeAgent {
   checks: string[];
 }
 
+/** Unified install surface — every in-repo agent lane. */
+export type AgentLane = "ai_judge" | "panel_judge" | "capper" | "brand";
+
+export interface CatalogAgent {
+  id: string;
+  name: string;
+  lane: AgentLane;
+  code?: string;
+  tagline: string;
+  specialty: string;
+  color?: string;
+  builtin: boolean;
+  endpoint?: string;
+}
+
+export interface UnifiedAgentCatalog {
+  total: number;
+  lanes: Record<AgentLane, number>;
+  agents: CatalogAgent[];
+  notes: string[];
+}
+
 export interface AgentPick {
   agentId: string;
   agentName: string;

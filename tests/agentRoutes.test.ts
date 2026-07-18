@@ -95,6 +95,22 @@ describe("agent routes", () => {
     expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
   });
 
+  it("returns unified catalog at /api/agents/catalog", async () => {
+    const response = await fetch(`${baseUrl}/api/agents/catalog`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      total: 1,
+      agents: [{ id: "alpha", lane: "capper" }],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
+
   it("returns agent details with ok envelope", async () => {
     const response = await fetch(`${baseUrl}/api/agents/alpha`);
     const body = await response.json();

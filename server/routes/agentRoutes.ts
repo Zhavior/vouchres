@@ -31,6 +31,15 @@ export function registerAgentRoutes(app: Express): void {
   }));
 
   app.get("/api/agents/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const id = String(req.params.id || "").trim().toLowerCase();
+    // Reserved segments registered as sibling routes — never treat as capper ids.
+    if (id === "catalog" || id === "generate-all-picks") {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Agent not found.",
+      });
+    }
     const agent = getAgent(req.params.id);
     if (!agent) {
       throw new AppError({

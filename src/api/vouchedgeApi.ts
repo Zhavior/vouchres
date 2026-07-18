@@ -10,7 +10,7 @@ import type {
   SneakyHrTarget,
   RunEnvironment,
 } from "../types/mlb";
-import type { CapperAgent, JudgeAgent, AgentPicksResponse } from "../types/agents";
+import type { CapperAgent, JudgeAgent, AgentPicksResponse, UnifiedAgentCatalog } from "../types/agents";
 import type { JudgeVerdict, PickCandidate } from "../types/judging";
 import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
@@ -132,7 +132,9 @@ export const vouchedgeApi = {
   runEnvironments: () => getJson<{ environments: RunEnvironment[] }>("/api/mlb/reports/run-environments"),
 
   // Agents
-  agents: () => getJson<{ cappers: CapperAgent[]; judges: JudgeAgent[] }>("/api/agents"),
+  agents: () =>
+    getJson<{ cappers: CapperAgent[]; judges: JudgeAgent[]; catalog: UnifiedAgentCatalog }>("/api/agents"),
+  agentsCatalog: () => getJson<UnifiedAgentCatalog>("/api/agents/catalog"),
   generatePicks: (agentId: string, date?: string) =>
     postJson<AgentPicksResponse>(`/api/agents/${agentId}/generate-picks`, { date }),
 
