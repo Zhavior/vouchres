@@ -401,7 +401,9 @@ async function buildFreshValidatedBoard(
 ): Promise<ValidatedHrBoardResult> {
   console.log(`[HR_BOARD_HUB] validated building key=${key}`);
 
-  const weatherPrewarm = getTodayGamesWeather(date ?? undefined)
+  // Weather is supporting research context, not a board truth prerequisite.
+  // Keep board availability non-blocking when the forecast provider is slow/degraded.
+  void getTodayGamesWeather(date ?? undefined)
     .then((rows) => {
       console.log(
         `[HR_BOARD_HUB] weather prewarm complete key=${key} games=${rows.length}`,
@@ -409,8 +411,6 @@ async function buildFreshValidatedBoard(
       return rows;
     })
     .catch((error) => {
-      // Weather is supporting research context, not a board truth prerequisite.
-      // Keep the validated board available when the forecast provider is degraded.
       console.warn(
         `[HR_BOARD_HUB] weather prewarm failed key=${key}:`,
         error instanceof Error ? error.message : String(error),
@@ -418,10 +418,7 @@ async function buildFreshValidatedBoard(
       return [];
     });
 
-  const [board] = await Promise.all([
-    buildValidatedHrBoard(date ?? undefined),
-    weatherPrewarm,
-  ]);
+  const board = await buildValidatedHrBoard(date ?? undefined);
 
   rememberLastGoodValidatedBoard(key, board);
 

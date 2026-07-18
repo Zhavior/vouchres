@@ -21,6 +21,7 @@ import {
 const sampleBoard = {
   date: "2026-07-08",
   gameCount: 2,
+  generatedAt: "2026-07-08T12:00:00.000Z",
   candidates: [
     {
       playerId: 1,
