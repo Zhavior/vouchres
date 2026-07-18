@@ -56,12 +56,18 @@ export const corsMiddleware = cors({
  * Helmet — security headers. Strict-Transport-Security, no-sniff, etc.
  * Disable COEP/COOP if you embed third-party iframes (you probably don't).
  */
+const isProd = process.env.NODE_ENV === "production";
+
 export const helmetMiddleware = helmet({
+  // HSTS + upgrade-insecure-requests break local http://localhost Vite boots
+  // (browser upgrades module/HMR requests to https:// and the page stays blank).
+  hsts: isProd,
   contentSecurityPolicy: {
+    useDefaults: true,
     directives: {
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: process.env.NODE_ENV === "production"
+      scriptSrc: isProd
         ? ["'self'"]
         : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind v4 needs unsafe-inline
@@ -71,12 +77,12 @@ export const helmetMiddleware = helmet({
         "https://statsapi.mlb.com",
         "https://*.supabase.co",
         "https://api.stripe.com",
-        // Vite HMR websocket (dev only — separate port from Express)
-        ...(process.env.NODE_ENV !== "production"
-          ? ["ws://localhost:*", "ws://127.0.0.1:*"]
-          : []),
+        // Vite HMR websocket (dev only)
+        ...(isProd ? [] : ["ws://localhost:*", "ws://127.0.0.1:*", "wss://localhost:*", "wss://127.0.0.1:*"]),
       ],
       frameSrc: ["https://js.stripe.com"],
+      // Disable Helmet's default upgrade-insecure-requests outside production.
+      upgradeInsecureRequests: isProd ? [] : null,
     },
   },
   crossOriginEmbedderPolicy: false,
