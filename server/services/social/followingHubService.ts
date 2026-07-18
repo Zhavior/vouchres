@@ -243,6 +243,18 @@ export async function listConversations(userId: string) {
 export async function findOrCreateDirectConversation(userId: string, otherUserId: string) {
   if (userId === otherUserId) throw new Error("Cannot message yourself.");
 
+  // Anti-harassment: only mutual followers may start a DM thread.
+  const { getRelationshipForTarget } = await import("./followService");
+  const relationship = await getRelationshipForTarget({
+    viewerId: userId,
+    profileId: otherUserId,
+  });
+  if (!relationship.isFriend) {
+    const err = new Error("You can only message mutual followers.");
+    (err as Error & { code?: string }).code = "dm_requires_mutual_follow";
+    throw err;
+  }
+
   const supabaseAdmin = await admin();
   const { data: myMemberships } = await supabaseAdmin
     .from("dm_participants")

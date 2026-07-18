@@ -308,16 +308,33 @@ publicRoutes.get("/cappers/:id", asyncHandler(async (req: RequestWithContext, re
       .eq("subject_id", id),
     supabaseAdmin
       .from("picks")
-      .select("id, market, selection, status, settled_units, created_at, graded_at, event_id")
+      .select("id, market, selection, status, settled_units, created_at, graded_at, event_id, visibility")
       .eq("capper_id", id)
+      .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
 
+  let recentPicks = picksRes.data ?? [];
+  if (picksRes.error) {
+    // Missing visibility column → fail closed (never dump private capper slips).
+    if (picksRes.error.code === "42703" || picksRes.error.code === "PGRST204") {
+      console.warn("[public] picks.visibility unavailable — refusing unfiltered capper recent picks");
+      recentPicks = [];
+    } else {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to fetch capper picks.",
+        cause: picksRes.error,
+      });
+    }
+  }
+
   return res.json(apiOkFlat(req, {
     ...capper,
     trust_scores: scoresRes.data ?? [],
-    recent_picks: picksRes.data ?? [],
+    recent_picks: recentPicks,
   }));
 }));
 
@@ -331,6 +348,7 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
     .from("picks")
     .select(PUBLIC_PICK_COLUMNS, { count: "exact" })
     .eq("capper_id", id)
+    .eq("visibility", "public")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -338,6 +356,10 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
 
   const { data, count, error } = await query;
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn("[public] picks.visibility unavailable — refusing unfiltered capper picks");
+      return res.json(apiOkFlat(req, { picks: [], total: 0, limit, offset }));
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",

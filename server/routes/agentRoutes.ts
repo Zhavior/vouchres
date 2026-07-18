@@ -49,7 +49,7 @@ export function registerAgentRoutes(app: Express): void {
     "/api/agents/:id/generate-picks",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 5, "agent_generate_picks"),
+    requireTierOrQuota("gold", 5, "agent_generate_picks", 100),
     asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const start = Date.now();
     const agent = getAgent(req.params.id);

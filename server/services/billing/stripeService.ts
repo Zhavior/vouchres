@@ -466,6 +466,81 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
 }
 
 /**
+ * Cancel all active Stripe subscriptions for a profile (account deletion schedule).
+ * Also downgrades local tier so paid entitlements stop immediately.
+ */
+export async function cancelSubscriptionsForProfile(profileId: string): Promise<{
+  canceled: number;
+  warnings: string[];
+}> {
+  const warnings: string[] = [];
+  if (!profileId) return { canceled: 0, warnings: ["missing_profile_id"] };
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  const [{ data: subs }, { data: profile }] = await Promise.all([
+    supabaseAdmin
+      .from("subscriptions")
+      .select("stripe_subscription_id, status")
+      .eq("profile_id", profileId),
+    supabaseAdmin
+      .from("profiles")
+      .select("stripe_subscription_id")
+      .eq("id", profileId)
+      .maybeSingle(),
+  ]);
+
+  const subscriptionIds = new Set<string>();
+  for (const row of subs ?? []) {
+    const id = String((row as { stripe_subscription_id?: string | null }).stripe_subscription_id ?? "").trim();
+    if (id) subscriptionIds.add(id);
+  }
+  const profileSub = String(profile?.stripe_subscription_id ?? "").trim();
+  if (profileSub) subscriptionIds.add(profileSub);
+
+  let canceled = 0;
+  if (subscriptionIds.size > 0 && isStripeConfigured()) {
+    const stripe = getStripe();
+    for (const subscriptionId of subscriptionIds) {
+      try {
+        await stripe.subscriptions.cancel(subscriptionId);
+        canceled += 1;
+      } catch (error: unknown) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String((error as { code?: string }).code ?? "")
+            : "";
+        const statusCode =
+          error && typeof error === "object" && "statusCode" in error
+            ? Number((error as { statusCode?: number }).statusCode)
+            : NaN;
+        if (code === "resource_missing" || statusCode === 404) continue;
+        warnings.push(`cancel_failed:${subscriptionId}`);
+        console.warn("[stripe] cancel subscription failed", subscriptionId, error);
+      }
+    }
+  } else if (subscriptionIds.size > 0) {
+    warnings.push("stripe_not_configured");
+  }
+
+  const { error: subErr } = await supabaseAdmin
+    .from("subscriptions")
+    .update({ status: "canceled", cancel_at_period_end: true })
+    .eq("profile_id", profileId);
+  if (subErr) warnings.push(`local_subscription_update_failed:${subErr.message}`);
+
+  const { error: profileErr } = await supabaseAdmin
+    .from("profiles")
+    .update({ tier: "free", stripe_subscription_id: null })
+    .eq("id", profileId);
+  if (profileErr) warnings.push(`local_profile_downgrade_failed:${profileErr.message}`);
+
+  const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+  await bumpAuthUserEpoch(profileId);
+
+  return { canceled, warnings };
+}
+
+/**
  * Permanently delete a Stripe customer during account teardown.
  * Treats already-missing customers as success so re-runs stay idempotent.
  */

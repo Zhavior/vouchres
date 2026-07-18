@@ -4,14 +4,22 @@ import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { boundedInt, upstreamUnavailable } from "../lib/requestValidators";
-import { getLedger } from "../services/persistence/pickService";
-import { gradeAndLearn } from "../services/results/learningNoteService";
+import { getLedger, gradePick as persistGradePick } from "../services/persistence/pickService";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import type { AuthedRequest } from "../middleware/auth";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { gradingLimiter } from "../middleware/rateLimit";
 
 type ResultReq = AuthedRequest & RequestWithContext;
+
+const RESULT_STATUS_MAP: Record<string, "won" | "lost" | "push" | "void"> = {
+  win: "won",
+  won: "won",
+  loss: "lost",
+  lost: "lost",
+  push: "push",
+  void: "void",
+};
 
 export function registerResultRoutes(app: Express): void {
   app.get("/api/results/ledger", requireAuth, asyncHandler(async (req: ResultReq, res: Response) => {
@@ -34,6 +42,10 @@ export function registerResultRoutes(app: Express): void {
     }
   }));
 
+  /**
+   * Staff grading writes to Postgres (pending → settled).
+   * The old in-memory seed ledger path is retired — it never touched real picks.
+   */
   app.post("/api/results/grade", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: ResultReq, res: Response) => {
     const { pickId, result, whatActuallyHappened } = req.body ?? {};
     if (!pickId || !result) {
@@ -47,8 +59,42 @@ export function registerResultRoutes(app: Express): void {
         ],
       });
     }
-    const out = await gradeAndLearn(pickId, result, whatActuallyHappened);
-    if (!out.pick) throw new AppError({ status: 404, code: "not_found", message: "Pick not found." });
-    return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
+
+    const status = RESULT_STATUS_MAP[String(result).toLowerCase()];
+    if (!status) {
+      throw new AppError({
+        status: 400,
+        code: "validation_error",
+        message: "result must be one of: win, loss, push, void.",
+        details: [{ path: "result", message: "Invalid result status." }],
+      });
+    }
+
+    const learningNote =
+      typeof whatActuallyHappened === "string" && whatActuallyHappened.trim()
+        ? whatActuallyHappened.trim().slice(0, 2000)
+        : undefined;
+
+    const changed = await persistGradePick({
+      pickId: String(pickId),
+      status,
+      settledUnits: null,
+      learningNote,
+    });
+
+    if (!changed) {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Pick not found or already graded.",
+      });
+    }
+
+    return res.json(apiOkFlat(req, {
+      pickId: String(pickId),
+      status,
+      source: "postgres",
+      learningNote: learningNote ?? null,
+    }));
   }));
 }

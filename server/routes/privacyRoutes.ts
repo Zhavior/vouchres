@@ -114,14 +114,25 @@ privacyRoutes.post(
 
   await bumpAuthUserEpoch(req.user!.id);
 
-  if ((req.user!.profile as any).stripe_subscription_id) {
+  // Stop billing immediately when deletion is scheduled (do not wait 30 days).
+  try {
+    const { cancelSubscriptionsForProfile } = await import("../services/billing/stripeService");
+    const cancelResult = await cancelSubscriptionsForProfile(req.user!.id);
     structuredLog({
-      level: "warn",
-      event: "privacy_stripe_cancel_skipped",
+      level: cancelResult.warnings.length ? "warn" : "info",
+      event: "privacy_stripe_cancel_on_deletion",
       requestId: req.requestId,
       userId: req.user!.id,
-      subscriptionId: (req.user!.profile as any).stripe_subscription_id,
-      message: "Stripe subscription cancellation helper is not wired yet.",
+      canceled: cancelResult.canceled,
+      warnings: cancelResult.warnings,
+    });
+  } catch (err) {
+    structuredLog({
+      level: "error",
+      event: "privacy_stripe_cancel_failed",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      message: err instanceof Error ? err.message : String(err),
     });
   }
 
@@ -241,19 +252,36 @@ async function processScheduledDeletionsUnlocked(): Promise<{
 
       await supabaseAdmin.rpc("anonymize_user_picks", { p_user_id: user.id });
 
-      const deleteJobs = await Promise.all([
-        supabaseAdmin.from("post_likes").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("post_comments").delete().eq("author_id", user.id),
-        supabaseAdmin.from("posts").delete().eq("author_id", user.id),
-        supabaseAdmin.from("follows").delete().eq("follower_id", user.id),
-        supabaseAdmin.from("follows").delete().eq("following_profile_id", user.id),
-        supabaseAdmin.from("daily_quotas").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("subscriptions").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("beta_signups").delete().eq("activated_user_id", user.id),
-      ]);
-      const deleteFailure = deleteJobs.find((job) => job.error);
-      if (deleteFailure?.error) {
-        throw new Error(`related-row delete failed: ${deleteFailure.error.message}`);
+      // Best-effort wipe of user-owned rows. Missing tables are ignored; other errors fail the job.
+      const deleteSpecs: Array<{ table: string; column: string }> = [
+        { table: "post_likes", column: "profile_id" },
+        { table: "post_comments", column: "author_id" },
+        { table: "posts", column: "author_id" },
+        { table: "follows", column: "follower_id" },
+        { table: "follows", column: "following_profile_id" },
+        { table: "daily_quotas", column: "profile_id" },
+        { table: "subscriptions", column: "profile_id" },
+        { table: "beta_signups", column: "activated_user_id" },
+        { table: "notifications", column: "user_id" },
+        { table: "push_subscriptions", column: "user_id" },
+        { table: "vouches", column: "user_id" },
+        { table: "user_status_notes", column: "user_id" },
+        { table: "user_stories", column: "user_id" },
+        { table: "dm_messages", column: "sender_id" },
+        { table: "dm_participants", column: "user_id" },
+        { table: "subscriber_channel_messages", column: "author_id" },
+      ];
+
+      for (const spec of deleteSpecs) {
+        const result = await supabaseAdmin.from(spec.table).delete().eq(spec.column, user.id);
+        if (!result.error) continue;
+        const code = String(result.error.code ?? "");
+        // Undefined table / column in some envs — do not block erasure of the rest.
+        if (code === "42P01" || code === "42703" || code === "PGRST205" || code === "PGRST204") {
+          console.warn(`[deletion] skip missing ${spec.table}.${spec.column}: ${result.error.message}`);
+          continue;
+        }
+        throw new Error(`related-row delete failed (${spec.table}): ${result.error.message}`);
       }
 
       if (user.stripe_customer_id) {

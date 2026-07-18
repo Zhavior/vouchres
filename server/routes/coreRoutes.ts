@@ -70,7 +70,7 @@ coreRoutes.post(
   requireAuth,
   requireLegalConfirmed,
   pickLimiter,
-  requireTierOrQuota("gold", 3, "picks_per_day"),
+  requireTierOrQuota("gold", 3, "picks_per_day", 100),
   validate({ body: CreatePickSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const body = req.body as CreatePickInput;

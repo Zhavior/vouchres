@@ -260,11 +260,18 @@ async function loadCapperAnnouncementPosts(capperId: string, limit: number) {
     .select("id, explanation, selection, created_at, status")
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
+    .eq("visibility", "public")
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn(
+        "[subscriber] picks.visibility unavailable — refusing unfiltered capper announcements",
+      );
+      return [];
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",

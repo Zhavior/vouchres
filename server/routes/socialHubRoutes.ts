@@ -81,8 +81,23 @@ const StartConversationSchema = z.object({
 
 socialHubRoutes.post("/messages/conversations", requireAuth, validate({ body: StartConversationSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { user_id } = req.body as z.infer<typeof StartConversationSchema>;
-  const conversationId = await findOrCreateDirectConversation(req.user!.id, user_id);
-  return res.status(201).json(apiOkFlat(req, { conversationId }));
+  try {
+    const conversationId = await findOrCreateDirectConversation(req.user!.id, user_id);
+    return res.status(201).json(apiOkFlat(req, { conversationId }));
+  } catch (error: unknown) {
+    const code = error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code ?? "")
+      : "";
+    if (code === "dm_requires_mutual_follow") {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "You can only message mutual followers.",
+        details: { reason: "dm_requires_mutual_follow" },
+      });
+    }
+    throw error;
+  }
 }));
 
 socialHubRoutes.get("/messages/conversations/:id", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {

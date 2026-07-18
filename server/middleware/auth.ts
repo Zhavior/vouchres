@@ -101,7 +101,11 @@ function authEpochRedisKey(userId: string): string {
   return `auth:epoch:${userId}`;
 }
 
-async function getAuthUserEpoch(userId: string): Promise<number> {
+/**
+ * Returns the auth epoch, or `null` when Redis is enabled but unreadable.
+ * Callers must treat `null` as "do not trust cached sessions".
+ */
+async function getAuthUserEpoch(userId: string): Promise<number | null> {
   const local = authEpochL1.get(userId);
   if (local !== undefined) return local;
 
@@ -114,7 +118,7 @@ async function getAuthUserEpoch(userId: string): Promise<number> {
     return epoch;
   } catch (error) {
     console.warn("[auth] redis epoch read failed", (error as Error)?.message ?? error);
-    return 0;
+    return null;
   }
 }
 
@@ -124,7 +128,7 @@ async function getAuthUserEpoch(userId: string): Promise<number> {
  */
 export async function bumpAuthUserEpoch(userId: string): Promise<void> {
   if (!userId) return;
-  const current = await getAuthUserEpoch(userId);
+  const current = (await getAuthUserEpoch(userId)) ?? authEpochL1.get(userId) ?? 0;
   const next = current + 1;
   authEpochL1.set(userId, next);
   if (!isUpstashEnabled()) return;
@@ -154,7 +158,8 @@ async function readAuthSessionCache(tokenHash: string): Promise<CachedAuthSessio
   if (!candidate) return null;
 
   const epoch = await getAuthUserEpoch(candidate.id);
-  if ((candidate.authEpoch ?? 0) !== epoch) {
+  // Redis epoch unread ⇒ cache miss (never treat unknown epoch as 0 / pre-ban).
+  if (epoch === null || (candidate.authEpoch ?? 0) !== epoch) {
     authSessionCache.delete(tokenHash);
     if (isUpstashEnabled()) {
       try {
@@ -173,7 +178,7 @@ async function writeAuthSessionCache(
   tokenHash: string,
   session: NonNullable<AuthedRequest["user"]>,
 ): Promise<void> {
-  const epoch = await getAuthUserEpoch(session.id);
+  const epoch = (await getAuthUserEpoch(session.id)) ?? 0;
   const cached: CachedAuthSession = { ...session, authEpoch: epoch };
   authSessionCache.set(tokenHash, cached, AUTH_SESSION_TTL_MS);
   if (!isUpstashEnabled()) return;
