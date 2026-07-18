@@ -23,13 +23,13 @@ function secretsEqual(a: string, b: string): boolean {
 }
 
 /**
- * Cron endpoints are open in dev when CRON_SECRET is unset.
- * In production, missing CRON_SECRET fails closed (deny all cron traffic).
+ * Cron auth fails closed when CRON_SECRET is unset — including staging/preview —
+ * unless ALLOW_INSECURE_CRON=true (local-only escape hatch).
  */
 export function isAuthorizedCronRequest(req: Request): boolean {
   const cronSecret = readCronSecret();
   if (!cronSecret) {
-    return !isProductionRuntime();
+    return process.env.ALLOW_INSECURE_CRON === "true" && !isProductionRuntime();
   }
 
   // Bearer only — never accept ?token= (leaks into access logs, Referer, and proxies).
@@ -45,7 +45,7 @@ export function isAuthorizedCronRequest(req: Request): boolean {
 export function assertCronAuthorized(req: Request): void {
   if (!isAuthorizedCronRequest(req)) {
     const cronSecret = readCronSecret();
-    if (!cronSecret && isProductionRuntime()) {
+    if (!cronSecret) {
       throw new AppError({
         status: 503,
         code: "internal_server_error",

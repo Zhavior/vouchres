@@ -4,10 +4,11 @@ import { AuthedRequest, bumpAuthUserEpoch, requireAuth, supabaseAdmin } from "..
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
-import { AppError } from "../errors/AppError";
+import { AppError, isAppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { validate } from "../middleware/validation";
 import { PrivacyDeleteAccountSchema } from "../validators/mutationSchemas";
+import { runWithDistributedLock } from "../lib/distributedLock";
 
 /**
  * Privacy routes — GDPR / CCPA / CPRA compliance endpoints.
@@ -186,6 +187,25 @@ privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: Priv
  * Called by server/cron/dailyDeleteJob.ts (similar pattern to dailyGradeJob.ts).
  */
 export async function processScheduledDeletions(): Promise<{
+  processed: number;
+  errors: string[];
+}> {
+  try {
+    return await runWithDistributedLock(
+      "cron:account-deletion",
+      () => processScheduledDeletionsUnlocked(),
+      { ttlSeconds: 900, waitMs: 5_000 },
+    );
+  } catch (err) {
+    if (isAppError(err) && err.code === "conflict") {
+      console.warn("[deletion] skipped — another deletion job holds the lock");
+      return { processed: 0, errors: ["deletion job already running"] };
+    }
+    throw err;
+  }
+}
+
+async function processScheduledDeletionsUnlocked(): Promise<{
   processed: number;
   errors: string[];
 }> {

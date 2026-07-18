@@ -4,6 +4,7 @@ import { AuthedRequest, optionalAuth, requireAuth, requireStaff, supabaseAdmin }
 import { generationLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
+import { PUBLIC_PICK_COLUMNS, toPublicPickDtos } from "../lib/publicPickDto";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { validate } from "../middleware/validation";
@@ -328,7 +329,7 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
 
   let query = supabaseAdmin
     .from("picks")
-    .select("*", { count: "exact" })
+    .select(PUBLIC_PICK_COLUMNS, { count: "exact" })
     .eq("capper_id", id)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -345,7 +346,12 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
     });
   }
 
-  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
+  return res.json(apiOkFlat(req, {
+    picks: toPublicPickDtos((data ?? []) as Array<Record<string, unknown>>),
+    total: count ?? 0,
+    limit,
+    offset,
+  }));
 }));
 
 publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -406,7 +412,7 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
 
   let query = supabaseAdmin
     .from("picks")
-    .select("*", { count: "exact" })
+    .select(PUBLIC_PICK_COLUMNS, { count: "exact" })
     .eq("user_id", id)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -423,7 +429,12 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
     });
   }
 
-  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
+  return res.json(apiOkFlat(req, {
+    picks: toPublicPickDtos((data ?? []) as Array<Record<string, unknown>>),
+    total: count ?? 0,
+    limit,
+    offset,
+  }));
 }));
 
 publicRoutes.post(

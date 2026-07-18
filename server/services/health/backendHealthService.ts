@@ -147,9 +147,9 @@ function productionProofChecklist(checks: ConfigCheck[]): {
   const envItems: ProductionProofItem[] = [
     {
       id: "cron_secret",
-      label: "CRON_SECRET set (cron fails closed in production)",
+      label: "CRON_SECRET set (cron fails closed unless ALLOW_INSECURE_CRON)",
       ready: Boolean(cron?.configured),
-      detail: "Verify GET /api/cron/parlays/grade-due returns 401 without Authorization Bearer CRON_SECRET; staff-only POST /api/parlays/grade-due returns 403 for non-staff users.",
+      detail: "Verify GET /api/cron/parlays/grade-due returns 503/401 without Authorization Bearer CRON_SECRET; staff-only POST /api/parlays/grade-due returns 403 for non-staff users.",
     },
     {
       id: "sentry_dsn",

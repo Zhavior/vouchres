@@ -13,6 +13,7 @@ import {
   canViewerAccessCapperSubscriberContent,
   canViewerAccessProfileSubscriberContent,
 } from "../services/social/socialProjectionService";
+import { PUBLIC_PICK_COLUMNS, toPublicPickDto } from "../lib/publicPickDto";
 
 export const subscriberRoutes = Router();
 
@@ -80,7 +81,7 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
   const { data, error } = await supabaseAdmin
     .from("picks")
-    .select("*")
+    .select(PUBLIC_PICK_COLUMNS)
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
     .eq("visibility", "public")
@@ -109,7 +110,7 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
 
   return res.json(apiOkFlat(req, {
     picks: rows.map((row: Record<string, unknown>) => ({
-      ...row,
+      ...toPublicPickDto(row),
       legs: legsByPickId[String(row.id)] ?? [],
     })),
   }));
@@ -126,7 +127,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
   // Public/shared parlays only: visibility=public when available, else linked to a feed post.
   const query = supabaseAdmin
     .from("picks")
-    .select("*")
+    .select(PUBLIC_PICK_COLUMNS)
     .eq("user_id", profileId)
     .eq("leg_type", "parlay")
     .is("user_hidden_at", null)
@@ -171,7 +172,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     if (pickIds.length > 0) {
       const { data: postedPicks, error: postedError } = await supabaseAdmin
         .from("picks")
-        .select("*")
+        .select(PUBLIC_PICK_COLUMNS)
         .in("id", pickIds)
         .eq("leg_type", "parlay")
         .is("user_hidden_at", null);
@@ -192,7 +193,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
 
   return res.json(apiOkFlat(req, {
     picks: rows.map((row: Record<string, unknown>) => ({
-      ...row,
+      ...toPublicPickDto(row),
       legs: legsByPickId[String(row.id)] ?? [],
     })),
   }));

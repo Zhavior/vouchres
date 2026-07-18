@@ -228,6 +228,18 @@ async function runGradePendingPicks(opts: {
 
             if (atomicSettlement.ok) {
               atomicSettlementSucceeded = true;
+            } else if (atomicSettlement.fatal) {
+              skipped.push({
+                pick_id: pick.id,
+                status: "graded_error",
+                settled_units: null,
+                error: "atomic_settlement_required",
+                warnings: [
+                  atomicSettlement.warning ??
+                    "Atomic parlay settlement failed; non-atomic fallback refused.",
+                ],
+              });
+              continue;
             } else if (atomicSettlement.warning) {
               result.warnings = [...(result.warnings ?? []), atomicSettlement.warning];
             }
@@ -890,7 +902,12 @@ type AtomicParlaySettlementResult = {
 async function settleParlayPacketAtomically(
   pickId: string,
   result: GradeResult
-): Promise<{ ok: boolean; warning?: string; proof?: AtomicParlaySettlementResult }> {
+): Promise<{
+  ok: boolean;
+  fatal?: boolean;
+  warning?: string;
+  proof?: AtomicParlaySettlementResult;
+}> {
   if (!result.leg_results?.length) {
     return { ok: false, warning: "No leg_results supplied for atomic parlay settlement." };
   }
@@ -924,6 +941,22 @@ async function settleParlayPacketAtomically(
       error.code === "42883" ||
       error.code === "PGRST202" ||
       /settle_parlay_packet/i.test(error.message ?? "");
+
+    // Production refuses non-atomic parent-then-legs fallback (split-brain risk).
+    // Local/dev may still fall back when the RPC is missing, unless overridden.
+    const allowLegacy =
+      process.env.ALLOW_LEGACY_PARLAY_SETTLEMENT === "true" ||
+      (process.env.NODE_ENV !== "production" && missingRpc);
+
+    if (!allowLegacy) {
+      return {
+        ok: false,
+        fatal: true,
+        warning: missingRpc
+          ? "Atomic settlement RPC unavailable — refusing non-atomic fallback."
+          : `Atomic settlement RPC failed — refusing non-atomic fallback. ${error.message}`,
+      };
+    }
 
     return {
       ok: false,

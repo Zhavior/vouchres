@@ -15,6 +15,7 @@ import { renderParlayShareCardSvg, PARLAY_SHARE_CARD_HEADERS } from "../services
 import { getPublicVouch } from "../services/persistence/vouchService";
 import { getPublicParlayProof, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getSafePublicOrigin } from "../lib/publicOrigin";
+import { mlbReadLimiter } from "../middleware/rateLimit";
 
 export const shareRoutes = Router();
 
@@ -60,7 +61,7 @@ shareRoutes.get("/share/vouch/:id/card.png", asyncHandler(async (req, res) => {
   }
 }));
 
-shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
+shareRoutes.get("/share/hr-card", mlbReadLimiter, asyncHandler(async (req, res) => {
   try {
     const params = parseHrShareCardParams(req.query as unknown as Record<string, unknown>);
     const board = await getCachedValidatedHrBoard(params.date);
