@@ -80,21 +80,21 @@ export function VouchEdgeMark({
       <g className="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
         <path
           className="letter-v"
-          d="M318 408
-             L414 676
-             L476 676
-             L572 408
-             L512 408
-             L445 612
-             L378 408
+          d="M330 360
+             L420 610
+             L478 610
+             L568 360
+             L512 360
+             L449 560
+             L386 360
              Z"
           fill="url(#veMarkLetter)"
         />
         <g className="letter-e">
-          <path d="M612 408 H662 V676 H612 Z" fill="url(#veMarkLetter)" />
-          <path d="M662 408 H720 V460 H662 Z" fill="url(#veMarkLetter)" />
-          <path d="M662 516 H704 V568 H662 Z" fill="url(#veMarkLetter)" />
-          <path d="M662 624 H720 V676 H662 Z" fill="url(#veMarkLetter)" />
+          <path d="M608 360 H656 V610 H608 Z" fill="url(#veMarkLetter)" />
+          <path d="M656 360 H700 V408 H656 Z" fill="url(#veMarkLetter)" />
+          <path d="M656 456 H686 V504 H656 Z" fill="url(#veMarkLetter)" />
+          <path d="M656 562 H700 V610 H656 Z" fill="url(#veMarkLetter)" />
         </g>
       </g>
     </svg>

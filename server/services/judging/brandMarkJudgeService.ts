@@ -177,12 +177,12 @@ export function judgeBrandLetters(svg: string): SubJudgeResult {
   }
 
   const maxX = metaInt(svg, "optical-max-x") ?? metaInt(svg, "maxX");
-  if (maxX != null && maxX <= 720) {
+  if (maxX != null && maxX <= 700) {
     score += 6;
-    notes.push(`Letter max-x ${maxX} — inside shield safe zone`);
+    notes.push(`Letter max-x ${maxX} — inside shield body safe zone`);
   } else if (maxX != null) {
     score -= 14;
-    flags.push(`Letter max-x ${maxX} spills past shield safe zone (≤720)`);
+    flags.push(`Letter max-x ${maxX} spills past shield body (≤700)`);
   } else {
     score -= 6;
     flags.push("Missing optical max-x — cannot prove letters stay inside shield");

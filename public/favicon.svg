@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VouchEdge VE"
   data-craft-level="2"
-  data-optical-letter-height="268"
+  data-optical-letter-height="250"
   data-optical-gap="40"
-  data-optical-margin="110"
-  data-optical-max-x="720"
+  data-optical-margin="120"
+  data-optical-max-x="700"
   data-no-gimmick="1">
   <!--
     VouchEdge master mark — craft level 2
-    craft:level=2 optical:letterHeight=268 optical:gap=40 optical:margin=110 optical:maxX=720 noGimmick=1
-    Optical lockup: VE centered, fully inside shield (max x ≤720). Equal stem weight.
+    craft:level=2 optical:letterHeight=250 optical:gap=40 optical:margin=120 optical:maxX=700 noGimmick=1
+    Optical lockup: VE in the WIDE body of the shield (not the tip). y≈360–610.
     Classic E mid-bar (~80%). Restrained glow. No gimmick tips.
   -->
   <defs>
@@ -55,25 +55,25 @@
     stroke-linejoin="round"
   />
 
-  <!-- VE centered inside shield (safe max x = 720) -->
+  <!-- VE in shield body (above the tip taper) -->
   <g class="ve-mark-letters ve-mark-identity ve-mark-optical" aria-label="VE">
     <path
       class="letter-v"
-      d="M318 408
-         L414 676
-         L476 676
-         L572 408
-         L512 408
-         L445 612
-         L378 408
+      d="M330 360
+         L420 610
+         L478 610
+         L568 360
+         L512 360
+         L449 560
+         L386 360
          Z"
       fill="url(#ve-letter)"
     />
     <g class="letter-e">
-      <path d="M612 408 H662 V676 H612 Z" fill="url(#ve-letter)"/>
-      <path d="M662 408 H720 V460 H662 Z" fill="url(#ve-letter)"/>
-      <path d="M662 516 H704 V568 H662 Z" fill="url(#ve-letter)"/>
-      <path d="M662 624 H720 V676 H662 Z" fill="url(#ve-letter)"/>
+      <path d="M608 360 H656 V610 H608 Z" fill="url(#ve-letter)"/>
+      <path d="M656 360 H700 V408 H656 Z" fill="url(#ve-letter)"/>
+      <path d="M656 456 H686 V504 H656 Z" fill="url(#ve-letter)"/>
+      <path d="M656 562 H700 V610 H656 Z" fill="url(#ve-letter)"/>
     </g>
   </g>
 </svg>
