@@ -1,5 +1,6 @@
 import { AppError } from "../../errors/AppError";
 import { runWithDistributedLock } from "../../lib/distributedLock";
+import { isProductionRuntime } from "../../lib/runtime";
 import { captureGradingFailure } from "../../lib/sentry";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
@@ -942,11 +943,13 @@ async function settleParlayPacketAtomically(
       error.code === "PGRST202" ||
       /settle_parlay_packet/i.test(error.message ?? "");
 
-    // Production refuses non-atomic parent-then-legs fallback (split-brain risk).
-    // Local/dev may still fall back when the RPC is missing, unless overridden.
+    // Production never allows non-atomic parent-then-legs fallback (split-brain
+    // risk), even if ALLOW_LEGACY_PARLAY_SETTLEMENT is set — that escape hatch
+    // is non-prod only. Local/dev may fall back when the RPC is missing or when
+    // the env override is explicitly enabled.
     const allowLegacy =
-      process.env.ALLOW_LEGACY_PARLAY_SETTLEMENT === "true" ||
-      (process.env.NODE_ENV !== "production" && missingRpc);
+      !isProductionRuntime() &&
+      (process.env.ALLOW_LEGACY_PARLAY_SETTLEMENT === "true" || missingRpc);
 
     if (!allowLegacy) {
       return {

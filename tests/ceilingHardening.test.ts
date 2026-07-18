@@ -20,8 +20,14 @@ describe("backend ceiling hardening invariants", () => {
   it("atomic parlay settlement refuses legacy fallback in production", () => {
     const grading = readFileSync("server/services/grading/gradingService.ts", "utf8");
     expect(grading).toContain("ALLOW_LEGACY_PARLAY_SETTLEMENT");
+    expect(grading).toContain("isProductionRuntime");
+    expect(grading).toContain("!isProductionRuntime()");
     expect(grading).toContain("fatal: true");
     expect(grading).toContain("atomic_settlement_required");
+    // Escape hatch must not bypass production fail-closed.
+    expect(grading).not.toMatch(
+      /ALLOW_LEGACY_PARLAY_SETTLEMENT === "true"\s*\|\|\s*\([\s\S]*NODE_ENV !== "production"/,
+    );
   });
 
   it("share HR card is rate-limited", () => {
