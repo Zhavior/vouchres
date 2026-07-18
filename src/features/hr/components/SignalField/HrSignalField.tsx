@@ -120,7 +120,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
   }
 
   return (
-    <section className="z8-hr-map overflow-hidden border border-white/[0.09] bg-[#04090c] shadow-[0_24px_80px_rgba(0,0,0,0.3)]" aria-label="HR Signal Field">
+    <section className="z8-hr-map overflow-hidden border border-white/[0.09] bg-ve-obsidian shadow-[0_24px_80px_rgba(0,0,0,0.3)]" aria-label="HR Signal Field">
       <header className="border-b border-white/[0.08] bg-white/[0.02] px-3 py-3 sm:px-4">
         <div className="flex items-center justify-between gap-3">
           <div>

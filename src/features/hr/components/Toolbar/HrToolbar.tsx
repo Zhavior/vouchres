@@ -330,7 +330,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                 <Table2 className="h-3.5 w-3.5" />
                 Table
               </button>
-              {HR_MAP_ENABLED ? (
+              {HR_MAP_ENABLED && sourceMode !== 'preview' ? (
                 <button
                   type="button"
                   onClick={() => onViewModeChange('treemap')}
@@ -416,7 +416,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                     { key: 'cards' as const, label: 'Cards', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
                     { key: 'table' as const, label: 'Table', icon: <Table2 className="h-3.5 w-3.5" /> },
                     { key: 'treemap' as const, label: 'Map', icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
-                  ].filter((opt) => opt.key !== 'treemap' || HR_MAP_ENABLED)).map((opt) => (
+                  ].filter((opt) => opt.key !== 'treemap' || (HR_MAP_ENABLED && sourceMode !== 'preview'))).map((opt) => (
                     <button
                       key={opt.key}
                       type="button"

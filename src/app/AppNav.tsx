@@ -16,7 +16,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
   return (
     <nav
-      className="ve-mobile-app-dock ve-safe-bottom fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-[#05070b]/95 backdrop-blur-xl md:hidden"
+      className="ve-mobile-app-dock ve-safe-bottom fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-ve-obsidian/95 backdrop-blur-xl md:hidden"
       aria-label="Mobile app navigation"
     >
       <div className="mx-auto grid h-14 max-w-md grid-cols-5 items-stretch px-2">

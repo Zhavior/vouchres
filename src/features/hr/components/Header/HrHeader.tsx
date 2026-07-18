@@ -45,10 +45,10 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
 
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex min-h-10 items-center gap-3 border border-[#00ff94]/20 bg-black/25 px-3 text-[11px] text-white/70">
-        <span className={`h-2 w-2 rounded-full ${isToday && !isRefreshing ? 'bg-[#00ff94] shadow-[0_0_10px_rgba(0,255,148,.65)]' : 'bg-white/20'}`} />
+        <span className={`h-2 w-2 rounded-full ${isToday && !isRefreshing ? 'bg-ve-voltage shadow-[0_0_10px_rgba(0,255,148,.65)]' : 'bg-white/20'}`} />
         <span className="font-bold">Live Updates</span>
         <span className="h-3 w-px bg-white/10" />
-        <span className="flex items-center gap-1.5 text-white/48"><span className="h-2 w-2 rounded-full bg-[#00ff94]/40" />{isToday ? 'On' : 'Off'}</span>
+        <span className="flex items-center gap-1.5 text-white/48"><span className="h-2 w-2 rounded-full bg-ve-voltage/40" />{isToday ? 'On' : 'Off'}</span>
       </div>
       {onRefresh ? (
         <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Refresh" className="flex h-10 w-10 items-center justify-center border border-white/10 bg-black/25 text-[#00f0ff] transition hover:border-[#00f0ff]/35 disabled:opacity-40">

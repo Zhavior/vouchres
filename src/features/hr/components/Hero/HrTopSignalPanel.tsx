@@ -83,7 +83,7 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
 
           <div className="flex items-center justify-center border-b border-white/[0.08] p-4 lg:border-b-0 lg:border-r">
             <div className="z8-hr-judge-score-ring flex h-[116px] w-[116px] items-center justify-center rounded-full" style={{ '--hr-score': `${Math.max(0, Math.min(100, player.hrScore))}%` } as CSSProperties}>
-              <div className="flex h-[92px] w-[92px] flex-col items-center justify-center rounded-full bg-[#061015] shadow-[inset_0_0_24px_rgba(0,0,0,.65)]">
+              <div className="flex h-[92px] w-[92px] flex-col items-center justify-center rounded-full bg-ve-graphite shadow-[inset_0_0_24px_rgba(0,0,0,.65)]">
                 <strong className="font-mono text-[38px] leading-none text-white">{Math.round(player.hrScore)}</strong>
                 <span className="mt-1 font-mono text-[9px] font-black text-[#00f0ff]">Signal Score</span>
                 <span className="font-mono text-[8px] text-[#00f0ff]/65">/100</span>
@@ -102,7 +102,7 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
           </div>
 
           <div className="flex flex-col justify-center gap-3 p-5">
-            <button type="button" onClick={() => onResearch(player)} className="flex min-h-11 items-center justify-center gap-2 border border-[#00f0ff]/60 bg-[#00f0ff]/15 px-3 text-[12px] font-black text-white transition hover:bg-[#00f0ff]/22">
+            <button type="button" onClick={() => onResearch(player)} className="flex min-h-11 items-center justify-center gap-2 border border-[#00f0ff]/60 bg-ve-ion/15 px-3 text-[12px] font-black text-white transition hover:bg-ve-ion/22">
               Research Player <ArrowRight className="h-4 w-4 text-[#00f0ff]" />
             </button>
             <button type="button" onClick={() => canAdd ? onAddToSlip?.(player) : onOpenBuild()} className="flex min-h-11 items-center justify-center gap-2 border border-white/15 bg-black/25 px-3 text-[12px] font-bold text-white/72 transition hover:border-[#00ff94]/40 hover:text-[#75ffc5]">

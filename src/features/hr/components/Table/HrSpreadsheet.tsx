@@ -31,7 +31,7 @@ interface HrSpreadsheetProps {
 }
 
 const TIER_STYLES: Record<HrTableTier, string> = {
-  Elite: 'border-[#00ff94]/35 bg-[#00ff94]/10 text-[#75ffc5]',
+  Elite: 'border-[#00ff94]/35 bg-ve-voltage/10 text-[#75ffc5]',
   Strong: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200',
   Watch: 'border-sky-300/20 bg-sky-300/[0.07] text-sky-100',
   Sleeper: 'border-amber-300/25 bg-amber-300/[0.08] text-amber-200',
@@ -150,7 +150,7 @@ function ExpandedDetails({ row, freshness, generatedAt, showMarket }: {
   const brief = buildHrDecisionBrief(row, freshness, generatedAt);
   const marketEdge = marketEdgeLabel(row);
   return (
-    <div className="grid gap-3 border-t border-[#00f0ff]/15 bg-[#00f0ff]/[0.025] p-3 sm:p-4 xl:grid-cols-[1fr_300px]">
+    <div className="grid gap-3 border-t border-[#00f0ff]/15 bg-ve-ion/[0.025] p-3 sm:p-4 xl:grid-cols-[1fr_300px]">
       <div>
         <p className="mb-2 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-[#00f0ff]/75">Signal inputs</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -194,7 +194,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, expa
   const risk = getHrTableRisk(row);
 
   return (
-    <article className={`border-t border-white/[0.16] p-3 transition ${expanded ? 'bg-[#00f0ff]/[0.055] shadow-[inset_3px_0_0_rgba(0,240,255,.55)]' : 'bg-black/10 even:bg-white/[0.022]'}`}>
+    <article className={`border-t border-white/[0.16] p-3 transition ${expanded ? 'bg-ve-ion/[0.055] shadow-[inset_3px_0_0_rgba(0,240,255,.55)]' : 'bg-black/10 even:bg-white/[0.022]'}`}>
       <div className="flex items-center gap-3">
         <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={46} />
         <div className="min-w-0 flex-1">
@@ -221,7 +221,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, expa
       {expanded ? <div className="mt-3"><ExpandedDetails row={row} freshness={freshness} generatedAt={generatedAt} showMarket={showMarket} /></div> : null}
 
       <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
-        <button type="button" onClick={() => onSelect(row)} className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00f0ff]/35 bg-[#00f0ff]/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#00f0ff]">
+        <button type="button" onClick={() => onSelect(row)} className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00f0ff]/35 bg-ve-ion/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#00f0ff]">
           <Search className="h-3.5 w-3.5" /> Research
         </button>
         <button
@@ -229,7 +229,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, expa
           onClick={() => onAddToSlip?.(row)}
           disabled={!brief.canAddToSlip}
           title={brief.addToSlipBlockReason ?? 'Add player to slip'}
-          className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00ff94]/35 bg-[#00ff94]/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#75ffc5] disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00ff94]/35 bg-ve-voltage/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#75ffc5] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <Plus className="h-3.5 w-3.5" /> Slip
         </button>
@@ -250,7 +250,7 @@ function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, exp
 
   return (
     <Fragment>
-      <tr className={`group border-t border-white/[0.16] transition ${expanded ? 'bg-[#00f0ff]/[0.06] shadow-[inset_3px_0_0_rgba(0,240,255,.58)]' : 'bg-black/[0.08] odd:bg-white/[0.018] hover:bg-[#00f0ff]/[0.045]'}`}>
+      <tr className={`group border-t border-white/[0.16] transition ${expanded ? 'bg-ve-ion/[0.06] shadow-[inset_3px_0_0_rgba(0,240,255,.58)]' : 'bg-black/[0.08] odd:bg-white/[0.018] hover:bg-ve-ion/[0.045]'}`}>
         <td className="px-3 py-3.5 align-top">
           <div className="flex items-center gap-2.5">
             <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={42} />
@@ -282,7 +282,7 @@ function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, exp
         </td>
         <td className="px-3 py-3.5 align-top">
           <div className="flex min-w-[150px] flex-wrap gap-1.5">
-            <button type="button" onClick={() => onSelect(row)} className="flex min-h-8 items-center gap-1 border border-[#00f0ff]/30 bg-[#00f0ff]/[0.07] px-2 text-[9px] font-black uppercase tracking-wide text-[#00f0ff] transition hover:border-[#00f0ff]/60">
+            <button type="button" onClick={() => onSelect(row)} className="flex min-h-8 items-center gap-1 border border-[#00f0ff]/30 bg-ve-ion/[0.07] px-2 text-[9px] font-black uppercase tracking-wide text-[#00f0ff] transition hover:border-[#00f0ff]/60">
               <Search className="h-3 w-3" /> Research
             </button>
             <button
@@ -290,11 +290,11 @@ function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, exp
               onClick={() => onAddToSlip?.(row)}
               disabled={!brief.canAddToSlip}
               title={brief.addToSlipBlockReason ?? 'Add player to slip'}
-              className="flex min-h-8 items-center gap-1 border border-[#00ff94]/30 bg-[#00ff94]/[0.07] px-2 text-[9px] font-black uppercase tracking-wide text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
+              className="flex min-h-8 items-center gap-1 border border-[#00ff94]/30 bg-ve-voltage/[0.07] px-2 text-[9px] font-black uppercase tracking-wide text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
             >
               <Plus className="h-3 w-3" /> Slip
             </button>
-            <button type="button" onClick={onToggle} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onToggle(); } }} aria-expanded={expanded} aria-label={`${expanded ? 'Hide' : 'Show'} details for ${row.playerName}`} title={`${expanded ? 'Hide' : 'Show'} details`} className={`flex h-8 w-8 items-center justify-center border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f0ff]/70 ${expanded ? 'border-[#00f0ff]/45 bg-[#00f0ff]/10 text-[#00f0ff]' : 'border-white/14 bg-black/25 text-white/62 hover:border-white/30 hover:text-white'}`}>
+            <button type="button" onClick={onToggle} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onToggle(); } }} aria-expanded={expanded} aria-label={`${expanded ? 'Hide' : 'Show'} details for ${row.playerName}`} title={`${expanded ? 'Hide' : 'Show'} details`} className={`flex h-8 w-8 items-center justify-center border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f0ff]/70 ${expanded ? 'border-[#00f0ff]/45 bg-ve-ion/10 text-[#00f0ff]' : 'border-white/14 bg-black/25 text-white/62 hover:border-white/30 hover:text-white'}`}>
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
             </button>
           </div>
@@ -424,7 +424,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                 type="button"
                 onClick={() => selectAdjacentGame(-1)}
                 aria-label={previousGroup ? `Previous matchup: ${previousGroup.primaryTeam} vs ${previousGroup.opponent}` : 'Previous matchup'}
-                className="group flex min-h-10 min-w-0 items-center gap-2 border border-white/12 bg-black/30 px-2.5 text-left transition hover:border-[#00f0ff]/35 hover:bg-[#00f0ff]/[0.05]"
+                className="group flex min-h-10 min-w-0 items-center gap-2 border border-white/12 bg-black/30 px-2.5 text-left transition hover:border-[#00f0ff]/35 hover:bg-ve-ion/[0.05]"
               >
                 <ChevronLeft className="h-4 w-4 shrink-0 text-white/45 group-hover:text-[#00f0ff]" />
                 <span className="min-w-0">
@@ -439,7 +439,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                 type="button"
                 onClick={() => selectAdjacentGame(1)}
                 aria-label={nextGroup ? `Next matchup: ${nextGroup.primaryTeam} vs ${nextGroup.opponent}` : 'Next matchup'}
-                className="group flex min-h-10 min-w-0 items-center justify-end gap-2 border border-white/12 bg-black/30 px-2.5 text-right transition hover:border-[#00f0ff]/35 hover:bg-[#00f0ff]/[0.05]"
+                className="group flex min-h-10 min-w-0 items-center justify-end gap-2 border border-white/12 bg-black/30 px-2.5 text-right transition hover:border-[#00f0ff]/35 hover:bg-ve-ion/[0.05]"
               >
                 <span className="min-w-0">
                   <span className="block font-mono text-[7px] font-black uppercase tracking-[0.08em] text-white/35">Next</span>
@@ -466,7 +466,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
               aria-current={activeGameKey === 'all' ? 'true' : undefined}
               className={`min-h-[76px] min-w-[136px] snap-center border px-3 py-2 text-left transition ${
                 activeGameKey === 'all'
-                  ? 'border-[#00ff94]/45 bg-[#00ff94]/10 shadow-[inset_0_-3px_#00ff94,0_0_24px_rgba(0,255,148,.08)]'
+                  ? 'border-[#00ff94]/45 bg-ve-voltage/10 shadow-[inset_0_-3px_#00ff94,0_0_24px_rgba(0,255,148,.08)]'
                   : 'border-white/12 bg-black/25 hover:border-white/24'
               }`}
             >
@@ -490,7 +490,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                   aria-current={selected ? 'true' : undefined}
                   className={`min-h-[76px] snap-center border px-3 py-2 text-left transition ${
                     selected
-                      ? 'min-w-[240px] border-[#00f0ff]/55 bg-[#00f0ff]/[0.1] shadow-[inset_0_-3px_#00f0ff,0_0_28px_rgba(0,240,255,.1)]'
+                      ? 'min-w-[240px] border-[#00f0ff]/55 bg-ve-ion/[0.1] shadow-[inset_0_-3px_#00f0ff,0_0_28px_rgba(0,240,255,.1)]'
                       : 'min-w-[198px] border-white/12 bg-black/25 hover:border-white/24 hover:bg-white/[0.035]'
                   }`}
                 >
@@ -522,7 +522,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                           {group.rows.length} players
                         </span>
                         {selected ? (
-                          <span className="border border-[#00f0ff]/30 bg-[#00f0ff]/10 px-1.5 py-0.5 font-mono text-[7px] font-black uppercase tracking-[0.08em] text-[#00f0ff]">
+                          <span className="border border-[#00f0ff]/30 bg-ve-ion/10 px-1.5 py-0.5 font-mono text-[7px] font-black uppercase tracking-[0.08em] text-[#00f0ff]">
                             Active
                           </span>
                         ) : null}
@@ -573,7 +573,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                 {showMarket ? <col className="w-[9%]" /> : null}
                 <col className="w-[18%]" /><col className="w-[16%]" /><col className="w-[10%]" /><col className="w-[180px]" />
               </colgroup>
-              <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.1em] text-white/62 shadow-[0_3px_10px_rgba(0,0,0,.35)] backdrop-blur">
+              <thead className="sticky top-0 z-20 border-b border-white/18 bg-ve-graphite/95 font-mono text-[9px] font-black uppercase tracking-[0.1em] text-white/62 shadow-[0_3px_10px_rgba(0,0,0,.35)] backdrop-blur">
                 <tr>
                   <th className="px-3 py-2">Player</th>
                   <th className="px-3 py-2"><span title="Composite matchup score. Not an estimated home-run probability.">Signal score</span></th>

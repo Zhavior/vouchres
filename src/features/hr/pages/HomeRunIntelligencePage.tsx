@@ -505,7 +505,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
                     className="z8-hr-hero__score-ring flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full"
                     style={{ '--hr-score': `${Math.max(0, Math.min(100, topPlayer.hrScore))}%` } as React.CSSProperties}
                   >
-                    <span className="flex h-[46px] w-[46px] flex-col items-center justify-center rounded-full bg-[#07100f] font-mono">
+                    <span className="flex h-[46px] w-[46px] flex-col items-center justify-center rounded-full bg-ve-obsidian font-mono">
                       <strong className="text-lg leading-none tabular-nums text-white">{Math.round(topPlayer.hrScore)}</strong>
                       <span className="mt-0.5 text-[6px] font-black uppercase tracking-[0.08em] text-white/35">Signal /100</span>
                     </span>
@@ -726,7 +726,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           <div
             role="status"
             aria-live="polite"
-            className="fixed bottom-5 left-1/2 z-[120] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border border-vouch-cyan/25 bg-[#071017]/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
+            className="fixed bottom-5 left-1/2 z-[120] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border border-vouch-cyan/25 bg-ve-obsidian/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
           >
             <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-vouch-cyan" />
             <div>
