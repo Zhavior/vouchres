@@ -53,6 +53,7 @@
     "screenshots:mobile": "node scripts/mobileScreenshots.mjs",
     "brand:assets": "node scripts/generateBrandAssets.mjs",
     "brand:judge": "npx tsx scripts/judgeBrandMark.ts",
+    "brand:craft": "npx tsx scripts/judgeBrandCraft.ts",
     "screenshots:splash": "node scripts/splashScreenshots.mjs",
     "brand:ve-type": "node scripts/buildVeMarkFromFont.mjs"
   },

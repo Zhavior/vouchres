@@ -134,6 +134,7 @@ function masterSvg({ vD, eD, finalBox, cfg, fontKey }) {
   data-palette="socialize-ref"
   data-texture="painterly-grain"
   data-optical-letter-height="${Math.round(finalBox.h)}"
+  data-optical-gap="${cfg.tracking}"
   data-optical-margin="${Math.max(margin, 0)}"
   data-optical-max-x="${Math.round(finalBox.maxX)}"
   data-no-gimmick="1">
@@ -368,6 +369,7 @@ export function VouchEdgeMark({
         <path className="letter-e" d="${eD}" fill="url(#veMarkLetterShade)" opacity="0.5" />
       </g>
     </svg>
+    </span>
   );
 }
 

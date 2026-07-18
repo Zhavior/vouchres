@@ -7,6 +7,7 @@ import type { RequestWithContext } from "../middleware/requestContext";
 import { runJudgePanel } from "../services/judging/trustJudgeService";
 import { judgeBias } from "../services/judging/biasJudgeService";
 import { judgeRepoBrandMark } from "../services/judging/brandMarkJudgeService";
+import { judgeRepoBrandCraftMarket } from "../services/judging/brandCraftMarketAgent";
 import { PickCandidate } from "../services/judging/judgeTypes";
 import { gradingLimiter } from "../middleware/rateLimit";
 import { requireAuth } from "../middleware/auth";
@@ -15,6 +16,14 @@ export function registerJudgeRoutes(app: Express): void {
   /** Brand-mark QA panel — scores the shipping VE icon (no auth; static asset review). */
   app.get("/api/judge/brand-mark", gradingLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     return res.json(apiOkFlat(req, { verdict: judgeRepoBrandMark() }));
+  }));
+
+  /**
+   * Brand Craft Market Agent — App Store / Play parity bar.
+   * Never auto-ships (human veto required).
+   */
+  app.get("/api/judge/brand-craft", gradingLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, { verdict: judgeRepoBrandCraftMarket() }));
   }));
 
   app.post("/api/judge/pick", requireAuth, gradingLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {

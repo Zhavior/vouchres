@@ -29,7 +29,7 @@ export default function AgentDock({
             AI Judge agents
           </h3>
           <p className="mt-1 max-w-2xl text-xs text-white/50">
-            HR board specialty lenses (DS / PH / MR / RA). Full catalog — cappers, panel judges, brand mark — at{" "}
+            HR board lenses (DS / PH / MR / RA). Brand: BM craft flags + BC market bar (human veto). Catalog:{" "}
             <span className="text-white/70">GET /api/agents/catalog</span>.
           </p>
         </div>

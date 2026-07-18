@@ -6,6 +6,7 @@
 import { listAgentMeta } from "../aiJudges/agentRegistry";
 import { CAPPER_AGENTS, JUDGE_AGENTS } from "../../agents/agentRegistry";
 import type { CapperAgent, JudgeAgent } from "../../agents/baseAgent";
+import { BRAND_CRAFT_MARKET_META } from "../judging/brandCraftMarketAgent";
 
 export type AgentLane = "ai_judge" | "panel_judge" | "capper" | "brand";
 
@@ -32,6 +33,18 @@ const BRAND_MARK_AGENT: CatalogAgent = {
   color: "cyan",
   builtin: true,
   endpoint: "GET /api/judge/brand-mark",
+};
+
+const BRAND_CRAFT_AGENT: CatalogAgent = {
+  id: BRAND_CRAFT_MARKET_META.id,
+  name: BRAND_CRAFT_MARKET_META.name,
+  lane: "brand",
+  code: BRAND_CRAFT_MARKET_META.code,
+  tagline: BRAND_CRAFT_MARKET_META.tagline,
+  specialty: BRAND_CRAFT_MARKET_META.specialty,
+  color: BRAND_CRAFT_MARKET_META.color,
+  builtin: true,
+  endpoint: BRAND_CRAFT_MARKET_META.endpoint,
 };
 
 export function buildUnifiedAgentCatalog(): {
@@ -72,7 +85,7 @@ export function buildUnifiedAgentCatalog(): {
     endpoint: `POST /api/agents/${c.id}/generate-picks`,
   }));
 
-  const agents = [...aiJudges, ...panelJudges, ...cappers, BRAND_MARK_AGENT];
+  const agents = [...aiJudges, ...panelJudges, ...cappers, BRAND_MARK_AGENT, BRAND_CRAFT_AGENT];
 
   return {
     total: agents.length,
@@ -80,13 +93,14 @@ export function buildUnifiedAgentCatalog(): {
       ai_judge: aiJudges.length,
       panel_judge: panelJudges.length,
       capper: cappers.length,
-      brand: 1,
+      brand: 2,
     },
     agents,
     notes: [
       "Installed: in-repo agent lanes only.",
       "Cursor/Claude cloud agents (desktop runs) cannot be installed into this API.",
-      "AI Judges score HR board candidates. Brand Mark Judge scores the app icon SVG.",
+      "AI Judges score HR board candidates.",
+      "Brand Mark Judge (BM) = craft flags. Brand Craft Market (BC) = App Store/Play parity — cannot auto-ship.",
       "Cappers generate researched picks; panel judges score pick quality/risk/bias/trust.",
     ],
   };
