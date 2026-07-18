@@ -33,28 +33,11 @@ async function canViewPickForTail(input: {
     return { pick, ownerId };
   }
 
+  // Public only for non-owners. Follow/post presence must not unlock private parlays (IDOR).
   const visibility = String(pick.visibility ?? "private");
   if (visibility === "public") {
     return { pick, ownerId };
   }
-
-  const { data: follow } = await supabaseAdmin
-    .from("follows")
-    .select("follower_id")
-    .eq("follower_id", input.viewerId)
-    .eq("following_profile_id", ownerId)
-    .maybeSingle();
-
-  if (follow) return { pick, ownerId };
-
-  const { data: post } = await supabaseAdmin
-    .from("posts")
-    .select("id")
-    .eq("pick_id", input.pickId)
-    .limit(1)
-    .maybeSingle();
-
-  if (post) return { pick, ownerId };
 
   throw new AppError({
     status: 403,

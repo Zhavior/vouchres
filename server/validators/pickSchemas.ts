@@ -14,7 +14,8 @@ export const CreatePickSchema = z.object({
   judge_risk: z.number().min(0).max(100).optional(),
   judge_bias: z.number().min(0).max(100).optional(),
   judge_trust: z.number().min(0).max(100).optional(),
-  judge_verdict: z.string().trim().max(64).optional(),
+  // judge_verdict is server/AI-authored only — accepting it from clients let users
+  // set "avoid" and invert HR settle logic in gradingService.
   explanation: z.string().trim().max(4000).optional(),
 });
 

@@ -89,7 +89,8 @@ coreRoutes.post(
       judge_risk: body.judge_risk ?? null,
       judge_bias: body.judge_bias ?? null,
       judge_trust: body.judge_trust ?? null,
-      judge_verdict: body.judge_verdict ?? null,
+      // Never accept client-authored judge_verdict (grading integrity).
+      judge_verdict: null,
       explanation: body.explanation ?? null,
       is_demo: false,
     });

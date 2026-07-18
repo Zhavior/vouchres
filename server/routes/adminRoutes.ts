@@ -177,7 +177,15 @@ adminRoutes.get(
       .range(offset, offset + limit - 1);
 
     if (search) {
-      query = query.or(`username.ilike.%${search}%,display_name.ilike.%${search}%`);
+      // Strip PostgREST filter metacharacters — never interpolate raw search into .or().
+      const cleaned = String(search)
+        .replace(/[%_,.()\\]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 64);
+      if (cleaned) {
+        query = query.or(`username.ilike.%${cleaned}%,display_name.ilike.%${cleaned}%`);
+      }
     }
 
     const { data, count, error } = await query;
