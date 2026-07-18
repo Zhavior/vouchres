@@ -117,11 +117,23 @@ socialHubRoutes.post("/messages/conversations/:id", requireAuth, validate({ body
       body: (req.body as z.infer<typeof SendMessageSchema>).body,
     });
     return res.status(201).json(apiOkFlat(req, { message }));
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const code = error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code ?? "")
+      : "";
+    if (code === "dm_requires_mutual_follow") {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "You can only message mutual followers.",
+        details: { reason: "dm_requires_mutual_follow" },
+      });
+    }
+    const message = error instanceof Error ? error.message : "Cannot send message.";
     throw new AppError({
       status: 403,
       code: "forbidden",
-      message: error?.message ?? "Cannot send message.",
+      message,
     });
   }
 }));

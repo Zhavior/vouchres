@@ -46,10 +46,15 @@ describe("deep-scan backend hardening", () => {
     expect(auth).toContain("Promise<number | null>");
   });
 
-  it("DMs require mutual follow", () => {
+  it("DMs require mutual follow on create and send", () => {
     const hub = readFileSync("server/services/social/followingHubService.ts", "utf8");
+    expect(hub).toContain("assertMutualFollowForDm");
     expect(hub).toContain("dm_requires_mutual_follow");
     expect(hub).toContain("isFriend");
+    expect(hub).toMatch(/sendDirectMessage[\s\S]*assertMutualFollowForDm/);
+    expect(hub).toMatch(/findOrCreateDirectConversation[\s\S]*assertMutualFollowForDm/);
+    const routes = readFileSync("server/routes/socialHubRoutes.ts", "utf8");
+    expect(routes).toContain("dm_requires_mutual_follow");
   });
 
   it("paid expensive routes have paidDailyLimit ceilings", () => {
