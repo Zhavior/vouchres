@@ -23,6 +23,8 @@ export interface HrToolbarProps {
   rows: HrWatchRow[];
   viewMode: HrViewMode;
   onViewModeChange: (mode: HrViewMode) => void;
+  /** Confirmed-bucket count — used so Preview copy does not lie when lineups exist. */
+  confirmedCount?: number;
 }
 
 const TIER_OPTIONS: HrTierFilter[] = [
@@ -195,6 +197,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
   rows,
   viewMode,
   onViewModeChange,
+  confirmedCount = 0,
 }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const exportDisabled = rows.length === 0;
@@ -399,7 +402,9 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                 <SourceModeButtons sourceMode={sourceMode} onSourceModeChange={onSourceModeChange} className="w-full" />
                 {sourceMode === 'preview' && (
                   <p className="text-[10px] leading-snug text-vouch-amber">
-                    Preview candidates use projected lineups — official batting orders not posted yet.
+                    {confirmedCount === 0
+                      ? 'Preview candidates use projected lineups — official batting orders not posted yet.'
+                      : 'Preview candidates use projected lineups and are subject to change. Confirmed official lineups are also available.'}
                   </p>
                 )}
               </div>

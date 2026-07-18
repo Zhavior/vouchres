@@ -99,7 +99,8 @@ describe('HR board projected preview warnings', () => {
     );
 
     expect(screen.getByText('Preview mode')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Map' })).toBeNull();
+    // Map is feature-flagged on; Export remains disabled/hidden for empty rows.
+    expect(screen.getByRole('button', { name: 'Map' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
   });
 });

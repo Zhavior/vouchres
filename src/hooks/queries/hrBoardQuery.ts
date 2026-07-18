@@ -40,6 +40,8 @@ export function hrBoardQueryOptions(date: string) {
     gcTime,
     refetchInterval: isToday ? refetchInterval : false,
     refetchOnMount: false,
-    placeholderData: (previousData) => previousData,
+    // Keep prior data only for the same slate date — never show yesterday while today loads.
+    placeholderData: (previousData) =>
+      previousData && previousData.date === date ? previousData : undefined,
   });
 }

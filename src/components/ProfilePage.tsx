@@ -141,15 +141,18 @@ export default function ProfilePage({
     }
   };
 
-  // Filter user's posts
-  const userPosts = posts.filter(
-    p => p.userId === 'u-user-current' || p.username === profile.username || p.displayName === profile.displayName
-  );
+  // Filter this profile's posts. Local draft id only applies on the signed-in user's own profile.
+  const userPosts = posts.filter((p) => {
+    const isLocalCurrentUser = isOwnProfile && p.userId === 'u-user-current';
+    return isLocalCurrentUser || p.username === profile.username || p.displayName === profile.displayName;
+  });
 
-  // Filter user's results
-  const userResults = posts.filter(
-    p => p.postType === 'RESULT' && p.result && (p.userId === 'u-user-current' || p.username === profile.username || p.displayName === profile.displayName)
-  );
+  // Filter this profile's results
+  const userResults = posts.filter((p) => {
+    if (p.postType !== 'RESULT' || !p.result) return false;
+    const isLocalCurrentUser = isOwnProfile && p.userId === 'u-user-current';
+    return isLocalCurrentUser || p.username === profile.username || p.displayName === profile.displayName;
+  });
 
   const getLocalYMD = (dateInput: string | Date | number) => {
     const d = new Date(dateInput);

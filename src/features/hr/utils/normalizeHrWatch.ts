@@ -58,6 +58,12 @@ function clampScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+const OFFICIAL_LINEUP_WARNING = 'Official lineup not posted yet';
+
+function hasOfficialLineupWarning(warnings: readonly string[]): boolean {
+  return warnings.some((warning) => /official lineup not posted yet/i.test(warning));
+}
+
 function truthStatus(row: UnknownRecord, mode: HrWatchMode): TruthStatus {
   if (mode === 'blocked') return 'blocked';
   // Bucket provenance wins over stale row-level labels. The API guarantees
@@ -65,10 +71,19 @@ function truthStatus(row: UnknownRecord, mode: HrWatchMode): TruthStatus {
   // carries an old "confirmed" lineupStatus value.
   if (mode === 'curated' || mode === 'all') return 'projected';
   const status = firstString(row, ['lineupStatus', 'truthStatus', 'status'], '').toLowerCase();
-  if (status.includes('official') || status.includes('confirmed')) return 'official';
-  if (status.includes('projected') || status.includes('unconfirmed')) return 'projected';
+  if (status.includes('project') || status.includes('preview') || status.includes('unconfirmed')) {
+    return 'projected';
+  }
+  if (row.isConfirmed === false) return 'projected';
   const official = row.officialLineup ?? row.isOfficialLineup ?? row.confirmedLineup;
-  if (official === true) return 'official';
+  if (
+    row.isConfirmed === true
+    || official === true
+    || status.includes('official')
+    || status.includes('confirmed')
+  ) {
+    return 'official';
+  }
   return 'unknown';
 }
 
@@ -146,6 +161,11 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
     const hrScore = clampScore(firstNumber(row, ['hrScore', 'hrEdge', 'finalScore', 'score', 'batterScore'], 0));
     const truth = truthStatus(row, mode);
     const breakdown = readBreakdown(row);
+    const warnings = readWarnings(row);
+    // Every projected preview row must carry the trust-first lineup warning.
+    if (truth === 'projected' && !hasOfficialLineupWarning(warnings)) {
+      warnings.unshift(OFFICIAL_LINEUP_WARNING);
+    }
 
     normalized.push({
       stableId: `${gamePk ?? 'game'}-${playerId ?? playerName}-${team}`,
@@ -179,7 +199,7 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       hrProbability: firstNullableNumber(row, ['hrProbability', 'estimatedHrProb', 'probability']),
       impliedProbability: firstNullableNumber(row, ['impliedProbability', 'bookImpliedProbability']),
       reasons: readReasons(row),
-      warnings: readWarnings(row),
+      warnings,
       sourceMode: mode,
     });
   }

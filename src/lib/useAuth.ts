@@ -87,16 +87,25 @@ export function useAuth() {
 
   // Subscribe to auth changes
   useEffect(() => {
+    let generation = 0;
     const { data } = onAuthStateChange(async (event) => {
+      if (event === "SIGNED_OUT") {
+        generation += 1;
+        setState({ user: null, loading: false, error: null });
+        return;
+      }
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        const requestId = ++generation;
         setState((s) => ({ ...s, loading: true }));
         const profile = await fetchProfile();
+        if (requestId !== generation) return;
         setState({ user: profile, loading: false, error: null });
-      } else if (event === "SIGNED_OUT") {
-        setState({ user: null, loading: false, error: null });
       }
     });
-    return () => data.subscription.unsubscribe();
+    return () => {
+      generation += 1;
+      data.subscription.unsubscribe();
+    };
   }, [fetchProfile]);
 
   const refresh = useCallback(async () => {

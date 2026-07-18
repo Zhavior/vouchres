@@ -598,7 +598,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         </section>
 
         {(warningList.length > 0 || vm.slate.truthMessage || vm.slate.note) && (
-          <section hidden className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="glass-command border border-vouch-amber/18 bg-vouch-amber/6 p-4">
               <div className="flex items-start gap-3">
                 <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-vouch-amber" />
@@ -644,6 +644,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
           visibleCount={vm.rows?.length ?? totalCount}
           rows={(vm.rows ?? []) as unknown[]}
+          confirmedCount={vm.modeCounts?.confirmed ?? 0}
         />
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
@@ -696,7 +697,9 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
         <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
           <p>
             {vm.mode === 'curated'
-              ? 'Preview mode: No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Lineups are subject to change.'
+              ? (vm.modeCounts?.confirmed ?? 0) === 0
+                ? 'Preview mode: No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Lineups are subject to change.'
+                : 'Preview mode: Showing projected-lineup candidates. Official confirmed lineups are also available — switch to Confirmed to see them. Lineups are subject to change.'
               : vm.mode === 'confirmed'
                 ? 'Confirmed mode: Only players from official batting orders are shown.'
                 : 'All signals: Confirmed and projected players remain clearly labeled.'}

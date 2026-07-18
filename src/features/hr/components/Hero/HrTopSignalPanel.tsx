@@ -60,7 +60,15 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
   }
 
   const lineupValue = player.truthStatus === 'official' ? 'Confirmed' : player.truthStatus === 'projected' ? 'Projected' : 'Unverified';
-  const lineupDetail = player.truthStatus === 'official' ? 'Official order posted' : 'Awaiting official order';
+  const lineupDetail = player.truthStatus === 'official'
+    ? 'Official order posted'
+    : player.truthStatus === 'projected'
+      ? 'Official lineup not posted yet'
+      : 'Awaiting official order';
+  const changeItems = player.truthStatus === 'projected'
+    && !player.warnings.some((warning) => /official lineup not posted yet/i.test(warning))
+    ? ['Official lineup not posted yet', ...player.warnings]
+    : player.warnings;
   const weatherValue = player.weather == null ? 'Unavailable' : `${Math.round(player.weather)}/100`;
   const weatherDetail = player.weather == null ? 'Not provided' : 'Model weather context';
   const canAdd = Boolean(onAddToSlip) && player.playerId != null && player.truthStatus !== 'blocked';
@@ -77,7 +85,15 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
             <div className="mt-5 min-w-0">
               <h2 className="truncate text-[24px] font-black uppercase tracking-[-0.03em] text-white">{player.playerName}</h2>
               <p className="mt-2 truncate text-[12px] font-semibold text-white/58"><span className="text-[#00ff94]">{player.team}</span> vs {player.opponent} <span className="mx-1.5 text-white/20">/</span> vs {player.pitcherName || 'pitcher unavailable'}</p>
-              <span className="mt-2 inline-flex border border-white/12 bg-black/30 px-2 py-1 font-mono text-[9px] font-bold text-white/50">{lineupValue}</span>
+              <span
+                className="mt-2 inline-flex border border-white/12 bg-black/30 px-2 py-1 font-mono text-[9px] font-bold text-white/50"
+                title={lineupDetail}
+              >
+                {lineupValue}
+              </span>
+              {player.truthStatus === 'projected' && (
+                <p className="mt-1 text-[10px] font-semibold text-amber-200/90">Official lineup not posted yet</p>
+              )}
             </div>
           </div>
 
@@ -98,7 +114,7 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
 
           <div className="border-b border-white/[0.08] px-5 py-5 lg:border-b-0 lg:border-r">
             <p className="font-mono text-[10px] font-black uppercase tracking-[0.1em] text-amber-300">What could change</p>
-            <EvidenceList items={player.warnings} emptyLabel="Verify the lineup and market before saving." warning />
+            <EvidenceList items={changeItems} emptyLabel="Verify the lineup and market before saving." warning />
           </div>
 
           <div className="flex flex-col justify-center gap-3 p-5">

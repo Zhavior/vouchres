@@ -65,6 +65,11 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
             {player.truthStatus === 'official' ? <ShieldCheck className="h-2.5 w-2.5 text-[#00ff94]" /> : <ShieldQuestion className="h-2.5 w-2.5 text-amber-200" />}
             {player.truthStatus === 'official' ? 'Confirmed' : player.truthStatus === 'projected' ? 'Projected' : 'Unverified'}
           </div>
+          {player.truthStatus === 'projected' && (
+            <p className="mt-1 text-[9px] font-semibold leading-3 text-amber-200/90" title="Official lineup not posted yet">
+              Official lineup not posted yet
+            </p>
+          )}
         </div>
         {result === 'hit' ? (
           <span className="absolute right-2 top-2 inline-flex items-center gap-1 border border-orange-300/45 bg-orange-400/15 px-1.5 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] text-orange-200 shadow-[0_0_18px_rgba(251,146,60,.24)]">

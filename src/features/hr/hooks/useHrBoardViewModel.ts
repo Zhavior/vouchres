@@ -106,13 +106,20 @@ export function useHrBoardViewModel() {
   // auto-switch once (never overriding a mode the user picked themselves) —
   // and say so, since silently substituting preview for confirmed would
   // violate the "no fake confirmed lineups" rule if left unlabeled.
+  // When official lineups post later, return to Confirmed automatically
+  // (only if we were the ones who switched to Preview).
   useEffect(() => {
     if (!board || userPickedModeRef.current) return;
     if (mode === 'confirmed' && board.confirmed.length === 0 && board.curated.length > 0) {
       setModeState('curated');
       setAutoSwitchedToPreview(true);
+      return;
     }
-  }, [board, mode]);
+    if (autoSwitchedToPreview && board.confirmed.length > 0 && mode !== 'confirmed') {
+      setModeState('confirmed');
+      setAutoSwitchedToPreview(false);
+    }
+  }, [board, mode, autoSwitchedToPreview]);
 
   const rows = useMemo(() => board ? rowsForMode(board, mode) : [], [board, mode]);
 

@@ -27,6 +27,7 @@ type Props = {
   onToggleTier: (tier: HrTier) => void;
   visibleCount: number;
   rows: unknown[];
+  confirmedCount?: number;
 };
 
 export function HrCommandCenter(props: Props) {
@@ -43,6 +44,7 @@ export function HrCommandCenter(props: Props) {
         rows={props.rows as any}
         viewMode={props.viewMode}
         onViewModeChange={props.onViewModeChange}
+        confirmedCount={props.confirmedCount ?? 0}
       />
     </div>
   );

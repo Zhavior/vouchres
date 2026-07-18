@@ -336,6 +336,11 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                         {player.truthStatus === 'official' ? '✅ Official' : player.truthStatus === 'projected' ? '🔮 Projected' : '⛔ Blocked'}
                       </span>
                     )}
+                    {player.truthStatus === 'projected' && (
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 text-amber-200" style={{ background: 'rgba(251,191,36,0.10)', ['--tw-ring-color' as string]: 'rgba(251,191,36,0.35)' } as React.CSSProperties}>
+                        Official lineup not posted yet
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

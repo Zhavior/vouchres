@@ -17,9 +17,13 @@ export function useDailyHrBoard(date: string) {
     };
   }, [date, query.data, query.dataUpdatedAt]);
 
+  const dataDate = query.data?.date ?? null;
+  const dateMismatch = Boolean(dataDate && dataDate !== date);
+  const showPlaceholderLoading = query.isFetching && (query.isPlaceholderData || dateMismatch);
+
   return {
-    data: contract,
-    loading: query.isLoading && !query.data,
+    data: dateMismatch && query.isFetching ? null : contract,
+    loading: (query.isLoading && !query.data) || showPlaceholderLoading,
     error: query.isError ? 'Data unavailable right now.' : null,
     lastUpdated: query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : null,
     refresh: async () => {
