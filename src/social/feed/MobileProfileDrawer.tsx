@@ -173,7 +173,7 @@ function MobileProfileDrawer({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[90] md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div className="fixed inset-0 z-[100] md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}

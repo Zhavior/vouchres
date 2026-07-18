@@ -11,6 +11,7 @@ import { hasRealAuthToken } from './sectionNavigation';
 import { AppNav } from './AppNav';
 import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
+import { useNavUiStore } from '../stores/navUiStore';
 import type { CreatorProofProfile, Parlay } from '../types';
 
 const DeployUpdateBanner = lazy(() =>
@@ -63,6 +64,8 @@ export function AppShell({
   onConfirmParlayTier,
   onSaveParlaySlip,
 }: AppShellProps) {
+  const mobileDrawerOpen = useNavUiStore((s) => s.mobileDrawerOpen);
+
   useEffect(() => {
     if (isPublicFrontPage) return;
     preloadMainRouter();
@@ -133,10 +136,12 @@ export function AppShell({
                         }}
                         navigateSection={navigateSection}
                         suppressFloatingDock={
-                          activeSection === 'build'
+                          mobileDrawerOpen
+                          || activeSection === 'build'
                           || activeSection === 'live_parlays'
                           || activeSection === 'judge_home'
                           || activeSection === 'settings'
+                          || activeSection === 'board'
                         }
                       />
                     </Suspense>

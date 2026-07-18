@@ -21,8 +21,9 @@
 - After first P0 code pass: **~58 / 100**
 - After screenshot-driven mobile UI pass (routing + Judge Home + FAB + empty states): **~64 / 100**
 - After Board/Settings/Menu polish + Capacitor deps: **~68 / 100**
-- Next to ~72: `npx cap add ios/android`, splash/icons, TestFlight + Play internal
-- Next to ~82: store listings, counsel legal, IAP decision, reviewer demo
+- After Android scaffold + Board compact chrome: **~72 / 100**
+- Next to ~82: iOS project (macOS), splash/icons, TestFlight + Play internal, counsel legal, IAP decision
+- Next to ~88–92: store submit + habit loops (push alerts, widgets)
 
 ## Screenshot QA loop
 

@@ -495,27 +495,50 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
         </div>
       )}
 
-      {/* Main header banner */}
-      <header className={`glass-command ve-premium-panel overflow-hidden rounded-2xl sm:rounded-3xl border border-ve-fuse/50 p-4 sm:p-5 relative shadow-[0_0_40px_rgba(0,229,255,0.07)]`}>
+      {/* Main header banner — compact on phone so the studio canvas wins the first viewport */}
+      <header className={`glass-command ve-premium-panel overflow-hidden rounded-2xl sm:rounded-3xl border border-ve-fuse/50 p-3 sm:p-5 relative shadow-[0_0_40px_rgba(0,229,255,0.07)]`}>
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-vouch-cyan/10 blur-3xl pointer-events-none" />
         <div className={`relative ${Z8_SECTION_HEADER}`}>
-          <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
-            <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
-          </span>
-          <h2 className={`${Z8_DISPLAY} mt-1 text-xl sm:text-inherit`}>
-            Vouch Board
+          <div className="flex items-center justify-between gap-2">
+            <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-2.5 py-1 text-ve-ion`}>
+              <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Board
+            </span>
+            <p className="hidden text-[11px] text-white/45 sm:block">Share cards → Feed</p>
+          </div>
+          <h2 className={`${Z8_DISPLAY} mt-1 max-md:hidden`}>
+            Vouch Board &amp; Graphic Studio
           </h2>
           <p className="max-w-2xl text-sm text-white/45 max-md:hidden">
             Build bespoke circular player portfolios, customize metrics, toggle sabermeter charts, and generate high-contrast cards for Twitter/X.
           </p>
-          <p className="max-w-2xl text-[12px] text-white/50 md:hidden">
-            Design share cards, then publish to Feed.
-          </p>
-          <div className="z8-accent-line mt-3 w-full max-w-md" />
+          <div className="z8-accent-line mt-2 hidden w-full max-w-md sm:block" />
         </div>
 
-        {/* Prominent full-width section switcher (was a small corner pill) */}
-        <div className="relative mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2" id="board-tabs-belt">
+        {/* Phone: segmented control. Desktop: rich cards. */}
+        <div className="relative mt-3 md:hidden" id="board-tabs-belt-mobile">
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-black/35 p-1">
+            {([
+              { id: 'studio', label: 'Studio' },
+              { id: 'saved', label: `Feed (${savedVouches.length})` },
+            ] as const).map((t) => {
+              const active = activeBoardTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveBoardTab(t.id as 'studio' | 'saved')}
+                  className={`ve-touch-target rounded-lg px-3 py-2 text-center text-xs font-bold transition-all ${
+                    active ? 'bg-vouch-cyan/15 text-vouch-cyan' : 'text-white/55'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="relative mt-5 hidden grid-cols-1 gap-2 sm:grid-cols-2 md:grid" id="board-tabs-belt">
           {([
             { id: 'studio', emoji: '🎨', label: 'Orbit Studio', sub: 'Design shareable cards' },
             { id: 'saved', emoji: '📋', label: `Feed Board (${savedVouches.length})`, sub: 'Your saved vouches' },
@@ -524,6 +547,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             return (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => setActiveBoardTab(t.id as 'studio' | 'saved')}
                 className={`group relative flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
                   active ? Z8_ACTIVE : Z8_IDLE
