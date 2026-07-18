@@ -212,4 +212,59 @@ describe("deep-scan backend hardening", () => {
     expect(stripe).toContain("runWithDistributedLock");
     expect(stripe).toContain("`checkout:${opts.profileId}`");
   });
+
+  it("checkout preserves AppError conflicts and expires open sessions", () => {
+    const billing = readFileSync("server/routes/billingRoutes.ts", "utf8");
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(billing).toContain("if (isAppError(err)) throw err");
+    expect(stripe).toContain('status: "open"');
+    expect(stripe).toContain("checkout.sessions.expire");
+    expect(stripe).toContain("subscriptions.list");
+  });
+
+  it("portal always repairs via ensureStripeCustomer", () => {
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(stripe).toMatch(/createPortalSession[\s\S]*ensureStripeCustomer/);
+    expect(stripe).not.toMatch(/createPortalSession[\s\S]*profile\?\.stripe_customer_id\s*\?\s*profile\.stripe_customer_id/);
+  });
+
+  it("refund/dispute cancels Stripe subscriptions before access revoke", () => {
+    const billing = readFileSync("server/routes/billingRoutes.ts", "utf8");
+    expect(billing).toContain("cancelSubscriptionsForProfile");
+    expect(billing).toContain("charge.refunded");
+    expect(billing).toContain("charge.dispute.created");
+  });
+
+  it("DSAR export supplements deletion-surface tables", () => {
+    const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
+    expect(privacy).toContain("loadDsarRows");
+    expect(privacy).toContain('table: "notifications"');
+    expect(privacy).toContain('table: "vouches"');
+    expect(privacy).toContain('table: "user_stories"');
+    expect(privacy).toContain('table: "dm_messages"');
+    expect(privacy).toContain('table: "parlay_tails"');
+  });
+
+  it("expensive HR reads use a tighter limiter and debug stays staff-only", () => {
+    const limits = readFileSync("server/middleware/rateLimit.ts", "utf8");
+    const hr = readFileSync("server/routes/mlbHrBoardRoutes.ts", "utf8");
+    expect(limits).toContain("mlbExpensiveReadLimiter");
+    expect(hr).toContain("mlbExpensiveReadLimiter");
+    expect(hr).toMatch(/today\/debug[\s\S]*requireStaff/);
+    expect(hr).toMatch(/today\/deep[\s\S]*mlbExpensiveReadLimiter/);
+  });
+
+  it("AI social drafts prefer confirmed candidates and label projected fallback", () => {
+    const drafts = readFileSync("server/services/aiJudges/socialDraftService.ts", "utf8");
+    expect(drafts).toContain("projectedUnconfirmed");
+    expect(drafts).toContain("Official lineup not posted yet");
+    expect(drafts).not.toMatch(/const candidates = \[\s*\.\.\.safeArray[\s\S]*projectedCandidates/);
+  });
+
+  it("HR notification scan refuses unscoped profile fan-out", () => {
+    const notifications = readFileSync("server/services/notifications/notificationService.ts", "utf8");
+    expect(notifications).toContain("refusing unscoped profile fan-out");
+    expect(notifications).toContain('eq("hr_alerts_enabled", true)');
+    expect(notifications).not.toMatch(/from\("profiles"\)\s*\n\s*\.select\("id"\)\s*\n\s*\.limit\(1000\)/);
+  });
 });

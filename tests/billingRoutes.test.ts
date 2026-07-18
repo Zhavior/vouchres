@@ -13,6 +13,7 @@ vi.mock("../server/services/billing/stripeService", () => ({
   beginStripeWebhookEvent: vi.fn(),
   finishStripeWebhookEvent: vi.fn(),
   syncSubscription: vi.fn(),
+  cancelSubscriptionsForProfile: vi.fn(async () => ({ canceled: 1, warnings: [] })),
 }));
 
 vi.mock("../server/middleware/auth", () => ({

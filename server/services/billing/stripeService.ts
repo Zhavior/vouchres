@@ -190,8 +190,52 @@ export async function createCheckoutSession(opts: {
       }
 
       const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
+      const stripe = getStripe();
 
-      return getStripe().checkout.sessions.create({
+      // Stripe-side guard: local DB can lag webhooks — refuse if customer already has a live sub.
+      const stripeSubs = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "all",
+        limit: 20,
+      });
+      const liveStripeSub = stripeSubs.data.find((sub) =>
+        sub.status === "active" || sub.status === "trialing" || sub.status === "past_due",
+      );
+      if (liveStripeSub) {
+        throw new AppError({
+          status: 409,
+          code: "conflict",
+          message:
+            "You already have an active subscription. Manage or change your plan from the billing portal instead of starting a new checkout.",
+          expose: true,
+          details: {
+            reason: "already_subscribed",
+            currentTier: stripePriceConfigByPriceId(
+              typeof liveStripeSub.items.data[0]?.price?.id === "string"
+                ? liveStripeSub.items.data[0].price.id
+                : "",
+            )?.tier ?? "unknown",
+            status: liveStripeSub.status,
+            source: "stripe",
+          },
+        });
+      }
+
+      // Expire leftover open Checkout Sessions so sequential clicks cannot double-subscribe.
+      const openSessions = await stripe.checkout.sessions.list({
+        customer: customer.id,
+        status: "open",
+        limit: 20,
+      });
+      for (const open of openSessions.data) {
+        try {
+          await stripe.checkout.sessions.expire(open.id);
+        } catch (error) {
+          console.warn("[stripe] expire open checkout failed", open.id, (error as Error)?.message);
+        }
+      }
+
+      return stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customer.id,
         line_items: [{ price: opts.priceId, quantity: 1 }],
@@ -225,24 +269,14 @@ export async function createPortalSession(opts: {
   returnUrl: string;
 }) {
   assertStripeConfigured();
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data: profile, error: profileErr } = await supabaseAdmin
-    .from("profiles")
-    .select("stripe_customer_id")
-    .eq("id", opts.profileId)
-    .single();
 
-  if (profileErr) {
-    console.error("[stripe] profile lookup failed:", profileErr.message);
-  }
-
-  const customerId = profile?.stripe_customer_id
-    ? profile.stripe_customer_id
-    : ((await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer).id;
+  // Always go through ensureStripeCustomer so deleted/stale Stripe customer IDs
+  // are retrieved/recreated instead of failing the portal with a dead cus_ id.
+  const customer = (await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer;
 
   try {
     return await getStripe().billingPortal.sessions.create({
-      customer: customerId,
+      customer: customer.id,
       return_url: opts.returnUrl,
     });
   } catch (err: any) {

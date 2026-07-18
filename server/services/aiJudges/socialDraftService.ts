@@ -116,7 +116,16 @@ function selectPicks(judgeId: JudgeId, candidates: Candidate[]): Candidate[] {
   return rankCandidatesForJudge(judgeId, candidates, singlePickLimit(judgeId));
 }
 
-function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string {
+function composeDraft(
+  judge: AiJudge,
+  picks: Candidate[],
+  date: string,
+  opts?: { projectedUnconfirmed?: boolean },
+): string {
+  const honesty = opts?.projectedUnconfirmed
+    ? `Official lineup not posted yet. Do not treat as confirmed. Research only — not betting advice.`
+    : `Research only. Not betting advice. No guarantees.`;
+
   if (judge.id === "risk_auditor") {
     const lines = picks.map((p, i) => {
       return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nRisk Score: ${agentScore(judge.id, p).toFixed(1)}\n${agentReason(judge.id, p)}`;
@@ -129,7 +138,7 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
       ``,
       premiumCta(judge.name),
       ``,
-      `Research only. Not betting advice. No guarantees.`,
+      honesty,
       `Generated for ${date}.`,
     ].join("\n");
   }
@@ -146,7 +155,7 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
     ``,
     premiumCta(judge.name),
     ``,
-    `Research only. Not betting advice. Lineups may be projected.`,
+    honesty,
     `Generated for ${date}.`,
   ].join("\n");
 }
@@ -172,10 +181,12 @@ export async function generateHrSocialDrafts(options?: {
   const payload = board?.payload ?? board ?? {};
   const date = payload.date ?? options?.date ?? new Date().toISOString().slice(0, 10);
 
-  const candidates = [
-    ...safeArray<Candidate>(payload.candidates),
-    ...safeArray<Candidate>(payload.projectedCandidates),
-  ];
+  // Confirmed batting-order rows only by default. Fall back to projected with
+  // an explicit unconfirmed disclaimer — never silently mix the two pools.
+  const confirmed = safeArray<Candidate>(payload.candidates);
+  const projected = safeArray<Candidate>(payload.projectedCandidates);
+  const projectedUnconfirmed = confirmed.length === 0;
+  const candidates = projectedUnconfirmed ? projected : confirmed;
 
   const created: SocialDraft[] = [];
 
@@ -193,7 +204,7 @@ export async function generateHrSocialDrafts(options?: {
       status: "draft",
       date,
       scheduledFor,
-      content: composeDraft(judge, picks, date),
+      content: composeDraft(judge, picks, date, { projectedUnconfirmed }),
       picks,
       createdAt: now,
       updatedAt: now,

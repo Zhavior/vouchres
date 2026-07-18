@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
+import { z } from "zod";
 import { AuthedRequest, requireAuth, requireStaff, getSupabaseAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
@@ -191,20 +192,32 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
   return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const start = Date.now();
-  const date = typeof req.body?.date === "string" ? req.body.date : undefined;
-  const feed = await getTodayHomeRuns(date);
-  const out = await processHomeRunEvents(feed.events);
-  structuredLog({
-    level: "info",
-    event: "endpoint",
-    requestId: req.requestId,
-    method: "POST",
-    route: "/api/notifications/scan-hr",
-    durationMs: Date.now() - start,
-    scanned: out.scanned,
-    created: out.created,
-  });
-  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
-}));
+const ScanHrSchema = z.object({
+  date: z.string().optional(),
+  /** Optional explicit recipient set. When omitted, only opted-in HR-alert prefs are used. */
+  userIds: z.array(z.string().uuid()).max(500).optional(),
+});
+
+notificationRoutes.post(
+  "/notifications/scan-hr",
+  requireAuth,
+  requireStaff,
+  validate({ body: ScanHrSchema }),
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    const start = Date.now();
+    const body = req.body as z.infer<typeof ScanHrSchema>;
+    const feed = await getTodayHomeRuns(body.date);
+    const out = await processHomeRunEvents(feed.events, { userIds: body.userIds });
+    structuredLog({
+      level: "info",
+      event: "endpoint",
+      requestId: req.requestId,
+      method: "POST",
+      route: "/api/notifications/scan-hr",
+      durationMs: Date.now() - start,
+      scanned: out.scanned,
+      created: out.created,
+    });
+    return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
+  }),
+);

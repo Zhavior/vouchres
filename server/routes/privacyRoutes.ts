@@ -36,16 +36,31 @@ export const privacyRoutes = Router();
 
 type PrivacyReq = AuthedRequest & RequestWithContext;
 
+async function loadDsarRows(
+  table: string,
+  column: string,
+  userId: string,
+): Promise<{ rows: unknown[]; warning?: string }> {
+  const result = await supabaseAdmin.from(table).select("*").eq(column, userId);
+  if (!result.error) return { rows: result.data ?? [] };
+  const code = String(result.error.code ?? "");
+  if (code === "42P01" || code === "42703" || code === "PGRST205" || code === "PGRST204") {
+    return { rows: [], warning: `skip missing ${table}.${column}` };
+  }
+  throw new Error(`${table} export failed: ${result.error.message}`);
+}
+
 privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+  const userId = req.user!.id;
   const { data, error } = await supabaseAdmin
-    .rpc("export_user_data", { p_user_id: req.user!.id });
+    .rpc("export_user_data", { p_user_id: userId });
 
   if (error) {
     structuredLog({
       level: "error",
       event: "privacy_export_failed",
       requestId: req.requestId,
-      userId: req.user!.id,
+      userId,
       message: error.message,
     });
     throw new AppError({
@@ -56,11 +71,30 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, r
     });
   }
 
+  // Supplement RPC export with surfaces hard-deletion already covers.
+  const supplementalSpecs: Array<{ key: string; table: string; column: string }> = [
+    { key: "notifications", table: "notifications", column: "user_id" },
+    { key: "vouches", table: "vouches", column: "user_id" },
+    { key: "stories", table: "user_stories", column: "user_id" },
+    { key: "dm_messages", table: "dm_messages", column: "sender_id" },
+    { key: "dm_participations", table: "dm_participants", column: "user_id" },
+    { key: "parlay_tails", table: "parlay_tails", column: "user_id" },
+    { key: "daily_quotas", table: "daily_quotas", column: "profile_id" },
+    { key: "push_subscriptions", table: "push_subscriptions", column: "user_id" },
+  ];
+  const supplemental: Record<string, unknown> = {};
+  const warnings: string[] = [];
+  for (const spec of supplementalSpecs) {
+    const loaded = await loadDsarRows(spec.table, spec.column, userId);
+    supplemental[spec.key] = loaded.rows;
+    if (loaded.warning) warnings.push(loaded.warning);
+  }
+
   structuredLog({
     level: "info",
     event: "privacy_dsar_export",
     requestId: req.requestId,
-    userId: req.user!.id,
+    userId,
   });
 
   res.setHeader("Content-Type", "application/json");
@@ -69,7 +103,14 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, r
     `attachment; filename="vouchedge-data-export-${req.user!.profile.username}-${Date.now()}.json"`,
   );
 
-  return res.json(apiOkFlat(req, { data }));
+  const base = data && typeof data === "object" ? (data as Record<string, unknown>) : { rpc: data };
+  return res.json(apiOkFlat(req, {
+    data: {
+      ...base,
+      ...supplemental,
+      export_warnings: warnings,
+    },
+  }));
 }));
 
 privacyRoutes.post(

@@ -32,7 +32,7 @@ import { LIVE_HUB_TTL_MS } from "../services/hubs/liveGameHub";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 import { getMaterializedHrResearch } from "../services/mlb/hrResearchSnapshotService";
 import type { RequestWithContext } from "../middleware/requestContext";
-import { mlbReadLimiter } from "../middleware/rateLimit";
+import { mlbExpensiveReadLimiter, mlbReadLimiter } from "../middleware/rateLimit";
 import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/auth";
 
 function parsePreviewLimit(raw: unknown): number {
@@ -183,7 +183,7 @@ res.json(apiOkFlat(req, {
   );
 
   /* ============ Deep endpoint — research-only; NEVER a confirmed-candidate source ============ */
-  app.get("/api/mlb/hr-board/today/deep", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/today/deep", mlbExpensiveReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await Promise.race([
         getCachedDeepHrBoard(),
@@ -209,7 +209,7 @@ res.json(apiOkFlat(req, {
     }
   }));
 
-  app.get("/api/mlb/hr-board/date/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/hr-board/date/:date", mlbExpensiveReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const date = requiredYmd(req.params.date);
       const previewLimit = parsePreviewLimit(req.query.previewLimit);

@@ -210,6 +210,15 @@ export const mlbReadLimiter = rateLimit({
   handler,
 });
 
+/** Expensive HR board builds (deep / multi-date) — tighter than mlbReadLimiter. */
+export const mlbExpensiveReadLimiter = rateLimit({
+  name: "mlb_expensive_read",
+  windowMs: 60 * 1000,
+  limit: 12,
+  keyGenerator: clientIpKey,
+  handler,
+});
+
 export const worldChatLimiter = rateLimit({
   name: "world_chat",
   windowMs: 60 * 1000,

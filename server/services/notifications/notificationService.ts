@@ -145,15 +145,33 @@ export async function getPrefs(userId: string): Promise<{ prefs: NotificationPre
 }
 
 async function getRecipientUserIds(explicitUserIds?: string[]): Promise<{ userIds: string[]; warnings: string[] }> {
-  if (explicitUserIds?.length) return { userIds: [...new Set(explicitUserIds)], warnings: [] };
+  if (explicitUserIds?.length) {
+    return { userIds: [...new Set(explicitUserIds)].slice(0, 500), warnings: [] };
+  }
+
+  // Fail closed: never fan out to every profile. Only users who opted into HR alerts.
   try {
     const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .limit(1000);
-    if (error) return { userIds: [], warnings: [`recipient lookup failed: ${error.message}`] };
-    return { userIds: (data ?? []).map((row: any) => String(row.id)), warnings: [] };
+      .from("notification_preferences")
+      .select("user_id")
+      .eq("hr_alerts_enabled", true)
+      .eq("in_app_enabled", true)
+      .limit(500);
+    if (error) {
+      if (missingTable(error)) {
+        return {
+          userIds: [],
+          warnings: ["notification_preferences missing — refusing unscoped profile fan-out"],
+        };
+      }
+      return { userIds: [], warnings: [`recipient lookup failed: ${error.message}`] };
+    }
+    const userIds = (data ?? []).map((row: { user_id?: string }) => String(row.user_id)).filter(Boolean);
+    return {
+      userIds,
+      warnings: userIds.length === 0 ? ["no opted-in HR alert recipients"] : [],
+    };
   } catch (err: any) {
     return { userIds: [], warnings: [`recipient lookup unavailable: ${err?.message ?? "unknown error"}`] };
   }
