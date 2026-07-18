@@ -25,7 +25,17 @@ vi.mock("../server/agents/agentRegistry", () => ({
   listAgents: vi.fn(() => [{ id: "alpha", name: "Alpha", icon: "A" }]),
   getAgent: vi.fn((id: string) => (id === "alpha" ? { id: "alpha", name: "Alpha", icon: "A" } : null)),
   generatePicks: vi.fn(async () => [{ selection: "Player HR", confidence: 72 }]),
-  JUDGE_AGENTS: [{ id: "judge", name: "Judge" }],
+  JUDGE_AGENTS: [{ id: "judge", name: "Judge", checks: ["a"] }],
+  CAPPER_AGENTS: [{ id: "alpha", name: "Alpha", personality: "x", pickStyle: "y", riskTolerance: "balanced" }],
+}));
+
+vi.mock("../server/services/agents/unifiedAgentCatalog", () => ({
+  buildUnifiedAgentCatalog: vi.fn(() => ({
+    total: 1,
+    lanes: { ai_judge: 0, panel_judge: 0, capper: 1, brand: 0 },
+    agents: [{ id: "alpha", name: "Alpha", lane: "capper", tagline: "x", specialty: "y", builtin: true }],
+    notes: [],
+  })),
 }));
 
 vi.mock("../server/services/intelligence/mlbIntelligenceEngine", () => ({
@@ -73,6 +83,10 @@ describe("agent routes", () => {
       ok: true,
       cappers: [{ id: "alpha" }],
       judges: [{ id: "judge" }],
+      catalog: {
+        total: expect.any(Number),
+        agents: expect.any(Array),
+      },
       meta: {
         requestId: expect.any(String),
         timestamp: expect.any(String),

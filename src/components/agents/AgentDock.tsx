@@ -26,10 +26,11 @@ export default function AgentDock({
         <div>
           <p className={`${Z8_LABEL} text-vouch-emerald`}>Agent Dock</p>
           <h3 id="agent-dock-heading" className="mt-1 text-lg font-black text-white">
-            Four AI Judges
+            AI Judge agents
           </h3>
           <p className="mt-1 max-w-2xl text-xs text-white/50">
-            Each judge scores the HR board with its own specialty lens. Picks sync to V.A.I Research Command Center rooms.
+            HR board specialty lenses (DS / PH / MR / RA). Full catalog — cappers, panel judges, brand mark — at{" "}
+            <span className="text-white/70">GET /api/agents/catalog</span>.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/60">

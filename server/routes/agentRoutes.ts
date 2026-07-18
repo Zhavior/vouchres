@@ -1,6 +1,7 @@
 /** AI capper + judge agent routes. */
 import type { Express, Response } from "express";
 import { listAgents, getAgent, generatePicks, JUDGE_AGENTS } from "../agents/agentRegistry";
+import { buildUnifiedAgentCatalog } from "../services/agents/unifiedAgentCatalog";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { generationLimiter } from "../middleware/rateLimit";
 import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/auth";
@@ -14,7 +15,19 @@ import type { RequestWithContext } from "../middleware/requestContext";
 
 export function registerAgentRoutes(app: Express): void {
   app.get("/api/agents", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    return res.json(apiOkFlat(req, { cappers: listAgents(), judges: JUDGE_AGENTS }));
+    const catalog = buildUnifiedAgentCatalog();
+    return res.json(
+      apiOkFlat(req, {
+        cappers: listAgents(),
+        judges: JUDGE_AGENTS,
+        catalog,
+      }),
+    );
+  }));
+
+  /** Full install surface — every in-repo agent lane. */
+  app.get("/api/agents/catalog", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, buildUnifiedAgentCatalog()));
   }));
 
   app.get("/api/agents/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
