@@ -76,6 +76,17 @@ describe("judge routes", () => {
     expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
   });
 
+  it("returns brand-mark judge verdict for the shipping VE icon", async () => {
+    const response = await fetch(`${baseUrl}/api/judge/brand-mark`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.verdict.finalScore).toBeGreaterThanOrEqual(75);
+    expect(body.verdict.judges?.length).toBeGreaterThanOrEqual(4);
+    expect(body.verdict.marketingRead).toMatch(/VE|VouchEdge/i);
+  });
+
   it("rejects missing pick with unified validation envelope", async () => {
     const response = await fetch(`${baseUrl}/api/judge/pick`, {
       method: "POST",

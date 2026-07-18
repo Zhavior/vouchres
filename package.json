@@ -52,6 +52,7 @@
     "cap:open:android": "npx cap open android",
     "screenshots:mobile": "node scripts/mobileScreenshots.mjs",
     "brand:assets": "node scripts/generateBrandAssets.mjs",
+    "brand:judge": "npx tsx scripts/judgeBrandMark.ts",
     "screenshots:splash": "node scripts/splashScreenshots.mjs"
   },
   "dependencies": {
