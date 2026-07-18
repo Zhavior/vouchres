@@ -13,7 +13,7 @@ export default function HelloScreen() {
       aria-live="polite"
       aria-label="Signing in"
     >
-      <div className="drop-shadow-[0_0_40px_rgba(0,229,255,0.3)]">
+      <div>
         <VouchEdgeMark size={104} variant="boot" />
       </div>
       <p className="text-2xl font-black tracking-tight">VouchEdge</p>

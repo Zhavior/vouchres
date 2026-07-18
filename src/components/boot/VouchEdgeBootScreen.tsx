@@ -34,7 +34,7 @@ export default function VouchEdgeBootScreen({ boot }: Props) {
       </div>
 
       <div className="relative z-10 flex w-full max-w-xs flex-col items-center text-center">
-        <div className="mb-8 drop-shadow-[0_0_48px_rgba(0,229,255,0.28)]">
+        <div className="mb-8">
           <VouchEdgeMark size={120} variant="boot" />
         </div>
 

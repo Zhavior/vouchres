@@ -13,7 +13,7 @@ export default function GoodbyeScreen() {
       aria-live="polite"
       aria-label="Signing out"
     >
-      <div className="drop-shadow-[0_0_36px_rgba(0,229,255,0.22)]">
+      <div>
         <VouchEdgeMark size={88} variant="idle" />
       </div>
       <h1 className="text-2xl font-black tracking-tight">Goodbye.</h1>

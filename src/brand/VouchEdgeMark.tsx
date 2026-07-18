@@ -23,8 +23,15 @@ export function VouchEdgeMark({
   const dim = typeof size === 'number' ? `${size}px` : size;
   const animClass =
     variant === 'boot' ? 've-mark-boot' : variant === 'idle' ? 've-mark-idle' : '';
+  const spatialClass =
+    variant === 'boot'
+      ? 've-mark-spatial ve-mark-spatial--boot'
+      : variant === 'idle'
+        ? 've-mark-spatial ve-mark-spatial--idle'
+        : 've-mark-spatial ve-mark-spatial--static';
 
   return (
+    <span className={spatialClass} style={{ width: dim, height: dim }}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 1024 1024"
@@ -117,6 +124,7 @@ export function VouchEdgeMark({
         <path className="letter-e" d="M674.43 563.52L553.4 563.52L553.4 432.48L674.43 432.48L674.43 460.87L581.97 460.87L581.97 483.80L656.41 483.80L656.41 512.20L581.97 512.20L581.97 535.13L674.43 535.13" fill="url(#veMarkLetterShade)" opacity="0.5" />
       </g>
     </svg>
+    </span>
   );
 }
 

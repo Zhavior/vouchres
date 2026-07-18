@@ -1,8 +1,36 @@
-/* VouchEdge brand mark + splash motion — transform/opacity only */
+/* VouchEdge brand mark + splash motion — spatial depth toward camera */
 
 .ve-brand-mark {
   display: block;
   overflow: visible;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Perspective stage — mark hovers / approaches the viewer */
+.ve-mark-spatial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 980px;
+  perspective-origin: 50% 40%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.ve-mark-spatial .ve-brand-mark {
+  transform-origin: 50% 48%;
+  will-change: transform, opacity, filter;
+}
+
+/* Boot: fly out of depth toward the screen */
+.ve-mark-spatial--boot .ve-brand-mark {
+  animation: veMarkApproach 1.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Idle: continuous spatial hover toward / away from camera */
+.ve-mark-spatial--idle .ve-brand-mark {
+  animation: veMarkHoverToward 4.2s ease-in-out infinite;
 }
 
 .ve-mark-idle .ve-mark-glow {
@@ -29,12 +57,73 @@
   animation: veMarkPopIdentity 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
 }
 
-/* Filled type — no stroke draw; identity pop handles reveal */
-
 .ve-mark-boot .ve-mark-glow {
   opacity: 0;
   transform-origin: 512px 460px;
   animation: veMarkGlowIn 1.15s ease-out 0.15s forwards;
+}
+
+/* Soft depth cue that blooms as the mark comes forward */
+.ve-mark-spatial--boot {
+  filter: drop-shadow(0 28px 40px rgba(11, 6, 24, 0.55));
+  animation: veMarkShadowApproach 1.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-mark-spatial--idle {
+  filter: drop-shadow(0 18px 28px rgba(11, 6, 24, 0.45));
+  animation: veMarkShadowHover 4.2s ease-in-out infinite;
+}
+
+@keyframes veMarkApproach {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 42px, -320px) scale(0.62) rotateX(16deg);
+    filter: blur(4px);
+  }
+  58% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  78% {
+    transform: translate3d(0, -4px, 56px) scale(1.045) rotateX(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 28px) scale(1) rotateX(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes veMarkHoverToward {
+  0%,
+  100% {
+    transform: translate3d(0, 10px, -72px) scale(0.94) rotateX(7deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 78px) scale(1.06) rotateX(-3.5deg);
+  }
+}
+
+@keyframes veMarkShadowApproach {
+  0% {
+    filter: drop-shadow(0 4px 8px rgba(11, 6, 24, 0.2)) drop-shadow(0 0 0 rgba(34, 211, 238, 0));
+  }
+  100% {
+    filter: drop-shadow(0 32px 48px rgba(11, 6, 24, 0.65))
+      drop-shadow(0 0 36px rgba(34, 211, 238, 0.28));
+  }
+}
+
+@keyframes veMarkShadowHover {
+  0%,
+  100% {
+    filter: drop-shadow(0 10px 16px rgba(11, 6, 24, 0.35))
+      drop-shadow(0 0 12px rgba(34, 211, 238, 0.12));
+  }
+  50% {
+    filter: drop-shadow(0 36px 52px rgba(11, 6, 24, 0.7))
+      drop-shadow(0 0 42px rgba(34, 211, 238, 0.32));
+  }
 }
 
 @keyframes veMarkDrawShield {
@@ -79,6 +168,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ve-mark-spatial--boot .ve-brand-mark,
+  .ve-mark-spatial--idle .ve-brand-mark,
+  .ve-mark-spatial--boot,
+  .ve-mark-spatial--idle,
   .ve-mark-idle .ve-mark-glow,
   .ve-mark-idle .ve-mark-identity,
   .ve-mark-boot .ve-mark-shield,
@@ -88,6 +181,7 @@
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
     stroke-dashoffset: 0 !important;
   }
 }
