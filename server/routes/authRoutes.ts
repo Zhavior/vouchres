@@ -7,6 +7,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import { HandleSchema, validateHandle } from "../lib/handleSchema";
+import { HttpsUrlSchema } from "../lib/httpsUrlSchema";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { normalizeCapperSettings } from "../../src/lib/capperSettings";
 import { syncLegacyCapperSettingsToCreatorBusiness } from "../services/business/creatorBusinessService";
@@ -130,7 +131,7 @@ const ProfileUpdateSchema = z.object({
   username: HandleSchema.optional(),
   display_name: z.string().max(64).optional(),
   bio: z.string().max(500).optional(),
-  avatar_url: z.string().url().max(500).optional().nullable(),
+  avatar_url: HttpsUrlSchema.max(500).optional().nullable(),
   capper_settings: CapperSettingsSchema.optional(),
 });
 

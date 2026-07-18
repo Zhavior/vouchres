@@ -90,7 +90,7 @@ describeOrSkip("Auth flow", () => {
       username: z.string().min(3).max(24).optional(),
       display_name: z.string().max(64).optional(),
       bio: z.string().max(500).optional(),
-      avatar_url: z.string().url().max(500).optional().nullable(),
+      avatar_url: (await import("../server/lib/httpsUrlSchema")).HttpsUrlSchema.max(500).optional().nullable(),
       // Note: 'tier' is intentionally NOT in the schema
     });
 

@@ -124,6 +124,30 @@ describe("deep-scan backend hardening", () => {
     expect(stripe).toContain("Do not mutate local entitlements when Stripe cancel was incomplete");
   });
 
+  it("Stripe customer bind fails closed and cleans up orphans", () => {
+    const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
+    expect(stripe).toContain("stripe_customer_bind_failed");
+    expect(stripe).toContain("deleteStripeCustomer(customer.id)");
+    expect(stripe).toMatch(/update\(\{\s*stripe_customer_id: customer\.id\s*\}\)[\s\S]*\.select\("id"\)[\s\S]*\.maybeSingle\(\)/);
+  });
+
+  it("legal confirm bumps auth epoch so gates refresh immediately", () => {
+    const core = readFileSync("server/routes/coreRoutes.ts", "utf8");
+    expect(core).toContain("bumpAuthUserEpoch");
+    expect(core).toMatch(/\/legal\/confirm[\s\S]*await bumpAuthUserEpoch\(req\.user!\.id\)/);
+  });
+
+  it("avatar and story media URLs require https", () => {
+    const schema = readFileSync("server/lib/httpsUrlSchema.ts", "utf8");
+    const auth = readFileSync("server/routes/authRoutes.ts", "utf8");
+    const social = readFileSync("server/routes/socialHubRoutes.ts", "utf8");
+    expect(schema).toContain('protocol === "https:"');
+    expect(auth).toContain("HttpsUrlSchema");
+    expect(auth).toContain("avatar_url: HttpsUrlSchema");
+    expect(social).toContain("HttpsUrlSchema");
+    expect(social).toContain("media_url: HttpsUrlSchema");
+  });
+
   it("deletion schedule does not toggle is_banned", () => {
     const privacy = readFileSync("server/routes/privacyRoutes.ts", "utf8");
     expect(privacy).not.toContain("is_banned: true");

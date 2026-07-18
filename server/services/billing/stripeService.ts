@@ -119,10 +119,28 @@ export async function ensureStripeCustomer(profileId: string, email: string) {
         metadata: { profile_id: profileId },
       });
 
-      await supabaseAdmin
+      const { data: bound, error: bindError } = await supabaseAdmin
         .from("profiles")
         .update({ stripe_customer_id: customer.id })
-        .eq("id", profileId);
+        .eq("id", profileId)
+        .select("id")
+        .maybeSingle();
+
+      if (bindError || !bound) {
+        // Fail closed: do not return an unbound Stripe customer (orphan billing id).
+        try {
+          await deleteStripeCustomer(customer.id);
+        } catch {
+          // Best-effort cleanup; surface the bind failure either way.
+        }
+        throw new AppError({
+          status: 503,
+          code: "upstream_unavailable",
+          message: "Unable to link billing customer. Please try again.",
+          details: { reason: "stripe_customer_bind_failed" },
+          cause: bindError ?? new Error("stripe_customer_bind_missing_row"),
+        });
+      }
 
       return customer;
     },

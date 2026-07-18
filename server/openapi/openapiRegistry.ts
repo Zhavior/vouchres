@@ -1,5 +1,6 @@
 import { extendZodWithOpenApi, OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import { HttpsUrlSchema } from "../lib/httpsUrlSchema";
 
 extendZodWithOpenApi(z);
 
@@ -1167,7 +1168,7 @@ openapiRegistry.registerPath({
             username: z.string().min(3).max(24).optional(),
             display_name: z.string().max(64).optional(),
             bio: z.string().max(500).optional(),
-            avatar_url: z.string().url().max(500).nullable().optional(),
+            avatar_url: HttpsUrlSchema.max(500).nullable().optional(),
           }),
         },
       },

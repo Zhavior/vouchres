@@ -3,7 +3,7 @@ import type { Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
-import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
+import { AuthedRequest, bumpAuthUserEpoch, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { validate } from "../middleware/validation";
@@ -54,6 +54,8 @@ coreRoutes.post(
       .eq("id", req.user!.id);
 
     if (error) throw error;
+    // Legal gates are epoch-cached; bump so requireLegalConfirmed sees the confirm immediately.
+    await bumpAuthUserEpoch(req.user!.id);
     return res.json(apiOkFlat(req, {}));
   })
 );

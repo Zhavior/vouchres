@@ -6,6 +6,7 @@ import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
+import { HttpsUrlSchema } from "../lib/httpsUrlSchema";
 import type { RequestWithContext } from "../middleware/requestContext";
 import {
   buildFollowingHub,
@@ -49,7 +50,7 @@ socialHubRoutes.delete("/status-note", requireAuth, asyncHandler(async (req: Aut
 const CreateStorySchema = z.object({
   kind: z.enum(["text", "image"]).optional(),
   body: z.string().max(280).optional().nullable(),
-  media_url: z.string().url().optional().nullable(),
+  media_url: HttpsUrlSchema.max(2000).optional().nullable(),
   background: z.string().max(32).optional().nullable(),
 });
 
