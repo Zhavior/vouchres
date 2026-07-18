@@ -9,7 +9,7 @@ import {
   listCentralBrainSports,
 } from "../services/intelligence/centralBrain/centralBrainService";
 import { CentralBrainDailyQuerySchema } from "../services/intelligence/centralBrain/schemas";
-import { getBrainHrLedger, getBrainPitcherKLedger, getBrainStolenBaseLedger } from "../services/intelligence/centralBrain/brainLedgerService";
+import { getBrainHrLedger, getBrainMlbPicksForDate, getBrainPitcherKLedger, getBrainStolenBaseLedger } from "../services/intelligence/centralBrain/brainLedgerService";
 import { scanMlbSlate } from "../services/intelligence/centralBrain/brainScanService";
 import { BRAIN_PRODUCT_IDENTITY } from "../services/intelligence/centralBrain/identity";
 import { executeBrainOperations } from "../services/intelligence/centralBrain/brainOperationsService";
@@ -54,8 +54,12 @@ export function registerCentralBrainRoutes(app: Express): void {
       throw new AppError({ status: 400, code: "validation_error", message: "date must use YYYY-MM-DD format.", details: parsedQuery.error.issues });
     }
     const date = parsedQuery.data.date ?? new Date().toISOString().slice(0, 10);
-    const [homeRuns, stolenBase, pitcherStrikeouts, aiReviews] = await Promise.all([getBrainHrLedger(20, date), getBrainStolenBaseLedger(20, date), getBrainPitcherKLedger(20, date), getBrainGeminiReviews(date)]);
-    return res.json(apiOkFlat(req, { ...homeRuns, stolenBase, pitcherStrikeouts, aiReviews }));
+    // Live server selection (or frozen ledger when present). Never depends on the HR board UI.
+    const [bundle, aiReviews] = await Promise.all([
+      getBrainMlbPicksForDate(date, 20),
+      getBrainGeminiReviews(date),
+    ]);
+    return res.json(apiOkFlat(req, { ...bundle, aiReviews }));
   }));
 
   app.get("/api/intelligence/brain/mlb/scan", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {

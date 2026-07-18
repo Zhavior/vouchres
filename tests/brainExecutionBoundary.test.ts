@@ -31,4 +31,11 @@ describe("ProjectVABrAIns execution boundary", () => {
       expect(readFileSync(resolve(ROOT, file), "utf8"), file).not.toContain("/api/intelligence/brain/");
     }
   });
+
+  it("does not project Brain picks from the HR board view-model", () => {
+    const source = readFileSync(resolve(ROOT, "src/features/brain/BrainPicksPage.tsx"), "utf8");
+    expect(source).not.toContain("useHrBoardViewModel");
+    expect(source).not.toContain("selectBrainPicks");
+    expect(source).toContain("/api/intelligence/brain/mlb/picks");
+  });
 });

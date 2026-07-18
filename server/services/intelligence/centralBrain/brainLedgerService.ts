@@ -237,6 +237,146 @@ export async function getBrainPitcherKLedger(limit = 100, date?: string): Promis
   return getBrainLedgerByMarket("pitcher_strikeouts", limit, date);
 }
 
+function pendingPerformance(picks: BrainLedgerPick[]): BrainPerformance {
+  return {
+    total: picks.length,
+    resolved: 0,
+    pending: picks.length,
+    hits: 0,
+    misses: 0,
+    voids: 0,
+    hitRate: null,
+    sampleWarning: picks.length ? "Live selection — outcomes settle after final MLB results." : null,
+  };
+}
+
+/** Live HR selection from sport adapters (no DB required). */
+export async function buildLiveBrainHrPicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+  const snapshots = await mlbHrFeatureAdapter.build({ date });
+  return selectMlbHrFeatures(snapshots).map(({ snapshot, score, rank }) => ({
+    decisionKey: decisionKey(date, snapshot.eventId, snapshot.subjectId),
+    date,
+    gameId: snapshot.eventId,
+    playerId: snapshot.subjectId,
+    playerName: snapshot.subjectLabel,
+    team: snapshot.team,
+    opponent: snapshot.opponent,
+    rank,
+    score,
+    confidence: Number(snapshot.features.dataConfidence ?? 0),
+    tier: String(snapshot.features.riskTier ?? "Unrated"),
+    evidenceQuality: snapshot.eligibility === "eligible" ? "official" : "preview",
+    reasons: snapshot.reasons.slice(0, 6),
+    risks: [...snapshot.risks, ...snapshot.missingFeatures.map((feature) => `Missing: ${feature}`)].slice(0, 6),
+    result: "pending",
+  }));
+}
+
+/** Live stolen-base selection from sport adapters (no DB required). */
+export async function buildLiveBrainStolenBasePicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+  const snapshots = await mlbStolenBaseFeatureAdapter.build({ date });
+  return selectMlbStolenBaseFeatures(snapshots).map(({ snapshot, score, rank }) => ({
+    decisionKey: createHash("sha256")
+      .update([BRAIN_SB_SELECTION_VERSION, date, snapshot.eventId, snapshot.subjectId, "stolen_base"].join("|"))
+      .digest("hex"),
+    date,
+    gameId: snapshot.eventId,
+    playerId: snapshot.subjectId,
+    playerName: snapshot.subjectLabel,
+    team: snapshot.team,
+    opponent: snapshot.opponent,
+    rank,
+    score,
+    confidence: Math.max(20, Math.min(70, 70 - snapshot.missingFeatures.length * 10)),
+    tier: score >= 75 ? "Strong" : "Watch",
+    evidenceQuality: snapshot.eligibility === "eligible" ? "official" : "preview",
+    reasons: snapshot.reasons.slice(0, 6),
+    risks: snapshot.risks.slice(0, 6),
+    result: "pending",
+  }));
+}
+
+/** Live pitcher-K selection from sport adapters (no DB required). */
+export async function buildLiveBrainPitcherKPicks(date = todayISO()): Promise<BrainLedgerPick[]> {
+  const snapshots = await mlbPitcherKFeatureAdapter.build({ date });
+  return selectMlbPitcherKFeatures(snapshots).map(({ snapshot, score, confidence, rank }) => ({
+    decisionKey: createHash("sha256")
+      .update([BRAIN_PITCHER_K_SELECTION_VERSION, date, snapshot.eventId, snapshot.subjectId, "pitcher_strikeouts"].join("|"))
+      .digest("hex"),
+    date,
+    gameId: snapshot.eventId,
+    playerId: snapshot.subjectId,
+    playerName: snapshot.subjectLabel,
+    team: snapshot.team,
+    opponent: snapshot.opponent,
+    rank,
+    score,
+    confidence,
+    tier: score >= 75 ? "Strong" : "Watch",
+    evidenceQuality: "official",
+    reasons: snapshot.reasons.slice(0, 6),
+    risks: snapshot.risks.slice(0, 6),
+    result: "pending",
+  }));
+}
+
+/**
+ * Brain Picks page source of truth: live server selection.
+ * Prefers frozen ledger rows when they exist for the date; otherwise computes
+ * from adapters so the Brain page never depends on the HR board UI path.
+ */
+export async function getBrainMlbPicksForDate(date = todayISO(), limit = 20): Promise<{
+  picks: BrainLedgerPick[];
+  performance: BrainPerformance;
+  stolenBase: { picks: BrainLedgerPick[]; performance: BrainPerformance };
+  pitcherStrikeouts: { picks: BrainLedgerPick[]; performance: BrainPerformance };
+  provenance: {
+    home_run: "ledger" | "live_selection";
+    stolen_base: "ledger" | "live_selection";
+    pitcher_strikeouts: "ledger" | "live_selection";
+  };
+}> {
+  const capped = Math.max(1, Math.min(limit, 250));
+
+  const [hrLedger, sbLedger, kLedger] = await Promise.all([
+    getBrainHrLedger(capped, date).catch(() => null),
+    getBrainStolenBaseLedger(capped, date).catch(() => null),
+    getBrainPitcherKLedger(capped, date).catch(() => null),
+  ]);
+
+  const needHr = !hrLedger?.picks.length;
+  const needSb = !sbLedger?.picks.length;
+  const needK = !kLedger?.picks.length;
+
+  const [hrLive, sbLive, kLive] = await Promise.all([
+    needHr ? buildLiveBrainHrPicks(date) : Promise.resolve([] as BrainLedgerPick[]),
+    needSb ? buildLiveBrainStolenBasePicks(date) : Promise.resolve([] as BrainLedgerPick[]),
+    needK ? buildLiveBrainPitcherKPicks(date) : Promise.resolve([] as BrainLedgerPick[]),
+  ]);
+
+  const hrPicks = (needHr ? hrLive : hrLedger!.picks).slice(0, capped);
+  const sbPicks = (needSb ? sbLive : sbLedger!.picks).slice(0, capped);
+  const kPicks = (needK ? kLive : kLedger!.picks).slice(0, capped);
+
+  return {
+    picks: hrPicks,
+    performance: needHr ? pendingPerformance(hrPicks) : hrLedger!.performance,
+    stolenBase: {
+      picks: sbPicks,
+      performance: needSb ? pendingPerformance(sbPicks) : sbLedger!.performance,
+    },
+    pitcherStrikeouts: {
+      picks: kPicks,
+      performance: needK ? pendingPerformance(kPicks) : kLedger!.performance,
+    },
+    provenance: {
+      home_run: needHr ? "live_selection" : "ledger",
+      stolen_base: needSb ? "live_selection" : "ledger",
+      pitcher_strikeouts: needK ? "live_selection" : "ledger",
+    },
+  };
+}
+
 async function getBrainLedgerByMarket(market: "home_run" | "stolen_base" | "pitcher_strikeouts", limit = 100, date?: string): Promise<{ picks: BrainLedgerPick[]; performance: BrainPerformance }> {
   const supabase = await getSupabaseAdmin();
   let query = supabase

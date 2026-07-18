@@ -45,6 +45,16 @@ vi.mock("../server/services/intelligence/centralBrain/brainLedgerService", () =>
     picks: [{ decisionKey: "k_1", playerId: "99", playerName: "Starter", result: "pending" }],
     performance: { total: 1, resolved: 0, pending: 1, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Small sample" },
   })),
+  getBrainMlbPicksForDate: vi.fn(async () => ({
+    picks: [{ decisionKey: "decision_1", playerId: "1", playerName: "Slugger", result: "pending", score: 88, rank: 1 }],
+    performance: { total: 1, resolved: 0, pending: 1, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Live selection" },
+    stolenBase: { picks: [], performance: { total: 0, resolved: 0, pending: 0, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: null } },
+    pitcherStrikeouts: {
+      picks: [{ decisionKey: "k_1", playerId: "99", playerName: "Starter", result: "pending" }],
+      performance: { total: 1, resolved: 0, pending: 1, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Small sample" },
+    },
+    provenance: { home_run: "live_selection", stolen_base: "live_selection", pitcher_strikeouts: "ledger" },
+  })),
 }));
 
 vi.mock("../server/services/intelligence/centralBrain/brainScanService", () => ({
@@ -139,17 +149,18 @@ describe("central brain routes", () => {
     });
   });
 
-  it("keeps the Brain Picks endpoint read-only", async () => {
+  it("serves Brain Picks from live server selection without writing snapshots", async () => {
     const ledger = await import("../server/services/intelligence/centralBrain/brainLedgerService");
     const response = await fetch(`${baseUrl}/api/intelligence/brain/mlb/picks?date=2026-07-12`);
     expect(response.status).toBe(200);
     expect(ledger.snapshotDailyBrainHrPicks).not.toHaveBeenCalled();
     expect(ledger.snapshotDailyBrainStolenBasePicks).not.toHaveBeenCalled();
     expect(ledger.snapshotDailyBrainPitcherKPicks).not.toHaveBeenCalled();
-    expect(ledger.getBrainHrLedger).toHaveBeenCalledWith(20, "2026-07-12");
-    expect(ledger.getBrainPitcherKLedger).toHaveBeenCalledWith(20, "2026-07-12");
+    expect(ledger.getBrainMlbPicksForDate).toHaveBeenCalledWith("2026-07-12", 20);
     const body = await response.json();
     expect(body.aiReviews).toMatchObject({ home_run: { status: "live" } });
+    expect(body.provenance).toMatchObject({ home_run: "live_selection" });
+    expect(body.picks).toMatchObject([{ playerName: "Slugger" }]);
     expect(body.pitcherStrikeouts.picks).toMatchObject([{ playerName: "Starter", result: "pending" }]);
   });
 

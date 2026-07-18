@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, RefreshCw, Target } from "lucide-react";
-import { useHrBoardViewModel } from "../hr/hooks/useHrBoardViewModel";
-import { selectBrainPicks } from "./brainSelection";
 import { BrainPageShell } from "./BrainPageShell";
-import { Z8_LABEL, Z8_PANEL_PREMIUM } from "../../theme/z8Tokens";
+import { Z8_LABEL } from "../../theme/z8Tokens";
 import { apiClient } from "../../lib/apiClient";
 import PlayerHeadshot from "../../components/parlays/PlayerHeadshot";
 import { BrainMarketLoadingState } from "./BrainMarketLoadingState";
+import { localISODate } from "../hr/utils/localDate";
 
 type BrainScan = {
   coverage: {
@@ -53,15 +52,17 @@ type ServerBrainPick = {
   playerName: string;
   team: string;
   opponent: string;
+  gameId?: string;
   rank: number;
   score: number;
   confidence: number;
   tier: string;
-  evidenceQuality: string;
+  evidenceQuality: "official" | "preview" | string;
   reasons?: string[];
   risks?: string[];
   result: "pending" | "hit" | "miss" | "void";
 };
+
 type AiPickReview = {
   subjectId: string;
   verdict:
@@ -90,63 +91,61 @@ type BrainPicksResponse = {
   aiReviews: Partial<
     Record<"home_run" | "stolen_base" | "pitcher_strikeouts", AiMarketReview>
   >;
+  provenance?: {
+    home_run: "ledger" | "live_selection";
+    stolen_base: "ledger" | "live_selection";
+    pitcher_strikeouts: "ledger" | "live_selection";
+  };
 };
+type BrainPicksBundle = BrainPicksResponse;
 
 const reviewLabel = (review?: AiPickReview) =>
   review?.verdict.replaceAll("_", " ") ?? "review pending";
+
+function pickKey(pick: ServerBrainPick): string {
+  return `${pick.playerId}:${pick.gameId ?? pick.rank}`;
+}
 
 export default function BrainPicksPage({
   onNavigate,
 }: {
   onNavigate: (section: string) => void;
 }) {
-  const vm = useHrBoardViewModel();
+  const date = localISODate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const candidatePicks = useMemo(
-    () => selectBrainPicks(vm.rows ?? []),
-    [vm.rows],
-  );
   const picksQuery = useQuery({
-    queryKey: ["brain", "picks", "mlb", vm.date],
+    queryKey: ["brain", "picks", "mlb", date],
     queryFn: () =>
-      apiClient.get<BrainPicksResponse>("/api/intelligence/brain/mlb/picks", {
-        date: vm.date,
+      apiClient.get<BrainPicksBundle>("/api/intelligence/brain/mlb/picks", {
+        date,
       }),
     staleTime: 60_000,
     refetchInterval: 5 * 60_000,
+    retry: 1,
   });
-  const picks = useMemo(() => {
-    const serverByPlayer = new Map(
-      (picksQuery.data?.picks ?? []).map((pick) => [pick.playerId, pick]),
-    );
-    return candidatePicks
-      .filter((pick) => serverByPlayer.has(String(pick.player.playerId)))
-      .map((pick) => ({
-        ...pick,
-        selectionScore: serverByPlayer.get(String(pick.player.playerId))!.score,
-      }))
-      .sort(
-        (a, b) =>
-          serverByPlayer.get(String(a.player.playerId))!.rank -
-          serverByPlayer.get(String(b.player.playerId))!.rank,
-      );
-  }, [candidatePicks, picksQuery.data]);
+  /** Server-authored only — no HR board view-model, no client re-rank. */
+  const picks = useMemo(
+    () =>
+      [...(picksQuery.data?.picks ?? [])].sort(
+        (a, b) => a.rank - b.rank || b.score - a.score,
+      ),
+    [picksQuery.data?.picks],
+  );
   const scanQuery = useQuery({
-    queryKey: ["brain", "scan", "mlb", vm.date],
+    queryKey: ["brain", "scan", "mlb", date],
     queryFn: () =>
       apiClient.get<{ scan: BrainScan }>("/api/intelligence/brain/mlb/scan", {
-        date: vm.date,
+        date,
       }),
     staleTime: 5 * 60_000,
+    retry: 1,
   });
   const selected =
-    picks.find((pick) => pick.player.stableId === selectedId) ??
-    picks[0] ??
-    null;
+    picks.find((pick) => pickKey(pick) === selectedId) ?? picks[0] ?? null;
   const homeRunReviews = useMemo(
     () =>
       new Map(
-        (picksQuery.data?.aiReviews.home_run?.reviews ?? []).map((review) => [
+        (picksQuery.data?.aiReviews?.home_run?.reviews ?? []).map((review) => [
           review.subjectId,
           review,
         ]),
@@ -172,11 +171,13 @@ export default function BrainPicksPage({
     [picksQuery.data],
   );
   const selectedReview = selected
-    ? homeRunReviews.get(String(selected.player.playerId))
+    ? homeRunReviews.get(String(selected.playerId))
     : undefined;
   const officialCount = picks.filter(
     (pick) => pick.evidenceQuality === "official",
   ).length;
+  const scannedPlayers = scanQuery.data?.scan.coverage.playersScanned ?? 0;
+  const hrProvenance = picksQuery.data?.provenance?.home_run ?? null;
   const decisionWindowOpen =
     scanQuery.data?.scan.temporal.decisionWindowOpen ?? false;
   const untilWindow =
@@ -401,10 +402,7 @@ export default function BrainPicksPage({
         {[
           ["Players chosen", picks.length],
           ["Official lineup", officialCount],
-          [
-            "Roster rows rejected",
-            Math.max(0, (vm.rows?.length ?? 0) - picks.length),
-          ],
+          ["Players scanned", scannedPlayers],
         ].map(([label, value]) => (
           <div key={String(label)} className="brain-stat">
             <div className={`${Z8_LABEL} text-white/40`}>{label}</div>
@@ -415,6 +413,12 @@ export default function BrainPicksPage({
         ))}
       </section>
 
+      {hrProvenance && (
+        <div className={`${Z8_LABEL} text-white/40`}>
+          HR source: {hrProvenance === "ledger" ? "frozen ledger" : "live server selection"}
+        </div>
+      )}
+
       {picks.some((pick) => pick.evidenceQuality === "preview") && (
         <div className="brain-callout flex items-start gap-2 p-3 text-sm text-amber-100/75">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> Official lineups
@@ -422,7 +426,7 @@ export default function BrainPicksPage({
         </div>
       )}
 
-      {vm.loading || picksQuery.isLoading ? (
+      {picksQuery.isLoading ? (
         <BrainMarketLoadingState
           market="Home run"
           {...homeRunReadiness}
@@ -435,8 +439,8 @@ export default function BrainPicksPage({
             Verified Brain picks are unavailable.
           </h2>
           <p className="mt-2 text-sm text-white/50">
-            The page will not substitute browser-generated recommendations for
-            the server-authored ledger.
+            Sign in with Pro access to load `/api/intelligence/brain/mlb/picks`.
+            This page will not invent browser-side recommendations.
           </p>
         </div>
       ) : picks.length === 0 ? (
@@ -450,30 +454,28 @@ export default function BrainPicksPage({
           <div className="grid content-start gap-2">
             {picks.map((pick, index) => (
               <button
-                key={pick.player.stableId}
+                key={pickKey(pick)}
                 type="button"
-                onClick={() => setSelectedId(pick.player.stableId)}
+                onClick={() => setSelectedId(pickKey(pick))}
                 className="brain-choice-row grid min-h-[88px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 border p-3 text-left"
                 data-favorite={index < 3}
-                data-selected={selected?.player.stableId === pick.player.stableId}
+                data-selected={selected ? pickKey(selected) === pickKey(pick) : false}
               >
                 <span className="grid h-10 w-10 place-items-center border border-white/10 font-mono text-sm font-black text-white/55">
                   {index + 1}
                 </span>
                 <span className="flex min-w-0 items-center gap-3">
                   <PlayerHeadshot
-                    name={pick.player.playerName}
-                    playerId={pick.player.playerId}
-                    headshotUrl={pick.player.headshotUrl}
+                    name={pick.playerName}
+                    playerId={pick.playerId}
                     size={42}
                   />
                   <span className="min-w-0">
                     <strong className="block truncate text-sm text-white">
-                      {pick.player.playerName}
+                      {pick.playerName}
                     </strong>
                     <span className="mt-1 block truncate font-mono text-[10px] uppercase text-white/40">
-                      {pick.player.team} vs {pick.player.opponent} ·{" "}
-                      {pick.player.pitcherName || "Pitcher TBD"}
+                      {pick.team} vs {pick.opponent} · {pick.evidenceQuality}
                     </span>
                     {index < 3 && (
                       <span className="mt-1.5 flex gap-1">
@@ -487,7 +489,7 @@ export default function BrainPicksPage({
                         >
                           AI:{" "}
                           {reviewLabel(
-                            homeRunReviews.get(String(pick.player.playerId)),
+                            homeRunReviews.get(String(pick.playerId)),
                           )}
                         </span>
                       </span>
@@ -496,7 +498,7 @@ export default function BrainPicksPage({
                 </span>
                 <span className="text-right">
                   <strong className="brain-score block font-mono text-xl text-vouch-emerald">
-                    {pick.selectionScore}
+                    {pick.score}
                   </strong>
                   <small className={`${Z8_LABEL} text-white/35`}>Brain</small>
                 </span>
@@ -514,34 +516,38 @@ export default function BrainPicksPage({
                     Selected over the slate
                   </div>
                   <h2 className="mt-1 text-2xl font-black text-white">
-                    {selected.player.playerName}
+                    {selected.playerName}
                   </h2>
                   <p className="mt-1 text-sm text-white/45">
-                    {selected.player.team} vs {selected.player.opponent} ·{" "}
-                    {selected.player.venue || "Venue pending"}
+                    {selected.team} vs {selected.opponent} · rank #{selected.rank}
                   </p>
                 </div>
                 <div className="border border-vouch-emerald/25 bg-vouch-emerald/8 px-4 py-3 text-center">
                   <strong className="font-mono text-3xl text-vouch-emerald">
-                    {selected.slatePercentile}
+                    {selected.confidence}
                   </strong>
                   <span className={`${Z8_LABEL} block text-white/40`}>
-                    Slate percentile
+                    Confidence
                   </span>
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
-                {selected.tags.map((tag) => (
-                  <span
-                    key={tag.label}
-                    className={`${Z8_LABEL} border px-2.5 py-1 ${tag.tone === "positive" ? "border-vouch-emerald/30 bg-vouch-emerald/8 text-vouch-emerald" : tag.tone === "warning" ? "border-amber-400/25 bg-amber-400/5 text-amber-200" : "border-white/10 text-white/55"}`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
+                <span
+                  className={`${Z8_LABEL} border px-2.5 py-1 ${
+                    selected.evidenceQuality === "official"
+                      ? "border-vouch-emerald/30 bg-vouch-emerald/8 text-vouch-emerald"
+                      : "border-amber-400/25 bg-amber-400/5 text-amber-200"
+                  }`}
+                >
+                  {selected.evidenceQuality === "official" ? "Official lineup" : "Preview only"}
+                </span>
+                <span className={`${Z8_LABEL} border border-white/10 px-2.5 py-1 text-white/55`}>
+                  {selected.tier}
+                </span>
               </div>
               <p className="mt-5 text-base leading-7 text-white/75">
-                {selected.explanation}
+                {(selected.reasons ?? []).slice(0, 2).join(" ") ||
+                  "Server-authored Brain selection from the live MLB evidence adapters."}
               </p>
               <div
                 className="brain-stat-grid mt-6"
@@ -549,26 +555,24 @@ export default function BrainPicksPage({
               >
                 <div className="brain-stat">
                   <div className={`${Z8_LABEL} text-white/40`}>
-                    Normal intelligence
+                    Brain score
                   </div>
                   <strong className="mt-1 block font-mono text-2xl text-white">
-                    {selected.player.hrScore}
+                    {selected.score}
                   </strong>
                   <p className="mt-1 text-xs leading-5 text-white/40">
-                    Raw player HR score before slate scarcity and exposure
-                    rules.
+                    Server selection score after slate scarcity and trust gates.
                   </p>
                 </div>
                 <div className="brain-stat border-vouch-emerald/30 bg-vouch-emerald/8">
                   <div className={`${Z8_LABEL} text-vouch-emerald`}>
-                    Brain decision
+                    Confidence
                   </div>
                   <strong className="mt-1 block font-mono text-2xl text-vouch-emerald">
-                    {selected.selectionScore}
+                    {selected.confidence}
                   </strong>
                   <p className="mt-1 text-xs leading-5 text-white/50">
-                    Choosy score after evidence, lineup, pitcher, and slate
-                    comparison.
+                    Evidence confidence from the Brain feature adapter.
                   </p>
                 </div>
                 <div className="brain-stat">
@@ -637,10 +641,10 @@ export default function BrainPicksPage({
               )}
               <div className="brain-stat-grid mt-6">
                 {[
-                  ["Power", selected.player.hitterPower],
-                  ["Pitcher risk", selected.player.pitcherVulnerability],
-                  ["Recent form", selected.player.recentForm],
-                  ["Data confidence", selected.player.dataConfidence],
+                  ["Score", selected.score],
+                  ["Confidence", selected.confidence],
+                  ["Rank", selected.rank],
+                  ["Result", selected.result],
                 ].map(([label, value]) => (
                   <div key={String(label)} className="brain-stat">
                     <div className="flex justify-between text-xs text-white/55">
@@ -649,14 +653,16 @@ export default function BrainPicksPage({
                         {value ?? "—"}
                       </strong>
                     </div>
-                    <div className="brain-meter-track mt-2">
-                      <div
-                        className="bg-vouch-emerald"
-                        style={{
-                          width: `${Math.max(0, Math.min(100, Number(value) || 0))}%`,
-                        }}
-                      />
-                    </div>
+                    {typeof value === "number" && (
+                      <div className="brain-meter-track mt-2">
+                        <div
+                          className="bg-vouch-emerald"
+                          style={{
+                            width: `${Math.max(0, Math.min(100, Number(value) || 0))}%`,
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -667,7 +673,7 @@ export default function BrainPicksPage({
                   <Target className="h-4 w-4" /> Why this survived
                 </div>
                 <ul className="mt-3 space-y-2">
-                  {selected.player.reasons.slice(0, 4).map((reason) => (
+                  {(selected.reasons ?? []).slice(0, 4).map((reason) => (
                     <li
                       key={reason}
                       className="flex gap-2 text-sm leading-6 text-white/60"
