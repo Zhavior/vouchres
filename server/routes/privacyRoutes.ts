@@ -371,14 +371,23 @@ async function processScheduledDeletionsUnlocked(): Promise<{
         await deleteStripeCustomer(String(user.stripe_customer_id));
       }
 
+      // Auth user first so a failure keeps the profile in the deletion queue for retry.
+      // Profile delete after Auth prevents orphaned auth.users with no recoverable row.
+      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+      if (authErr) {
+        const msg = String(authErr.message ?? "");
+        const alreadyGone =
+          /user not found/i.test(msg)
+          || /not found/i.test(msg)
+          || (authErr as { status?: number }).status === 404;
+        if (!alreadyGone) {
+          throw new Error(`auth delete failed: ${authErr.message}`);
+        }
+      }
+
       const profileDelete = await supabaseAdmin.from("profiles").delete().eq("id", user.id);
       if (profileDelete.error) {
         throw new Error(`profile delete failed: ${profileDelete.error.message}`);
-      }
-
-      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-      if (authErr) {
-        throw new Error(`auth delete failed: ${authErr.message}`);
       }
 
       processed++;

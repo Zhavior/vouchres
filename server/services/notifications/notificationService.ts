@@ -73,6 +73,16 @@ const DEFAULT_PREFS: NotificationPrefs = {
   browser_push_enabled: false,
 };
 
+/** Fail-closed prefs when preference lookup errors — never notify on unknown consent. */
+const FAIL_CLOSED_PREFS: NotificationPrefs = {
+  in_app_enabled: false,
+  hr_alerts_enabled: false,
+  parlay_alerts_enabled: false,
+  follow_alerts_enabled: false,
+  tail_alerts_enabled: false,
+  browser_push_enabled: false,
+};
+
 const MISSING_TABLE_CODES = new Set(["42P01", "PGRST205", "PGRST204", "42703"]);
 
 export function missingTable(error: any): boolean {
@@ -135,29 +145,47 @@ export async function getPrefs(userId: string): Promise<{ prefs: NotificationPre
       .eq("user_id", userId)
       .maybeSingle();
     if (error) {
-      if (missingTable(error)) return { prefs: DEFAULT_PREFS, warnings: ["notification_preferences table missing; using safe defaults"] };
-      return { prefs: DEFAULT_PREFS, warnings: [`preference lookup failed: ${error.message}`] };
+      if (missingTable(error)) {
+        return {
+          prefs: FAIL_CLOSED_PREFS,
+          warnings: ["notification_preferences table missing; refusing notifications"],
+        };
+      }
+      return {
+        prefs: FAIL_CLOSED_PREFS,
+        warnings: [`preference lookup failed: ${error.message}`],
+      };
     }
+    // Missing row: use optimistic defaults for first-time users.
     return { prefs: { ...DEFAULT_PREFS, ...(data ?? {}) }, warnings: [] };
   } catch (err: any) {
-    return { prefs: DEFAULT_PREFS, warnings: [`preference lookup unavailable: ${err?.message ?? "unknown error"}`] };
+    return {
+      prefs: FAIL_CLOSED_PREFS,
+      warnings: [`preference lookup unavailable: ${err?.message ?? "unknown error"}`],
+    };
   }
 }
 
 async function getRecipientUserIds(explicitUserIds?: string[]): Promise<{ userIds: string[]; warnings: string[] }> {
-  if (explicitUserIds?.length) {
-    return { userIds: [...new Set(explicitUserIds)].slice(0, 500), warnings: [] };
-  }
-
-  // Fail closed: never fan out to every profile. Only users who opted into HR alerts.
+  // Fail closed: never fan out without confirmed opt-in, including staff-provided userIds.
   try {
     const supabaseAdmin = await getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("notification_preferences")
       .select("user_id")
       .eq("hr_alerts_enabled", true)
       .eq("in_app_enabled", true)
       .limit(500);
+
+    if (explicitUserIds?.length) {
+      const scoped = [...new Set(explicitUserIds)].filter(Boolean).slice(0, 500);
+      if (scoped.length === 0) {
+        return { userIds: [], warnings: ["no valid explicit recipient ids"] };
+      }
+      query = query.in("user_id", scoped);
+    }
+
+    const { data, error } = await query;
     if (error) {
       if (missingTable(error)) {
         return {
@@ -422,6 +450,7 @@ export async function ensureFollowAlertsEnabled(userId: string): Promise<void> {
       .eq("user_id", userId)
       .maybeSingle();
 
+    // Only seed defaults for first-time rows. Never overwrite an explicit opt-out.
     if (!data) {
       await supabaseAdmin.from("notification_preferences").upsert({
         user_id: userId,
@@ -429,17 +458,6 @@ export async function ensureFollowAlertsEnabled(userId: string): Promise<void> {
         tail_alerts_enabled: true,
         updated_at: new Date().toISOString(),
       });
-      return;
-    }
-
-    if (data.follow_alerts_enabled === false) {
-      await supabaseAdmin
-        .from("notification_preferences")
-        .update({
-          follow_alerts_enabled: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId);
     }
   } catch (err: any) {
     if (missingTable(err)) return;

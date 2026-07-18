@@ -65,6 +65,71 @@ async function denyUnlessOwns(
  */
 export const postRoutes = Router();
 
+/** Include visibility so public reads can strip non-public pick embeds. */
+const POST_PICK_EMBED =
+  "pick:picks(id, market, selection, status, settled_units, locked_at, created_at, visibility)";
+
+/** Fail closed: never expose a non-public pick through a post embed. */
+function sanitizePostPickEmbed<T extends Record<string, unknown>>(row: T): T {
+  const pick = row.pick as { visibility?: string } | null | undefined;
+  if (!pick || typeof pick !== "object") return row;
+  if (pick.visibility !== "public") {
+    return { ...row, pick: null };
+  }
+  const { visibility: _visibility, ...safePick } = pick as Record<string, unknown>;
+  return { ...row, pick: safePick };
+}
+
+/**
+ * Post detail / comments / likes are follower-circle (or demo / own).
+ * Fail closed with 404 so private posts are not enumerable by id.
+ */
+async function assertCanViewPost(
+  viewerId: string | undefined,
+  post: { id: string; author_id: string; is_demo?: boolean | null },
+): Promise<void> {
+  if (post.is_demo) return;
+  if (viewerId && viewerId === post.author_id) return;
+
+  if (viewerId) {
+    const { data: follow } = await supabaseAdmin
+      .from("follows")
+      .select("follower_id")
+      .eq("follower_id", viewerId)
+      .eq("following_profile_id", post.author_id)
+      .maybeSingle();
+    if (follow) return;
+  }
+
+  throw new AppError({
+    status: 404,
+    code: "not_found",
+    message: "Post not found.",
+  });
+}
+
+async function loadPostForViewAcl(postId: string): Promise<{
+  id: string;
+  author_id: string;
+  is_demo: boolean | null;
+}> {
+  const { data, error } = await supabaseAdmin
+    .from("posts")
+    .select("id, author_id, is_demo")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Post not found.",
+    });
+  }
+
+  return data as { id: string; author_id: string; is_demo: boolean | null };
+}
+
 postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
@@ -303,6 +368,9 @@ postRoutes.post(
 
 postRoutes.get("/posts/:id", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+  const aclPost = await loadPostForViewAcl(id);
+  await assertCanViewPost(req.user?.id, aclPost);
+
   const { data, error } = await supabaseAdmin
     .from("posts")
     .select(`
@@ -394,7 +462,9 @@ postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequ
   return res.json(apiOkFlat(req, {}));
 }));
 
-postRoutes.post("/posts/:id/view", asyncHandler(async (req, res: Response) => {
+postRoutes.post("/posts/:id/view", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const aclPost = await loadPostForViewAcl(String(req.params.id));
+  await assertCanViewPost(req.user?.id, aclPost);
   const { id } = req.params;
   const { error } = await supabaseAdmin.rpc("increment_post_view", { p_post_id: id });
   if (error) {
@@ -405,20 +475,8 @@ postRoutes.post("/posts/:id/view", asyncHandler(async (req, res: Response) => {
 
 postRoutes.post("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
-
-  const { data: post } = await supabaseAdmin
-    .from("posts")
-    .select("id")
-    .eq("id", id)
-    .single();
-  if (!post) {
-    throw new AppError({
-      status: 404,
-      code: "not_found",
-      message: "Post not found.",
-      details: { error: "post_not_found" },
-    });
-  }
+  const aclPost = await loadPostForViewAcl(id);
+  await assertCanViewPost(req.user!.id, aclPost);
 
   const { error } = await supabaseAdmin.from("post_likes").upsert(
     { post_id: id, profile_id: req.user!.id },
@@ -494,15 +552,8 @@ postRoutes.post(
     const { id } = req.params;
     const { body: commentBody, parent_id, reply_to_user_id } = req.body as z.infer<typeof CreateCommentSchema>;
 
-    const { data: post } = await supabaseAdmin.from("posts").select("id").eq("id", id).single();
-    if (!post) {
-      throw new AppError({
-        status: 404,
-        code: "not_found",
-        message: "Post not found.",
-        details: { error: "post_not_found" },
-      });
-    }
+    const aclPost = await loadPostForViewAcl(id);
+    await assertCanViewPost(req.user!.id, aclPost);
 
     if (parent_id) {
       const { data: parentComment } = await supabaseAdmin
@@ -564,6 +615,9 @@ postRoutes.post(
 
 postRoutes.get("/posts/:id/comments", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+  const aclPost = await loadPostForViewAcl(id);
+  await assertCanViewPost(req.user?.id, aclPost);
+
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
 
@@ -611,13 +665,16 @@ postRoutes.post("/comments/:id/like", requireAuth, asyncHandler(async (req: Auth
   const { id } = req.params;
   const { data: comment } = await supabaseAdmin
     .from("post_comments")
-    .select("id")
+    .select("id, post_id")
     .eq("id", id)
     .maybeSingle();
 
   if (!comment) {
     throw new AppError({ status: 404, code: "not_found", message: "Comment not found." });
   }
+
+  const aclPost = await loadPostForViewAcl(String(comment.post_id));
+  await assertCanViewPost(req.user!.id, aclPost);
 
   const { error } = await supabaseAdmin.from("comment_likes").upsert(
     { comment_id: id, profile_id: req.user!.id },

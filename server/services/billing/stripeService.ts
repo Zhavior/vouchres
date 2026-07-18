@@ -109,8 +109,22 @@ export async function ensureStripeCustomer(profileId: string, email: string) {
         try {
           const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
           if (!existing.deleted) return existing;
-        } catch {
-          // Customer was deleted in Stripe dashboard — fall through to create
+          // Deleted in Stripe — fall through to create + rebind.
+        } catch (error: unknown) {
+          const code =
+            error && typeof error === "object" && "code" in error
+              ? String((error as { code?: string }).code ?? "")
+              : "";
+          const statusCode =
+            error && typeof error === "object" && "statusCode" in error
+              ? Number((error as { statusCode?: number }).statusCode)
+              : NaN;
+          // Only recreate on definitive missing customer — never on transient Stripe/network errors.
+          if (code === "resource_missing" || statusCode === 404) {
+            // fall through to create
+          } else {
+            throw error;
+          }
         }
       }
 
@@ -495,13 +509,16 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   }
 
   const status = subscription.status; // 'active' | 'trialing' | 'past_due' | 'canceled' | etc.
-  const effective = effectiveTierForSubscriptionStatus(status, tier);
+  let effective = effectiveTierForSubscriptionStatus(status, tier);
+  let profileSubscriptionId = subscription.id;
+  let profileCustomerId = subscription.customer as string;
+  let profileTier = effective.tier;
 
-  // Upsert subscription row
+  // Upsert this subscription row first (source of truth for this event).
   const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
     {
       profile_id: profileId,
-      stripe_customer_id: subscription.customer as string,
+      stripe_customer_id: profileCustomerId,
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId,
       tier,
@@ -514,13 +531,45 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   );
   if (upsertError) throw upsertError;
 
-  // Update profile tier
+  // If this event would downgrade, keep the best paid entitlement from any other live sub.
+  if (profileTier === "free" && isStripeConfigured() && profileCustomerId) {
+    try {
+      const others = await getStripe().subscriptions.list({
+        customer: profileCustomerId,
+        status: "all",
+        limit: 20,
+      });
+      const tierRank: Record<string, number> = { free: 0, gold: 1, seller_pro: 2 };
+      let bestRank = 0;
+      for (const sub of others.data) {
+        if (sub.id === subscription.id) continue;
+        if (sub.status !== "active" && sub.status !== "trialing") continue;
+        const livePriceId = sub.items.data[0]?.price?.id;
+        const liveTier = livePriceId ? tierFromPriceId(livePriceId) : null;
+        if (!liveTier) continue;
+        const liveEffective = effectiveTierForSubscriptionStatus(sub.status, liveTier);
+        const rank = tierRank[liveEffective.tier] ?? 0;
+        if (rank > bestRank) {
+          bestRank = rank;
+          profileTier = liveEffective.tier;
+          profileSubscriptionId = sub.id;
+          effective = liveEffective;
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "[stripe] live-sub reconciliation failed; applying event entitlement",
+        (error as Error)?.message,
+      );
+    }
+  }
+
   const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({
-      tier: effective.tier,
-      stripe_customer_id: subscription.customer as string,
-      stripe_subscription_id: subscription.id,
+      tier: profileTier,
+      stripe_customer_id: profileCustomerId,
+      stripe_subscription_id: profileSubscriptionId,
     })
     .eq("id", profileId);
   if (profileError) throw profileError;
@@ -530,7 +579,7 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   await bumpAuthUserEpoch(profileId);
 
   console.log(
-    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effective.tier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
+    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${profileTier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
   );
 }
 

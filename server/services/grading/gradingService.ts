@@ -456,13 +456,23 @@ export async function evaluatePick(
   }
 
   const playerName = extractPlayerName(selection, market);
-  const isAvoidPick =
-    pick.judge_verdict === "avoid" ||
-    market === "hr_avoid" ||
-    market.includes("avoid") ||
-    /^avoid\b/i.test(selection);
+  // Only trust server/AI-authored judge_verdict. Client-controlled market/selection
+  // strings must never invert settle logic (e.g. market=hr_avoid / selection="Avoid X").
+  if (
+    market === "hr_avoid"
+    || market.includes("avoid")
+    || /^avoid\b/i.test(selection)
+  ) {
+    return {
+      pick_id: pick.id,
+      status: "graded_error",
+      settled_units: null,
+      error: "client_avoid_market_rejected",
+    };
+  }
+  const isAvoidPick = pick.judge_verdict === "avoid";
 
-  if (market === "hr" || market === "hr_multi" || market === "hr_avoid" || market === "home run") {
+  if (market === "hr" || market === "hr_multi" || market === "home run") {
     const threshold = market === "hr_multi" ? 2 : 1;
     const playerHrs = countPlayerStat(boxscore, playerName, "homeRuns");
     if (playerHrs === null) {
@@ -601,13 +611,14 @@ async function gradeParlayPick(
     }
 
     if (!isLikelyMlbGamePk(rawGamePk)) {
-      legResults.push({
-        leg_index: Number(leg.leg_index),
-        status: "push",
-        odds: Number(leg.odds_decimal ?? 1),
-        note: `Skipped legacy/manual leg with invalid game id: ${rawGamePk || "missing"}`,
-      });
-      continue;
+      // Fail closed — invalid game ids must not soft-push and invent a parlay result.
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `parlay_leg_invalid_game_pk:${rawGamePk || "missing"}`,
+        warnings: [`Parlay leg ${leg.leg_index} has an invalid MLB game id.`],
+      };
     }
 
     let legBoxscore = boxscoreCache.get(rawGamePk);
