@@ -1,13 +1,20 @@
 # Archived Next.js apps (do not deploy for API truth)
 
+**Update 2026-07-19:** both directories below have been physically moved out
+of the working tree to `~/Desktop/Projects/Vouch/vouchres-archive-2026-07-19/`
+as part of repository hygiene (see that archive's `ARCHIVE_MANIFEST.md`). The
+Z8 Obsidian design tokens they originated were already ported into
+`src/styles/z8-design-system.css` before the move. This doc is kept for
+historical context and as the restoration record.
+
 The production VouchEdge app is the **Vite React + Express** stack at the repo root (`npm run dev`, `server/routes/*`).
 
-These directories are **legacy / experimental Next.js shells** and must not be treated as canonical API hosts:
+These directories were **legacy / experimental Next.js shells** and must not be treated as canonical API hosts:
 
 | Directory | Risk |
 | --- | --- |
-| `vouchedge/` | Duplicate `/app/api/mlb/*` routes that proxy or reimplement HR/live feeds — can drift from `server/routes` |
-| `vouchedge-terminal/` | Same pattern — terminal UI + shadow API routes |
+| `vouchedge/` (archived) | Duplicate `/app/api/mlb/*` routes that proxy or reimplement HR/live feeds — can drift from `server/routes` |
+| `vouchedge-terminal/` (archived) | Same pattern — terminal UI + shadow API routes |
 
 ## Policy
 
