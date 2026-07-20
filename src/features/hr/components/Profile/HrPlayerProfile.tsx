@@ -17,8 +17,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
-  BarChart2, Target, Users, Activity, AlertTriangle, Clock3, Plus, ShieldCheck,
+  X, Minus, Flame, Award, Eye, Moon,
+  BarChart2, Users, Activity,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
@@ -26,6 +26,7 @@ import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
+import { useAppProfile } from '../../../../context/AppShellContext';
 import {
   GameLogEmpty,
   GameLogLoading,
@@ -34,6 +35,18 @@ import {
 import { HrMatchupPressureMatrix } from './HrMatchupPressureMatrix';
 import { HrImpactTimeline } from './HrImpactTimeline';
 import { HrOverviewDossier } from './HrOverviewDossier';
+import {
+  PlayerIdentityHeader,
+  ConfidenceSummary,
+  MarketDecision,
+  EvidenceStack,
+  RiskSummary,
+  MatchupBreakdown,
+  DataFreshness,
+  ProResearchGate,
+  StickyResearchAction,
+  type EvidenceItem,
+} from '../../../../components/player-intelligence';
 import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -248,6 +261,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
+  const profile = useAppProfile();
   const {
     research,
     loading: researchLoading,
@@ -329,6 +343,22 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
         ? 'unavailable'
         : 'ready';
 
+  // Structured evidence — every model reason/warning as its own ranked claim,
+  // not folded into a single paragraph. warnings[0] drives RiskSummary
+  // separately; anything past it still surfaces here as uncertainty.
+  const evidenceItems: EvidenceItem[] = useMemo(() => {
+    if (!player) return [];
+    const reasons = player.reasons.filter((r) => r.trim());
+    const extraWarnings = player.warnings.filter((w) => w.trim()).slice(1);
+    return [
+      ...reasons.map((text, i): EvidenceItem => ({
+        tone: i === 0 ? 'strongest' : 'matchup',
+        text,
+      })),
+      ...extraWarnings.map((text): EvidenceItem => ({ tone: 'uncertainty', text })),
+    ];
+  }, [player]);
+
   const compositeScore = useMemo(() => {
     const ls = getLayers(player);
     let sum = 0, wt = 0;
@@ -396,91 +426,53 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 <X className="h-4 w-4" />
               </button>
 
-              {/* Hero identity block */}
-              <div className="ve-player-intelligence-rail__identity relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:pt-8">
-                {/* Avatar */}
-                <div className="ve-player-intelligence-rail__portrait relative shrink-0">
-                  <div
-                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 lg:h-24 lg:w-24"
-                    style={{ background: `hsl(${hue} 45% 16%)`, ['--tw-ring-color' as string]: `hsl(${hue} 55% 30%)` } as React.CSSProperties}
-                  >
-                    {showImg ? (
-                      <img src={player.headshotUrl!} alt={player.playerName} className="h-full w-full object-cover" loading="lazy" decoding="async" onError={() => setImgErr(true)} />
-                    ) : (
-                      <span className="text-3xl font-black lg:text-4xl" style={{ color: `hsl(${hue} 80% 75%)` }}>{initials(player.playerName)}</span>
-                    )}
-                  </div>
-                  {/* Tier badge */}
-                  <div
-                    className="absolute -bottom-2 -right-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
-                    style={{ background: `rgba(${tier.rgb}, 0.18)`, border: `1px solid rgba(${tier.rgb}, 0.45)`, color: tier.color }}
-                  >
-                    {tier.icon}{tier.label}
-                  </div>
-                </div>
-
-                {/* Name + meta */}
-                <div className="ve-player-intelligence-rail__name flex-1 min-w-0 lg:mt-2">
-                  <h2 className="text-xl font-black leading-tight tracking-tight text-white lg:text-2xl">
-                    {player.playerName}
-                  </h2>
-                  <div className="ve-hr-team-header mt-2 w-fit">
-                    {teamLogo && <img src={teamLogo} alt="" loading="lazy" decoding="async" />}
-                    <span className="text-xs font-semibold text-white/70">{player.team}</span>
-                    <span className="text-white/30">vs</span>
-                    {oppLogo && <img src={oppLogo} alt="" loading="lazy" decoding="async" />}
-                    <span className="text-xs font-semibold text-white/70">{player.opponent}</span>
-                  </div>
-                  {player.pitcherName && (
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                      vs {player.pitcherName}
-                    </p>
-                  )}
-                  {player.venue && (
-                    <p className="text-xs mt-0.5 hidden lg:block" style={{ color: 'rgba(255,255,255,0.22)' }}>
-                      🏟️ {player.venue}{player.gameTime ? ` · ${player.gameTime}` : ''}
-                    </p>
-                  )}
-                  {/* Chips */}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {player.oddsLabel && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold ring-1" style={{ background: 'rgba(255,255,255,0.03)', color: '#ffffff', ['--tw-ring-color' as string]: 'rgba(255,255,255,0.4)' } as React.CSSProperties}>
-                        {player.oddsLabel}
-                      </span>
-                    )}
-                    {player.bookOdds != null && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold ring-1" style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', ['--tw-ring-color' as string]: 'rgba(251,191,36,0.3)' } as React.CSSProperties}>
-                        {fmtOdds(player.bookOdds)}
-                      </span>
-                    )}
-                    {player.truthStatus && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1" style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', ['--tw-ring-color' as string]: 'rgba(255,255,255,0.3)' } as React.CSSProperties}>
-                        {player.truthStatus === 'official' ? '✅ Official' : player.truthStatus === 'projected' ? '🔮 Projected' : '⛔ Blocked'}
-                      </span>
-                    )}
-                  </div>
-                </div>
+              {/* Identity — who this is and against whom */}
+              <div className="p-5 lg:pt-8">
+                <PlayerIdentityHeader
+                  name={player.playerName}
+                  avatarUrl={showImg ? player.headshotUrl : null}
+                  teamHue={hue}
+                  team={player.team}
+                  teamLogoUrl={teamLogo}
+                  opponent={player.opponent}
+                  opponentLogoUrl={oppLogo}
+                  subtitle={player.pitcherName ? `vs ${player.pitcherName}` : null}
+                  meta={player.venue ? `🏟️ ${player.venue}${player.gameTime ? ` · ${player.gameTime}` : ''}` : null}
+                  tierLabel={tier.label}
+                  tierColor={tier.color}
+                  chips={[
+                    ...(player.oddsLabel ? [{ label: player.oddsLabel, tone: 'neutral' as const }] : []),
+                    ...(player.bookOdds != null ? [{ label: fmtOdds(player.bookOdds), tone: 'caution' as const }] : []),
+                    ...(player.truthStatus
+                      ? [{
+                          label: player.truthStatus === 'official' ? '✅ Official' : player.truthStatus === 'projected' ? '🔮 Projected' : '⛔ Blocked',
+                          tone: (player.truthStatus === 'official' ? 'positive' : player.truthStatus === 'projected' ? 'caution' : 'neutral') as 'positive' | 'caution' | 'neutral',
+                        }]
+                      : []),
+                  ]}
+                />
               </div>
 
-              {/* Sidebar composite — replaces 6-arc wall */}
-              <div className="ve-hr-sidebar-composite ve-player-intelligence-rail__scorecard hidden px-5 lg:block">
-                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">Weighted composite</p>
-                <p className="ve-hr-sidebar-composite-score mt-1">{compositeScore}</p>
-                <div className="ve-hr-sidebar-composite-row">
-                  <span>Power <strong>{fmtScore(player.hitterPower)}</strong></span>
-                  <span>Pitcher <strong>{fmtScore(player.pitcherVulnerability)}</strong></span>
-                  <span>Form <strong>{fmtScore(player.recentForm)}</strong></span>
-                </div>
-                {player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null && (() => {
-                  const edge = player.hrProbability - player.impliedProbability;
-                  const pos = edge >= 0.02;
-                  const neg = edge <= -0.02;
-                  return (
-                    <p className={`mt-3 font-mono text-[11px] ${pos ? 'text-emerald-400/90' : neg ? 'text-rose-400/90' : 'text-white/40'}`}>
-                      Edge {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(1)}%
-                    </p>
-                  );
-                })()}
+              {/* Weighted composite confidence */}
+              <div className="ve-player-intelligence-rail__scorecard hidden px-5 lg:block">
+                <ConfidenceSummary
+                  score={compositeScore}
+                  label="Weighted composite"
+                  color={tier.color}
+                  stats={[
+                    { label: 'Power', value: fmtScore(player.hitterPower) },
+                    { label: 'Pitcher', value: fmtScore(player.pitcherVulnerability) },
+                    { label: 'Form', value: fmtScore(player.recentForm) },
+                  ]}
+                  edge={
+                    player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null
+                      ? {
+                          value: player.hrProbability - player.impliedProbability,
+                          positive: player.hrProbability - player.impliedProbability >= 0,
+                        }
+                      : null
+                  }
+                />
               </div>
 
               {/* Nav — desktop vertical list */}
@@ -522,31 +514,15 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 ))}
               </div>
 
-              <div className="ve-player-intelligence-rail__action hidden px-4 pb-5 lg:block">
-                <button
-                  type="button"
-                  onClick={() => onAddToSlip(player)}
+              <div className="hidden px-4 pb-5 lg:block">
+                <StickyResearchAction
+                  eyebrow="Home run market"
+                  label="Choose HR prop"
                   disabled={!decision.canAddToSlip}
-                  className="ve-player-intelligence-rail__cta"
-                  title={decision.addToSlipBlockReason ?? undefined}
-                >
-                  <span>
-                    <small>Home run market</small>
-                    <strong>
-                      {decision.canAddToSlip
-                        ? 'Choose HR prop'
-                        : decision.addToSlipBlockReason}
-                    </strong>
-                  </span>
-
-                  <Plus className="h-4 w-4" />
-                </button>
-
-                <p className="ve-player-intelligence-rail__truth">
-                  {decision.lineupLabel}
-                  <span>·</span>
-                  {decision.freshnessLabel}
-                </p>
+                  disabledReason={decision.addToSlipBlockReason}
+                  onClick={() => onAddToSlip(player)}
+                  trustLine={`${decision.lineupLabel} · ${decision.freshnessLabel}`}
+                />
               </div>
             </aside>
 
@@ -575,53 +551,37 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeSection === 'overview' && (
           <div className="flex flex-col gap-5">
-            <section className="ve-hr-decision-brief" aria-label="Player decision brief">
-              <div className="ve-hr-decision-brief__header">
-                <div>
-                  <p className="ve-hr-decision-brief__eyebrow">Decision brief</p>
-                  <h3 className="ve-hr-decision-brief__title">The case, the risk, and what is confirmed.</h3>
-                </div>
-                <span className="ve-hr-decision-brief__score">{Math.round(player.hrScore)}</span>
-              </div>
+            <DataFreshness
+              label={decision.freshnessLabel}
+              tone={boardFreshness === 'fresh' ? 'fresh' : boardFreshness === 'stale' ? 'unavailable' : 'stale'}
+              detail={decision.lineupLabel}
+              className="self-start"
+            />
 
-              <div className="ve-hr-decision-brief__read">
-                <article className="ve-hr-decision-brief__case">
-                  <span className="ve-hr-decision-brief__icon ve-hr-decision-brief__icon--positive">
-                    <ShieldCheck className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="ve-hr-decision-brief__label">Why this player</p>
-                    <p className="ve-hr-decision-brief__copy">{decision.reason}</p>
-                  </div>
-                </article>
-                <article className="ve-hr-decision-brief__case">
-                  <span className="ve-hr-decision-brief__icon ve-hr-decision-brief__icon--risk">
-                    <AlertTriangle className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="ve-hr-decision-brief__label">Biggest risk</p>
-                    <p className="ve-hr-decision-brief__copy">{decision.risk}</p>
-                  </div>
-                </article>
-              </div>
+            <MarketDecision
+              eyebrow="Decision brief"
+              title="The case, the risk, and what is confirmed."
+              score={player.hrScore}
+              statusItems={[decision.lineupLabel, `vs ${decision.pitcherLabel}`]}
+              action={
+                <StickyResearchAction
+                  eyebrow="Home run market"
+                  label="Choose HR prop"
+                  disabled={!decision.canAddToSlip}
+                  disabledReason={decision.addToSlipBlockReason}
+                  onClick={() => onAddToSlip(player)}
+                />
+              }
+            />
 
-              <div className="ve-hr-decision-brief__status" aria-label="Signal verification status">
-                <span>{decision.lineupLabel}</span>
-                <span>vs {decision.pitcherLabel}</span>
-                <span><Clock3 className="h-3 w-3" /> {decision.freshnessLabel}</span>
-              </div>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] px-5">
+              <EvidenceStack items={evidenceItems.length > 0 ? evidenceItems : [{ tone: 'strongest', text: decision.reason }]} />
+            </div>
 
-              <button
-                type="button"
-                onClick={() => onAddToSlip(player)}
-                disabled={!decision.canAddToSlip}
-                className="ve-hr-decision-brief__cta"
-                title={decision.addToSlipBlockReason ?? undefined}
-              >
-                <Plus className="h-4 w-4" />
-                {decision.canAddToSlip ? 'Choose HR prop' : decision.addToSlipBlockReason}
-              </button>
-            </section>
+            <RiskSummary
+              risk={decision.risk}
+              whatCouldChange={player.truthStatus !== 'official' ? 'Verify the lineup and market before saving.' : null}
+            />
 
             <HrOverviewDossier
               player={player}
@@ -641,190 +601,51 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               sub="Signal strength, model weight, and composite influence"
             />
 
-            <HrMatchupPressureMatrix
-              layers={layers}
-              compositeScore={compositeScore}
-            />
+            <ProResearchGate
+              profile={profile}
+              title="12-Layer Intelligence is a Pro research tool"
+              detail="Full weighted signal breakdown — same depth as Player Edge Lab and Pro Graphs Lab."
+            >
+              <HrMatchupPressureMatrix
+                layers={layers}
+                compositeScore={compositeScore}
+              />
+            </ProResearchGate>
           </div>
         )}
 
         {/* ── BvP ─────────────────────────────────────────────────────────────── */}
         {activeSection === 'bvp' && (
-          <div className="flex flex-col gap-6">
-            <Sec
-              icon={<Target className="h-4 w-4" style={{ color: '#00F0FF' }} />}
-              title={`vs ${research?.matchup.pitcher.name ?? player.pitcherName ?? 'Pitcher'}`}
-              sub={
-                researchLoading
-                  ? 'Loading official batter-versus-pitcher history'
-                  : researchError
-                    ? 'Official BvP history is temporarily unavailable'
-                    : bvpCareer.available
-                      ? 'Official MLB career batter-versus-pitcher results'
-                      : 'No recorded MLB career history against this pitcher'
-              }
-            />
-
-            {researchLoading && <GameLogLoading />}
-
-            {!researchLoading && researchError && (
-              <GameLogEmpty message="The official BvP feed could not be loaded. No simulated values are shown." />
-            )}
-
-            {!researchLoading && !researchError && !bvpCareer.available && (
-              <GameLogEmpty
-                message={`No recorded career plate appearances against ${
-                  research?.matchup.pitcher.name
-                    ?? player.pitcherName
-                    ?? 'this pitcher'
-                }. This is missing evidence, not a negative matchup signal.`}
-              />
-            )}
-
-            {!researchLoading && !researchError && bvpCareer.available && (
-              <>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {[
-                    {
-                      label: 'Career PA',
-                      value: bvpCareer.pa ?? '—',
-                      color: '#ffffff',
-                    },
-                    {
-                      label: 'Career HR',
-                      value: bvpCareer.hrs ?? '—',
-                      color: '#fbbf24',
-                    },
-                    {
-                      label: 'Career AVG',
-                      value: formatRate(bvpCareer.avg),
-                      color: '#ffffff',
-                    },
-                    {
-                      label: 'Career SLG',
-                      value: formatRate(bvpCareer.slg),
-                      color: '#00FF94',
-                    },
-                    {
-                      label: 'HR / PA',
-                      value:
-                        bvpCareer.hrPct === null
-                          ? '—'
-                          : `${bvpCareer.hrPct}%`,
-                      color: '#00F0FF',
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3"
-                      style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.35)',
-                      }}
-                    >
-                      <span
-                        className="text-2xl font-extrabold tabular-nums"
-                        style={{ color: item.color }}
-                      >
-                        {item.value}
-                      </span>
-                      <span
-                        className="text-[9px] font-bold uppercase tracking-wide"
-                        style={{ color: 'rgba(255,255,255,0.4)' }}
-                      >
-                        {item.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div
-                  className="overflow-hidden rounded-2xl"
-                  style={{ border: '1px solid rgba(255,255,255,0.35)' }}
-                >
-                  <div
-                    className="grid grid-cols-4 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]"
-                    style={{
-                      background: '#050505',
-                      color: 'rgba(255,255,255,0.4)',
-                    }}
-                  >
-                    <span>Hits</span>
-                    <span className="text-right">Walks</span>
-                    <span className="text-right">Strikeouts</span>
-                    <span className="text-right">OPS</span>
-                  </div>
-
-                  <div
-                    className="grid grid-cols-4 gap-0 px-4 py-4"
-                    style={{
-                      background: '#0A0A0A',
-                      borderTop: '1px solid rgba(255,255,255,0.12)',
-                    }}
-                  >
-                    <span className="text-sm font-bold text-white">
-                      {bvpCareer.hits ?? '—'}
-                    </span>
-                    <span className="text-right text-sm tabular-nums text-white">
-                      {bvpCareer.walks ?? '—'}
-                    </span>
-                    <span className="text-right text-sm tabular-nums text-white">
-                      {bvpCareer.strikeouts ?? '—'}
-                    </span>
-                    <span className="text-right text-sm font-semibold tabular-nums text-white">
-                      {formatRate(bvpCareer.ops)}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className="flex items-center gap-4 rounded-2xl p-4"
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.35)',
-                  }}
-                >
-                  {(bvpCareer.hrs ?? 0) >= 2 ? (
-                    <TrendingUp
-                      className="h-6 w-6 shrink-0"
-                      style={{ color: '#00FF94' }}
-                    />
-                  ) : (bvpCareer.hrs ?? 0) === 0 ? (
-                    <Minus
-                      className="h-6 w-6 shrink-0"
-                      style={{ color: 'rgba(255,255,255,0.4)' }}
-                    />
-                  ) : (
-                    <TrendingUp
-                      className="h-6 w-6 shrink-0"
-                      style={{ color: '#fbbf24' }}
-                    />
-                  )}
-
-                  <div>
-                    <p className="text-sm font-bold text-white">
-                      {(bvpCareer.hrs ?? 0) >= 2
-                        ? `${bvpCareer.hrs} recorded career HRs against this pitcher`
-                        : (bvpCareer.hrs ?? 0) === 1
-                          ? 'One recorded career HR against this pitcher'
-                          : 'No recorded career HR against this pitcher'}
-                    </p>
-
-                    <p
-                      className="mt-0.5 text-xs"
-                      style={{ color: 'rgba(255,255,255,0.4)' }}
-                    >
-                      {bvpCareer.hrPct === null
-                        ? 'HR rate unavailable'
-                        : `${bvpCareer.hrPct}% HR rate`}
-                      {' · '}
-                      {bvpCareer.pa ?? 'Unknown'} career PA
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <MatchupBreakdown
+            title={`vs ${research?.matchup.pitcher.name ?? player.pitcherName ?? 'Pitcher'}`}
+            subtitle="Official MLB career batter-versus-pitcher results"
+            state={researchLoading ? 'loading' : bvpCareer.available ? 'ready' : 'empty'}
+            emptyMessage={
+              researchError
+                ? 'The official BvP feed could not be loaded. No simulated values are shown.'
+                : `No recorded career plate appearances against ${
+                    research?.matchup.pitcher.name ?? player.pitcherName ?? 'this pitcher'
+                  }. This is missing evidence, not a negative matchup signal.`
+            }
+            stats={[
+              { label: 'Career PA', value: bvpCareer.pa ?? '—' },
+              { label: 'Career HR', value: bvpCareer.hrs ?? '—', color: '#fbbf24' },
+              { label: 'Career AVG', value: formatRate(bvpCareer.avg) },
+              { label: 'Career SLG', value: formatRate(bvpCareer.slg), color: 'hsl(var(--ve-positive))' },
+              { label: 'HR / PA', value: bvpCareer.hrPct === null ? '—' : `${bvpCareer.hrPct}%`, color: 'hsl(var(--ve-accent))' },
+              { label: 'Walks', value: bvpCareer.walks ?? '—' },
+              { label: 'Strikeouts', value: bvpCareer.strikeouts ?? '—' },
+              { label: 'OPS', value: formatRate(bvpCareer.ops) },
+            ]}
+            narrative={
+              (bvpCareer.hrs ?? 0) >= 2
+                ? `${bvpCareer.hrs} recorded career HRs against this pitcher · ${bvpCareer.hrPct === null ? 'HR rate unavailable' : `${bvpCareer.hrPct}% HR rate`} · ${bvpCareer.pa ?? 'Unknown'} career PA`
+                : (bvpCareer.hrs ?? 0) === 1
+                  ? `One recorded career HR against this pitcher · ${bvpCareer.pa ?? 'Unknown'} career PA`
+                  : `No recorded career HR against this pitcher · ${bvpCareer.pa ?? 'Unknown'} career PA`
+            }
+            narrativeTone={(bvpCareer.hrs ?? 0) > 0 ? 'positive' : 'neutral'}
+          />
         )}
 
         {/* ── vs TEAM ──────────────────────────────────────────────────────────── */}
