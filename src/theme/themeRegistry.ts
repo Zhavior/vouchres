@@ -124,8 +124,10 @@ export const THEME_REGISTRY: VisualTheme[] = [
     customAIPhrase: '⚡ VOUCHEDGE PRIME • AI RESEARCH ENGINE ENGAGED',
     pageBg: 'bg-ve-obsidian',
     gridOverlay: 'opacity-10 bg-[radial-gradient(#00B7FF_1px,transparent_1px)] [background-size:20px_20px]',
-    borderColor: 'border-[#00B7FF]/25',
-    accentText: 'text-[#00B7FF]'
+    borderColor: 'border-[#4FB8DC]/25',
+    // Canonical default accent (matches --ve-accent in vouchedge-tokens.css) —
+    // this is the only field of this theme entry ThemeProvider actually reads.
+    accentText: 'text-[#4FB8DC]'
   },
   {
     id: 'sharp-syndicate',

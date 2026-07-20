@@ -27,6 +27,44 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const Z8_THEME = THEME_REGISTRY.find((theme) => theme.id === 'vouchedge-prime') ?? THEME_REGISTRY[0];
 
+/**
+ * The only CSS custom properties a theme is allowed to write. Structure —
+ * layout, spacing, component anatomy, semantic positive/warning/negative/live
+ * colors — lives in vouchedge-tokens.css and is never touched here. A theme
+ * may only recolor the accent/glow/selection layer these vars drive.
+ */
+const THEME_COSMETIC_VARS = [
+  '--theme-accent-color',
+  '--theme-border-color',
+  '--theme-glow-color',
+  '--ve-accent',
+  '--ve-accent-glow',
+  '--ve-border-strong',
+] as const;
+
+function findTheme(themeId: string | null | undefined): VisualTheme | null {
+  if (!themeId) return null;
+  return THEME_REGISTRY.find((theme) => theme.id === themeId) ?? null;
+}
+
+/** Derives the cosmetic-only var set for a theme. Nothing outside THEME_COSMETIC_VARS. */
+function applyThemeAccent(root: HTMLElement, theme: VisualTheme) {
+  // theme.borderColor is a Tailwind class (e.g. "border-cyan-300/30"), not a CSS
+  // value, so the border/glow vars are derived from the resolved accent instead.
+  const { accent, glow } = resolveThemeAccent(theme.accentText);
+  const values: Record<(typeof THEME_COSMETIC_VARS)[number], string> = {
+    '--theme-accent-color': accent,
+    '--theme-border-color': glow,
+    '--theme-glow-color': glow,
+    '--ve-accent': accent,
+    '--ve-accent-glow': glow,
+    '--ve-border-strong': glow,
+  };
+  for (const key of THEME_COSMETIC_VARS) {
+    root.style.setProperty(key, values[key]);
+  }
+}
+
 // Converts a hex like #00B7FF to an rgba() string at the given alpha.
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
@@ -105,33 +143,45 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   const unlockedThemes = profile.unlockedThemeIds || profile.boughtThemes || ['cyber-blue', '4bit-arcade', 'proof-mode'];
   const unlockedBorders = profile.unlockedBorderIds || ['default-cyber-ring'];
 
-  // Resolve Themes
-  const currentAppTheme = Z8_THEME;
-  const currentProfileTheme = Z8_THEME;
+  // A theme is selectable if it's free, or the profile has unlocked/bought it.
+  // Keeps setAppTheme/setProfileTheme from bypassing the purchase economy even
+  // if a caller forgets to gate on ownership before calling.
+  const isOwned = (theme: VisualTheme) =>
+    (!theme.isPremium && theme.cost === 0) || unlockedThemes.includes(theme.id);
+
+  // Resolve Themes — structure (layout, spacing, component anatomy) never
+  // varies by theme; only the cosmetic accent layer applied below does.
+  const currentAppTheme = findTheme(profile.appThemeId) ?? Z8_THEME;
+  const currentProfileTheme = findTheme(profile.profileThemeId) ?? Z8_THEME;
   const currentBorder = BORDER_REGISTRY.find(b => b.id === profile.profileBorderId) || BORDER_REGISTRY[0];
 
-  // Resolve Active Theme
-  const overrideTheme = null;
-  const activeTheme = Z8_THEME;
+  // Resolve Active Theme — an override (e.g. previewing someone else's
+  // profile theme) takes precedence over the signed-in user's own selection.
+  const overrideTheme = findTheme(overrideThemeId);
+  const activeTheme = overrideTheme ?? currentAppTheme;
 
-  const setAppTheme = (_themeId: string) => {
-    onUpdateProfile({ 
-      appThemeId: Z8_THEME.id,
-      activeTheme: Z8_THEME.id,
+  const setAppTheme = (themeId: string) => {
+    const theme = findTheme(themeId);
+    if (!theme || !isOwned(theme)) return;
+    onUpdateProfile({
+      appThemeId: theme.id,
+      activeTheme: theme.id,
     });
   };
 
-  const setProfileTheme = (_themeId: string) => {
+  const setProfileTheme = (themeId: string) => {
     if (!canCustomizeProfileHeader(profile)) return;
-    onUpdateProfile({ profileThemeId: Z8_THEME.id });
+    const theme = findTheme(themeId);
+    if (!theme || !isOwned(theme)) return;
+    onUpdateProfile({ profileThemeId: theme.id });
   };
 
   const setBorder = (borderId: string | null) => {
     onUpdateProfile({ profileBorderId: borderId || undefined });
   };
 
-  const setOverrideTheme = (_themeId: string | null) => {
-    setOverrideThemeId(null);
+  const setOverrideTheme = (themeId: string | null) => {
+    setOverrideThemeId(themeId && findTheme(themeId) ? themeId : null);
   };
 
   const unlockTheme = (themeId: string) => {
@@ -155,20 +205,18 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
     onUpdateProfile({ reduceMotion: val });
   };
 
-  // Add styles to document based on active theme
+  // The structural design system (z8-premium) is fixed — it never varies by
+  // theme. Only the cosmetic accent layer reacts to the active theme.
   useEffect(() => {
     const root = document.documentElement;
     root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
-    root.style.setProperty('--theme-accent-color', '#4FB8DC');
-    root.style.setProperty('--theme-border-color', 'rgba(79,184,220,0.2)');
-    root.style.setProperty('--theme-glow-color', 'rgba(79,184,220,0.2)');
     root.setAttribute('data-theme', 'z8-premium');
     root.setAttribute('data-vouchedge-theme', 'z8-premium');
-    root.style.setProperty('--ve-accent', '#4FB8DC');
-    root.style.setProperty('--ve-accent-2', '#31B583');
-    root.style.setProperty('--ve-accent-glow', 'rgba(79,184,220,0.2)');
-    root.style.setProperty('--ve-border-strong', 'rgba(79,184,220,0.2)');
   }, []);
+
+  useEffect(() => {
+    applyThemeAccent(document.documentElement, activeTheme);
+  }, [activeTheme]);
 
   return (
     <ThemeContext.Provider value={{

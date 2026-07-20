@@ -5,7 +5,6 @@ import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer from './MobileProfileDrawer';
 import { useTheme } from '../../components/theme/ThemeProvider';
-import { VisualTheme } from '../../theme/themeRegistry';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
 import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
@@ -155,64 +154,17 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const getThemeVars = (theme: VisualTheme) => {
-    return {
-      '--theme-border-color': theme.borderColor || 'rgba(6,182,212,0.2)',
-      '--theme-shadow-glow': theme.accentText.includes('cyan') ? 'rgba(6,182,212,0.15)' : 'rgba(99,102,241,0.15)',
-      '--theme-card-bg-gradient': 'linear-gradient(135deg, rgba(8, 20, 48, 0.84) 0%, rgba(2, 6, 23, 0.90) 100%)',
-      '--theme-accent-color': theme.accentText.includes('cyan') ? '#22d3ee' : theme.accentText.includes('orange') ? '#f97316' : theme.accentText.includes('emerald') ? '#10b981' : theme.accentText.includes('rose') ? '#e11d48' : '#eab308',
-    };
-  };
-
-  const themeVars = activeTheme ? getThemeVars(activeTheme) : null;
-
+  // Theme accent vars (--ve-accent, --theme-accent-color, etc.) are applied to
+  // :root by ThemeProvider and inherit down naturally — this layout no longer
+  // derives its own parallel copy. The legacy `has-active-theme` class in
+  // styles/legacy/feed.css and per-theme gridOverlay/equalizer decoration are
+  // removed: themes may only recolor the accent layer, never structure.
   return (
     <div
-      className={`z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-transparent has-active-theme' : 'bg-transparent'
-      }`}
-      style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
+      className="z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip bg-transparent"
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-      {activeTheme && activeTheme.id !== 'cyber-blue' && activeTheme.gridOverlay && (
-        <div className={`absolute inset-0 pointer-events-none z-0 ${activeTheme.gridOverlay}`} />
-      )}
-
-      {activeTheme?.id === 'music_beat_lines' && (
-        <>
-          <style>{`
-            @keyframes equalizer-pulse {
-              0% { height: 16px; opacity: 0.25; filter: saturate(0.85); }
-              50% { height: 135px; opacity: 0.55; filter: saturate(1.2); }
-              100% { height: 38px; opacity: 0.35; filter: saturate(1.4); }
-            }
-          `}</style>
-          <div className="absolute bottom-12 left-0 right-0 h-44 pointer-events-none z-0 select-none flex items-end justify-around px-2 opacity-40 gap-1 overflow-hidden" id="bg-equalizer-beat-lines">
-            {Array.from({ length: 42 }).map((_, i) => {
-              const animDuration = `${0.5 + (i % 8) * 0.12}s`;
-              const animDelay = `-${(i % 5) * 0.18}s`;
-              const barColor = i % 4 === 0 ? '#00F0FF' : i % 3 === 0 ? '#00FF9D' : '#FFB800';
-              return (
-                <div
-                  key={i}
-                  className="w-1.5 rounded-t-md origin-bottom"
-                  style={{
-                    background: barColor,
-                    animationName: 'equalizer-pulse',
-                    animationDuration: animDuration,
-                    animationDelay: animDelay,
-                    animationIterationCount: 'infinite',
-                    animationTimingFunction: 'ease-in-out',
-                    height: '16px',
-                  }}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
-
       {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
         <DeferredBubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
       )}

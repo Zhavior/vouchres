@@ -219,55 +219,10 @@
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
 }
 
-/* Active premium app themes only apply inside the feed shell that sets this class. */
-.has-active-theme .premium-card-bg,
-.has-active-theme [id^="panel-"],
-.has-active-theme [class*="bg-\[\#121824\]"],
-.has-active-theme [class*="bg-\[\#0e1320\]"],
-.has-active-theme [class*="bg-\[\#090d16\]"],
-.has-active-theme .bg-slate-900:not(#brand-logo-id),
-.has-active-theme .bg-slate-950,
-.has-active-theme .bg-\[\#121824\]\/30 {
-  background-color: var(--theme-card-bg-fallback, rgba(14, 18, 28, 0.65)) !important;
-  border-color: var(--theme-border-color) !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 18px var(--theme-shadow-glow) !important;
-  background-image: var(--theme-card-bg-gradient) !important;
-  border-width: 1px !important;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.has-active-theme aside {
-  border-right-color: var(--theme-border-color) !important;
-  box-shadow: 4px 0 25px -5px var(--theme-shadow-glow) !important;
-}
-
-.has-active-theme main {
-  border-right-color: var(--theme-border-color) !important;
-  border-left-color: var(--theme-border-color) !important;
-}
-
-.has-active-theme header {
-  border-bottom-color: var(--theme-border-color) !important;
-  box-shadow: 0 4px 20px -2px var(--theme-shadow-glow) !important;
-}
-
-.has-active-theme .border-slate-850,
-.has-active-theme .border-slate-900,
-.has-active-theme .border-\[\#3b82f6\]\/10,
-.has-active-theme .border-\[\#1e293b\]\/50 {
-  border-color: var(--theme-border-color) !important;
-}
-
-.has-active-theme .theme-text-accent {
-  color: var(--theme-accent-color) !important;
-  text-shadow: 0 0 8px var(--theme-shadow-glow) !important;
-}
-
-.has-active-theme .bg-sky-950\/40 {
-  background-color: var(--theme-shadow-glow) !important;
-  color: var(--theme-accent-color) !important;
-  border-color: var(--theme-border-color) !important;
-}
+/* .has-active-theme structural override cascade removed: themes may only
+   recolor the accent layer (see ThemeProvider's THEME_COSMETIC_VARS), never
+   panel backgrounds, aside/main/header borders, or box-shadows via !important.
+   The class is no longer applied anywhere (was set only in HomeFeedLayout). */
 
 .ve-social-stream-command__header {
   display: flex;
