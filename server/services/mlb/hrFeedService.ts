@@ -24,7 +24,7 @@ export interface HrEvent {
   timestamp: string;
 }
 
-const HR_CACHE_TTL = 900_000;
+const HR_CACHE_TTL = 45_000;
 const hrCache = new TTLCache<HrFeedPayload>(HR_CACHE_TTL);
 const MAX_GAMES = 15;
 

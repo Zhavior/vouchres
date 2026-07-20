@@ -19,9 +19,11 @@ import {
 } from 'lucide-react';
 import type { CreatorProofProfile, Parlay } from '../types';
 import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
+import { MostVouchedPlayersPanel } from '../features/hr/components/Social/MostVouchedPlayersPanel';
 import { buildBoard } from '../features/hr/utils/normalizeHrWatch';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { todayISO } from '../hooks/queries/hrBoardQuery';
+import { usePlayerVouchLeaderboard } from '../hooks/queries/usePlayerVouchLayer';
 import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
 import { buildTodayDecision, type TodayAttentionItem } from './today/todayDecisionModel';
 import TodayDecisionReel, { type BriefingFilter } from './today/TodayDecisionReel';
@@ -67,6 +69,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
   const report = dailyReportQuery.data ?? null;
+  const playerVouchLeaderboard = usePlayerVouchLeaderboard(todayISO(), 5);
   const hrBoard = useMemo(
     () => hrBoardQuery.data ? buildBoard(hrBoardQuery.data) : null,
     [hrBoardQuery.data],
@@ -249,6 +252,12 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
           <MySlipsPanel slip={activeSlip} onSectionChange={onSectionChange} />
           <ImpactPanel attention={decision.attention} report={report} onSectionChange={onSectionChange} />
         </section>
+
+        <MostVouchedPlayersPanel
+          players={playerVouchLeaderboard.data ?? []}
+          subtitle="The players the community is backing most across today’s slate."
+          onOpenBoard={() => onSectionChange('hr_board')}
+        />
 
         <section className={`${Z8_PANEL} ve-premium-panel rounded-xl p-4 sm:p-5`} aria-labelledby="quick-access-heading">
           <h2 id="quick-access-heading" className="text-base font-black uppercase tracking-[0.03em] text-white">Quick Access</h2>

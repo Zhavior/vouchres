@@ -1,0 +1,6 @@
+ M package.json
+ M server/services/persistence/pickService.ts
+?? backups/
+?? docs/architecture/VOUCHRES_BACKEND_94_PLUS_MATRIX.md
+?? docs/architecture/VOUCHRES_BACKEND_ARCHITECTURE_V2.md
+?? server/v3/

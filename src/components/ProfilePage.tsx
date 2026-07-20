@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Shield, ShieldCheck, ArrowLeft, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette, Camera, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Shield, ShieldCheck, ArrowLeft, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette, Camera, Loader2, Crown, Gem, Star } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import FeedPostCard from '../social/feed/FeedPostCard';
 import { THEME_REGISTRY } from '../theme/themeRegistry';
@@ -10,8 +11,10 @@ import { DeferredBubbleField } from './vouchedge/DeferredBubbleField';
 import { VEButton } from './ui/ve';
 import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
+import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../lib/useAuth';
-import { useProfileSocialStats } from '../hooks/useSocialGraph';
+import { useDirectMessages } from '../hooks/useFollowingHub';
+import { useProfileSocialStats, useSocialGraph } from '../hooks/useSocialGraph';
 import { uploadProfileAvatar } from '../lib/profileAvatarUpload';
 import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
 import {
@@ -43,6 +46,94 @@ interface ProfilePageProps {
   onClearViewUser?: () => void;
 }
 
+type SubscriptionTier = 'BASIC' | 'GOLD' | 'SELLER_PRO';
+
+const TIER_CONFIG: Record<SubscriptionTier, {
+  label: string;
+  badge: string;
+  icon: typeof Shield;
+  accent: string;
+  chipClass: string;
+  panelClass: string;
+  auraClass: string;
+  evolutionTitle: string;
+  evolutionText: string;
+  perks: string[];
+  signatureBadges: string[];
+}> = {
+  BASIC: {
+    label: 'Starter Identity',
+    badge: 'EDGE STARTER',
+    icon: Shield,
+    accent: 'text-white/80',
+    chipClass: 'border-white/12 bg-white/5 text-white/72',
+    panelClass: 'border-white/10 bg-black/25',
+    auraClass: 'from-white/10 via-white/5 to-transparent',
+    evolutionTitle: 'Built for proof first',
+    evolutionText: 'Starter profiles focus on trust, ledger clarity, and visible accountability before cosmetics.',
+    perks: ['Public trust record', 'Verified win-rate ledger', 'Core profile identity'],
+    signatureBadges: ['Truth-first profile', 'Verified record', 'Public accountability'],
+  },
+  GOLD: {
+    label: 'Gold Identity',
+    badge: 'GOLD MEMBER',
+    icon: Crown,
+    accent: 'text-vouch-emerald',
+    chipClass: 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald',
+    panelClass: 'border-vouch-emerald/25 bg-vouch-emerald/6',
+    auraClass: 'from-vouch-emerald/20 via-vouch-emerald/10 to-transparent',
+    evolutionTitle: 'Premium personal brand',
+    evolutionText: 'Gold profiles unlock stronger presence with premium identity treatment, better header status, and elevated profile presentation.',
+    perks: ['Header customization', 'Premium profile styling', 'Elevated member badge set'],
+    signatureBadges: ['Gold identity', 'Premium styling', 'Enhanced member status'],
+  },
+  SELLER_PRO: {
+    label: 'Seller Pro Identity',
+    badge: 'SELLER PRO',
+    icon: Gem,
+    accent: 'text-vouch-cyan',
+    chipClass: 'border-vouch-cyan/30 bg-vouch-cyan/10 text-vouch-cyan',
+    panelClass: 'border-vouch-cyan/25 bg-vouch-cyan/6',
+    auraClass: 'from-vouch-cyan/20 via-vouch-cyan/10 to-transparent',
+    evolutionTitle: 'Monetized creator presence',
+    evolutionText: 'Seller Pro profiles should feel like premium storefronts: stronger authority, stronger differentiation, and stronger public trust signals.',
+    perks: ['Creator-grade trust branding', 'Subscriber-facing identity', 'Highest-tier profile presence'],
+    signatureBadges: ['Seller Pro storefront', 'Subscriber-ready profile', 'Creator trust surface'],
+  },
+};
+
+function normalizeSubscriptionTier(value: unknown): SubscriptionTier {
+  const raw = String(value ?? '').trim().toUpperCase();
+  if (raw === 'GOLD') return 'GOLD';
+  if (raw === 'SELLER_PRO' || raw === 'SELLER PRO' || raw === 'PRO') return 'SELLER_PRO';
+  return 'BASIC';
+}
+
+function buildViewedProfile(base: CreatorProofProfile, remote?: Record<string, unknown> | null): CreatorProofProfile {
+  if (!remote) return base;
+  const totalPicks = Number(remote.total_picks ?? base.totalPicks ?? 0);
+  const wonPicks = Number(remote.won_picks ?? base.wonPicks ?? 0);
+  const lostPicks = Number(remote.lost_picks ?? 0);
+  const pushedPicks = Number(remote.pushed_picks ?? 0);
+  const resolvedPicks = Math.max(0, wonPicks + lostPicks + pushedPicks);
+  const winRate = resolvedPicks > 0 ? (wonPicks / resolvedPicks) * 100 : 0;
+  return {
+    ...base,
+    displayName: String(remote.display_name ?? base.displayName ?? 'VouchEdge Member'),
+    username: String(remote.username ?? base.username ?? ''),
+    handle: String(remote.handle ?? remote.username ?? base.handle ?? ''),
+    avatarUrl: String(remote.avatar_url ?? base.avatarUrl ?? ''),
+    bio: String(remote.bio ?? base.bio ?? ''),
+    verified: Boolean(remote.is_staff) || base.verified,
+    subscriptionTier: normalizeSubscriptionTier(remote.tier ?? base.subscriptionTier),
+    totalPicks,
+    wonPicks,
+    winRate,
+    unitsNetProfit: Number(remote.net_units ?? base.unitsNetProfit ?? 0),
+    unitsTracked: totalPicks,
+  };
+}
+
 export default function ProfilePage({ 
   profile, 
   onUpdateProfile,
@@ -61,23 +152,35 @@ export default function ProfilePage({
   const { user } = useAuth();
   const profileUserId = viewUserId ?? user?.id ?? null;
   const isOwnProfile = !viewUserId || viewUserId === user?.id;
+  const viewedProfileQuery = useQuery({
+    queryKey: ['public-profile', viewUserId],
+    queryFn: () => apiClient.get<Record<string, unknown>>(`/api/profile/${encodeURIComponent(viewUserId!)}`),
+    enabled: Boolean(viewUserId) && !isOwnProfile,
+    staleTime: 60_000,
+  });
+  const displayedProfile = buildViewedProfile(profile, viewedProfileQuery.data ?? null);
+  const displayedTier = normalizeSubscriptionTier(displayedProfile.subscriptionTier);
+  const tierConfig = TIER_CONFIG[displayedTier];
+  const TierIcon = tierConfig.icon;
   const socialStats = useProfileSocialStats(profileUserId);
+  const socialGraph = useSocialGraph(user?.id ?? null);
+  const directMessages = useDirectMessages(Boolean(user) && !isOwnProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [displayName, setDisplayName] = useState(profile.displayName);
-  const [bio, setBio] = useState(profile.bio);
+  const [displayName, setDisplayName] = useState(displayedProfile.displayName);
+  const [bio, setBio] = useState(displayedProfile.bio);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [hoveredDayYmd, setHoveredDayYmd] = useState<string | null>(null);
   const entitlements = useEntitlements();
-  const canEditHeader = canCustomizeProfileHeader(profile, {
+  const canEditHeader = canCustomizeProfileHeader(displayedProfile, {
     isPro: entitlements.isPro,
     isStaff: entitlements.isStaff,
   });
 
   const getActiveThemeData = () => {
-    const themeToFind = profile.profileThemeId || profile.activeTheme || 'cyber-blue';
+    const themeToFind = displayedProfile.profileThemeId || displayedProfile.activeTheme || 'cyber-blue';
     const found = THEME_REGISTRY.find(t => t.id === themeToFind);
     if (!found) {
       try {
@@ -116,6 +219,40 @@ export default function ProfilePage({
     setFollowingCount(socialStats.following);
   }, [socialStats.following]);
 
+  React.useEffect(() => {
+    setDisplayName(displayedProfile.displayName);
+    setBio(displayedProfile.bio);
+  }, [displayedProfile.bio, displayedProfile.displayName]);
+
+  const isFollowingViewedProfile = !isOwnProfile && Boolean(
+    viewUserId && socialGraph.isFollowingUser({ profileId: viewUserId, username: displayedProfile.username }),
+  );
+  const isFriendWithViewedProfile = !isOwnProfile && Boolean(
+    viewUserId && socialGraph.isFriendWith({ profileId: viewUserId, username: displayedProfile.username }),
+  );
+
+  const handleToggleFollow = React.useCallback(async () => {
+    if (!viewUserId || !user) return;
+    if (isFollowingViewedProfile) {
+      await socialGraph.unfollowProfile(viewUserId);
+      return;
+    }
+    await socialGraph.followProfile({ profileId: viewUserId, relationshipType: 'follow' });
+  }, [isFollowingViewedProfile, socialGraph, user, viewUserId]);
+
+  const handleMessageProfile = React.useCallback(async () => {
+    if (!viewUserId || !user) return;
+    const conversationId = await directMessages.startConversation(viewUserId);
+    if (!conversationId) return;
+    try {
+      sessionStorage.setItem('vouchedge_social_open_tab', 'messages');
+      sessionStorage.setItem('vouchedge_social_open_conversation_id', conversationId);
+    } catch {
+      // ignore storage failures
+    }
+    onSectionChange?.('following');
+  }, [directMessages, onSectionChange, user, viewUserId]);
+
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateProfile({
@@ -143,13 +280,32 @@ export default function ProfilePage({
 
   // Filter user's posts
   const userPosts = posts.filter(
-    p => p.userId === 'u-user-current' || p.username === profile.username || p.displayName === profile.displayName
+    p => p.userId === 'u-user-current' || p.username === displayedProfile.username || p.displayName === displayedProfile.displayName
   );
 
   // Filter user's results
   const userResults = posts.filter(
-    p => p.postType === 'RESULT' && p.result && (p.userId === 'u-user-current' || p.username === profile.username || p.displayName === profile.displayName)
+    p => p.postType === 'RESULT' && p.result && (p.userId === 'u-user-current' || p.username === displayedProfile.username || p.displayName === displayedProfile.displayName)
   );
+  const recentCreatorPosts = userPosts.slice(0, 3);
+  const recentCreatorResults = userResults.slice(0, 3);
+  const tierProofNotes = displayedTier === 'SELLER_PRO'
+    ? [
+        `${socialStats.subscribers} active subscribers can evaluate this profile publicly`,
+        `${recentCreatorResults.length} settled creator results are visible on-page`,
+        'Profile is positioned as a premium storefront, not a hidden black box',
+      ]
+    : displayedTier === 'GOLD'
+      ? [
+          'Header identity and premium profile styling are unlocked',
+          `${socialStats.followers} followers can track this account in SocialOS`,
+          'Gold pages emphasize stronger personal brand without hiding the record',
+        ]
+      : [
+          'Starter profiles still surface the same public truth record',
+          `${displayedProfile.totalPicks} tracked picks anchor the account reputation`,
+          'Core identity stays clean, simple, and accountability-first',
+        ];
 
   const getLocalYMD = (dateInput: string | Date | number) => {
     const d = new Date(dateInput);
@@ -170,14 +326,14 @@ export default function ProfilePage({
   }
 
   return (
-    <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
+    <ProfileThemeWrapper themeId={displayedProfile.profileThemeId || displayedProfile.activeTheme || 'cyber-blue'}>
       <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 max-w-[1120px] mx-auto overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="profile-details-view">
 
         <header className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className={`${Z8_LABEL} text-vouch-emerald`}>{isOwnProfile ? 'Your profile' : 'Community profile'}</span>
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              {isOwnProfile ? 'Trust record and identity' : `${profile.displayName}'s trust record`}
+              {isOwnProfile ? 'Trust record and identity' : `${displayedProfile.displayName}'s trust record`}
             </h1>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-white/55">
               Settled results, public activity, and account identity in one verifiable record.
@@ -202,7 +358,7 @@ export default function ProfilePage({
             }`} id="profile-primary-card">
               
               {/* Cats around the borders of the profile card (Google Cats Theme) */}
-              {profile.activeTheme === 'google_cats' && (
+              {displayedProfile.activeTheme === 'google_cats' && (
                 <>
                   {/* Cat peaking over the top border */}
                   <div className="absolute -top-3.5 right-12 flex flex-col items-center pointer-events-none select-none z-30 transition-all hover:-top-1 group cursor-pointer">
@@ -230,13 +386,14 @@ export default function ProfilePage({
               )}
 
               {/* Dynamic theme floating bubbles */}
-              {profile.activeTheme && profile.activeTheme !== 'default' && (
+              {displayedProfile.activeTheme && displayedProfile.activeTheme !== 'default' && (
                 <DeferredBubbleField count={8} mobileCount={3} variant="float" className="opacity-35 z-0" />
               )}
 
-              <div className={`h-28 sm:h-32 bg-gradient-to-r relative border-b border-vouch-cyan/15 z-10 ${
+              <div className={`h-32 sm:h-36 bg-gradient-to-r relative border-b border-vouch-cyan/15 z-10 ${
                 activeThemeData ? activeThemeData.coverBg || 'from-sky-600/25 to-indigo-600/25' : 'from-sky-600/25 to-indigo-600/25'
               }`}>
+                <div className={`absolute inset-0 bg-gradient-to-br ${tierConfig.auraClass}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
 
@@ -269,7 +426,7 @@ export default function ProfilePage({
                 <div className="absolute -bottom-10 left-6 z-10">
                   
                   {/* Cute Kitten Ears & Whiskers on image border for Google Cats Theme */}
-                  {profile.activeTheme === 'google_cats' && (
+                  {displayedProfile.activeTheme === 'google_cats' && (
                     <>
                       {/* Left ear */}
                       <div className="absolute -top-3 left-1.5 w-6 h-6 bg-blue-500 border border-slate-950 rounded-tr-emerald-500 rounded-tl-2xl rounded-br-2xl rotate-12 z-30 flex items-center justify-center shadow-lg">
@@ -286,13 +443,13 @@ export default function ProfilePage({
                   )}
 
                   <ProfileAvatarBorder 
-                    borderId={profile.profileBorderId}
-                    avatarUrl={profile.avatarUrl}
-                    displayName={profile.displayName}
-                    initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
+                    borderId={displayedProfile.profileBorderId}
+                    avatarUrl={displayedProfile.avatarUrl}
+                    displayName={displayedProfile.displayName}
+                    initials={displayedProfile.displayName.split(' ').map(n=>n[0]).join('')}
                     size="xl"
-                    winRate={profile.winRate}
-                    isVerified={profile.verified}
+                    winRate={displayedProfile.winRate}
+                    isVerified={displayedProfile.verified}
                   />
                   {isOwnProfile && (
                     <>
@@ -329,14 +486,22 @@ export default function ProfilePage({
                     <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
                       {displayName}
                     </h3>
-                    {profile.verified && (
+                    {displayedProfile.verified && (
                       <span className="text-[10px] bg-vouch-emerald/10 text-vouch-emerald px-2 py-0.5 rounded-full font-bold border border-vouch-emerald/25 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5" />
                         VERIFIED ACCOUNT
                       </span>
                     )}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 ${tierConfig.chipClass}`}>
+                      <TierIcon className="w-3.5 h-3.5" />
+                      {tierConfig.badge}
+                    </span>
                   </div>
-                  <p className={`${Z8_LABEL} text-white/40 mt-0.5 normal-case tracking-normal font-medium`}>@{profile.handle || profile.username}</p>
+                  <p className={`${Z8_LABEL} text-white/40 mt-0.5 normal-case tracking-normal font-medium`}>@{displayedProfile.handle || displayedProfile.username}</p>
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1">
+                    <Star className={`h-3.5 w-3.5 ${tierConfig.accent}`} />
+                    <span className={`text-[11px] font-black ${tierConfig.accent}`}>{tierConfig.label}</span>
+                  </div>
                   
                   {/* Dynamic Followers and Tailing count belt */}
                   <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-white/45 font-medium ${Z8_TABULAR}`}>
@@ -345,10 +510,8 @@ export default function ProfilePage({
                       <span className="text-white/35">followers</span>
                     </div>
                     <div className="whitespace-nowrap">
-                      <strong className="text-white/90 font-bold">{socialStats.subscribers}</strong>{' '}
-                      <span className="text-white/35">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers' : 'subscribers'}
-                      </span>
+                    <strong className="text-white/90 font-bold">{socialStats.subscribers}</strong>{' '}
+                      <span className="text-white/35">subscribers</span>
                     </div>
                     <div className="whitespace-nowrap">
                       <strong className="text-white/90">{socialStats.friends}</strong>{' '}
@@ -399,9 +562,44 @@ export default function ProfilePage({
                         Edit Profile
                       </VEButton>
                     )}
+                    {!isOwnProfile && viewUserId && (
+                      <>
+                        <VEButton
+                          onClick={() => void handleToggleFollow()}
+                          variant={isFollowingViewedProfile ? 'ghost' : 'secondary'}
+                          className={isFollowingViewedProfile ? 'border-vouch-emerald/35 text-vouch-emerald hover:text-vouch-emerald' : 'border-vouch-cyan/30 text-vouch-cyan hover:text-vouch-cyan'}
+                        >
+                          {isFollowingViewedProfile ? 'Following' : 'Follow'}
+                        </VEButton>
+                        <VEButton
+                          onClick={() => void handleMessageProfile()}
+                          variant="ghost"
+                          className="border-white/12 text-white/80 hover:text-vouch-cyan"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          Message
+                        </VEButton>
+                      </>
+                    )}
                   </div>
                 ) : null}
               </div>
+
+              {!isOwnProfile && (
+                <div className="flex flex-wrap gap-2">
+                  <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${isFollowingViewedProfile ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald' : 'border-white/10 bg-black/20 text-white/55'}`}>
+                    {isFollowingViewedProfile ? 'Following' : 'Not following'}
+                  </span>
+                  {isFriendWithViewedProfile ? (
+                    <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-vouch-cyan">
+                      Mutuals / friends
+                    </span>
+                  ) : null}
+                  <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
+                    SocialOS profile
+                  </span>
+                </div>
+              )}
 
               {isEditing ? (
                 <form onSubmit={handleProfileSave} className="space-y-3.5 bg-ve-graphite p-4 rounded-xl border border-slate-850" id="profile-edit-subform">
@@ -450,9 +648,129 @@ export default function ProfilePage({
                 </form>
               ) : (
                 <p className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                  "{profile.bio}"
+                  "{displayedProfile.bio}"
                 </p>
               )}
+
+              <div className={`rounded-2xl border p-4 ${tierConfig.panelClass}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className={`${Z8_LABEL} ${tierConfig.accent}`}>Profile Evolution</p>
+                    <h4 className="mt-1 text-sm font-black text-white">{tierConfig.evolutionTitle}</h4>
+                    <p className="mt-2 text-xs leading-5 text-white/60">{tierConfig.evolutionText}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${tierConfig.chipClass}`}>
+                    <TierIcon className="h-3.5 w-3.5" />
+                    {displayedTier.replace('_', ' ')}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tierConfig.perks.map((perk) => (
+                    <span key={perk} className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/70">
+                      {perk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 lg:grid-cols-[1fr_0.9fr]">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className={`${Z8_LABEL} ${tierConfig.accent}`}>Tier Badge Set</p>
+                  <h4 className="mt-1 text-sm font-black text-white">Profile identity markers</h4>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {tierConfig.signatureBadges.map((item) => (
+                      <span
+                        key={item}
+                        className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${tierConfig.chipClass}`}
+                      >
+                        <TierIcon className="h-3.5 w-3.5" />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] leading-5 text-white/48">
+                    Each tier now carries its own visible badge language so the profile evolves in a way users can feel immediately, not just infer from subscription text.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className={`${Z8_LABEL} text-white/55`}>Trust Surface</p>
+                  <div className="mt-3 space-y-2">
+                    {tierProofNotes.map((item) => (
+                      <div key={item} className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-xs text-white/68">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {displayedTier === 'SELLER_PRO' ? (
+                <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className="rounded-2xl border border-vouch-cyan/20 bg-[linear-gradient(135deg,rgba(0,240,255,0.09),rgba(2,6,23,0.92),rgba(8,47,73,0.35))] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className={`${Z8_LABEL} text-vouch-cyan`}>Creator Storefront</p>
+                        <h4 className="mt-1 text-sm font-black text-white">Seller Pro public presence</h4>
+                        <p className="mt-2 text-xs leading-5 text-white/62">
+                          This profile is positioned as a premium creator surface: public proof, social trust, and subscriber-facing identity all in one place.
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-vouch-cyan">
+                        Monetized
+                      </span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Followers</p>
+                        <p className="mt-1 text-lg font-black text-white">{socialStats.followers}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Subscribers</p>
+                        <p className="mt-1 text-lg font-black text-vouch-cyan">{socialStats.subscribers}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Posts</p>
+                        <p className="mt-1 text-lg font-black text-white">{userPosts.length}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onSectionChange?.('subscriber_hub')}
+                        className="inline-flex items-center rounded-full border border-vouch-cyan/35 bg-vouch-cyan/12 px-3 py-1.5 text-xs font-black text-vouch-cyan transition hover:bg-vouch-cyan/18"
+                      >
+                        Open Subscriber Hub
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSectionChange?.('premium')}
+                        className="inline-flex items-center rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-white/72 transition hover:text-white"
+                      >
+                        Manage creator tier
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className={`${Z8_LABEL} text-vouch-cyan/85`}>Subscriber Signals</p>
+                    <div className="mt-3 space-y-2">
+                      {[
+                        `${socialStats.subscribers} visible subscriber connections`,
+                        `${recentCreatorPosts.length} recent public creator posts`,
+                        `${recentCreatorResults.length} recent settled results on profile`,
+                      ].map((item) => (
+                        <div key={item} className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-xs text-white/68">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-[11px] leading-5 text-white/45">
+                      Seller Pro pages should sell trust before they sell access. This module keeps the storefront honest by anchoring it to visible outcomes and public social proof.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
 
               {/* Verified Metrics Strip Grid */}
               <div className="space-y-3.5 pt-1">
@@ -464,49 +782,49 @@ export default function ProfilePage({
                 <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs ${Z8_TABULAR}`}>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className={`${Z8_LABEL} text-white/35`}>True Win Rate</p>
-                    <p className="font-mono text-base font-black text-vouch-cyan mt-1">{profile.winRate.toFixed(1)}%</p>
+                    <p className="font-mono text-base font-black text-vouch-cyan mt-1">{displayedProfile.winRate.toFixed(1)}%</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className={`${Z8_LABEL} text-white/35`}>Net Returns</p>
-                    <p className={`font-mono text-base font-black mt-1 ${profile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-400'}`}>
-                      {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}U
+                    <p className={`font-mono text-base font-black mt-1 ${displayedProfile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-400'}`}>
+                      {displayedProfile.unitsNetProfit >= 0 ? '+' : ''}{displayedProfile.unitsNetProfit.toFixed(1)}U
                     </p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className={`${Z8_LABEL} text-white/35`}>Verified Picks</p>
-                    <p className="font-mono text-base font-black text-white mt-1">{profile.totalPicks}</p>
+                    <p className="font-mono text-base font-black text-white mt-1">{displayedProfile.totalPicks}</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className={`${Z8_LABEL} text-white/35`}>Total Won</p>
-                    <p className="font-mono text-base font-black text-vouch-emerald mt-1">{profile.wonPicks}</p>
+                    <p className="font-mono text-base font-black text-vouch-emerald mt-1">{displayedProfile.wonPicks}</p>
                   </div>
                 </div>
               </div>
 
               {/* Sub-tier Badge Details */}
               <div className={`flex items-center justify-between p-3.5 rounded-xl border text-xs ${
-                profile.subscriptionTier === 'SELLER_PRO'
+                displayedProfile.subscriptionTier === 'SELLER_PRO'
                   ? 'border-vouch-cyan/25 bg-vouch-cyan/5'
-                  : profile.subscriptionTier === 'GOLD'
+                  : displayedProfile.subscriptionTier === 'GOLD'
                     ? 'border-vouch-emerald/25 bg-vouch-emerald/5'
                     : 'border-white/10 bg-black/25'
               }`}>
                 <div className="flex items-center gap-2">
                   <Sparkles className={`w-4 h-4 ${
-                    profile.subscriptionTier === 'SELLER_PRO' ? 'text-vouch-cyan' :
-                    profile.subscriptionTier === 'GOLD' ? 'text-vouch-emerald' : 'text-white/40'
+                    displayedProfile.subscriptionTier === 'SELLER_PRO' ? 'text-vouch-cyan' :
+                    displayedProfile.subscriptionTier === 'GOLD' ? 'text-vouch-emerald' : 'text-white/40'
                   }`} />
                   <div>
                     <span className={`${Z8_LABEL} text-white/35 block leading-tight`}>Subscription Tier</span>
                     <span className="font-extrabold text-white text-xs tracking-wide">
-                      {profile.subscriptionTier === 'SELLER_PRO' ? '💎 SELLER PRO MONETIZED' : profile.subscriptionTier === 'GOLD' ? '✨ VEDGE GOLD' : '🛡️ VEdge BASIC PARTNER'}
+                      {displayedProfile.subscriptionTier === 'SELLER_PRO' ? '💎 SELLER PRO MONETIZED' : displayedProfile.subscriptionTier === 'GOLD' ? '✨ VEDGE GOLD' : '🛡️ VEDGE BASIC PARTNER'}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className={`${Z8_LABEL} text-white/35 block`}>Status</span>
                   <span className="text-vouch-emerald text-xs font-black font-mono">
-                    {profile.totalPicks > 0 ? `${profile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'}
+                    {displayedProfile.totalPicks > 0 ? `${displayedProfile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'}
                   </span>
                 </div>
               </div>
@@ -558,7 +876,7 @@ export default function ProfilePage({
                 <div className="space-y-1">
                   <p className="text-xs text-slate-300 font-bold uppercase font-mono">No Posts Published Yet</p>
                   <p className="text-[11px] text-slate-550 max-w-sm mx-auto text-slate-450 leading-relaxed">
-                    You haven't logged any sports analyses, result settlements, or parlay slips to the feed yet. 
+                    {isOwnProfile ? "You haven't" : `${displayedProfile.displayName} hasn't`} logged any sports analyses, result settlements, or parlay slips to the feed yet. 
                     Use the composer on the Home Feed or the custom Vouch visual generator to make your mark!
                   </p>
                 </div>

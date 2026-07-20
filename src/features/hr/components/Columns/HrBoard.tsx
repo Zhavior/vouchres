@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, Flame, Plus, Search, ShieldCheck, ShieldQuestion, Zap } from 'lucide-react';
+import { Check, ChevronDown, Flame, Heart, Plus, Search, ShieldCheck, ShieldQuestion, Zap } from 'lucide-react';
 import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
+import type { PlayerVouchSummary } from '../../../../hooks/queries/usePlayerVouchLayer';
 import type { HrBuckets } from '../../hooks/useHrBoardViewModel';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief } from '../../utils/hrDecisionBrief';
@@ -11,6 +12,9 @@ interface HrBoardProps {
   onSelectPlayer: (player: HrWatchRow) => void;
   onViewProfile: (player: HrWatchRow) => void;
   onAddToSlip?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
+  getPlayerVouchSummary?: (playerId: string | number | null) => PlayerVouchSummary | null;
+  playerVouchPendingId?: string | null;
   getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
@@ -39,11 +43,14 @@ function metric(value: number | null | undefined): string {
   return value == null || !Number.isFinite(value) ? '-' : String(Math.round(value));
 }
 
-function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
+function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTogglePlayerVouch, playerVouchSummary, playerVouchPending, result }: {
   player: HrWatchRow;
   tier: TierDefinition;
   onResearch: (player: HrWatchRow) => void;
   onAddToSlip?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
+  playerVouchSummary?: PlayerVouchSummary | null;
+  playerVouchPending?: boolean;
   result: HrCardResult;
 }) {
   const brief = buildHrDecisionBrief(player, 'fresh', null, Boolean(onAddToSlip));
@@ -119,15 +126,36 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, result }: {
           <Plus className="h-3.5 w-3.5" /> Slip
         </button>
       </div>
+      <div className="border-t border-white/[0.07] px-2 py-2">
+        <button
+          type="button"
+          onClick={() => onTogglePlayerVouch?.(player)}
+          disabled={playerVouchPending || !onTogglePlayerVouch}
+          className={`flex min-h-9 w-full items-center justify-center gap-2 border px-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${
+            playerVouchSummary?.viewerHasVouched
+              ? 'border-vouch-emerald/35 bg-vouch-emerald/12 text-vouch-emerald'
+              : 'border-white/10 bg-black/25 text-white/60 hover:text-white'
+          } disabled:cursor-not-allowed disabled:opacity-55`}
+        >
+          <Heart className={`h-3.5 w-3.5 ${playerVouchSummary?.viewerHasVouched ? 'fill-current' : ''}`} />
+          {playerVouchSummary?.viewerHasVouched ? 'Vouched' : 'Vouch'}
+          <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/55">
+            {playerVouchPending ? '...' : playerVouchSummary?.totalVouches ?? 0}
+          </span>
+        </button>
+      </div>
     </article>
   );
 }
 
-function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, getHrResult }: {
+function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePlayerVouch, getPlayerVouchSummary, playerVouchPendingId, getHrResult }: {
   tier: TierDefinition;
   players: HrWatchRow[];
   onResearch: (player: HrWatchRow) => void;
   onAddToSlip?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
+  getPlayerVouchSummary?: (playerId: string | number | null) => PlayerVouchSummary | null;
+  playerVouchPendingId?: string | null;
   getHrResult?: (playerId: string | number | null) => HrCardResult;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -152,6 +180,9 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, getHrResult
             tier={tier}
             onResearch={onResearch}
             onAddToSlip={onAddToSlip}
+            onTogglePlayerVouch={onTogglePlayerVouch}
+            playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
+            playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
             result={getHrResult?.(player.playerId) ?? null}
           />
         )) : (
@@ -178,7 +209,16 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, getHrResult
   );
 }
 
-export function HrBoard({ buckets, onSelectPlayer, onViewProfile, onAddToSlip, getHrResult }: HrBoardProps) {
+export function HrBoard({
+  buckets,
+  onSelectPlayer,
+  onViewProfile,
+  onAddToSlip,
+  onTogglePlayerVouch,
+  getPlayerVouchSummary,
+  playerVouchPendingId,
+  getHrResult,
+}: HrBoardProps) {
   const firstPopulated = useMemo(() => TIERS.find((tier) => buckets[tier.key].length > 0)?.key ?? 'Elite', [buckets]);
   const [activeTier, setActiveTier] = useState<TierKey>(firstPopulated);
 
@@ -198,6 +238,9 @@ export function HrBoard({ buckets, onSelectPlayer, onViewProfile, onAddToSlip, g
             players={buckets[tier.key]}
             onResearch={onViewProfile}
             onAddToSlip={onAddToSlip}
+            onTogglePlayerVouch={onTogglePlayerVouch}
+            getPlayerVouchSummary={getPlayerVouchSummary}
+            playerVouchPendingId={playerVouchPendingId}
             getHrResult={getHrResult}
           />
         ))}
@@ -241,6 +284,10 @@ export function HrBoard({ buckets, onSelectPlayer, onViewProfile, onAddToSlip, g
               player={player}
               onClick={() => onSelectPlayer(player)}
               onViewProfile={onViewProfile}
+              onTogglePlayerVouch={onTogglePlayerVouch}
+              playerVouchCount={getPlayerVouchSummary?.(player.playerId)?.totalVouches ?? 0}
+              playerVouchedByViewer={getPlayerVouchSummary?.(player.playerId)?.viewerHasVouched ?? false}
+              playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
               hrResult={getHrResult?.(player.playerId) ?? null}
             />
           ))}

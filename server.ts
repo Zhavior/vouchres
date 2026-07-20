@@ -14,6 +14,7 @@ import { initServerSentry, sentryErrorHandler, isSentryEnabled, captureException
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
+import { startLiveHrNotificationLoop, type LiveHrLoopHandle } from "./server/cron/liveHrNotificationLoop";
 
 // Local/dev: load .env then .env.local (local wins).
 // On Vercel, platform Environment Variables are the source of truth — do not
@@ -144,6 +145,7 @@ function registerProcessSafetyHandlers(httpServer: http.Server): void {
 }
 
 let shuttingDown = false;
+let liveHrLoopHandle: LiveHrLoopHandle | null = null;
 
 /**
  * Drain in-flight requests before exiting. Render sends SIGTERM on every
@@ -155,6 +157,8 @@ function gracefulShutdown(httpServer: http.Server, signal: string, code: number)
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`[shutdown] ${signal} received — draining in-flight requests…`);
+  liveHrLoopHandle?.stop();
+  liveHrLoopHandle = null;
 
   httpServer.close(() => {
     console.log("[shutdown] all connections drained, exiting.");
@@ -175,6 +179,7 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
   registerProcessSafetyHandlers(httpServer);
+  liveHrLoopHandle = startLiveHrNotificationLoop();
 
   // Loud, unmissable warning if production is running without error tracking —
   // the two highest-stakes signals (failed payment, crashed grading) funnel to

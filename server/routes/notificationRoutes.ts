@@ -11,6 +11,7 @@ import { validate } from "../middleware/validation";
 import { NotificationPreferencesPatchSchema } from "../validators/mutationSchemas";
 import {
   deletePushSubscription,
+  getPublicVapidKey,
   getNotificationPreferences,
   listNotifications,
   markAllNotificationsRead,
@@ -74,6 +75,14 @@ notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(
     notifications: [],
     unreadCount: out.unreadCount,
     warnings: out.warnings,
+  }));
+}));
+
+notificationRoutes.get("/notifications/push/public-key", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const publicKey = getPublicVapidKey();
+  return res.json(apiOkFlat(req, {
+    publicKey,
+    configured: Boolean(publicKey),
   }));
 }));
 

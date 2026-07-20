@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../lib/apiClient';
+import { ensureRealtimeAuth, supabase } from '../lib/supabaseClient';
 
 export interface FollowingHubNote {
   userId: string;
@@ -85,6 +86,57 @@ export function useFollowingHub(enabled = true) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let disposed = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void (async () => {
+      await ensureRealtimeAuth();
+      if (disposed) return;
+
+      channel = supabase
+        .channel('social-hub-live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_status_notes' },
+          () => {
+            void refresh();
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_stories' },
+          () => {
+            void refresh();
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'story_views' },
+          () => {
+            void refresh();
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'follows' },
+          () => {
+            void refresh();
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      disposed = true;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [enabled, refresh]);
 
   const publishNote = useCallback(async (body: string, emoji?: string | null) => {
     await apiClient.put('/api/status-note', { body, emoji: emoji ?? null });
@@ -189,12 +241,71 @@ export function useDirectMessages(enabled = true) {
     void refreshConversations();
   }, [refreshConversations]);
 
+  useEffect(() => {
+    if (!enabled) return;
+
+    let disposed = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void (async () => {
+      await ensureRealtimeAuth();
+      if (disposed) return;
+
+      channel = supabase
+        .channel(`dm-live:${activeConversationId ?? 'inbox'}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'dm_messages' },
+          () => {
+            void refreshConversations();
+            if (activeConversationId) {
+              void openConversation(activeConversationId);
+            }
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'dm_participants' },
+          () => {
+            void refreshConversations();
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'dm_conversations' },
+          () => {
+            void refreshConversations();
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      disposed = true;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [activeConversationId, enabled, openConversation, refreshConversations]);
+
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
+    [activeConversationId, conversations],
+  );
+
+  const unreadCount = useMemo(
+    () => conversations.filter((conversation) => conversation.unread).length,
+    [conversations],
+  );
+
   return {
     conversations,
     messages,
+    activeConversation,
     activeConversationId,
     loading,
     error,
+    unreadCount,
     refreshConversations,
     openConversation,
     startConversation,

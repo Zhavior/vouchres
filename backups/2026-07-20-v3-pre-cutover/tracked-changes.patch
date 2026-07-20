@@ -1,0 +1,93 @@
+diff --git a/package.json b/package.json
+index 7049f3cf..04e54d4d 100755
+--- a/package.json
++++ b/package.json
+@@ -5,11 +5,14 @@
+   "type": "module",
+   "scripts": {
+     "dev": "PORT=3000 node --max-old-space-size=12000 --import tsx server.ts",
++    "dev:v3": "V3_PORT=3100 node --max-old-space-size=12000 --import tsx server/v3/bootstrap.ts",
+     "dev:stop": "sh -c 'PORT=${PORT:-3000}; PIDS=$(lsof -ti :$PORT 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"[dev:stop] Killing PID(s) on port $PORT: $PIDS\"; echo \"$PIDS\" | xargs kill -9 2>/dev/null || true; sleep 1; else echo \"[dev:stop] Port $PORT is free\"; fi'",
+     "dev:port": "sh -c 'PORT=${PORT:-3000}; lsof -nP -iTCP:$PORT -sTCP:LISTEN || echo \"Port $PORT is free\"'",
+     "dev:restart": "npm run dev:stop && npm run dev",
+     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && esbuild server/cron/dailyGradeJob.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/gradeJob.cjs && esbuild server/cron/dailyDeleteJob.ts --bundle --platform=node --format=cjs --packages=external --external:stripe --external:../middleware/auth --outfile=dist/deleteJob.cjs",
++    "build:v3": "esbuild server/v3/bootstrap.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server-v3.cjs",
+     "start": "node dist/server.cjs",
++    "start:v3": "node dist/server-v3.cjs",
+     "preview": "vite preview",
+     "clean": "rm -rf dist server.js",
+     "lint": "eslint . || true",
+diff --git a/server/services/persistence/pickService.ts b/server/services/persistence/pickService.ts
+index eed77e60..88f494ef 100755
+--- a/server/services/persistence/pickService.ts
++++ b/server/services/persistence/pickService.ts
+@@ -149,7 +149,7 @@ export async function getLedger(opts: {
+  * Recompute trust_score, total_picks, won_picks, etc. for the author of a
+  * pick after it has been graded. Updates both public.profiles and public.trust_scores.
+  */
+-async function recomputeTrustForPick(pickId: string): Promise<void> {
++export async function recomputeTrustForPick(pickId: string): Promise<void> {
+   const supabaseAdmin = await getSupabaseAdmin();
+   // 1. Look up the pick to find the author
+   const { data: pick } = await supabaseAdmin
+@@ -233,3 +233,60 @@ async function recomputeTrustForPick(pickId: string): Promise<void> {
+       .eq("id", subjectId);
+   }
+ }
++
++export async function recomputeTrustForRecentPicks(options: {
++  hours?: number;
++  limit?: number;
++  dryRun?: boolean;
++} = {}): Promise<{
++  dryRun: boolean;
++  scanned: number;
++  uniqueSubjects: number;
++  recomputed: number;
++}> {
++  const supabaseAdmin = await getSupabaseAdmin();
++  const hours = Math.min(Math.max(Number(options.hours ?? 72), 1), 24 * 30);
++  const limit = Math.min(Math.max(Number(options.limit ?? 100), 1), 500);
++  const dryRun = options.dryRun ?? false;
++  const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
++
++  const { data, error } = await supabaseAdmin
++    .from("picks")
++    .select("id, user_id, capper_id, sport, graded_at")
++    .in("status", ["won", "lost", "push", "void"])
++    .not("graded_at", "is", null)
++    .gte("graded_at", since)
++    .order("graded_at", { ascending: false })
++    .limit(limit);
++
++  if (error) throw error;
++
++  const rows = data ?? [];
++  const seen = new Set<string>();
++  const pickIds: string[] = [];
++
++  for (const row of rows) {
++    const subjectType = row.user_id ? "user" : row.capper_id ? "capper" : null;
++    const subjectId = row.user_id ?? row.capper_id ?? null;
++    const scope = String(row.sport ?? "overall");
++    if (!subjectType || !subjectId) continue;
++
++    const key = `${subjectType}:${subjectId}:${scope}`;
++    if (seen.has(key)) continue;
++    seen.add(key);
++    pickIds.push(String(row.id));
++  }
++
++  if (!dryRun) {
++    for (const pickId of pickIds) {
++      await recomputeTrustForPick(pickId);
++    }
++  }
++
++  return {
++    dryRun,
++    scanned: rows.length,
++    uniqueSubjects: seen.size,
++    recomputed: dryRun ? 0 : pickIds.length,
++  };
++}

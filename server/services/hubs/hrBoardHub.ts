@@ -100,6 +100,14 @@ type ValidatedPlayerIndexEntry = {
 
 const localValidatedPlayerIndex = new Map<string, ValidatedPlayerIndexEntry>();
 
+function validatedBoardGeneratedAt(board: ValidatedHrBoardSnapshot): string | null {
+  return typeof (board as any).updatedAt === "string"
+    ? (board as any).updatedAt
+    : typeof (board as any).generatedAt === "string"
+      ? (board as any).generatedAt
+      : null;
+}
+
 function buildValidatedPlayerIndex(
   key: string,
   board: ValidatedHrBoardSnapshot,
@@ -127,12 +135,7 @@ function buildValidatedPlayerIndex(
     }
   }
 
-  const generatedAt =
-    typeof (board as any).updatedAt === "string"
-      ? (board as any).updatedAt
-      : typeof (board as any).generatedAt === "string"
-        ? (board as any).generatedAt
-        : null;
+  const generatedAt = validatedBoardGeneratedAt(board);
 
   localValidatedPlayerIndex.set(key, {
     expiresAt,
@@ -373,10 +376,7 @@ function scheduleProfileResearchPrewarm(
       try {
         await getMaterializedHrResearch({
           candidate: candidate.candidate,
-          generatedAt:
-            typeof board.generatedAt === "string"
-              ? board.generatedAt
-              : null,
+          generatedAt: validatedBoardGeneratedAt(board),
         });
 
         return true;
@@ -606,4 +606,3 @@ export async function getCachedDeepHrBoard(date?: string | null): Promise<DeepHr
     localDeepHrBoardBuilds.delete(key);
   }
 }
-

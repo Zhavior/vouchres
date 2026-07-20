@@ -25,6 +25,29 @@ export interface SaveUserParlayResult {
   };
 }
 
+export interface PreviewUserParlaySaveResult {
+  ok: true;
+  dryRun: true;
+  summary: {
+    title: string;
+    sport: string;
+    mode: "REAL" | "PRACTICE";
+    source: string;
+    selectionSummary: string;
+    combinedOdds: number | null;
+    stakeUnits: number;
+    confidence: number | null;
+    aiGenerated: boolean;
+    clientRef: string | null;
+    legCount: number;
+  };
+  canonical: {
+    parent: Record<string, unknown>;
+    legs: Array<Record<string, unknown>>;
+  };
+  warnings: string[];
+}
+
 function isMissingColumnError(error: unknown): boolean {
   return MISSING_COLUMN_CODES.has(String((error as { code?: unknown })?.code ?? ""));
 }
@@ -98,6 +121,155 @@ function buildResponse(input: {
     combined_odds: input.combinedOdds,
     ai_generated: input.aiGenerated,
     deduped: input.deduped,
+  };
+}
+
+function normalizeSaveUserParlayInput(input: {
+  userId: string;
+  body: SaveMeParlayInput;
+}): {
+  title: string;
+  explanation: string;
+  mode: "REAL" | "PRACTICE";
+  wagerAmount: number;
+  aiGenerated: boolean;
+  source: string;
+  clientRef: string | null;
+  combinedOdds: number | null;
+  selectionSummary: string;
+  parentEventId: string;
+  sport: string;
+  confidence: number | null;
+  legCount: number;
+  legsJson: Array<Record<string, unknown>>;
+  parent: Record<string, unknown>;
+} {
+  const body = input.body as SaveMeParlayInput & Record<string, any>;
+  const rawLegs = body.legs as Record<string, any>[];
+  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
+  const explanation = typeof body.explanation === "string" && body.explanation.trim()
+    ? body.explanation.trim().slice(0, 2000)
+    : title;
+  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
+  const wagerAmount =
+    typeof body.wagerAmount === "number" && body.wagerAmount > 0
+      ? body.wagerAmount
+      : typeof body.stake_units === "number" && body.stake_units > 0
+        ? body.stake_units
+        : 1.0;
+  const aiGenerated = body.aiGenerated === true;
+  const source = normalizeSource(body.source, aiGenerated);
+  const clientRef =
+    typeof body.clientRef === "string" && body.clientRef
+      ? body.clientRef.slice(0, 128)
+      : typeof body.client_ref === "string" && body.client_ref
+        ? body.client_ref.slice(0, 128)
+        : typeof body.id === "string" && body.id
+          ? body.id.slice(0, 128)
+          : null;
+
+  const legOdds = rawLegs.map((leg) => legOddsToDecimalOrNull(leg));
+  const allLegsPriced = legOdds.length > 0 && legOdds.every((odds) => odds !== null);
+  const combinedOdds = allLegsPriced
+    ? Number((legOdds as number[]).reduce((product, odds) => product * odds, 1).toFixed(3))
+    : null;
+
+  const selectionSummary = rawLegs
+    .map((leg) => String(leg.selection || leg.market || "").slice(0, 60))
+    .filter(Boolean)
+    .join(" | ")
+    .slice(0, 500);
+
+  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
+  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
+  const confidence =
+    typeof body.edgeScore === "number"
+      ? body.edgeScore
+      : typeof body.confidence === "number"
+        ? body.confidence
+        : null;
+  const legsJson = rawLegs.map((leg, index) => buildLegIdentity({
+    leg,
+    index,
+    sport,
+    oddsDecimal: legOdds[index],
+  }));
+
+  const parent = {
+    user_id: input.userId,
+    capper_id: null,
+    leg_type: "parlay" as const,
+    sport,
+    event_id: parentEventId,
+    market: `${rawLegs.length}-leg parlay`,
+    selection: selectionSummary || title,
+    odds_decimal: combinedOdds,
+    stake_units: wagerAmount,
+    confidence,
+    explanation,
+    is_demo: mode === "PRACTICE",
+    status: "pending",
+    source,
+    client_ref: clientRef,
+  };
+
+  return {
+    title,
+    explanation,
+    mode,
+    wagerAmount,
+    aiGenerated,
+    source,
+    clientRef,
+    combinedOdds,
+    selectionSummary,
+    parentEventId,
+    sport,
+    confidence,
+    legCount: rawLegs.length,
+    legsJson,
+    parent,
+  };
+}
+
+export async function previewUserParlaySave(input: {
+  userId: string;
+  body: SaveMeParlayInput;
+}): Promise<PreviewUserParlaySaveResult> {
+  const normalized = normalizeSaveUserParlayInput(input);
+  const warnings: string[] = [];
+
+  if (!normalized.combinedOdds) {
+    warnings.push("Combined odds could not be fully computed from the provided leg prices.");
+  }
+  if (!normalized.clientRef) {
+    warnings.push("No clientRef provided; dedupe protection will rely on a fresh save path.");
+  }
+  if (normalized.parent.event_id === "manual") {
+    warnings.push("Parent event_id resolved to manual; verify canonical game identity before live save.");
+  }
+
+  return {
+    ok: true,
+    dryRun: true,
+    summary: {
+      title: normalized.title,
+      sport: normalized.sport,
+      mode: normalized.mode,
+      source: normalized.source,
+      selectionSummary: normalized.selectionSummary || normalized.title,
+      combinedOdds: normalized.combinedOdds,
+      stakeUnits: normalized.wagerAmount,
+      confidence: normalized.confidence,
+      aiGenerated: normalized.aiGenerated,
+      clientRef: normalized.clientRef,
+      legCount: normalized.legCount,
+    },
+    canonical: {
+      parent: normalized.parent,
+      legs: normalized.legsJson,
+    },
+    warnings,
   };
 }
 
@@ -182,56 +354,24 @@ export async function saveUserParlay(input: {
   userId: string;
   body: SaveMeParlayInput;
 }): Promise<SaveUserParlayResult> {
-  const body = input.body as SaveMeParlayInput & Record<string, any>;
-  const rawLegs = body.legs as Record<string, any>[];
-  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
-  const explanation = typeof body.explanation === "string" && body.explanation.trim()
-    ? body.explanation.trim().slice(0, 2000)
-    : title;
-  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
-  const wagerAmount =
-    typeof body.wagerAmount === "number" && body.wagerAmount > 0
-      ? body.wagerAmount
-      : typeof body.stake_units === "number" && body.stake_units > 0
-        ? body.stake_units
-        : 1.0;
-  const aiGenerated = body.aiGenerated === true;
-  const source = normalizeSource(body.source, aiGenerated);
-  const clientRef =
-    typeof body.clientRef === "string" && body.clientRef
-      ? body.clientRef.slice(0, 128)
-      : typeof body.client_ref === "string" && body.client_ref
-        ? body.client_ref.slice(0, 128)
-        : typeof body.id === "string" && body.id
-          ? body.id.slice(0, 128)
-          : null;
-
-  const legOdds = rawLegs.map((leg) => legOddsToDecimalOrNull(leg));
-  const allLegsPriced = legOdds.length > 0 && legOdds.every((odds) => odds !== null);
-  const combinedOdds = allLegsPriced
-    ? Number((legOdds as number[]).reduce((product, odds) => product * odds, 1).toFixed(3))
-    : null;
-
-  const selectionSummary = rawLegs
-    .map((leg) => String(leg.selection || leg.market || "").slice(0, 60))
-    .filter(Boolean)
-    .join(" | ")
-    .slice(0, 500);
-
-  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
-  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
-  const confidence =
-    typeof body.edgeScore === "number"
-      ? body.edgeScore
-      : typeof body.confidence === "number"
-        ? body.confidence
-        : null;
-  const legsJson = rawLegs.map((leg, index) => buildLegIdentity({
-    leg,
-    index,
+  const normalized = normalizeSaveUserParlayInput(input);
+  const {
+    title,
+    explanation,
+    mode,
+    wagerAmount,
+    aiGenerated,
+    source,
+    clientRef,
+    combinedOdds,
+    selectionSummary,
+    parentEventId,
     sport,
-    oddsDecimal: legOdds[index],
-  }));
+    confidence,
+    legCount,
+    legsJson,
+    parent,
+  } = normalized;
 
   if (clientRef) {
     try {
@@ -260,7 +400,7 @@ export async function saveUserParlay(input: {
       p_user_id: input.userId,
       p_sport: sport,
       p_event_id: parentEventId,
-      p_market: `${rawLegs.length}-leg parlay`,
+      p_market: `${legCount}-leg parlay`,
       p_selection: selectionSummary || title,
       p_odds_decimal: combinedOdds,
       p_stake_units: wagerAmount,
@@ -294,24 +434,6 @@ export async function saveUserParlay(input: {
 
   let parlay: ParlayRow | null = null;
   try {
-    const parent = {
-      user_id: input.userId,
-      capper_id: null,
-      leg_type: "parlay" as const,
-      sport,
-      event_id: parentEventId,
-      market: `${rawLegs.length}-leg parlay`,
-      selection: selectionSummary || title,
-      odds_decimal: combinedOdds,
-      stake_units: wagerAmount,
-      confidence,
-      explanation,
-      is_demo: mode === "PRACTICE",
-      status: "pending",
-      source,
-      client_ref: clientRef,
-    };
-
     try {
       parlay = await insertParlayParent(parent);
     } catch (error) {

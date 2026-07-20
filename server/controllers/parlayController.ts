@@ -19,35 +19,16 @@ import {
 import { saveUserParlay } from "../services/parlays/parlayCreationService";
 import { tailParlayForUser } from "../services/social/parlayTailService";
 import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../validators/parlaySchemas";
+import { sendV3ParlayDetailResponse, sendV3ParlayListResponse, sendV3ParlaySaveResponse, sendV3ParlayTrustCommitResponse, sendV3ParlayTrustFinalizeResponse } from "../v3/modules/parlays/handlers";
 
 type ParlayReq = AuthedRequest & RequestWithContext;
 
 export const getParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (owned.ok === false) {
-    if (owned.warning === "resource not found for authenticated user") {
-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
-    }
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Ownership check failed.",
-      details: { warning: owned.warning },
-    });
-  }
-
-  const parlay = await getUserParlay({ userId: req.user!.id, parlayId: req.params.id });
-  return res.json(apiOkFlat(req, { parlay }));
+  return sendV3ParlayDetailResponse(req, res);
 });
 
 export const listMyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  const query = req.query as unknown as ListParlaysQuery;
-  const result = await listUserParlays({
-    userId: req.user!.id,
-    limit: query.limit,
-    offset: query.offset,
-  });
-  return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
+  return sendV3ParlayListResponse(req, res);
 });
 
 export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
@@ -65,11 +46,7 @@ export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res:
 });
 
 export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  const result = await saveUserParlay({
-    userId: req.user!.id,
-    body: req.body as SaveMeParlayInput,
-  });
-  return res.status(result.statusCode).json(apiOkFlat(req, result.body as unknown as Record<string, unknown>));
+  return sendV3ParlaySaveResponse(req, res);
 });
 
 export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
@@ -168,52 +145,9 @@ export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Respon
 });
 
 export const commitParlayTrustHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (owned.ok === false) {
-    if (owned.warning === "resource not found for authenticated user") {
-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
-    }
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Ownership check failed.",
-      details: { warning: owned.warning },
-    });
-  }
-
-  const audience = typeof req.body?.audience === "string" ? req.body.audience : "private";
-  const parlay = await commitParlayTrustLedger({
-    userId: req.user!.id,
-    parlayId: req.params.id,
-    audience: audience as "private" | "public" | "subscriber",
-  });
-  return res.json(apiOkFlat(req, { parlay }));
+  return sendV3ParlayTrustCommitResponse(req, res);
 });
 
 export const finalizeParlayTrustLockHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (owned.ok === false) {
-    if (owned.warning === "resource not found for authenticated user") {
-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
-    }
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Ownership check failed.",
-      details: { warning: owned.warning },
-    });
-  }
-
-  const parlay = await finalizeParlayTrustLock({
-    userId: req.user!.id,
-    parlayId: req.params.id,
-  });
-  if (!parlay?.locked_at) {
-    throw new AppError({
-      status: 409,
-      code: "domain_state_error",
-      message: "Parlay is not ready to lock yet.",
-    });
-  }
-  return res.json(apiOkFlat(req, { parlay }));
+  return sendV3ParlayTrustFinalizeResponse(req, res);
 });

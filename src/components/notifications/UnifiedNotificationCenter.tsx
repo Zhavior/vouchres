@@ -18,12 +18,9 @@ import {
   X,
 } from 'lucide-react';
 import {
-  AppNotification,
-  clearNotifications,
-  markAllRead,
   onNotification,
 } from '../../lib/appNotifications';
-import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
+import { useAppNotifications, type ActivityNotification } from '../../hooks/queries/useAppNotifications';
 import { useHrNotificationState } from '../../hooks/useHrNotificationState';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../hooks/queries/queryKeys';
@@ -86,38 +83,79 @@ type ProviderProps = {
 
 export function NotificationProvider({ savedSlips = [], onNavigate, children }: ProviderProps) {
   const queryClient = useQueryClient();
-  const { data: appList = [] } = useAppNotifications();
+  const { data: appList = [], markAllRead, clearLocal } = useAppNotifications();
   const hr = useHrNotificationState(savedSlips);
 
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('all');
-  const [appToasts, setAppToasts] = useState<AppNotification[]>([]);
+  const [appToasts, setAppToasts] = useState<ActivityNotification[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
+  const seenServerToastIds = useRef<Set<string>>(new Set());
+  const initializedServerToasts = useRef(false);
 
   useEffect(() => {
     return onNotification((n) => {
       if (!n) return;
-      setAppToasts((t) => [n, ...t].slice(0, 3));
-      window.setTimeout(() => setAppToasts((t) => t.filter((x) => x.id !== n.id)), 7000);
+      const toast: ActivityNotification = {
+        id: n.id,
+        kind: n.kind,
+        title: n.title,
+        body: n.body,
+        ts: n.ts,
+        read: n.read,
+        section: n.section,
+        source: 'local',
+        typeLabel: 'Local alert',
+        rawType: n.kind,
+      };
+      setAppToasts((t) => [toast, ...t].slice(0, 3));
+      window.setTimeout(() => setAppToasts((t) => t.filter((x) => x.id !== toast.id)), 7000);
     });
   }, []);
 
+  useEffect(() => {
+    const serverFresh = appList.filter(
+      (notification) =>
+        notification.source === 'server' &&
+        !notification.read &&
+        !seenServerToastIds.current.has(notification.id) &&
+        notification.rawType !== 'HOME_RUN',
+    );
+
+    if (!initializedServerToasts.current) {
+      appList
+        .filter((notification) => notification.source === 'server')
+        .forEach((notification) => seenServerToastIds.current.add(notification.id));
+      initializedServerToasts.current = true;
+      return;
+    }
+
+    if (serverFresh.length === 0) return;
+
+    serverFresh.forEach((notification) => seenServerToastIds.current.add(notification.id));
+    const incoming = serverFresh.slice(0, 2);
+    setAppToasts((current) => [...incoming, ...current].slice(0, 4));
+    incoming.forEach((notification) => {
+      window.setTimeout(() => {
+        setAppToasts((current) => current.filter((item) => item.id !== notification.id));
+      }, 7000);
+    });
+  }, [appList]);
+
   const appUnread = appList.filter((n) => !n.read).length;
-  const hrUnread = hr.enabled ? hr.unread : 0;
-  const unreadCount = appUnread + hrUnread;
+  const unreadCount = appUnread;
 
   const openPanel = useCallback(() => {
     setOpen(true);
-    const updated = markAllRead();
+    void markAllRead();
     hr.markHrRead();
-    queryClient.setQueryData(queryKeys.appNotifications(), updated);
-  }, [hr, queryClient]);
+    void queryClient.invalidateQueries({ queryKey: queryKeys.appNotifications() });
+  }, [hr, markAllRead, queryClient]);
 
   const closePanel = useCallback(() => setOpen(false), []);
 
   const handleClearApp = () => {
-    clearNotifications();
-    queryClient.setQueryData(queryKeys.appNotifications(), []);
+    void clearLocal();
   };
 
   const ctx = useMemo(

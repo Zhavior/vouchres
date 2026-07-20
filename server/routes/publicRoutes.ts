@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, optionalAuth, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
@@ -13,11 +13,17 @@ import {
   getRelationshipForTarget,
   getProfileSocialStats,
   getSocialGraph,
+  getSuggestedProfiles,
   removeFollow,
   upsertFollow,
   type RelationshipType,
   type SocialGraphBucket,
 } from "../services/social/followService";
+import {
+  getMostVouchedPlayers,
+  getPlayerVouchSummary,
+  togglePlayerVouch,
+} from "../services/social/playerVouchService";
 import {
   EXTENSION_DOCS_PATH,
   getAgent,
@@ -529,4 +535,79 @@ publicRoutes.get("/social/relationship", requireAuth, asyncHandler(async (req: A
   });
 
   return res.json(apiOkFlat(req, relationship as unknown as Record<string, unknown>));
+}));
+
+publicRoutes.get("/social/suggestions", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const limit = Math.min(Number(req.query.limit ?? 8), 24);
+  const suggestions = await getSuggestedProfiles({
+    userId: req.user!.id,
+    limit,
+  });
+  return res.json(apiOkFlat(req, { suggestions }));
+}));
+
+publicRoutes.get("/player-vouches/summary", optionalAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const date = typeof req.query.date === "string" ? req.query.date : undefined;
+  const rawPlayerIds = typeof req.query.playerIds === "string" ? req.query.playerIds : "";
+  const playerIds = rawPlayerIds
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (playerIds.length === 0) {
+    return res.json(apiOkFlat(req, { summaries: [] }));
+  }
+
+  const summaries = await getPlayerVouchSummary({
+    date,
+    playerIds,
+    viewerId: req.user?.id ?? null,
+  });
+
+  return res.json(apiOkFlat(req, { summaries }));
+}));
+
+publicRoutes.get("/player-vouches/leaderboard", optionalAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const date = typeof req.query.date === "string" ? req.query.date : undefined;
+  const limit = Math.min(Number(req.query.limit ?? 6), 12);
+  const players = await getMostVouchedPlayers({
+    date,
+    limit,
+    viewerId: req.user?.id ?? null,
+  });
+
+  return res.json(apiOkFlat(req, { players }));
+}));
+
+publicRoutes.post("/player-vouches/toggle", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body as {
+    player_id?: string | number;
+    player_name?: string;
+    team?: string | null;
+    opponent?: string | null;
+    game_pk?: string | number | null;
+    context_date?: string | null;
+    source_page?: string | null;
+  };
+
+  if (body.player_id == null || !String(body.player_id).trim() || !body.player_name?.trim()) {
+    throw new AppError({
+      status: 400,
+      code: "bad_request",
+      message: "player_id and player_name are required.",
+    });
+  }
+
+  const result = await togglePlayerVouch({
+    userId: req.user!.id,
+    playerId: body.player_id,
+    playerName: body.player_name.trim(),
+    team: body.team ?? null,
+    opponent: body.opponent ?? null,
+    gamePk: body.game_pk ?? null,
+    contextDate: body.context_date ?? null,
+    sourcePage: body.source_page ?? null,
+  });
+
+  return res.json(apiOkFlat(req, result));
 }));

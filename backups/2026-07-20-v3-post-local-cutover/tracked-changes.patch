@@ -1,0 +1,1527 @@
+diff --git a/package.json b/package.json
+index 7049f3cf..19450a83 100755
+--- a/package.json
++++ b/package.json
+@@ -5,11 +5,14 @@
+   "type": "module",
+   "scripts": {
+     "dev": "PORT=3000 node --max-old-space-size=12000 --import tsx server.ts",
++    "dev:v3": "V3_PORT=3100 node --max-old-space-size=12000 --import tsx server/v3/bootstrap.ts",
+     "dev:stop": "sh -c 'PORT=${PORT:-3000}; PIDS=$(lsof -ti :$PORT 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"[dev:stop] Killing PID(s) on port $PORT: $PIDS\"; echo \"$PIDS\" | xargs kill -9 2>/dev/null || true; sleep 1; else echo \"[dev:stop] Port $PORT is free\"; fi'",
+     "dev:port": "sh -c 'PORT=${PORT:-3000}; lsof -nP -iTCP:$PORT -sTCP:LISTEN || echo \"Port $PORT is free\"'",
+     "dev:restart": "npm run dev:stop && npm run dev",
+     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && esbuild server/cron/dailyGradeJob.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/gradeJob.cjs && esbuild server/cron/dailyDeleteJob.ts --bundle --platform=node --format=cjs --packages=external --external:stripe --external:../middleware/auth --outfile=dist/deleteJob.cjs",
++    "build:v3": "esbuild server/v3/bootstrap.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server-v3.cjs",
+     "start": "node dist/server.cjs",
++    "start:v3": "node dist/server-v3.cjs",
+     "preview": "vite preview",
+     "clean": "rm -rf dist server.js",
+     "lint": "eslint . || true",
+@@ -25,6 +28,24 @@
+     "migrate:trustos": "node --env-file=.env.local scripts/applyTrustOsMigration.mjs",
+     "verify:billing-hardening": "tsx scripts/verifyBillingHardening.ts",
+     "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts",
++    "verify:v3-backend": "tsx scripts/verifyV3Backend.ts",
++    "compare:legacy-v3-reads": "tsx scripts/compareLegacyV3Reads.ts",
++    "audit:parlay-route-ownership": "tsx scripts/auditParlayRouteOwnership.ts",
++    "report:legacy-parlay-cutover-readiness": "tsx scripts/reportLegacyParlayCutoverReadiness.ts",
++    "verify:legacy-parlay-telemetry": "tsx scripts/verifyLegacyParlayTelemetry.ts",
++    "verify:legacy-parlay-deprecation-headers": "tsx scripts/verifyLegacyParlayDeprecationHeaders.ts",
++    "verify:legacy-parlay-cutoff-report": "tsx scripts/verifyLegacyParlayCutoffReport.ts",
++    "verify:legacy-parlay-kill-switch": "tsx scripts/verifyLegacyParlayKillSwitch.ts",
++    "verify:legacy-parlay-detail-cutoff-canary": "tsx scripts/verifyLegacyParlayDetailCutoffCanary.ts",
++    "verify:legacy-parlay-list-cutoff-canary": "tsx scripts/verifyLegacyParlayListCutoffCanary.ts",
++    "verify:legacy-parlay-commit-trust-cutoff-canary": "tsx scripts/verifyLegacyParlayCommitTrustCutoffCanary.ts",
++    "verify:legacy-parlay-finalize-trust-lock-cutoff-canary": "tsx scripts/verifyLegacyParlayFinalizeTrustLockCutoffCanary.ts",
++    "verify:legacy-parlay-save-cutoff-canary": "tsx scripts/verifyLegacyParlaySaveCutoffCanary.ts",
++    "verify:parlay-save-cutover": "tsx scripts/verifyParlaySaveCutover.ts",
++    "verify:parlay-save-preview": "tsx scripts/verifyParlaySavePreview.ts",
++    "verify:parlay-trust-commit-cutover": "tsx scripts/verifyParlayTrustCommitCutover.ts",
++    "verify:parlay-trust-finalize-cutover": "tsx scripts/verifyParlayTrustFinalizeCutover.ts",
++    "verify:billing-cutover": "tsx scripts/verifyBillingCutover.ts",
+     "sentry:test": "tsx scripts/sentryTestError.ts",
+     "test": "vitest run",
+     "test:e2e": "playwright test",
+diff --git a/server/controllers/parlayController.ts b/server/controllers/parlayController.ts
+index ff50816e..b363f1fc 100644
+--- a/server/controllers/parlayController.ts
++++ b/server/controllers/parlayController.ts
+@@ -19,35 +19,16 @@ import {
+ import { saveUserParlay } from "../services/parlays/parlayCreationService";
+ import { tailParlayForUser } from "../services/social/parlayTailService";
+ import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../validators/parlaySchemas";
++import { sendV3ParlayDetailResponse, sendV3ParlayListResponse, sendV3ParlaySaveResponse, sendV3ParlayTrustCommitResponse, sendV3ParlayTrustFinalizeResponse } from "../v3/modules/parlays/handlers";
+ 
+ type ParlayReq = AuthedRequest & RequestWithContext;
+ 
+ export const getParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+-  if (owned.ok === false) {
+-    if (owned.warning === "resource not found for authenticated user") {
+-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+-    }
+-    throw new AppError({
+-      status: 500,
+-      code: "internal_server_error",
+-      message: "Ownership check failed.",
+-      details: { warning: owned.warning },
+-    });
+-  }
+-
+-  const parlay = await getUserParlay({ userId: req.user!.id, parlayId: req.params.id });
+-  return res.json(apiOkFlat(req, { parlay }));
++  return sendV3ParlayDetailResponse(req, res);
+ });
+ 
+ export const listMyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+-  const query = req.query as unknown as ListParlaysQuery;
+-  const result = await listUserParlays({
+-    userId: req.user!.id,
+-    limit: query.limit,
+-    offset: query.offset,
+-  });
+-  return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
++  return sendV3ParlayListResponse(req, res);
+ });
+ 
+ export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+@@ -65,11 +46,7 @@ export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res:
+ });
+ 
+ export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+-  const result = await saveUserParlay({
+-    userId: req.user!.id,
+-    body: req.body as SaveMeParlayInput,
+-  });
+-  return res.status(result.statusCode).json(apiOkFlat(req, result.body as unknown as Record<string, unknown>));
++  return sendV3ParlaySaveResponse(req, res);
+ });
+ 
+ export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+@@ -168,52 +145,9 @@ export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Respon
+ });
+ 
+ export const commitParlayTrustHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+-  if (owned.ok === false) {
+-    if (owned.warning === "resource not found for authenticated user") {
+-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+-    }
+-    throw new AppError({
+-      status: 500,
+-      code: "internal_server_error",
+-      message: "Ownership check failed.",
+-      details: { warning: owned.warning },
+-    });
+-  }
+-
+-  const audience = typeof req.body?.audience === "string" ? req.body.audience : "private";
+-  const parlay = await commitParlayTrustLedger({
+-    userId: req.user!.id,
+-    parlayId: req.params.id,
+-    audience: audience as "private" | "public" | "subscriber",
+-  });
+-  return res.json(apiOkFlat(req, { parlay }));
++  return sendV3ParlayTrustCommitResponse(req, res);
+ });
+ 
+ export const finalizeParlayTrustLockHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+-  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+-  if (owned.ok === false) {
+-    if (owned.warning === "resource not found for authenticated user") {
+-      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+-    }
+-    throw new AppError({
+-      status: 500,
+-      code: "internal_server_error",
+-      message: "Ownership check failed.",
+-      details: { warning: owned.warning },
+-    });
+-  }
+-
+-  const parlay = await finalizeParlayTrustLock({
+-    userId: req.user!.id,
+-    parlayId: req.params.id,
+-  });
+-  if (!parlay?.locked_at) {
+-    throw new AppError({
+-      status: 409,
+-      code: "domain_state_error",
+-      message: "Parlay is not ready to lock yet.",
+-    });
+-  }
+-  return res.json(apiOkFlat(req, { parlay }));
++  return sendV3ParlayTrustFinalizeResponse(req, res);
+ });
+diff --git a/server/routes/billingRoutes.ts b/server/routes/billingRoutes.ts
+old mode 100755
+new mode 100644
+index f0c2e43f..91e5e605
+--- a/server/routes/billingRoutes.ts
++++ b/server/routes/billingRoutes.ts
+@@ -1,415 +1,55 @@
+ import { Router } from "express";
+ import type { Response } from "express";
+-import Stripe from "stripe";
+-import { z } from "zod";
+-import { AppError } from "../errors/AppError";
+-import { asyncHandler } from "../lib/asyncHandler";
+-import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
+-import { apiOkFlat } from "../lib/apiResponse";
+-import { structuredLog } from "../lib/structuredLog";
++import type { AuthedRequest } from "../middleware/auth";
+ import type { RequestWithContext } from "../middleware/requestContext";
++import { requireAuth } from "../middleware/auth";
++import { asyncHandler } from "../lib/asyncHandler";
+ import { webhookLimiter } from "../middleware/rateLimit";
+ import { validate } from "../middleware/validation";
+ import {
+-  getStripe,
+-  createCheckoutSession,
+-  createPortalSession,
+-  beginStripeWebhookEvent,
+-  finishStripeWebhookEvent,
+-  isStripeConfigured,
+-  syncSubscription,
+-} from "../services/billing/stripeService";
+-import {
+-  getStripePriceId,
+-  getStripePriceMatrix,
+-  getTierEntitlements,
+-  normalizeSubscriptionTier,
+-  type BillingInterval,
+-  type PaidCanonicalTier,
+-} from "../services/billing/tierConfig";
++  BillingCheckoutSchema,
++  sendV3BillingCheckoutResponse,
++  sendV3BillingPortalResponse,
++  sendV3BillingStatusResponse,
++  sendV3BillingWebhookResponse,
++} from "../v3/modules/billing/handlers";
+ 
+ export const billingRoutes = Router();
+ 
+ type AuthedRequestWithContext = AuthedRequest & RequestWithContext;
+ 
+-/**
+- * Returns a validated, slash-stripped frontend origin for Stripe redirect URLs.
+- * Preference order: FRONTEND_URL → CLIENT_URL → SITE_URL → PUBLIC_SITE_URL → APP_URL → localhost:3000
+- * Rejects any value that doesn't start with http:// or https://.
+- */
+-function getSafeFrontendOrigin(): string {
+-  const raw =
+-    process.env.FRONTEND_URL ||
+-    process.env.CLIENT_URL ||
+-    process.env.SITE_URL ||
+-    process.env.PUBLIC_SITE_URL ||
+-    process.env.APP_URL ||
+-    "http://localhost:3000";
+-
+-  const stripped = raw.replace(/\/+$/, "");
+-
+-  if (!stripped.startsWith("http://") && !stripped.startsWith("https://")) {
+-    console.warn(
+-      `[billing] getSafeFrontendOrigin: "${stripped}" is not a valid http(s) URL — falling back to http://localhost:3000`
+-    );
+-    return "http://localhost:3000";
+-  }
+-
+-  structuredLog({
+-    level: "info",
+-    event: "billing.safe_frontend_origin",
+-    message: stripped,
+-  });
+-  return stripped;
+-}
+-
+-const CheckoutSchema = z.object({
+-  tier: z.enum(["pro", "creator"]),
+-  interval: z.enum(["monthly", "yearly"]).default("monthly"),
+-});
+-
+-function assertStripeConfigured() {
+-  if (!isStripeConfigured()) {
+-    throw new AppError({
+-      status: 503,
+-      code: "external_service_error",
+-      message: "Stripe secret key is not configured on the server.",
+-      details: { reason: "stripe_not_configured" },
+-      expose: true,
+-    });
+-  }
+-}
+-
+ billingRoutes.post(
+   "/checkout",
+   requireAuth,
+-  validate({ body: CheckoutSchema }),
+-  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+-    const { tier, interval } = req.body as z.infer<typeof CheckoutSchema>;
+-    const normalized = normalizeSubscriptionTier(tier);
+-    const checkoutTier = normalized.tier as PaidCanonicalTier;
+-    const billingInterval = interval as BillingInterval;
+-
+-    if (checkoutTier !== "pro" && checkoutTier !== "creator") {
+-      throw new AppError({
+-        status: 400,
+-        code: "bad_request",
+-        message: "Checkout supports pro and creator subscriptions.",
+-        details: { reason: "unsupported_billing_tier", warnings: normalized.warnings },
+-      });
+-    }
+-
+-    assertStripeConfigured();
+-
+-    const priceId = getStripePriceId(checkoutTier, billingInterval);
+-    if (!priceId) {
+-      throw new AppError({
+-        status: 503,
+-        code: "external_service_error",
+-        message: `Stripe price id is missing for ${checkoutTier} ${billingInterval}.`,
+-        details: { reason: "stripe_price_not_configured", warnings: normalized.warnings },
+-        expose: true,
+-      });
+-    }
+-
+-    const safeOrigin = getSafeFrontendOrigin();
+-    const successUrl = new URL("/settings?checkout=success", safeOrigin).toString();
+-    const cancelUrl = new URL("/settings?checkout=cancelled", safeOrigin).toString();
+-
+-    const session = await createCheckoutSession({
+-      profileId: req.user!.id,
+-      email: req.user!.email ?? "",
+-      priceId,
+-      successUrl,
+-      cancelUrl,
+-    }).catch((err) => {
+-      console.error("[billing] checkout failed", err);
+-      throw new AppError({
+-        status: 500,
+-        code: "internal_server_error",
+-        message: err instanceof Error ? err.message : "checkout_failed",
+-        cause: err,
+-      });
+-    });
+-
+-    return res.json(apiOkFlat(req, { url: session.url, warnings: normalized.warnings }));
+-  }),
++  validate({ body: BillingCheckoutSchema }),
++  asyncHandler(async (req: AuthedRequestWithContext, res: Response) =>
++    sendV3BillingCheckoutResponse(req, res)),
+ );
+ 
+ billingRoutes.post(
+   "/portal",
+   requireAuth,
+-  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+-    assertStripeConfigured();
+-
+-    const safeOrigin = getSafeFrontendOrigin();
+-    const returnUrl = new URL("/settings", safeOrigin).toString();
+-
+-    const session = await createPortalSession({
+-      profileId: req.user!.id,
+-      email: req.user!.email ?? "",
+-      returnUrl,
+-    }).catch((err: unknown) => {
+-      console.error("[billing] portal failed", err);
+-      if (err instanceof Error && err.message === "billing_portal_not_configured") {
+-        throw new AppError({
+-          status: 503,
+-          code: "external_service_error",
+-          message:
+-            "The Stripe Billing Portal is not configured. " +
+-            "Go to dashboard.stripe.com → Settings → Billing → Customer portal and activate it.",
+-          details: { reason: "portal_not_configured" },
+-          expose: true,
+-        });
+-      }
+-      throw new AppError({
+-        status: 400,
+-        code: "bad_request",
+-        message: err instanceof Error ? err.message : "billing_portal_failed",
+-        cause: err,
+-      });
+-    });
+-
+-    return res.json(apiOkFlat(req, { url: session.url }));
+-  }),
++  asyncHandler(async (req: AuthedRequestWithContext, res: Response) =>
++    sendV3BillingPortalResponse(req, res)),
+ );
+ 
+-const billingStatusHandler = asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+-  const { data: sub, error } = await supabaseAdmin
+-    .from("subscriptions")
+-    .select(
+-      "tier, status, current_period_start, current_period_end, cancel_at_period_end, stripe_price_id"
+-    )
+-    .eq("profile_id", req.user!.id)
+-    .order("current_period_end", { ascending: false })
+-    .limit(1)
+-    .maybeSingle();
+-
+-  if (error) {
+-    console.error("[billing] status lookup failed", error);
+-    throw new AppError({
+-      status: 500,
+-      code: "internal_server_error",
+-      message: "Billing status unavailable.",
+-      details: { reason: "billing_status_failed", code: error.code },
+-      cause: error,
+-    });
+-  }
+-
+-  const profileTier = req.user!.profile.tier;
+-  const entitlements = getTierEntitlements(profileTier);
+-  const normalized = normalizeSubscriptionTier(profileTier);
+-
+-  return res.json(apiOkFlat(req, {
+-    tier: entitlements.tier,
+-    legacyTier: normalized.sourceTier !== entitlements.tier ? normalized.sourceTier : null,
+-    monthlyCustomizationPoints: entitlements.monthlyCustomizationPoints,
+-    canUseProGraphs: entitlements.canUseProGraphs,
+-    canUseTeamMatchupLab: entitlements.canUseTeamMatchupLab,
+-    canUsePlayerEdgeLab: entitlements.canUsePlayerEdgeLab,
+-    canAccessNotifications: entitlements.canAccessNotifications,
+-    status: sub?.status ?? (profileTier === "free" ? "free" : "active"),
+-    currentPeriodStart: sub?.current_period_start ?? null,
+-    currentPeriodEnd: sub?.current_period_end ?? null,
+-    cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
+-    subscription: sub ?? null,
+-    prices: getStripePriceMatrix(),
+-    warnings: entitlements.warnings,
+-  }));
+-});
++billingRoutes.get(
++  "/status",
++  requireAuth,
++  asyncHandler(async (req: AuthedRequestWithContext, res: Response) =>
++    sendV3BillingStatusResponse(req, res)),
++);
+ 
+-billingRoutes.get("/status", requireAuth, billingStatusHandler);
+-billingRoutes.get("/subscription", requireAuth, billingStatusHandler);
++billingRoutes.get(
++  "/subscription",
++  requireAuth,
++  asyncHandler(async (req: AuthedRequestWithContext, res: Response) =>
++    sendV3BillingStatusResponse(req, res)),
++);
+ 
+ billingRoutes.post(
+   "/webhook",
+   webhookLimiter,
+-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+-    if (!isStripeConfigured()) {
+-      throw new AppError({
+-        status: 503,
+-        code: "external_service_error",
+-        message: "Stripe is not configured.",
+-        details: { reason: "stripe_not_configured" },
+-        expose: true,
+-      });
+-    }
+-
+-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+-    if (!webhookSecret) {
+-      console.error("[stripe] webhook secret is not configured");
+-      throw new AppError({
+-        status: 503,
+-        code: "external_service_error",
+-        message: "Webhook secret is not configured.",
+-        details: { reason: "webhook_secret_not_configured" },
+-        expose: true,
+-      });
+-    }
+-
+-    const signature = req.headers["stripe-signature"];
+-    if (!signature) {
+-      throw new AppError({
+-        status: 400,
+-        code: "bad_request",
+-        message: "Missing Stripe signature header.",
+-        details: { reason: "missing_signature" },
+-      });
+-    }
+-
+-    let event: Stripe.Event;
+-    try {
+-      event = getStripe().webhooks.constructEvent(
+-        req.body as unknown as string | Buffer,
+-        signature,
+-        webhookSecret,
+-      );
+-    } catch (err) {
+-      console.error("[stripe] webhook signature verification failed", err);
+-      throw new AppError({
+-        status: 400,
+-        code: "bad_request",
+-        message: "Invalid Stripe webhook signature.",
+-        details: { reason: "invalid_signature" },
+-        cause: err,
+-      });
+-    }
+-
+-    const idempotency = await beginStripeWebhookEvent(event);
+-    if (!idempotency.shouldProcess) {
+-      return res.json({
+-        ok: true,
+-        received: true,
+-        duplicate: true,
+-        status: idempotency.status,
+-      });
+-    }
+-
+-    try {
+-      switch (event.type) {
+-        case "checkout.session.completed": {
+-          const session = event.data.object as Stripe.Checkout.Session;
+-          const subscriptionId =
+-            typeof session.subscription === "string"
+-              ? session.subscription
+-              : session.subscription?.id;
+-          if (subscriptionId) {
+-            const sub = await getStripe().subscriptions.retrieve(subscriptionId);
+-            await syncSubscription(sub);
+-          }
+-          break;
+-        }
+-        case "customer.subscription.created":
+-        case "customer.subscription.updated": {
+-          const sub = event.data.object as Stripe.Subscription;
+-          await syncSubscription(sub);
+-          break;
+-        }
+-        case "customer.subscription.deleted": {
+-          const sub = event.data.object as Stripe.Subscription;
+-          await syncSubscription(sub);
+-          await supabaseAdmin
+-            .from("subscriptions")
+-            .update({ status: "canceled" })
+-            .eq("stripe_subscription_id", sub.id);
+-          await supabaseAdmin
+-            .from("profiles")
+-            .update({ tier: "free", stripe_subscription_id: null })
+-            .eq("stripe_subscription_id", sub.id);
+-          break;
+-        }
+-        case "invoice.payment_failed": {
+-          const invoice = event.data.object as Stripe.Invoice;
+-          const subId = (invoice as { subscription?: string | null }).subscription;
+-          // ALERT: a customer's renewal payment failed (dunning). syncSubscription
+-          // moves them to past_due (which downgrades access), but the owner needs
+-          // a loud, actionable signal — this is a business event, not routine.
+-          structuredLog({
+-            level: "error",
+-            event: "stripe.payment_failed",
+-            message: `Payment failed for customer ${invoice.customer} (invoice ${invoice.id})` +
+-              ` — subscription ${subId ?? "unknown"} moving to past_due.`,
+-          });
+-          if (subId) {
+-            const sub = await getStripe().subscriptions.retrieve(subId);
+-            await syncSubscription(sub);
+-          }
+-          break;
+-        }
+-        case "charge.refunded":
+-        case "charge.dispute.created": {
+-          // A refunded/charged-back customer must NOT keep paid access. Revoke
+-          // on a FULL refund or any dispute (partial refunds are left alone).
+-          const resolveCustomerId = (c: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined): string | null =>
+-            typeof c === "string" ? c : c?.id ?? null;
+-
+-          let customerId: string | null = null;
+-          let isFullRefund = true; // a dispute always revokes; refunds check below
+-
+-          if (event.type === "charge.refunded") {
+-            const charge = event.data.object as Stripe.Charge;
+-            isFullRefund = charge.amount_refunded >= charge.amount;
+-            customerId = resolveCustomerId(charge.customer);
+-          } else {
+-            // Stripe.Dispute has NO top-level customer field — resolve it via
+-            // the disputed charge (expanded object or a charge id we retrieve).
+-            const dispute = event.data.object as Stripe.Dispute;
+-            const chargeRef = dispute.charge;
+-            if (typeof chargeRef === "string") {
+-              const charge = await getStripe().charges.retrieve(chargeRef);
+-              customerId = resolveCustomerId(charge.customer);
+-            } else {
+-              customerId = resolveCustomerId(chargeRef?.customer);
+-            }
+-          }
+-
+-          if (customerId && isFullRefund) {
+-            structuredLog({
+-              level: "warn",
+-              event: "stripe.access_revoked",
+-              message: `${event.type} for customer ${customerId} — revoking paid access (tier -> free).`,
+-            });
+-            await supabaseAdmin
+-              .from("subscriptions")
+-              .update({ status: "canceled" })
+-              .eq("stripe_customer_id", customerId);
+-            await supabaseAdmin
+-              .from("profiles")
+-              .update({ tier: "free", stripe_subscription_id: null })
+-              .eq("stripe_customer_id", customerId);
+-          } else {
+-            structuredLog({
+-              level: "info",
+-              event: "stripe.refund_partial_or_no_customer",
+-              message: `${event.type} not revoked (fullRefund=${isFullRefund}, customer=${customerId ?? "none"}).`,
+-            });
+-          }
+-          break;
+-        }
+-        default:
+-          structuredLog({
+-            level: "info",
+-            event: "stripe.webhook.unhandled",
+-            message: event.type,
+-          });
+-      }
+-
+-      await finishStripeWebhookEvent(event.id, "processed");
+-      return res.json({ ok: true, received: true });
+-    } catch (err: unknown) {
+-      await finishStripeWebhookEvent(
+-        event.id,
+-        "failed",
+-        err instanceof Error ? err.message : "webhook_handler_failed",
+-      );
+-      console.error("[stripe] webhook handler error", err);
+-      throw new AppError({
+-        status: 500,
+-        code: "internal_server_error",
+-        message: "Webhook handler failed.",
+-        details: { reason: "webhook_handler_failed" },
+-        cause: err,
+-      });
+-    }
+-  }),
++  asyncHandler(async (req: AuthedRequest, res: Response) =>
++    sendV3BillingWebhookResponse(req, res)),
+ );
+diff --git a/server/routes/index.ts b/server/routes/index.ts
+index ae360fdd..0e9c6661 100755
+--- a/server/routes/index.ts
++++ b/server/routes/index.ts
+@@ -36,6 +36,7 @@ import { authLimiter, generationLimiter } from "../middleware/rateLimit";
+ import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
+ import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
+ import { getBackendHealthReport } from "../services/health/backendHealthService";
++import { getLegacyRouteMetricsSnapshot } from "../lib/observability/legacyRouteMetrics";
+ import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
+ import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
+ import { getSupabaseAdmin } from "../middleware/auth";
+@@ -184,12 +185,14 @@ export function registerApiRoutes(app: Express): void {
+   app.get("/api/health/metrics", requireAuth, requireStaff, (req: RequestWithContext, res: Response) => {
+     const metrics = getRouteMetricsSnapshot();
+     const parlayGrade = getParlayGradeMetricsSnapshot();
++    const legacyRoutes = getLegacyRouteMetricsSnapshot();
+     res.json(apiOkFlat(req, {
+       service: "vouchedge-backend",
+       schema: "route_metrics_v2",
+       updatedAt: new Date().toISOString(),
+       metrics,
+       parlayGrade,
++      legacyRoutes,
+     }));
+   });
+ 
+diff --git a/server/routes/parlay/parlayUserRoutes.ts b/server/routes/parlay/parlayUserRoutes.ts
+index 5f3dded3..f2bb5b7e 100644
+--- a/server/routes/parlay/parlayUserRoutes.ts
++++ b/server/routes/parlay/parlayUserRoutes.ts
+@@ -1,363 +1,35 @@
+ import { Router } from "express";
+-import type { Request, Response } from "express";
+-import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../../middleware/auth";
+-import { requireTierOrQuota, incrementQuota } from "../../middleware/entitlements";
+-import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
++import { requireAuth, requireLegalConfirmed } from "../../middleware/auth";
+ import { validate } from "../../middleware/validation";
+-import { asyncHandler } from "../../lib/asyncHandler";
+-import { apiOkFlat } from "../../lib/apiResponse";
+-import { AppError } from "../../errors/AppError";
+-import type { RequestWithContext } from "../../middleware/requestContext";
+-import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
+-import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../../services/grading/sportGraders";
+-import {
+-  beginParlayGradeObservability,
+-  graderDataSourcesForSports,
+-  logParlayGradeFailed,
+-  logParlayGradeSucceeded,
+-  validateParlayGradeBody,
+-  type ParlayGradeRequest,
+-} from "../../services/grading/parlayGradeObservability";
+-import { getFeedComposerOptions } from "../../services/feed/composerOptionsService";
+ import {
+   getParlayHandler,
+-  getParlayAuditHandler,
+-  hideParlayHandler,
+-  listLegacyParlaysHandler,
+   listMyParlaysHandler,
+   commitParlayTrustHandler,
+   finalizeParlayTrustLockHandler,
+-  repairParlayIdentityHandler,
+   saveMeParlayHandler,
+-  tailParlayHandler,
+-  updateParlayHandler,
+ } from "../../controllers/parlayController";
+ import {
+   ListParlaysQuerySchema,
+   ParlayIdParamsSchema,
+-  GradeParlaySchema,
+-  type GradeParlayInput,
+   SaveMeParlaySchema,
+-  UpdateParlaySchema,
+ } from "../../validators/parlaySchemas";
+-import {
+-  AI_PARLAY_SOURCE,
+-  buildGeneratedAiParlays,
+-  enrichParlayRow,
+-  todayYmd,
+-  ymdFromValue,
+-} from "./parlayRouteHelpers";
+-
+-/** User-facing parlay routes — save, list, grade preview, dashboard widgets. */
+-export const parlayUserRoutes = Router();
+-
+-parlayUserRoutes.post(
+-  "/parlays/ai-generate",
+-  requireAuth,
+-  generationLimiter,
+-  requireTierOrQuota("gold", 2, "parlay_lab_saves"),
+-  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+-    const start = Date.now();
+-    const date = ymdFromValue(req.body?.date) ?? todayYmd();
+-    const options = await getFeedComposerOptions({ sport: "MLB", date }).catch((err) => {
+-      console.error("[parlays/ai-generate] failed", (err as Error)?.message);
+-      throw upstreamUnavailable("AI parlay generation unavailable.", err);
+-    });
+-    const result = buildGeneratedAiParlays(options);
+-    const q = (req as { __quota?: { key: string; day: string } }).__quota;
+-    if (q) {
+-      await incrementQuota(req.user!.id, q.key, q.day);
+-    }
+-    console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
+-    return res.json(apiOkFlat(req, {
+-      parlays: result.parlays,
+-      warnings: result.warnings,
+-      generatedAt: new Date().toISOString(),
+-      source: AI_PARLAY_SOURCE,
+-    }));
+-  }),
+-);
+-
+-parlayUserRoutes.post(
+-  "/parlays/grade",
+-  requireAuth,
+-  gradingLimiter,
+-  beginParlayGradeObservability,
+-  validateParlayGradeBody,
+-  asyncHandler(async (req: ParlayGradeRequest, res: Response) => {
+-    const startedAt = req.parlayGradeStartedAt ?? Date.now();
+-    const { legs, stakeUnits } = req.body as GradeParlayInput;
+-    const normalizedLegs = legs as GradableLeg[];
+-
+-    try {
+-      const gameCache = new Map<string, GameData | null>();
+-      let upstreamFetchMisses = 0;
+-
+-      for (const leg of normalizedLegs) {
+-        const key = `${leg.sport}:${leg.gamePk}`;
+-        if (!gameCache.has(key)) {
+-          const game = await getGrader(leg.sport).fetchGame(leg.gamePk);
+-          if (!game) upstreamFetchMisses += 1;
+-          gameCache.set(key, game);
+-        }
+-      }
+-
+-      const gradedLegs = normalizedLegs.map((leg) => {
+-        const key = `${leg.sport}:${leg.gamePk}`;
+-        const game = gameCache.get(key) ?? null;
+-        let outcome: LegOutcome;
+-        if (!game) {
+-          outcome = { status: "pending", note: "game data unavailable" };
+-        } else if (!game.final) {
+-          outcome = { status: "pending", note: "game not final" };
+-        } else {
+-          try {
+-            outcome = getGrader(leg.sport).evaluateLeg(leg, game);
+-          } catch (err) {
+-            logParlayGradeFailed(req, {
+-              status: 500,
+-              code: "grading_engine_error",
+-              message: "Leg evaluation failed during parlay grading.",
+-              failureStage: "grading_engine",
+-              cause: err,
+-            });
+-            outcome = { status: "error", note: "grading_engine_error" };
+-          }
+-        }
+-        return {
+-          sport: leg.sport,
+-          gamePk: leg.gamePk,
+-          market: leg.market,
+-          selection: leg.selection,
+-          oddsDecimal: leg.oddsDecimal ?? null,
+-          status: outcome.status,
+-          actual: outcome.actual ?? null,
+-          note: outcome.note ?? null,
+-        };
+-      });
+-
+-      const parlay = settleParlay(
+-        gradedLegs.map((leg) => ({
+-          outcome: { status: leg.status, actual: leg.actual ?? undefined },
+-          oddsDecimal: leg.oddsDecimal ?? undefined,
+-        })),
+-        stakeUnits,
+-      );
+-
+-      const wonLegCount = gradedLegs.filter((leg) => leg.status === "won").length;
+-      const lostLegCount = gradedLegs.filter((leg) => leg.status === "lost").length;
+-      const voidLegCount = gradedLegs.filter((leg) => leg.status === "push").length;
+-      const pendingLegCount = gradedLegs.filter((leg) => leg.status === "pending").length;
+-      const errorLegCount = gradedLegs.filter((leg) => leg.status === "error").length;
+-      const gradedLegCount = wonLegCount + lostLegCount + voidLegCount + errorLegCount;
+-
+-      logParlayGradeSucceeded(req, {
+-        legCount: gradedLegs.length,
+-        gradedLegCount,
+-        pendingLegCount,
+-        wonLegCount,
+-        lostLegCount,
+-        voidLegCount,
+-        errorLegCount,
+-        parlayStatus: parlay.status,
+-        dataSources: graderDataSourcesForSports(normalizedLegs.map((leg) => leg.sport)),
+-        warningCount: upstreamFetchMisses + errorLegCount,
+-      }, Date.now() - startedAt);
+-
+-      return res.json(apiOkFlat(req, {
+-        legs: gradedLegs,
+-        parlay,
+-        gradedAt: new Date().toISOString(),
+-      }));
+-    } catch (err) {
+-      logParlayGradeFailed(req, {
+-        status: 500,
+-        code: "internal_server_error",
+-        message: err instanceof Error ? err.message : "Parlay grading failed.",
+-        failureStage: "response_build",
+-        cause: err,
+-      });
+-      throw err;
+-    }
+-  }),
+-);
++import { mountParlaySupportRoutes } from "./mountParlaySupportRoutes";
++import { markLegacyParlayRoute } from "./legacyParlayRouteTelemetry";
+ 
+-parlayUserRoutes.post("/parlays", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {
+-  throw new AppError({
+-    status: 410,
+-    code: "gone",
+-    message: "Use POST /api/parlays/save for canonical parlay saves.",
+-    details: { legacy: "legacy_parlay_route_disabled" },
+-  });
+-}));
++/** User-facing parlay routes — canonical lifecycle plus shared support flows. */
++export const parlayUserRoutes = mountParlaySupportRoutes(Router());
+ 
+ parlayUserRoutes.get(
+   "/parlays/:id",
++  markLegacyParlayRoute("legacy.parlay.detail"),
+   requireAuth,
+   validate({ params: ParlayIdParamsSchema }),
+   getParlayHandler,
+ );
+ 
+-parlayUserRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+-  const supabaseAdmin = await getSupabaseAdmin();
+-
+-  const { data: picks, error } = await supabaseAdmin
+-    .from("picks")
+-    .select("id, status, leg_type, created_at")
+-    .eq("user_id", req.user!.id)
+-    .order("created_at", { ascending: false })
+-    .limit(250);
+-
+-  if (error) {
+-    console.error("[me/dashboard-summary] fetch failed", error);
+-    throw new AppError({
+-      status: 503,
+-      code: "external_service_error",
+-      message: "Dashboard summary unavailable.",
+-      details: { code: error.code, hint: error.hint },
+-      cause: error,
+-    });
+-  }
+-
+-  const rows = picks ?? [];
+-
+-  const summary = rows.reduce(
+-    (acc: any, pick: any) => {
+-      const status = String(pick.status ?? "pending").toLowerCase();
+-      acc.total += 1;
+-      acc[status] = (acc[status] ?? 0) + 1;
+-
+-      if (pick.leg_type === "parlay") acc.parlays += 1;
+-      else acc.singles += 1;
+-
+-      return acc;
+-    },
+-    {
+-      total: 0,
+-      pending: 0,
+-      won: 0,
+-      lost: 0,
+-      void: 0,
+-      push: 0,
+-      parlays: 0,
+-      singles: 0,
+-    },
+-  );
+-
+-  const graded = summary.won + summary.lost + summary.void + summary.push;
+-  const decisions = summary.won + summary.lost;
+-
+-  const winRate =
+-    decisions > 0 ? Number(((summary.won / decisions) * 100).toFixed(1)) : null;
+-
+-  const proofScore =
+-    graded > 0
+-      ? Math.min(100, Math.round((summary.won * 7 + summary.push * 2 + graded * 1.5)))
+-      : 0;
+-
+-  return res.json(apiOkFlat(req, {
+-    widgets: {
+-      savedPicks: summary.total,
+-      savedParlays: summary.parlays,
+-      pendingPicks: summary.pending,
+-      winRate,
+-      proofScore,
+-    },
+-    summary,
+-    recent: rows.slice(0, 8),
+-  }));
+-}));
+-
+-parlayUserRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+-  const limit = boundedInt(req.query.limit, "limit", 100, 1, 200);
+-  const offset = boundedInt(req.query.offset, "offset", 0, 0, 100000);
+-  const status = typeof req.query.status === "string" ? req.query.status.toLowerCase() : undefined;
+-
+-  const allowedStatuses = new Set(["pending", "won", "lost", "void", "push"]);
+-  const supabaseAdmin = await getSupabaseAdmin();
+-
+-  let query = supabaseAdmin
+-    .from("picks")
+-    .select("*", { count: "exact" })
+-    .eq("user_id", req.user!.id)
+-    .order("created_at", { ascending: false })
+-    .range(offset, offset + limit - 1);
+-
+-  if (status && allowedStatuses.has(status)) {
+-    query = query.eq("status", status);
+-  }
+-
+-  const { data: picks, count, error } = await query;
+-
+-  if (error) {
+-    console.error("[me/ledger] picks fetch failed", error);
+-    throw new AppError({
+-      status: 503,
+-      code: "external_service_error",
+-      message: "Ledger unavailable.",
+-      details: { code: error.code, hint: error.hint },
+-      cause: error,
+-    });
+-  }
+-
+-  const pickIds = (picks ?? []).map((pick: any) => pick.id);
+-
+-  let legsByPickId: Record<string, any[]> = {};
+-
+-  if (pickIds.length > 0) {
+-    const { data: legs, error: legsError } = await supabaseAdmin
+-      .from("pick_legs")
+-      .select("*")
+-      .in("pick_id", pickIds)
+-      .order("leg_index", { ascending: true });
+-
+-    if (legsError) {
+-      console.error("[me/ledger] legs fetch failed", legsError);
+-      throw new AppError({
+-        status: 503,
+-        code: "external_service_error",
+-        message: "Ledger legs unavailable.",
+-        details: { code: legsError.code, hint: legsError.hint },
+-        cause: legsError,
+-      });
+-    }
+-
+-    legsByPickId = (legs ?? []).reduce((acc: Record<string, any[]>, leg: any) => {
+-      const key = String(leg.pick_id);
+-      acc[key] = acc[key] ?? [];
+-      acc[key].push(leg);
+-      return acc;
+-    }, {});
+-  }
+-
+-  const ledger = (picks ?? []).map((pick: any) => ({
+-    ...enrichParlayRow(pick, legsByPickId[String(pick.id)] ?? []),
+-    is_parlay: pick.leg_type === "parlay",
+-  }));
+-
+-  const summary = ledger.reduce(
+-    (acc: any, pick: any) => {
+-      const normalizedStatus = String(pick.status ?? "pending").toLowerCase();
+-      acc.total += 1;
+-      acc[normalizedStatus] = (acc[normalizedStatus] ?? 0) + 1;
+-      if (pick.is_parlay) acc.parlays += 1;
+-      else acc.singles += 1;
+-      return acc;
+-    },
+-    { total: 0, pending: 0, won: 0, lost: 0, void: 0, push: 0, parlays: 0, singles: 0 },
+-  );
+-
+-  return res.json(apiOkFlat(req, {
+-    ledger,
+-    summary,
+-    total: count ?? 0,
+-    limit,
+-    offset,
+-  }));
+-}));
+-
+ parlayUserRoutes.get(
+   "/me/parlays",
++  markLegacyParlayRoute("legacy.parlay.list"),
+   requireAuth,
+   validate({ query: ListParlaysQuerySchema }),
+   listMyParlaysHandler,
+@@ -365,6 +37,7 @@ parlayUserRoutes.get(
+ 
+ parlayUserRoutes.post(
+   "/parlays/save",
++  markLegacyParlayRoute("legacy.parlay.save"),
+   requireAuth,
+   requireLegalConfirmed,
+   validate({ body: SaveMeParlaySchema }),
+@@ -373,6 +46,7 @@ parlayUserRoutes.post(
+ 
+ parlayUserRoutes.post(
+   "/parlays/:id/commit-trust",
++  markLegacyParlayRoute("legacy.parlay.commit_trust"),
+   requireAuth,
+   validate({ params: ParlayIdParamsSchema }),
+   commitParlayTrustHandler,
+@@ -380,49 +54,8 @@ parlayUserRoutes.post(
+ 
+ parlayUserRoutes.post(
+   "/parlays/:id/finalize-trust-lock",
++  markLegacyParlayRoute("legacy.parlay.finalize_trust_lock"),
+   requireAuth,
+   validate({ params: ParlayIdParamsSchema }),
+   finalizeParlayTrustLockHandler,
+ );
+-
+-parlayUserRoutes.get(
+-  "/parlays/:id/audit",
+-  requireAuth,
+-  validate({ params: ParlayIdParamsSchema }),
+-  getParlayAuditHandler,
+-);
+-
+-parlayUserRoutes.post(
+-  "/parlays/:id/repair-identity",
+-  requireAuth,
+-  validate({ params: ParlayIdParamsSchema }),
+-  repairParlayIdentityHandler,
+-);
+-
+-parlayUserRoutes.patch(
+-  "/parlays/:id",
+-  requireAuth,
+-  validate({ params: ParlayIdParamsSchema, body: UpdateParlaySchema }),
+-  updateParlayHandler,
+-);
+-
+-parlayUserRoutes.post(
+-  "/parlays/:id/tail",
+-  requireAuth,
+-  validate({ params: ParlayIdParamsSchema }),
+-  tailParlayHandler,
+-);
+-
+-parlayUserRoutes.delete(
+-  "/parlays/:id",
+-  requireAuth,
+-  validate({ params: ParlayIdParamsSchema }),
+-  hideParlayHandler,
+-);
+-
+-parlayUserRoutes.get(
+-  "/parlays",
+-  requireAuth,
+-  validate({ query: ListParlaysQuerySchema }),
+-  listLegacyParlaysHandler,
+-);
+diff --git a/server/routes/trustRoutes.ts b/server/routes/trustRoutes.ts
+index 473d0f16..d3930081 100755
+--- a/server/routes/trustRoutes.ts
++++ b/server/routes/trustRoutes.ts
+@@ -6,6 +6,7 @@ import { apiOkFlat } from "../lib/apiResponse";
+ import type { RequestWithContext } from "../middleware/requestContext";
+ import { getUserTrust, getCapperTrust } from "../services/trust/trustScoreService";
+ import { getVerifiedRecord } from "../services/trust/verifiedRecordService";
++import { sendV3CapperTrustResponse, sendV3UserTrustResponse } from "../v3/modules/trust/handlers";
+ 
+ function requirePathId(value: unknown, field: string): string {
+   const id = typeof value === "string" ? value.trim() : "";
+@@ -22,16 +23,10 @@ function requirePathId(value: unknown, field: string): string {
+ 
+ export function registerTrustRoutes(app: Express): void {
+   app.get("/api/trust/user/:userId", asyncHandler(async (req: RequestWithContext, res: Response) => {
+-    const userId = requirePathId(req.params.userId, "userId");
+-    return res.json(apiOkFlat(req, { trust: await getUserTrust(userId) }));
++    return sendV3UserTrustResponse(req, res);
+   }));
+ 
+   app.get("/api/trust/capper/:capperId", asyncHandler(async (req: RequestWithContext, res: Response) => {
+-    const capperId = requirePathId(req.params.capperId, "capperId");
+-    const [trust, verifiedRecord] = await Promise.all([
+-      getCapperTrust(capperId),
+-      getVerifiedRecord(capperId),
+-    ]);
+-    return res.json(apiOkFlat(req, { trust, verifiedRecord }));
++    return sendV3CapperTrustResponse(req, res);
+   }));
+ }
+diff --git a/server/services/hubs/hrBoardHub.ts b/server/services/hubs/hrBoardHub.ts
+index ca9b98e8..0f6fb66b 100644
+--- a/server/services/hubs/hrBoardHub.ts
++++ b/server/services/hubs/hrBoardHub.ts
+@@ -100,6 +100,14 @@ type ValidatedPlayerIndexEntry = {
+ 
+ const localValidatedPlayerIndex = new Map<string, ValidatedPlayerIndexEntry>();
+ 
++function validatedBoardGeneratedAt(board: ValidatedHrBoardSnapshot): string | null {
++  return typeof (board as any).updatedAt === "string"
++    ? (board as any).updatedAt
++    : typeof (board as any).generatedAt === "string"
++      ? (board as any).generatedAt
++      : null;
++}
++
+ function buildValidatedPlayerIndex(
+   key: string,
+   board: ValidatedHrBoardSnapshot,
+@@ -127,12 +135,7 @@ function buildValidatedPlayerIndex(
+     }
+   }
+ 
+-  const generatedAt =
+-    typeof (board as any).updatedAt === "string"
+-      ? (board as any).updatedAt
+-      : typeof (board as any).generatedAt === "string"
+-        ? (board as any).generatedAt
+-        : null;
++  const generatedAt = validatedBoardGeneratedAt(board);
+ 
+   localValidatedPlayerIndex.set(key, {
+     expiresAt,
+@@ -373,10 +376,7 @@ function scheduleProfileResearchPrewarm(
+       try {
+         await getMaterializedHrResearch({
+           candidate: candidate.candidate,
+-          generatedAt:
+-            typeof board.generatedAt === "string"
+-              ? board.generatedAt
+-              : null,
++          generatedAt: validatedBoardGeneratedAt(board),
+         });
+ 
+         return true;
+@@ -606,4 +606,3 @@ export async function getCachedDeepHrBoard(date?: string | null): Promise<DeepHr
+     localDeepHrBoardBuilds.delete(key);
+   }
+ }
+-
+diff --git a/server/services/parlays/parlayCreationService.ts b/server/services/parlays/parlayCreationService.ts
+index 1a880280..8eabed6a 100644
+--- a/server/services/parlays/parlayCreationService.ts
++++ b/server/services/parlays/parlayCreationService.ts
+@@ -25,6 +25,29 @@ export interface SaveUserParlayResult {
+   };
+ }
+ 
++export interface PreviewUserParlaySaveResult {
++  ok: true;
++  dryRun: true;
++  summary: {
++    title: string;
++    sport: string;
++    mode: "REAL" | "PRACTICE";
++    source: string;
++    selectionSummary: string;
++    combinedOdds: number | null;
++    stakeUnits: number;
++    confidence: number | null;
++    aiGenerated: boolean;
++    clientRef: string | null;
++    legCount: number;
++  };
++  canonical: {
++    parent: Record<string, unknown>;
++    legs: Array<Record<string, unknown>>;
++  };
++  warnings: string[];
++}
++
+ function isMissingColumnError(error: unknown): boolean {
+   return MISSING_COLUMN_CODES.has(String((error as { code?: unknown })?.code ?? ""));
+ }
+@@ -101,6 +124,155 @@ function buildResponse(input: {
+   };
+ }
+ 
++function normalizeSaveUserParlayInput(input: {
++  userId: string;
++  body: SaveMeParlayInput;
++}): {
++  title: string;
++  explanation: string;
++  mode: "REAL" | "PRACTICE";
++  wagerAmount: number;
++  aiGenerated: boolean;
++  source: string;
++  clientRef: string | null;
++  combinedOdds: number | null;
++  selectionSummary: string;
++  parentEventId: string;
++  sport: string;
++  confidence: number | null;
++  legCount: number;
++  legsJson: Array<Record<string, unknown>>;
++  parent: Record<string, unknown>;
++} {
++  const body = input.body as SaveMeParlayInput & Record<string, any>;
++  const rawLegs = body.legs as Record<string, any>[];
++  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
++  const explanation = typeof body.explanation === "string" && body.explanation.trim()
++    ? body.explanation.trim().slice(0, 2000)
++    : title;
++  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
++  const wagerAmount =
++    typeof body.wagerAmount === "number" && body.wagerAmount > 0
++      ? body.wagerAmount
++      : typeof body.stake_units === "number" && body.stake_units > 0
++        ? body.stake_units
++        : 1.0;
++  const aiGenerated = body.aiGenerated === true;
++  const source = normalizeSource(body.source, aiGenerated);
++  const clientRef =
++    typeof body.clientRef === "string" && body.clientRef
++      ? body.clientRef.slice(0, 128)
++      : typeof body.client_ref === "string" && body.client_ref
++        ? body.client_ref.slice(0, 128)
++        : typeof body.id === "string" && body.id
++          ? body.id.slice(0, 128)
++          : null;
++
++  const legOdds = rawLegs.map((leg) => legOddsToDecimalOrNull(leg));
++  const allLegsPriced = legOdds.length > 0 && legOdds.every((odds) => odds !== null);
++  const combinedOdds = allLegsPriced
++    ? Number((legOdds as number[]).reduce((product, odds) => product * odds, 1).toFixed(3))
++    : null;
++
++  const selectionSummary = rawLegs
++    .map((leg) => String(leg.selection || leg.market || "").slice(0, 60))
++    .filter(Boolean)
++    .join(" | ")
++    .slice(0, 500);
++
++  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
++  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
++  const confidence =
++    typeof body.edgeScore === "number"
++      ? body.edgeScore
++      : typeof body.confidence === "number"
++        ? body.confidence
++        : null;
++  const legsJson = rawLegs.map((leg, index) => buildLegIdentity({
++    leg,
++    index,
++    sport,
++    oddsDecimal: legOdds[index],
++  }));
++
++  const parent = {
++    user_id: input.userId,
++    capper_id: null,
++    leg_type: "parlay" as const,
++    sport,
++    event_id: parentEventId,
++    market: `${rawLegs.length}-leg parlay`,
++    selection: selectionSummary || title,
++    odds_decimal: combinedOdds,
++    stake_units: wagerAmount,
++    confidence,
++    explanation,
++    is_demo: mode === "PRACTICE",
++    status: "pending",
++    source,
++    client_ref: clientRef,
++  };
++
++  return {
++    title,
++    explanation,
++    mode,
++    wagerAmount,
++    aiGenerated,
++    source,
++    clientRef,
++    combinedOdds,
++    selectionSummary,
++    parentEventId,
++    sport,
++    confidence,
++    legCount: rawLegs.length,
++    legsJson,
++    parent,
++  };
++}
++
++export async function previewUserParlaySave(input: {
++  userId: string;
++  body: SaveMeParlayInput;
++}): Promise<PreviewUserParlaySaveResult> {
++  const normalized = normalizeSaveUserParlayInput(input);
++  const warnings: string[] = [];
++
++  if (!normalized.combinedOdds) {
++    warnings.push("Combined odds could not be fully computed from the provided leg prices.");
++  }
++  if (!normalized.clientRef) {
++    warnings.push("No clientRef provided; dedupe protection will rely on a fresh save path.");
++  }
++  if (normalized.parent.event_id === "manual") {
++    warnings.push("Parent event_id resolved to manual; verify canonical game identity before live save.");
++  }
++
++  return {
++    ok: true,
++    dryRun: true,
++    summary: {
++      title: normalized.title,
++      sport: normalized.sport,
++      mode: normalized.mode,
++      source: normalized.source,
++      selectionSummary: normalized.selectionSummary || normalized.title,
++      combinedOdds: normalized.combinedOdds,
++      stakeUnits: normalized.wagerAmount,
++      confidence: normalized.confidence,
++      aiGenerated: normalized.aiGenerated,
++      clientRef: normalized.clientRef,
++      legCount: normalized.legCount,
++    },
++    canonical: {
++      parent: normalized.parent,
++      legs: normalized.legsJson,
++    },
++    warnings,
++  };
++}
++
+ function buildLegIdentity(input: {
+   leg: Record<string, any>;
+   index: number;
+@@ -182,56 +354,24 @@ export async function saveUserParlay(input: {
+   userId: string;
+   body: SaveMeParlayInput;
+ }): Promise<SaveUserParlayResult> {
+-  const body = input.body as SaveMeParlayInput & Record<string, any>;
+-  const rawLegs = body.legs as Record<string, any>[];
+-  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
+-  const explanation = typeof body.explanation === "string" && body.explanation.trim()
+-    ? body.explanation.trim().slice(0, 2000)
+-    : title;
+-  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
+-  const wagerAmount =
+-    typeof body.wagerAmount === "number" && body.wagerAmount > 0
+-      ? body.wagerAmount
+-      : typeof body.stake_units === "number" && body.stake_units > 0
+-        ? body.stake_units
+-        : 1.0;
+-  const aiGenerated = body.aiGenerated === true;
+-  const source = normalizeSource(body.source, aiGenerated);
+-  const clientRef =
+-    typeof body.clientRef === "string" && body.clientRef
+-      ? body.clientRef.slice(0, 128)
+-      : typeof body.client_ref === "string" && body.client_ref
+-        ? body.client_ref.slice(0, 128)
+-        : typeof body.id === "string" && body.id
+-          ? body.id.slice(0, 128)
+-          : null;
+-
+-  const legOdds = rawLegs.map((leg) => legOddsToDecimalOrNull(leg));
+-  const allLegsPriced = legOdds.length > 0 && legOdds.every((odds) => odds !== null);
+-  const combinedOdds = allLegsPriced
+-    ? Number((legOdds as number[]).reduce((product, odds) => product * odds, 1).toFixed(3))
+-    : null;
+-
+-  const selectionSummary = rawLegs
+-    .map((leg) => String(leg.selection || leg.market || "").slice(0, 60))
+-    .filter(Boolean)
+-    .join(" | ")
+-    .slice(0, 500);
+-
+-  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
+-  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
+-  const confidence =
+-    typeof body.edgeScore === "number"
+-      ? body.edgeScore
+-      : typeof body.confidence === "number"
+-        ? body.confidence
+-        : null;
+-  const legsJson = rawLegs.map((leg, index) => buildLegIdentity({
+-    leg,
+-    index,
++  const normalized = normalizeSaveUserParlayInput(input);
++  const {
++    title,
++    explanation,
++    mode,
++    wagerAmount,
++    aiGenerated,
++    source,
++    clientRef,
++    combinedOdds,
++    selectionSummary,
++    parentEventId,
+     sport,
+-    oddsDecimal: legOdds[index],
+-  }));
++    confidence,
++    legCount,
++    legsJson,
++    parent,
++  } = normalized;
+ 
+   if (clientRef) {
+     try {
+@@ -260,7 +400,7 @@ export async function saveUserParlay(input: {
+       p_user_id: input.userId,
+       p_sport: sport,
+       p_event_id: parentEventId,
+-      p_market: `${rawLegs.length}-leg parlay`,
++      p_market: `${legCount}-leg parlay`,
+       p_selection: selectionSummary || title,
+       p_odds_decimal: combinedOdds,
+       p_stake_units: wagerAmount,
+@@ -294,24 +434,6 @@ export async function saveUserParlay(input: {
+ 
+   let parlay: ParlayRow | null = null;
+   try {
+-    const parent = {
+-      user_id: input.userId,
+-      capper_id: null,
+-      leg_type: "parlay" as const,
+-      sport,
+-      event_id: parentEventId,
+-      market: `${rawLegs.length}-leg parlay`,
+-      selection: selectionSummary || title,
+-      odds_decimal: combinedOdds,
+-      stake_units: wagerAmount,
+-      confidence,
+-      explanation,
+-      is_demo: mode === "PRACTICE",
+-      status: "pending",
+-      source,
+-      client_ref: clientRef,
+-    };
+-
+     try {
+       parlay = await insertParlayParent(parent);
+     } catch (error) {
+diff --git a/server/services/persistence/pickService.ts b/server/services/persistence/pickService.ts
+index eed77e60..88f494ef 100755
+--- a/server/services/persistence/pickService.ts
++++ b/server/services/persistence/pickService.ts
+@@ -149,7 +149,7 @@ export async function getLedger(opts: {
+  * Recompute trust_score, total_picks, won_picks, etc. for the author of a
+  * pick after it has been graded. Updates both public.profiles and public.trust_scores.
+  */
+-async function recomputeTrustForPick(pickId: string): Promise<void> {
++export async function recomputeTrustForPick(pickId: string): Promise<void> {
+   const supabaseAdmin = await getSupabaseAdmin();
+   // 1. Look up the pick to find the author
+   const { data: pick } = await supabaseAdmin
+@@ -233,3 +233,60 @@ async function recomputeTrustForPick(pickId: string): Promise<void> {
+       .eq("id", subjectId);
+   }
+ }
++
++export async function recomputeTrustForRecentPicks(options: {
++  hours?: number;
++  limit?: number;
++  dryRun?: boolean;
++} = {}): Promise<{
++  dryRun: boolean;
++  scanned: number;
++  uniqueSubjects: number;
++  recomputed: number;
++}> {
++  const supabaseAdmin = await getSupabaseAdmin();
++  const hours = Math.min(Math.max(Number(options.hours ?? 72), 1), 24 * 30);
++  const limit = Math.min(Math.max(Number(options.limit ?? 100), 1), 500);
++  const dryRun = options.dryRun ?? false;
++  const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
++
++  const { data, error } = await supabaseAdmin
++    .from("picks")
++    .select("id, user_id, capper_id, sport, graded_at")
++    .in("status", ["won", "lost", "push", "void"])
++    .not("graded_at", "is", null)
++    .gte("graded_at", since)
++    .order("graded_at", { ascending: false })
++    .limit(limit);
++
++  if (error) throw error;
++
++  const rows = data ?? [];
++  const seen = new Set<string>();
++  const pickIds: string[] = [];
++
++  for (const row of rows) {
++    const subjectType = row.user_id ? "user" : row.capper_id ? "capper" : null;
++    const subjectId = row.user_id ?? row.capper_id ?? null;
++    const scope = String(row.sport ?? "overall");
++    if (!subjectType || !subjectId) continue;
++
++    const key = `${subjectType}:${subjectId}:${scope}`;
++    if (seen.has(key)) continue;
++    seen.add(key);
++    pickIds.push(String(row.id));
++  }
++
++  if (!dryRun) {
++    for (const pickId of pickIds) {
++      await recomputeTrustForPick(pickId);
++    }
++  }
++
++  return {
++    dryRun,
++    scanned: rows.length,
++    uniqueSubjects: seen.size,
++    recomputed: dryRun ? 0 : pickIds.length,
++  };
++}

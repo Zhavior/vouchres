@@ -1,11 +1,6 @@
+import React from 'react';
 import { ProductEvents } from "../../lib/productEvents";
 import { Bell, Info, Trash2, Trophy, X } from 'lucide-react';
-
-import {
-  clearNotifications,
-  markAllRead,
-  type AppNotification,
-} from '../../lib/appNotifications';
 import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
 import {
   Z8_DISPLAY,
@@ -27,12 +22,12 @@ type NotificationsPageProps = {
 const iconMap = {
   info: Info,
   success: Trophy,
-} satisfies Partial<Record<AppNotification['kind'], typeof Info>>;
+} satisfies Record<string, typeof Info>;
 
 const toneMap = {
   info: 'info',
   success: 'success',
-} satisfies Partial<Record<AppNotification['kind'], 'neutral' | 'info' | 'success' | 'warning' | 'danger'>>;
+} satisfies Record<string, 'neutral' | 'info' | 'success' | 'warning' | 'danger'>;
 
 function timeAgo(iso: string): string {
   const timestamp = new Date(iso).getTime();
@@ -52,18 +47,17 @@ function timeAgo(iso: string): string {
 }
 
 export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
-  const { data: list = [] } = useAppNotifications();
+  const { data: list = [], unreadCount, markAllRead, clearLocal } = useAppNotifications();
 
-  const unread = list.filter((notification) => !notification.read).length;
-
-  markAllRead();
+  React.useEffect(() => {
+    void markAllRead();
+  }, [markAllRead]);
 
   const handleClear = () => {
-    clearNotifications();
-    window.location.reload();
+    void clearLocal();
   };
 
-  const renderNotification = (notification: AppNotification) => {
+  const renderNotification = (notification: (typeof list)[number]) => {
     const Icon = iconMap[notification.kind] ?? Info;
 
     return (
@@ -108,7 +102,11 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <VEBadge tone={toneMap[notification.kind] ?? 'neutral'}>{notification.kind}</VEBadge>
+              <VEBadge tone={toneMap[notification.kind] ?? 'neutral'}>{notification.typeLabel}</VEBadge>
+
+              <VEBadge tone={notification.source === 'server' ? 'success' : 'neutral'}>
+                {notification.source === 'server' ? 'SocialOS' : 'Local'}
+              </VEBadge>
 
               {notification.section && (
                 <span className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
@@ -145,9 +143,9 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`${Z8_STAT_CHIP} ${unread > 0 ? 'border-vouch-amber/30 text-vouch-amber' : ''}`}>
+            <span className={`${Z8_STAT_CHIP} ${unreadCount > 0 ? 'border-vouch-amber/30 text-vouch-amber' : ''}`}>
               <span className={`${Z8_LABEL} block text-white/40`}>Unread</span>
-              <span className="z8-tabular-nums text-lg font-bold text-white">{unread}</span>
+              <span className="z8-tabular-nums text-lg font-bold text-white">{unreadCount}</span>
             </span>
 
             {list.length > 0 && (
@@ -158,7 +156,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
                 leftIcon={<Trash2 className="h-4 w-4" />}
                 onClick={handleClear}
               >
-                Clear all
+                Clear local
               </VEButton>
             )}
           </div>

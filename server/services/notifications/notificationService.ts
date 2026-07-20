@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import type { HrEvent } from "../mlb/hrFeedService";
+import { getTodayHomeRuns } from "../mlb/hrFeedService";
 
 export type NotificationType =
   | "HOME_RUN"
@@ -44,6 +45,11 @@ export interface NotificationListResult {
   warnings: string[];
 }
 
+export interface NotificationListOptions {
+  limit?: number;
+  includeLiveHomeRuns?: boolean;
+}
+
 export interface PushSubscriptionInput {
   endpoint: string;
   keys: {
@@ -51,6 +57,12 @@ export interface PushSubscriptionInput {
     auth: string;
   };
 }
+
+type StoredPushSubscriptionRow = {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
 
 const DEFAULT_PREFS: NotificationPrefs = {
   in_app_enabled: true,
@@ -69,6 +81,40 @@ function missingTable(error: any): boolean {
 
 function pushConfigured(): boolean {
   return Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT);
+}
+
+let webPushModulePromise: Promise<any> | null = null;
+
+async function getWebPushModule() {
+  if (!webPushModulePromise) {
+    webPushModulePromise = import("web-push").then((mod) => {
+      const webPush = mod.default ?? mod;
+      webPush.setVapidDetails(
+        process.env.VAPID_SUBJECT!,
+        process.env.VAPID_PUBLIC_KEY!,
+        process.env.VAPID_PRIVATE_KEY!,
+      );
+      return webPush;
+    });
+  }
+  return webPushModulePromise;
+}
+
+export function getPublicVapidKey(): string | null {
+  return process.env.VAPID_PUBLIC_KEY ?? null;
+}
+
+function notificationUrl(type: NotificationType, metadata: Record<string, unknown>): string {
+  if (type === "HOME_RUN" && metadata.playerId) {
+    return `/hr-board?hrPlayer=${encodeURIComponent(String(metadata.playerId))}`;
+  }
+  if (type === "PARLAY_GRADED" || type === "PARLAY_TAILED") {
+    return "/notifications";
+  }
+  if (type === "NEW_FOLLOWER" || type === "FOLLOWED_POST") {
+    return "/following";
+  }
+  return "/notifications";
 }
 
 function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean {
@@ -115,6 +161,7 @@ async function getRecipientUserIds(explicitUserIds?: string[]): Promise<{ userId
 
 async function maybeSendPush(args: {
   userId: string;
+  type: NotificationType;
   title: string;
   message: string;
   metadata: Record<string, unknown>;
@@ -126,10 +173,68 @@ async function maybeSendPush(args: {
   if (!pushConfigured()) {
     return { sent: 0, skipped: 1, warnings: ["push skipped: VAPID/web push env vars are not configured"] };
   }
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth")
+      .eq("user_id", args.userId);
 
-  // Web Push dispatch is intentionally a no-op until a web-push provider is
-  // installed/configured. In-app persistence remains the source of truth.
-  return { sent: 0, skipped: 1, warnings: ["push skipped: web push sender is not configured in this deployment"] };
+    if (error) {
+      if (missingTable(error)) {
+        return { sent: 0, skipped: 1, warnings: [`push skipped: push_subscriptions table missing: ${error.message}`] };
+      }
+      return { sent: 0, skipped: 1, warnings: [`push subscription lookup failed: ${error.message}`] };
+    }
+
+    const subscriptions = (data ?? []) as StoredPushSubscriptionRow[];
+    if (subscriptions.length === 0) {
+      return { sent: 0, skipped: 1, warnings: ["push skipped: no active push subscriptions for user"] };
+    }
+
+    const webPush = await getWebPushModule();
+    const payload = JSON.stringify({
+      title: args.title,
+      message: args.message,
+      metadata: args.metadata,
+      url: notificationUrl(args.type, args.metadata),
+    });
+
+    let sent = 0;
+    let skipped = 0;
+    const warnings: string[] = [];
+
+    for (const subscription of subscriptions) {
+      try {
+        await webPush.sendNotification(
+          {
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.p256dh,
+              auth: subscription.auth,
+            },
+          },
+          payload,
+        );
+        sent += 1;
+      } catch (error: any) {
+        skipped += 1;
+        const statusCode = Number(error?.statusCode ?? 0);
+        warnings.push(`push send failed (${statusCode || "unknown"}): ${error?.message ?? "unknown error"}`);
+        if (statusCode === 404 || statusCode === 410) {
+          await supabaseAdmin
+            .from("push_subscriptions")
+            .delete()
+            .eq("user_id", args.userId)
+            .eq("endpoint", subscription.endpoint);
+        }
+      }
+    }
+
+    return { sent, skipped, warnings: [...new Set(warnings)] };
+  } catch (error: any) {
+    return { sent: 0, skipped: 1, warnings: [`push sender failed: ${error?.message ?? "unknown error"}`] };
+  }
 }
 
 export async function createNotification(args: {
@@ -174,6 +279,7 @@ export async function createNotification(args: {
 
   const push = await maybeSendPush({
     userId: args.userId,
+    type: args.type,
     title: args.title,
     message: args.message,
     metadata: args.metadata,
@@ -257,6 +363,16 @@ export async function processHomeRunEvents(
   }
   console.log(`[notifications] HR events scanned=${events.length} created=${created} duplicates=${duplicates}`);
   return { scanned: events.length, created, duplicates, pushSent, pushSkipped, warnings: [...new Set(warnings)] };
+}
+
+export async function syncLiveHomeRunNotificationsForUser(userId: string): Promise<string[]> {
+  try {
+    const feed = await getTodayHomeRuns();
+    const result = await processHomeRunEvents(feed.events, { userIds: [userId] });
+    return result.warnings;
+  } catch (err: any) {
+    return [`live HR notification sync failed: ${err?.message ?? "unknown error"}`];
+  }
 }
 
 export function buildParlayGradedNotification(args: {
@@ -443,8 +559,14 @@ export async function createParlayGradedNotification(args: {
   return result;
 }
 
-export async function listNotifications(userId: string, limit = 50): Promise<NotificationListResult> {
+export async function listNotifications(userId: string, options: number | NotificationListOptions = 50): Promise<NotificationListResult> {
+  const opts = typeof options === "number"
+    ? { limit: options, includeLiveHomeRuns: true }
+    : { limit: options.limit ?? 50, includeLiveHomeRuns: options.includeLiveHomeRuns ?? true };
   const warnings: string[] = [];
+  if (opts.includeLiveHomeRuns) {
+    warnings.push(...(await syncLiveHomeRunNotificationsForUser(userId)));
+  }
   try {
     const supabaseAdmin = await getSupabaseAdmin();
     const [rows, unread] = await Promise.all([
@@ -453,7 +575,7 @@ export async function listNotifications(userId: string, limit = 50): Promise<Not
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(Math.min(limit, 100)),
+        .limit(Math.min(opts.limit, 100)),
       supabaseAdmin
         .from("notifications")
         .select("id", { count: "exact", head: true })

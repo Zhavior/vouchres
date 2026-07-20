@@ -1,0 +1,36 @@
+ M package.json
+ M server/controllers/parlayController.ts
+ M server/routes/billingRoutes.ts
+ M server/routes/index.ts
+ M server/routes/parlay/parlayUserRoutes.ts
+ M server/routes/trustRoutes.ts
+ M server/services/hubs/hrBoardHub.ts
+ M server/services/parlays/parlayCreationService.ts
+ M server/services/persistence/pickService.ts
+?? backups/
+?? docs/architecture/VOUCHRES_BACKEND_94_PLUS_MATRIX.md
+?? docs/architecture/VOUCHRES_BACKEND_ARCHITECTURE_V2.md
+?? scripts/auditParlayRouteOwnership.ts
+?? scripts/compareLegacyV3ParlayReads.ts
+?? scripts/compareLegacyV3Reads.ts
+?? scripts/reportLegacyParlayCutoverReadiness.ts
+?? scripts/runLegacyParlayCutoffCanary.ts
+?? scripts/verifyBillingCutover.ts
+?? scripts/verifyLegacyParlayCommitTrustCutoffCanary.ts
+?? scripts/verifyLegacyParlayCutoffReport.ts
+?? scripts/verifyLegacyParlayDeprecationHeaders.ts
+?? scripts/verifyLegacyParlayDetailCutoffCanary.ts
+?? scripts/verifyLegacyParlayFinalizeTrustLockCutoffCanary.ts
+?? scripts/verifyLegacyParlayKillSwitch.ts
+?? scripts/verifyLegacyParlayListCutoffCanary.ts
+?? scripts/verifyLegacyParlaySaveCutoffCanary.ts
+?? scripts/verifyLegacyParlayTelemetry.ts
+?? scripts/verifyParlaySaveCutover.ts
+?? scripts/verifyParlaySavePreview.ts
+?? scripts/verifyParlayTrustCommitCutover.ts
+?? scripts/verifyParlayTrustFinalizeCutover.ts
+?? scripts/verifyV3Backend.ts
+?? server/lib/observability/legacyRouteMetrics.ts
+?? server/routes/parlay/legacyParlayRouteTelemetry.ts
+?? server/routes/parlay/mountParlaySupportRoutes.ts
+?? server/v3/

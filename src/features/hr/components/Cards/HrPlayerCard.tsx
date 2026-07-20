@@ -19,16 +19,33 @@ export interface HrPlayerCardProps {
   player: HrWatchRow;
   onClick?: (player: HrWatchRow) => void;
   onViewProfile?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
   hrResult?: HrCardResult;
+  playerVouchCount?: number;
+  playerVouchedByViewer?: boolean;
+  playerVouchPending?: boolean;
 }
 
-export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onViewProfile, hrResult = null }) => (
+export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({
+  player,
+  onClick,
+  onViewProfile,
+  onTogglePlayerVouch,
+  hrResult = null,
+  playerVouchCount = 0,
+  playerVouchedByViewer = false,
+  playerVouchPending = false,
+}) => (
   <UnifiedPlayerCard
     player={player}
     onClick={onClick}
     onViewProfile={onViewProfile}
+    onTogglePlayerVouch={onTogglePlayerVouch}
     hrResult={hrResult}
     showVouchExplainer
+    playerVouchCount={playerVouchCount}
+    playerVouchedByViewer={playerVouchedByViewer}
+    playerVouchPending={playerVouchPending}
   />
 );
 

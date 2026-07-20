@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, X, Sparkles, Lock, Trophy, Info, CheckCircle2 } from 'lucide-react';
 import {
-  AppNotification,
-  markAllRead,
-  clearNotifications,
   onNotification,
 } from '../../lib/appNotifications';
-import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
+import { useAppNotifications, type ActivityNotification } from '../../hooks/queries/useAppNotifications';
 
 const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   ai: Sparkles, lock: Lock, result: Trophy, success: CheckCircle2, info: Info,
@@ -31,23 +28,33 @@ interface Props {
 }
 
 export default function AppNotificationsHost({ onNavigate }: Props) {
-  const { data: list = [] } = useAppNotifications();
-  const [toasts, setToasts] = useState<AppNotification[]>([]);
+  const { data: list = [], unreadCount, markAllRead, clearLocal } = useAppNotifications();
+  const [toasts, setToasts] = useState<ActivityNotification[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     return onNotification((n) => {
       if (!n) return;
-      setToasts((t) => [n, ...t].slice(0, 3));
-      window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n.id)), 7000);
+      const toast: ActivityNotification = {
+        id: n.id,
+        kind: n.kind,
+        title: n.title,
+        body: n.body,
+        ts: n.ts,
+        read: n.read,
+        section: n.section,
+        source: 'local',
+        typeLabel: 'Local alert',
+        rawType: n.kind,
+      };
+      setToasts((t) => [toast, ...t].slice(0, 3));
+      window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== toast.id)), 7000);
     });
   }, []);
 
-  const unread = list.filter((n) => !n.read).length;
-
   const openPanel = () => {
     setOpen(true);
-    markAllRead();
+    void markAllRead();
   };
 
   return (
@@ -78,8 +85,8 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
         aria-label="App notifications"
       >
         <Bell className="w-5 h-5 text-cyan-400" />
-        {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-500 text-[10px] font-black text-slate-950 flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-500 text-[10px] font-black text-slate-950 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
 
@@ -92,7 +99,7 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
               <h3 className="text-sm font-black flex items-center gap-2 text-slate-100"><Bell className="w-4 h-4 text-cyan-400" /> Notifications</h3>
               <div className="flex items-center gap-2">
                 {list.length > 0 && (
-                  <button onClick={() => { clearNotifications(); }} className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider">Clear</button>
+                  <button onClick={() => { void clearLocal(); }} className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider">Clear local</button>
                 )}
                 <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
               </div>

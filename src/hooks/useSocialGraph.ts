@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../lib/apiClient";
+import { ensureRealtimeAuth, supabase } from "../lib/supabaseClient";
 
 export type RelationshipType = "follow" | "tail" | "subscribe";
 export type SocialGraphBucket = "all" | "following" | "followers" | "friends" | "subscribers" | "tailing";
@@ -114,6 +115,36 @@ export function useSocialGraph(userId: string | null) {
   useEffect(() => {
     void refresh("all");
   }, [refresh]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let disposed = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void (async () => {
+      await ensureRealtimeAuth();
+      if (disposed) return;
+
+      channel = supabase
+        .channel(`social-graph-live:${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'follows' },
+          () => {
+            void refresh('all');
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      disposed = true;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [refresh, userId]);
 
   const entryMap = useMemo(() => {
     const map = new Map<string, SocialGraphEntry>();

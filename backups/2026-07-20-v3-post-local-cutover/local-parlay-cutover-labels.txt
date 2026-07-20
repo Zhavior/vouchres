@@ -1,0 +1,1 @@
+DISABLE_LEGACY_CANONICAL_PARLAY_ROUTE_LABELS=legacy.parlay.detail,legacy.parlay.list,legacy.parlay.commit_trust,legacy.parlay.finalize_trust_lock,legacy.parlay.save

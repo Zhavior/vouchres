@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
+import { ChevronRight, Heart, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { logoByTeamName } from '../../lib/teamLogos';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import VouchCursorTip from '../vouch-system/VouchCursorTip';
@@ -123,8 +123,12 @@ export interface UnifiedPlayerCardProps {
   player: HrWatchRow;
   onClick?: (player: HrWatchRow) => void;
   onViewProfile?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
   hrResult?: HrCardResult;
   showVouchExplainer?: boolean;
+  playerVouchCount?: number;
+  playerVouchedByViewer?: boolean;
+  playerVouchPending?: boolean;
   className?: string;
 }
 
@@ -132,8 +136,12 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
   player,
   onClick,
   onViewProfile,
+  onTogglePlayerVouch,
   hrResult = null,
   showVouchExplainer = true,
+  playerVouchCount = 0,
+  playerVouchedByViewer = false,
+  playerVouchPending = false,
   className = '',
 }: UnifiedPlayerCardProps) {
   const tier = tierStyle(player.hrScore);
@@ -159,11 +167,24 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
   const vouchButton = (
     <button
       type="button"
-      onClick={(event) => event.stopPropagation()}
-      className="ve-vouch-action mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/75 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
+      onClick={(event) => {
+        event.stopPropagation();
+        onTogglePlayerVouch?.(player);
+      }}
+      disabled={playerVouchPending || !onTogglePlayerVouch}
+      className={`ve-vouch-action mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition ${
+        playerVouchedByViewer
+          ? 'border-vouch-emerald/40 bg-vouch-emerald/14 text-vouch-emerald'
+          : 'border-white/15 bg-white/5 text-white/75 hover:border-white/25 hover:bg-white/10 hover:text-white'
+      } disabled:cursor-not-allowed disabled:opacity-60`}
     >
-      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/20 text-[9px]">V</span>
-      Vouch this pick
+      <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border text-[9px] ${playerVouchedByViewer ? 'border-vouch-emerald/40' : 'border-white/20'}`}>
+        <Heart className={`h-2.5 w-2.5 ${playerVouchedByViewer ? 'fill-current' : ''}`} />
+      </span>
+      {playerVouchedByViewer ? 'Vouched' : 'Vouch player'}
+      <span className="ml-1 rounded-full border border-white/10 px-1.5 py-0.5 text-[8px] text-white/55">
+        {playerVouchPending ? '...' : playerVouchCount}
+      </span>
     </button>
   );
 

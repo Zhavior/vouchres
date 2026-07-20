@@ -49,6 +49,12 @@ export async function getAuthToken(): Promise<string | null> {
   return data.session?.access_token ?? null;
 }
 
+export async function ensureRealtimeAuth(): Promise<void> {
+  const token = await getAuthToken();
+  if (!token) return;
+  await supabase.realtime.setAuth(token);
+}
+
 /**
  * Sign up with email + password. Requires invite code during beta.
  */

@@ -6,6 +6,7 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { getUserTrust, getCapperTrust } from "../services/trust/trustScoreService";
 import { getVerifiedRecord } from "../services/trust/verifiedRecordService";
+import { sendV3CapperTrustResponse, sendV3UserTrustResponse } from "../v3/modules/trust/handlers";
 
 function requirePathId(value: unknown, field: string): string {
   const id = typeof value === "string" ? value.trim() : "";
@@ -22,16 +23,10 @@ function requirePathId(value: unknown, field: string): string {
 
 export function registerTrustRoutes(app: Express): void {
   app.get("/api/trust/user/:userId", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const userId = requirePathId(req.params.userId, "userId");
-    return res.json(apiOkFlat(req, { trust: await getUserTrust(userId) }));
+    return sendV3UserTrustResponse(req, res);
   }));
 
   app.get("/api/trust/capper/:capperId", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const capperId = requirePathId(req.params.capperId, "capperId");
-    const [trust, verifiedRecord] = await Promise.all([
-      getCapperTrust(capperId),
-      getVerifiedRecord(capperId),
-    ]);
-    return res.json(apiOkFlat(req, { trust, verifiedRecord }));
+    return sendV3CapperTrustResponse(req, res);
   }));
 }

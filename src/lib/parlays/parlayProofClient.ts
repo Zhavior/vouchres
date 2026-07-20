@@ -16,7 +16,7 @@ export type ClientParlayProof = {
   lock_reason?: string | null;
   committed_at?: string | null;
   legs: Array<Record<string, unknown>>;
-  author?: { display_name?: string; handle?: string; username?: string } | null;
+  author?: { id?: string; display_name?: string; handle?: string; username?: string } | null;
   trust_events?: Array<{ label: string; created_at: string }>;
   proof_url?: string;
   proofScope: "public" | "owner" | "local";

@@ -16,8 +16,10 @@ import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
+import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
+import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { HrSignalField } from '../components/SignalField/HrSignalField';
@@ -30,6 +32,7 @@ import {
   readHrResearchPlayerId,
 } from '../utils/hrResearchRoute';
 import { ProductEvents } from '../../../lib/productEvents';
+import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
 
 interface MiniStatChipProps {
@@ -245,6 +248,20 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   const freshnessTone = statusTone[vm.slate.freshness];
   const warningList = vm.slate.warnings.slice(0, 3);
   const noGamesToday = !vm.loading && !vm.slate.hasGames && (vm.slate.gameCount === 0 || totalCount === 0);
+  const visiblePlayerIds = useMemo(
+    () => (vm.rows ?? []).map((row) => row.playerId),
+    [vm.rows],
+  );
+  const playerVouchSummary = usePlayerVouchSummary(vm.date, visiblePlayerIds);
+  const playerVouchLeaderboard = usePlayerVouchLeaderboard(vm.date, 5);
+  const togglePlayerVouch = useTogglePlayerVouch();
+  const playerVouchMap = useMemo(
+    () => new Map((playerVouchSummary.data ?? []).map((entry) => [entry.playerId, entry])),
+    [playerVouchSummary.data],
+  );
+  const pendingPlayerVouchId = togglePlayerVouch.variables?.playerId != null
+    ? String(togglePlayerVouch.variables.playerId)
+    : null;
 
   const handleRefresh = React.useCallback(() => {
     vm.refresh?.();
@@ -383,6 +400,28 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
     onSectionChange?.('results');
   }, [onSectionChange, vm.date]);
 
+  const getPlayerVouchSummaryFor = React.useCallback((playerId: string | number | null) => {
+    if (playerId == null) return null;
+    return playerVouchMap.get(String(playerId)) ?? null;
+  }, [playerVouchMap]);
+
+  const handleTogglePlayerVouch = React.useCallback((player: HrWatchRow) => {
+    if (player.playerId == null) return;
+    togglePlayerVouch.mutate({
+      playerId: player.playerId,
+      playerName: player.playerName,
+      team: player.team,
+      opponent: player.opponent,
+      gamePk: player.gamePk,
+      contextDate: vm.date,
+      sourcePage: 'hr_intelligence',
+    }, {
+      onError: () => {
+        window.alert('Sign in to vouch players and save your community likes.');
+      },
+    });
+  }, [togglePlayerVouch, vm.date]);
+
   // Only the finished card and table views are public during the paid beta.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
     if (typeof window === 'undefined') return 'cards';
@@ -427,7 +466,20 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           dateLabel={isToday ? 'Today' : vm.date}
           onResearch={openPlayerProfile}
           onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+          onTogglePlayerVouch={handleTogglePlayerVouch}
           onOpenBuild={goToBuild}
+          playerVouchCount={getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.totalVouches ?? 0}
+          playerVouchedByViewer={getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.viewerHasVouched ?? false}
+          playerVouchPending={topPlayer?.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId}
+        />
+
+        <MostVouchedPlayersPanel
+          players={playerVouchLeaderboard.data ?? []}
+          subtitle="The hottest community-backed bats on this slate."
+          onSelectPlayer={(playerId) => {
+            const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+            if (match) openPlayerProfile(match);
+          }}
         />
 
         <section hidden className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
@@ -705,6 +757,9 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
                 openPlayerProfile(player);
               }}
               onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+              onTogglePlayerVouch={handleTogglePlayerVouch}
+              getPlayerVouchSummary={getPlayerVouchSummaryFor}
+              playerVouchPendingId={pendingPlayerVouchId}
               getHrResult={vm.getHrResult}
             />
           </div>

@@ -7,37 +7,17 @@ import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { findLegsForPicks } from "../repositories/parlayRepository";
+import {
+  buildSubscriberChannelsProjection,
+  canViewerAccessCapperSubscriberContent,
+  canViewerAccessProfileSubscriberContent,
+} from "../services/social/socialProjectionService";
 
 export const subscriberRoutes = Router();
 
-async function loadFollowingIds(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("follows")
-    .select("following_profile_id, following_capper_id")
-    .eq("follower_id", userId);
-
-  if (error) throw error;
-
-  const profileIds = (data ?? [])
-    .map((row: { following_profile_id?: string | null }) => row.following_profile_id)
-    .filter(Boolean) as string[];
-  const capperIds = (data ?? [])
-    .map((row: { following_capper_id?: string | null }) => row.following_capper_id)
-    .filter(Boolean) as string[];
-
-  return { profileIds, capperIds };
-}
-
 async function assertFollowsCapper(userId: string, capperId: string): Promise<void> {
-  const { data, error } = await supabaseAdmin
-    .from("follows")
-    .select("follower_id")
-    .eq("follower_id", userId)
-    .eq("following_capper_id", capperId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) {
+  const allowed = await canViewerAccessCapperSubscriberContent(userId, capperId);
+  if (!allowed) {
     throw new AppError({
       status: 403,
       code: "forbidden",
@@ -48,17 +28,8 @@ async function assertFollowsCapper(userId: string, capperId: string): Promise<vo
 }
 
 async function assertFollowsProfile(userId: string, profileId: string): Promise<void> {
-  if (userId === profileId) return;
-
-  const { data, error } = await supabaseAdmin
-    .from("follows")
-    .select("follower_id")
-    .eq("follower_id", userId)
-    .eq("following_profile_id", profileId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) {
+  const allowed = await canViewerAccessProfileSubscriberContent(userId, profileId);
+  if (!allowed) {
     throw new AppError({
       status: 403,
       code: "forbidden",
@@ -70,64 +41,17 @@ async function assertFollowsProfile(userId: string, profileId: string): Promise<
 
 subscriberRoutes.get("/subscriber/channels", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const userId = req.user!.id;
-  const following = await loadFollowingIds(userId);
-
-  const [cappersRes, profilesRes] = await Promise.all([
-    supabaseAdmin
-      .from("cappers")
-      .select("id, display_name, tagline, persona, is_demo, is_active, created_at")
-      .eq("is_active", true)
-      .order("display_name", { ascending: true }),
-    following.profileIds.length > 0
-      ? supabaseAdmin
-          .from("profiles")
-          .select("id, handle, username, display_name, avatar_url, bio, trust_score, total_picks, won_picks, lost_picks")
-          .in("id", following.profileIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-
-  if (cappersRes.error) {
+  try {
+    const projection = await buildSubscriberChannelsProjection(userId);
+    return res.json(apiOkFlat(req, projection as unknown as Record<string, unknown>));
+  } catch (error) {
     throw new AppError({
       status: 500,
       code: "internal_server_error",
-      message: "Failed to load capper channels.",
-      cause: cappersRes.error,
+      message: "Failed to load subscriber channel projection.",
+      cause: error,
     });
   }
-  if (profilesRes.error) {
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to load followed profiles.",
-      cause: profilesRes.error,
-    });
-  }
-
-  const capperIds = (cappersRes.data ?? []).map((c: { id: string }) => c.id);
-  const { data: capperFollowCounts } = capperIds.length > 0
-    ? await supabaseAdmin
-        .from("follows")
-        .select("following_capper_id")
-        .in("following_capper_id", capperIds)
-    : { data: [] };
-
-  const followerCountByCapper = (capperFollowCounts ?? []).reduce((acc: Record<string, number>, row: { following_capper_id?: string | null }) => {
-    const key = String(row.following_capper_id ?? "");
-    if (!key) return acc;
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  return res.json(apiOkFlat(req, {
-    following,
-    cappers: (cappersRes.data ?? []).map((c: Record<string, unknown>) => ({
-      ...c,
-      follower_count: followerCountByCapper[String(c.id)] ?? 0,
-      is_following: following.capperIds.includes(String(c.id)),
-    })),
-    profiles: profilesRes.data ?? [],
-    owner_profile_id: userId,
-  }));
 }));
 
 subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {

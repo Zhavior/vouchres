@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, Check, Cloud, Crosshair, Gauge, Landmark, Plus, Shield, ShieldAlert, Users, Zap } from 'lucide-react';
+import { ArrowRight, Check, Cloud, Crosshair, Gauge, Heart, Landmark, Plus, Shield, ShieldAlert, Users, Zap } from 'lucide-react';
 import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrBoardFreshness } from '../../utils/hrDecisionBrief';
@@ -11,7 +11,11 @@ interface HrTopSignalPanelProps {
   dateLabel: string;
   onResearch: (player: HrWatchRow) => void;
   onAddToSlip?: (player: HrWatchRow) => void;
+  onTogglePlayerVouch?: (player: HrWatchRow) => void;
   onOpenBuild: () => void;
+  playerVouchCount?: number;
+  playerVouchedByViewer?: boolean;
+  playerVouchPending?: boolean;
 }
 
 function numberLabel(value: number | null | undefined): string {
@@ -50,7 +54,19 @@ function MetricCell({ label, value, detail, icon }: { label: string; value: stri
   );
 }
 
-export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, onResearch, onAddToSlip, onOpenBuild }: HrTopSignalPanelProps) {
+export function HrTopSignalPanel({
+  player,
+  freshness,
+  generatedAt,
+  dateLabel,
+  onResearch,
+  onAddToSlip,
+  onTogglePlayerVouch,
+  onOpenBuild,
+  playerVouchCount = 0,
+  playerVouchedByViewer = false,
+  playerVouchPending = false,
+}: HrTopSignalPanelProps) {
   if (!player) {
     return (
       <section className="z8-hr-judge-hero flex min-h-44 items-center justify-center border border-white/10 p-6 text-center">
@@ -104,6 +120,22 @@ export function HrTopSignalPanel({ player, freshness, generatedAt, dateLabel, on
           <div className="flex flex-col justify-center gap-3 p-5">
             <button type="button" onClick={() => onResearch(player)} className="flex min-h-11 items-center justify-center gap-2 border border-[#00f0ff]/60 bg-[#00f0ff]/15 px-3 text-[12px] font-black text-white transition hover:bg-[#00f0ff]/22">
               Research Player <ArrowRight className="h-4 w-4 text-[#00f0ff]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onTogglePlayerVouch?.(player)}
+              disabled={playerVouchPending || !onTogglePlayerVouch}
+              className={`flex min-h-11 items-center justify-center gap-2 border px-3 text-[12px] font-black transition ${
+                playerVouchedByViewer
+                  ? 'border-vouch-emerald/45 bg-vouch-emerald/12 text-vouch-emerald'
+                  : 'border-white/15 bg-black/25 text-white/72 hover:border-vouch-emerald/40 hover:text-[#75ffc5]'
+              } disabled:cursor-not-allowed disabled:opacity-55`}
+            >
+              <Heart className={`h-4 w-4 ${playerVouchedByViewer ? 'fill-current' : ''}`} />
+              {playerVouchedByViewer ? 'Vouched' : 'Vouch Player'}
+              <span className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] text-white/60">
+                {playerVouchPending ? '...' : playerVouchCount}
+              </span>
             </button>
             <button type="button" onClick={() => canAdd ? onAddToSlip?.(player) : onOpenBuild()} className="flex min-h-11 items-center justify-center gap-2 border border-white/15 bg-black/25 px-3 text-[12px] font-bold text-white/72 transition hover:border-[#00ff94]/40 hover:text-[#75ffc5]">
               <Plus className="h-4 w-4" /> Add to Slip

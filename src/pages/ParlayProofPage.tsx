@@ -1,14 +1,16 @@
-import React, { useMemo } from "react";
-import { ExternalLink, ShieldCheck, Lock, Download, Layers3 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { ExternalLink, ShieldCheck, Lock, Download, Layers3, CopyCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import SmartParlaySlipCard from "../components/parlay/smart/SmartParlaySlipCard";
 import ParlayOsBadgeRow from "../components/trust/ParlayOsBadgeRow";
 import ParlayIdentityBadge from "../components/trust/ParlayIdentityBadge";
 import { formatFeedLockTimestamp } from "../lib/parlayLockPolicy";
+import { apiClient } from "../lib/apiClient";
 import { fetchParlayProofRecord } from "../lib/parlays/fetchParlayProof";
 import type { ClientParlayProof } from "../lib/parlays/parlayProofClient";
 import { isBackendProofPickId } from "../lib/parlays/parlayProofLinks";
 import { projectSmartParlayFromProof } from "../domain/parlay";
+import { useAuthMe } from "../hooks/queries/useAuthMe";
 
 function scopeLabel(proof: ClientParlayProof): string {
   if (proof.proofScope === "public") return "Public proof record";
@@ -17,11 +19,15 @@ function scopeLabel(proof: ClientParlayProof): string {
 }
 
 export default function ParlayProofPage({ pickId }: { pickId: string }) {
+  const { data: authMe } = useAuthMe();
   const { data: proof, isLoading, error } = useQuery({
     queryKey: ["parlay-proof", pickId],
     queryFn: () => fetchParlayProofRecord(pickId),
     staleTime: 60_000,
   });
+  const [tailing, setTailing] = useState(false);
+  const [tailMessage, setTailMessage] = useState<string | null>(null);
+  const [tailError, setTailError] = useState<string | null>(null);
 
   const smartSlip = useMemo(
     () => (proof ? projectSmartParlayFromProof(proof) : null),
@@ -55,6 +61,30 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
     ? `/p/${encodeURIComponent(proof.id)}`
     : null;
   const otsUrl = proof.has_ots_proof ? `/api/proof/parlay/${encodeURIComponent(proof.id)}/ots` : null;
+  const isOwnProof = Boolean(authMe?.id && proof.author?.id && proof.author.id === authMe.id);
+  const canTail = proof.proofScope === "public" && isBackendProofPickId(proof.id) && !isOwnProof;
+
+  const handleTail = async () => {
+    if (!canTail || tailing) return;
+    if (!authMe?.id) {
+      window.location.href = "/welcome";
+      return;
+    }
+
+    setTailing(true);
+    setTailError(null);
+    setTailMessage(null);
+    try {
+      await apiClient.post(`/api/parlays/${encodeURIComponent(proof.id)}/tail`, {
+        source_post_id: null,
+      });
+      setTailMessage("Added to your profile. This parlay now counts inside your tailing record.");
+    } catch (err: any) {
+      setTailError(err?.message ?? "Could not tail this parlay right now.");
+    } finally {
+      setTailing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[var(--bg-obsidian)] text-white">
@@ -107,6 +137,34 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
             showIdentityBadge={false}
             showOsBadges={false}
           />
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300/75">Shared proof actions</p>
+              <p className="mt-1 text-sm text-white/55">
+                This page is view-only. You can tail this parlay to your own profile, but you cannot edit the original slip.
+              </p>
+            </div>
+            {canTail ? (
+              <button
+                type="button"
+                onClick={() => void handleTail()}
+                disabled={tailing}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-cyan-200 transition hover:border-cyan-300/55 hover:text-cyan-100 disabled:opacity-50"
+              >
+                <CopyCheck className="h-4 w-4" />
+                {tailing ? "Tailing..." : authMe?.id ? "Tail this parlay" : "Sign in to tail"}
+              </button>
+            ) : (
+              <span className="text-xs font-semibold text-white/40">
+                {isOwnProof ? "This proof is already yours." : "Tailing is available on public shared proofs."}
+              </span>
+            )}
+          </div>
+          {tailMessage ? <p className="mt-3 text-sm text-emerald-300/90">{tailMessage}</p> : null}
+          {tailError ? <p className="mt-3 text-sm text-rose-300/90">{tailError}</p> : null}
         </section>
 
         {proof.trust_events && proof.trust_events.length > 0 ? (

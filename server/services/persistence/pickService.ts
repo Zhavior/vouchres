@@ -149,7 +149,7 @@ export async function getLedger(opts: {
  * Recompute trust_score, total_picks, won_picks, etc. for the author of a
  * pick after it has been graded. Updates both public.profiles and public.trust_scores.
  */
-async function recomputeTrustForPick(pickId: string): Promise<void> {
+export async function recomputeTrustForPick(pickId: string): Promise<void> {
   const supabaseAdmin = await getSupabaseAdmin();
   // 1. Look up the pick to find the author
   const { data: pick } = await supabaseAdmin
@@ -232,4 +232,61 @@ async function recomputeTrustForPick(pickId: string): Promise<void> {
       })
       .eq("id", subjectId);
   }
+}
+
+export async function recomputeTrustForRecentPicks(options: {
+  hours?: number;
+  limit?: number;
+  dryRun?: boolean;
+} = {}): Promise<{
+  dryRun: boolean;
+  scanned: number;
+  uniqueSubjects: number;
+  recomputed: number;
+}> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const hours = Math.min(Math.max(Number(options.hours ?? 72), 1), 24 * 30);
+  const limit = Math.min(Math.max(Number(options.limit ?? 100), 1), 500);
+  const dryRun = options.dryRun ?? false;
+  const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select("id, user_id, capper_id, sport, graded_at")
+    .in("status", ["won", "lost", "push", "void"])
+    .not("graded_at", "is", null)
+    .gte("graded_at", since)
+    .order("graded_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  const rows = data ?? [];
+  const seen = new Set<string>();
+  const pickIds: string[] = [];
+
+  for (const row of rows) {
+    const subjectType = row.user_id ? "user" : row.capper_id ? "capper" : null;
+    const subjectId = row.user_id ?? row.capper_id ?? null;
+    const scope = String(row.sport ?? "overall");
+    if (!subjectType || !subjectId) continue;
+
+    const key = `${subjectType}:${subjectId}:${scope}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pickIds.push(String(row.id));
+  }
+
+  if (!dryRun) {
+    for (const pickId of pickIds) {
+      await recomputeTrustForPick(pickId);
+    }
+  }
+
+  return {
+    dryRun,
+    scanned: rows.length,
+    uniqueSubjects: seen.size,
+    recomputed: dryRun ? 0 : pickIds.length,
+  };
 }
