@@ -1,4 +1,4 @@
-import type { NormalizedPlayerPayload } from "@/src/adapters/normalized";
+import type { NormalizedPlayerPayload } from "@/adapters/normalized";
 
 interface Props {
   payload: NormalizedPlayerPayload;
@@ -12,7 +12,7 @@ function scoreColor(score: number | null | undefined) {
   return "text-red-400";
 }
 
-export default function PlayerIntelligenceCard({
+export default function PlayerResearchDecisionCard({
   payload,
   onOpen,
 }: Props) {

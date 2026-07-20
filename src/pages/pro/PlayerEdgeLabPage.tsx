@@ -1,4 +1,4 @@
-import PlayerIntelligenceCard from "@/components/player/PlayerIntelligenceCard";
+import PlayerResearchDecisionCard from "@/components/player/PlayerResearchDecisionCard";
 import { useMemo, useState } from 'react';
 import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
 
@@ -213,7 +213,7 @@ export default function PlayerEdgeLabPage() {
         <section className="space-y-4">
           {playerPayload ? (
             <>
-              <PlayerIntelligenceCard payload={playerPayload} />
+              <PlayerResearchDecisionCard payload={playerPayload} />
 
               {isPro ? (
                 <HrSignalGraphs

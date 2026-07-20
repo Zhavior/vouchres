@@ -1,14 +1,14 @@
 import type { LiveAtBatSnapshot } from "../../types/liveAtBat";
 
-type PlayerIntelligenceCardProps = {
+type LiveAtBatMatchupCardProps = {
   snapshot?: LiveAtBatSnapshot;
   onOpenPitcherProfile?: (pitcherId: number) => void;
 };
 
-export function PlayerIntelligenceCard({
+export function LiveAtBatMatchupCard({
   snapshot,
   onOpenPitcherProfile,
-}: PlayerIntelligenceCardProps) {
+}: LiveAtBatMatchupCardProps) {
   const batter = snapshot?.play?.batter;
   const pitcher = snapshot?.play?.pitcher;
 
