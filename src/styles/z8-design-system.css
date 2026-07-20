@@ -9,13 +9,13 @@
  * would land it after Tailwind's expanded output and break the build).
  */
 @theme {
-  --color-obsidian-900: #020617;
-  --color-obsidian-800: #0a1628;
-  --color-obsidian-700: #0f1a2e;
-  --color-obsidian-600: #152238;
-  --color-vouch-emerald: #00FF94;
-  --color-vouch-cyan: #00F0FF;
-  --color-vouch-amber: #f59e0b;
+  --color-obsidian-900: #050A14;
+  --color-obsidian-800: #0B1220;
+  --color-obsidian-700: #101A2C;
+  --color-obsidian-600: #16233A;
+  --color-vouch-emerald: #31B583;
+  --color-vouch-cyan: #4FB8DC;
+  --color-vouch-amber: #D99C4A;
   --background-image-glass-gradient: linear-gradient(110deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
   --background-image-vignette: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%);
   --background-image-z8-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
@@ -30,17 +30,17 @@
 }
 
 @utility glass-panel {
-  background-color: rgba(2, 6, 23, 0.28);
+  background-color: rgba(5, 10, 20, 0.28);
   backdrop-filter: blur(16px) saturate(1.15);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(231, 236, 243, 0.05);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
 }
 
 @utility glass-border {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(231, 236, 243, 0.1);
   transition: border-color 0.5s;
   &:hover {
-    border-color: rgba(0, 255, 148, 0.3);
+    border-color: rgba(79, 184, 220, 0.3);
   }
 }
 
@@ -49,7 +49,7 @@
   letter-spacing: -0.05em;
   text-transform: uppercase;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(231, 236, 243, 0.4);
 }
 
 @utility font-z8 {
@@ -60,23 +60,23 @@
 @utility z8-sidebar-shell {
   background: linear-gradient(
     180deg,
-    rgba(10, 22, 40, 0.36) 0%,
-    rgba(2, 6, 23, 0.28) 55%,
-    rgba(2, 6, 23, 0.20) 100%
+    rgba(11, 18, 32, 0.36) 0%,
+    rgba(5, 10, 20, 0.28) 55%,
+    rgba(5, 10, 20, 0.20) 100%
   );
   backdrop-filter: blur(24px) saturate(1.2);
   box-shadow:
     4px 0 40px rgba(0, 0, 0, 0.45),
-    0 0 32px rgba(0, 240, 255, 0.08);
+    0 0 32px rgba(79, 184, 220, 0.08);
 }
 
 /** Borderless glass panel for sidebar nav groups. */
 @utility z8-sidebar-panel {
-  background-color: rgba(2, 6, 23, 0.32);
+  background-color: rgba(5, 10, 20, 0.32);
   backdrop-filter: blur(20px) saturate(1.15);
   box-shadow:
     0 8px 28px 0 rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(231, 236, 243, 0.04);
 }
 
 /** Borderless inner surface for sidebar controls. */
@@ -85,34 +85,34 @@
   backdrop-filter: blur(12px);
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    inset 0 1px 0 rgba(231, 236, 243, 0.03);
 }
 
 /** Borderless icon box for sidebar nav items. */
 @utility z8-sidebar-icon {
   background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.04);
 }
 
-/** Cyan accent rule — matches HR board header treatment. */
+/** Accent rule — matches HR board header treatment. */
 @utility z8-accent-line {
   height: 2px;
   background: linear-gradient(
     90deg,
-    rgba(0, 240, 255, 0.85) 0%,
-    rgba(0, 240, 255, 0.4) 55%,
+    rgba(79, 184, 220, 0.85) 0%,
+    rgba(79, 184, 220, 0.4) 55%,
     transparent 100%
   );
 }
 
 /** Brighter glass panel variant for sidebar groups. */
 @utility glass-panel-strong {
-  background-color: rgba(2, 6, 23, 0.34);
+  background-color: rgba(5, 10, 20, 0.34);
   backdrop-filter: blur(20px) saturate(1.15);
-  border: 1px solid rgba(0, 240, 255, 0.14);
+  border: 1px solid rgba(79, 184, 220, 0.14);
   box-shadow:
     0 8px 28px 0 rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(231, 236, 243, 0.04);
 }
 
 /** Z8 Premium — layered glass, grain overlay, inset rim light. */
@@ -121,12 +121,12 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    linear-gradient(145deg, rgba(15, 26, 46, 0.46) 0%, rgba(8, 14, 28, 0.38) 55%, rgba(2, 6, 23, 0.42) 100%);
+    linear-gradient(145deg, rgba(16, 26, 44, 0.46) 0%, rgba(11, 18, 32, 0.38) 55%, rgba(5, 10, 20, 0.42) 100%);
   backdrop-filter: blur(24px) saturate(1.18);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  border: 1px solid rgba(79, 184, 220, 0.2);
   box-shadow:
     0 14px 48px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 rgba(231, 236, 243, 0.07),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45);
   &::before {
     content: "";
@@ -145,7 +145,7 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.08), transparent 60%);
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 184, 220, 0.08), transparent 60%);
   }
 }
 
@@ -159,14 +159,16 @@
 /** Stat chip — compact metric cell with tabular numerals. */
 @utility z8-stat-chip {
   border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(231, 236, 243, 0.08);
   background: rgba(0, 0, 0, 0.35);
   padding: 0.625rem 0.75rem;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/** Production control contract: touch-safe, keyboard-visible, motion restrained. */
+/** Production control contract: touch-safe, keyboard-visible, motion restrained.
+ * Focus ring uses the accent (not a semantic color) — a focus outline is a
+ * selection affordance, which is exactly what the accent is reserved for. */
 @utility z8-control {
   min-height: 2.75rem;
   min-width: 2.75rem;
@@ -179,24 +181,24 @@
     box-shadow 160ms ease;
   &:focus-visible {
     box-shadow:
-      0 0 0 2px #070a09,
-      0 0 0 4px rgba(0, 255, 148, 0.9);
+      0 0 0 2px #050A14,
+      0 0 0 4px rgba(79, 184, 220, 0.9);
   }
 }
 
 /** Editorial data surface: no decorative glass or hover movement. */
 @utility z8-data-surface {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(231, 236, 243, 0.1);
   border-radius: 0.25rem;
   background: rgba(8, 13, 10, 0.82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.025);
 }
 
 @utility z8-readable {
   max-width: 75ch;
   font-size: 0.9375rem;
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(231, 236, 243, 0.68);
 }
 
 /** Display typography scale for page titles. */
@@ -206,7 +208,7 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: #fff;
+  color: #E7ECF3;
   @media (width >= 40rem) {
     font-size: 1.875rem;
   }

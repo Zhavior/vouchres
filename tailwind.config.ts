@@ -24,7 +24,7 @@ const config: Config = {
         'surface-panel': 'var(--surface-panel)',
         'vouch-cyan': 'var(--ion-core)',
         'vouch-emerald': 'var(--voltage-green)',
-        'vouch-amber': '#f59e0b',
+        'vouch-amber': '#D99C4A',
         slate: { 950: 'var(--bg-obsidian)' },
       },
       borderColor: {

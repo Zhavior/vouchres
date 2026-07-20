@@ -159,15 +159,15 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   useEffect(() => {
     const root = document.documentElement;
     root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
-    root.style.setProperty('--theme-accent-color', '#00F0FF');
-    root.style.setProperty('--theme-border-color', 'rgba(0,240,255,0.2)');
-    root.style.setProperty('--theme-glow-color', 'rgba(0,240,255,0.2)');
+    root.style.setProperty('--theme-accent-color', '#4FB8DC');
+    root.style.setProperty('--theme-border-color', 'rgba(79,184,220,0.2)');
+    root.style.setProperty('--theme-glow-color', 'rgba(79,184,220,0.2)');
     root.setAttribute('data-theme', 'z8-premium');
     root.setAttribute('data-vouchedge-theme', 'z8-premium');
-    root.style.setProperty('--ve-accent', '#00F0FF');
-    root.style.setProperty('--ve-accent-2', '#00FF94');
-    root.style.setProperty('--ve-accent-glow', 'rgba(0,240,255,0.2)');
-    root.style.setProperty('--ve-border-strong', 'rgba(0,240,255,0.2)');
+    root.style.setProperty('--ve-accent', '#4FB8DC');
+    root.style.setProperty('--ve-accent-2', '#31B583');
+    root.style.setProperty('--ve-accent-glow', 'rgba(79,184,220,0.2)');
+    root.style.setProperty('--ve-border-strong', 'rgba(79,184,220,0.2)');
   }, []);
 
   return (

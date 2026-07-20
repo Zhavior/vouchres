@@ -40,12 +40,12 @@
 
 .ve-hr-decision-brief {
   overflow: hidden;
-  border: 1px solid rgba(0, 255, 148, 0.2);
+  border: 1px solid rgba(49, 181, 131, 0.2);
   border-radius: 0.875rem;
   background:
-    radial-gradient(circle at 88% 0%, rgba(0, 240, 255, 0.1), transparent 36%),
-    linear-gradient(145deg, rgba(0, 255, 148, 0.055), rgba(13, 18, 25, 0.96) 55%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    radial-gradient(circle at 88% 0%, rgba(79, 184, 220, 0.1), transparent 36%),
+    linear-gradient(145deg, rgba(49, 181, 131, 0.055), rgba(13, 18, 25, 0.96) 55%);
+  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.035);
 }
 
 .ve-hr-decision-brief__header {
@@ -66,7 +66,7 @@
   text-transform: uppercase;
 }
 
-.ve-hr-decision-brief__eyebrow { color: #00ff94; }
+.ve-hr-decision-brief__eyebrow { color: #31B583; }
 
 .ve-hr-decision-brief__title {
   margin-top: 0.3rem;
@@ -74,7 +74,7 @@
   font-size: 1rem;
   font-weight: 750;
   line-height: 1.3;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(231, 236, 243, 0.9);
 }
 
 .ve-hr-decision-brief__score {
@@ -82,7 +82,7 @@
   font-size: 1.75rem;
   font-weight: 900;
   line-height: 1;
-  color: #00ff94;
+  color: #31B583;
 }
 
 .ve-hr-decision-brief__read {
@@ -113,24 +113,24 @@
 }
 
 .ve-hr-decision-brief__icon--positive {
-  border: 1px solid rgba(0, 255, 148, 0.2);
-  background: rgba(0, 255, 148, 0.08);
-  color: #00ff94;
+  border: 1px solid rgba(49, 181, 131, 0.2);
+  background: rgba(49, 181, 131, 0.08);
+  color: #31B583;
 }
 
 .ve-hr-decision-brief__icon--risk {
-  border: 1px solid rgba(245, 158, 11, 0.22);
-  background: rgba(245, 158, 11, 0.08);
-  color: #fbbf24;
+  border: 1px solid rgba(217, 156, 74, 0.22);
+  background: rgba(217, 156, 74, 0.08);
+  color: #D99C4A;
 }
 
-.ve-hr-decision-brief__label { color: rgba(255, 255, 255, 0.38); }
+.ve-hr-decision-brief__label { color: rgba(231, 236, 243, 0.38); }
 
 .ve-hr-decision-brief__copy {
   margin-top: 0.35rem;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(231, 236, 243, 0.75);
 }
 
 .ve-hr-decision-brief__status {
@@ -143,7 +143,7 @@
   font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.46);
+  color: rgba(231, 236, 243, 0.46);
 }
 
 .ve-hr-decision-brief__status span { display: inline-flex; align-items: center; gap: 0.3rem; }
@@ -156,28 +156,28 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid rgba(0, 255, 148, 0.42);
+  border: 1px solid rgba(49, 181, 131, 0.42);
   border-radius: 0.75rem;
-  background: linear-gradient(90deg, rgba(0, 255, 148, 0.16), rgba(0, 240, 255, 0.13));
+  background: linear-gradient(90deg, rgba(49, 181, 131, 0.16), rgba(79, 184, 220, 0.13));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.6875rem;
   font-weight: 850;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #eafff6;
+  color: #E7ECF3;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .ve-hr-decision-brief__cta:not(:disabled):hover {
-  border-color: rgba(0, 255, 148, 0.72);
-  background: linear-gradient(90deg, rgba(0, 255, 148, 0.24), rgba(0, 240, 255, 0.2));
+  border-color: rgba(49, 181, 131, 0.72);
+  background: linear-gradient(90deg, rgba(49, 181, 131, 0.24), rgba(79, 184, 220, 0.2));
   transform: translateY(-1px);
 }
 
 .ve-hr-decision-brief__cta:disabled {
   cursor: not-allowed;
   border-color: var(--ve-hr-border);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(231, 236, 243, 0.025);
   color: rgba(255, 255, 255, 0.35);
 }
 

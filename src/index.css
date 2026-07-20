@@ -21,12 +21,12 @@
   display: none; /* Safari and Chrome */
 }
 
-/* Core Theme definitions */
+/* Core Theme definitions — mirrors the approved palette in vouchedge-tokens.css */
 @theme {
-  --color-primary: #1d9bf0;
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+  --color-primary: #4FB8DC;
+  --color-success: #31B583;
+  --color-danger: #D96459;
+  --color-warning: #D99C4A;
 }
 
 body {

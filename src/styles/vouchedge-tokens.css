@@ -1,60 +1,92 @@
 /*
- * VouchEdge Lightning Theme — Tailwind v4 @theme tokens.
+ * VouchEdge canonical design tokens — Tailwind v4 @theme tokens.
  * Imported from index.css after @import "tailwindcss" (never duplicate that import here).
- * Usage: bg-ve-obsidian, text-ve-ion, border-ve-fuse, shadow-ve-glow-cyan
+ *
+ * This file is the SINGLE SOURCE OF TRUTH for color. Every other token file
+ * (z8-premium.css, z8-design-system.css, index.css @theme, index.html critical
+ * CSS, tailwind.config.ts, z8Tokens.ts) either derives from these values or
+ * duplicates them verbatim — see the "mirrors" note at each site.
+ *
+ * Palette (approved 2026-07-19, restrained premium — not neon):
+ *   ground     #050A14   near-black navy application background
+ *   surface-1  #0B1220   elevated surface (cards, panels)
+ *   surface-2  #101A2C   further elevated (nested panels, sheets)
+ *   surface-3  #16233A   highest elevation (active/selected surfaces)
+ *   accent     #4FB8DC   mineral-cyan — selection, primary action, live focus
+ *   positive   #31B583   muted emerald — won/confirmed/good
+ *   caution    #D99C4A   warm amber — projected/stale/review
+ *   negative   #D96459   muted coral — lost/error/blocked
+ *   live       #F0536B   brighter rose — reserved strictly for live game state
+ *
+ * Legacy "Lightning" and "Z8 Obsidian" names below are kept as compat
+ * aliases pointing at the same approved values — no consumer needs to change.
  */
 
 @theme {
-  /* Core surfaces (cinematic obsidian / ion palette) */
-  --color-ve-obsidian: #060709;
-  --color-ve-graphite: #0c0e12;
-  --color-ve-storm: #13171f;
-  --color-ve-surface-panel: #171c26;
+  /* Core surfaces (approved premium navy palette) */
+  --color-ve-obsidian: #050A14;
+  --color-ve-graphite: #0B1220;
+  --color-ve-storm: #101A2C;
+  --color-ve-surface-panel: #16233A;
 
-  /* Accents & signals */
-  --color-ve-ion: #00e5ff;
-  --color-ve-flash: #e6faff;
-  --color-ve-voltage: #00f5a0;
+  /* Accent & semantic signals */
+  --color-ve-ion: #4FB8DC;
+  --color-ve-flash: #E7ECF3;
+  --color-ve-voltage: #31B583;
   --color-ve-locked: #2b3344;
+  --color-ve-caution: #D99C4A;
+  --color-ve-negative: #D96459;
+  --color-ve-live: #F0536B;
 
   /* Borders */
-  --color-ve-fuse: rgba(31, 38, 51, 0.7);
-  --color-ve-charged: rgba(0, 229, 255, 0.3);
+  --color-ve-fuse: rgba(231, 236, 243, 0.08);
+  --color-ve-charged: rgba(79, 184, 220, 0.30);
 
   /* Typography */
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Glow shadows */
-  --shadow-ve-glow-cyan: 0 0 20px rgba(0, 240, 255, 0.15);
-  --shadow-ve-glow-emerald: 0 0 20px rgba(0, 255, 148, 0.15);
+  /* Glow — restrained; only the accent glows, and only for selection/focus */
+  --shadow-ve-glow-cyan: 0 0 20px rgba(79, 184, 220, 0.14);
+  --shadow-ve-glow-emerald: 0 0 16px rgba(49, 181, 131, 0.12);
 
   /* Z8 / tailwind.config.ts aliases — same palette, no duplicate hex drift */
-  --color-graphite: #0c0e12;
-  --color-storm: #13171f;
-  --color-ion: #00e5ff;
-  --color-flash: #e6faff;
-  --color-voltage: #00f5a0;
+  --color-graphite: #0B1220;
+  --color-storm: #101A2C;
+  --color-ion: #4FB8DC;
+  --color-flash: #E7ECF3;
+  --color-voltage: #31B583;
   --color-locked: #2b3344;
-  --color-surface-panel: #171c26;
+  --color-surface-panel: #16233A;
 }
 
 :root {
   color-scheme: dark;
 
-  /* Legacy CSS vars consumed by tailwind.config.ts and existing components */
-  --bg-obsidian: #060709;
-  --bg-graphite: #0c0e12;
-  --bg-storm: #13171f;
-  --surface-panel: #171c26;
-  --border-fuse: rgba(31, 38, 51, 0.7);
-  --border-charged: rgba(0, 229, 255, 0.3);
-  --ion-core: #00e5ff;
-  --lightning-flash: #e6faff;
-  --voltage-green: #00f5a0;
+  /* Legacy CSS vars consumed by tailwind.config.ts and existing components —
+     same approved values, kept under their old names for zero-diff callers. */
+  --bg-obsidian: #050A14;
+  --bg-graphite: #0B1220;
+  --bg-storm: #101A2C;
+  --surface-panel: #16233A;
+  --border-fuse: rgba(231, 236, 243, 0.08);
+  --border-charged: rgba(79, 184, 220, 0.30);
+  --ion-core: #4FB8DC;
+  --lightning-flash: #E7ECF3;
+  --voltage-green: #31B583;
   --locked-slate: #2b3344;
 
   --ve-ion: var(--ion-core);
   --ve-voltage: var(--voltage-green);
   --ve-obsidian: var(--bg-obsidian);
+
+  /* Canonical semantic HSL triplets — consumed as hsl(var(--ve-success)) etc.
+     across ParlayOS, mlb-stats, and results surfaces. Previously undefined
+     for success/warning/danger (those calls silently no-op'd to inherited
+     color); now backed by the approved palette. --ve-live is new and is
+     reserved strictly for in-progress game state, never decorative. */
+  --ve-success: 157 57% 45%;
+  --ve-warning: 34 65% 57%;
+  --ve-danger: 5 63% 60%;
+  --ve-live: 351 84% 63%;
 }

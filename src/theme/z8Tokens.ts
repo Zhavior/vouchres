@@ -28,7 +28,7 @@ export const Z8_ICON_BOX =
 
 /** Active nav / tab state — cyan left rail + glow (layout-stable via fixed left border width). */
 export const Z8_ACTIVE =
-  'border-l-[3px] border-l-vouch-cyan border-vouch-cyan/50 bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(0,240,255,0.22),0_0_32px_rgba(0,240,255,0.14)]';
+  'border-l-[3px] border-l-vouch-cyan border-vouch-cyan/50 bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(79,184,220,0.22),0_0_32px_rgba(79,184,220,0.14)]';
 
 /** Idle nav / tab state. */
 export const Z8_IDLE =
@@ -49,11 +49,11 @@ export const Z8_SIDEBAR_ICON_BOX =
 
 /** Active sidebar nav — cyan glow rail (absolute in component), no borders. */
 export const Z8_SIDEBAR_ACTIVE =
-  'bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(0,240,255,0.22),0_0_32px_rgba(0,240,255,0.14)]';
+  'bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(79,184,220,0.22),0_0_32px_rgba(79,184,220,0.14)]';
 
 /** Idle sidebar nav — background contrast + hover glow, no borders. */
 export const Z8_SIDEBAR_IDLE =
-  'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]';
+  'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(79,184,220,0.1)]';
 
 /** Mono label typography. */
 export const Z8_LABEL = `${Z8_FONT_MONO} text-[11px] font-bold uppercase tracking-[0.08em]`;
@@ -80,9 +80,9 @@ export const Z8_TABULAR = 'z8-tabular-nums';
 export const Z8_INTERACTIVE = 'z8-interactive';
 
 /** Vouch palette hex — SVG rings, inline styles, chart strokes. */
-export const Z8_CYAN_HEX = '#00F0FF';
-export const Z8_EMERALD_HEX = '#00FF94';
-export const Z8_AMBER_HEX = '#f59e0b';
+export const Z8_CYAN_HEX = '#4FB8DC';
+export const Z8_EMERALD_HEX = '#31B583';
+export const Z8_AMBER_HEX = '#D99C4A';
 
 /** Resolve legacy --ve-accent-* status tokens to Z8 hex; passthrough for semantic ve-* vars. */
 export function z8StatusColor(token: string): string {

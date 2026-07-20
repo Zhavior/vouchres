@@ -1,36 +1,38 @@
-/* Z8 Premium is the single visual foundation for every product surface. */
+/* Z8 Premium is the single visual foundation for every product surface.
+ * Values below mirror the approved palette in vouchedge-tokens.css — see
+ * that file's header comment for the canonical hex list. */
 :root {
   --ve-sidebar-width: 72px;
-  --ve-bg: 222 47% 4%;
-  --ve-bg-deep: 222 50% 2%;
-  --ve-bg-panel: 222 40% 6%;
-  --ve-surface: 222 35% 7%;
-  --ve-border: 0 0% 100%;
-  --ve-border-strong: 186 100% 50%;
-  --ve-accent-cyan: 186 100% 50%;
-  --ve-accent-pink: 152 100% 50%;
-  --ve-accent-gold: 38 92% 50%;
-  --ve-text-primary: 0 0% 98%;
-  --ve-text-secondary: 0 0% 68%;
-  --ve-text-muted: 0 0% 46%;
+  --ve-bg: 220 60% 5%;
+  --ve-bg-deep: 220 65% 3%;
+  --ve-bg-panel: 220 49% 8%;
+  --ve-surface: 219 47% 12%;
+  --ve-border: 215 25% 90%;
+  --ve-border-strong: 195 67% 59%;
+  --ve-accent-cyan: 195 67% 59%;
+  --ve-accent-pink: 157 57% 45%;
+  --ve-accent-gold: 34 65% 57%;
+  --ve-text-primary: 215 33% 93%;
+  --ve-text-secondary: 214 18% 67%;
+  --ve-text-muted: 212 12% 44%;
 }
 
-html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; background: #020617; color-scheme: dark; }
+html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; background: #050A14; color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; }
 
 .z8-app-shell, .ve-terminal-page {
   min-height: 100vh;
-  color: rgba(255,255,255,.94);
+  color: rgba(231,236,243,.94);
   background:
-    radial-gradient(90% 55% at 50% -18%, rgba(0,240,255,.08), transparent 62%),
-    radial-gradient(50% 42% at 100% 100%, rgba(0,255,148,.05), transparent 68%),
-    #020617;
+    radial-gradient(90% 55% at 50% -18%, rgba(79,184,220,.08), transparent 62%),
+    radial-gradient(50% 42% at 100% 100%, rgba(49,181,131,.05), transparent 68%),
+    #050A14;
 }
 
 .ve-motion-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.ve-motion-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(0,240,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.055) 1px,transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom,black,transparent 72%); }
+.ve-motion-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(79,184,220,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(79,184,220,.055) 1px,transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom,black,transparent 72%); }
 .ve-motion-noise { position: absolute; inset: 0; opacity: .035; background-image: var(--background-image-z8-noise); }
-.ve-motion-spotlight { position: absolute; top: -18rem; left: 50%; width: 48rem; height: 34rem; transform: translateX(-50%); border-radius: 999px; background: rgba(0,240,255,.08); filter: blur(72px); }
+.ve-motion-spotlight { position: absolute; top: -18rem; left: 50%; width: 48rem; height: 34rem; transform: translateX(-50%); border-radius: 999px; background: rgba(79,184,220,.08); filter: blur(72px); }
 .ve-motion-orb { display: none; }
 .ve-motion-content { position: relative; z-index: 1; }
 
@@ -55,35 +57,35 @@ html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; backgrou
 .page-shell, .page-container, .dashboard-shell, .daily-theater-pro, .daily-players-page, .daily-players-board, .daily-players-content, .results-studio, .profile-page, .settings-page, .live-games-pro, .player-research-hub, .team-matchup-lab, .daily-hr-board { width: 100%; min-width: 0; }
 
 .ve-premium-panel, .ve-card, .ve-card-soft, .ve-card-elevated, .ve-stat-card, .ve-surface-card, .ve-tool-card {
-  border: 1px solid rgba(0,240,255,.14);
-  background: linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.012)),rgba(2,6,23,.62);
-  box-shadow: 0 14px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.05);
+  border: 1px solid rgba(79,184,220,.14);
+  background: linear-gradient(135deg,rgba(231,236,243,.045),rgba(231,236,243,.012)),rgba(5,10,20,.62);
+  box-shadow: 0 14px 38px rgba(0,0,0,.36), inset 0 1px 0 rgba(231,236,243,.05);
   backdrop-filter: blur(18px) saturate(1.12);
 }
-.ve-button-primary { border: 1px solid rgba(0,240,255,.48); background: rgba(0,240,255,.13); color: #e6faff; }
-.ve-button-secondary { border: 1px solid rgba(255,255,255,.12); background: rgba(2,6,23,.52); color: rgba(255,255,255,.72); }
+.ve-button-primary { border: 1px solid rgba(79,184,220,.48); background: rgba(79,184,220,.13); color: #E7ECF3; }
+.ve-button-secondary { border: 1px solid rgba(231,236,243,.12); background: rgba(5,10,20,.52); color: rgba(231,236,243,.72); }
 .ve-button-primary, .ve-button-secondary { font-family: var(--z8-font-mono); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 
-.ve-edge-island-trigger { border: 1px solid rgba(0,240,255,.38); background: rgba(2,6,23,.82); box-shadow: 0 10px 30px rgba(0,0,0,.48),0 0 20px rgba(0,240,255,.1); backdrop-filter: blur(18px); transition: transform .2s ease,border-color .2s ease,background .2s ease; }
-.ve-edge-island-trigger:hover { transform: translateY(-2px); border-color: rgba(0,255,148,.55); background: rgba(0,240,255,.1); }
-.ve-edge-island-trigger-icon { color: #00f0ff; }
+.ve-edge-island-trigger { border: 1px solid rgba(79,184,220,.38); background: rgba(5,10,20,.82); box-shadow: 0 10px 30px rgba(0,0,0,.48),0 0 20px rgba(79,184,220,.1); backdrop-filter: blur(18px); transition: transform .2s ease,border-color .2s ease,background .2s ease; }
+.ve-edge-island-trigger:hover { transform: translateY(-2px); border-color: rgba(49,181,131,.55); background: rgba(79,184,220,.1); }
+.ve-edge-island-trigger-icon { color: #4FB8DC; }
 
 .home-feed-shell, .feed-main { width: 100%; max-width: 680px; min-width: 0; margin-inline: auto; }
 .home-feed-header, .home-feed-tabs, .feed-composer, .feed-post, .ve-social-stream-command, .ve-real-composer, .ve-vouch-composer {
-  border: 1px solid rgba(255,255,255,.08); background: rgba(2,6,23,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(14px);
+  border: 1px solid rgba(231,236,243,.08); background: rgba(5,10,20,.6); box-shadow: inset 0 1px 0 rgba(231,236,243,.035); backdrop-filter: blur(14px);
 }
-.feed-post:hover { border-color: rgba(0,240,255,.22); background: rgba(0,240,255,.035); }
+.feed-post:hover { border-color: rgba(79,184,220,.22); background: rgba(79,184,220,.035); }
 .feed-action-btn, .feed-icon-btn { display: inline-flex; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; border-radius: 999px; transition: background .18s ease,color .18s ease; }
-.feed-action-btn:hover, .feed-icon-btn:hover { background: rgba(0,240,255,.1); color: #00f0ff; }
+.feed-action-btn:hover, .feed-icon-btn:hover { background: rgba(79,184,220,.1); color: #4FB8DC; }
 
-.daily-players-page, .daily-players-board, .daily-theater-pro { color: rgba(255,255,255,.92); }
+.daily-players-page, .daily-players-board, .daily-theater-pro { color: rgba(231,236,243,.92); }
 .daily-matchup-card-pro, .daily-roster-panel-pro, .dp-game-card, .dp-roster-column, .daily-faceoff-header-pro {
-  border: 1px solid rgba(0,240,255,.14); background: rgba(2,6,23,.64); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); backdrop-filter: blur(16px);
+  border: 1px solid rgba(79,184,220,.14); background: rgba(5,10,20,.64); box-shadow: inset 0 1px 0 rgba(231,236,243,.04); backdrop-filter: blur(16px);
 }
-.daily-player-row-pro, .dp-player-row { border-color: rgba(255,255,255,.07); }
-.daily-player-row-pro:hover, .dp-player-row:hover { background: rgba(0,240,255,.055); }
+.daily-player-row-pro, .dp-player-row { border-color: rgba(231,236,243,.07); }
+.daily-player-row-pro:hover, .dp-player-row:hover { background: rgba(79,184,220,.055); }
 
-.ve-terminal-preview-row { background: rgba(2,6,23,.46); }
+.ve-terminal-preview-row { background: rgba(5,10,20,.46); }
 
 @media (min-width: 1280px) { :root { --ve-sidebar-width: 280px; } }
 @media (max-width: 1180px) { #layout-inner-frame.ve-layout-feed { grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); } .ve-edge-rail-right { display: none; } }
