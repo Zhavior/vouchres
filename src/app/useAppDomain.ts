@@ -80,10 +80,11 @@ export function useAppDomain({
     const optimisticProfile = { ...cur, ...updatedProfile };
     syncProfile(optimisticProfile);
 
-    const updates: Record<string, string | null> = {};
+    const updates: Record<string, unknown> = {};
     if (updatedProfile.displayName !== undefined) updates.display_name = updatedProfile.displayName;
     if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
     if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
+    if (updatedProfile.capperSettings !== undefined) updates.capper_settings = updatedProfile.capperSettings as unknown as string | null;
     if (Object.keys(updates).length === 0) return;
 
     void apiClient.patch<Record<string, unknown>>('/api/auth/profile', updates)

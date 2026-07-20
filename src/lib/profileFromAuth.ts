@@ -1,4 +1,5 @@
 import type { CreatorProofProfile } from "../types";
+import { normalizeCapperSettings } from "./capperSettings";
 import type { SubscriptionTier, UserProfile } from "./useAuth";
 
 type AuthMePayload = Partial<UserProfile> & Record<string, unknown>;
@@ -49,6 +50,7 @@ export function mapAuthMeToCreatorProof(
     isStaff: Boolean(data.is_staff ?? current?.isStaff),
     staff: Boolean(data.is_staff ?? current?.isStaff),
     isDeveloper: current?.isDeveloper,
+    capperSettings: normalizeCapperSettings(data.capper_settings ?? current?.capperSettings),
   };
 }
 

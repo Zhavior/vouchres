@@ -4,6 +4,10 @@ import {
   createNewFollowerNotification,
   ensureFollowAlertsEnabled,
 } from "../notifications/notificationService";
+import {
+  cancelMembershipForFollower,
+  ensureActiveMembershipForFollower,
+} from "../business/creatorBusinessService";
 
 export type RelationshipType = "follow" | "tail" | "subscribe";
 export type SocialGraphBucket = "all" | "following" | "followers" | "friends" | "subscribers" | "tailing";
@@ -35,6 +39,18 @@ export interface SocialGraphSummary {
   friends: number;
   subscribers: number;
   tailing: number;
+}
+
+export interface SuggestedSocialProfile {
+  profileId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string;
+  mutualCount: number;
+  followerCount: number;
+  postCount: number;
+  reason: string;
 }
 
 const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
@@ -146,6 +162,16 @@ export async function upsertFollow(input: {
   });
 
   if (input.followingProfileId && input.followingProfileId !== input.followerId) {
+    if (relationshipType === "subscribe") {
+      await ensureActiveMembershipForFollower({
+        ownerProfileId: input.followingProfileId,
+        followerProfileId: input.followerId,
+        source: "follow_subscribe",
+      }).catch((err) => {
+        console.warn("[follow] membership activate failed", (err as Error)?.message);
+      });
+    }
+
     await createNewFollowerNotification({
       followerId: input.followerId,
       followingProfileId: input.followingProfileId,
@@ -174,6 +200,16 @@ export async function removeFollow(input: {
     });
 
   if (error) throw error;
+
+  if (input.followingProfileId && input.followingProfileId !== input.followerId) {
+    await cancelMembershipForFollower({
+      ownerProfileId: input.followingProfileId,
+      followerProfileId: input.followerId,
+      source: "follow_unsubscribe",
+    }).catch((err) => {
+      console.warn("[follow] membership cancel failed", (err as Error)?.message);
+    });
+  }
 }
 
 export async function getProfileSocialStats(profileId: string): Promise<SocialGraphSummary & { posts: number }> {
@@ -427,4 +463,105 @@ export async function getRelationshipForTarget(input: {
     notifyEnabled: Boolean(data.notify_enabled ?? true),
     isFriend,
   };
+}
+
+export async function getSuggestedProfiles(input: {
+  userId: string;
+  limit?: number;
+}): Promise<SuggestedSocialProfile[]> {
+  const supabaseAdmin = await admin();
+  const limit = Math.min(Math.max(Number(input.limit ?? 8), 1), 24);
+
+  const rows = await loadFollowRowsForUser(input.userId);
+  const myFollowingIds = profileIdsUserFollows(rows, input.userId);
+  const followerIds = profileIdsFollowingUser(rows, input.userId);
+
+  const seedIds = [...new Set([...myFollowingIds, ...followerIds])];
+  if (seedIds.length === 0) return [];
+
+  const { data: secondDegreeRows, error: secondDegreeError } = await supabaseAdmin
+    .from("follows")
+    .select("follower_id, following_profile_id")
+    .in("follower_id", seedIds)
+    .not("following_profile_id", "is", null);
+
+  if (secondDegreeError) throw secondDegreeError;
+
+  const candidateMutualCounts = new Map<string, number>();
+  for (const row of secondDegreeRows ?? []) {
+    const candidateId = row.following_profile_id ? String(row.following_profile_id) : "";
+    if (!candidateId) continue;
+    if (candidateId === input.userId) continue;
+    if (myFollowingIds.has(candidateId)) continue;
+    candidateMutualCounts.set(candidateId, (candidateMutualCounts.get(candidateId) ?? 0) + 1);
+  }
+
+  const candidateIds = [...candidateMutualCounts.keys()];
+  if (candidateIds.length === 0) return [];
+
+  const [{ data: profiles, error: profileError }, { data: followerRows, error: followerError }, { data: postRows, error: postError }] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("id, username, handle, display_name, avatar_url, bio")
+      .in("id", candidateIds),
+    supabaseAdmin
+      .from("follows")
+      .select("following_profile_id")
+      .in("following_profile_id", candidateIds),
+    supabaseAdmin
+      .from("posts")
+      .select("author_id")
+      .in("author_id", candidateIds),
+  ]);
+
+  if (profileError) throw profileError;
+  if (followerError) throw followerError;
+  if (postError) throw postError;
+
+  const followerCountByProfile = new Map<string, number>();
+  for (const row of followerRows ?? []) {
+    const profileId = row.following_profile_id ? String(row.following_profile_id) : "";
+    if (!profileId) continue;
+    followerCountByProfile.set(profileId, (followerCountByProfile.get(profileId) ?? 0) + 1);
+  }
+
+  const postCountByProfile = new Map<string, number>();
+  for (const row of postRows ?? []) {
+    const profileId = row.author_id ? String(row.author_id) : "";
+    if (!profileId) continue;
+    postCountByProfile.set(profileId, (postCountByProfile.get(profileId) ?? 0) + 1);
+  }
+
+  return (profiles ?? [])
+    .map((profile: Record<string, unknown>) => {
+      const profileId = String(profile.id);
+      const mutualCount = candidateMutualCounts.get(profileId) ?? 0;
+      const followerCount = followerCountByProfile.get(profileId) ?? 0;
+      const postCount = postCountByProfile.get(profileId) ?? 0;
+      const reason = mutualCount > 1
+        ? `${mutualCount} mutual connections`
+        : mutualCount === 1
+          ? "1 mutual connection"
+          : followerCount > 0
+            ? `${followerCount} followers in network`
+            : "Active creator";
+
+      return {
+        profileId,
+        username: String(profile.handle ?? profile.username ?? profileId),
+        displayName: String(profile.display_name ?? profile.username ?? "Creator"),
+        avatarUrl: (profile.avatar_url as string | null) ?? null,
+        bio: String(profile.bio ?? ""),
+        mutualCount,
+        followerCount,
+        postCount,
+        reason,
+      } satisfies SuggestedSocialProfile;
+    })
+    .sort((a, b) => {
+      const aScore = a.mutualCount * 100 + a.followerCount * 3 + a.postCount;
+      const bScore = b.mutualCount * 100 + b.followerCount * 3 + b.postCount;
+      return bScore - aScore || a.displayName.localeCompare(b.displayName);
+    })
+    .slice(0, limit);
 }

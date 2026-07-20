@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiClient } from "../lib/apiClient";
+import { normalizeCapperSettings, type CapperSettings } from "../lib/capperSettings";
+import { ensureRealtimeAuth, supabase } from "../lib/supabaseClient";
 import type { Leg, Parlay } from "../types";
 
 export interface SubscriberAnnouncement {
@@ -34,6 +36,7 @@ export interface SubscriberChannel {
   subscriberCount: number;
   badge: string;
   isFollowing: boolean;
+  capperSettings: CapperSettings;
 }
 
 function channelKey(kind: SubscriberChannelKind, targetId: string): string {
@@ -125,6 +128,7 @@ export function useSubscriberHubData(input: {
   bio: string;
   winRate: number;
   totalPicks: number;
+  capperSettings?: CapperSettings;
 }) {
   const [channels, setChannels] = useState<SubscriberChannel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,6 +139,7 @@ export function useSubscriberHubData(input: {
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<SubscriberChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const activeChannelRef = useRef<SubscriberChannel | null>(null);
 
   const ownerChannelId = input.userId ? channelKey("owner", input.userId) : null;
 
@@ -170,6 +175,7 @@ export function useSubscriberHubData(input: {
         subscriberCount: 0,
         badge: "👑 OWNER",
         isFollowing: true,
+        capperSettings: normalizeCapperSettings(input.capperSettings),
       });
 
       for (const capper of data.cappers ?? []) {
@@ -187,6 +193,7 @@ export function useSubscriberHubData(input: {
           subscriberCount: Number(capper.follower_count ?? 0),
           badge: capper.is_demo ? "AI CAPPER" : "VERIFIED",
           isFollowing: followingCapperIds.has(String(capper.id)),
+          capperSettings: normalizeCapperSettings(undefined),
         });
       }
 
@@ -201,9 +208,10 @@ export function useSubscriberHubData(input: {
           bio: String(profile.bio ?? ""),
           winRate: winRateFromStats(Number(profile.won_picks ?? 0), Number(profile.lost_picks ?? 0)),
           totalPicks: Number(profile.total_picks ?? 0),
-          subscriberCount: 0,
+          subscriberCount: Number(profile.subscriber_count ?? 0),
           badge: "CREATOR",
           isFollowing: true,
+          capperSettings: normalizeCapperSettings(profile.capper_settings),
         });
       }
 
@@ -223,17 +231,19 @@ export function useSubscriberHubData(input: {
         subscriberCount: 0,
         badge: "👑 OWNER",
         isFollowing: true,
+        capperSettings: normalizeCapperSettings(input.capperSettings),
       }] : []);
     } finally {
       setLoading(false);
     }
-  }, [input.userId, input.displayName, input.username, input.bio, input.winRate, input.totalPicks]);
+  }, [input.userId, input.displayName, input.username, input.bio, input.winRate, input.totalPicks, input.capperSettings]);
 
   useEffect(() => {
     void refreshChannels();
   }, [refreshChannels]);
 
   const loadChannelParlays = useCallback(async (channel: SubscriberChannel | undefined) => {
+    activeChannelRef.current = channel ?? null;
     if (!channel || !input.userId) {
       setPremiumParlays([]);
       return;
@@ -263,6 +273,7 @@ export function useSubscriberHubData(input: {
   }, [input.userId]);
 
   const loadChannelAnnouncements = useCallback(async (channel: SubscriberChannel | undefined) => {
+    activeChannelRef.current = channel ?? null;
     if (!channel || !input.userId) {
       setAnnouncements([]);
       return;
@@ -294,6 +305,7 @@ export function useSubscriberHubData(input: {
   }, [input.userId]);
 
   const loadChannelMessages = useCallback(async (channel: SubscriberChannel | undefined) => {
+    activeChannelRef.current = channel ?? null;
     if (!channel || !input.userId) {
       setChatMessages([]);
       return;
@@ -375,6 +387,55 @@ export function useSubscriberHubData(input: {
     () => channels.filter((channel) => channel.isFollowing).map((channel) => channel.id),
     [channels],
   );
+
+  useEffect(() => {
+    if (!input.userId) return;
+
+    let disposed = false;
+    const channel = supabase.channel(`subscriber-hub:${input.userId}`);
+
+    const refreshActiveChannel = async () => {
+      const activeChannel = activeChannelRef.current;
+      if (!activeChannel) return;
+      await Promise.all([
+        loadChannelAnnouncements(activeChannel),
+        loadChannelMessages(activeChannel),
+        loadChannelParlays(activeChannel),
+      ]);
+    };
+
+    void ensureRealtimeAuth().catch(() => undefined);
+
+    channel
+      .on("postgres_changes", { event: "*", schema: "public", table: "follows" }, () => {
+        if (disposed) return;
+        void refreshChannels();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => {
+        if (disposed) return;
+        void refreshActiveChannel();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "subscriber_channel_messages" }, () => {
+        if (disposed) return;
+        void refreshActiveChannel();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "picks" }, () => {
+        if (disposed) return;
+        void refreshActiveChannel();
+      })
+      .subscribe();
+
+    return () => {
+      disposed = true;
+      void supabase.removeChannel(channel);
+    };
+  }, [
+    input.userId,
+    loadChannelAnnouncements,
+    loadChannelMessages,
+    loadChannelParlays,
+    refreshChannels,
+  ]);
 
   return {
     channels,

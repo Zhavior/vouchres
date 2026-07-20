@@ -15,12 +15,15 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  Sparkles,
   Trash2,
   User,
   Zap,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
 import { apiClient } from '../lib/apiClient';
+import { normalizeCapperSettings, type CapperHeroStyle } from '../lib/capperSettings';
+import { disableBrowserPush, enableBrowserPush } from '../lib/pushNotifications';
 import { VEButton } from './ui/ve';
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -44,7 +47,20 @@ interface SettingsPageProps {
   onUpdateProfile: (updated: Partial<CreatorProofProfile>) => void;
 }
 
-type SettingsTab = 'account' | 'billing' | 'notifications' | 'privacy';
+type CapperBusinessProduct = {
+  id: string;
+  code: 'free-follow' | 'vip-club' | string;
+  name: string;
+  description: string;
+  pricingModel: 'free' | 'one_time' | 'recurring' | 'waitlist';
+  priceCents: number;
+  billingInterval: string | null;
+  visibility: 'public' | 'hidden' | 'waitlist' | string;
+  active: boolean;
+  accessScope?: Record<string, boolean>;
+};
+
+type SettingsTab = 'account' | 'capper' | 'billing' | 'notifications' | 'privacy';
 type AppTier = 'BASIC' | 'GOLD' | 'SELLER_PRO';
 
 const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string; badge?: string }> = {
@@ -147,6 +163,7 @@ export default function SettingsPage({
   profile,
   onUpdateProfile,
 }: SettingsPageProps) {
+  const initialCapperSettings = useMemo(() => normalizeCapperSettings(profile.capperSettings), [profile.capperSettings]);
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [displayName, setDisplayName] = useState(profile.displayName || profileName || '');
   const [username, setUsername] = useState(profile.username || '');
@@ -155,6 +172,24 @@ export default function SettingsPage({
   const [twitter, setTwitter] = useState(profile.twitter || '');
   const [discord, setDiscord] = useState(profile.discord || '');
   const [telegram, setTelegram] = useState(profile.telegram || '');
+  const [clubName, setClubName] = useState(initialCapperSettings.clubName || profile.displayName || '');
+  const [clubTagline, setClubTagline] = useState(initialCapperSettings.clubTagline);
+  const [welcomeMessage, setWelcomeMessage] = useState(initialCapperSettings.welcomeMessage);
+  const [offerHeadline, setOfferHeadline] = useState(initialCapperSettings.offerHeadline);
+  const [offerSummary, setOfferSummary] = useState(initialCapperSettings.offerSummary);
+  const [ctaLabel, setCtaLabel] = useState(initialCapperSettings.ctaLabel);
+  const [ctaSubtext, setCtaSubtext] = useState(initialCapperSettings.ctaSubtext);
+  const [badgeText, setBadgeText] = useState(initialCapperSettings.badgeText);
+  const [heroStyle, setHeroStyle] = useState<CapperHeroStyle>(initialCapperSettings.heroStyle);
+  const [featuredTagsInput, setFeaturedTagsInput] = useState(initialCapperSettings.featuredTags.join(', '));
+  const [subscriberChatEnabled, setSubscriberChatEnabled] = useState(initialCapperSettings.subscriberChatEnabled);
+  const [announcementsEnabled, setAnnouncementsEnabled] = useState(initialCapperSettings.announcementsEnabled);
+  const [showVerifiedRecord, setShowVerifiedRecord] = useState(initialCapperSettings.showVerifiedRecord);
+  const [showTailRate, setShowTailRate] = useState(initialCapperSettings.showTailRate);
+  const [profanityFilterEnabled, setProfanityFilterEnabled] = useState(initialCapperSettings.profanityFilterEnabled);
+  const [linksAllowed, setLinksAllowed] = useState(initialCapperSettings.linksAllowed);
+  const [slowModeSeconds, setSlowModeSeconds] = useState(initialCapperSettings.slowModeSeconds);
+  const [autoWelcomeEnabled, setAutoWelcomeEnabled] = useState(initialCapperSettings.autoWelcomeEnabled);
 
   const [emailAlerts, setEmailAlerts] = useState(() => localStorage.getItem('vouchedge_email_alerts') !== 'false');
   const [pushAlerts, setPushAlerts] = useState(() => localStorage.getItem('vouchedge_push_alerts') !== 'false');
@@ -177,6 +212,10 @@ export default function SettingsPage({
 
   const [privacyLoading, setPrivacyLoading] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [capperSaved, setCapperSaved] = useState(false);
+  const [capperLoading, setCapperLoading] = useState(false);
+  const [capperProducts, setCapperProducts] = useState<CapperBusinessProduct[]>([]);
+  const [productSavingCode, setProductSavingCode] = useState<string | null>(null);
   const [billingPortalError, setBillingPortalError] = useState<string | null>(null);
 
   const [newPassword, setNewPassword] = useState('');
@@ -190,6 +229,7 @@ export default function SettingsPage({
 
   const nav: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'account', label: 'Profile', icon: User },
+    { id: 'capper', label: 'Capper', icon: Globe },
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy & Data', icon: Shield },
@@ -203,7 +243,7 @@ export default function SettingsPage({
   useEffect(() => {
     let cancelled = false;
     void apiClient
-      .get<{ preferences?: { follow_alerts_enabled?: boolean; tail_alerts_enabled?: boolean } }>(
+      .get<{ preferences?: { follow_alerts_enabled?: boolean; tail_alerts_enabled?: boolean; browser_push_enabled?: boolean } }>(
         '/api/notification-preferences',
       )
       .then((data) => {
@@ -214,6 +254,9 @@ export default function SettingsPage({
         if (typeof data.preferences.tail_alerts_enabled === 'boolean') {
           setTailAlerts(data.preferences.tail_alerts_enabled);
         }
+        if (typeof data.preferences.browser_push_enabled === 'boolean') {
+          setPushAlerts(data.preferences.browser_push_enabled);
+        }
       })
       .catch(() => {});
     return () => {
@@ -221,11 +264,65 @@ export default function SettingsPage({
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    setCapperLoading(true);
+    void apiClient
+      .get<{ business?: { displayName?: string; brandSettings?: any; products?: CapperBusinessProduct[] } }>('/api/creator-business/me')
+      .then((data) => {
+        if (cancelled || !data.business) return;
+        const brand = normalizeCapperSettings(data.business.brandSettings);
+        setCapperProducts(data.business.products ?? []);
+        setClubName(brand.clubName || profile.displayName || '');
+        setClubTagline(brand.clubTagline);
+        setWelcomeMessage(brand.welcomeMessage);
+        setOfferHeadline(brand.offerHeadline);
+        setOfferSummary(brand.offerSummary);
+        setCtaLabel(brand.ctaLabel);
+        setCtaSubtext(brand.ctaSubtext);
+        setBadgeText(brand.badgeText);
+        setHeroStyle(brand.heroStyle);
+        setFeaturedTagsInput(brand.featuredTags.join(', '));
+        setSubscriberChatEnabled(brand.subscriberChatEnabled);
+        setAnnouncementsEnabled(brand.announcementsEnabled);
+        setShowVerifiedRecord(brand.showVerifiedRecord);
+        setShowTailRate(brand.showTailRate);
+        setProfanityFilterEnabled(brand.profanityFilterEnabled);
+        setLinksAllowed(brand.linksAllowed);
+        setSlowModeSeconds(brand.slowModeSeconds);
+        setAutoWelcomeEnabled(brand.autoWelcomeEnabled);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCapperLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.displayName]);
+
   const persistNotificationPref = async (patch: Record<string, boolean>) => {
     try {
       await apiClient.patch('/api/notification-preferences', patch);
     } catch (err) {
       console.warn('[Settings] notification pref save failed', err);
+    }
+  };
+
+  const handlePushAlertsToggle = async (value: boolean) => {
+    setPushAlerts(value);
+    try {
+      if (value) {
+        await enableBrowserPush();
+        showToast('Push notifications enabled.');
+        return;
+      }
+      await disableBrowserPush();
+      showToast('Push notifications disabled.');
+    } catch (error: any) {
+      setPushAlerts(!value);
+      showToast(error?.message ?? 'Push notification update failed.', 'err');
     }
   };
 
@@ -276,6 +373,85 @@ export default function SettingsPage({
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 2000);
     showToast('Profile saved.');
+  };
+
+  const handleCapperSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const featuredTags = featuredTagsInput
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
+    const brandSettings = {
+      clubName: clubName.trim(),
+      clubTagline: clubTagline.trim(),
+      welcomeMessage: welcomeMessage.trim(),
+      offerHeadline: offerHeadline.trim(),
+      offerSummary: offerSummary.trim(),
+      ctaLabel: ctaLabel.trim(),
+      ctaSubtext: ctaSubtext.trim(),
+      badgeText: badgeText.trim(),
+      heroStyle,
+      featuredTags,
+      subscriberChatEnabled,
+      announcementsEnabled,
+      showVerifiedRecord,
+      showTailRate,
+      profanityFilterEnabled,
+      linksAllowed,
+      slowModeSeconds,
+      autoWelcomeEnabled,
+    };
+
+    setCapperLoading(true);
+    try {
+      const data = await apiClient.put<{ business?: { brandSettings?: any; displayName?: string; products?: CapperBusinessProduct[] } }>('/api/creator-business/me', {
+        displayName: clubName.trim() || profile.displayName || 'Creator Club',
+        brandSettings,
+      });
+      const normalized = normalizeCapperSettings(data.business?.brandSettings ?? brandSettings);
+      setCapperProducts(data.business?.products ?? capperProducts);
+      onUpdateProfile({ capperSettings: normalized });
+      setCapperSaved(true);
+      setTimeout(() => setCapperSaved(false), 2000);
+      showToast('Capper settings saved.');
+    } catch (err: any) {
+      showToast(err?.message ?? 'Capper settings could not be saved.', 'err');
+    } finally {
+      setCapperLoading(false);
+    }
+  };
+
+  const handleProductUpdate = async (product: CapperBusinessProduct, patch: Partial<CapperBusinessProduct>) => {
+    const nextProduct: CapperBusinessProduct = {
+      ...product,
+      ...patch,
+      accessScope: { ...(product.accessScope ?? {}), ...(patch.accessScope ?? {}) },
+    };
+    setProductSavingCode(product.code);
+    try {
+      const data = await apiClient.put<{ business?: { products?: CapperBusinessProduct[] } }>(
+        `/api/creator-business/me/products/${encodeURIComponent(product.code)}`,
+        {
+          code: product.code,
+          name: nextProduct.name,
+          description: nextProduct.description,
+          pricingModel: nextProduct.pricingModel,
+          priceCents: nextProduct.pricingModel === 'free' ? 0 : nextProduct.priceCents,
+          billingInterval: nextProduct.pricingModel === 'recurring' ? (nextProduct.billingInterval || 'month') : null,
+          visibility: nextProduct.visibility,
+          active: nextProduct.active,
+          accessScope: nextProduct.accessScope ?? {},
+        },
+      );
+      setCapperProducts(data.business?.products ?? capperProducts.map((entry) => entry.code === nextProduct.code ? nextProduct : entry));
+      showToast(`${nextProduct.name} updated.`);
+    } catch (err: any) {
+      showToast(err?.message ?? 'Product update failed.', 'err');
+    } finally {
+      setProductSavingCode(null);
+    }
   };
 
   const handleUpgrade = async (tier: AppTier) => {
@@ -686,6 +862,292 @@ export default function SettingsPage({
               </>
             )}
 
+            {/* ── CAPPER ── */}
+            {activeTab === 'capper' && (
+              <form onSubmit={handleCapperSave} className="space-y-8">
+                <Section title="Club identity" subtitle="This powers how your subscriber club looks and reads across SocialOS and the club hub.">
+                  <div className={`${Z8_SURFACE} rounded-xl p-4 sm:p-5`}>
+                    <div className={`rounded-2xl border p-4 ${
+                      heroStyle === 'emerald'
+                        ? 'border-emerald-500/30 bg-emerald-500/10'
+                        : heroStyle === 'crimson'
+                          ? 'border-rose-500/30 bg-rose-500/10'
+                          : 'border-vouch-cyan/25 bg-vouch-cyan/10'
+                    }`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">{badgeText || 'CREATOR CLUB'}</p>
+                          <h3 className="mt-1 text-lg font-semibold text-white">{clubName || displayName || 'Your club'}</h3>
+                          <p className="mt-1 text-sm text-white/65">{clubTagline || 'Shared parlays, verified wins, and clean subscriber access.'}</p>
+                        </div>
+                        <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-semibold text-white/55">
+                          {heroStyle}
+                        </div>
+                      </div>
+                      <p className="mt-4 text-xs leading-relaxed text-white/55">{welcomeMessage}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Club name</label>
+                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Zhavior Club" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Badge text</label>
+                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="CREATOR CLUB" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">Club tagline</label>
+                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="What your club is known for" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">Welcome message</label>
+                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="What a new follower should feel immediately" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">Club look</label>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {(['midnight', 'emerald', 'crimson'] as CapperHeroStyle[]).map((style) => (
+                        <button
+                          key={style}
+                          type="button"
+                          onClick={() => setHeroStyle(style)}
+                          className={`rounded-xl border px-3 py-3 text-left text-sm transition-colors ${
+                            heroStyle === style
+                              ? 'border-vouch-cyan/40 bg-vouch-cyan/10 text-white'
+                              : 'border-white/10 bg-black/25 text-white/60 hover:border-white/20 hover:text-white'
+                          }`}
+                        >
+                          <div className="font-semibold capitalize">{style}</div>
+                          <div className="mt-1 text-xs text-white/40">Club header treatment</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Offer and conversion" subtitle="This controls the language around why someone should follow your club.">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Offer headline</label>
+                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Free follow during beta" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Primary CTA</label>
+                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Follow club" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">Offer summary</label>
+                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Explain exactly what a follow unlocks" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">CTA subtext</label>
+                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Unlock shared parlays and club updates" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-400">Featured tags</label>
+                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="MLB, Parlays, Verified" />
+                    <p className="text-[11px] text-slate-500">Comma-separated. We use up to 6 tags across your club previews.</p>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Products and access" subtitle="These are the actual business products behind your club, closer to a Whop-style access model.">
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {capperProducts.map((product) => {
+                      const isSaving = productSavingCode === product.code;
+                      const accessScope = product.accessScope ?? {};
+                      return (
+                        <div key={product.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-white">{product.name}</p>
+                              <p className="mt-1 text-xs leading-relaxed text-slate-500">{product.description}</p>
+                            </div>
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
+                              product.active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-800 text-slate-500'
+                            }`}>
+                              {product.active ? 'Live' : 'Off'}
+                            </span>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-slate-400">Product name</label>
+                              <input
+                                value={product.name}
+                                onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, name: e.target.value } : entry))}
+                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-slate-400">Pricing model</label>
+                              <select
+                                value={product.pricingModel}
+                                onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, pricingModel: e.target.value as CapperBusinessProduct['pricingModel'] } : entry))}
+                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              >
+                                <option value="free">Free</option>
+                                <option value="waitlist">Waitlist</option>
+                                <option value="one_time">One-time</option>
+                                <option value="recurring">Recurring</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-400">Product description</label>
+                            <textarea
+                              value={product.description}
+                              onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, description: e.target.value } : entry))}
+                              rows={3}
+                              className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                            />
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-slate-400">Price</label>
+                              <input
+                                type="number"
+                                min={0}
+                                value={Math.round((product.priceCents ?? 0) / 100)}
+                                onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, priceCents: Math.max(0, Number(e.target.value) || 0) * 100 } : entry))}
+                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-slate-400">Billing</label>
+                              <select
+                                value={product.billingInterval ?? 'month'}
+                                onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, billingInterval: e.target.value } : entry))}
+                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              >
+                                <option value="month">Monthly</option>
+                                <option value="year">Yearly</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-slate-400">Visibility</label>
+                              <select
+                                value={product.visibility}
+                                onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, visibility: e.target.value as CapperBusinessProduct['visibility'] } : entry))}
+                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              >
+                                <option value="public">Public</option>
+                                <option value="hidden">Hidden</option>
+                                <option value="waitlist">Waitlist</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <PrefRow label="Shared parlays" detail="Members of this product can unlock shared slips.">
+                              <Toggle checked={accessScope.shared_parlays !== false} onChange={(value) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, accessScope: { ...(entry.accessScope ?? {}), shared_parlays: value } } : entry))} />
+                            </PrefRow>
+                            <PrefRow label="Club chat" detail="Members can enter and talk in club chat.">
+                              <Toggle checked={accessScope.club_chat !== false} onChange={(value) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, accessScope: { ...(entry.accessScope ?? {}), club_chat: value } } : entry))} />
+                            </PrefRow>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 border-t border-slate-800 pt-4">
+                            <div className="flex items-center gap-2">
+                              <Toggle
+                                checked={product.active}
+                                onChange={(value) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, active: value } : entry))}
+                              />
+                              <span className="text-xs text-slate-400">Product active</span>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => void handleProductUpdate(product, {})}
+                              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+                            >
+                              {isSaving ? 'Saving…' : 'Save product'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Trust and content" subtitle="Decide what proof and club surfaces stay visible to followers.">
+                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                    <PrefRow label="Show verified record" detail="Keep your tracked record visible on the club surface.">
+                      <Toggle checked={showVerifiedRecord} onChange={setShowVerifiedRecord} />
+                    </PrefRow>
+                    <PrefRow label="Show tail-rate framing" detail="Reserve space for follower performance and tailing trust signals.">
+                      <Toggle checked={showTailRate} onChange={setShowTailRate} />
+                    </PrefRow>
+                    <PrefRow label="Subscriber chat live" detail="Let followers talk in the club chat room.">
+                      <Toggle checked={subscriberChatEnabled} onChange={setSubscriberChatEnabled} />
+                    </PrefRow>
+                    <PrefRow label="Announcements live" detail="Allow official club broadcasts in the announcements feed.">
+                      <Toggle checked={announcementsEnabled} onChange={setAnnouncementsEnabled} />
+                    </PrefRow>
+                    <PrefRow label="Auto welcome tone" detail="Keep your saved welcome copy prominent across the club entry points.">
+                      <Toggle checked={autoWelcomeEnabled} onChange={setAutoWelcomeEnabled} />
+                    </PrefRow>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Moderation defaults" subtitle="These are the guardrails for how your club should behave as it grows.">
+                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                    <PrefRow label="Profanity filter" detail="Keep basic bad-word blocking turned on for subscriber chat.">
+                      <Toggle checked={profanityFilterEnabled} onChange={setProfanityFilterEnabled} />
+                    </PrefRow>
+                    <PrefRow label="Allow links" detail="Permit links in club messages. Keep this off if you want a cleaner room.">
+                      <Toggle checked={linksAllowed} onChange={setLinksAllowed} />
+                    </PrefRow>
+                    <div className="px-4 py-4 sm:px-5 sm:py-3.5">
+                      <label className="text-sm font-medium text-slate-200">Slow mode seconds</label>
+                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">0 keeps chat fully open. Higher values reduce spam.</p>
+                      <input
+                        type="number"
+                        min={0}
+                        max={300}
+                        value={slowModeSeconds}
+                        onChange={(e) => setSlowModeSeconds(Math.min(300, Math.max(0, Number(e.target.value) || 0)))}
+                        className="mt-3 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 sm:max-w-[160px]"
+                      />
+                    </div>
+                  </div>
+                </Section>
+
+                <div className="flex flex-col gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-end">
+                  <button
+                    type="submit"
+                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:w-auto ${
+                      capperSaved
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-blue-600 text-white hover:bg-blue-500'
+                    }`}
+                  >
+                    {capperSaved ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                    {capperSaved ? 'Saved' : 'Save capper settings'}
+                  </button>
+                </div>
+              </form>
+            )}
+
             {/* ── BILLING ── */}
             {activeTab === 'billing' && (
               <div className="space-y-8">
@@ -839,7 +1301,7 @@ export default function SettingsPage({
                 <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
                   <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
                     <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
-                      <Toggle checked={pushAlerts} onChange={setPushAlerts} />
+                      <Toggle checked={pushAlerts} onChange={(value) => { void handlePushAlertsToggle(value); }} />
                     </PrefRow>
                     <PrefRow label="Following alerts" detail="Posts and activity from people you follow. Turned on automatically when you follow someone.">
                       <Toggle

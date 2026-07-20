@@ -8,6 +8,8 @@ import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import { HandleSchema, validateHandle } from "../lib/handleSchema";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { normalizeCapperSettings } from "../../src/lib/capperSettings";
+import { syncLegacyCapperSettingsToCreatorBusiness } from "../services/business/creatorBusinessService";
 
 /**
  * Auth routes — minimal session/profile endpoints used by the frontend.
@@ -41,6 +43,7 @@ const ME_PROFILE_COLUMNS = `
   age_confirmed_at,
   jurisdiction_confirmed_at,
   jurisdiction,
+  capper_settings,
   created_at,
   updated_at
 `;
@@ -72,12 +75,34 @@ authRoutes.post("/signout", requireAuth, asyncHandler(async (req: AuthedRequestW
   return res.json(apiOkFlat(req, {}));
 }));
 
+const CapperSettingsSchema = z.object({
+  clubName: z.string().trim().max(60),
+  clubTagline: z.string().trim().max(140),
+  welcomeMessage: z.string().trim().max(240),
+  offerHeadline: z.string().trim().max(80),
+  offerSummary: z.string().trim().max(220),
+  ctaLabel: z.string().trim().max(32),
+  ctaSubtext: z.string().trim().max(120),
+  badgeText: z.string().trim().max(24),
+  heroStyle: z.enum(["midnight", "emerald", "crimson"]),
+  featuredTags: z.array(z.string().trim().max(20)).max(6),
+  subscriberChatEnabled: z.boolean(),
+  announcementsEnabled: z.boolean(),
+  showVerifiedRecord: z.boolean(),
+  showTailRate: z.boolean(),
+  profanityFilterEnabled: z.boolean(),
+  linksAllowed: z.boolean(),
+  slowModeSeconds: z.number().int().min(0).max(300),
+  autoWelcomeEnabled: z.boolean(),
+});
+
 const ProfileUpdateSchema = z.object({
   handle: HandleSchema.optional(),
   username: HandleSchema.optional(),
   display_name: z.string().max(64).optional(),
   bio: z.string().max(500).optional(),
   avatar_url: z.string().url().max(500).optional().nullable(),
+  capper_settings: CapperSettingsSchema.optional(),
 });
 
 async function assertHandleAvailable(handle: string, excludeUserId: string) {
@@ -115,6 +140,7 @@ authRoutes.patch(
     if (updates.display_name !== undefined) safeUpdates.display_name = updates.display_name;
     if (updates.bio !== undefined) safeUpdates.bio = updates.bio;
     if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url;
+    if (updates.capper_settings !== undefined) safeUpdates.capper_settings = normalizeCapperSettings(updates.capper_settings);
 
     if (Object.keys(safeUpdates).length === 0) {
       throw new AppError({
@@ -140,6 +166,14 @@ authRoutes.patch(
         message: "Failed to update profile.",
         cause: error,
       });
+    }
+
+    if (safeUpdates.capper_settings !== undefined) {
+      try {
+        await syncLegacyCapperSettingsToCreatorBusiness(req.user!.id, safeUpdates.capper_settings);
+      } catch (syncError) {
+        console.warn("[auth] creator business sync failed", (syncError as Error)?.message ?? syncError);
+      }
     }
 
     return res.json(apiOkFlat(req, data as unknown as Record<string, unknown>));

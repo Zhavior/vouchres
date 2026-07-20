@@ -30,12 +30,14 @@ import { registerAiJudgeSocialRoutes } from "./aiJudgeSocialRoutes";
 import { registerCentralBrainRoutes } from "./centralBrainRoutes";
 import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
+import { creatorBusinessRoutes } from "./creatorBusinessRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
 import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
 import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
+import { getLegacyRouteMetricsSnapshot } from "../lib/observability/legacyRouteMetrics";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
@@ -75,6 +77,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", subscriberRoutes);
   app.use("/api", worldChatRoutes);
   app.use("/api", socialHubRoutes);
+  app.use("/api", creatorBusinessRoutes);
 
   registerMlbRoutes(app);
   registerNflRoutes(app);
@@ -184,12 +187,14 @@ export function registerApiRoutes(app: Express): void {
   app.get("/api/health/metrics", requireAuth, requireStaff, (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
     const parlayGrade = getParlayGradeMetricsSnapshot();
+    const legacyRoutes = getLegacyRouteMetricsSnapshot();
     res.json(apiOkFlat(req, {
       service: "vouchedge-backend",
       schema: "route_metrics_v2",
       updatedAt: new Date().toISOString(),
       metrics,
       parlayGrade,
+      legacyRoutes,
     }));
   });
 

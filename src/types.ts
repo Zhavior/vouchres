@@ -1,3 +1,5 @@
+import type { CapperSettings } from './lib/capperSettings';
+
 export interface Leg {
   id: string;
   sport: string;
@@ -251,6 +253,7 @@ export interface CreatorProofProfile {
   isStaff?: boolean;
   staff?: boolean;
   isDeveloper?: boolean;
+  capperSettings?: CapperSettings;
 }
 
 export interface GameMarket {

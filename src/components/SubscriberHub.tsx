@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -26,6 +26,7 @@ import { decimalToAmerican } from '../utils/oddsHelper';
 import { getFounderPointsLabel } from "../lib/founderAccess";
 import { useAuth } from '../lib/useAuth';
 import { useSubscriberHubData, type SubscriberChannel } from '../hooks/useSubscriberHubData';
+import { normalizeCapperSettings } from '../lib/capperSettings';
 import {
   Z8_ACTIVE,
   Z8_DISPLAY,
@@ -105,6 +106,7 @@ export default function SubscriberHub({
     bio: profile.bio,
     winRate: profile.winRate,
     totalPicks: profile.totalPicks,
+    capperSettings: profile.capperSettings,
   });
 
   const [activeTab, setActiveTab] = useState<'explore' | 'channel_settings'>('explore');
@@ -117,14 +119,23 @@ export default function SubscriberHub({
   const [announcementPublishing, setAnnouncementPublishing] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [chatSending, setChatSending] = useState(false);
-  const [subPlans] = useState([
-    { months: 1, name: 'Follow', price: 0, savings: 'Free during beta', note: 'Follow creators to unlock shared parlays.' },
-  ]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editPrice, setEditPrice] = useState<number>(0);
   const [editPerk, setEditPerk] = useState<string>('');
 
   const selectedChannel = channels.find((channel) => channel.id === selectedCapperId);
+  const ownerClubSettings = normalizeCapperSettings(profile.capperSettings);
+  const selectedClubSettings = normalizeCapperSettings(selectedChannel?.capperSettings);
+  const modalClubSettings = normalizeCapperSettings(selectedCapperForSub?.capperSettings);
+  const subPlans = useMemo(() => [
+    {
+      months: 1,
+      name: ownerClubSettings.offerHeadline || 'Follow',
+      price: 0,
+      savings: ownerClubSettings.ctaLabel || 'Free during beta',
+      note: ownerClubSettings.offerSummary || 'Follow creators to unlock shared parlays.',
+    },
+  ], [ownerClubSettings]);
 
   useEffect(() => {
     if (selectedChannel) {
@@ -198,7 +209,7 @@ export default function SubscriberHub({
       {/* Demo banner */}
       <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
         <span className={`${Z8_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
-        Follow cappers to unlock shared parlay picks. Club chat and announcements are live; paid tiers remain in beta.
+        {ownerClubSettings.offerSummary}
       </div>
 
       {/* Page Header */}
@@ -249,7 +260,7 @@ export default function SubscriberHub({
               How VouchEdge Subscriptions Work
             </h3>
             <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-              Follow creators to unlock their shared parlay picks. Club chat and announcements are live; paid tiers remain in beta.
+            {ownerClubSettings.offerSummary}
             </p>
           </div>
 
@@ -291,8 +302,16 @@ export default function SubscriberHub({
                     </div>
 
                     <p className="text-[11px] text-white/45 leading-relaxed font-semibold">
-                      {capper.bio}
+                      {capper.capperSettings.clubTagline || capper.bio}
                     </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {capper.capperSettings.featuredTags.slice(0, 3).map((tag) => (
+                        <span key={`${capper.id}-${tag}`} className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[9px] font-mono text-white/45 uppercase">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
 
                     <div className="flex items-center justify-between text-[11px] font-mono border-t border-slate-850/50 pt-2 text-white/45">
                       <span>Total Tracked: <strong>{capper.totalPicks}</strong></span>
@@ -413,7 +432,7 @@ export default function SubscriberHub({
 
               <div className="space-y-2.5 text-xs text-white/45">
                 <p className="font-semibold text-white/65">
-                  {channels.find(c => c.id === selectedCapperId)?.bio}
+                  {selectedClubSettings.clubTagline || channels.find(c => c.id === selectedCapperId)?.bio}
                 </p>
                 <div className="border-t border-slate-850/50 pt-2.5 space-y-1.5 font-mono text-[10px]">
                   <div className="flex justify-between">
@@ -432,7 +451,7 @@ export default function SubscriberHub({
               </div>
 
               <div className="bg-obsidian-900/40 p-3 rounded-lg border border-slate-850 font-mono text-[9px] text-dashed text-white/40 leading-normal">
-                🛡️ Follow-gated picks only. Shared parlays require an active follow relationship.
+                🛡️ {selectedClubSettings.welcomeMessage}
               </div>
             </div>
 
@@ -600,12 +619,14 @@ export default function SubscriberHub({
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
                       <p className="text-[10px] text-white/40 leading-normal mt-0.5">
-                        Text-only club broadcasts for followers. Parlay shares still go through the main feed and lock on share.
+                        {selectedClubSettings.announcementsEnabled
+                          ? 'Text-only club broadcasts for followers. Parlay shares still go through the main feed and lock on share.'
+                          : 'Announcements are paused for this club right now.'}
                       </p>
                     </div>
                   </div>
 
-                  {selectedCapperId === ownerChannelId && (
+                  {selectedCapperId === ownerChannelId && selectedClubSettings.announcementsEnabled && (
                     <form
                       onSubmit={handlePublishAnnouncement}
                       className="p-4 bg-black/30 border border-indigo-900/30 rounded-xl space-y-3"
@@ -684,7 +705,7 @@ export default function SubscriberHub({
               Customize Subscription Offerings
             </h3>
             <p className="text-xs text-white/45 lines-normal">
-              Paid subscription tiers are not live during beta. Follow is free and gates shared parlay picks.
+              {ownerClubSettings.offerSummary}
             </p>
           </div>
 
@@ -701,10 +722,10 @@ export default function SubscriberHub({
                   <div className="space-y-2.5">
                     {/* Visual Segment header */}
                     <div className="flex items-center justify-between border-b border-slate-850 pb-2.5">
-                      <span className="text-xs font-black uppercase tracking-widest text-[#fbbf24] font-mono flex items-center gap-1">
-                        <DollarSign className="w-4 h-4 text-[#fbbf24]" />
-                        {durationLabel}
-                      </span>
+                        <span className="text-xs font-black uppercase tracking-widest text-[#fbbf24] font-mono flex items-center gap-1">
+                          <DollarSign className="w-4 h-4 text-[#fbbf24]" />
+                          {ownerClubSettings.offerHeadline || durationLabel}
+                        </span>
                     </div>
 
                     {isEditingThis ? (
@@ -746,6 +767,9 @@ export default function SubscriberHub({
                         </div>
                         <div className="text-[10px] text-white/40 italic mt-1 font-mono">
                           {plan.note || 'Full club access included'}
+                        </div>
+                        <div className="text-[10px] text-vouch-cyan/80 font-mono">
+                          {ownerClubSettings.ctaSubtext}
                         </div>
                       </div>
                     )}
@@ -803,7 +827,7 @@ export default function SubscriberHub({
                   Subscribe to {selectedCapperForSub.name}
                 </h3>
                 <p className="text-xs text-white/45 mt-0.5">
-                  Choose your subscription length to unlock premium club insights and tools.
+                  {modalClubSettings.offerSummary}
                 </p>
               </div>
               <button 
@@ -823,7 +847,14 @@ export default function SubscriberHub({
                 <Sparkles className="w-4 h-4 text-sky-400" />
                 Full club access includes:
               </h4>
+              <p className="text-[11px] leading-relaxed text-white/45">{modalClubSettings.ctaSubtext}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-white/65">
+                {modalClubSettings.featuredTags.slice(0, 3).map((tag) => (
+                  <div key={`${selectedCapperForSub.id}-${tag}`} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
+                    <span>{tag}</span>
+                  </div>
+                ))}
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
                   <span>premium picks</span>
@@ -864,7 +895,7 @@ export default function SubscriberHub({
               <h4 className="text-sm font-black uppercase tracking-widest text-slate-350">
                 Choose your subscription length
               </h4>
-              <p className="text-[11px] text-slate-450">Every billing duration unlocks the exact same complete access with greater long-term value</p>
+              <p className="text-[11px] text-slate-450">{modalClubSettings.offerHeadline}</p>
             </div>
 
             {/* Pricing Cards Grid */}
@@ -924,7 +955,7 @@ export default function SubscriberHub({
             {/* Disclaimer & Balance Indicator */}
             <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-white/40 font-mono border-t border-white/10 pt-4 gap-2">
               <span>Follow is free during beta</span>
-              <span>Shared parlays unlock after follow</span>
+              <span>{modalClubSettings.ctaLabel}</span>
             </div>
 
           </div>
