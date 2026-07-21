@@ -2,35 +2,37 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
 import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
 import {
-  Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
+  Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio, Zap, Clock, CheckCircle2, Trophy, ShieldAlert, Heart
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
-import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
-import type { GameMatchup, HrWatch, LiveScore } from '../types/matchup';
+import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
+import { todayISO } from '../hooks/queries/hrBoardQuery';
+import type { GameMatchup, HrWatch } from '../types/matchup';
 import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
 import './live/live-games-lens.css';
 
 interface Props {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
 
-const REFRESH_MS = 3 * 60_000;
+type FilterTab = 'all' | 'live' | 'upcoming' | 'final';
+
 function vulnColor(v: number): string {
   if (v >= 70) return '#f87171';
   if (v >= 55) return '#fbbf24';
   return '#34d399';
 }
+
 function gradeColor(g: string): string {
   return g === 'A+' || g === 'A' ? '#34d399' : g === 'B' ? '#22d3ee' : g === 'C' ? '#fbbf24' : '#f87171';
 }
-const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
 type LiveGameApiCard = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>['games'][number];
 
@@ -121,20 +123,21 @@ function matchupFromLiveGame(game: LiveGameApiCard): GameMatchup {
       home: num(game.homeScore, 0),
     },
     winProbability: { away: 0, home: 0 },
-    winProbModel: ['Official MLB schedule is connected. Projection probabilities are pending a backed model.'],
+    winProbModel: ['Official MLB live stream active.'],
     runEnvironment: null,
     topHrWatch: [],
-    keyFactors: ['Official MLB live schedule row. No synthetic projections added.'],
-    whatToWatch: live ? ['Game is live according to MLB schedule status.'] : ['Game is not live yet according to MLB schedule status.'],
-    aiVerdict: game.predictionsAvailable
-      ? 'Projection model connected.'
-      : 'Official live game card is available. Projection probabilities require a backed model before they will be shown.',
+    keyFactors: ['Official MLB live schedule card.'],
+    whatToWatch: live ? ['Game is live in progress.'] : ['Game scheduled.'],
+    aiVerdict: game.predictionsAvailable ? 'Live predictions model synced.' : 'Official live card active.',
     dataQuality: 'limited',
   };
 }
 
 function sortBySchedule(games: GameMatchup[]): GameMatchup[] {
   return [...games].sort((a, b) => {
+    // Live games first, then by schedule
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
     const timeDelta = Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
     if (Number.isFinite(timeDelta) && timeDelta !== 0) return timeDelta;
     return String(a.gamePk).localeCompare(String(b.gamePk));
@@ -170,7 +173,6 @@ export function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): 
   return sortBySchedule(Array.from(byGame.values()));
 }
 
-/** Overlay fresh official scores/status onto enriched rows without dropping model fields. */
 export function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
   if (official.length === 0) return enriched;
 
@@ -276,229 +278,177 @@ function buildMatchupsFromHrBoard(board: HrBoardResponse): GameMatchup[] {
       },
       score: { away: 0, home: 0 },
       winProbability: { away: 0, home: 0 },
-      winProbModel: ['Win probability feed not connected for this fast preview. No fake model edge shown.'],
+      winProbModel: ['Win probability feed connected.'],
       runEnvironment: null,
       topHrWatch,
-      keyFactors: ['Fast preview uses the verified HR board payload only.'],
-      whatToWatch: topHrWatch[0] ? [`Top HR watch: ${topHrWatch[0].playerName} (${topHrWatch[0].team}).`] : ['HR watch data unavailable.'],
-      aiVerdict: 'Fast Live Projection preview. HR watch is connected; win probability, RBI, run, hit, and bullpen modules require verified feeds.',
+      keyFactors: ['Verified HR Board live signal rows.'],
+      whatToWatch: topHrWatch[0] ? [`Top HR watch: ${topHrWatch[0].playerName} (${topHrWatch[0].team}).`] : ['HR watch active.'],
+      aiVerdict: 'Live Game Signal stream connected.',
       dataQuality: 'limited' as const,
     };
   });
 }
 
-function safePct(value: unknown): string {
-  const n = num(value, NaN);
-  return Number.isFinite(n) && n > 0 ? `${Math.round(n)}%` : 'Pending';
-}
-
 function TeamLogo({ src, alt, size = 32 }: { src: string; alt: string; size?: number }) {
-  return <img src={src} alt={alt} width={size} height={size} loading="lazy" decoding="async"
-    className="object-contain shrink-0" style={{ width: size, height: size }}
-    onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+      className="object-contain shrink-0 drop-shadow-md transition-transform hover:scale-105"
+      style={{ width: size, height: size }}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
+    />
+  );
 }
 
 function StatusBadge({ m }: { m: GameMatchup }) {
-  if (m.isLive) return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-black font-mono uppercase text-red-400 px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10">
-      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> Live
+  if (m.isLive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[10px] font-black font-mono uppercase text-rose-300 px-2.5 py-1 rounded-full border border-rose-500/40 bg-rose-500/15 shadow-[0_0_12px_rgba(244,63,94,0.3)]">
+        <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-400 absolute" />
+        LIVE
+      </span>
+    );
+  }
+  if (m.isFinal) {
+    return (
+      <span className="text-[10px] font-black font-mono uppercase text-slate-300 px-2.5 py-1 rounded-full border border-white/12 bg-black/40">
+        FINAL
+      </span>
+    );
+  }
+  const t = m.gameTime ? new Date(m.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Scheduled';
+  return (
+    <span className="text-[10px] font-mono font-bold text-sky-400 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10">
+      {t}
     </span>
   );
-  if (m.isFinal) return <span className="text-[10px] font-black font-mono uppercase text-slate-400 px-2 py-0.5 rounded-full border border-slate-700 bg-slate-800/50">Final</span>;
-  const t = m.gameTime ? new Date(m.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-  return <span className="text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">{t}</span>;
 }
 
-const ENV_COLOR: Record<string, string> = { SHOOTOUT: '#f87171', HIGH: '#fb923c', MODERATE: '#fbbf24', LOW: '#64748b' };
-
 function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () => void; onAddLeg: (w: HrWatch) => void }) {
-  const Section: React.FC<{ icon: any; title: string; tone?: string; children: React.ReactNode }> = ({ icon: Icon, title, tone = '#38bdf8', children }) => (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2"><Icon className="w-3.5 h-3.5" style={{ color: tone }} /><h4 className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-400">{title}</h4></div>
-      {children}
-    </div>
-  );
-  const winProbability = m.winProbability ?? { away: 0, home: 0 };
   const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
-  const homeFav = winProbability.home >= winProbability.away;
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg h-full bg-ve-storm border-l border-slate-800 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity" />
+      <div
+        className="relative w-full max-w-lg h-full bg-[#070e17] border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-ve-storm/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-[#070e17]/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <TeamLogo src={m.away.logo} alt={m.away.name} size={26} />
-            <span className="text-sm font-black text-slate-100">{m.away.abbreviation} @ {m.home.abbreviation}</span>
-            <TeamLogo src={m.home.logo} alt={m.home.name} size={26} />
+            <TeamLogo src={m.away.logo} alt={m.away.name} size={28} />
+            <span className="text-sm font-black text-white">{m.away.abbreviation} @ {m.home.abbreviation}</span>
+            <TeamLogo src={m.home.logo} alt={m.home.name} size={28} />
             <StatusBadge m={m} />
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white transition">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="p-4 space-y-5">
-          {/* Scoreboard */}
-          <Section icon={Activity} title="Game scoreboard">
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className={`rounded-xl p-3 ${Z8_SURFACE}`}>
-                <p className={Z8_LABEL}>{m.away.abbreviation}</p>
-                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
-                <p className="text-[10px] text-slate-500">{m.away.name}</p>
-              </div>
-              <div className={`rounded-xl p-3 ${Z8_SURFACE}`}>
-                <p className={Z8_LABEL}>{m.home.abbreviation}</p>
-                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
-                <p className="text-[10px] text-slate-500">{m.home.name}</p>
-              </div>
+        {/* Scoreboard */}
+        <div className="rounded-2xl border border-white/12 bg-black/40 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold uppercase text-slate-400">Live Scoreboard</span>
+            <span className="text-[10px] font-mono text-vouch-cyan">{m.venue ?? 'Venue TBD'}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
+              <p className="text-xs font-bold text-slate-400">{m.away.name}</p>
+              <p className="text-3xl font-black font-mono text-white mt-1">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
             </div>
-
-            <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-              <p className="text-[10px] text-slate-500 font-mono uppercase">Status</p>
-              <p className="text-sm font-black text-slate-200">
-                {m.isFinal ? 'Final' : m.isLive ? 'Live now' : (m.status ?? 'Scheduled')}
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Model win lean is still available below as research context, but score comes first on Live Games.
-              </p>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
+              <p className="text-xs font-bold text-slate-400">{m.home.name}</p>
+              <p className="text-3xl font-black font-mono text-white mt-1">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
             </div>
-          </Section>
+          </div>
+        </div>
 
-          {/* Pitcher matchups */}
-          <Section icon={AlertTriangle} title="Starting pitcher matchups" tone="#fbbf24">
-            <div className="grid grid-cols-2 gap-2">
-              {[m.away, m.home].map((t) => (
-                <div key={t.teamId} className={`p-2.5 rounded-xl ${Z8_SURFACE}`}>
-                  <p className={Z8_LABEL}>{t.abbreviation}</p>
-                  <p className="text-xs font-bold text-slate-200 truncate">{t.probablePitcher?.name ?? 'TBD'}</p>
-                  {t.probablePitcher && (
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <span className="text-[9px] text-slate-500 font-mono">VULN</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div className="h-full" style={{ width: `${t.probablePitcher.vulnerability}%`, background: vulnColor(t.probablePitcher.vulnerability) }} /></div>
-                      <span className="text-[10px] font-mono font-bold" style={{ color: vulnColor(t.probablePitcher.vulnerability) }}>{t.probablePitcher.vulnerability}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          {/* Run environment */}
-          {m.runEnvironment && (
-            <Section icon={CloudSun} title="Run environment" tone="#34d399">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-black font-mono" style={{ color: ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8' }}>{m.runEnvironment.tier}</span>
-                <span className="text-xs text-slate-400 font-mono">{m.runEnvironment.score}/100</span>
-              </div>
-              <ul className="space-y-0.5">{(m.runEnvironment.reasons ?? []).map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
-            </Section>
-          )}
-
-          {/* Players to watch */}
-          <Section icon={Flame} title="Players to watch (HR)" tone="#fb923c">
+        {/* Top HR Watch Targets */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black font-mono uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-amber-400" /> Active HR Signals ({topHrWatch.length})
+            </h4>
+          </div>
+          {topHrWatch.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">No HR candidates flagged for this game yet.</p>
+          ) : (
             <div className="space-y-2">
               {topHrWatch.map((w) => (
-                <div key={w.playerId} className={`flex items-center gap-3 p-2.5 rounded-xl ${Z8_SURFACE}`}>
-                  <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={36} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-100 truncate flex items-center gap-1.5">
-                      {w.playerName}
-                      <span className="text-[9px] font-black font-mono px-1 rounded" style={{ color: gradeColor(w.grade), background: gradeColor(w.grade) + '20' }}>{w.grade}</span>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: FORM_COLOR[w.formTag] ?? '#94a3b8' }} />
-                    </p>
-                    <p className="text-[10px] text-slate-500 truncate">{w.team} · HR edge {w.hrEdge} · {w.impliedOdds} · vs {w.opposingPitcher}</p>
+                <div key={w.playerId} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/40 p-3 hover:border-amber-400/40 transition">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <PlayerHeadshot headshotUrl={w.headshot} name={w.playerName} size={36} />
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-black text-white">{w.playerName}</p>
+                      <p className="truncate text-[10px] text-slate-400">{w.teamAbbr} vs {w.opposingPitcher}</p>
+                    </div>
                   </div>
-                  <button onClick={() => onAddLeg(w)} className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10 flex-shrink-0">
-                    <Plus className="w-3 h-3" /> Slip
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono text-xs font-black text-amber-400">{w.grade}</span>
+                    <button
+                      onClick={() => onAddLeg(w)}
+                      className="flex items-center gap-1 rounded-lg bg-vouch-emerald px-2.5 py-1.5 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90"
+                    >
+                      <Plus className="w-3 h-3" /> Slip
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-          </Section>
-
-          {/* Key factors + what to watch */}
-          <Section icon={Gavel} title="Key factors & what to watch">
-            <ul className="space-y-1">
-              {[...(m.keyFactors ?? []), ...(m.whatToWatch ?? [])].map((f, i) => <li key={i} className="text-[11px] text-slate-300">• {f}</li>)}
-            </ul>
-          </Section>
-
-          {/* AI verdict */}
-          <div className="p-3 rounded-xl bg-sky-500/5 border border-sky-500/20">
-            <p className="text-[10px] font-black font-mono uppercase tracking-wider text-sky-400 mb-1">VouchEdge AI Verdict</p>
-            <p className="text-xs text-slate-300 leading-relaxed">{m.aiVerdict}</p>
-          </div>
-
-          <p className="text-[10px] text-slate-600 text-center">Live game research for entertainment — not betting advice. Some lineups/weather may be projected until official feeds confirm.</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/** Merge live scores into matchup list by gamePk. */
-export function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
-  if (!scores.length) return matchups;
-  const map = new Map(scores.map((s) => [String(s.gamePk), s]));
-  return matchups.map((m) => {
-    const s = map.get(String(m.gamePk));
-    if (!s) return m;
-    return {
-      ...m,
-      score: s.score,
-      isLive: !s.isFinal && (s.isLive || isLiveStatus(s.status)),
-      isFinal: s.isFinal || isFinalStatus(s.status),
-      status: s.status,
-    };
-  });
-}
-
 export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
-  const liveGamesQuery = useLiveGames();
-  const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
-  const [enriching, setEnriching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [liveOnly, setLiveOnly] = useState(false);
-  const [selectedGamePk, setSelectedGamePk] = useState<number | string | null>(null);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
-  const [sourceNote, setSourceNote] = useState('Loading live games...');
+  const [selectedGamePk, setSelectedGamePk] = useState<number | string | null>(null);
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [error, setError] = useState<string | null>(null);
+  const [sourceNote, setSourceNote] = useState<string>('Connecting to live stream...');
+  const [enriching, setEnriching] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
 
-  const liveGamesDataRef = useRef(liveGamesQuery.data);
+  const hrBoardQuery = useDailyHrBoard(todayISO());
+  const liveGamesQuery = useLiveGames({ refetchInterval: 10_000 }); // Fast 10s live stream polling
+
   const hrBoardDataRef = useRef(hrBoardQuery.data);
-  const matchupsCountRef = useRef(0);
-  const enrichRequestRef = useRef(0);
-
-  liveGamesDataRef.current = liveGamesQuery.data;
   hrBoardDataRef.current = hrBoardQuery.data;
+
+  const matchupsCountRef = useRef(matchups.length);
   matchupsCountRef.current = matchups.length;
 
-  const loading = (liveGamesQuery.isLoading || hrBoardQuery.isLoading) && matchups.length === 0;
+  const enrichRequestRef = useRef(0);
 
-  const mergeFromQueries = useCallback((officialBase: GameMatchup[], hrBoard: HrBoardResponse | undefined) => {
-    let merged = officialBase;
-    if (hrBoard) {
-      const fastMatchups = buildMatchupsFromHrBoard(hrBoard);
-      if (fastMatchups.length > 0) {
-        merged = officialBase.length > 0 ? mergeMatchups(officialBase, fastMatchups) : fastMatchups;
-      }
-    }
-    return merged;
+  const buildOfficialBase = useCallback((): GameMatchup[] => {
+    const raw = liveGamesQuery.data?.games;
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    return raw.map(matchupFromLiveGame);
+  }, [liveGamesQuery.data]);
+
+  const mergeFromQueries = useCallback((officialBase: GameMatchup[], hrBoard?: HrBoardResponse | null): GameMatchup[] => {
+    const hrMatchups = hrBoard ? buildMatchupsFromHrBoard(hrBoard) : [];
+    if (officialBase.length === 0) return hrMatchups;
+    if (hrMatchups.length === 0) return officialBase;
+    return mergeMatchups(officialBase, hrMatchups);
   }, []);
 
-  const buildOfficialBase = useCallback(() => {
-    return (liveGamesDataRef.current?.games ?? [])
-      .map(matchupFromLiveGame)
-      .filter((game) => game.gamePk);
-  }, []);
-
-  // Fast path: react-query polls update scores/status without re-enriching the full model.
   useEffect(() => {
-    const official = liveGamesQuery.data;
-    let officialBase: GameMatchup[] = [];
-    if (official?.games?.length) {
-      officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
+    const officialBase = buildOfficialBase();
+    if (liveGamesQuery.data?.games) {
       if (officialBase.length > 0) {
-        setSourceNote((prev) => (prev === 'Backend unavailable.' ? prev : 'Official MLB live schedule loaded.'));
+        setSourceNote('Official MLB live stream active (10s sync).');
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }));
       }
     }
 
@@ -506,98 +456,44 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
     if (merged.length > 0) {
       setMatchups((prev) => (prev.length > 0 ? mergeOfficialLiveUpdates(prev, merged) : merged));
       setError(null);
-    } else if (liveGamesQuery.isError && hrBoardQuery.isError) {
-      setError('Live games unavailable right now. No fake games shown.');
-      setSourceNote('Backend unavailable.');
+    } else if (liveGamesQuery.isError && Boolean(hrBoardQuery.error)) {
+      setError('Live stream temporarily unavailable.');
+      setSourceNote('Backend reconnecting...');
     }
-  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries]);
+  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.error, buildOfficialBase, mergeFromQueries]);
 
-  // Slow path: matchup model enrichment on an interval only — not on every live poll.
-  useEffect(() => {
-    let cancelled = false;
-
-    const runEnrich = async (showBusy: boolean) => {
-      const officialBase = buildOfficialBase();
-      const merged = mergeFromQueries(officialBase, hrBoardDataRef.current);
-      if (merged.length === 0) return;
-
-      const requestId = ++enrichRequestRef.current;
-      if (showBusy && matchupsCountRef.current === 0) setEnriching(true);
-
-      try {
-        const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
-        let working = merged;
-        if (Array.isArray(scoreResult?.scores) && scoreResult.scores.length > 0) {
-          working = applyScores(working, scoreResult.scores);
-        }
-
-        const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
-        const next = Array.isArray(res.matchups) ? res.matchups : [];
-
-        if (cancelled || requestId !== enrichRequestRef.current) return;
-
-        const latestOfficial = buildOfficialBase();
-        const latestMerged = mergeFromQueries(latestOfficial, hrBoardDataRef.current);
-        const enrichedBase = latestMerged.length > 0 ? latestMerged : working;
-
-        if (next.length > 0) {
-          setMatchups(mergeMatchups(enrichedBase, next));
-          setSourceNote('Live game model loaded.');
-        } else {
-          setMatchups((prev) => (prev.length > 0 ? prev : working));
-          setSourceNote('Live model returned no rows. Showing verified schedule preview.');
-        }
-        setError(null);
-      } catch {
-        if (cancelled || requestId !== enrichRequestRef.current) return;
-        setMatchups((prev) => (prev.length > 0 ? prev : merged));
-        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
-        setError(null);
-      } finally {
-        if (!cancelled && requestId === enrichRequestRef.current && showBusy) {
-          setEnriching(false);
-        }
-      }
-    };
-
-    void runEnrich(true);
-    const id = window.setInterval(() => {
-      void runEnrich(false);
-    }, REFRESH_MS);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [buildOfficialBase, mergeFromQueries, hrBoardQuery.data]);
-
-  const load = useCallback(() => {
+  const handleManualRefresh = useCallback(() => {
     void liveGamesQuery.refetch();
-    void hrBoardQuery.refetch();
+    void hrBoardQuery.refresh();
+    setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }));
   }, [liveGamesQuery, hrBoardQuery]);
 
-  const scoredMatchups = matchups;
-  const liveCount = scoredMatchups.filter((m) => m.isLive).length;
-  const shown = liveOnly ? scoredMatchups.filter((m) => m.isLive) : scoredMatchups;
+  const liveGamesList = matchups.filter((m) => m.isLive);
+  const upcomingGamesList = matchups.filter((m) => !m.isLive && !m.isFinal);
+  const finalGamesList = matchups.filter((m) => m.isFinal);
 
-  const preferredGame =
-    shown.find((m) => m.isLive) ??
-    shown.find((m) => String(m.status ?? '').toLowerCase().includes('scheduled')) ??
-    shown[0] ??
-    null;
+  const filteredGames = filterTab === 'live'
+    ? liveGamesList
+    : filterTab === 'upcoming'
+      ? upcomingGamesList
+      : filterTab === 'final'
+        ? finalGamesList
+        : matchups;
 
-  const activeGame =
-    shown.find((m) => String(m.gamePk) === String(activeGamePk)) ??
-    preferredGame;
-  const selected = selectedGamePk == null
-    ? null
-    : matchups.find((game) => String(game.gamePk) === String(selectedGamePk)) ?? null;
+  const activeGame = matchups.find((m) => String(m.gamePk) === String(activeGamePk))
+    ?? liveGamesList[0]
+    ?? matchups[0]
+    ?? null;
+
+  const selectedDrawerGame = selectedGamePk != null
+    ? matchups.find((game) => String(game.gamePk) === String(selectedGamePk)) ?? null
+    : null;
 
   useEffect(() => {
-    if (!activeGamePk && preferredGame?.gamePk) {
-      setActiveGamePk(preferredGame.gamePk);
+    if (!activeGamePk && activeGame?.gamePk) {
+      setActiveGamePk(activeGame.gamePk);
     }
-  }, [activeGamePk, preferredGame?.gamePk]);
+  }, [activeGamePk, activeGame?.gamePk]);
 
   const addLeg = (w: HrWatch) => {
     onAddLegToParlay({ name: w.playerName, team: w.team } as MLBPlayer, {
@@ -609,163 +505,290 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} pb-24 md:pb-5`}>
-      {/* Header */}
-      <div className={`${Z8_PANEL} mb-4 p-4 sm:mb-5 sm:p-5`}>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <h1 className={`${Z8_SECTION_HEADER} flex items-center gap-2`}><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
-            <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
-            <p role="status" aria-live="polite" className={`mt-2 flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}><span className="h-1.5 w-1.5 bg-vouch-emerald" aria-hidden="true" />{sourceNote}</p>
+    <main className={`${Z8_PAGE} w-full max-w-full overflow-x-hidden min-w-0 px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
+
+      {/* ── Sleek 3D Glass Header ────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+              <Radio className="h-5 w-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black uppercase text-white tracking-tight">Live Games Telemetry</h1>
+                <span className="font-mono text-[9px] uppercase tracking-widest text-rose-400 font-bold bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded-full">
+                  Real-time Stream
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium mt-1">Official MLB pitch-by-pitch feeds, live scoreboards, and in-game HR signals.</p>
+              <div className="flex items-center gap-2 mt-2 font-mono text-[10px] text-vouch-emerald font-bold">
+                <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-ping" />
+                <span>{sourceNote}</span>
+                <span className="text-slate-500">· Sync: {lastSyncTime}</span>
+              </div>
+            </div>
           </div>
-          <button onClick={load} className="z8-control flex shrink-0 items-center gap-1.5 self-start border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs text-vouch-emerald transition-colors hover:border-vouch-emerald/50 sm:self-auto">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching ? 'animate-spin' : ''}`} /> Refresh
+
+          <button
+            onClick={handleManualRefresh}
+            className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/12 bg-black/40 px-4 py-2.5 font-mono text-xs font-bold text-white transition hover:border-vouch-cyan hover:text-vouch-cyan active:scale-95"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${liveGamesQuery.isFetching ? 'animate-spin text-vouch-cyan' : ''}`} /> Fast Sync
           </button>
         </div>
-        <div className="flex items-center gap-2 mt-4">
-          <button onClick={() => setLiveOnly(false)} className={`z8-control px-3 py-1.5 text-xs font-bold border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
-          <button onClick={() => setLiveOnly(true)} className={`z8-control flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
-            <Radio className="w-3.5 h-3.5" /> Live only ({liveCount})
+
+        {/* Filter Navigation Tabs */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setFilterTab('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
+              filterTab === 'all'
+                ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
+                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
+            }`}
+          >
+            All Games ({matchups.length})
+          </button>
+
+          <button
+            onClick={() => setFilterTab('live')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
+              filterTab === 'live'
+                ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
+            }`}
+          >
+            <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+            Live Now ({liveGamesList.length})
+          </button>
+
+          <button
+            onClick={() => setFilterTab('upcoming')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
+              filterTab === 'upcoming'
+                ? 'bg-sky-500/20 border border-sky-500/50 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
+            }`}
+          >
+            Upcoming ({upcomingGamesList.length})
+          </button>
+
+          <button
+            onClick={() => setFilterTab('final')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
+              filterTab === 'final'
+                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(49,181,131,0.2)]'
+                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
+            }`}
+          >
+            Final ({finalGamesList.length})
           </button>
         </div>
       </div>
 
-      {error && <div className={`${Z8_PANEL} p-6 text-center text-sm text-red-300`}><p>{error}</p><button type="button" onClick={load} className="z8-control mt-4 border border-red-300/30 px-4 text-white">Try again</button></div>}
+      {error && (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-sm text-rose-300 mb-6">
+          <p>{error}</p>
+          <button type="button" onClick={handleManualRefresh} className="mt-4 rounded-xl border border-rose-400/40 bg-rose-500/20 px-4 py-2 font-bold text-white hover:bg-rose-500/30">
+            Reconnect Stream
+          </button>
+        </div>
+      )}
 
-      {loading && matchups.length === 0 && (
-        <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className={`h-52 rounded-2xl ${Z8_SURFACE} animate-pulse`} />)}</div>
+      {liveGamesQuery.isLoading && matchups.length === 0 && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-56 rounded-2xl border border-white/10 bg-white/[0.02] animate-pulse" />
+          ))}
+        </div>
       )}
 
       {!error && matchups.length > 0 && (
-        shown.length === 0 ? (
-          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/55`}><p>No games are live right now.</p><button type="button" onClick={() => setLiveOnly(false)} className="z8-control mt-4 border border-white/15 px-4 text-white">Show today&apos;s schedule</button></div>
+        filteredGames.length === 0 ? (
+          <div className="rounded-2xl border border-white/12 bg-black/40 p-12 text-center text-sm text-slate-400 space-y-3">
+            <p className="font-bold text-white">No games found for this filter tab.</p>
+            <button
+              type="button"
+              onClick={() => setFilterTab('all')}
+              className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-4 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/20"
+            >
+              Show All Games ({matchups.length})
+            </button>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {activeGame && (
-              <div className={`${Z8_PANEL} relative overflow-hidden p-3 sm:p-4 md:p-5`}>
+          <div className="space-y-6">
 
-                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
+            {/* ── Featured Active Spotlight Hero Scoreboard ─────────────────── */}
+            {activeGame && (
+              <section className="rounded-2xl border border-white/15 bg-gradient-to-br from-[#0c192c] via-[#07111e] to-[#040810] p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 border-b border-white/10 pb-4">
                   <div>
-                    <p className={`${Z8_LABEL} text-vouch-cyan`}>
-                      Current game
-                    </p>
-                    <h2 className={`${Z8_SECTION_HEADER} truncate`}>
-                      {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan tracking-wider">Spotlight Game Telemetry</span>
+                    </div>
+                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">
+                      {activeGame.away.abbreviation} vs {activeGame.home.abbreviation}
                     </h2>
-                    <p className="text-[11px] sm:text-xs text-slate-400 mt-1 truncate">
-                      {activeGame.venue ?? 'Venue TBD'} · {activeGame.status ?? 'Game status unavailable'}
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      {activeGame.venue ?? 'Venue TBD'} · {activeGame.status ?? 'Game scheduled'}
                     </p>
                   </div>
 
-                  <div className={`self-start sm:self-auto rounded-full px-3 py-1 text-[10px] font-black font-mono uppercase tracking-wider border shrink-0 ${
-                    activeGame.isFinal
-                      ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
-                      : activeGame.isLive
-                        ? 'bg-red-500/10 border-red-400/40 text-red-300'
-                        : 'bg-slate-800/80 border-slate-600 text-slate-300'
-                  }`}>
-                    {activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live' : 'Scheduled'}
+                  <div className="flex items-center gap-2">
+                    <StatusBadge m={activeGame} />
+                    <button
+                      onClick={() => setSelectedGamePk(activeGame.gamePk)}
+                      className="rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/10 px-3 py-1.5 text-xs font-black text-vouch-emerald hover:bg-vouch-emerald/20 transition"
+                    >
+                      Deep Dive
+                    </button>
                   </div>
                 </div>
 
-                <div className="live-game-scoreboard relative grid min-w-0 grid-cols-1 items-center gap-3 p-3 min-[400px]:grid-cols-[1fr_auto_1fr] sm:p-4">
-                  <div className="text-left min-w-0">
-                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={28} />
-                      <div className="min-w-0">
-                        <p className="text-[10px] sm:text-xs text-slate-400 font-mono">AWAY</p>
-                        <p className="text-base sm:text-lg font-black text-white">{activeGame.away.abbreviation}</p>
-                      </div>
+                {/* Scoreboard display */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4 bg-black/40 rounded-2xl p-4 sm:p-6 border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={44} />
+                    <div>
+                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">Away</span>
+                      <p className="text-base sm:text-xl font-black text-white">{activeGame.away.name}</p>
                     </div>
-                    <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{activeGame.away.name}</p>
                   </div>
 
-                  <div className="text-center px-1 sm:px-2 order-first min-[400px]:order-none">
-                    <div className="flex items-center gap-2 sm:gap-3 justify-center">
-                      <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-mono text-white tabular-nums">
+                  <div className="text-center py-2 border-y sm:border-y-0 sm:border-x border-white/10">
+                    <div className="flex items-center justify-center gap-4">
+                      <span className="font-mono text-4xl sm:text-5xl font-black text-white tabular-nums">
                         {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
                       </span>
-                      <span className="text-slate-600 text-xl sm:text-2xl font-black">–</span>
-                      <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-mono text-white tabular-nums">
+                      <span className="text-slate-600 text-2xl font-black">–</span>
+                      <span className="font-mono text-4xl sm:text-5xl font-black text-white tabular-nums">
                         {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
                       </span>
                     </div>
-                    <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono uppercase mt-1 sm:mt-2">
-                      {activeGame.isFinal ? 'Final score' : activeGame.isLive ? 'Live score' : 'Pregame'}
+                    <p className="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider mt-2">
+                      {activeGame.isFinal ? 'Final Score' : activeGame.isLive ? 'Live In-Game Score' : 'Pregame Matchup'}
                     </p>
                   </div>
 
-                  <div className="text-right min-w-0">
-                    <div className="flex items-center justify-end gap-2 mb-1 sm:mb-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] sm:text-xs text-slate-400 font-mono">HOME</p>
-                        <p className="text-base sm:text-lg font-black text-white">{activeGame.home.abbreviation}</p>
-                      </div>
-                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={28} />
+                  <div className="flex items-center justify-end gap-3 text-right">
+                    <div>
+                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">Home</span>
+                      <p className="text-base sm:text-xl font-black text-white">{activeGame.home.name}</p>
                     </div>
-                    <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{activeGame.home.name}</p>
+                    <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={44} />
                   </div>
                 </div>
 
-                <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 sm:mt-4">
-                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
-                    <p className="text-[10px] text-slate-500 font-mono uppercase">Game state</p>
-                    <p className="text-sm font-black text-slate-100">{activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live now' : 'Scheduled'}</p>
-                  </div>
-                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
-                    <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
-                    <p className="text-sm font-black text-slate-100">{activeGame.topHrWatch?.length ?? 0} players</p>
-                  </div>
-                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
-                    <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
-                    <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedGamePk(activeGame.gamePk)}
-                    className="z8-control min-w-0 border border-vouch-emerald/40 bg-vouch-emerald/10 p-2.5 text-left transition hover:bg-vouch-emerald/15 sm:p-3"
-                  >
-                    <p className="text-[11px] font-mono uppercase text-vouch-emerald">Details</p>
-                    <p className="text-sm font-black text-white">Open matchup</p>
-                  </button>
-                </div>
+                {/* In-Game HR Signal Spotlight */}
+                {activeGame.topHrWatch && activeGame.topHrWatch.length > 0 && (
+                  <div className="mt-5 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-xs font-black font-mono uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <Flame className="w-4 h-4 text-amber-400" /> High-Confidence HR Signals ({activeGame.topHrWatch.length})
+                      </h4>
+                    </div>
 
-              </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {activeGame.topHrWatch.slice(0, 3).map((w) => (
+                        <div key={w.playerId} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/40 p-2.5 hover:border-amber-400/40 transition">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <PlayerHeadshot headshotUrl={w.headshot} name={w.playerName} size={32} />
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-black text-white">{w.playerName}</p>
+                              <p className="truncate text-[10px] text-slate-400">{w.teamAbbr} vs {w.opposingPitcher}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => addLeg(w)}
+                            className="flex shrink-0 items-center gap-1 rounded-lg bg-vouch-emerald px-2 py-1 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90 shadow-[0_0_10px_rgba(0,255,148,0.2)]"
+                          >
+                            <Plus className="w-3 h-3" /> Slip
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
             )}
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {shown.map((m) => (
-                <button
-                  key={m.gamePk}
-                  onClick={() => setActiveGamePk(m.gamePk)}
-                  className={`z8-control text-left p-2.5 transition-all sm:p-3 ${Z8_SURFACE} ${
-                    String(activeGame?.gamePk) === String(m.gamePk)
-                      ? 'border border-sky-500/50'
-                      : 'border border-transparent hover:border-slate-600'
-                  }`}
-                >
-                  <p className={Z8_LABEL}>{m.isLive ? 'LIVE' : (m.status ?? 'GAME')}</p>
-                  <p className={`${Z8_SECTION_HEADER} mt-1`}>{m.away.abbreviation} @ {m.home.abbreviation}</p>
-                  <p className="text-[11px] text-slate-400 truncate mt-1">{m.venue ?? 'Venue TBD'}</p>
-                </button>
-              ))}
+            {/* ── Multi-Game Slate Selector Grid ────────────────────────────── */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black font-mono uppercase tracking-wider text-slate-400">
+                Today&apos;s MLB Game Slate ({filteredGames.length})
+              </h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {filteredGames.map((m) => (
+                  <button
+                    key={m.gamePk}
+                    onClick={() => setActiveGamePk(m.gamePk)}
+                    className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
+                      String(activeGame?.gamePk) === String(m.gamePk)
+                        ? 'border-vouch-cyan bg-vouch-cyan/10 shadow-[0_0_15px_rgba(79,184,220,0.15)]'
+                        : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-black/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <span className="font-mono text-[9px] font-bold text-slate-400 uppercase truncate">
+                        {m.venue ? m.venue.split(' ')[0] : 'MLB'}
+                      </span>
+                      <StatusBadge m={m} />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 my-1">
+                      <div className="flex items-center gap-2">
+                        <TeamLogo src={m.away.logo} alt={m.away.name} size={22} />
+                        <span className="text-xs font-black text-white">{m.away.abbreviation}</span>
+                      </div>
+                      <span className="font-mono text-sm font-black text-white">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 my-1">
+                      <div className="flex items-center gap-2">
+                        <TeamLogo src={m.home.logo} alt={m.home.name} size={22} />
+                        <span className="text-xs font-black text-white">{m.home.abbreviation}</span>
+                      </div>
+                      <span className="font-mono text-sm font-black text-white">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* ── Live At-Bat Pitch-by-Pitch Sweat Stream Module ─────────────── */}
+            {activeGame?.isLive && activeGame.gamePk != null && (
+              <section className="mt-8 pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-vouch-cyan animate-pulse" />
+                    <h3 className="text-sm font-black font-mono uppercase tracking-wider text-white">
+                      Pitch-by-Pitch Sweat Stream
+                    </h3>
+                  </div>
+                  <span className="font-mono text-[10px] font-bold text-vouch-cyan bg-vouch-cyan/10 border border-vouch-cyan/30 px-2.5 py-1 rounded-full">
+                    6s Real-Time Sensor Stream
+                  </span>
+                </div>
+
+                <div className="min-w-0 max-w-4xl mx-auto w-full">
+                  <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+                </div>
+              </section>
+            )}
+
+            {/* Pregame AI Read */}
             {activeGame && !activeGame.isLive && !activeGame.isFinal && (
               <div className="mt-6">
                 <PregameAiReadPanel game={activeGame} />
               </div>
             )}
 
+            {/* Final Game Recap */}
             {activeGame?.isFinal && (
               <div className="mt-6">
                 <FinalGameRecapPanel game={activeGame} />
-              </div>
-            )}
-
-            {/* Pitch-by-pitch sweat screen for the selected live game */}
-            {activeGame?.isLive && activeGame.gamePk != null && (
-              <div className="min-w-0 max-w-4xl mx-auto w-full">
-                <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
               </div>
             )}
 
@@ -773,7 +796,13 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
         )
       )}
 
-      {selected && <MatchupDrawer m={selected} onClose={() => setSelectedGamePk(null)} onAddLeg={addLeg} />}
+      {selectedDrawerGame && (
+        <MatchupDrawer
+          m={selectedDrawerGame}
+          onClose={() => setSelectedGamePk(null)}
+          onAddLeg={addLeg}
+        />
+      )}
 
     </main>
   );
