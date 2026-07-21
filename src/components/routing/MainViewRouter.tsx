@@ -48,6 +48,7 @@ const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
+const MostVouchedTodayPageZ8 = lazy(() => import('../../pages/MostVouchedTodayPageZ8'));
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -350,6 +351,13 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <NbaNflArena onSectionChange={navigateSection} />
+        </LazyRoute>
+      );
+    case 'most_vouched_today':
+    case 'most_vouched':
+      return (
+        <LazyRoute>
+          <MostVouchedTodayPageZ8 onNavigate={navigateSection} />
         </LazyRoute>
       );
     case 'premium':

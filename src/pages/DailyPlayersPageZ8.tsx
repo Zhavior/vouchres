@@ -1859,23 +1859,24 @@ function DailyPlayerIntelligenceLayer({
         </article>
       </div>
 
-      <article className={`${Z8_PANEL_PREMIUM} overflow-hidden p-3`}>
+      <article className={`${Z8_PANEL_PREMIUM} rounded-2xl overflow-hidden p-4`}>
         <div className="flex items-center justify-between gap-3 px-1">
           <div>
-            <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
+            <div className="text-sm font-black uppercase tracking-[0.14em] text-white flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-vouch-cyan shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
               Matchup Navigator
             </div>
-            <p className="mt-1 text-[11px] text-white/38">
-              Select any matchup without leaving the player board.
+            <p className="mt-1 text-xs font-semibold text-slate-300">
+              Tap any matchup button below to filter player candidates instantly.
             </p>
           </div>
 
-          <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan">
-            {games.length} games
+          <span className="font-mono text-xs font-black uppercase text-vouch-cyan border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 rounded-lg">
+            {games.length} Games
           </span>
         </div>
 
-        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+        <div className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none">
           {games.map((game, index) => {
             const gameAway = resolveDailyTeam(game, 'away');
             const gameHome = resolveDailyTeam(game, 'home');
@@ -1888,40 +1889,41 @@ function DailyPlayerIntelligenceLayer({
                 type="button"
                 onClick={() => onSelectGame(index)}
                 aria-current={active ? 'true' : undefined}
-                className={`min-w-[230px] snap-center border p-3 text-left transition ${
+                className={`min-w-[240px] shrink-0 snap-center rounded-xl border p-3.5 text-left transition-all duration-200 cursor-pointer active:scale-[0.97] ${
                   active
-                    ? 'border-vouch-cyan/45 bg-vouch-cyan/[0.09] shadow-[0_0_26px_rgba(0,240,255,0.10)]'
-                    : 'border-white/10 bg-black/20 hover:border-vouch-cyan/25 hover:bg-vouch-cyan/[0.03]'
+                    ? 'border-vouch-cyan/80 bg-gradient-to-br from-[#0c2235] via-[#091a29] to-[#06101c] shadow-[0_0_24px_rgba(0,240,255,0.25)] ring-1 ring-vouch-cyan/50'
+                    : 'border-white/20 bg-[#0a121d] hover:border-vouch-cyan/40 hover:bg-[#0f1c2c]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <span
-                    className={`text-[9px] font-black uppercase ${
-                      active ? 'text-vouch-cyan' : 'text-white/38'
+                    className={`font-mono text-[10px] font-black uppercase tracking-wider ${
+                      active ? 'text-vouch-cyan' : 'text-slate-300'
                     }`}
                   >
-                    Matchup {index + 1}
+                    Matchup #{index + 1}
                   </span>
 
-                  <span className="font-mono text-[9px] font-black text-white/38">
+                  <span className="font-mono text-[10px] font-black text-slate-200 bg-black/40 px-2 py-0.5 rounded border border-white/10">
                     {formatGameTime(game?.gameTime || game?.startTime)}
                   </span>
                 </div>
 
-                <div className="mt-3 truncate text-sm font-black text-white">
-                  {gameAway.name} @ {gameHome.name}
+                <div className="mt-2.5 truncate text-base font-black uppercase tracking-tight text-white">
+                  <span className="text-vouch-cyan">{gameAway.name}</span> <span className="text-slate-400 font-bold">@</span> <span className="text-white">{gameHome.name}</span>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold text-white/38">
-                    {gamePlayers.length} players
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
+                  <span className="font-mono text-[11px] font-bold text-slate-300">
+                    {gamePlayers.length} hitters
                   </span>
 
-                  <ChevronRight
-                    className={`h-4 w-4 ${
-                      active ? 'text-vouch-cyan' : 'text-white/25'
-                    }`}
-                  />
+                  <div className={`inline-flex items-center gap-1 text-[10px] font-black uppercase rounded-lg px-2 py-1 transition ${
+                    active ? 'bg-vouch-cyan text-black' : 'bg-white/10 text-white hover:bg-vouch-cyan/20 hover:text-vouch-cyan'
+                  }`}>
+                    <span>{active ? 'Active' : 'Select'}</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
                 </div>
               </button>
             );
@@ -2065,99 +2067,99 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
   };
 
   return (
-    <main className={`${Z8_PAGE} daily-players-page min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 lg:py-5`}>
-      <div className="daily-players-content mx-0 max-w-none flex flex-col space-y-4 lg:flex-row lg:items-start lg:space-y-0 lg:gap-6">
-        <div className="lg:sticky lg:top-4 lg:self-start lg:w-[260px] lg:shrink-0 space-y-4">
-          <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
-                  Daily Player Board
-                </span>
-                <span className={`${Z8_LABEL} border border-white/10 bg-black/25 px-2.5 py-1 text-white/50`}>
-                  <Calendar className="mr-1 inline h-3 w-3 text-vouch-cyan/70" />
-                  {data?.date || todayISO()}
-                </span>
-              </div>
-
-              <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-white sm:text-3xl">
-                Today&apos;s MLB Starting Lineups
-              </h1>
-
-              <p className="mt-1.5 max-w-3xl font-mono text-[11px] leading-5 text-white/45 sm:text-xs">
-                Posted MLB starting hitters when lineups are available. Projected previews are labeled — never shown as confirmed.
-              </p>
+    <main className={`${Z8_PAGE} daily-players-page min-w-0 overflow-x-hidden px-3 py-4 space-y-4 sm:px-4 lg:py-5`}>
+      {/* Top Header Card */}
+      <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
+                Daily Player Board
+              </span>
+              <span className={`${Z8_LABEL} border border-white/10 bg-black/25 px-2.5 py-1 text-white/50`}>
+                <Calendar className="mr-1 inline h-3 w-3 text-vouch-cyan/70" />
+                {data?.date || todayISO()}
+              </span>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              {onSectionChange && (
-                <button
-                  type="button"
-                  onClick={() => onSectionChange('hr_board')}
-                  className={`${Z8_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
-                >
-                  <HrBrandIcon size="sm" />
-                  Home Run Intelligence
-                </button>
-              )}
+            <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-white sm:text-3xl">
+              Today&apos;s MLB Starting Lineups
+            </h1>
+
+            <p className="mt-1.5 max-w-3xl font-mono text-[11px] leading-5 text-white/45 sm:text-xs">
+              Posted MLB starting hitters when lineups are available. Projected previews are labeled — never shown as confirmed.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {onSectionChange && (
               <button
                 type="button"
-                onClick={() => fetchBoard()}
-                className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+                onClick={() => onSectionChange('hr_board')}
+                className={`${Z8_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Refresh Board
+                <HrBrandIcon size="sm" />
+                Home Run Intelligence
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fetchBoard()}
+              className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh Board
+            </button>
           </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-            {[
-              { label: 'Games Loaded', value: data?.totalGames ?? games.length },
-              { label: 'Confirmed', value: boardStatusCounts.confirmed },
-              { label: 'Preview Only', value: boardStatusCounts.preview },
-              { label: 'Players Listed', value: totalPlayers },
-              { label: 'Last Updated', value: lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet' },
-            ].map((stat) => (
-              <div key={stat.label} className={`${Z8_SURFACE} px-3 py-2.5`}>
-                <div className={`${Z8_LABEL} text-white/40`}>{stat.label}</div>
-                <div className="mt-0.5 font-mono text-xl font-bold text-white">{stat.value}</div>
-              </div>
-            ))}
-          </div>
-        </header>
-
-        <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between lg:flex-col lg:items-stretch`}>
-          <label className="grid w-full gap-1 md:max-w-md lg:max-w-none">
-            <span className={`${Z8_LABEL} text-white/45`}>Find a player or team</span>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Player, team, or position"
-              className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
-            />
-          </label>
-
-          <div className="flex flex-wrap gap-1.5">
-            {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setFilter(item)}
-                className={`border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wide transition sm:py-1.5 ${
-                  filter === item ? Z8_ACTIVE : Z8_IDLE
-                }`}
-              >
-                {item === 'pending' ? 'Preview' : item}
-              </button>
-            ))}
-          </div>
-        </section>
         </div>
 
-        <div className="flex-1 min-w-0 space-y-4">
-          {loading && (
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+          {[
+            { label: 'Games Loaded', value: data?.totalGames ?? games.length },
+            { label: 'Confirmed', value: boardStatusCounts.confirmed },
+            { label: 'Preview Only', value: boardStatusCounts.preview },
+            { label: 'Players Listed', value: totalPlayers },
+            { label: 'Last Updated', value: lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet' },
+          ].map((stat) => (
+            <div key={stat.label} className={`${Z8_SURFACE} px-3 py-2.5 min-w-0`}>
+              <div className={`${Z8_LABEL} text-white/40 truncate`}>{stat.label}</div>
+              <div className="mt-0.5 font-mono text-xl font-bold text-white truncate">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </header>
+
+      {/* Search and Filter Toolbar */}
+      <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between`}>
+        <label className="grid w-full gap-1 sm:max-w-xs md:max-w-md">
+          <span className={`${Z8_LABEL} text-white/45`}>Find a player or team</span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Player, team, or position"
+            className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
+          />
+        </label>
+
+        <div className="flex flex-wrap gap-1.5">
+          {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setFilter(item)}
+              className={`border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wide transition sm:py-1.5 ${
+                filter === item ? Z8_ACTIVE : Z8_IDLE
+              }`}
+            >
+              {item === 'pending' ? 'Preview' : item}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      <div className="space-y-4">
+        {loading && (
           <div className={`${Z8_PANEL_PREMIUM} flex items-center justify-center gap-3 p-10 text-center`}>
             <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
             <span className={`${Z8_LABEL} text-white/50`}>Loading Daily Player Board...</span>
@@ -2192,17 +2194,16 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
             />
 
             <DailyMatchupTheater
-            games={games}
-            selectedGame={selectedGame}
-            selectedGameIndex={selectedGameIndex}
-            setSelectedGameIndex={setSelectedGameIndex}
-            goToPreviousGame={goToPreviousGame}
-            goToNextGame={goToNextGame}
-            search={search}
-          />
+              games={games}
+              selectedGame={selectedGame}
+              selectedGameIndex={selectedGameIndex}
+              setSelectedGameIndex={setSelectedGameIndex}
+              goToPreviousGame={goToPreviousGame}
+              goToNextGame={goToNextGame}
+              search={search}
+            />
           </>
         )}
-        </div>
       </div>
     </main>
   );

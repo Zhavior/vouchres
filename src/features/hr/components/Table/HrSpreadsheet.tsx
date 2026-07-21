@@ -5,6 +5,7 @@ import {
   ChevronRight,
   CircleAlert,
   Clock3,
+  Heart,
   Plus,
   Search,
   ShieldCheck,
@@ -26,6 +27,9 @@ interface HrSpreadsheetProps {
   rows: HrWatchRow[];
   onSelectPlayer: (row: HrWatchRow) => void;
   onAddToSlip?: (row: HrWatchRow) => void;
+  onTogglePlayerVouch?: (row: HrWatchRow) => void;
+  playerVouchMap?: Map<string, { totalVouches: number; viewerHasVouched: boolean }>;
+  pendingPlayerVouchId?: string | null;
   freshness: HrBoardFreshness;
   generatedAt: Date | null;
 }
@@ -180,6 +184,9 @@ interface TargetProps {
   row: HrWatchRow;
   onSelect: (row: HrWatchRow) => void;
   onAddToSlip?: (row: HrWatchRow) => void;
+  onTogglePlayerVouch?: (row: HrWatchRow) => void;
+  vouchInfo?: { totalVouches: number; viewerHasVouched: boolean } | null;
+  isVouchPending?: boolean;
   freshness: HrBoardFreshness;
   generatedAt: Date | null;
   expanded: boolean;
@@ -187,61 +194,113 @@ interface TargetProps {
   showMarket: boolean;
 }
 
-function MobileTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, expanded, onToggle, showMarket }: TargetProps) {
+function MobileTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchInfo, isVouchPending, freshness, generatedAt, expanded, onToggle, showMarket }: TargetProps) {
   const tier = getHrTableTier(row) ?? 'Sleeper';
   const brief = buildHrDecisionBrief(row, freshness, generatedAt, Boolean(onAddToSlip));
   const reason = getHrTableReason(row);
-  const risk = getHrTableRisk(row);
 
   return (
-    <article className={`border-t border-white/[0.16] p-3 transition ${expanded ? 'bg-[#00f0ff]/[0.055] shadow-[inset_3px_0_0_rgba(0,240,255,.55)]' : 'bg-black/10 even:bg-white/[0.022]'}`}>
-      <div className="flex items-center gap-3">
-        <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={46} />
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-black leading-tight tracking-tight text-white">{row.playerName}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[10px] font-black text-white/60">{row.team}</span>
-            <TruthLabel row={row} />
+    <Fragment>
+      <tr className={`border-t border-white/[0.12] transition ${expanded ? 'bg-[#00f0ff]/[0.08] shadow-[inset_2px_0_0_rgba(0,240,255,.6)]' : 'bg-black/20 odd:bg-white/[0.02]'}`}>
+
+        {/* Player Column */}
+        <td className="p-2 align-middle">
+          <div className="flex items-center gap-2 min-w-0">
+            <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={34} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-black text-white">{row.playerName}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="font-mono text-[9px] font-bold text-slate-400">{row.team}</span>
+                <TruthLabel row={row} />
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5"><Score value={row.hrScore} /><TierBadge tier={tier} /></div>
-      </div>
+        </td>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold text-white/72">vs {brief.pitcherLabel}</span>
-        <DataStatus row={row} />
-        {showMarket ? <span className="ml-auto font-mono text-[10px] font-black text-white/75">{row.oddsLabel}</span> : null}
-      </div>
+        {/* Score Column */}
+        <td className="p-2 align-middle font-mono">
+          <div className="flex flex-col items-start gap-0.5">
+            <Score value={row.hrScore} />
+            <TierBadge tier={tier} />
+          </div>
+        </td>
 
-      <div className="mt-3 grid gap-2">
-        <p className="border-l-2 border-[#00ff94]/55 pl-2 text-[12px] leading-5 text-white/78"><span className="font-bold text-[#75ffc5]">Reason:</span> {reason}</p>
-        <p className="border-l-2 border-amber-300/45 pl-2 text-[12px] leading-5 text-white/70"><span className="font-bold text-amber-200">Risk:</span> {risk}</p>
-      </div>
+        {/* Matchup Column */}
+        <td className="p-2 align-middle font-mono">
+          <p className="truncate text-[11px] font-bold text-slate-200">vs {brief.pitcherLabel}</p>
+          <p className="text-[9px] text-slate-400">Vuln {numberLabel(row.pitcherVulnerability)}</p>
+        </td>
 
-      {expanded ? <div className="mt-3"><ExpandedDetails row={row} freshness={freshness} generatedAt={generatedAt} showMarket={showMarket} /></div> : null}
+        {/* Actions Column */}
+        <td className="p-2 align-middle">
+          <div className="flex items-center gap-1 justify-end">
+            <button
+              type="button"
+              onClick={() => onTogglePlayerVouch?.(row)}
+              disabled={!onTogglePlayerVouch || isVouchPending}
+              title="Vouch for player"
+              className={`flex h-7 items-center gap-1 rounded-md border px-1.5 font-mono text-[10px] font-bold transition ${
+                vouchInfo?.viewerHasVouched
+                  ? 'border-vouch-emerald/50 bg-vouch-emerald/20 text-vouch-emerald shadow-[0_0_8px_rgba(0,255,148,0.2)]'
+                  : 'border-white/15 bg-black/40 text-slate-300'
+              } disabled:opacity-40`}
+            >
+              <Heart className={`h-3 w-3 text-vouch-emerald ${vouchInfo?.viewerHasVouched ? 'fill-current' : ''}`} />
+              <span>{vouchInfo?.totalVouches ?? 0}</span>
+            </button>
 
-      <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
-        <button type="button" onClick={() => onSelect(row)} className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00f0ff]/35 bg-[#00f0ff]/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#00f0ff]">
-          <Search className="h-3.5 w-3.5" /> Research
-        </button>
-        <button
-          type="button"
-          onClick={() => onAddToSlip?.(row)}
-          disabled={!brief.canAddToSlip}
-          title={brief.addToSlipBlockReason ?? 'Add player to slip'}
-          className="flex min-h-10 items-center justify-center gap-1.5 border border-[#00ff94]/35 bg-[#00ff94]/[0.08] px-3 text-[11px] font-black uppercase tracking-wide text-[#75ffc5] disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          <Plus className="h-3.5 w-3.5" /> Slip
-        </button>
-        <button type="button" onClick={onToggle} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onToggle(); } }} aria-expanded={expanded} aria-label={`${expanded ? 'Hide' : 'Show'} details for ${row.playerName}`} className="flex min-h-10 min-w-10 items-center justify-center border border-white/12 bg-black/25 text-white/55">
-          <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-    </article>
+            <button
+              type="button"
+              onClick={() => onAddToSlip?.(row)}
+              disabled={!brief.canAddToSlip}
+              title="Add to slip"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald disabled:opacity-30"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-label="Toggle details"
+              className={`flex h-7 w-7 items-center justify-center rounded-md border transition ${
+                expanded ? 'border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan' : 'border-white/15 bg-black/40 text-slate-300'
+              }`}
+            >
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      {/* Expanded Table Row Drawer */}
+      {expanded && (
+        <tr className="border-b border-vouch-cyan/30 bg-[#071322]/95">
+          <td colSpan={4} className="p-3 space-y-2 font-mono text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Primary Catalysts & Risks:</span>
+              <button
+                type="button"
+                onClick={() => onSelect(row)}
+                className="flex items-center gap-1 text-[10px] font-bold text-vouch-cyan hover:underline"
+              >
+                Full Research Dossier <Search className="h-3 w-3" />
+              </button>
+            </div>
+
+            <p className="text-slate-200 border-l-2 border-vouch-emerald pl-2 text-[11px] leading-snug">{reason}</p>
+
+            <div className="pt-1">
+              <ExpandedDetails row={row} freshness={freshness} generatedAt={generatedAt} showMarket={showMarket} />
+            </div>
+          </td>
+        </tr>
+      )}
+    </Fragment>
   );
 }
 
-function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, expanded, onToggle, showMarket }: TargetProps) {
+function DesktopTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchInfo, isVouchPending, freshness, generatedAt, expanded, onToggle, showMarket }: TargetProps) {
   const tier = getHrTableTier(row) ?? 'Sleeper';
   const brief = buildHrDecisionBrief(row, freshness, generatedAt, Boolean(onAddToSlip));
   const reason = getHrTableReason(row);
@@ -281,9 +340,23 @@ function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, exp
           <div className="flex flex-col items-start gap-2"><TruthLabel row={row} /><DataStatus row={row} /></div>
         </td>
         <td className="px-3 py-3.5 align-top">
-          <div className="flex min-w-[150px] flex-wrap gap-1.5">
+          <div className="flex min-w-[190px] flex-wrap items-center gap-1.5">
             <button type="button" onClick={() => onSelect(row)} className="flex min-h-8 items-center gap-1 border border-[#00f0ff]/30 bg-[#00f0ff]/[0.07] px-2 text-[9px] font-black uppercase tracking-wide text-[#00f0ff] transition hover:border-[#00f0ff]/60">
               <Search className="h-3 w-3" /> Research
+            </button>
+            <button
+              type="button"
+              onClick={() => onTogglePlayerVouch?.(row)}
+              disabled={!onTogglePlayerVouch || isVouchPending}
+              title="Vouch for this player"
+              className={`flex min-h-8 items-center gap-1 border px-2 font-mono text-[9px] font-bold transition ${
+                vouchInfo?.viewerHasVouched
+                  ? 'border-vouch-emerald/50 bg-vouch-emerald/20 text-vouch-emerald shadow-[0_0_8px_rgba(0,255,148,0.2)]'
+                  : 'border-white/15 bg-black/30 text-white/70 hover:border-vouch-emerald/40 hover:text-white'
+              } disabled:opacity-40`}
+            >
+              <Heart className={`h-3 w-3 ${vouchInfo?.viewerHasVouched ? 'fill-current' : ''}`} />
+              <span>{vouchInfo?.totalVouches ?? 0}</span>
             </button>
             <button
               type="button"
@@ -309,7 +382,16 @@ function DesktopTarget({ row, onSelect, onAddToSlip, freshness, generatedAt, exp
   );
 }
 
-export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, generatedAt }: HrSpreadsheetProps) {
+export function HrSpreadsheet({
+  rows,
+  onSelectPlayer,
+  onAddToSlip,
+  onTogglePlayerVouch,
+  playerVouchMap,
+  pendingPlayerVouchId,
+  freshness,
+  generatedAt,
+}: HrSpreadsheetProps) {
   const groups = buildHrMatchupGroups(rows);
   const [selectedGameKey, setSelectedGameKey] = useState('all');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
@@ -562,8 +644,36 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
             ) : null}
           </header>
 
-          <div className="lg:hidden">
-            {group.rows.map((row) => <MobileTarget key={row.stableId} row={row} onSelect={onSelectPlayer} onAddToSlip={onAddToSlip} freshness={freshness} generatedAt={generatedAt} expanded={expandedRows.has(row.stableId)} onToggle={() => toggleExpanded(row.stableId)} showMarket={showMarket} />)}
+          {/* Smart Mobile Table View */}
+          <div className="overflow-x-auto lg:hidden">
+            <table className="w-full min-w-[360px] border-collapse text-left">
+              <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.08em] text-slate-400 backdrop-blur">
+                <tr>
+                  <th className="p-2">Player</th>
+                  <th className="p-2">Score</th>
+                  <th className="p-2">Matchup</th>
+                  <th className="p-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.rows.map((row) => (
+                  <MobileTarget
+                    key={row.stableId}
+                    row={row}
+                    onSelect={onSelectPlayer}
+                    onAddToSlip={onAddToSlip}
+                    onTogglePlayerVouch={onTogglePlayerVouch}
+                    vouchInfo={playerVouchMap?.get(String(row.playerId))}
+                    isVouchPending={pendingPlayerVouchId != null && String(row.playerId) === pendingPlayerVouchId}
+                    freshness={freshness}
+                    generatedAt={generatedAt}
+                    expanded={expandedRows.has(row.stableId)}
+                    onToggle={() => toggleExpanded(row.stableId)}
+                    showMarket={showMarket}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="hidden overflow-x-auto lg:block">
@@ -571,7 +681,7 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
               <colgroup>
                 <col className="w-[19%]" /><col className="w-[9%]" /><col className="w-[16%]" />
                 {showMarket ? <col className="w-[9%]" /> : null}
-                <col className="w-[18%]" /><col className="w-[16%]" /><col className="w-[10%]" /><col className="w-[180px]" />
+                <col className="w-[18%]" /><col className="w-[16%]" /><col className="w-[10%]" /><col className="w-[210px]" />
               </colgroup>
               <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.1em] text-white/62 shadow-[0_3px_10px_rgba(0,0,0,.35)] backdrop-blur">
                 <tr>
@@ -586,7 +696,22 @@ export function HrSpreadsheet({ rows, onSelectPlayer, onAddToSlip, freshness, ge
                 </tr>
               </thead>
               <tbody>
-                {group.rows.map((row) => <DesktopTarget key={row.stableId} row={row} onSelect={onSelectPlayer} onAddToSlip={onAddToSlip} freshness={freshness} generatedAt={generatedAt} expanded={expandedRows.has(row.stableId)} onToggle={() => toggleExpanded(row.stableId)} showMarket={showMarket} />)}
+                {group.rows.map((row) => (
+                  <DesktopTarget
+                    key={row.stableId}
+                    row={row}
+                    onSelect={onSelectPlayer}
+                    onAddToSlip={onAddToSlip}
+                    onTogglePlayerVouch={onTogglePlayerVouch}
+                    vouchInfo={playerVouchMap?.get(String(row.playerId))}
+                    isVouchPending={pendingPlayerVouchId != null && String(row.playerId) === pendingPlayerVouchId}
+                    freshness={freshness}
+                    generatedAt={generatedAt}
+                    expanded={expandedRows.has(row.stableId)}
+                    onToggle={() => toggleExpanded(row.stableId)}
+                    showMarket={showMarket}
+                  />
+                ))}
               </tbody>
             </table>
           </div>

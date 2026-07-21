@@ -17,6 +17,8 @@ export const PUBLIC_SECTIONS = new Set([
   'subscribers_club',
   'subscriber_club',
   'mlb_stats',
+  'most_vouched_today',
+  'most_vouched',
   // ParlayOS supports guest practice-mode building; saving prompts sign-in
   // (see backendSyncState: 'auth_required' in domain/parlayActions.ts).
   'build',

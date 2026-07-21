@@ -812,55 +812,67 @@ export default function PitcherMatchupIntelligencePageZ8() {
         )}
 
         {matchupNavigator.length > 0 && (
-          <section className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl p-3`}>
+          <section className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl p-4`}>
             <div className="flex items-center justify-between gap-3 px-1">
               <div>
-                <div className={`${Z8_LABEL} text-white`}>
+                <div className="text-sm font-black uppercase tracking-[0.14em] text-white flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-vouch-cyan shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
                   Matchup Navigator
                 </div>
-                <p className="mt-1 text-[11px] text-white/38">
-                  Select a pitcher to open the full matchup dossier.
+                <p className="mt-1 text-xs font-semibold text-slate-300">
+                  Select any starting pitcher button to open their complete matchup breakdown.
                 </p>
               </div>
-              <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan">
-                Top {matchupNavigator.length}
+              <span className="font-mono text-xs font-black uppercase text-vouch-cyan border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 rounded-lg">
+                Top {matchupNavigator.length} Pitchers
               </span>
             </div>
 
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {matchupNavigator.map((row) => (
-                <button
-                  key={`${row.gameId}-${row.pitcherId}-navigator`}
-                  type="button"
-                  onClick={() => setSelectedPitcher(row)}
-                  className="min-w-[220px] shrink-0 border border-white/10 bg-black/20 p-3 text-left transition hover:border-vouch-cyan/30 hover:bg-vouch-cyan/[0.04]"
-                >
-                  <div className="flex items-center gap-3">
-                    <PlayerHeadshot
-                      name={row.pitcherName}
-                      playerId={row.pitcherId}
-                      size={44}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-black text-white">{row.pitcherName}</div>
-                      <div className="mt-1 font-mono text-[10px] font-bold text-white/42">
-                        {row.team} vs {row.opponent}
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+              {matchupNavigator.map((row) => {
+                const active = selectedPitcher?.pitcherId === row.pitcherId;
+                return (
+                  <button
+                    key={`${row.gameId}-${row.pitcherId}-navigator`}
+                    type="button"
+                    onClick={() => setSelectedPitcher(row)}
+                    aria-current={active ? 'true' : undefined}
+                    className={`min-w-[240px] shrink-0 snap-center rounded-xl border p-3.5 text-left transition-all duration-200 cursor-pointer active:scale-[0.97] ${
+                      active
+                        ? 'border-vouch-cyan/80 bg-gradient-to-br from-[#0c2235] via-[#091a29] to-[#06101c] shadow-[0_0_24px_rgba(0,240,255,0.25)] ring-1 ring-vouch-cyan/50'
+                        : 'border-white/20 bg-[#0a121d] hover:border-vouch-cyan/40 hover:bg-[#0f1c2c]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <PlayerHeadshot
+                        name={row.pitcherName}
+                        playerId={row.pitcherId}
+                        size={48}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-base font-black uppercase tracking-tight text-white">{row.pitcherName}</div>
+                        <div className="mt-1 font-mono text-[11px] font-bold text-slate-200">
+                          <span className="text-vouch-cyan">{row.team}</span> vs <span className="text-white">{row.opponent}</span>
+                        </div>
+                      </div>
+                      <div className="font-mono text-xl font-black text-vouch-cyan bg-black/40 px-2 py-1 rounded-lg border border-vouch-cyan/30">
+                        {row.score ?? '—'}
                       </div>
                     </div>
-                    <div className="font-mono text-lg font-black text-vouch-cyan">
-                      {row.score ?? '—'}
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${confidenceClass(row.confidence)}`}>
+                        {row.confidence} confidence
+                      </span>
+                      <div className={`inline-flex items-center gap-1 text-[10px] font-black uppercase rounded-lg px-2 py-1 transition ${
+                        active ? 'bg-vouch-cyan text-black' : 'bg-white/10 text-white hover:bg-vouch-cyan/20 hover:text-vouch-cyan'
+                      }`}>
+                        <span>{active ? 'Active' : 'Select'}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    <span className={`text-[9px] font-black uppercase ${confidenceClass(row.confidence)}`}>
-                      {row.confidence} confidence
-                    </span>
-                    <span className="text-[9px] font-black uppercase text-white/38">
-                      {researchLabel(row.label)}
-                    </span>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}

@@ -30,6 +30,11 @@ type Props = {
 };
 
 export function HrCommandCenter(props: Props) {
+  const confirmedCount = (props.rows as any[])?.filter(
+    (r) => String(r?.truthStatus || '').toLowerCase().includes('official') || String(r?.sourceMode || '').toLowerCase().includes('confirmed')
+  ).length ?? 0;
+  const previewCount = Math.max(0, ((props.rows as any[])?.length ?? 0) - confirmedCount);
+
   return (
     <div id="hr-command-center" className="scroll-mt-4">
       <HrToolbar
@@ -43,6 +48,8 @@ export function HrCommandCenter(props: Props) {
         rows={props.rows as any}
         viewMode={props.viewMode}
         onViewModeChange={props.onViewModeChange}
+        confirmedCount={confirmedCount}
+        previewCount={previewCount}
       />
     </div>
   );
