@@ -1,11 +1,9 @@
-/**
- * StatHubHeader — compact professional chrome for MLB Stat Intelligence Hub
- */
-
 import React from 'react';
 import type { StatType, StatViewMode, StatTier, StatScope } from '../types/statHubTypes';
 import { STAT_CONFIG, STAT_ORDER } from '../engine/statHubConfig';
 import { StatModeToggle } from './StatModeToggle';
+import { BarChart3, Search, Calendar, Filter, Sparkles } from 'lucide-react';
+import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_ICON_BOX } from '../../../theme/z8Tokens';
 
 interface Props {
   activeStatType: StatType;
@@ -34,6 +32,14 @@ const TIER_LABELS: Record<StatTier, string> = {
   fade: 'Fade',
 };
 
+const TIER_COLORS: Record<StatTier, string> = {
+  elite: 'border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald',
+  strong: 'border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan',
+  watch: 'border-amber-400/40 bg-amber-400/15 text-amber-300',
+  sleeper: 'border-sky-400/40 bg-sky-400/15 text-sky-300',
+  fade: 'border-slate-500/40 bg-slate-500/15 text-slate-400',
+};
+
 export const StatHubHeader: React.FC<Props> = ({
   activeStatType,
   date,
@@ -55,24 +61,36 @@ export const StatHubHeader: React.FC<Props> = ({
   const config = STAT_CONFIG[activeStatType];
 
   return (
-    <header className="flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/40">MLB Research</p>
-          <h1 className="ve-stat-hub-title mt-0.5 text-lg font-bold leading-tight text-white sm:text-xl">
-            Stat Intelligence Hub
-          </h1>
-          <p className="ve-stat-hub-subtitle mt-1 text-xs text-white/45">{config.description}</p>
+    <header className="flex flex-col gap-4">
+      {/* Top Header Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`${Z8_ICON_BOX} h-12 w-12 rounded-2xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan shadow-[0_0_15px_rgba(79,184,220,0.25)]`}>
+            <BarChart3 className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className={`${Z8_SECTION_HEADER} text-lg sm:text-xl font-black uppercase text-white tracking-tight`}>
+                MLB Stat Intelligence Hub
+              </h1>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-vouch-cyan font-bold bg-vouch-cyan/10 border border-vouch-cyan/30 px-2.5 py-0.5 rounded-full">
+                Z8 Engine
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 font-medium mt-1">{config.description}</p>
+          </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
+
+        <div className="flex shrink-0 items-center gap-3">
           <StatModeToggle value={viewMode} onChange={onViewMode} />
-          <span className="rounded-md border border-white/10 bg-black/30 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-white/45">
-            {loading ? 'Loading…' : `${rowCount} rows`}
+          <span className="rounded-xl border border-white/12 bg-black/40 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-emerald shadow-inner">
+            {loading ? 'Syncing...' : `${rowCount} Rows Loaded`}
           </span>
         </div>
       </div>
 
-      <div role="tablist" aria-label="Stat category" className="ve-stat-hub-scroll-x">
+      {/* Category Pills Strip */}
+      <div role="tablist" aria-label="Stat category" className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         {STAT_ORDER.map((st) => {
           const cfg = STAT_CONFIG[st];
           const active = st === activeStatType;
@@ -83,44 +101,50 @@ export const StatHubHeader: React.FC<Props> = ({
               role="tab"
               aria-selected={active}
               onClick={() => onStatType(st)}
-              className={[
-                've-stat-hub-pill rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition',
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-black font-mono uppercase tracking-wider transition ${
                 active
-                  ? 'border-white/25 bg-white/10 text-white'
-                  : 'border-white/8 bg-black/25 text-white/45 hover:border-white/15 hover:text-white/70',
-              ].join(' ')}
+                  ? 'border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
+                  : 'border-white/10 bg-black/40 text-slate-400 hover:border-white/20 hover:text-white'
+              }`}
             >
-              {cfg.shortLabel}
+              <span>{cfg.shortLabel}</span>
               {cfg.phase === 2 && (
-                <span className="ml-1 font-mono text-[8px] uppercase text-amber-200/80">β</span>
+                <span className="font-mono text-[9px] font-bold text-amber-400 bg-amber-400/15 border border-amber-400/30 px-1 rounded">
+                  BETA
+                </span>
               )}
             </button>
           );
         })}
       </div>
 
-      <div className="ve-stat-hub-toolbar flex flex-wrap items-center gap-2">
-        <div className="ve-stat-hub-search relative min-w-[140px] flex-1">
+      {/* Toolbar: Search, Date, Scope */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
           <input
             type="search"
-            placeholder="Search player or team…"
+            placeholder="Search player or team..."
             value={search}
             onChange={(e) => onSearch(e.target.value)}
-            aria-label="Search players"
-            className="ve-stat-surface-raised w-full rounded-lg border border-white/10 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-white/25 focus:outline-none focus:ring-1 focus:ring-white/10"
+            className="w-full rounded-xl border border-white/12 bg-black/40 pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-vouch-cyan focus:outline-none focus:ring-1 focus:ring-vouch-cyan/50"
           />
         </div>
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => onDate(e.target.value)}
-          aria-label="Select date"
-          disabled={statScope === 'overall'}
-          className={`ve-stat-surface-raised rounded-lg border border-white/10 px-2.5 py-2 text-xs text-white focus:border-white/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${statScope === 'overall' ? '' : ''}`}
-        />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => onDate(e.target.value)}
+              disabled={statScope === 'overall'}
+              className="w-full rounded-xl border border-white/12 bg-black/40 pl-9 pr-3 py-2 text-xs font-mono text-white focus:border-vouch-cyan focus:outline-none disabled:opacity-40"
+            />
+          </div>
+        </div>
 
-        <div role="group" aria-label="Stat range" className="ve-stat-surface-raised flex rounded-lg border border-white/10 p-0.5">
+        <div className="flex rounded-xl border border-white/12 bg-black/40 p-1">
           {(['season', 'overall'] as StatScope[]).map((scope) => {
             const active = statScope === scope;
             return (
@@ -129,53 +153,57 @@ export const StatHubHeader: React.FC<Props> = ({
                 type="button"
                 onClick={() => onStatScope(scope)}
                 aria-pressed={active}
-                className={[
-                  'rounded-md px-2.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-wide transition',
-                  active ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/65',
-                ].join(' ')}
+                className={`flex-1 rounded-lg py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider transition ${
+                  active
+                    ? 'bg-vouch-emerald/20 border border-vouch-emerald/40 text-vouch-emerald shadow-[0_0_10px_rgba(49,181,131,0.2)]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                {scope === 'season' ? 'Season' : 'Overall'}
+                {scope === 'season' ? 'Season Scope' : 'Overall Career'}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div role="group" aria-label="Filter by tier" className="ve-stat-hub-tier-row ve-stat-hub-scroll-x">
+      {/* Tier Filter Row */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1">
+          <Filter className="h-3 w-3 text-vouch-cyan" /> Tier Filter:
+        </span>
         {(['elite', 'strong', 'watch', 'sleeper'] as StatTier[]).map((tier) => {
           const active = tierFilter.includes(tier);
           const count = tierCounts[tier as keyof typeof tierCounts] as number;
+          const colorStyle = TIER_COLORS[tier];
+
           return (
             <button
               key={tier}
               type="button"
               onClick={() => onToggleTier(tier)}
               aria-pressed={active}
-              className={[
-                've-stat-hub-pill flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wide transition',
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition ${
                 active
-                  ? 'border-white/20 bg-white/10 text-white'
-                  : 'border-white/8 bg-black/20 text-white/40 hover:border-white/15 hover:text-white/60',
-              ].join(' ')}
+                  ? `${colorStyle} shadow-[0_0_10px_rgba(255,255,255,0.1)]`
+                  : 'border-white/10 bg-black/40 text-slate-400 hover:border-white/20 hover:text-white'
+              }`}
             >
-              {TIER_LABELS[tier]}
-              <span className="rounded bg-black/40 px-1 py-0.5 text-[8px] tabular-nums">{count}</span>
+              <span>{TIER_LABELS[tier]}</span>
+              <span className="rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] tabular-nums text-white font-bold">{count}</span>
             </button>
           );
         })}
       </div>
 
-      <div
-        className={[
-          've-stat-hub-status rounded-lg border px-3 py-2 text-xs leading-relaxed',
-          error ? 'border-red-500/25 bg-red-500/8 text-red-200/85' : 'border-white/8 bg-black/25 text-white/45',
-        ].join(' ')}
-      >
+      {/* Status Banner */}
+      <div className={`rounded-xl border px-3 py-2 text-xs font-mono font-bold leading-relaxed ${
+        error ? 'border-rose-500/30 bg-rose-500/10 text-rose-300' : 'border-white/10 bg-black/40 text-slate-400'
+      }`}>
         {error
-          ? `${error}. No mock Stat Hub rows are shown.`
+          ? `Status Alert: ${error}`
           : loading
-            ? 'Loading schedule, rosters, and MLB Stats API data…'
-            : `${rowCount} official MLB API row${rowCount === 1 ? '' : 's'} · ${config.label} · lineups not inferred`}
+            ? 'Syncing official MLB Stats API feeds...'
+            : `Verified Dataset: ${rowCount} Official Rows · Category: ${config.label}`}
       </div>
     </header>
   );

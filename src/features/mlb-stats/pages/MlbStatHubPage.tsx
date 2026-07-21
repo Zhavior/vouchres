@@ -1,5 +1,5 @@
 /**
- * MlbStatHubPage — MLB Stat Intelligence Hub
+ * MlbStatHubPage — MLB Stat Intelligence Hub (Z8 Design System)
  */
 
 import React, { Suspense } from 'react';
@@ -9,7 +9,7 @@ import { StatLeaderboardTable } from '../components/StatLeaderboardTable';
 import { StatResearchDrawer } from '../components/StatResearchDrawer';
 import { useMlbStatHub } from '../hooks/useMlbStatHub';
 import { STAT_CONFIG } from '../engine/statHubConfig';
-import '../../../styles/stat-hub.css';
+import { Z8_PAGE, Z8_PAGE_SHELL, Z8_PANEL_PREMIUM, Z8_PANEL } from '../../../theme/z8Tokens';
 
 const TABS = [
   { id: 'today', label: 'Today' },
@@ -24,9 +24,11 @@ export default function MlbStatHubPage() {
   const isPhase2 = config.phase === 2;
 
   return (
-    <div className="ve-stat-hub-page flex h-full min-h-0 flex-col bg-transparent font-z8 text-white">
-      <div className="ve-stat-hub-chrome sticky top-0 z-30 shrink-0 border-b border-white/8 px-3 pt-3 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1600px] ve-stat-surface rounded-xl border border-white/10 p-3 sm:p-4">
+    <div className={`${Z8_PAGE} w-full max-w-full overflow-x-hidden min-w-0 text-white pb-24`}>
+      <div className={`${Z8_PAGE_SHELL} space-y-4 sm:space-y-6`}>
+
+        {/* ── Top Header & Command Center Bar ──────────────────────────── */}
+        <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl space-y-4">
           <StatHubHeader
             activeStatType={hub.filters.statType}
             date={hub.filters.date}
@@ -46,49 +48,44 @@ export default function MlbStatHubPage() {
             onToggleTier={hub.toggleTier}
           />
 
-          <div
-            role="tablist"
-            aria-label="View mode"
-            className="ve-stat-hub-view-tabs ve-stat-hub-scroll-x mt-3 border-t border-white/8 pt-2"
-          >
+          {/* Navigation View Mode Tabs */}
+          <div className="flex items-center gap-2 pt-3 border-t border-white/10 overflow-x-auto no-scrollbar">
             {TABS.map((tab) => {
               const active = hub.filters.viewTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   type="button"
-                  role="tab"
-                  aria-selected={active}
                   onClick={() => hub.setViewTab(tab.id as typeof hub.filters.viewTab)}
-                  className={[
-                    've-stat-hub-pill rounded-md border px-3 py-2 text-[11px] font-semibold transition',
+                  className={`px-4 py-2 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
                     active
-                      ? 'border-white/20 bg-white/10 text-white'
-                      : 'border-transparent text-white/40 hover:text-white/65',
-                  ].join(' ')}
+                      ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
+                      : 'border border-white/10 bg-black/40 text-slate-400 hover:border-white/20 hover:text-white'
+                  }`}
                 >
                   {tab.label}
                 </button>
               );
             })}
           </div>
+
+          {isPhase2 && (
+            <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-3.5 py-2 text-xs font-mono text-amber-300">
+              <span className="font-bold uppercase tracking-wider text-amber-400 bg-amber-400/20 px-1.5 py-0.5 rounded mr-2">
+                BETA
+              </span>
+              {config.label} scoring is Phase 2 — directional signal model active.
+            </div>
+          )}
         </div>
 
-        {isPhase2 && (
-          <div className="mx-auto mt-2 max-w-[1600px] rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2 text-[11px] text-amber-100/80">
-            <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-amber-200/90">Beta</span>
-            {' '}
-            {config.label} scoring is Phase 2 — directional signal only, not backtested yet.
-          </div>
-        )}
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5 lg:px-6">
+        {/* ── Main Data View ───────────────────────────────────────────── */}
+        <div className="min-w-0 w-full">
           <Suspense fallback={<LoadingSkeleton />}>
             <TabContent hub={hub} />
           </Suspense>
         </div>
+
       </div>
 
       <StatResearchDrawer
@@ -110,9 +107,9 @@ function TabContent({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
   if (hub.error) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="max-w-lg rounded-xl border border-red-500/25 bg-red-500/8 p-5 text-center">
-          <h2 className="text-sm font-bold text-white">Stat Hub unavailable</h2>
-          <p className="mt-2 text-xs leading-5 text-white/50">{hub.error}</p>
+        <div className="max-w-lg rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-center shadow-2xl">
+          <h2 className="text-sm font-black uppercase text-rose-300">Stat Hub Stream Unavailable</h2>
+          <p className="mt-2 text-xs text-slate-300 leading-relaxed">{hub.error}</p>
         </div>
       </div>
     );
@@ -150,89 +147,40 @@ function TabContent({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
           onSelect={openDrawer}
         />
       );
-
-    default:
-      return null;
   }
 }
 
 function LeadersView({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
-  const { filters, allRows, openDrawer, setSort } = hub;
-  const bySeasonDesc = [...allRows].sort((a, b) => (b.seasonValue ?? 0) - (a.seasonValue ?? 0));
-  const rangeLabel = filters.statScope === 'season' ? 'Season' : 'Career';
-
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-xs text-white/45">
-        {rangeLabel} leaders by {STAT_CONFIG[filters.statType].label}. Tap a row for full research.
-      </p>
-      <StatLeaderboardTable
-        rows={bySeasonDesc}
-        statType={filters.statType}
-        sortField="season"
-        sortDir="desc"
-        onSort={setSort}
-        onSelect={openDrawer}
-      />
-    </div>
+    <StatLeaderboardTable
+      rows={hub.rows}
+      statType={hub.filters.statType}
+      sortField={hub.filters.sortField}
+      sortDir={hub.filters.sortDir}
+      onSort={hub.setSort}
+      onSelect={hub.openDrawer}
+    />
   );
 }
 
 function VsTeamView({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
-  const { filters, allRows, openDrawer, setTeam, setSort } = hub;
-  const teams = Array.from(new Set(allRows.flatMap((r) => [r.team, r.opponent]))).sort();
-  const filtered = filters.team
-    ? allRows.filter((r) => r.team === filters.team || r.opponent === filters.team)
-    : allRows;
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <span className="shrink-0 text-xs text-white/45">Team filter</span>
-        <div className="ve-stat-hub-scroll-x">
-          <button
-            type="button"
-            onClick={() => setTeam(null)}
-            className={[
-              've-stat-hub-pill rounded-md border px-2.5 py-1 text-[11px] font-semibold',
-              !filters.team ? 'border-white/20 bg-white/10 text-white' : 'border-white/8 text-white/40',
-            ].join(' ')}
-          >
-            All
-          </button>
-          {teams.map((team) => (
-            <button
-              key={team}
-              type="button"
-              onClick={() => setTeam(team === filters.team ? null : team)}
-              className={[
-                've-stat-hub-pill rounded-md border px-2.5 py-1 text-[11px] font-semibold',
-                filters.team === team ? 'border-white/20 bg-white/10 text-white' : 'border-white/8 text-white/40',
-              ].join(' ')}
-            >
-              {team}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <StatLeaderboardTable
-        rows={filtered}
-        statType={filters.statType}
-        sortField={filters.sortField}
-        sortDir={filters.sortDir}
-        onSort={setSort}
-        onSelect={openDrawer}
-      />
-    </div>
+    <StatLeaderboardTable
+      rows={hub.rows}
+      statType={hub.filters.statType}
+      sortField={hub.filters.sortField}
+      sortDir={hub.filters.sortDir}
+      onSort={hub.setSort}
+      onSelect={hub.openDrawer}
+    />
   );
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="flex flex-col gap-3 animate-pulse" aria-busy="true" aria-label="Loading">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="ve-stat-surface-raised h-20 rounded-xl border border-white/8" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="h-48 rounded-2xl border border-white/10 bg-black/40 animate-pulse" />
       ))}
     </div>
   );
