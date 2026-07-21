@@ -146,11 +146,10 @@ export default function BrainPicksPage({
     const serverPicks = picksQuery.data?.stolenBase?.picks ?? [];
     if (serverPicks.length > 0) return serverPicks;
 
-    const candidates = (vm.rows ?? []).filter((r) => r.lineupSpot === 1 || r.lineupSpot === 2 || (r.avg && r.avg >= 0.270)).slice(0, 4);
-    const pool = candidates.length > 0 ? candidates : (vm.rows ?? []).slice(0, 4);
+    const pool = (vm.rows ?? []).slice(0, 4);
 
     return pool.map((r, i) => ({
-      playerId: String(r.playerId || r.id || i + 100),
+      playerId: String(r.playerId || i + 100),
       playerName: String(r.playerName || 'Runner'),
       team: String(r.team || 'MLB'),
       opponent: String(r.opponent || 'OPP'),
@@ -174,14 +173,14 @@ export default function BrainPicksPage({
     const pitcherList: ServerBrainPick[] = [];
 
     (vm.rows ?? []).forEach((r, i) => {
-      const pitcherName = r.opponentPitcherName || r.pitcherName;
-      const pitcherTeam = r.opposingPitcherTeam || r.opponent || 'MLB';
+      const pitcherName = r.pitcherName;
+      const pitcherTeam = r.opponent || 'MLB';
       const hitterTeam = r.team || 'OPP';
 
       if (pitcherName && !seenPitchers.has(pitcherName)) {
         seenPitchers.add(pitcherName);
         pitcherList.push({
-          playerId: String(r.pitcherId || 200 + i),
+          playerId: String(200 + i),
           playerName: String(pitcherName),
           team: String(pitcherTeam),
           opponent: String(hitterTeam),
@@ -516,7 +515,7 @@ export default function BrainPicksPage({
                   <PlayerHeadshot
                     name={pick.player.playerName}
                     playerId={Number(pick.player.playerId || 0)}
-                    headshotUrl={pick.player.headshot}
+                    headshotUrl={pick.player.headshotUrl ?? undefined}
                     size={44}
                   />
                   <div className="min-w-0">
