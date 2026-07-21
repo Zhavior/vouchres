@@ -61,7 +61,7 @@ export default function LandingFeatureSlideshow({ features }: { features: readon
                   <h3 className="mt-2 text-2xl font-black text-white sm:text-3xl">{item.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-white/50 sm:text-base">{item.copy}</p>
                   <span className="mt-5 inline-flex rounded-full border border-vouch-emerald/25 bg-vouch-emerald/8 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-emerald/85">
-                    Premium terminal module
+                    Premium research module
                   </span>
                 </div>
               </article>
