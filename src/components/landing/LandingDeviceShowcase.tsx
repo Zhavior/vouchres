@@ -7,8 +7,8 @@ import { MLB_PLAYER_RECORDS } from '../../data/playerData';
 import { warmGuestHrBoardCache } from '../../lib/boot/guestHrBoardWarmCache';
 import type { CardLayoutId, CustomPlayerSelection, VouchStudioDarkroomProps } from '../vouch-studio-darkroom/types';
 
-const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
-const TodayDashboard = lazy(() => import('../TodayDashboard'));
+const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));
+const TodayDashboard = lazy(() => import('../TodayDashboardZ8'));
 
 const noop = () => {};
 const ORBIT_RADIUS = 38;

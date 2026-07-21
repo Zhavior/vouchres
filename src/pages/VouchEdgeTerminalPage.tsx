@@ -1,4 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import { Terminal } from 'lucide-react';
+import { apiClient } from '../lib/apiClient';
 import {
   Activity,
   BarChart3,
@@ -14,14 +16,19 @@ import {
   Z8_LABEL,
   Z8_PAGE,
   Z8_PANEL_PREMIUM,
-  Z8_BTN_TERMINAL_HEADER_LOGIN,
-  Z8_BTN_TERMINAL_HEADER_SIGNUP,
-} from '../components/landing/LandingTokens';
+  Z8_SURFACE,
+} from '../theme/z8Tokens';
+
+const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
+const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
+
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
-import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import LandingDeviceShowcase from '../components/landing/LandingDeviceShowcase';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
+import LandingDynamicBackground from '../components/landing/LandingDynamicBackground';
+import LandingFAQ from '../components/landing/LandingFAQ';
+import ScrollReveal from '../components/landing/ScrollReveal';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 import '../components/landing/LandingMobileShell.css';
@@ -104,26 +111,6 @@ const TRUST_PILLARS = [
   { label: 'Record', detail: 'Results stay visible' },
 ] as const;
 
-function JudgesPlaceholder() {
-  return (
-    <section
-      className={`ve-judges-placeholder rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}
-      aria-label="AI Judge Council preview"
-    >
-      <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Four judges on standby</h2>
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
-        Interactive judge profiles load as you scroll — hover or click each AI to explore.
-      </p>
-      <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
-        {['DS', 'PH', 'MR', 'RA'].map((code) => (
-          <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function AuthModalFallback() {
   return (
     <div
@@ -137,43 +124,6 @@ function AuthModalFallback() {
       </div>
     </div>
   );
-}
-
-function DeferredLandingJudgesDeck() {
-  const [ready, setReady] = useState(false);
-  const markerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const marker = markerRef.current;
-
-    if (!marker || !('IntersectionObserver' in window)) {
-      setReady(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setReady(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '360px 0px' },
-    );
-
-    observer.observe(marker);
-    return () => observer.disconnect();
-  }, []);
-
-  if (!ready) {
-    return (
-      <div ref={markerRef}>
-        <JudgesPlaceholder />
-      </div>
-    );
-  }
-
-  return <LandingJudgesDeck />;
 }
 
 function VouchCardShowcasePlaceholder() {
@@ -285,6 +235,77 @@ function PricingGrid({
   );
 }
 
+function TerminalChatDemo() {
+  const [prompt, setPrompt] = useState('');
+  const [messages, setMessages] = useState<{ role: 'user' | 'system', text: string }[]>([
+    { role: 'system', text: 'VouchEdge Terminal Ready. How can I help you today?' }
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const submitPrompt = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim() || isLoading) return;
+    const userMsg = prompt;
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setPrompt('');
+    setIsLoading(true);
+    try {
+      await apiClient.get<any>('/api/mlb/hr-board/today');
+      setMessages(prev => [...prev, { role: 'system', text: `Fetched data from hr-board. Terminal access secured.` }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'system', text: 'Error connecting to Edge OS. Please try again.' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section className={`mx-auto w-full max-w-2xl rounded-2xl ${Z8_PANEL_PREMIUM} p-4 mt-8 mb-8 flex flex-col gap-4 text-left border border-white/10 shadow-[0_0_48px_rgba(0,240,255,0.06)]`}>
+      <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+        <Terminal className="h-4 w-4 text-vouch-cyan" />
+        <span className={Z8_LABEL}>AI Edge Terminal Chat</span>
+      </div>
+      
+      {/* chat window */}
+      <div className={`flex flex-col gap-3 overflow-y-auto p-4 rounded-xl h-64 ${Z8_SURFACE} ${Z8_INTERACTIVE}`}>
+        {messages.map((m, i) => (
+          <div key={i} className={`flex flex-col gap-1 max-w-[85%] ${m.role === 'user' ? 'self-end items-end' : 'self-start items-start'}`}>
+            <span className={`${Z8_LABEL} ${m.role === 'user' ? 'text-white/40' : 'text-vouch-cyan'}`}>
+              {m.role === 'user' ? 'You' : 'System'}
+            </span>
+            <div className={`p-3 rounded-xl text-sm ${m.role === 'user' ? 'bg-vouch-cyan/20 text-white' : 'bg-black/40 text-white/70 border border-white/5'}`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="self-start flex items-center gap-2 mt-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" />
+            <span className="text-xs text-white/40 font-mono">Processing...</span>
+          </div>
+        )}
+      </div>
+
+      {/* prompt input area */}
+      <form onSubmit={submitPrompt} className={`relative flex items-center gap-2 rounded-xl ${Z8_SURFACE} p-1 ${Z8_INTERACTIVE}`}>
+        <input 
+          value={prompt} 
+          onChange={e => setPrompt(e.target.value)}
+          placeholder="Query the terminal..."
+          className="flex-1 bg-transparent text-sm text-white outline-none min-h-[44px] px-3 font-mono placeholder:text-white/30"
+        />
+        <button 
+          type="submit" 
+          disabled={!prompt.trim() || isLoading}
+          className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-black bg-vouch-cyan rounded-lg min-h-[44px] disabled:opacity-50 transition-opacity"
+        >
+          Execute
+        </button>
+      </form>
+    </section>
+  );
+}
+
 export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
@@ -309,6 +330,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       <LandingStatusTicker />
 
       <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
+        <LandingDynamicBackground />
+        
         {/* Ambient obsidian glow */}
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
@@ -323,8 +346,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
 
         <div className="relative z-10 mx-auto w-full max-w-none px-3 py-4 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-          <header className="ve-terminal-header ve-terminal-sticky-header flex items-center justify-between gap-3 md:mb-6 md:justify-end">
-            <div className="flex min-w-0 items-center gap-2.5 md:hidden">
+          <header className="ve-terminal-header ve-terminal-sticky-header flex items-center justify-between gap-3 md:mb-6">
+            <div className="flex min-w-0 items-center gap-2.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/25 bg-vouch-cyan/10">
                 <Activity size={16} className="text-vouch-cyan" />
               </div>
@@ -361,13 +384,26 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </div>
           </header>
 
-          <div className="space-y-8 sm:space-y-16 md:space-y-20">
-            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
-              <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
-                <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
-                  Official lineup status · Explainable scoring
-                </span>
+          <div className="space-y-8 sm:space-y-16 md:space-y-20 overflow-hidden">
+            <ScrollReveal animation="scale-up">
+              <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
+                  <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
+                    MLB Official Data
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NFL <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NBA <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
               </div>
 
               <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
@@ -424,26 +460,38 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 </button>
               </div>
             </section>
+            </ScrollReveal>
 
-            {/* Apple-style device showcase — MacBook + iPhone */}
-            <LandingDeviceShowcase />
+            <ScrollReveal delayMs={100}>
+              <LandingDeviceShowcase />
+            </ScrollReveal>
 
-            <LandingLiveGamesCenter />
+            <ScrollReveal delayMs={100}>
+              <LandingLiveGamesCenter />
+            </ScrollReveal>
 
-            {/* 4 Judges */}
-            <DeferredLandingJudgesDeck />
+            <ScrollReveal delayMs={100}>
+              <TerminalChatDemo />
+            </ScrollReveal>
 
-            {/* Platform strengths slideshow */}
-            <LandingFeatureSlideshow features={FEATURES} />
+            <ScrollReveal>
+              <LandingFeatureSlideshow features={FEATURES} />
+            </ScrollReveal>
 
-            {/* Vouch Card System spotlight */}
-            <DeferredVouchCardShowcase />
+            <ScrollReveal>
+              <DeferredVouchCardShowcase />
+            </ScrollReveal>
 
-            {/* Pricing */}
-            <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />
+            <ScrollReveal>
+              <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />
+            </ScrollReveal>
 
-            {/* Footer CTA */}
-            <section
+            <ScrollReveal>
+              <LandingFAQ />
+            </ScrollReveal>
+
+            <ScrollReveal>
+              <section
               className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
               style={{ boxShadow: `0 0 48px rgba(0,240,255,0.06)` }}
             >
@@ -465,6 +513,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 <ChevronRight size={14} />
               </button>
             </section>
+            </ScrollReveal>
           </div>
         </div>
       </main>
