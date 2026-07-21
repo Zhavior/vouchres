@@ -242,16 +242,16 @@ export default function ParlayOsLayer({
             <button
               type="button"
               onClick={toggleSheet}
-              className="fixed bottom-20 right-4 z-[90] flex min-h-12 items-center gap-2.5 rounded-2xl border border-cyan-300/35 bg-[#050b12]/95 px-3.5 py-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 lg:bottom-6 lg:right-6 lg:px-4"
+              className="fixed bottom-20 right-4 z-[90] flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/35 bg-[#050b12]/95 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 sm:h-auto sm:w-auto sm:min-h-12 sm:justify-start sm:gap-2.5 sm:rounded-2xl sm:px-3.5 sm:py-2.5 lg:bottom-6 lg:right-6"
               aria-label={`Open ParlayOS dock${legCount ? `, ${legCount} legs` : ""}`}
             >
-              <span className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10">
-                <Layers3 className="h-4.5 w-4.5 text-cyan-200" />
+              <span className="relative flex items-center justify-center sm:h-8 sm:w-8 sm:rounded-xl sm:border sm:border-cyan-300/20 sm:bg-cyan-300/10">
+                <Layers3 className="h-5 w-5 text-cyan-200 sm:h-4.5 sm:w-4.5" />
                 {legCount > 0 ? (
-                  <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-black">{legCount}</span>
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-black sm:-right-2 sm:-top-2">{legCount}</span>
                 ) : null}
               </span>
-              <span className="text-left">
+              <span className="hidden text-left sm:block">
                 <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-white">ParlayOS</span>
                 <span className="mt-0.5 hidden text-[9px] text-white/45 sm:block">Open slip dock</span>
               </span>

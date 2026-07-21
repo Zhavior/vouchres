@@ -9,6 +9,7 @@
  * 5. ParlayOsLayer — floating dock + bottom sheet on all player pages
  */
 import { create } from "zustand";
+import { useNavUiStore } from "./navUiStore";
 import type { MLBPlayer, Vouch } from "../types";
 import type { ResearchProp } from "./appCommandStore";
 import type { ParlayMarketFamilyId } from "../lib/parlays/parlayMarketCatalog";
@@ -95,11 +96,15 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
 
   setBuildTemplate: (templateId) => set({ buildTemplateId: templateId }),
 
-  openSheet: (expanded = true) =>
+  openSheet: (expanded = true) => {
+    // ParlayOS dock and the mobile nav drawer share the bottom-screen mobile
+    // real estate — only one can be on screen at a time.
+    useNavUiStore.getState().closeMobileDrawer();
     set({
       sheetOpen: true,
       sheetExpanded: expanded,
-    }),
+    });
+  },
 
   closeSheet: () =>
     set({
@@ -108,10 +113,13 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
     }),
 
   toggleSheet: () =>
-    set((state) => ({
-      sheetOpen: !state.sheetOpen,
-      sheetExpanded: state.sheetOpen ? state.sheetExpanded : true,
-    })),
+    set((state) => {
+      if (!state.sheetOpen) useNavUiStore.getState().closeMobileDrawer();
+      return {
+        sheetOpen: !state.sheetOpen,
+        sheetExpanded: state.sheetOpen ? state.sheetExpanded : true,
+      };
+    }),
 
   setSheetExpanded: (expanded) => set({ sheetExpanded: expanded }),
 

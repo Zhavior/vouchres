@@ -22,8 +22,9 @@ import type {
   WorldChatReaction,
 } from '../../lib/worldChatTypes';
 import ChatAuthorChip, { type ChatAuthor } from './ChatAuthorChip';
-import ChatProfileCard from './ChatProfileCard';
 import ChatProfileEditor from './ChatProfileEditor';
+import ProfileAvatarBorder from '../profile/ProfileAvatarBorder';
+import { accentHex, type ChatAccentColor } from '../../lib/chatProfileStorage';
 
 type Props = {
   profile?: CreatorProofProfile;
@@ -592,26 +593,37 @@ export default function WorldChatPanel({
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
   const sharedProofIdsInDraft = useMemo(() => extractParlayProofIds(input), [input]);
 
+  // DM starters: anyone you follow, plus anyone who's actually posted in
+  // World Chat — not just your existing follow graph, so you can message
+  // people you've actually seen talking.
+  const dmStarters = useMemo(() => {
+    const merged = new Map<string, { userId: string; displayName: string; username: string }>();
+    for (const person of followingHub.people) {
+      if (person.isSelf) continue;
+      merged.set(person.userId, { userId: person.userId, displayName: person.displayName, username: person.username });
+    }
+    for (const msg of messages) {
+      if (!msg.userId || msg.userId === user?.id || merged.has(msg.userId)) continue;
+      merged.set(msg.userId, { userId: msg.userId, displayName: msg.displayName, username: msg.username });
+    }
+    return [...merged.values()];
+  }, [followingHub.people, messages, user?.id]);
+
   return (
     <div className="flex h-full min-h-[420px] flex-col">
-      <div className="glass-panel glass-border mb-3 flex items-center gap-3 rounded-2xl p-3.5">
-        <div className="grid h-10 w-10 place-items-center rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald">
-          <Globe className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-black text-white">World Chat</h2>
-          <p className="text-[10px] text-white/40">
-            {activeChannel?.description ?? 'Community lounge · profile-linked messages'}
-          </p>
-        </div>
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <Globe className="h-3.5 w-3.5 shrink-0 text-vouch-emerald/70" />
+        <p className="min-w-0 flex-1 truncate text-[11px] text-white/40">
+          {activeChannel?.description ?? 'Community lounge · profile-linked messages'}
+        </p>
         {previewMode ? (
-          <span className="terminal-text rounded-full border border-white/10 px-2 py-1 text-vouch-amber">Preview</span>
+          <span className="terminal-text shrink-0 rounded-full border border-white/10 px-2 py-1 text-vouch-amber">Preview</span>
         ) : null}
         {isLoggedIn ? (
           <button
             type="button"
             onClick={() => setShowEditor((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-bold text-white/50 transition hover:border-vouch-cyan/35 hover:text-vouch-cyan"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-bold text-white/50 transition hover:border-vouch-cyan/35 hover:text-vouch-cyan"
           >
             <Settings2 className="h-3 w-3" />
             {showEditor ? 'Done' : 'Edit'}
@@ -648,7 +660,7 @@ export default function WorldChatPanel({
         })}
       </div>
 
-      {activePage === 'world' && channels.length > 0 ? (
+      {activePage === 'world' && channels.length > 1 ? (
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           {channels.map((channel) => {
             const active = channel.id === activeChannelId;
@@ -679,11 +691,7 @@ export default function WorldChatPanel({
               onChange={setChatPrefs}
             />
           </div>
-        ) : (
-          <div className="mb-3 shrink-0">
-            <ChatProfileCard profile={resolvedProfile} compact />
-          </div>
-        )
+        ) : null
       ) : (
         <div className="glass-panel glass-border mb-3 rounded-2xl border-emerald-400/20 bg-emerald-400/[0.06] p-4">
           <div className="flex items-start gap-3">
@@ -719,111 +727,149 @@ export default function WorldChatPanel({
                 : 'No messages yet. Be the first to share an edge — honest research only.'}
             </p>
           ) : (
-            messages.map((msg) => (
-              <article key={msg.id} className="rounded-xl border border-white/5 bg-black/20 p-2.5">
-              <ChatAuthorChip
-                author={{
-                  userId: msg.userId,
-                  displayName: msg.displayName,
-                  username: msg.username,
-                  handle: msg.handle,
-                  avatarUrl: msg.avatarUrl,
-                  borderId: msg.borderId,
-                  accentColor: msg.accentColor,
-                  winRate: msg.winRate,
-                }}
-                timestamp={formatTime(msg.createdAt)}
-                onOpenProfile={() => openAuthorPreview({
-                  userId: msg.userId,
-                  displayName: msg.displayName,
-                  username: msg.username,
-                  handle: msg.handle,
-                  avatarUrl: msg.avatarUrl,
-                  borderId: msg.borderId,
-                  accentColor: msg.accentColor,
-                  winRate: msg.winRate,
-                  statusLine: msg.statusLine,
-                })}
-              />
-              <div className="mt-1.5 whitespace-pre-wrap break-words text-sm text-white/80">
-                {renderMessageText(msg.text)}
-              </div>
-              {msg.replyTo ? (
-                <button
-                  type="button"
-                  onClick={() => openAuthorPreview({
-                    userId: msg.replyTo!.userId,
-                    displayName: msg.replyTo!.displayName,
-                    username: msg.replyTo!.handle,
-                    handle: msg.replyTo!.handle,
-                    winRate: null,
-                    statusLine: 'From World Chat reply',
-                  })}
-                  className="mt-2 block w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left transition hover:border-white/15"
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/65">
-                    Replying to @{msg.replyTo.handle}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-white/55">{msg.replyTo.text}</p>
-                </button>
-              ) : null}
-              {extractParlayProofIds(msg.text).length > 0 ? (
-                <div className="mt-2 space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/60">
-                    Shared proof link · open to tail on your own profile
-                  </p>
-                  {extractParlayProofIds(msg.text).map((pickId) => (
-                    <SharedParlayProofCard key={`${msg.id}:${pickId}`} pickId={pickId} />
-                  ))}
-                </div>
-              ) : null}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setReplyTarget({
-                    id: msg.id,
-                    userId: msg.userId,
-                    displayName: msg.displayName,
-                    handle: msg.handle,
-                    text: msg.text,
-                  })}
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[10px] text-white/55 transition hover:border-white/25 hover:text-white/85"
-                >
-                  <CornerUpLeft className="h-3.5 w-3.5" />
-                  Reply
-                </button>
-                {emojis.length > 0
-                  ? emojis.map((emoji) => {
-                      const reaction = msg.reactions.find((item) => item.emojiId === emoji.id);
-                      const selected = Boolean(reaction?.reactedByViewer);
-                      const count = reaction?.count ?? 0;
-                      const disabled = !isLoggedIn || reactingKey === `${msg.id}:${emoji.id}`;
-                      return (
+            messages.map((msg, index) => {
+              const isMine = Boolean(user?.id) && msg.userId === user?.id;
+              const prev = messages[index - 1];
+              const isGrouped = Boolean(prev) && prev.userId === msg.userId && !prev.replyTo;
+              const accent = accentHex((msg.accentColor as ChatAccentColor) ?? 'cyan');
+              const openThisAuthor = () => openAuthorPreview({
+                userId: msg.userId,
+                displayName: msg.displayName,
+                username: msg.username,
+                handle: msg.handle,
+                avatarUrl: msg.avatarUrl,
+                borderId: msg.borderId,
+                accentColor: msg.accentColor,
+                winRate: msg.winRate,
+                statusLine: msg.statusLine,
+              });
+
+              return (
+                <div key={msg.id} className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? '' : 'mt-1'}`}>
+                  <button
+                    type="button"
+                    onClick={openThisAuthor}
+                    disabled={isMine}
+                    className={`mb-0.5 shrink-0 self-end transition ${isMine ? 'cursor-default' : 'hover:opacity-80'} ${isGrouped ? 'invisible' : ''}`}
+                    aria-label={isMine ? 'You' : `Open ${msg.displayName}'s profile`}
+                  >
+                    <ProfileAvatarBorder
+                      borderId={msg.borderId ?? undefined}
+                      avatarUrl={msg.avatarUrl || undefined}
+                      displayName={msg.displayName}
+                      initials={msg.displayName.slice(0, 2) || '??'}
+                      size="sm"
+                      winRate={msg.winRate ?? undefined}
+                    />
+                  </button>
+
+                  <div className={`flex min-w-0 max-w-[78%] flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                    {!isMine ? (
+                      <button
+                        type="button"
+                        onClick={openThisAuthor}
+                        className="mb-1 px-1 text-[11px] font-bold transition hover:opacity-80"
+                        style={{ color: accent }}
+                      >
+                        {msg.displayName}
+                      </button>
+                    ) : null}
+
+                    <div
+                      className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm ${
+                        isMine
+                          ? 'rounded-br-md border border-vouch-cyan/25 bg-vouch-cyan/[0.16] text-white'
+                          : 'rounded-bl-md border border-white/8 bg-white/[0.05] text-white/88'
+                      }`}
+                    >
+                      {renderMessageText(msg.text)}
+                    </div>
+
+                    <span className="mt-1 px-1 text-[10px] text-white/25">{formatTime(msg.createdAt)}</span>
+
+                    {msg.replyTo ? (
+                      <button
+                        type="button"
+                        onClick={() => openAuthorPreview({
+                          userId: msg.replyTo!.userId,
+                          displayName: msg.replyTo!.displayName,
+                          username: msg.replyTo!.handle,
+                          handle: msg.replyTo!.handle,
+                          winRate: null,
+                          statusLine: 'From World Chat reply',
+                        })}
+                        className="mt-1 block w-full max-w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left transition hover:border-white/15"
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/65">
+                          Replying to @{msg.replyTo.handle}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-xs text-white/55">{msg.replyTo.text}</p>
+                      </button>
+                    ) : null}
+
+                    {extractParlayProofIds(msg.text).length > 0 ? (
+                      <div className="mt-2 w-full space-y-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/60">
+                          Shared proof link · open to tail on your own profile
+                        </p>
+                        {extractParlayProofIds(msg.text).map((pickId) => (
+                          <SharedParlayProofCard key={`${msg.id}:${pickId}`} pickId={pickId} />
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className={`mt-1.5 flex flex-wrap gap-1.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      {!isMine ? (
                         <button
-                          key={`${msg.id}:${emoji.id}`}
                           type="button"
-                          disabled={disabled}
-                          onClick={() => void handleReaction(msg.id, emoji.id)}
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition ${
-                            selected
-                              ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                              : 'border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white/85'
-                          } disabled:opacity-50`}
-                          title={emoji.altText}
+                          onClick={() => setReplyTarget({
+                            id: msg.id,
+                            userId: msg.userId,
+                            displayName: msg.displayName,
+                            handle: msg.handle,
+                            text: msg.text,
+                          })}
+                          aria-label="Reply"
+                          title="Reply"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/55 transition hover:border-white/25 hover:text-white/85"
                         >
-                          <img
-                            src={emoji.imageUrl}
-                            alt={emoji.altText}
-                            className="h-4 w-4 rounded-sm object-cover"
-                          />
-                          {count > 0 ? <span>{count}</span> : null}
+                          <CornerUpLeft className="h-3.5 w-3.5" />
                         </button>
-                      );
-                    })
-                  : null}
-              </div>
-              </article>
-            ))
+                      ) : null}
+                      {emojis.length > 0
+                        ? emojis.map((emoji) => {
+                            const reaction = msg.reactions.find((item) => item.emojiId === emoji.id);
+                            const selected = Boolean(reaction?.reactedByViewer);
+                            const count = reaction?.count ?? 0;
+                            const disabled = !isLoggedIn || reactingKey === `${msg.id}:${emoji.id}`;
+                            return (
+                              <button
+                                key={`${msg.id}:${emoji.id}`}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => void handleReaction(msg.id, emoji.id)}
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition ${
+                                  selected
+                                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                                    : 'border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white/85'
+                                } disabled:opacity-50`}
+                                title={emoji.altText}
+                              >
+                                <img
+                                  src={emoji.imageUrl}
+                                  alt={emoji.altText}
+                                  className="h-4 w-4 rounded-sm object-cover"
+                                />
+                                {count > 0 ? <span>{count}</span> : null}
+                              </button>
+                            );
+                          })
+                        : null}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       ) : (
@@ -854,17 +900,16 @@ export default function WorldChatPanel({
                 </div>
                 <div className="max-h-[220px] overflow-y-auto border-b border-white/10 p-3">
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">Start a message</p>
-                  {followingHub.loading ? (
+                  {followingHub.loading && dmStarters.length === 0 ? (
                     <div className="flex items-center gap-2 text-xs text-white/45">
                       <Loader className="h-3.5 w-3.5 animate-spin" />
                       Loading your circle...
                     </div>
-                  ) : followingHub.people.filter((person) => !person.isSelf).length === 0 ? (
-                    <p className="text-xs text-white/45">Follow people to open DMs here.</p>
+                  ) : dmStarters.length === 0 ? (
+                    <p className="text-xs text-white/45">Follow people or say something in World to open DMs here.</p>
                   ) : (
                     <div className="space-y-2">
-                      {followingHub.people
-                        .filter((person) => !person.isSelf)
+                      {dmStarters
                         .slice(0, 8)
                         .map((person) => (
                           <button

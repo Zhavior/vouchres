@@ -1,6 +1,8 @@
-import { Menu, Flame, LayoutDashboard, Home, BadgeCheck } from 'lucide-react';
+import { Menu, Flame, LayoutDashboard, Home, BadgeCheck, UserCircle } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
+import { useAppProfile } from '../context/AppShellContext';
+import { useParlayOsStore } from '../stores/parlayOsStore';
 
 type AppNavProps = {
   activeSection: string;
@@ -8,7 +10,9 @@ type AppNavProps = {
 };
 
 export function AppNav({ activeSection, onNavigate }: AppNavProps) {
+  const profile = useAppProfile();
   const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
+  const parlayDockOpen = useParlayOsStore((state) => state.sheetOpen);
   const feedActive = activeSection === 'feed';
   const proActive = activeSection === 'pro_command_center';
   const vouchActive = activeSection === 'board';
@@ -16,7 +20,9 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
   return (
     <nav
-      className="ve-mobile-app-dock ve-safe-bottom fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-[#05070b]/95 backdrop-blur-xl md:hidden"
+      className={`ve-mobile-app-dock ve-safe-bottom fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-[#05070b]/95 backdrop-blur-xl transition-transform duration-200 md:hidden ${
+        parlayDockOpen ? 'translate-y-full pointer-events-none' : 'translate-y-0'
+      }`}
       aria-label="Mobile app navigation"
     >
       <div className="mx-auto grid h-14 max-w-md grid-cols-5 items-stretch px-2">
@@ -52,11 +58,15 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
         <button
           type="button"
           onClick={openMobileDrawer}
-          aria-label="Open navigation menu"
-          title="Menu"
-          className="ve-touch-target z8-interactive flex min-w-0 items-center justify-center text-white/55 transition-colors active:scale-95 active:text-white"
+          aria-label="Open navigation menu and account"
+          title="Account"
+          className="ve-touch-target z8-interactive flex min-w-0 items-center justify-center transition-colors active:scale-95"
         >
-          <Menu className="h-6 w-6" strokeWidth={1.9} />
+          {profile?.avatarUrl ? (
+            <img src={profile.avatarUrl} alt="Account" className="h-7 w-7 rounded-full border border-white/20 object-cover bg-black" />
+          ) : (
+            <UserCircle className="h-6 w-6 text-white/55 transition-colors active:text-white" strokeWidth={1.9} />
+          )}
         </button>
       </div>
     </nav>
