@@ -565,10 +565,14 @@ export default function HitterMatchupZonesPageZ8() {
     let alive = true;
     setLoadingLineups(true);
 
-    const fetchSide = (pitcher: { id: number; name: string; team: string; throws: string } | null, oppTeam: string): Promise<PitcherMatchupResponse | null> => {
+    const fetchSide = (
+      pitcher: { id: number; name: string; throws: string } | null,
+      pitcherTeam: string,
+      oppTeam: string
+    ): Promise<PitcherMatchupResponse | null> => {
       const pitcherId = pitcher?.id;
-      const pitcherHand = (pitcher?.throws === 'L' || pitcher?.throws === 'R') ? pitcher.throws : 'R';
-      const pitcherObj = { id: pitcherId ?? 0, name: pitcher?.name ?? 'Pitcher', team: pitcher?.team ?? 'TBD', throws: pitcherHand };
+      const pitcherHand: 'L' | 'R' | 'U' = (pitcher?.throws === 'L' || pitcher?.throws === 'R') ? pitcher.throws : 'R';
+      const pitcherObj = { id: pitcherId ?? 0, name: pitcher?.name ?? 'Pitcher', team: pitcherTeam, throws: pitcherHand };
 
       if (!pitcherId) {
         return Promise.resolve(buildLineupFromHrBoard(game.gamePk, pitcherObj, oppTeam, hrBoardQuery.data));
@@ -580,8 +584,8 @@ export default function HitterMatchupZonesPageZ8() {
     };
 
     Promise.all([
-      fetchSide(game.away.probablePitcher, game.home.name),
-      fetchSide(game.home.probablePitcher, game.away.name),
+      fetchSide(game.away.probablePitcher, game.away.name, game.home.name),
+      fetchSide(game.home.probablePitcher, game.home.name, game.away.name),
     ]).then(([awayPitcherVsHomeLineup, homePitcherVsAwayLineup]) => {
       if (!alive) return;
       setAwayVsHome(awayPitcherVsHomeLineup);
