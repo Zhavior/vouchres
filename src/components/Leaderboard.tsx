@@ -691,6 +691,5 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
       )}
 
     </div>
-    </div>
   );
 }
