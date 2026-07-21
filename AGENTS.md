@@ -81,3 +81,12 @@ Minimum verification defaults:
 - backend changes: `npm run typecheck` and the most relevant verify script
 - broad backend/runtime changes: `npm run typecheck`, `npm run build`, and `npm run verify:v3-backend`
 - frontend-only changes: `npm run typecheck` and `npm run build` when the touched surface can affect packaging
+
+## Cursor Cloud specific instructions
+
+- Single dev process: `npm run dev` runs Express + Vite (middleware mode) on one port, `http://localhost:3000`. It serves both the `/api/*` backend and the React SPA/HMR. There is no separate frontend server. Run it under tmux for long-lived sessions.
+- The server boots fine in dev with no `.env.local`. Missing Supabase/Upstash/Stripe/Sentry/Gemini/CRON config only logs `[boot] Missing required production config` warnings and degrades gracefully; `validateProductionEnvAtBoot()` only hard-fails when `NODE_ENV=production`.
+- Core research surface (HR / Truth OS) works with only outbound internet to the free MLB Stats API — no keys needed. Smoke it with `curl http://localhost:3000/api/mlb/hr-board/today` (returns real MLB data).
+- Auth-gated features (login, picks, billing, social) need a Supabase project (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, plus `VITE_` mirrors). Without it the UI shows the landing page and a login gate; `[auth] Local login disabled` is logged. `docker-compose.yml` can bring up a local Supabase stack if a real project is unavailable (requires Docker).
+- `npm run lint` intentionally ends in `|| true` and will exit 0 even with pre-existing errors/warnings (currently ~4 errors, ~1179 warnings in the checked-in code). Use `npm run lint:strict` for a failing lint gate on `src server tests`.
+- Optional V3 backend is a separate process: `npm run dev:v3` on port 3100. Not required for the main app to run end-to-end.
