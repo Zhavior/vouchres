@@ -52,21 +52,21 @@ function buildFallbackLedger(): LedgerResponse {
   const today = new Date().toISOString().slice(0, 10);
   
   const samplePicks: LedgerPick[] = [
-    { decisionKey: 'hk-1', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'BOS', rank: 1, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'hit' },
+    { decisionKey: 'hk-1', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 1, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
     { decisionKey: 'hk-2', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 2, score: 91, confidence: 88, tier: 'Elite Power', evidenceQuality: 'official', result: 'hit' },
-    { decisionKey: 'hk-3', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'BOS', rank: 3, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'hk-4', date: today, playerName: 'Gunnar Henderson', team: 'BAL', opponent: 'TOR', rank: 4, score: 84, confidence: 82, tier: 'Core Target', evidenceQuality: 'official', result: 'miss' },
+    { decisionKey: 'hk-3', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'PIT', rank: 3, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
+    { decisionKey: 'hk-4', date: today, playerName: 'Gunnar Henderson', team: 'BAL', opponent: 'BOS', rank: 4, score: 84, confidence: 82, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
     { decisionKey: 'hk-5', date: today, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 5, score: 82, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'hit' },
   ];
 
   const hrPerf: Performance = {
     total: 5,
-    resolved: 4,
-    pending: 1,
-    hits: 3,
-    misses: 1,
-    voids: 0,
-    hitRate: 75.0,
+    resolved: 2,
+    pending: 0,
+    hits: 2,
+    misses: 0,
+    voids: 3,
+    hitRate: 100.0,
     sampleWarning: null,
   };
 
