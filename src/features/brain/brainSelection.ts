@@ -58,7 +58,7 @@ function explain(row: HrWatchRow, percentile: number): string {
 }
 
 export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
-  const ranked = rows
+  let ranked = rows
     .filter((row) => row.riskTier !== 'Blocked')
     .map((row) => ({ row, score: selectionScore(row) }))
     .filter(({ row, score }) => {
@@ -67,6 +67,13 @@ export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
       return (primaryTier || exceptionalWatch || score >= 55) && score >= 55 && numeric(row.dataConfidence, 0) >= 55;
     })
     .sort((a, b) => b.score - a.score || numeric(a.row.rank, 999) - numeric(b.row.rank, 999));
+
+  if (ranked.length < 4) {
+    ranked = rows
+      .filter((row) => row.riskTier !== 'Blocked')
+      .map((row) => ({ row, score: selectionScore(row) }))
+      .sort((a, b) => b.score - a.score || numeric(a.row.rank, 999) - numeric(b.row.rank, 999));
+  }
 
   const official = ranked.filter(({ row }) => row.truthStatus === 'official');
   const pool = official.length >= 10 ? official : ranked;

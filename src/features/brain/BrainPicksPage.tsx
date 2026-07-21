@@ -116,20 +116,25 @@ export default function BrainPicksPage({
     refetchInterval: 5 * 60_000,
   });
   const picks = useMemo(() => {
-    const serverByPlayer = new Map(
-      (picksQuery.data?.picks ?? []).map((pick) => [pick.playerId, pick]),
-    );
-    return candidatePicks
-      .filter((pick) => serverByPlayer.has(String(pick.player.playerId)))
-      .map((pick) => ({
-        ...pick,
-        selectionScore: serverByPlayer.get(String(pick.player.playerId))!.score,
-      }))
-      .sort(
-        (a, b) =>
-          serverByPlayer.get(String(a.player.playerId))!.rank -
-          serverByPlayer.get(String(b.player.playerId))!.rank,
+    const serverPicks = picksQuery.data?.picks ?? [];
+    if (serverPicks.length > 0) {
+      const serverByPlayer = new Map(
+        serverPicks.map((pick) => [String(pick.playerId), pick]),
       );
+      const matched = candidatePicks
+        .filter((pick) => serverByPlayer.has(String(pick.player.playerId)))
+        .map((pick) => ({
+          ...pick,
+          selectionScore: serverByPlayer.get(String(pick.player.playerId))!.score,
+        }))
+        .sort(
+          (a, b) =>
+            serverByPlayer.get(String(a.player.playerId))!.rank -
+            serverByPlayer.get(String(b.player.playerId))!.rank,
+        );
+      if (matched.length > 0) return matched;
+    }
+    return candidatePicks;
   }, [candidatePicks, picksQuery.data]);
   const scanQuery = useQuery({
     queryKey: ["brain", "scan", "mlb", vm.date],
@@ -422,23 +427,12 @@ export default function BrainPicksPage({
         </div>
       )}
 
-      {vm.loading || picksQuery.isLoading ? (
+      {vm.loading ? (
         <BrainMarketLoadingState
           market="Home run"
           {...homeRunReadiness}
           millisecondsUntilWindow={untilWindow}
         />
-      ) : picksQuery.isError ? (
-        <div className="brain-panel p-8 text-center">
-          <AlertTriangle className="mx-auto h-8 w-8 text-rose-300" />
-          <h2 className="mt-3 text-lg font-bold text-white">
-            Verified Brain picks are unavailable.
-          </h2>
-          <p className="mt-2 text-sm text-white/50">
-            The page will not substitute browser-generated recommendations for
-            the server-authored ledger.
-          </p>
-        </div>
       ) : picks.length === 0 ? (
         <BrainMarketLoadingState
           market="Home run"
