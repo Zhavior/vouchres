@@ -13,9 +13,9 @@ describe("AI quota gates (static audit)", () => {
   });
 
   it("gates parlay AI generation", () => {
-    const source = readFileSync(path.join(process.cwd(), "server/routes/parlay/parlayUserRoutes.ts"), "utf8");
+    const source = readFileSync(path.join(process.cwd(), "server/routes/parlay/mountParlaySupportRoutes.ts"), "utf8");
     const start = source.indexOf('"/parlays/ai-generate"');
-    const end = source.indexOf('parlayUserRoutes.post(', start + 1);
+    const end = source.indexOf('router.post(', start + 1);
     const block = source.slice(start, end > start ? end : start + 1200);
     expect(block).toContain("requireTierOrQuota");
     expect(block).toContain("parlay_lab_saves");

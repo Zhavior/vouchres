@@ -7,6 +7,16 @@ vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
   useHrBoardViewModel: vi.fn(),
 }));
 
+vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
+  usePlayerVouchSummary: vi.fn(() => ({ data: [] })),
+  usePlayerVouchLeaderboard: vi.fn(() => ({ data: [] })),
+  useTogglePlayerVouch: vi.fn(() => ({ mutate: vi.fn() })),
+}));
+
+vi.mock('../src/features/hr/hooks/useHrResearch', () => ({
+  useHrResearch: vi.fn(() => ({ data: null, isLoading: false })),
+}));
+
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);

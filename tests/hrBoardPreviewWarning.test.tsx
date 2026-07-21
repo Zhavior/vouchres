@@ -5,6 +5,20 @@ import { HrPlayerCard } from '../src/features/hr/components/Cards/HrPlayerCard';
 import { HrCommandCenter } from '../src/features/hr/components/CommandCenter/HrCommandCenter';
 import type { HrWatchRow } from '../src/features/hr/types/hrWatch';
 
+vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
+  useHrBoardViewModel: vi.fn(),
+}));
+
+vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
+  usePlayerVouchSummary: vi.fn(() => ({ data: [] })),
+  usePlayerVouchLeaderboard: vi.fn(() => ({ data: [] })),
+  useTogglePlayerVouch: vi.fn(() => ({ mutate: vi.fn() })),
+}));
+
+vi.mock('../src/features/hr/hooks/useHrResearch', () => ({
+  useHrResearch: vi.fn(() => ({ data: null, isLoading: false })),
+}));
+
 function makeProjectedRow(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
   return {
     stableId: 'proj-1',
@@ -99,7 +113,7 @@ describe('HR board projected preview warnings', () => {
     );
 
     expect(screen.getByText('Preview mode')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Map' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Map' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
   });
 });

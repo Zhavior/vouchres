@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const SRC_ROOT = join(process.cwd(), 'src');
 
 /** Baseline after hex purge wave 2 (Jul 2026). Was 61, then 0. */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 0;
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 64;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

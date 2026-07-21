@@ -45,6 +45,18 @@ vi.mock("../server/services/hubs/hrBoardHub", () => ({
     lastGoodWarnings: [],
   })),
   getCachedDeepHrBoard: vi.fn(),
+  getCachedValidatedHrCandidate: vi.fn(async (playerId) => ({
+    candidate: sampleBoard.candidates.find((c) => c.playerId === Number(playerId)),
+    source: "test",
+    generatedAt: "2026-07-09T12:00:00.000Z",
+  })),
+}));
+
+vi.mock("../server/services/mlb/hrResearchSnapshotService", () => ({
+  getMaterializedHrResearch: vi.fn(async () => ({
+    research: {},
+    source: "test",
+  })),
 }));
 
 let server: Server;

@@ -13,7 +13,7 @@ describe('Profile trust layout', () => {
   it('labels performance as settled data with a clear disclosure', () => {
     expect(source).toContain('SETTLED DATA');
     expect(source).toContain('Unsettled picks and local-only drafts are excluded.');
-    expect(source).toContain("profile.totalPicks > 0 ? `${profile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'");
+    expect(source).toContain("displayedProfile.totalPicks > 0 ? `${displayedProfile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'");
   });
 
   it('keeps owner-only actions off community profiles', () => {

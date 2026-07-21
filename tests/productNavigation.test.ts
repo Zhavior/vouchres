@@ -39,7 +39,7 @@ describe('customer-facing product navigation', () => {
 
   it('drives desktop and mobile navigation from the workspace model without false active states', () => {
     for (const source of shellSources) {
-      expect(source).toContain('getPrimaryProductNavigation()');
+      expect(source).toContain('getSidebarFeatures');
       expect(
         source.includes('activeSection === item.id') ||
           source.includes('activeSection === f.id'),
