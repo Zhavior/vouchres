@@ -47,7 +47,7 @@ export async function buildSubscriberChannelsProjection(userId: string): Promise
     following.profileIds.length > 0
       ? supabaseAdmin
           .from("profiles")
-          .select("id, handle, username, display_name, avatar_url, bio, trust_score, total_picks, won_picks, lost_picks, capper_settings")
+          .select("id, handle, username, display_name, avatar_url, bio, trust_score, total_picks, won_picks, lost_picks")
           .in("id", following.profileIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
@@ -115,7 +115,7 @@ export async function buildSubscriberChannelsProjection(userId: string): Promise
     })),
     profiles: (profilesRes.data ?? []).map((profile: Record<string, unknown>) => ({
       ...profile,
-      capper_settings: businessBrandSettingsByProfileId.get(String(profile.id)) ?? profile.capper_settings ?? null,
+      capper_settings: businessBrandSettingsByProfileId.get(String(profile.id)) ?? null,
       subscriber_count: membershipCountByBusinessId[businessIdByProfileId.get(String(profile.id)) ?? ""] ?? 0,
     })),
     owner_profile_id: userId,

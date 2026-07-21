@@ -75,7 +75,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
 
 const MISSING_TABLE_CODES = new Set(["42P01", "PGRST205", "PGRST204", "42703"]);
 
-function missingTable(error: any): boolean {
+export function missingTable(error: any): boolean {
   return error?.code && MISSING_TABLE_CODES.has(error.code);
 }
 
@@ -117,7 +117,7 @@ function notificationUrl(type: NotificationType, metadata: Record<string, unknow
   return "/notifications";
 }
 
-function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean {
+export function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean {
   if (!prefs.in_app_enabled) return false;
   if (type === "HOME_RUN") return prefs.hr_alerts_enabled;
   if (type === "PARLAY_GRADED") return prefs.parlay_alerts_enabled;
@@ -126,7 +126,7 @@ function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean 
   return true;
 }
 
-async function getPrefs(userId: string): Promise<{ prefs: NotificationPrefs; warnings: string[] }> {
+export async function getPrefs(userId: string): Promise<{ prefs: NotificationPrefs; warnings: string[] }> {
   try {
     const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
@@ -159,7 +159,7 @@ async function getRecipientUserIds(explicitUserIds?: string[]): Promise<{ userId
   }
 }
 
-async function maybeSendPush(args: {
+export async function maybeSendPush(args: {
   userId: string;
   type: NotificationType;
   title: string;
@@ -246,48 +246,31 @@ export async function createNotification(args: {
   dedupeKey: string;
 }): Promise<NotificationCreateResult> {
   const warnings: string[] = [];
-  const { prefs, warnings: prefWarnings } = await getPrefs(args.userId);
-  warnings.push(...prefWarnings);
-
-  if (!typeEnabled(args.type, prefs)) {
-    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`${args.type} notification skipped by user preferences`, ...warnings] };
-  }
 
   try {
     const supabaseAdmin = await getSupabaseAdmin();
-    const { error } = await supabaseAdmin.from("notifications").insert({
+    const { error } = await supabaseAdmin.from("notification_jobs").insert({
       user_id: args.userId,
       type: args.type,
       title: args.title,
       message: args.message,
       metadata: args.metadata,
       dedupe_key: args.dedupeKey,
+      status: "pending"
     });
+    
     if (error) {
-      if (error.code === "23505") {
-        console.log(`[notifications] duplicate skipped ${args.dedupeKey}`);
-        return { created: 0, duplicates: 1, pushSent: 0, pushSkipped: 0, warnings };
-      }
       if (missingTable(error)) {
-        return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notifications table missing: ${error.message}`, ...warnings] };
+        return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notification_jobs table missing: ${error.message}`] };
       }
       throw error;
     }
   } catch (err: any) {
-    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notification insert failed: ${err?.message ?? "unknown error"}`, ...warnings] };
+    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notification job insert failed: ${err?.message ?? "unknown error"}`] };
   }
 
-  const push = await maybeSendPush({
-    userId: args.userId,
-    type: args.type,
-    title: args.title,
-    message: args.message,
-    metadata: args.metadata,
-    prefs,
-  });
-  warnings.push(...push.warnings);
-
-  return { created: 1, duplicates: 0, pushSent: push.sent, pushSkipped: push.skipped, warnings };
+  // Delivery stats are now handled asynchronously by the worker
+  return { created: 1, duplicates: 0, pushSent: 0, pushSkipped: 0, warnings };
 }
 
 export function homeRunDedupeKey(event: Pick<HrEvent, "gamePk" | "id" | "playerId">): string {
@@ -320,28 +303,40 @@ export async function createHomeRunNotifications(
   const start = Date.now();
   const recipients = await getRecipientUserIds(opts.userIds);
   const warnings = [...recipients.warnings];
-  let created = 0;
-  let duplicates = 0;
-  let pushSent = 0;
-  let pushSkipped = 0;
+  
+  if (recipients.userIds.length === 0) {
+    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 0, warnings };
+  }
 
-  for (const userId of recipients.userIds) {
-    const payload = buildHomeRunNotification(event);
-    const result = await createNotification({
-      userId,
-      ...payload,
-    });
-    created += result.created;
-    duplicates += result.duplicates;
-    pushSent += result.pushSent;
-    pushSkipped += result.pushSkipped;
-    warnings.push(...result.warnings);
+  const payload = buildHomeRunNotification(event);
+  const jobs = recipients.userIds.map(userId => ({
+    user_id: userId,
+    type: payload.type,
+    title: payload.title,
+    message: payload.message,
+    metadata: payload.metadata,
+    dedupe_key: payload.dedupeKey,
+    status: "pending"
+  }));
+
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    // Chunk insert in batches of 500
+    for (let i = 0; i < jobs.length; i += 500) {
+      const chunk = jobs.slice(i, i + 500);
+      const { error } = await supabaseAdmin.from("notification_jobs").insert(chunk);
+      if (error) throw error;
+    }
+  } catch (err: any) {
+    warnings.push(`bulk job insert failed: ${err.message}`);
+    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: jobs.length, warnings };
   }
 
   console.log(
-    `[notifications] HR event ${event.id} scanned users=${recipients.userIds.length} created=${created} duplicates=${duplicates} pushSent=${pushSent} pushSkipped=${pushSkipped} ${Date.now() - start}ms`
+    `[notifications] HR event ${event.id} queued ${jobs.length} delivery jobs in ${Date.now() - start}ms`
   );
-  return { created, duplicates, pushSent, pushSkipped, warnings: [...new Set(warnings)] };
+  
+  return { created: jobs.length, duplicates: 0, pushSent: 0, pushSkipped: 0, warnings: [...new Set(warnings)] };
 }
 
 export async function processHomeRunEvents(

@@ -39,6 +39,13 @@ export interface CreatorBusinessProjection {
   }>;
 }
 
+export interface CreatorBusinessMembershipAccess {
+  hasMembership: boolean;
+  membershipStatus: BusinessMembershipStatus | null;
+  productCode: string | null;
+  accessScope: Record<string, boolean>;
+}
+
 export const CreatorBusinessUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(80),
   brandSettings: z.object({
@@ -552,4 +559,67 @@ export async function hasActiveMembershipForFollower(input: {
     .maybeSingle();
   if (error) throw error;
   return Boolean(data?.id);
+}
+
+export async function getMembershipAccessForFollower(input: {
+  ownerProfileId: string;
+  followerProfileId: string;
+}): Promise<CreatorBusinessMembershipAccess> {
+  const business = await ensureCreatorBusinessForProfile(input.ownerProfileId);
+  const admin = await getSupabaseAdmin();
+  const { data: membership, error: membershipError } = await admin
+    .from("creator_business_memberships")
+    .select("id, status, product_id")
+    .eq("business_id", business.id)
+    .eq("profile_id", input.followerProfileId)
+    .in("status", ["active", "trialing"])
+    .maybeSingle();
+
+  if (membershipError) throw membershipError;
+  if (!membership?.id) {
+    return {
+      hasMembership: false,
+      membershipStatus: null,
+      productCode: null,
+      accessScope: {},
+    };
+  }
+
+  if (!membership.product_id) {
+    return {
+      hasMembership: true,
+      membershipStatus: String(membership.status) as BusinessMembershipStatus,
+      productCode: null,
+      accessScope: {},
+    };
+  }
+
+  const { data: product, error: productError } = await admin
+    .from("creator_business_products")
+    .select("code, access_scope")
+    .eq("id", membership.product_id)
+    .maybeSingle();
+
+  if (productError) throw productError;
+
+  return {
+    hasMembership: true,
+    membershipStatus: String(membership.status) as BusinessMembershipStatus,
+    productCode: product?.code ? String(product.code) : null,
+    accessScope: (product?.access_scope as Record<string, boolean> | null) ?? {},
+  };
+}
+
+export async function canFollowerAccessBusinessCapability(input: {
+  ownerProfileId: string;
+  followerProfileId: string;
+  capability: "shared_parlays" | "announcements" | "club_chat" | "dms" | "support_inbox";
+}): Promise<boolean> {
+  if (input.ownerProfileId === input.followerProfileId) return true;
+  const access = await getMembershipAccessForFollower({
+    ownerProfileId: input.ownerProfileId,
+    followerProfileId: input.followerProfileId,
+  });
+  if (!access.hasMembership) return false;
+  return access.accessScope[input.capability] !== false;
 }

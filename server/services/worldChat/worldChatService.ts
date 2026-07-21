@@ -446,7 +446,7 @@ async function tryDurableList(
       profileMap = new Map((profiles ?? []).map((profile: ProfileRow) => [String(profile.id), profile]));
     }
 
-    let reactionsByMessage = new Map<string, WorldChatReaction[]>();
+    const reactionsByMessage = new Map<string, WorldChatReaction[]>();
     if (messageIds.length > 0) {
       const { data: reactionRows, error: reactionError } = await supabaseAdmin
         .from("world_chat_message_reactions")

@@ -31,6 +31,7 @@ import { registerCentralBrainRoutes } from "./centralBrainRoutes";
 import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
 import { creatorBusinessRoutes } from "./creatorBusinessRoutes";
+import { registerV3Routes } from "../v3/routes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
@@ -78,6 +79,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", worldChatRoutes);
   app.use("/api", socialHubRoutes);
   app.use("/api", creatorBusinessRoutes);
+  registerV3Routes(app);
 
   registerMlbRoutes(app);
   registerNflRoutes(app);

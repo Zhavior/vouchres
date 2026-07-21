@@ -43,7 +43,6 @@ const ME_PROFILE_COLUMNS = `
   age_confirmed_at,
   jurisdiction_confirmed_at,
   jurisdiction,
-  capper_settings,
   created_at,
   updated_at
 `;
@@ -56,6 +55,36 @@ authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithCon
     .single();
 
   if (error || !profile) {
+    if (error?.code === "PGRST116" || !profile) {
+      // Self-heal: create the missing profile row
+      const rawHandle = req.user!.email ? req.user!.email.split("@")[0] : `user_${req.user!.id.substring(0, 8)}`;
+      const { data: newProfile, error: insertError } = await supabaseAdmin
+        .from("profiles")
+        .insert({
+          id: req.user!.id,
+          username: rawHandle,
+          handle: rawHandle,
+          display_name: rawHandle,
+        })
+        .select(ME_PROFILE_COLUMNS)
+        .single();
+      
+      if (insertError || !newProfile) {
+        console.error("DEBUG Profile Insert Error:", insertError);
+        throw new AppError({
+          status: 500,
+          code: "internal_server_error",
+          message: "Failed to create missing profile.",
+          cause: insertError,
+        });
+      }
+      return res.json(apiOkFlat(req, {
+        ...newProfile,
+        email: req.user!.email ?? null,
+        entitlements: { tier: newProfile.tier },
+      }));
+    }
+
     throw new AppError({
       status: 500,
       code: "internal_server_error",

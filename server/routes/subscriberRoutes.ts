@@ -7,6 +7,7 @@ import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { findLegsForPicks } from "../repositories/parlayRepository";
+import { canFollowerAccessBusinessCapability } from "../services/business/creatorBusinessService";
 import {
   buildSubscriberChannelsProjection,
   canViewerAccessCapperSubscriberContent,
@@ -35,6 +36,23 @@ async function assertFollowsProfile(userId: string, profileId: string): Promise<
       code: "forbidden",
       message: "Follow this creator to view subscriber picks.",
       details: { error: "not_following" },
+    });
+  }
+}
+
+async function assertProfileCapability(userId: string, profileId: string, capability: "shared_parlays" | "announcements" | "club_chat"): Promise<void> {
+  if (userId === profileId) return;
+  const allowed = await canFollowerAccessBusinessCapability({
+    ownerProfileId: profileId,
+    followerProfileId: userId,
+    capability,
+  }).catch(() => false);
+  if (!allowed) {
+    throw new AppError({
+      status: 403,
+      code: "forbidden",
+      message: `Your current membership does not include ${capability.replace("_", " ")} access.`,
+      details: { error: "membership_scope_denied", capability },
     });
   }
 }
@@ -93,6 +111,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
   const userId = req.user!.id;
   const profileId = req.params.id;
   await assertFollowsProfile(userId, profileId);
+  await assertProfileCapability(userId, profileId, "shared_parlays");
 
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
 
@@ -210,6 +229,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/posts", requireAuth, asyncHandler
   const userId = req.user!.id;
   const profileId = req.params.id;
   await assertFollowsProfile(userId, profileId);
+  await assertProfileCapability(userId, profileId, "announcements");
 
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
   const posts = await loadProfileAnnouncementPosts(profileId, limit);
@@ -233,6 +253,7 @@ async function assertCanAccessSubscriberChannel(userId: string, kind: Subscriber
     return;
   }
   await assertFollowsProfile(userId, targetId);
+  await assertProfileCapability(userId, targetId, "club_chat");
 }
 
 async function loadCapperAnnouncementPosts(capperId: string, limit: number) {
