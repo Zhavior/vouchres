@@ -81,3 +81,13 @@ Minimum verification defaults:
 - backend changes: `npm run typecheck` and the most relevant verify script
 - broad backend/runtime changes: `npm run typecheck`, `npm run build`, and `npm run verify:v3-backend`
 - frontend-only changes: `npm run typecheck` and `npm run build` when the touched surface can affect packaging
+
+## Cursor Cloud specific instructions
+
+Dependencies are refreshed automatically on VM startup (`npm install`); no manual install step is needed.
+
+- Run the app with `npm run dev` (see `## Main commands`). This is a single Node process: Express serves the API and runs Vite in middleware mode, so both the API and the SPA are on `http://localhost:3000`. There is no separate frontend dev server.
+- Auth: Supabase is optional in dev. With no `SUPABASE_URL`/`VITE_SUPABASE_URL` + anon key, login is disabled and you'll see `[auth] Local login disabled`. For local dev without a Supabase project, create a gitignored `.env.local` with `VITE_DEV_BYPASS_AUTH=true` to skip the auth gate. For real auth/DB flows, either fill Supabase vars from a project or bring up the local stack via `docker compose up -d` (see `docker-compose.yml`).
+- The HR board (core feature) fetches live data from the public MLB StatsAPI (`https://statsapi.mlb.com/api`, no key). It needs outbound network egress; without it the board falls back to degraded/cached states by design.
+- Expected dev noise: boot logs `[boot] Missing required production config: ...` warnings — these only hard-fail when `NODE_ENV=production`, so they are safe to ignore in dev.
+- Known baseline at HEAD (not caused by setup): `npm run lint:strict` fails on one pre-existing `prefer-const` error in `server/services/worldChat/worldChatService.ts` (the non-strict `npm run lint` passes). A handful of `vitest` source-assertion/component tests fail, and DB-hitting tests are skipped/fail unless `SUPABASE_URL_TEST` and `SUPABASE_SERVICE_ROLE_KEY_TEST` are set (`.env.test.local`).
