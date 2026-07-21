@@ -15,6 +15,8 @@ import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
+import { LineScoreTable } from './live/LineScoreTable';
+import { TeamLogo } from './live/LiveTeamLogo';
 import { Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
 import './live/live-games-lens.css';
 
@@ -368,6 +370,9 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
               <p className="text-3xl font-black font-mono text-white mt-1">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
             </div>
           </div>
+          <div className="pt-2">
+            <LineScoreTable game={m} />
+          </div>
         </div>
 
         {/* Top HR Watch Targets */}
@@ -678,6 +683,11 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                     </div>
                     <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={44} />
                   </div>
+                </div>
+
+                {/* Inning-by-Inning Line Score Table */}
+                <div className="mt-4">
+                  <LineScoreTable game={activeGame} />
                 </div>
 
                 {/* In-Game HR Signal Spotlight */}
