@@ -232,7 +232,7 @@ function PricingGrid({
       <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
         <div>
           <p className={`${Z8_LABEL} text-vouch-cyan`}>Beta Pricing</p>
-          <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Terminal Access</h2>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Choose your plan</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
           Early VouchEdge pricing in USD. No fake trials, no bait-and-switch.

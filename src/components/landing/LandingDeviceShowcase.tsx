@@ -430,7 +430,7 @@ export default function LandingDeviceShowcase() {
   return (
     <section className="py-8 sm:py-16">
       <div className="mb-10 text-center sm:mb-16">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>Inside the Terminal</p>
+        <p className={`${Z8_LABEL} text-vouch-cyan`}>Inside VouchEdge</p>
         <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
           Research it. Post it.<br />
           <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">

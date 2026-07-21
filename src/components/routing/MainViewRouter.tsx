@@ -153,7 +153,7 @@ function MainViewRouter({
             <div className="mx-auto max-w-[1500px] px-3 py-4 sm:px-6">
               <LegacyPublicBanner
                 title="Legacy AI Studio landing (archived)"
-                backLabel="Back to terminal landing"
+                backLabel="Back to landing"
                 onBack={() => navigateSection('vouchedge_intro')}
               />
             </div>
