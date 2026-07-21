@@ -1,0 +1,10 @@
+# VouchEdge Cursor Ignore Rules
+node_modules/
+dist/
+.next/
+build/
+.cache/
+coverage/
+*.log
+.DS_Store
+.git/

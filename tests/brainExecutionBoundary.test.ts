@@ -24,7 +24,7 @@ describe("ProjectVABrAIns execution boundary", () => {
     const nonBrainEntrypoints = [
       "src/App.tsx",
       "src/app/AuthenticatedApp.tsx",
-      "src/features/hr/pages/HomeRunIntelligencePage.tsx",
+      "src/features/hr/pages/HomeRunIntelligencePageZ8.tsx",
       "src/components/routing/MainViewRouter.tsx",
     ];
     for (const file of nonBrainEntrypoints) {

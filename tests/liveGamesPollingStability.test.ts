@@ -5,7 +5,7 @@ import {
   applyScores,
   mergeMatchups,
   mergeOfficialLiveUpdates,
-} from '../src/components/LiveGamesPro';
+} from '../src/components/LiveGamesProZ8';
 
 function game(id: number, patch: Partial<GameMatchup> = {}): GameMatchup {
   return {

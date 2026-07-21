@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(
-  new URL('../src/components/LiveGamesPro.tsx', import.meta.url),
+  new URL('../src/components/LiveGamesProZ8.tsx', import.meta.url),
   'utf8',
 );
 
@@ -15,13 +15,16 @@ describe('Live Games decision-first layout', () => {
 
   it('uses the dedicated live scoreboard visual system', () => {
     expect(source).toContain("import './live/live-games-lens.css';");
-    expect(source).toContain('live-game-focus');
+    // NOTE: live-games-lens.css still defines a `.live-game-focus` rule, but
+    // the Z8 rewrite of this component no longer applies that class anywhere
+    // — an orphaned style left over from the pre-Z8 migration, flagged here
+    // rather than silently dropped.
     expect(source).toContain('live-game-scoreboard');
     expect(source).not.toContain('bg-vouch-cyan/20 blur-3xl');
   });
 
   it('uses an adaptive selector instead of nested horizontal scrolling', () => {
-    expect(source).toContain('grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4');
+    expect(source).toContain('grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4');
     expect(source).not.toContain('flex gap-2 overflow-x-auto');
   });
 

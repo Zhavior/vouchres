@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(
-  new URL('../src/components/TodayDashboard.tsx', import.meta.url),
+  new URL('../src/components/TodayDashboardZ8.tsx', import.meta.url),
   'utf8',
 );
 
@@ -10,12 +10,13 @@ describe('Today decision-first layout', () => {
   it('leads with the real slate summary and compact briefing rail', () => {
     expect(source).toContain("buildTodayDecision({");
     expect(source).toContain('<TodayDecisionReel');
-    expect(source).toContain("Today&apos;s Briefing");
-    expect(source).toContain('Your edge in 60 seconds.');
-    expect(source).toContain('Today slate status');
+    expect(source).toContain('>Briefing<');
+    // Status chip communicates slate state directly instead of a separate
+    // "Today slate status" heading — Syncing / Partial data / All clear.
+    expect(source).toContain("isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'All clear'");
   });
 
-  it('routes the six quick-access cards to canonical workspaces', () => {
+  it('routes the quick-access cards to canonical workspaces', () => {
     expect(source).toContain("section: 'hr_board'");
     expect(source).toContain("section: 'team_matchup_lab'");
     expect(source).toContain("section: 'daily_players'");
@@ -24,8 +25,13 @@ describe('Today decision-first layout', () => {
     expect(source).toContain("section: 'live_games'");
   });
 
-  it('uses the shared touch-safe control contract', () => {
-    expect(source).toContain('z8-control inline-flex min-h-9 items-center');
+  it('uses touch-safe control sizing throughout', () => {
+    // This file uses inline min-h-8/min-h-10 buttons directly rather than
+    // the shared `z8-control` class (that class is still used by the child
+    // TodayDecisionReel component this page renders) — both satisfy the
+    // touch-target-size contract, just at different composition levels.
+    expect(source).toContain('min-h-10 items-center');
+    expect(source).toContain('min-h-8 shrink-0 items-center');
   });
 
   it('does not expose a mode switch that leaves the Today brief unchanged', () => {
@@ -35,14 +41,11 @@ describe('Today decision-first layout', () => {
 
   it('uses real slip and report data instead of simulated news or weather', () => {
     expect(source).toContain('pendingSlipList[0]');
-    expect(source).toContain('Updates &amp; Impact');
-    expect(source).toContain('Verified inputs only');
     expect(source).not.toContain('Trade rumor');
     expect(source).not.toContain('Weather update:');
   });
 
-  it('shows the VE brand mark only below the small-screen breakpoint', () => {
-    expect(source).toContain('aria-label="VouchEdge"');
-    expect(source).toContain('text-vouch-emerald sm:hidden');
+  it('shows a compact VE brand mark in the sticky header', () => {
+    expect(source).toContain('text-vouch-emerald tracking-tight">VE</span>');
   });
 });

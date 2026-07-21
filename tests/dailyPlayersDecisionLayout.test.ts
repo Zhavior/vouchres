@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const source = readFileSync('src/pages/DailyPlayersPage.tsx', 'utf8');
+const source = readFileSync('src/pages/DailyPlayersPageZ8.tsx', 'utf8');
 
 describe('Daily Players decision layout', () => {
   it('keeps projected players clearly separated from confirmed lineups', () => {
