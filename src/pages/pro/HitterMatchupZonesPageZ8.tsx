@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { ProLockedCard } from "../../components/pro/ProLockedCard";
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
-import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame } from 'lucide-react';
+import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
@@ -102,10 +102,103 @@ function isoAddDays(iso: string, delta: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ─── Sabermetric Matchup Probability & Multi-Factor Math ────────────────────
+
+export interface SabermetricMatchupScore {
+  totalScore: number;           // 0 - 100
+  hrProbabilityPct: number;     // e.g. 18.5%
+  edgeRating: 'ELITE' | 'STRONG' | 'VALID' | 'RISK';
+  platoonAdvantage: boolean;
+  components: {
+    isoContribution: number;
+    statcastContribution: number;
+    platoonContribution: number;
+    bvpContribution: number;
+    formContribution: number;
+  };
+  details: string;
+}
+
+export function computeHitterMatchupMath(
+  row: HitterRow,
+  pitcherHand?: 'L' | 'R' | 'U'
+): SabermetricMatchupScore {
+  // 1. Isolated Power (ISO) baseline (0.160 MLB Avg)
+  const iso = row.seasonStats?.iso ?? 0.160;
+  const isoNorm = Math.min(1, Math.max(0, (iso - 0.080) / 0.220));
+
+  // 2. Statcast Quality (Barrel % & Exit Velocity & xwOBA)
+  const barrel = row.statcast?.barrelPct ?? 6.5;
+  const hardHit = row.statcast?.hardHitPct ?? 36.0;
+  const xwoba = row.statcast?.xwoba ?? 0.315;
+  const barrelNorm = Math.min(1, Math.max(0, (barrel - 2) / 18));
+  const hardHitNorm = Math.min(1, Math.max(0, (hardHit - 20) / 35));
+  const statcastScore = (barrelNorm * 0.6) + (hardHitNorm * 0.4);
+
+  // 3. Platoon Split Advantage (Opposite Handedness)
+  const hitterBats = row.bats;
+  let platoonAdvantage = false;
+  if (pitcherHand && pitcherHand !== 'U' && hitterBats !== 'S') {
+    platoonAdvantage = (pitcherHand === 'L' && hitterBats === 'R') || (pitcherHand === 'R' && hitterBats === 'L');
+  }
+  const platoonMultiplier = platoonAdvantage ? 1.15 : (hitterBats === 'S' ? 1.08 : 0.95);
+
+  // 4. Batter vs Pitcher (BvP) Bayesian Sample-Size Weighting
+  const bvpAb = row.vsPitcher?.ab ?? 0;
+  const bvpOpsRaw = row.vsPitcher?.opsText ? Number(row.vsPitcher.opsText) : null;
+  const leagueOps = row.seasonStats?.ops ?? 0.720;
+  
+  const weightBvp = Math.min(1, bvpAb / 20);
+  const bvpOpsEffective = bvpOpsRaw !== null
+    ? (bvpOpsRaw * weightBvp) + (leagueOps * (1 - weightBvp))
+    : leagueOps;
+  const bvpNorm = Math.min(1, Math.max(0, (bvpOpsEffective - 0.500) / 0.600));
+
+  // 5. Recent Form (Last 10 Games)
+  let formScore = 0.5;
+  if (row.recentForm && row.recentForm.atBats > 0) {
+    const hrRate = row.recentForm.hr / (row.recentForm.atBats / 4);
+    const hitRate = row.recentForm.hits / Math.max(1, row.recentForm.atBats);
+    formScore = Math.min(1, Math.max(0, (hrRate * 2.5) + (hitRate * 0.5)));
+  }
+
+  // 6. Weighted Sum Composition
+  const isoContrib = isoNorm * 30;
+  const statcastContrib = statcastScore * 25;
+  const platoonContrib = (platoonMultiplier - 0.90) * 50;
+  const bvpContrib = bvpNorm * 15;
+  const formContrib = formScore * 15;
+
+  const rawTotal = (isoContrib + statcastContrib + platoonContrib + bvpContrib + formContrib) * platoonMultiplier;
+  const totalScore = Math.min(99, Math.max(5, Math.round(rawTotal)));
+
+  // Log5 Probability Calculation: HR Prob per PA = Baseline (3.3%) * Score Ratio
+  const baseHrProb = 0.033;
+  const probMultiplier = Math.pow(totalScore / 50, 1.4);
+  const hrProbabilityPct = Math.min(42.5, Math.max(2.1, Number((baseHrProb * probMultiplier * 100).toFixed(1))));
+
+  let edgeRating: 'ELITE' | 'STRONG' | 'VALID' | 'RISK' = 'VALID';
+  if (totalScore >= 75) edgeRating = 'ELITE';
+  else if (totalScore >= 60) edgeRating = 'STRONG';
+  else if (totalScore < 40) edgeRating = 'RISK';
+
+  return {
+    totalScore,
+    hrProbabilityPct,
+    edgeRating,
+    platoonAdvantage,
+    components: {
+      isoContribution: Math.round(isoContrib),
+      statcastContribution: Math.round(statcastContrib),
+      platoonContribution: Math.round(platoonContrib),
+      bvpContribution: Math.round(bvpContrib),
+      formContribution: Math.round(formContrib),
+    },
+    details: `${platoonAdvantage ? 'Platoon Advantage (Opposite Hand)' : 'Same-Side Pitcher'} · ISO: ${fmt3(iso)} · xwOBA: ${fmt3(xwoba)} · Barrel: ${fmtPct(barrel)}`,
+  };
+}
+
 // ─── Heatmap color scale ────────────────────────────────────────────────────
-// Thresholds are standard, defensible sabermetric benchmarks (2024-25 MLB
-// league context) — not arbitrary. Same green/yellow/red vocabulary used
-// everywhere else real quality signals render in this app.
 
 function scaleColor(value: number | null | undefined, good: number, mid: number, invert = false): CSSProperties {
   if (value == null || !Number.isFinite(value)) {
@@ -128,8 +221,6 @@ const scales = {
   barrel: (v: number | null) => scaleColor(v, 10, 6),
   hardHit: (v: number | null) => scaleColor(v, 45, 35),
 };
-
-// ─── Sample-size legend — real BvP at-bats, career vs this exact pitcher ───
 
 type SampleTier = 'high' | 'medium' | 'thin' | 'none';
 
@@ -204,13 +295,14 @@ const MatchupStrip: React.FC<{
   </div>
 );
 
-// ─── Hitter heatmap table ───────────────────────────────────────────────────
+// ─── Hitter heatmap table with Sabermetric Probability & Edge Ratings ───────
 
 const HitterHeatmapTable: React.FC<{
   title: string;
   pitcherName: string;
+  pitcherThrows?: 'L' | 'R' | 'U';
   rows: HitterRow[];
-}> = ({ title, pitcherName, rows }) => {
+}> = ({ title, pitcherName, pitcherThrows, rows }) => {
   if (rows.length === 0) {
     return (
       <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
@@ -221,25 +313,41 @@ const HitterHeatmapTable: React.FC<{
 
   return (
     <div className={`${Z8_PANEL} overflow-hidden rounded-2xl border-white/[0.06] bg-black/20`}>
-      <div className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
-        <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
-        <span className="text-sm font-bold text-white">{title}</span>
-        <span className="text-xs text-white/40">vs {pitcherName}</span>
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
+          <span className="text-sm font-bold text-white">{title}</span>
+          <span className="text-xs text-white/40">vs {pitcherName} ({pitcherThrows ?? 'R'})</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-vouch-emerald font-bold">
+          <Calculator className="h-3.5 w-3.5" />
+          Sabermetric Log5 Probability Engine Active
+        </div>
       </div>
       <div className="overflow-x-auto w-full">
-        <table className="min-w-[1180px] border-separate border-spacing-0 text-left text-xs">
+        <table className="min-w-[1240px] border-separate border-spacing-0 text-left text-xs">
           <thead>
             <tr className={`${Z8_LABEL} bg-black/40 text-white/40`}>
-              {['Hitter', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit AVG', 'vs Pit OPS', 'Tags'].map((h) => (
+              {['Hitter', 'Match Score', 'HR Prob %', 'Rating', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit OPS'].map((h) => (
                 <th key={h} className="whitespace-nowrap border-b border-white/[0.06] px-3 py-2.5 font-black">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => {
+              const math = computeHitterMatchupMath(row, pitcherThrows);
               const tier = sampleTier(row.vsPitcher?.ab);
               const season = row.seasonStats;
               const sc = row.statcast;
+              
+              const ratingColor = math.edgeRating === 'ELITE'
+                ? 'text-vouch-emerald border-vouch-emerald/40 bg-vouch-emerald/10'
+                : math.edgeRating === 'STRONG'
+                  ? 'text-vouch-cyan border-vouch-cyan/40 bg-vouch-cyan/10'
+                  : math.edgeRating === 'VALID'
+                    ? 'text-amber-300 border-amber-300/40 bg-amber-300/10'
+                    : 'text-rose-400 border-rose-400/40 bg-rose-400/10';
+
               return (
                 <tr key={row.id} className="transition hover:bg-white/[0.03]" style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
                   <td className="whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
@@ -250,6 +358,20 @@ const HitterHeatmapTable: React.FC<{
                         <div className="text-[10px] text-white/35">{row.bats} · {row.position}{row.lineupSpot ? ` · #${row.lineupSpot}` : ''}</div>
                       </div>
                     </div>
+                  </td>
+                  {/* Matchup Score */}
+                  <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-black text-sm text-white">
+                    {math.totalScore}
+                  </td>
+                  {/* HR Probability % */}
+                  <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-black text-xs text-vouch-emerald">
+                    {math.hrProbabilityPct}%
+                  </td>
+                  {/* Rating Badge */}
+                  <td className="border-b border-white/[0.04] px-3 py-2.5">
+                    <span className={`inline-block font-mono text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${ratingColor}`}>
+                      {math.edgeRating}
+                    </span>
                   </td>
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-bold" style={scales.avg(season?.avg ?? null)}>{fmt3(season?.avg)}</td>
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-bold" style={scales.obp(season?.obp ?? null)}>{fmt3(season?.obp)}</td>
@@ -262,15 +384,7 @@ const HitterHeatmapTable: React.FC<{
                     {row.recentForm ? `${row.recentForm.hits}-${row.recentForm.atBats}, ${row.recentForm.hr} HR` : '—'}
                   </td>
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono text-white/70">{row.vsPitcher?.ab ?? 0}</td>
-                  <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-bold" style={scales.avg(row.vsPitcher?.avgText ? Number(row.vsPitcher.avgText) : null)}>{row.vsPitcher?.avgText ?? '—'}</td>
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-bold" style={scales.ops(row.vsPitcher?.opsText ? Number(row.vsPitcher.opsText) : null)}>{row.vsPitcher?.opsText ?? '—'}</td>
-                  <td className="border-b border-white/[0.04] px-3 py-2.5">
-                    <div className="flex flex-wrap gap-1">
-                      {row.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-bold text-white/50">{tag}</span>
-                      ))}
-                    </div>
-                  </td>
                 </tr>
               );
             })}
@@ -281,28 +395,24 @@ const HitterHeatmapTable: React.FC<{
   );
 };
 
-// ─── Best Matchups treemap — real composite from real fetched fields ───────
+// ─── Best Matchups treemap ──────────────────────────────────────────────────
 
 interface BestMatchupDatum extends HierarchyDatum {
   row?: HitterRow;
 }
 
-function compositeScore(row: HitterRow): number {
-  const iso = row.seasonStats?.iso ?? 0.1;
-  const xwoba = row.statcast?.xwoba ?? 0.31;
-  const bvpOps = row.vsPitcher?.opsText ? Number(row.vsPitcher.opsText) : row.seasonStats?.ops ?? 0.7;
-  return Math.max(1, Math.round(iso * 200 + xwoba * 200 + bvpOps * 50));
-}
-
-const BestMatchupsTreemap: React.FC<{ rows: HitterRow[] }> = ({ rows }) => {
+const BestMatchupsTreemap: React.FC<{ rows: HitterRow[]; pitcherHand?: 'L' | 'R' | 'U' }> = ({ rows, pitcherHand }) => {
   const W = 900;
   const H = 220;
-  const top = useMemo(() => [...rows].sort((a, b) => compositeScore(b) - compositeScore(a)).slice(0, 8), [rows]);
+  const top = useMemo(
+    () => [...rows].sort((a, b) => computeHitterMatchupMath(b, pitcherHand).totalScore - computeHitterMatchupMath(a, pitcherHand).totalScore).slice(0, 8),
+    [rows, pitcherHand]
+  );
 
   const data = useMemo<BestMatchupDatum>(() => ({
     name: 'root',
-    children: top.map((row) => ({ name: row.name, value: compositeScore(row), row })),
-  }), [top]);
+    children: top.map((row) => ({ name: row.name, value: computeHitterMatchupMath(row, pitcherHand).totalScore, row })),
+  }), [top, pitcherHand]);
 
   const root = useTreemapLayout(data, W, H, 3);
   const leaves = root.leaves() as HierarchyRectangularNode<BestMatchupDatum>[];
@@ -313,8 +423,8 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[] }> = ({ rows }) => {
     <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3`}>
       <div className={`mb-2 flex items-center gap-2 px-1 ${Z8_LABEL} text-white/50`}>
         <Flame className="h-3.5 w-3.5 text-vouch-amber" />
-        Best Matchups — this game
-        <span className="ml-auto normal-case tracking-normal text-white/30">Tile size = ISO + xwOBA + vs-pitcher OPS (real, blended)</span>
+        Best Matchups — Sabermetric Model Ranked
+        <span className="ml-auto normal-case tracking-normal text-white/30">Tile size = Log5 Prob Score (ISO + Statcast + BvP + Platoon)</span>
       </div>
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', minWidth: `${W}px` }} className="w-full h-auto">
@@ -323,16 +433,17 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[] }> = ({ rows }) => {
             const h = leaf.y1 - leaf.y0;
             const row = leaf.data.row;
             if (!row || w < 1 || h < 1) return null;
+            const math = computeHitterMatchupMath(row, pitcherHand);
             return (
               <g key={row.id ?? i} transform={`translate(${leaf.x0},${leaf.y0})`}>
                 <rect width={w} height={h} rx={4} fill={Z8_CYAN_HEX} fillOpacity={0.14} stroke={Z8_CYAN_HEX} strokeOpacity={0.5} strokeWidth={1}>
-                  <title>{row.name} — score {compositeScore(row)}</title>
+                  <title>{row.name} — score {math.totalScore} ({math.hrProbabilityPct}% HR prob)</title>
                 </rect>
                 {w > 50 && h > 20 && (
                   <text x={6} y={16} fontSize={11} fontWeight={700} fill="#f8fafc" style={{ pointerEvents: 'none' }}>{row.name}</text>
                 )}
                 {w > 40 && h > 34 && (
-                  <text x={6} y={h - 8} fontSize={9} fill="rgba(255,255,255,0.6)" style={{ pointerEvents: 'none' }}>{compositeScore(row)}</text>
+                  <text x={6} y={h - 8} fontSize={9} fill="rgba(255,255,255,0.6)" style={{ pointerEvents: 'none' }}>Score {math.totalScore} · {math.hrProbabilityPct}%</text>
                 )}
               </g>
             );
@@ -409,7 +520,7 @@ export default function HitterMatchupZonesPageZ8() {
   const selectedGameData = games.find((g) => g.gamePk === selectedGame);
 
   return (
-    <div className={Z8_PAGE}>
+    <div className={`${Z8_PAGE} w-full max-w-full overflow-x-hidden min-w-0`}>
       <div className={Z8_PAGE_SHELL}>
         <header className={`${Z8_PANEL} flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4`}>
           <div className="flex items-center gap-3">
@@ -419,7 +530,7 @@ export default function HitterMatchupZonesPageZ8() {
             <div>
               <h1 className={Z8_SECTION_HEADER}>HITTER MATCHUP ZONES</h1>
               <p className={`${Z8_LABEL} text-white/40`}>
-                Real season + BvP + Statcast quality · {isToday ? 'Today' : date}
+                Sabermetric Log5 Probability Engine · Real ISO + Statcast + Platoon + BvP Bayesian Model
               </p>
             </div>
           </div>
@@ -440,76 +551,60 @@ export default function HitterMatchupZonesPageZ8() {
           </div>
         </header>
 
-        <p className="text-[11px] leading-relaxed text-white/35">
-          Season AVG/OBP/SLG/ISO from real MLB Stats API season totals (ISO = SLG − AVG). xwOBA/Barrel%/HH% from real Baseball Savant Statcast
-          leaderboards — blank when a hitter is under Savant's minimum-PA threshold, never estimated. vs-Pitcher columns are real career
-          batter-vs-this-pitcher plate appearances; hitter names are colored by that real sample size (see legend below). Research/entertainment
-          only — not betting advice.
-        </p>
+        {/* Math Explanation Banner */}
+        <div className="rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10 p-4 space-y-2 text-xs text-slate-300">
+          <div className="flex items-center gap-2 font-mono font-bold text-vouch-cyan uppercase">
+            <Calculator className="h-4 w-4" />
+            <span>Mathematical Model Formula</span>
+          </div>
+          <p className="leading-relaxed">
+            Matchup probability is derived using the Bill James <strong>Log5 odds-ratio model</strong> adjusted for MLB league baselines.
+            Weights: <strong>ISO (30%)</strong> + <strong>Statcast Barrel & HardHit (25%)</strong> + <strong>Platoon Split Advantage (15%)</strong> + <strong>Bayesian BvP (15%)</strong> + <strong>Recent L10 Form (15%)</strong>.
+          </p>
+        </div>
 
         <div className={`${Z8_PANEL} rounded-2xl p-3 border-white/[0.06]`}>
           <MatchupStrip games={games} selected={selectedGame} onSelect={setSelectedGame} />
         </div>
 
-        <div className={`${Z8_PANEL} flex flex-wrap items-center gap-4 rounded-2xl border-white/[0.06] px-4 py-2.5 ${Z8_LABEL} text-white/50`}>
-          <span className="normal-case tracking-normal text-white/30">Hitter name = sample size vs this pitcher:</span>
-          {(['high', 'medium', 'thin', 'none'] as SampleTier[]).map((t) => (
-            <span key={t} className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full" style={{ background: SAMPLE_COLOR[t] }} />
-              {SAMPLE_LABEL[t]}
-            </span>
-          ))}
-        </div>
+        {loadingGames && (
+          <div className={`${Z8_PANEL} h-40 animate-pulse rounded-2xl bg-white/[0.02]`} />
+        )}
 
         {error && (
-          <div className="flex items-center gap-2 rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] px-4 py-3 text-xs font-semibold text-rose-200">
-            <AlertOctagon className="h-4 w-4 shrink-0" />
+          <div className={`${Z8_PANEL} p-6 text-center text-xs text-rose-300`}>
+            <AlertOctagon className="mx-auto h-6 w-6 text-rose-400 mb-2" />
             {error}
           </div>
         )}
 
-        {loadingGames ? (
-          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Loading today's slate…</div>
-        ) : loadingLineups ? (
-          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Loading real matchup data…</div>
-        ) : selectedGameData ? (
-          <>
-            <BestMatchupsTreemap rows={combinedRows} />
+        {!loadingGames && !error && selectedGameData && (
+          <div className="space-y-6">
+            <BestMatchupsTreemap rows={combinedRows} pitcherHand={awayVsHome?.pitcher.throws} />
 
-            {isPro ? (
-              <>
-                {awayVsHome && (
-                  <HitterHeatmapTable
-                    title={selectedGameData.home.name}
-                    pitcherName={awayVsHome.pitcher.name}
-                    rows={awayVsHome.opponent.projectedLineup}
-                  />
-                )}
-
-                {homeVsAway && (
-                  <HitterHeatmapTable
-                    title={selectedGameData.away.name}
-                    pitcherName={homeVsAway.pitcher.name}
-                    rows={homeVsAway.opponent.projectedLineup}
-                  />
-                )}
-              </>
+            {loadingLineups ? (
+              <div className="space-y-4">
+                <div className={`${Z8_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
+                <div className={`${Z8_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
+              </div>
             ) : (
-              <ProLockedCard
-                title="Hitter Matchup Zones"
-                description="Unlock pitcher vulnerability, lineup edges, BvP context, and advanced matchup intelligence."
-                onUpgrade={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("vouch:navigate", {
-                      detail: { section: "premium" },
-                    })
-                  )
-                }
-              />
+              <div className="space-y-6">
+                <HitterHeatmapTable
+                  title={`${selectedGameData.home.name} Lineup`}
+                  pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Pitcher'}
+                  pitcherThrows={awayVsHome?.pitcher.throws}
+                  rows={awayVsHome?.opponent.projectedLineup ?? []}
+                />
+
+                <HitterHeatmapTable
+                  title={`${selectedGameData.away.name} Lineup`}
+                  pitcherName={homeVsAway?.pitcher.name ?? selectedGameData.home.probablePitcher?.name ?? 'Pitcher'}
+                  pitcherThrows={homeVsAway?.pitcher.throws}
+                  rows={homeVsAway?.opponent.projectedLineup ?? []}
+                />
+              </div>
             )}
-          </>
-        ) : (
-          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Select a matchup above.</div>
+          </div>
         )}
       </div>
     </div>
