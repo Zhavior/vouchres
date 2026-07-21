@@ -354,7 +354,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("beginner")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "beginner"
-                    ? `${Z8_ACTIVE} border-vouch-cyan/40`
+                    ? `${Z8_ACTIVE} rounded-2xl`
                     : `${Z8_IDLE} rounded-2xl`
                 }`}
               >
@@ -367,7 +367,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("pro")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "pro"
-                    ? "border-vouch-emerald/40 bg-vouch-emerald/10 text-white"
+                    ? `${Z8_ACTIVE} rounded-2xl`
                     : `${Z8_IDLE} rounded-2xl`
                 }`}
               >
@@ -377,7 +377,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
             </div>
 
             <div className="mt-5">
-              <span className={`inline-flex items-center rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+              <span className={`inline-flex items-center rounded-full ${Z8_SURFACE} px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                 Z8 premium visual standard
               </span>
             </div>
@@ -451,7 +451,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                     </button>
                   </div>
 
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-vouch-cyan/15 bg-vouch-cyan/10 text-vouch-cyan">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${Z8_SURFACE} text-vouch-cyan`}>
                     <Icon className="h-4 w-4" />
                   </div>
 
@@ -461,7 +461,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                         {meta?.label ?? feature.id}
                       </span>
                       {feature.locked && (
-                        <span className={`inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5 ${Z8_LABEL} text-white/50`}>
+                        <span className={`inline-flex items-center gap-1 rounded-full ${Z8_SURFACE} px-2 py-0.5 ${Z8_LABEL} text-white/50`}>
                           <Lock className="h-2.5 w-2.5" />
                           Always visible
                         </span>
@@ -495,7 +495,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
           </div>
         </section>
 
-        <section className={`${Z8_PANEL_PREMIUM} border-vouch-cyan/15 bg-vouch-cyan/5 p-5`}>
+        <section className={`${Z8_PANEL_PREMIUM} p-5`}>
           <span className={`${Z8_LABEL} ${layout.mode === "pro" ? 'text-vouch-emerald' : 'text-vouch-cyan'}`}>
             {layout.mode === "pro" ? "Pro mode preview" : "Beginner mode preview"}
           </span>

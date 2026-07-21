@@ -32,6 +32,8 @@ import {
   Z8_SECTION_HEADER,
   Z8_STAT_CHIP,
   Z8_WARNING,
+  Z8_ACTIVE,
+  Z8_SURFACE,
 } from '../theme/z8Tokens';
 
 /**
@@ -257,7 +259,7 @@ export default function SmartAiEngine({
           </div>
 
           <div className={`${Z8_STAT_CHIP} text-xs text-white/70`}>
-            <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
+            <span className={`${Z8_LABEL} text-white/45`}>Access</span>
             <div className="font-bold text-white">{vaiEntitlements.reason}</div>
 
             <div className="mt-3 flex flex-wrap gap-1.5" aria-label="V.A.I access preview">
@@ -271,10 +273,10 @@ export default function SmartAiEngine({
                   key={tier}
                   type="button"
                   onClick={() => handleVaiAccessTierChange(tier)}
-                  className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
                     vaiAccessTier === tier
-                      ? 'border-sky-300/60 bg-sky-400/15 text-sky-100'
-                      : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                      ? Z8_ACTIVE
+                      : 'border border-white/10 bg-black/30 text-white/45 hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white'
                   }`}
                 >
                   {label}
@@ -294,8 +296,8 @@ export default function SmartAiEngine({
                 key={persona.id}
                 type="button"
                 onClick={() => setSelectedVaiPersonaId(persona.id)}
-                className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${persona.gradient} ${persona.border} p-4 text-left transition-all duration-200 ${
-                  selected ? `ring-2 ring-white/25 shadow-2xl ${persona.glow}` : 'hover:border-slate-500/50'
+                className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-4 text-left transition-all duration-200 ${
+                  selected ? 'ring-2 ring-vouch-cyan shadow-2xl bg-vouch-cyan/10' : 'hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8'
                 }`}
               >
                 <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/5 blur-2xl" />
@@ -304,7 +306,7 @@ export default function SmartAiEngine({
                     <div className="flex items-start gap-3">
                       <JudgePixelIcon code={persona.judgeCode} size="sm" />
                       <div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">
                           {persona.judgeCode} · {persona.accent}
                         </div>
                         <h3 className="mt-1 text-lg font-black text-white">{persona.name}</h3>
@@ -313,8 +315,8 @@ export default function SmartAiEngine({
 
                     <div className={`rounded-2xl border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
                       unlocked
-                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
-                        : 'border-slate-700 bg-slate-950/70 text-slate-400'
+                        ? 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald'
+                        : 'border-white/10 bg-black/40 text-white/45'
                     }`}>
                       {unlocked ? (
                         <span className="inline-flex items-center gap-1"><Unlock className="h-3 w-3" /> Open</span>
@@ -324,7 +326,7 @@ export default function SmartAiEngine({
                     </div>
                   </div>
 
-                  <p className="min-h-[44px] text-xs leading-relaxed text-slate-300">
+                  <p className="min-h-[44px] text-xs leading-relaxed text-white/70">
                     {persona.specialtyLine}
                   </p>
 
@@ -332,15 +334,15 @@ export default function SmartAiEngine({
                     {persona.specialties.slice(0, 4).map((specialty) => (
                       <span
                         key={`${persona.id}-${specialty}`}
-                        className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-1 text-[10px] font-bold text-slate-300"
+                        className="rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-bold text-white/70"
                       >
                         {specialty.replace('_', ' ')}
                       </span>
                     ))}
                   </div>
 
-                  <div className="border-t border-white/10 pt-3 text-[11px] text-slate-400">
-                    <span className="font-bold text-slate-200">{persona.roomName}</span>
+                  <div className="border-t border-white/10 pt-3 text-[11px] text-white/45">
+                    <span className="font-bold text-white">{persona.roomName}</span>
                     <span className="mx-1">·</span>
                     <span>{unlocked ? 'Tap to enter today.' : persona.lockedLine}</span>
                   </div>
@@ -351,20 +353,20 @@ export default function SmartAiEngine({
         </div>
       </section>
 
-      <div className={`rounded-[2rem] border ${selectedVaiPersona.border} bg-slate-950/70 p-4 sm:p-5 shadow-2xl ${selectedVaiPersona.glow}`} id="vai-selected-room-panel">
+      <div className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-selected-room-panel">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+            <div className={`${Z8_LABEL} text-white/45`}>
               Selected room
             </div>
             <h2 className="mt-1 text-2xl font-black text-white">{selectedVaiPersona.name}</h2>
-            <p className="mt-1 text-sm text-slate-400">{selectedVaiPersona.toneLine}</p>
+            <p className="mt-1 text-sm text-white/45">{selectedVaiPersona.toneLine}</p>
           </div>
 
           <div className={`w-fit rounded-2xl border px-3 py-2 text-xs font-black uppercase tracking-wider ${
             isSelectedVaiRoomUnlocked
-              ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
-              : 'border-slate-700 bg-slate-900/80 text-slate-400'
+              ? 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald'
+              : 'border-white/10 bg-black/40 text-white/45'
           }`}>
             {isSelectedVaiRoomUnlocked ? 'Room open today' : 'Upgrade to unlock'}
           </div>
@@ -389,24 +391,24 @@ export default function SmartAiEngine({
             </div>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 p-6 sm:p-8 text-center" id="vai-locked-room-upgrade-panel">
+          <div className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-6 sm:p-8 text-center`} id="vai-locked-room-upgrade-panel">
             <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
-              <Lock className="h-7 w-7 text-slate-300" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-black/60 shadow-2xl shadow-black/40">
+              <Lock className="h-7 w-7 text-white/70" />
             </div>
             <div className="mx-auto max-w-xl space-y-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+              <div className={`${Z8_LABEL} text-white/45`}>
                 {selectedVaiPersona.roomName} sealed
               </div>
               <h3 className="text-2xl font-black text-white">{selectedVaiPersona.lockedLine}</h3>
-              <p className="text-sm leading-relaxed text-slate-400">
+              <p className="text-sm leading-relaxed text-white/45">
                 You can see the room identity, specialty, and risk style, but the actual slips, player names,
                 and research receipts stay hidden until this room is unlocked.
               </p>
             </div>
             <button
               type="button"
-              className="mt-5 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-5 py-3 text-xs font-black uppercase tracking-wider text-sky-200 hover:bg-sky-500/20"
+              className="mt-5 rounded-2xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-5 py-3 text-xs font-black uppercase tracking-wider text-vouch-cyan hover:bg-vouch-cyan/20"
               onClick={() => onSectionChange('pricing')}
             >
               Upgrade to enter room

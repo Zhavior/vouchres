@@ -230,7 +230,7 @@ export function HrBoard({
   const players = buckets[activeTier];
   return (
     <section className="z8-hr-board space-y-3">
-      <div className="hidden grid-cols-4 gap-2 xl:grid">
+      <div className="hidden grid-cols-4 gap-2 lg:grid">
         {TIERS.map((tier) => (
           <DesktopTierColumn
             key={tier.key}
@@ -246,7 +246,7 @@ export function HrBoard({
         ))}
       </div>
 
-      <div className="space-y-4 xl:hidden">
+      <div className="space-y-4 lg:hidden">
         <div className="flex snap-x snap-mandatory overflow-x-auto border-b border-white/[0.08] bg-black/15 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Home run signal tiers">
           {TIERS.map((tier) => {
             const selected = tier.key === activeTier;

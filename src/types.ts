@@ -254,6 +254,10 @@ export interface CreatorProofProfile {
   staff?: boolean;
   isDeveloper?: boolean;
   capperSettings?: CapperSettings;
+  uiPreferences?: {
+    sidebarCollapsedGroups?: Record<string, boolean>;
+    activeSportId?: string;
+  };
 }
 
 export interface GameMarket {

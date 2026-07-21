@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import TrendingVouchesPanel from './TrendingVouchesPanel';
 import ProofBuildersPanel from './ProofBuildersPanel';
 import HotMarketsPanel from './HotMarketsPanel';
+
 import { FeedPost, CreatorProofProfile, Vouch } from '../../types';
 import { VECard } from '../../components/ui/ve';
 
@@ -21,7 +22,9 @@ export default function FeedRightRail({
 }: FeedRightRailProps) {
   return (
     <aside className="font-z8 hidden xl:flex flex-col gap-4 w-[290px] py-4 overflow-y-auto no-scrollbar max-h-screen sticky top-0 px-3 border-l border-white/[0.08]" id="feed-right-rail">
-      {/* 1. Hot MLB Markets Selection */}
+      
+
+      {/* 2. Hot MLB Markets Selection */}
       <HotMarketsPanel onQuickVouch={onSaveVouch} savedVouchIds={savedVouchIds} />
 
       {/* 2. Trending Vouches Derived from local state */}

@@ -392,51 +392,80 @@ export default function PlayerResearchHub({
         </div>
       </header>
 
-      <div className={`mx-auto max-w-7xl ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`}>
-        {/* ====== SCOUT MODE ====== */}
-        {mode === "scout" && (
-          <>
-            {/* Filter bar */}
-            <div className={`${Z8_PANEL_PREMIUM} mb-5 flex flex-wrap items-center gap-3 p-3`}>
-              <div className="relative min-w-[200px] max-w-md flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
-                <input
-                  type="text"
-                  placeholder="Search players, teams, positions..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={`${Z8_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
-                />
-              </div>
-              <select
-                value={teamFilter}
-                onChange={(e) => setTeamFilter(e.target.value)}
-                className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none`}
-              >
-                {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All Teams" : t}</option>)}
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none`}
-              >
-                <option value="batterScore">Sort: Batter Score</option>
-                <option value="hr">Sort: Home Runs</option>
-                <option value="avg">Sort: AVG</option>
-                <option value="ops">Sort: OPS</option>
-                <option value="name">Sort: Name</option>
-              </select>
-              <div className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
-                <button onClick={() => setListStyle("grid")} className={`rounded-md p-1.5 transition-all ${listStyle === "grid" ? "text-vouch-cyan" : "text-white/35"}`}>
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => setListStyle("table")} className={`rounded-md p-1.5 transition-all ${listStyle === "table" ? "text-vouch-cyan" : "text-white/35"}`}>
-                  <Table2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+      <div className={`mx-auto max-w-7xl ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} lg:flex-row lg:items-start lg:gap-6 flex flex-col`}>
+        {/* Left Sidebar */}
+        <div className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:w-[280px] w-full shrink-0 flex flex-col gap-4 mb-4 lg:mb-0">
+          <div className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3`}>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+              <input
+                type="text"
+                placeholder="Search players, teams, positions..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={`${Z8_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
+              />
             </div>
+            
+            {mode === "scout" && (
+              <>
+                <select
+                  value={teamFilter}
+                  onChange={(e) => setTeamFilter(e.target.value)}
+                  className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                >
+                  {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All Teams" : t}</option>)}
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                >
+                  <option value="batterScore">Sort: Batter Score</option>
+                  <option value="hr">Sort: Home Runs</option>
+                  <option value="avg">Sort: AVG</option>
+                  <option value="ops">Sort: OPS</option>
+                  <option value="name">Sort: Name</option>
+                </select>
+                <div className={`${Z8_SURFACE} flex rounded-lg p-0.5 w-full`}>
+                  <button onClick={() => setListStyle("grid")} className={`flex-1 flex justify-center rounded-md p-1.5 transition-all ${listStyle === "grid" ? "text-vouch-cyan" : "text-white/35"}`}>
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setListStyle("table")} className={`flex-1 flex justify-center rounded-md p-1.5 transition-all ${listStyle === "table" ? "text-vouch-cyan" : "text-white/35"}`}>
+                    <Table2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
-            {/* Player list */}
+          {activeLegs && activeLegs.length > 0 && (
+            <div className={`${Z8_PANEL_PREMIUM} p-3 flex flex-col gap-2`}>
+              <div className="text-xs font-bold text-white/70 uppercase tracking-wider mb-1 flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-vouch-cyan" />
+                Active Slip ({activeLegs.length})
+              </div>
+              {activeLegs.map((leg, i) => (
+                <div key={leg.id || i} className={`p-2 rounded-lg ${Z8_SURFACE} flex justify-between items-center`}>
+                  <div className="flex flex-col truncate pr-2 min-w-0">
+                    <span className="text-xs font-bold text-white truncate">{leg.selection}</span>
+                    <span className="text-[10px] text-white/45 truncate">{leg.market}</span>
+                  </div>
+                  <span className="text-xs font-mono text-[var(--ve-accent)] shrink-0">
+                    {leg.odds !== null && leg.odds > 0 ? `+${leg.odds}` : leg.odds || "TBD"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* ====== SCOUT MODE ====== */}
+          {mode === "scout" && (
+            <>
+              {/* Player list */}
             {filtered.length === 0 ? (
               <div className={`${Z8_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
                 <Search className="mx-auto h-6 w-6 text-white/25" />
@@ -471,6 +500,7 @@ export default function PlayerResearchHub({
         {mode === "build" && (
           <BuildView players={players} onAddLeg={onAddLegToParlay} activeLegs={activeLegs} />
         )}
+        </div>
       </div>
 
       {/* ====== Detail Modal ====== */}

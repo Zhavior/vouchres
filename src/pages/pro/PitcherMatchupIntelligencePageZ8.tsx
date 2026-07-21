@@ -21,7 +21,7 @@ import { VerifiedDataNotice } from '../../components/pro';
 import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { apiClient } from '../../lib/apiClient';
-import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER } from '../../theme/z8Tokens';
 import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
@@ -341,7 +341,7 @@ async function fetchJsonResponse<T>(path: string, signal: AbortSignal): Promise<
   return apiClient.get<T>(path, undefined, signal);
 }
 
-export default function PitcherMatchupIntelligencePage() {
+export default function PitcherMatchupIntelligencePageZ8() {
   const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
@@ -553,7 +553,7 @@ export default function PitcherMatchupIntelligencePage() {
                 <Target className="h-3.5 w-3.5" />
                 Matchup Matrix
               </div>
-              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Pitcher Matchup Intelligence</h1>
+              <h1 className={`mt-3 ${Z8_SECTION_HEADER} text-white`}>Pitcher Matchup Intelligence</h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
                 Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
               </p>
@@ -565,7 +565,7 @@ export default function PitcherMatchupIntelligencePage() {
             </div>
 
             <div className="ve-card-compact rounded-xl p-3 lg:min-w-64">
-              <label className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]" htmlFor="matchup-date">
+              <label className={`${Z8_LABEL} text-[hsl(var(--ve-text-muted))]`} htmlFor="matchup-date">
                 Slate Date
               </label>
               <div className="mt-2 flex gap-2">
@@ -609,7 +609,7 @@ export default function PitcherMatchupIntelligencePage() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.38)]">
                     <Icon className={`h-4 w-4 ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-vouch-amber' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-vouch-cyan'}`} />
                   </span>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">{label}</span>
+                  <span className={`${Z8_LABEL} text-[hsl(var(--ve-text-muted))]`}>{label}</span>
                 </div>
                 <div className={`mt-3 font-mono text-xl font-black ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-vouch-amber' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-vouch-cyan'}`}>{value}</div>
               </div>
@@ -619,7 +619,7 @@ export default function PitcherMatchupIntelligencePage() {
 
         {topPitcher && (
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_minmax(420px,0.82fr)]">
-            <article className="ve-premium-panel relative overflow-hidden rounded-2xl border border-vouch-cyan/20 p-4 sm:p-5">
+            <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-2xl border border-vouch-cyan/20 p-4 sm:p-5`}>
               <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.72),transparent)]" />
               <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-vouch-cyan/10 blur-3xl" />
 
@@ -640,7 +640,7 @@ export default function PitcherMatchupIntelligencePage() {
                       <div className="font-mono text-3xl font-black text-white">
                         {Math.round(topPitcher.score ?? 0)}
                       </div>
-                      <div className="text-[9px] font-black uppercase tracking-[0.16em] text-white/40">
+                      <div className={`${Z8_LABEL} text-white/40`}>
                         Matchup score
                       </div>
                     </div>
@@ -661,7 +661,7 @@ export default function PitcherMatchupIntelligencePage() {
                     </div>
 
                     <div className="min-w-0">
-                      <h2 className="truncate text-2xl font-black tracking-tight text-white sm:text-3xl">
+                      <h2 className={`truncate ${Z8_SECTION_HEADER} text-white`}>
                         {topPitcher.pitcherName}
                       </h2>
                       <p className="mt-1 font-mono text-sm font-black text-vouch-cyan">
@@ -691,7 +691,7 @@ export default function PitcherMatchupIntelligencePage() {
                       ['Workload', metricText(topPitcher.metrics.ip, ' IP')],
                     ].map(([label, value]) => (
                       <div key={label} className="border border-white/10 bg-black/20 px-3 py-2.5">
-                        <div className="text-[9px] font-black uppercase tracking-wider text-white/38">{label}</div>
+                        <div className={`${Z8_LABEL} text-white/38`}>{label}</div>
                         <div className="mt-1 font-mono text-sm font-black text-white">{value}</div>
                       </div>
                     ))}
@@ -749,10 +749,10 @@ export default function PitcherMatchupIntelligencePage() {
               </div>
             </article>
 
-            <article className="ve-premium-panel relative overflow-hidden rounded-2xl p-4">
+            <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-2xl p-4`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
+                  <div className={`${Z8_LABEL} text-white`}>
                     Strikeout Signal Field
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed text-white/42">
@@ -812,10 +812,10 @@ export default function PitcherMatchupIntelligencePage() {
         )}
 
         {matchupNavigator.length > 0 && (
-          <section className="ve-premium-panel overflow-hidden rounded-2xl p-3">
+          <section className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl p-3`}>
             <div className="flex items-center justify-between gap-3 px-1">
               <div>
-                <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
+                <div className={`${Z8_LABEL} text-white`}>
                   Matchup Navigator
                 </div>
                 <p className="mt-1 text-[11px] text-white/38">
@@ -865,7 +865,7 @@ export default function PitcherMatchupIntelligencePage() {
           </section>
         )}
 
-        <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-3 sm:p-4">
+        <section className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-2xl p-3 sm:p-4`}>
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.45),transparent)]" />
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="min-w-0">
@@ -934,10 +934,10 @@ export default function PitcherMatchupIntelligencePage() {
             ))}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel)/0.74)] shadow-[inset_0_1px_0_hsl(var(--ve-text-primary)/0.05)]">
+          <div className="mt-4 overflow-x-auto">
             <div className="flex items-center justify-between gap-3 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.24)] px-4 py-3">
               <div className="min-w-0">
-                <span className="text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-text-secondary))]">
+                <span className={`${Z8_LABEL} text-[hsl(var(--ve-text-secondary))]`}>
                   {rows.length > 0 ? `${filteredRows.length} of ${rows.length} rows` : 'Preparing live MLB slate'}
                 </span>
                 <p className="mt-0.5 hidden text-[11px] font-bold text-[hsl(var(--ve-text-muted))] sm:block">
@@ -1002,7 +1002,7 @@ export default function PitcherMatchupIntelligencePage() {
               <div className="overflow-x-auto">
                 <table className="min-w-[1540px] border-separate border-spacing-0 text-left text-sm">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">
+                    <tr className={`${Z8_LABEL} text-[hsl(var(--ve-text-muted))]`}>
                       {['Pitcher', 'Team', 'Opponent', 'Game Time', 'Score', 'Label', 'K/9', 'K/Game', 'ERA', 'WHIP', 'IP', 'GS', 'Whiff%', 'K%', 'xERA', 'Opp K%', 'Opponent vs Hand', 'Park Factor', 'Weather', 'Confidence', 'Research'].map((heading) => (
                         <th
                           key={heading}

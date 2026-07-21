@@ -346,8 +346,8 @@ function HomeFeedPage({
         </div>
       )}
 
-      {/* X-style sticky header */}
-      <header className="home-feed-header sticky top-0 z-20 min-w-0 border-b border-ve-fuse/60 bg-ve-obsidian/90 backdrop-blur-md">
+      {/* Apple-style sticky glass header */}
+      <header className="home-feed-header sticky top-0 z-30 min-w-0 border-b border-white/[0.05] bg-[rgba(5,10,20,0.65)] backdrop-blur-[40px] saturate-[1.8]">
         <div className="flex h-[53px] min-w-0 items-center justify-between gap-3 px-4">
           <h1 className="text-[20px] font-extrabold text-ve-flash leading-none">
             Home

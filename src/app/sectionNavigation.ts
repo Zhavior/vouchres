@@ -23,6 +23,12 @@ export const PUBLIC_SECTIONS = new Set([
 ]);
 
 export const SIGNED_IN_HOME = 'today';
+export const FORCE_PUBLIC_LANDING_PATHS = new Set(['/vouchedge-preview', '/preview/vouchedge']);
+
+export function shouldForcePublicLanding() {
+  if (typeof window === 'undefined') return false;
+  return FORCE_PUBLIC_LANDING_PATHS.has(window.location.pathname.toLowerCase());
+}
 
 /** Only poll live games while a view that consumes them is active. */
 export const SECTIONS_USING_LIVE_GAMES = new Set([
@@ -47,6 +53,7 @@ export function getSavedActiveSection(): string | null {
 
 /** Logged-out users always land on the terminal intro — not Edge Island welcome. */
 export function resolvePublicSection(section: string): string {
+  if (shouldForcePublicLanding()) return 'vouchedge_intro';
   if (hasRealAuthToken()) return section;
   if (section === 'welcome' || section === 'island') return 'vouchedge_intro';
   return section;
@@ -54,6 +61,7 @@ export function resolvePublicSection(section: string): string {
 
 /** Signed-in users must never land on the public intro terminal. */
 export function resolveAuthenticatedSection(section: string): string {
+  if (shouldForcePublicLanding()) return 'vouchedge_intro';
   if (!hasRealAuthToken()) return resolvePublicSection(section);
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
@@ -146,6 +154,13 @@ export function resolveDevSectionFromLocation() {
     const section = hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
     window.history.replaceState(null, '', hasRealAuthToken() ? `/${section}` : '/vouchedge');
     return section;
+  }
+
+  if (
+    target === 'vouchedge-preview' || target === '/vouchedge-preview' ||
+    target === 'preview/vouchedge' || target === '/preview/vouchedge'
+  ) {
+    return 'vouchedge_intro';
   }
 
   if (

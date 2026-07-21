@@ -29,6 +29,25 @@ import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 import { vouchToPlayer } from '../../lib/parlays/parlayOsLegBuilder';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../../lib/parlays/parlayMarketCatalog';
 
+const getVouchGrade = (conf: number | null) => {
+  if (conf === null) return null;
+  if (conf >= 90) return 'A+';
+  if (conf >= 80) return 'A';
+  if (conf >= 70) return 'B+';
+  if (conf >= 65) return 'B';
+  if (conf >= 60) return 'B-';
+  if (conf >= 50) return 'C';
+  return 'D';
+};
+
+const getGradeColor = (grade: string | null) => {
+  if (!grade) return 'bg-slate-800 text-slate-400 border-slate-700';
+  if (grade.startsWith('A')) return 'bg-vouch-emerald/10 text-vouch-emerald border-vouch-emerald/40';
+  if (grade.startsWith('B')) return 'bg-vouch-cyan/10 text-vouch-cyan border-vouch-cyan/40';
+  if (grade.startsWith('C')) return 'bg-vouch-amber/10 text-vouch-amber border-vouch-amber/40';
+  return 'bg-rose-950 text-rose-450 border-rose-900/50';
+};
+
 interface VouchCardProps {
   key?: any;
   vouch: Vouch;
@@ -396,6 +415,18 @@ export default React.memo(function VouchCard({
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-1.5 flex-1">
             <div className="flex items-center gap-2">
+              {(() => {
+                const confToUse = aiConfidence !== null ? aiConfidence : capperConfidence;
+                const grade = getVouchGrade(confToUse);
+                if (grade) {
+                  return (
+                    <span className={`rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-black tracking-wider ${getGradeColor(grade)} shadow-sm`}>
+                      {grade}
+                    </span>
+                  );
+                }
+                return null;
+              })()}
               <span className="rounded-md border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.40)] px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-[hsl(var(--ve-text-secondary))]">
                 {vouch.sport}
               </span>

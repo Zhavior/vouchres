@@ -18,6 +18,8 @@ import {
   ShieldAlert,
   Search
 } from 'lucide-react';
+import { Z8_PAGE, Z8_SECTION_HEADER, Z8_SURFACE, Z8_ACTIVE, Z8_LABEL } from '../theme/z8Tokens';
+
 
 interface LeaderboardProps {
   profile: any;
@@ -128,71 +130,93 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
   const firstPlace = cappersList.find(c => c.rank === 1);
   const secondPlace = cappersList.find(c => c.rank === 2);
   const thirdPlace = cappersList.find(c => c.rank === 3);
-
-  // The remaining cappers
-  const top10List = cappersList; // We show full 10 list or those matching filters
+  
+  const top10List = cappersList.filter(c => c.rank > 3);
 
   return (
-    <div className="p-4 md:p-6 max-w-[1200px] mx-auto min-h-screen bg-transparent space-y-6 text-left" id="leaderboard-outer-wrapper">
+    <div className="p-4 md:p-6 max-w-[1200px] mx-auto min-h-screen bg-transparent lg:flex-row lg:items-start lg:gap-6 lg:flex flex-col space-y-6 lg:space-y-0 text-left" id="leaderboard-outer-wrapper">
       
-      {/* Info banner */}
-      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[var(--ve-card)] border border-[var(--ve-border)] text-[11px] text-[var(--ve-accent)]/80">
-        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-[var(--ve-border-strong)] bg-[var(--ve-card)] text-[var(--ve-accent)]">Live</span>
-        Rankings are drawn from verified pick records — graded nightly. Leaderboard fills as cappers post and picks settle.
-      </div>
+      {/* SIDEBAR */}
+      <div className="lg:w-[240px] shrink-0 lg:sticky lg:top-4 lg:self-start space-y-6">
+        
+        {/* Upper header segment and description */}
+        <div className="flex flex-col gap-4 border-b border-[hsl(var(--ve-border)/0.30)] pb-5" id="leaderboard-header">
+          <div>
+            <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
+              <Trophy className="w-5 h-5 text-amber-400 animate-bounce shrink-0" />
+              Top Verifiable Cappers & Edge Board
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Browse transparent records, historical unit yield, and winning percentages audited directly by the chain ledger.
+            </p>
+          </div>
 
-      {/* Upper header segment and description */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[hsl(var(--ve-border)/0.30)] pb-5" id="leaderboard-header">
-        <div>
-          <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-            <Trophy className="w-5 h-5 text-amber-400 animate-bounce shrink-0" />
-            Top Verifiable Cappers & Edge Board
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Browse transparent records, historical unit yield, and winning percentages audited directly by the chain ledger.
-          </p>
+          {/* Timeframe Toggles */}
+          <div className="flex lg:flex-col bg-[hsl(var(--ve-surface-raised)/0.44)] p-1 rounded-xl border border-[hsl(var(--ve-border)/0.32)] self-start text-xs font-semibold gap-1" id="leaderboard-filters">
+            <button
+              onClick={() => setActiveRange('month')}
+              className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
+                activeRange === 'month'
+                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              This Month
+            </button>
+            
+            <button
+              onClick={() => setActiveRange('week')}
+              className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
+                activeRange === 'week'
+                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Weekly Sweep
+            </button>
+
+            <button
+              onClick={() => setActiveRange('all-time')}
+              className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
+                activeRange === 'all-time'
+                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              All-Time Legends
+            </button>
+          </div>
         </div>
 
-        {/* Timeframe Toggles */}
-        <div className="flex bg-[hsl(var(--ve-surface-raised)/0.44)] p-1 rounded-xl border border-[hsl(var(--ve-border)/0.32)] self-start text-xs font-semibold" id="leaderboard-filters">
-          <button
-            onClick={() => setActiveRange('month')}
-            className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all ${
-              activeRange === 'month'
-                ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            This Month
-          </button>
+        {/* Info banner */}
+        <div className="hidden lg:flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5 p-2.5 rounded-xl bg-[var(--ve-card)] border border-[var(--ve-border)] text-[11px] text-[var(--ve-accent)]/80">
+            <div>
+              <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-[var(--ve-border-strong)] bg-[var(--ve-card)] text-[var(--ve-accent)]">Live</span>
+            </div>
+            Rankings are drawn from verified pick records — graded nightly. Leaderboard fills as cappers post and picks settle.
+          </div>
           
-          <button
-            onClick={() => setActiveRange('week')}
-            className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all ${
-              activeRange === 'week'
-                ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Weekly Sweep
-          </button>
-
-          <button
-            onClick={() => setActiveRange('all-time')}
-            className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all ${
-              activeRange === 'all-time'
-                ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            All-Time Legends
-          </button>
+          <div className="bg-[hsl(var(--ve-surface-raised)/0.36)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-xl text-[10px] text-slate-400 flex flex-col items-start gap-2">
+            <Info className="w-4 h-4 text-[var(--ve-accent)] shrink-0" />
+            <span>Records are automatically locked once parlay game scores settle. No deleted history or manual edits.</span>
+          </div>
         </div>
       </div>
 
-      {/* SEARCH AND INFORMATION BADGE */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-        <div className="md:col-span-8 relative">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 space-y-6 min-w-0">
+        
+        {/* Mobile Info banners */}
+        <div className="lg:hidden flex flex-col gap-4">
+          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[var(--ve-card)] border border-[var(--ve-border)] text-[11px] text-[var(--ve-accent)]/80">
+            <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-[var(--ve-border-strong)] bg-[var(--ve-card)] text-[var(--ve-accent)]">Live</span>
+            Rankings are drawn from verified pick records — graded nightly. Leaderboard fills as cappers post and picks settle.
+          </div>
+        </div>
+
+        {/* SEARCH BAR */}
+        <div className="relative">
           <input
             type="text"
             placeholder="Search verified cappers, sports, or system badges..."
@@ -202,12 +226,6 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
           />
           <Search className="w-4 h-4 text-slate-550 absolute left-3 top-3.5" />
         </div>
-
-        <div className="md:col-span-4 bg-[hsl(var(--ve-surface-raised)/0.36)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-xl text-[10px] text-slate-400 flex items-center gap-2">
-          <Info className="w-4 h-4 text-[var(--ve-accent)] shrink-0" />
-          <span>Records are automatically locked once parlay game scores settle. No deleted history or manual edits.</span>
-        </div>
-      </div>
 
       {/* Loading skeleton */}
       {loading && (
@@ -545,6 +563,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
           </div>
         )}
       </div>}
+      </div>
 
       {/* ================= MODAL PROFILE DETAILS OVERVIEW POPUP ================= */}
       {selectedCapper && (
@@ -671,6 +690,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
         </div>
       )}
 
+    </div>
     </div>
   );
 }

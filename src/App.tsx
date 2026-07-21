@@ -7,7 +7,7 @@ import { queryKeys } from './hooks/queries/queryKeys';
 import { vouchedgeApi } from './api/vouchedgeApi';
 import VouchEdgeTerminalPage from './pages/VouchEdgeTerminalPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
-import { PUBLIC_SECTIONS } from './app/sectionNavigation';
+import { PUBLIC_SECTIONS, shouldForcePublicLanding } from './app/sectionNavigation';
 
 function isAuthCallbackPath(): boolean {
   if (typeof window === 'undefined') return false;
@@ -74,8 +74,9 @@ function MainAppRoutes() {
   const navigation = useSectionNavigation();
   const canRenderLoggedOutRoute =
     PUBLIC_SECTIONS.has(navigation.activeSection) && navigation.activeSection !== 'vouchedge_intro';
+  const forcePublicLanding = shouldForcePublicLanding();
   const showPublicLanding =
-    !navigation.isLoggedIn &&
+    (forcePublicLanding || !navigation.isLoggedIn) &&
     !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
     !canRenderLoggedOutRoute;
 

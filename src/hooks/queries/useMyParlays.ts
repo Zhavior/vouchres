@@ -14,7 +14,7 @@ async function fetchMyParlays(): Promise<BackendParlayRow[]> {
   if (!token) {
     throw new Error('Authentication token unavailable; parlay reconciliation deferred.');
   }
-  const result = await apiClient.get<{ parlays: BackendParlayRow[] }>('/api/me/parlays?limit=100');
+  const result = await apiClient.get<{ parlays: BackendParlayRow[] }>('/api/v3/me/parlays?limit=100');
   return result?.parlays ?? [];
 }
 

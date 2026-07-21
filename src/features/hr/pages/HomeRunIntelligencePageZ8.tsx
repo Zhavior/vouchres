@@ -127,7 +127,7 @@ const LoadingSkeleton: React.FC = () => (
               </div>
               <div className="h-14 w-14 shrink-0 animate-pulse bg-white/[0.08]" />
             </div>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="hidden grid-cols-4 gap-2 lg:grid">
               {Array.from({ length: 4 }).map((___, chipIdx) => (
                 <div key={chipIdx} className="h-10 animate-pulse bg-white/[0.05]" />
               ))}
@@ -224,7 +224,7 @@ function toBoardTier(tier: ToolbarTier): string {
   return tier === 'sleeper' ? 'Sleepers' : tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
+const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -447,17 +447,94 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   };
 
   return (
-    <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell h-[100dvh] max-h-[100dvh] min-h-0 min-w-0 overflow-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex h-full min-h-0 max-w-[1720px] flex-col overflow-hidden ${Z8_PAGE_GAP}`}>
-        <HrHeader
-          mode={vm.mode}
-          onRefresh={handleRefresh}
-          isRefreshing={vm.loading}
-          lastUpdated={lastUpdated}
-          date={vm.date}
-          isToday={isToday}
-          onDateChange={vm.setDate}
-        />
+    <div className={`${Z8_PAGE} min-h-0 min-w-0 text-ve-flash ${Z8_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex min-h-0 max-w-[1720px] flex-col gap-0 lg:flex-row lg:items-start lg:gap-6 ${Z8_PAGE_PAD_X}`}>
+
+        {/* ── Desktop Sticky Left Sidebar ──────────────────────────── */}
+        <aside className="hidden lg:flex lg:w-[280px] xl:w-[320px] lg:shrink-0 lg:flex-col lg:gap-4 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+          <HrHeader
+            mode={vm.mode}
+            onRefresh={handleRefresh}
+            isRefreshing={vm.loading}
+            lastUpdated={lastUpdated}
+            date={vm.date}
+            isToday={isToday}
+            onDateChange={vm.setDate}
+          />
+          <HrCommandCenter
+            mode={vm.mode}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            onRefresh={handleRefresh}
+            isRefreshing={vm.loading}
+            lastUpdated={lastUpdated}
+            lastUpdatedLabel={lastUpdatedLabel}
+            date={vm.date}
+            isToday={isToday}
+            onDateChange={vm.setDate}
+            autoSwitchedToPreview={autoSwitchedToPreview}
+            eliteCount={eliteCount}
+            strongCount={strongCount}
+            watchCount={watchCount}
+            sleeperCount={sleeperCount}
+            totalCount={totalCount}
+            searchValue={vm.search}
+            onSearchChange={vm.setSearch}
+            onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
+            activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+            onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
+            visibleCount={vm.rows?.length ?? totalCount}
+            rows={(vm.rows ?? []) as unknown[]}
+          />
+          {/* Slate status summary — desktop sidebar */}
+          <div className={`${Z8_PANEL_PREMIUM} rounded-xl p-3 space-y-3`}>
+            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Slate Status</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-black text-white">
+                {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
+              </p>
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}>
+                {freshnessTone.icon}{freshnessTone.label}
+              </span>
+            </div>
+            <div className="border-t border-white/[0.07] pt-2 space-y-1.5">
+              <div className="flex justify-between text-[10px]">
+                <span className="text-white/40 font-medium">Confirmed</span>
+                <span className="font-black text-white">{vm.modeCounts?.confirmed ?? 0}</span>
+              </div>
+              <div className="flex justify-between text-[10px]">
+                <span className="text-white/40 font-medium">Preview</span>
+                <span className="font-black text-white">{vm.modeCounts?.curated ?? 0}</span>
+              </div>
+              <div className="flex justify-between text-[10px]">
+                <span className="text-white/40 font-medium">Updated</span>
+                <span className="font-black text-white">{vm.slate.generatedAt ? formatRelativeTime(vm.slate.generatedAt) : '—'}</span>
+              </div>
+            </div>
+            {topPlayer && (
+              <div className="border-t border-white/[0.07] pt-2">
+                <p className="font-mono text-[9px] font-black uppercase tracking-[0.1em] text-vouch-emerald">Top Signal</p>
+                <p className="mt-1 text-xs font-black text-white truncate">{topPlayer.playerName}</p>
+                <p className="text-[10px] text-white/40 truncate">vs {topPlayer.pitcherName ?? 'TBD'}</p>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* ── Main content column ───────────────────────────────────── */}
+        <div className={`flex-1 min-w-0 flex flex-col ${Z8_PAGE_GAP}`}>
+          {/* Mobile-only header */}
+          <div className="lg:hidden">
+            <HrHeader
+              mode={vm.mode}
+              onRefresh={handleRefresh}
+              isRefreshing={vm.loading}
+              lastUpdated={lastUpdated}
+              date={vm.date}
+              isToday={isToday}
+              onDateChange={vm.setDate}
+            />
+          </div>
 
         <HrTopSignalPanel
           player={topPlayer}
@@ -689,33 +766,36 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
             </div>
           </section>
         )}
-        <HrCommandCenter
-          mode={vm.mode}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          onRefresh={handleRefresh}
-          isRefreshing={vm.loading}
-          lastUpdated={lastUpdated}
-          lastUpdatedLabel={lastUpdatedLabel}
-          date={vm.date}
-          isToday={isToday}
-          onDateChange={vm.setDate}
-          autoSwitchedToPreview={autoSwitchedToPreview}
-          eliteCount={eliteCount}
-          strongCount={strongCount}
-          watchCount={watchCount}
-          sleeperCount={sleeperCount}
-          totalCount={totalCount}
-          searchValue={vm.search}
-          onSearchChange={vm.setSearch}
-          onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
-          activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
-          onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
-          visibleCount={vm.rows?.length ?? totalCount}
-          rows={(vm.rows ?? []) as unknown[]}
-        />
+          {/* Mobile-only command center */}
+          <div className="lg:hidden">
+            <HrCommandCenter
+              mode={vm.mode}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              onRefresh={handleRefresh}
+              isRefreshing={vm.loading}
+              lastUpdated={lastUpdated}
+              lastUpdatedLabel={lastUpdatedLabel}
+              date={vm.date}
+              isToday={isToday}
+              onDateChange={vm.setDate}
+              autoSwitchedToPreview={autoSwitchedToPreview}
+              eliteCount={eliteCount}
+              strongCount={strongCount}
+              watchCount={watchCount}
+              sleeperCount={sleeperCount}
+              totalCount={totalCount}
+              searchValue={vm.search}
+              onSearchChange={vm.setSearch}
+              onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
+              activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+              onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
+              visibleCount={vm.rows?.length ?? totalCount}
+              rows={(vm.rows ?? []) as unknown[]}
+            />
+          </div>
 
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+        <div className="flex-1 pr-1">
         {vm.loading && !vm.rows?.length ? (
           <LoadingSkeleton />
         ) : vm.error ? (
@@ -765,6 +845,8 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           </div>
         )}
 
+        </div>{/* end flex-1 pr-1 */}
+
         <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
           <p>
             {vm.mode === 'curated'
@@ -775,39 +857,39 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           </p>
           <span className="shrink-0 text-white/55">Learn about our scoring <span className="ml-2">-&gt;</span></span>
         </footer>
-        </div>
+        </div>{/* end flex-1 main column */}
+      </div>{/* end lg:flex-row */}
 
-        {researchNotice ? (
-          <div
-            role="status"
-            aria-live="polite"
-            className="fixed bottom-5 left-1/2 z-[120] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border border-vouch-cyan/25 bg-[#071017]/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
-          >
-            <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-vouch-cyan" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-vouch-cyan">
-                Validating board
-              </p>
-              <p className="mt-0.5 text-xs text-white/70">
-                {researchNotice}
-              </p>
-            </div>
+      {researchNotice ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 left-1/2 z-[120] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 border border-vouch-cyan/25 bg-[#071017]/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
+        >
+          <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-vouch-cyan" />
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-vouch-cyan">
+              Validating board
+            </p>
+            <p className="mt-0.5 text-xs text-white/70">
+              {researchNotice}
+            </p>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        <HrPlayerProfile
-          player={vm.selectedPlayer}
-          isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-          onClose={closePlayerProfile}
-          onAddToSlip={addPlayerToSlip}
-          boardFreshness={vm.slate.freshness}
-          boardGeneratedAt={vm.slate.generatedAt}
-          boardDate={vm.date}
-          slipActionAvailable={Boolean(onSectionChange)}
-        />
-      </div>
+      <HrPlayerProfile
+        player={vm.selectedPlayer}
+        isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
+        onClose={closePlayerProfile}
+        onAddToSlip={addPlayerToSlip}
+        boardFreshness={vm.slate.freshness}
+        boardGeneratedAt={vm.slate.generatedAt}
+        boardDate={vm.date}
+        slipActionAvailable={Boolean(onSectionChange)}
+      />
     </div>
   );
 };
 
-export default HomeRunIntelligencePage;
+export default HomeRunIntelligencePageZ8;

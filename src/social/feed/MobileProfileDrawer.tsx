@@ -10,10 +10,11 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { getPrimaryProductNavigation } from '../../app/productNavigation';
+import { loadFeatureLayout, getSidebarFeatures, FeatureGroup } from '../../lib/featureConfig';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -27,7 +28,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair,
 };
 
 /** HR nav items use Flame per featureConfig. */
@@ -134,14 +135,16 @@ function MobileProfileDrawer({
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
+  const [featureLayout] = useState(() => loadFeatureLayout());
   const groups = useMemo(() => {
     if (!open) return [];
-    const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
-    return [{
-      group: 'Navigate',
-      items: getPrimaryProductNavigation().map((item) => ({ id: item.section, label: item.label, icon: icons[item.id] })),
-    }];
-  }, [open]);
+    const features = getSidebarFeatures(featureLayout);
+    const SIDEBAR_GROUPS: FeatureGroup[] = ["Daily", "Pro Labs", "AI", "Build & Track", "Social", "Account"];
+    return SIDEBAR_GROUPS.map(group => ({
+      group,
+      items: features.filter(f => f.group === group),
+    })).filter(g => g.items.length > 0);
+  }, [open, featureLayout]);
 
   const go = useCallback((section: string) => {
     onSectionChange(section);

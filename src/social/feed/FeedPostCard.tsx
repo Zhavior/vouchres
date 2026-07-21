@@ -1,5 +1,8 @@
 import { Z8_SURFACE } from '../../theme/z8Tokens';
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { triggerHaptic } from '../../lib/haptics';
+import SwipeDrawer from '../../components/ui/SwipeDrawer';
 import { 
   Heart, 
   MessageSquare, 
@@ -99,6 +102,7 @@ interface FeedPostCardProps {
   onAddComment: (postId: string, commentContent: string) => void;
   onPostCreated?: (postData: Partial<FeedPost>) => void;
   onDeletePost?: (postId: string) => void;
+  onSectionChange?: (section: string) => void;
 }
 
 function FeedPostCard({
@@ -111,6 +115,7 @@ function FeedPostCard({
   onAddComment,
   onPostCreated,
   onDeletePost,
+  onSectionChange,
 }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [focusReply, setFocusReply] = useState(false);
@@ -357,48 +362,63 @@ function FeedPostCard({
 
   const handleDeleteClick = () => {
     if (!postDeleteAllowed || !onDeletePost) return;
+    triggerHaptic('heavy');
     setShowPostMenu(false);
     onDeletePost(post.id);
+  };
+
+  const handleProfileClick = () => {
+    if (!document.startViewTransition) {
+      if (onSectionChange) onSectionChange('profile');
+      return;
+    }
+    document.startViewTransition(() => {
+      if (onSectionChange) onSectionChange('profile');
+    });
   };
 
   const renderPostActionsMenu = () => {
     if (!isSelf) return null;
     return (
       <div className="relative" ref={postMenuRef}>
-        <button
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           type="button"
-          onClick={() => setShowPostMenu((open) => !open)}
+          onClick={() => setShowPostMenu((open) => {
+            if (!open) triggerHaptic('light');
+            return !open;
+          })}
           className="feed-icon-btn p-1.5 rounded-full text-white/45 hover:text-white hover:bg-white/[0.06] transition-colors"
           aria-label="Post actions"
           aria-expanded={showPostMenu}
           id={`post-menu-btn-${post.id}`}
         >
           <MoreHorizontal className="w-5 h-5" />
-        </button>
-        {showPostMenu && (
-          <div className="absolute right-0 top-9 w-56 bg-black/95 border border-white/15 rounded-xl shadow-xl p-1 z-40">
+        </motion.button>
+        <SwipeDrawer isOpen={showPostMenu} onClose={() => setShowPostMenu(false)} title="Post Options">
+          <div className="flex flex-col gap-2">
             {postDeleteAllowed && onDeletePost ? (
               <button
                 type="button"
                 onClick={handleDeleteClick}
-                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-rose-300 font-medium flex items-center gap-2"
+                className="w-full text-left px-4 py-3 text-[15px] bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] rounded-xl text-rose-400 font-medium flex items-center gap-3 transition-colors"
                 id={`delete-post-btn-${post.id}`}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-5 h-5" />
                 Delete post
               </button>
             ) : parlayPostLocked ? (
               <div
-                className="px-3 py-2 text-[12px] text-white/45 flex items-start gap-2"
+                className="px-4 py-3 text-[14px] bg-white/[0.02] rounded-xl text-white/45 flex items-start gap-3"
                 title={parlayPostDeleteLockedReason()}
                 id={`locked-post-indicator-${post.id}`}
               >
-                <Lock className="w-4 h-4 shrink-0 mt-0.5 text-white/35" />
+                <Lock className="w-5 h-5 shrink-0 mt-0.5 text-white/35" />
                 <span>{parlayPostDeleteLockedReason()}</span>
               </div>
             ) : null}
           </div>
-        )}
+        </SwipeDrawer>
       </div>
     );
   };
@@ -489,20 +509,29 @@ function FeedPostCard({
     >
       {/* Upper header segment: User details & metadata badges */}
       <div className="flex items-start gap-3">
-        <ProfileAvatarBorder 
-          borderId={post.profileBorderId}
-          displayName={post.displayName}
-          initials={post.displayName.split(' ').map(n=>n[0]).join('')}
-          size="md"
-          winRate={post.winRate || 58.3}
-          isVerified={post.isVerified}
-        />
+        <div 
+          onClick={handleProfileClick}
+          className="cursor-pointer"
+          style={{ viewTransitionName: `avatar-${post.id}` } as any}
+        >
+          <ProfileAvatarBorder 
+            borderId={post.profileBorderId}
+            displayName={post.displayName}
+            initials={post.displayName.split(' ').map(n=>n[0]).join('')}
+            size="md"
+            winRate={post.winRate || 58.3}
+            isVerified={post.isVerified}
+          />
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-1 flex-wrap leading-tight">
-                <span className="font-bold text-[15px] text-white hover:underline cursor-pointer truncate">
+                <span 
+                  className="font-bold text-[15px] text-white hover:underline cursor-pointer truncate"
+                  onClick={handleProfileClick}
+                >
                   {post.displayName}
                 </span>
                 {post.isVerified && (
@@ -789,8 +818,12 @@ function FeedPostCard({
         </button>
 
         <div className="relative">
-          <button 
-            onClick={() => setShowRepostMenu(!showRepostMenu)}
+          <motion.button 
+            whileTap={{ scale: 0.85 }}
+            onClick={() => {
+              triggerHaptic('light');
+              setShowRepostMenu(!showRepostMenu);
+            }}
             className={`feed-action-btn flex items-center gap-1 hover:text-vouch-emerald transition-colors ${
               post.isReposted ? 'text-vouch-emerald font-bold' : ''
             }`}
@@ -799,36 +832,42 @@ function FeedPostCard({
           >
             <Repeat2 className={`w-[18px] h-[18px] ${post.isReposted ? 'rotate-180' : ''}`} />
             {post.repostsCount > 0 && <span>{post.repostsCount}</span>}
-          </button>
+          </motion.button>
 
-          {showRepostMenu && (
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-36 bg-black/95 border border-white/15 rounded-xl shadow-xl p-1 z-40">
+          <SwipeDrawer isOpen={showRepostMenu} onClose={() => setShowRepostMenu(false)} title="Repost Options">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => {
+                  triggerHaptic('success');
                   onRepost(post.id);
                   setShowRepostMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-white font-medium flex items-center gap-2"
+                className="w-full text-left px-4 py-3 text-[15px] bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] rounded-xl text-white font-medium flex items-center gap-3 transition-colors"
               >
-                <Repeat2 className="w-4 h-4 text-vouch-emerald" />
+                <Repeat2 className="w-5 h-5 text-vouch-emerald" />
                 {post.isReposted ? 'Undo Repost' : 'Repost'}
               </button>
               <button
                 onClick={() => {
+                  triggerHaptic('light');
                   setShowRepostMenu(false);
                   setShowQuoteModal(true);
                 }}
-                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-white font-medium flex items-center gap-2"
+                className="w-full text-left px-4 py-3 text-[15px] bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] rounded-xl text-white font-medium flex items-center gap-3 transition-colors"
               >
-                <Quote className="w-4 h-4 text-vouch-cyan" />
+                <Quote className="w-5 h-5 text-vouch-cyan" />
                 Quote
               </button>
             </div>
-          )}
+          </SwipeDrawer>
         </div>
 
-        <button 
-          onClick={() => onLike(post.id)}
+        <motion.button 
+          whileTap={{ scale: 0.85 }}
+          onClick={() => {
+            triggerHaptic('success');
+            onLike(post.id);
+          }}
           className={`feed-action-btn flex items-center gap-1 hover:text-rose-500 transition-colors ${
             post.isLiked ? 'text-rose-500 font-bold' : ''
           }`}
@@ -837,10 +876,14 @@ function FeedPostCard({
         >
           <Heart className={`w-[18px] h-[18px] ${post.isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
           {post.likesCount > 0 && <span>{post.likesCount}</span>}
-        </button>
+        </motion.button>
 
-        <button 
-          onClick={() => onVouchAction(post.id)}
+        <motion.button 
+          whileTap={{ scale: 0.85 }}
+          onClick={() => {
+            triggerHaptic('success');
+            onVouchAction(post.id);
+          }}
           className={`feed-action-btn flex items-center gap-1 hover:text-amber-400 transition-colors ${
             post.isVouched ? 'text-amber-400 font-semibold' : ''
           }`}
@@ -849,25 +892,30 @@ function FeedPostCard({
         >
           <Zap className={`w-[18px] h-[18px] ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
           {post.vouchesCount > 0 && <span>{post.vouchesCount}</span>}
-        </button>
+        </motion.button>
 
-        <button
-          onClick={handleBookmarkToggle}
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={() => {
+            triggerHaptic('light');
+            handleBookmarkToggle();
+          }}
           className={`feed-action-btn transition-colors ${
             isBookmarked ? 'text-vouch-cyan' : 'hover:text-vouch-cyan'
           }`}
           title="Bookmark"
         >
           {isBookmarked ? <BookmarkCheck className="w-[18px] h-[18px] fill-vouch-cyan text-vouch-cyan" /> : <Bookmark className="w-[18px] h-[18px]" />}
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          whileTap={{ scale: 0.85 }}
           onClick={handleCopyLink}
           className="feed-action-btn hover:text-vouch-cyan transition-colors"
           title="Share"
         >
           <Share className="w-[18px] h-[18px]" />
-        </button>
+        </motion.button>
       </div>
 
       {/* Quote Vouch Modal overlay */}

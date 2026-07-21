@@ -34,13 +34,12 @@ import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
-import '../../styles/public-auth.css';
 import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
 type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro' | 'capper';
-type SignupStep = 'intro' | 'plan' | 'policy' | 'form';
+type SignupStep = 'intro' | 'questionnaire' | 'plan' | 'policy' | 'form';
 type AgreementKey = 'age' | 'terms' | 'research';
 
 const POLICY_SECTIONS = [
@@ -148,7 +147,7 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [signupStep, setSignupStep] = useState<SignupStep>(() =>
-    initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
+    initialMode === 'signup' ? 'intro' : 'form',
   );
   const [introIndex, setIntroIndex] = useState(0);
   const [plan, setPlan] = useState<SignupPlan>(initialPlan);
@@ -176,7 +175,7 @@ export default function AuthModal({
       setError(null);
       setNotice(null);
       setEmailSent(false);
-      setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
+      setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
       setIntroIndex(0);
       setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });
@@ -522,7 +521,7 @@ export default function AuthModal({
                   type="button"
                   onClick={() => {
                     if (introIndex < INTRO_SLIDES.length - 1) setIntroIndex((i) => i + 1);
-                    else setSignupStep('plan');
+                    else setSignupStep('questionnaire');
                   }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
                   style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
@@ -535,6 +534,60 @@ export default function AuthModal({
                 type="button"
                 onClick={() => setSignupStep('plan')}
                 className="w-full mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          ) : mode === 'signup' && signupStep === 'questionnaire' ? (
+            /* ── Questionnaire selection ── */
+            <div className="px-6 pb-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-black text-white">How do you plan to use VouchEdge?</h3>
+                <p className="mt-1 text-sm text-slate-400">Select your primary goal so we can tailor your experience.</p>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { id: 'track', label: 'Track my own picks', icon: ClipboardCheck, desc: 'Immutable record keeping' },
+                  { id: 'follow', label: 'Find sharp research', icon: Eye, desc: 'Follow verified cappers' },
+                  { id: 'build', label: 'Build an audience', icon: Trophy, desc: 'Monetize my proof' }
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSignupStep('plan')}
+                    className={`w-full text-left rounded-xl border p-4 transition-all ${Z8_INTERACTIVE}`}
+                    style={{
+                      background: 'rgba(0,0,0,0.35)',
+                      borderColor: 'rgba(255,255,255,0.08)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(0,240,255,0.4)';
+                      e.currentTarget.style.background = 'rgba(0,240,255,0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.35)';
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                        <opt.icon className="w-5 h-5 text-vouch-cyan" />
+                      </div>
+                      <div>
+                        <div className="text-base font-bold text-white">{opt.label}</div>
+                        <div className="text-xs text-slate-400">{opt.desc}</div>
+                      </div>
+                      <div className="ml-auto opacity-50">
+                        <ArrowRight className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSignupStep('plan')}
+                className="w-full mt-4 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
               >
                 Skip
               </button>

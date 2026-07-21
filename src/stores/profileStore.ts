@@ -8,6 +8,7 @@ const STORAGE_KEY = 'vouchedge_profile';
 type ProfileState = {
   profile: CreatorProofProfile;
   syncProfile: (profile: CreatorProofProfile) => void;
+  updateUiPreferences: (prefs: Partial<CreatorProofProfile['uiPreferences']>) => void;
   hydrateFromStorage: () => void;
   resetProfile: () => void;
 };
@@ -22,6 +23,26 @@ export const useProfileStore = create<ProfileState>((set) => ({
       // ignore storage failures
     }
     set({ profile });
+  },
+
+  updateUiPreferences: (prefs) => {
+    set((state) => {
+      const updatedProfile = {
+        ...state.profile,
+        uiPreferences: {
+          ...state.profile.uiPreferences,
+          ...prefs,
+        }
+      };
+      // Send intent to V3 backend outbox in the background
+      // (This will be intercepted by the V3 worker)
+      // apiClient.post('/api/v3/preferences', { uiPreferences: updatedProfile.uiPreferences }).catch(() => {});
+      
+      try {
+        localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(updatedProfile));
+      } catch {}
+      return { profile: updatedProfile };
+    });
   },
 
   hydrateFromStorage: () => {

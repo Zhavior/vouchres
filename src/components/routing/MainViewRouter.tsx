@@ -17,32 +17,33 @@ const PersonalizedOnboarding = lazy(() =>
 );
 const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
-const TodayDashboard = lazy(() => import('../TodayDashboard'));
+const TodayDashboardZ8 = lazy(() => import('../TodayDashboardZ8'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
-const VouchBoard = lazy(() => import('../VouchBoard'));
-const ProfilePage = lazy(() => import('../ProfilePage'));
-const SettingsPage = lazy(() => import('../SettingsPage'));
+const VouchBoardZ8 = lazy(() => import('../VouchBoardZ8'));
+const ProfilePageZ8 = lazy(() => import('../ProfilePageZ8'));
+const SettingsPageZ8 = lazy(() => import('../SettingsPageZ8'));
 const PremiumSubPage = lazy(() => import('../PremiumSubPage'));
 const PlayerResearchHub = lazy(() => import('../PlayerResearchHub'));
 const CustomizePage = lazy(() => import('../CustomizePage'));
 const ResultsStudio = lazy(() => import('../results/ResultsStudio'));
 const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
-const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHub'));
+const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHubZ8'));
 const Leaderboard = lazy(() => import('../Leaderboard'));
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
-const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
+const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));
 const BrainPicksPage = lazy(() => import('../../features/brain/BrainPicksPage'));
 const BrainPerformancePage = lazy(() => import('../../features/brain/BrainPerformancePage'));
 const AiPilotPage = lazy(() => import('../../features/ai/pages/AiPilotPage'));
 const MlbStatHubPage = lazy(() => import('../../features/mlb-stats/pages/MlbStatHubPage'));
-const DailyPlayersPage = lazy(() => import('../../pages/DailyPlayersPage'));
-const LiveGamesPro = lazy(() => import('../LiveGamesPro'));
+const DailyPlayersPage = lazy(() => import('../../pages/DailyPlayersPageZ8'));
+const LiveGamesPro = lazy(() => import('../LiveGamesProZ8'));
 const NotificationsPage = lazy(() => import('../notifications/NotificationsPage'));
-const PlayerEdgeLabPage = lazy(() => import('../../pages/pro/PlayerEdgeLabPage'));
-const PitcherMatchupIntelligencePage = lazy(() => import('../../pages/pro/PitcherMatchupIntelligencePage'));
-const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZonesPage'));
-const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
-const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
+const PlayerEdgeLabPageZ8 = lazy(() => import('../../pages/pro/PlayerEdgeLabPageZ8'));
+const PitcherMatchupIntelligencePageZ8 = lazy(() => import('../../pages/pro/PitcherMatchupIntelligencePageZ8'));
+const TeamMatchupIntelligencePageZ8 = lazy(() => import('../../pages/pro/TeamMatchupIntelligencePageZ8'));
+const HitterMatchupZonesPageZ8 = lazy(() => import('../../pages/pro/HitterMatchupZonesPageZ8'));
+const ProGraphsLabPageZ8 = lazy(() => import('../../pages/pro/ProGraphsLabPageZ8'));
+const ProCommandCenterPageZ8 = lazy(() => import('../../pages/pro/ProCommandCenterPageZ8'));
 const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
@@ -255,8 +256,8 @@ function MainViewRouter({
     case 'pro_command_center':
       return (
         <LazyRoute>
-          <ProGateShell featureName="VouchEdge Pro Command Center" navigateSection={navigateSection}>
-            <ProCommandCenterPage />
+          <ProGateShell featureName="Pro Command Center" navigateSection={navigateSection}>
+            <ProCommandCenterPageZ8 />
           </ProGateShell>
         </LazyRoute>
       );
@@ -264,16 +265,23 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ProGateShell featureName="Top Player Lab" navigateSection={navigateSection}>
-            <PlayerEdgeLabPage />
+            <PlayerEdgeLabPageZ8 />
           </ProGateShell>
         </LazyRoute>
       );
     case 'pitcher_matchup_intelligence':
-    case 'team_matchup_lab':
       return (
         <LazyRoute>
           <ProGateShell featureName="Pitcher Matchup Intelligence" navigateSection={navigateSection}>
-            <PitcherMatchupIntelligencePage />
+            <PitcherMatchupIntelligencePageZ8 />
+          </ProGateShell>
+        </LazyRoute>
+      );
+    case 'team_matchup_lab':
+      return (
+        <LazyRoute>
+          <ProGateShell featureName="Team Matchup Lab" navigateSection={navigateSection}>
+            <TeamMatchupIntelligencePageZ8 />
           </ProGateShell>
         </LazyRoute>
       );
@@ -281,7 +289,7 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ProGateShell featureName="Hitter Matchup Zones" navigateSection={navigateSection}>
-            <HitterMatchupZonesPage />
+            <HitterMatchupZonesPageZ8 />
           </ProGateShell>
         </LazyRoute>
       );
@@ -289,7 +297,7 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ProGateShell featureName="Pro Graphs Lab" navigateSection={navigateSection}>
-            <ProGraphsLabPage />
+            <ProGraphsLabPageZ8 />
           </ProGateShell>
         </LazyRoute>
       );
@@ -393,7 +401,7 @@ function TodayDashboardShell({
 }) {
   const { profile, savedSlips } = useAppShell();
   return (
-    <TodayDashboard
+    <TodayDashboardZ8
       onSectionChange={navigateSection}
       savedSlips={savedSlips}
       profile={profile}
@@ -588,7 +596,7 @@ function BoardShell() {
   const { onRemoveVouchFromBoard, onPostCreated } = useAppCommandStore();
 
   return (
-    <VouchBoard
+    <VouchBoardZ8
       savedVouches={savedVouches}
       onRemoveVouch={onRemoveVouchFromBoard}
       onPostCreated={onPostCreated}
@@ -626,7 +634,7 @@ function ProfileShell({
   } = useAppCommandStore();
 
   return (
-    <ProfilePage
+    <ProfilePageZ8
       profile={profile}
       onUpdateProfile={onUpdateProfile}
       posts={posts}
@@ -676,7 +684,7 @@ function SettingsShell() {
   const { onResetDatabase, onUpdateProfile } = useAppCommandStore();
 
   return (
-    <SettingsPage
+    <SettingsPageZ8
       onResetDatabase={onResetDatabase}
       profileName={profile.displayName}
       profile={profile}

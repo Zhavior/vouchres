@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ClipboardCheck, 
-  Heart, 
-  HelpCircle, 
-  Shield, 
   BookmarkCheck, 
-  Share2, 
   X, 
   Sparkles, 
-  Check, 
-  CheckCircle2, 
-  Tv, 
-  ArrowRight, 
   Info,
-  Layers,
-  ChevronRight,
-  ChevronLeft,
-  Download,
 } from 'lucide-react';
 import { Vouch, FeedPost, MLBPlayer } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import VouchStudioDarkroom from './VouchStudioDarkroom';
 import VouchCard from './vouch-system/VouchCard';
 import VouchPack from './vouchBoard/VouchPack';
+import { apiClient } from '../lib/apiClient';
 import {
   Z8_ACTIVE,
   Z8_DISPLAY,
@@ -34,8 +23,6 @@ import {
   Z8_PAGE_PAD_Y,
   Z8_PANEL_PREMIUM,
   Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-  Z8_WARNING,
 } from '../theme/z8Tokens';
 
 interface VouchBoardProps {
@@ -62,153 +49,9 @@ interface CustomPlayerSelection {
   edgeMathProof?: string;
 }
 
-const cardStyleConfigs = {
-  cyberpunk: {
-    bg: 'bg-ve-obsidian border-2 border-[#162540] dark:bg-ve-obsidian',
-    cardBorder: 'border-sky-500/20',
-    radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(14,165,233,0.08),transparent_55%)]',
-    cornerLight1: 'bg-cyan-500/10',
-    cornerLight2: 'bg-indigo-500/5',
-    orbitStroke: 'stroke-sky-500/30',
-    orbitDashed: 'border-dashed border-sky-500/20',
-    orbitRing: 'border-slate-850/65',
-    hubBg: 'bg-ve-graphite border-2 border-sky-500/30',
-    hubGlow: 'bg-sky-500/10 group-hover:bg-sky-500/25',
-    hubVeBg: 'from-vouch-cyan to-vouch-emerald border-[var(--ve-border-strong)]',
-    hubText: 'text-sky-400',
-    nodeBorder: 'border-[var(--ve-border)] group-hover:border-[var(--ve-border-strong)]',
-    nodeValueBg: 'bg-[var(--ve-card)] border border-[var(--ve-border-strong)] text-vouch-cyan',
-    nodeTagBg: 'bg-slate-900 border-slate-850',
-    reasonsBg: 'bg-slate-900/60 border border-slate-900/80',
-    headerTitleColor: 'text-[#cbd5e1]',
-    headerSubTitleColor: 'text-[hsl(var(--ve-text-muted))]',
-    brandBadge: 'bg-sky-950/60 border border-sky-900/40 text-sky-400',
-    activeLineColor1: '#0ea5e9',
-    activeLineColor2: '#f97316',
-    ambientPingColor: 'bg-sky-400',
-    labelText: 'Dodger Offense',
-    labelText2: 'Yankee Leverage',
-    footerUrlColor: 'text-[#cbd5e1]',
-    footerPingColor: 'bg-sky-500',
-  },
-  luxury: {
-    bg: 'bg-ve-obsidian border-2 border-[#332211] dark:bg-ve-obsidian',
-    cardBorder: 'border-amber-500/20',
-    radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(217,119,6,0.08),transparent_55%)]',
-    cornerLight1: 'bg-amber-500/10',
-    cornerLight2: 'bg-yellow-600/5',
-    orbitStroke: 'stroke-amber-500/30',
-    orbitDashed: 'border-dashed border-amber-500/20',
-    orbitRing: 'border-amber-950/40',
-    hubBg: 'bg-ve-graphite border-2 border-amber-500/40',
-    hubGlow: 'bg-amber-600/10 group-hover:bg-amber-600/25',
-    hubVeBg: 'from-amber-600 to-yellow-600 border-amber-450/40',
-    hubText: 'text-amber-400',
-    nodeBorder: 'border-[#332211] group-hover:border-amber-500',
-    nodeValueBg: 'bg-ve-obsidian border border-amber-500 text-amber-400',
-    nodeTagBg: 'bg-ve-storm border-amber-950/40',
-    reasonsBg: 'bg-ve-storm/85 border border-amber-950/40',
-    headerTitleColor: 'text-[#f1f5f9]',
-    headerSubTitleColor: 'text-amber-600/70',
-    brandBadge: 'bg-amber-950/60 border border-amber-900/40 text-amber-400',
-    activeLineColor1: '#d97706',
-    activeLineColor2: '#b45309',
-    ambientPingColor: 'bg-amber-400',
-    labelText: 'Gold Coefficient',
-    labelText2: 'Prestige Pitch',
-    footerUrlColor: 'text-amber-500',
-    footerPingColor: 'bg-amber-500',
-  },
-  crimson: {
-    bg: 'bg-ve-obsidian border-2 border-[#450f14] dark:bg-ve-obsidian',
-    cardBorder: 'border-red-500/20',
-    radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(239,68,68,0.08),transparent_55%)]',
-    cornerLight1: 'bg-red-500/10',
-    cornerLight2: 'bg-rose-950/5',
-    orbitStroke: 'stroke-red-500/30',
-    orbitDashed: 'border-dashed border-red-500/20',
-    orbitRing: 'border-red-950/40',
-    hubBg: 'bg-ve-graphite border-2 border-red-500/40',
-    hubGlow: 'bg-red-500/10 group-hover:bg-red-500/25',
-    hubVeBg: 'from-red-600 to-rose-700 border-red-400/40',
-    hubText: 'text-red-400',
-    nodeBorder: 'border-[#450f14] group-hover:border-red-500',
-    nodeValueBg: 'bg-ve-obsidian border border-red-500 text-red-450',
-    nodeTagBg: 'bg-ve-storm border-red-950/40',
-    reasonsBg: 'bg-ve-storm/85 border border-red-950/40',
-    headerTitleColor: 'text-[#fecdd3]',
-    headerSubTitleColor: 'text-red-650/70',
-    brandBadge: 'bg-red-950/60 border border-red-900/40 text-red-450',
-    activeLineColor1: '#ef4444',
-    activeLineColor2: '#b91c1c',
-    ambientPingColor: 'bg-red-500',
-    labelText: 'Extreme Velo',
-    labelText2: 'Power Slugging',
-    footerUrlColor: 'text-rose-450',
-    footerPingColor: 'bg-red-500',
-  },
-  minimal: {
-    bg: 'bg-white border-2 border-slate-205 dark:bg-white',
-    cardBorder: 'border-slate-300',
-    radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(100,116,139,0.04),transparent_55%)]',
-    cornerLight1: 'bg-slate-100/50',
-    cornerLight2: 'bg-slate-200/5',
-    orbitStroke: 'stroke-slate-300',
-    orbitDashed: 'border-dashed border-slate-350',
-    orbitRing: 'border-slate-200',
-    hubBg: 'bg-slate-50 border-2 border-slate-400',
-    hubGlow: 'bg-slate-100 group-hover:bg-slate-200',
-    hubVeBg: 'from-slate-800 to-slate-900 border-slate-450',
-    hubText: 'text-slate-900',
-    nodeBorder: 'border-slate-300 group-hover:border-slate-800',
-    nodeValueBg: 'bg-white border border-slate-800 text-slate-900',
-    nodeTagBg: 'bg-slate-50 border-slate-250',
-    reasonsBg: 'bg-slate-50/90 border border-slate-200',
-    headerTitleColor: 'text-slate-800',
-    headerSubTitleColor: 'text-[hsl(var(--ve-text-muted))]',
-    brandBadge: 'bg-slate-100 border border-slate-200 text-slate-800',
-    activeLineColor1: '#1e293b',
-    activeLineColor2: '#64748b',
-    ambientPingColor: 'bg-slate-900',
-    labelText: 'Base Line',
-    labelText2: 'Target Index',
-    footerUrlColor: 'text-slate-600',
-    footerPingColor: 'bg-slate-950',
-  },
-  hologram: {
-    bg: 'bg-ve-obsidian border-2 border-[#2b0e40] dark:bg-ve-obsidian',
-    cardBorder: 'border-fuchsia-500/20',
-    radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(217,70,239,0.08),transparent_55%)]',
-    cornerLight1: 'bg-fuchsia-500/10',
-    cornerLight2: 'bg-purple-950/5',
-    orbitStroke: 'stroke-purple-500/30',
-    orbitDashed: 'border-dashed border-fuchsia-500/20',
-    orbitRing: 'border-purple-950/40',
-    hubBg: 'bg-ve-graphite border-2 border-fuchsia-500/40',
-    hubGlow: 'bg-fuchsia-500/10 group-hover:bg-fuchsia-500/25',
-    hubVeBg: 'from-fuchsia-600 to-purple-700 border-fuchsia-400/40',
-    hubText: 'text-fuchsia-400',
-    nodeBorder: 'border-[#2b0e40] group-hover:border-fuchsia-500',
-    nodeValueBg: 'bg-ve-obsidian border border-fuchsia-400 text-fuchsia-400',
-    nodeTagBg: 'bg-ve-graphite border-fuchsia-950/40',
-    reasonsBg: 'bg-ve-graphite/85 border border-fuchsia-950/40',
-    headerTitleColor: 'text-[#fae8ff]',
-    headerSubTitleColor: 'text-purple-650/70',
-    brandBadge: 'bg-fuchsia-950/60 border border-fuchsia-900/40 text-fuchsia-450',
-    activeLineColor1: '#d946ef',
-    activeLineColor2: '#a21caf',
-    ambientPingColor: 'bg-fuchsia-400',
-    labelText: 'Vapor Flare',
-    labelText2: 'Prism Laser',
-    footerUrlColor: 'text-fuchsia-450',
-    footerPingColor: 'bg-fuchsia-500',
-  },
-};
-
-export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated, profile }: VouchBoardProps) {
+export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreated, profile }: VouchBoardProps) {
   // Sub-tab selection: 'studio' (visualizer studio) vs 'saved' (original saved board)
   const [activeBoardTab, setActiveBoardTab] = useState<'saved' | 'studio'>('studio');
-  const [cardStyle, setCardStyle] = useState<'cyberpunk' | 'luxury' | 'crimson' | 'minimal' | 'hologram'>('cyberpunk');
   const [activeCardLayout, setActiveCardLayout] = useState<'orbit' | 'potd' | 'parlay'>('orbit');
 
   const formattedToday = new Date().toLocaleDateString('en-US', {
@@ -386,7 +229,6 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   // Circular coordinate calculations for Orbit Card Layout
   const orbitCount = selectedPlayers.length;
   const orbitRadius = 38; // % distance from midpoint
-  const activeStyle = cardStyleConfigs[cardStyle];
   const calculateOrbitPos = (index: number) => {
     if (orbitCount <= 1) return { x: 50, y: 50 };
     // Offset by -Math.PI / 2 translates the first node to the top center of the circle
@@ -397,12 +239,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   };
 
   // POST CONVERTER: Serialize this custom board into a real feed post!
-  const handlePublishAsFeedPost = () => {
-    if (!onPostCreated) {
-      triggerToast('❌ Error: Feed service unavailable in this context.');
-      return;
-    }
-
+  const handlePublishAsFeedPost = async () => {
     setIsPublishingToFeed(true);
     
     // Construct rich text representing the customized circle picks
@@ -416,8 +253,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
     const activeMediaUrl = customCardPhoto || "https://images.unsplash.com/photo-1540747737956-378724044432?w=800&auto=format&fit=crop&q=80";
     const companionMediaUrl = showSecondCard ? "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80" : undefined;
 
-    setTimeout(() => {
-      onPostCreated({
+    const postPayload = {
         content: cardDetailsSummary,
         postType: 'VOUCH',
         sportBadge: 'MLB',
@@ -437,7 +273,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           createdAt: new Date().toISOString()
         },
         boardConfig: {
-          cardStyle,
+          cardStyle: 'cyberpunk', // Hardcoded as Z8 relies on unified aesthetic now
           activeCardLayout,
           selectedPlayers,
           reasonsText,
@@ -467,12 +303,23 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
         mediaUrl2: companionMediaUrl,
         showSecondCard: showSecondCard,
         mediaType: 'image'
-      });
+      };
+
+    try {
+      await apiClient.post('/api/me/parlays', postPayload);
+      
+      if (onPostCreated) {
+        onPostCreated(postPayload as Partial<FeedPost>);
+      }
 
       setIsPublishingToFeed(false);
       triggerToast("🎉 Successfully published to the local VouchEdge home feed! Your profile's dynamic archive will record this stake.");
       setActiveBoardTab('saved'); // Navigate back to the board
-    }, 1200);
+    } catch (error) {
+      console.error("Failed to publish feed post", error);
+      triggerToast("❌ Error publishing to feed.");
+      setIsPublishingToFeed(false);
+    }
   };
 
   const handleSimulateXPost = () => {
@@ -485,7 +332,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen ve-page-shell bg-ve-obsidian text-ve-flash`} id="vouch-hub-view">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen`} id="vouch-hub-view">
       
       {/* Toast HUD */}
       {visualToast && (
@@ -496,7 +343,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       )}
 
       {/* Main header banner */}
-      <header className={`glass-command ve-premium-panel overflow-hidden rounded-2xl sm:rounded-3xl border border-ve-fuse/50 p-4 sm:p-5 relative shadow-[0_0_40px_rgba(0,229,255,0.07)]`}>
+      <header className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative`}>
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-vouch-cyan/10 blur-3xl pointer-events-none" />
         <div className={`relative ${Z8_SECTION_HEADER}`}>
           <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
@@ -538,7 +385,6 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
         </div>
       </header>
 
-
       {/* TAB SUB-VIEW 1: ORBIT STUDIO CARD BUILDER */}
       {activeBoardTab === 'studio' && (
         <VouchStudioDarkroom
@@ -546,8 +392,8 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           savedVouches={savedVouches}
           selectedPlayers={selectedPlayers}
           setSelectedPlayers={setSelectedPlayers}
-          cardStyle={cardStyle}
-          setCardStyle={setCardStyle}
+          cardStyle={'cyberpunk'}
+          setCardStyle={() => {}}
           activeCardLayout={activeCardLayout}
           setActiveCardLayout={setActiveCardLayout}
           potdIndex={potdIndex}
@@ -631,7 +477,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       {activeBoardTab === 'saved' && (
         <div className="space-y-4 animate-fade-in" id="vouch-board-saved-ledger">
           
-          <div className="p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl flex items-start gap-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]">
+          <div className={`${Z8_PANEL_PREMIUM} p-4 rounded-2xl flex items-start gap-3`}>
             <Info className="w-4.5 h-4.5 text-vouch-amber shrink-0 mt-0.5" />
             <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
               <span className="text-vouch-amber font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
@@ -642,7 +488,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
           {savedVouches.length === 0 ? (
             <div 
-              className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-4 py-20 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
+              className={`${Z8_PANEL_PREMIUM} p-10 text-center rounded-3xl flex flex-col items-center justify-center gap-4 py-20`}
               id="empty-vouch-board"
             >
               <ClipboardCheck className="w-12 h-12 text-[hsl(var(--ve-text-muted))] animate-pulse" />
@@ -683,7 +529,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       {/* SIMULATED TWITTER / X POSTING MODAL HUD OVERLAY */}
       {showTweetModal && (
         <div className="fixed inset-0 bg-[hsl(var(--ve-bg-deep)/0.86)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.36)] rounded-3xl max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative shadow-2xl shadow-[hsl(var(--ve-shadow)/0.28)] backdrop-blur-xl">
+          <div className={`${Z8_PANEL_PREMIUM} max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative`}>
             <button 
               onClick={() => setShowTweetModal(false)}
               className="absolute top-4 right-4 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] p-1 rounded-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.28)]"

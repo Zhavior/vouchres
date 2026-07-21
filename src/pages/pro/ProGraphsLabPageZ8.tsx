@@ -8,14 +8,15 @@ import {
   VerifiedGraphEmptyState,
 } from '../../components/pro';
 import { buildPlayerPayload, useHrBoardProData } from './proLabData';
+import { Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X } from '../../theme/z8Tokens';
 
-export default function ProGraphsLabPage() {
+export default function ProGraphsLabPageZ8() {
   const { topRow, loading, error, source } = useHrBoardProData();
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
 
   return (
-    <main className="ve-page-shell min-h-screen px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
-      <div className="mx-auto max-w-7xl space-y-4">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} py-4 lg:py-5`}>
+      <div className={Z8_PAGE_GAP}>
         <ProPageHeader
           title="Pro Graphs Lab"
           subtitle="A visual analytics lab for players, teams, pitchers, HR pressure, run pressure, and trend signals."

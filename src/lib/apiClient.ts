@@ -62,9 +62,15 @@ async function request<T = any>(
     credentials: "include",
   });
 
-  // Handle 401 — token expired or invalid
+  // Handle 401 — only force a global sign-out when we actually sent a token
+  // and the server rejected it (genuinely expired/invalid session). A 401 on
+  // a request that never had a token (e.g. one that raced ahead of session
+  // hydration at boot) just means "not authenticated yet" — signing out here
+  // would kick an otherwise-valid session out from under the user.
   if (res.status === 401) {
-    await supabase.auth.signOut();
+    if (token) {
+      await supabase.auth.signOut();
+    }
     throw { error: "unauthorized", status: 401 } as ApiError;
   }
 

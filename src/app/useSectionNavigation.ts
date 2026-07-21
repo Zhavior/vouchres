@@ -11,6 +11,7 @@ import {
   saveActiveSection,
   requiresLogin,
   isPublicFrontPage,
+  shouldForcePublicLanding,
 } from './sectionNavigation';
 import { persistAuthSession, supabase } from '../lib/supabaseClient';
 
@@ -134,6 +135,7 @@ export function useSectionNavigation() {
 
   useEffect(() => {
     if (loggingOut) return;
+    if (shouldForcePublicLanding()) return;
     if (!hasRealAuthToken()) return;
     if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);

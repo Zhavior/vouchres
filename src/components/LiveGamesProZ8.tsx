@@ -14,7 +14,7 @@ import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 import './live/live-games-lens.css';
 
 interface Props {
@@ -340,13 +340,13 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           {/* Scoreboard */}
           <Section icon={Activity} title="Game scoreboard">
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
-                <p className="text-[10px] text-slate-500 font-mono">{m.away.abbreviation}</p>
+              <div className={`rounded-xl p-3 ${Z8_SURFACE}`}>
+                <p className={Z8_LABEL}>{m.away.abbreviation}</p>
                 <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
                 <p className="text-[10px] text-slate-500">{m.away.name}</p>
               </div>
-              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
-                <p className="text-[10px] text-slate-500 font-mono">{m.home.abbreviation}</p>
+              <div className={`rounded-xl p-3 ${Z8_SURFACE}`}>
+                <p className={Z8_LABEL}>{m.home.abbreviation}</p>
                 <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
                 <p className="text-[10px] text-slate-500">{m.home.name}</p>
               </div>
@@ -367,8 +367,8 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           <Section icon={AlertTriangle} title="Starting pitcher matchups" tone="#fbbf24">
             <div className="grid grid-cols-2 gap-2">
               {[m.away, m.home].map((t) => (
-                <div key={t.teamId} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <p className="text-[10px] text-slate-500 font-mono">{t.abbreviation}</p>
+                <div key={t.teamId} className={`p-2.5 rounded-xl ${Z8_SURFACE}`}>
+                  <p className={Z8_LABEL}>{t.abbreviation}</p>
                   <p className="text-xs font-bold text-slate-200 truncate">{t.probablePitcher?.name ?? 'TBD'}</p>
                   {t.probablePitcher && (
                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -397,7 +397,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           <Section icon={Flame} title="Players to watch (HR)" tone="#fb923c">
             <div className="space-y-2">
               {topHrWatch.map((w) => (
-                <div key={w.playerId} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
+                <div key={w.playerId} className={`flex items-center gap-3 p-2.5 rounded-xl ${Z8_SURFACE}`}>
                   <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={36} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-100 truncate flex items-center gap-1.5">
@@ -452,7 +452,7 @@ export function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameM
   });
 }
 
-export default function LiveGamesPro({ onAddLegToParlay }: Props) {
+export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const liveGamesQuery = useLiveGames();
   const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
@@ -609,12 +609,12 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${Z8_PAGE} live-games-lens ve-page-shell mx-auto min-w-0 max-w-6xl overflow-x-hidden px-3 py-4 pb-24 sm:px-4 sm:py-5 md:pb-5`}>
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} pb-24 md:pb-5`}>
       {/* Header */}
-      <div className="live-games-lens__header z8-data-surface mb-4 p-4 sm:mb-5 sm:p-5">
+      <div className={`${Z8_PANEL} mb-4 p-4 sm:mb-5 sm:p-5`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
+          <div>
+            <h1 className={`${Z8_SECTION_HEADER} flex items-center gap-2`}><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
             <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
             <p role="status" aria-live="polite" className={`mt-2 flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}><span className="h-1.5 w-1.5 bg-vouch-emerald" aria-hidden="true" />{sourceNote}</p>
           </div>
@@ -630,7 +630,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
         </div>
       </div>
 
-      {error && <div className="z8-data-surface p-6 text-center text-sm text-red-300"><p>{error}</p><button type="button" onClick={load} className="z8-control mt-4 border border-red-300/30 px-4 text-white">Try again</button></div>}
+      {error && <div className={`${Z8_PANEL} p-6 text-center text-sm text-red-300`}><p>{error}</p><button type="button" onClick={load} className="z8-control mt-4 border border-red-300/30 px-4 text-white">Try again</button></div>}
 
       {loading && matchups.length === 0 && (
         <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className={`h-52 rounded-2xl ${Z8_SURFACE} animate-pulse`} />)}</div>
@@ -640,16 +640,16 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
         shown.length === 0 ? (
           <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/55`}><p>No games are live right now.</p><button type="button" onClick={() => setLiveOnly(false)} className="z8-control mt-4 border border-white/15 px-4 text-white">Show today&apos;s schedule</button></div>
         ) : (
-          <div className="space-y-4 min-w-0">
+          <div className="space-y-4">
             {activeGame && (
-              <div className="live-game-focus relative overflow-hidden p-3 sm:p-4 md:p-5">
+              <div className={`${Z8_PANEL} relative overflow-hidden p-3 sm:p-4 md:p-5`}>
 
-                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5 min-w-0">
-                  <div className="min-w-0">
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
+                  <div>
                     <p className={`${Z8_LABEL} text-vouch-cyan`}>
                       Current game
                     </p>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">
+                    <h2 className={`${Z8_SECTION_HEADER} truncate`}>
                       {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
                     </h2>
                     <p className="text-[11px] sm:text-xs text-slate-400 mt-1 truncate">
@@ -732,20 +732,20 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
               </div>
             )}
 
-            <div className="live-game-selector grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {shown.map((m) => (
                 <button
                   key={m.gamePk}
                   onClick={() => setActiveGamePk(m.gamePk)}
-                  className={`z8-control min-w-0 text-left border p-2.5 transition-all sm:p-3 ${
+                  className={`z8-control text-left p-2.5 transition-all sm:p-3 ${Z8_SURFACE} ${
                     String(activeGame?.gamePk) === String(m.gamePk)
-                      ? 'bg-sky-500/15 border-sky-500/50'
-                      : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
+                      ? 'border border-sky-500/50'
+                      : 'border border-transparent hover:border-slate-600'
                   }`}
                 >
-                  <p className="text-[10px] font-mono text-slate-500">{m.isLive ? 'LIVE' : (m.status ?? 'GAME')}</p>
-                  <p className="text-sm font-black text-slate-100">{m.away.abbreviation} @ {m.home.abbreviation}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{m.venue ?? 'Venue TBD'}</p>
+                  <p className={Z8_LABEL}>{m.isLive ? 'LIVE' : (m.status ?? 'GAME')}</p>
+                  <p className={`${Z8_SECTION_HEADER} mt-1`}>{m.away.abbreviation} @ {m.home.abbreviation}</p>
+                  <p className="text-[11px] text-slate-400 truncate mt-1">{m.venue ?? 'Venue TBD'}</p>
                 </button>
               ))}
             </div>

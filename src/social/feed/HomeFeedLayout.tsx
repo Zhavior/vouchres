@@ -15,6 +15,7 @@ import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 
 const CmdKPalette = lazy(() => import('./CmdKPalette'));
+const WorldChatWidget = lazy(() => import('../../components/theEdge/WorldChatWidget'));
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -210,6 +211,12 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
             onClose={handleCloseCmdK}
             onNavigate={handleSectionChange}
           />
+        </Suspense>
+      )}
+
+      {!isPublicFrontPage && (
+        <Suspense fallback={null}>
+          <WorldChatWidget />
         </Suspense>
       )}
     </div>

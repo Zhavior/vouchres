@@ -17,7 +17,18 @@ import type { HrBoardResponse } from '../types/hrBoard';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import AgentDock from './agents/AgentDock';
 import { hydrateAgentSlots } from '../services/agents/agentSlots';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import { 
+  Z8_ACTIVE, 
+  Z8_IDLE, 
+  Z8_LABEL, 
+  Z8_PAGE, 
+  Z8_PAGE_PAD_X, 
+  Z8_PAGE_PAD_Y, 
+  Z8_PANEL_PREMIUM, 
+  Z8_SECTION_HEADER, 
+  Z8_STAT_CHIP, 
+  Z8_SURFACE 
+} from '../theme/z8Tokens';
 
 type Props = {
   profile?: any;
@@ -223,7 +234,7 @@ function PixelAgentIcon({ code }: { code: string }) {
   const t = theme[code] ?? theme.DS;
 
   return (
-    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-inner">
+    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl ${Z8_SURFACE} shadow-inner`}>
       <div className={`absolute inset-0 ${t.glow} blur-xl`} />
       <div className="absolute inset-1 grid grid-cols-4 grid-rows-4 gap-[2px]">
         {Array.from({ length: 16 }).map((_, i) => (
@@ -234,7 +245,7 @@ function PixelAgentIcon({ code }: { code: string }) {
                 ? t.main
                 : [0, 5, 10, 15].includes(i)
                   ? t.accent
-                  : 'bg-slate-800'
+                  : 'bg-black/30'
             }`}
           />
         ))}
@@ -250,14 +261,14 @@ function PixelAgentIcon({ code }: { code: string }) {
 
 function StatTile({ label, value, tone = 'slate' }: { label: string; value: React.ReactNode; tone?: 'slate' | 'sky' | 'emerald' | 'amber' }) {
   const toneClass =
-    tone === 'sky' ? 'text-vouch-cyan border-vouch-cyan/20 bg-vouch-cyan/5' :
-    tone === 'emerald' ? 'text-vouch-emerald border-vouch-emerald/20 bg-vouch-emerald/5' :
-    tone === 'amber' ? 'text-amber-300 border-amber-400/20 bg-amber-400/5' :
-    'text-white/80 border-white/10 bg-black/25';
+    tone === 'sky' ? 'text-vouch-cyan border border-vouch-cyan/20 bg-vouch-cyan/5' :
+    tone === 'emerald' ? 'text-vouch-emerald border border-vouch-emerald/20 bg-vouch-emerald/5' :
+    tone === 'amber' ? 'text-amber-300 border border-amber-400/20 bg-amber-400/5' :
+    `text-white/80 ${Z8_SURFACE}`;
 
   return (
-    <div className={`rounded-2xl border p-3 ${toneClass}`}>
-      <p className="text-[10px] font-mono uppercase tracking-wider opacity-70">{label}</p>
+    <div className={`rounded-2xl p-3 ${Z8_STAT_CHIP} ${toneClass}`}>
+      <p className={`${Z8_LABEL} opacity-70`}>{label}</p>
       <div className="mt-1 text-xl font-black">{value}</div>
     </div>
   );
@@ -275,15 +286,15 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
         <div className="flex min-w-0 items-start gap-3">
           <PlayerHeadshot name={cleanName(c)} playerId={c.playerId} headshotUrl={c.headshotUrl ?? c.headshot} size={54} />
           <div className="min-w-0">
-            <p className="text-[10px] font-mono text-slate-500">#{rank}</p>
-            <h3 className="truncate text-lg font-black text-white">{cleanName(c)}</h3>
+            <p className={`${Z8_LABEL} text-slate-500`}>#{rank}</p>
+            <h3 className={`truncate ${Z8_SECTION_HEADER}`}>{cleanName(c)}</h3>
             <p className="text-xs text-slate-400">
               {c.team ?? 'TBD'} vs {cleanOpponent(c)} · {cleanPitcher(c)}
             </p>
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[10px] font-mono text-slate-500">HR edge</p>
+          <p className={`${Z8_LABEL} text-slate-500`}>HR edge</p>
           <p className="text-2xl font-black text-vouch-cyan">{score}</p>
         </div>
       </div>
@@ -294,8 +305,8 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
         <StatTile label="Venue" value={<span className="text-sm">{c.venue ?? 'TBD'}</span>} />
       </div>
 
-      <div className="mt-3 rounded-2xl border border-slate-800 bg-black/20 p-3">
-        <p className="mb-2 text-[10px] font-black font-mono uppercase tracking-wider text-slate-500">
+      <div className={`mt-3 rounded-2xl p-3 ${Z8_SURFACE}`}>
+        <p className={`mb-2 ${Z8_LABEL} text-slate-500`}>
           AI read
         </p>
         {reasons.length ? (
@@ -311,7 +322,7 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {Object.entries(breakdown).slice(0, 5).map(([key, value]) => (
-          <span key={key} className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-mono text-slate-300">
+          <span key={key} className={`rounded-full px-2 py-1 ${Z8_SURFACE} ${Z8_LABEL} text-slate-300`}>
             {key}: {Math.round(num(value))}
           </span>
         ))}
@@ -343,7 +354,7 @@ function pickTypeTone(pickType?: string) {
   if (value === 'FORM_PLAY') return 'border-violet-400/30 bg-violet-400/10 text-violet-200';
   if (value === 'CLEAN_SCREEN') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
   if (value === 'PREMIUM_EDGE') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
-  return 'border-slate-700 bg-slate-800 text-slate-300';
+  return Z8_SURFACE + ' text-slate-300';
 }
 
 const JUDGE_SECTION_COPY: Record<string, { title: string; subtitle: string }> = {
@@ -402,10 +413,10 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
     <article className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-5 shadow-xl shadow-black/20`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
+          <div className={`${Z8_LABEL} text-sky-300`}>
             {judge.specialty ?? (isRisk ? 'Trap Watch Agent' : 'AI Capper')}
           </div>
-          <h3 className="mt-1 text-2xl font-black text-white">{judge.displayName}</h3>
+          <h3 className={`mt-1 ${Z8_SECTION_HEADER}`}>{judge.displayName}</h3>
           <p className="mt-1 text-sm text-slate-400">{judge.tagline}</p>
           <p className="mt-2 max-w-2xl text-xs text-slate-500">{judge.persona}</p>
         </div>
@@ -417,10 +428,10 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-slate-800 bg-black/20 p-4">
+      <div className={`mt-5 rounded-2xl p-4 ${Z8_SURFACE}`}>
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+            <p className={`${Z8_LABEL} text-slate-500`}>
               {sectionCopy.title}
             </p>
             <p className="text-xs text-slate-400">
@@ -440,11 +451,11 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
 
         <div className="space-y-2">
           {!pick ? (
-            <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-500">
+            <p className={`rounded-2xl p-3 text-sm text-slate-500 ${Z8_SURFACE}`}>
               No judge pick available yet.
             </p>
           ) : (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+            <div className={`rounded-2xl p-3 ${Z8_SURFACE}`}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
                   <PlayerHeadshot name={pick.playerName} playerId={pick.playerId} headshotUrl={pick.headshotUrl ?? pick.headshot} size={42} />
@@ -469,16 +480,16 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
                 </div>
 
                 <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${pickTypeTone(pick.pickType)}`}>
+                  <span className={`rounded-full border px-2 py-1 ${Z8_LABEL} ${pickTypeTone(pick.pickType)}`}>
                     {pick.singlePickLabel ?? pick.specialtyLabel ?? pick.pickType}
                   </span>
-                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${availabilityTone(pick.availability?.status)}`}>
+                  <span className={`rounded-full border px-2 py-1 ${Z8_LABEL} ${availabilityTone(pick.availability?.status)}`}>
                     {pick.availability?.label ?? 'Availability unknown'}
                   </span>
-                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
+                  <span className={`rounded-full px-2 py-1 ${Z8_LABEL} ${
                     pick.gradeable
-                      ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
-                      : 'border-slate-700 bg-slate-800 text-slate-400'
+                      ? 'border border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                      : Z8_SURFACE + ' text-slate-400'
                   }`}>
                     {pick.gradeable ? 'Tracking' : 'Preview only'}
                   </span>
@@ -504,7 +515,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
   );
 }
 
-export default function MlbIntelligenceHub({ onSectionChange }: Props) {
+export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
   const hrBoardQuery = useHrBoardToday();
   const judgeQuery = useAiJudgeLeaderboard();
@@ -585,8 +596,8 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
   );
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom mx-auto max-w-7xl px-4 py-6 sm:px-6`}>
-      <div className={`mb-5 overflow-hidden rounded-3xl ${Z8_PANEL_PREMIUM} glass-command border border-ve-fuse/40 bg-gradient-to-br from-ve-obsidian via-ve-graphite to-vouch-cyan/10 p-5 shadow-2xl relative`}>
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} min-h-0 min-w-0 overflow-x-hidden text-ve-flash ve-safe-bottom`}>
+      <div className={`mb-5 overflow-hidden relative ${Z8_PANEL_PREMIUM} p-5`}>
         <div className="absolute -top-24 -right-24 h-60 w-60 rounded-full bg-vouch-cyan/15 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-60 w-60 rounded-full bg-vouch-emerald/10 blur-3xl" />
 
@@ -597,7 +608,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
               <p className={`mb-2 ${Z8_LABEL} text-vouch-cyan`}>
                 AI game room
               </p>
-              <h1 className="text-3xl font-black tracking-tight text-white">
+              <h1 className={Z8_SECTION_HEADER}>
                 VouchEdge AI Edge Lab
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-white/55">
@@ -619,7 +630,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
             )}
             <button
               onClick={load}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white/80 hover:border-vouch-cyan/40 hover:text-white"
+              className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${Z8_SURFACE} hover:border-vouch-cyan/40 hover:text-white text-white/80`}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -653,7 +664,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
         </div>
       </div>
 
-      <div className={`mb-5 rounded-2xl border border-vouch-cyan/15 bg-vouch-cyan/5 p-3 ${Z8_PANEL_PREMIUM}`}>
+      <div className={`mb-5 rounded-2xl p-3 ${Z8_PANEL_PREMIUM}`}>
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" />
           <p className="text-xs text-white/50">
@@ -677,7 +688,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
             <button
               key={String(id)}
               onClick={() => setTab(id as Tab)}
-              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-black transition ${
+              className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-black transition ${
                 active ? Z8_ACTIVE : Z8_IDLE
               }`}
             >
@@ -712,16 +723,16 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
           </div>
           <div className="space-y-3">
             <div className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-4`}>
-              <p className="mb-3 text-sm font-black text-white">Pitcher pressure board</p>
+              <p className={`mb-3 ${Z8_LABEL}`}>Pitcher pressure board</p>
               {pitcherGroups.slice(0, 6).map((p, i) => (
-                <div key={p.pitcher} className="mb-2 rounded-2xl border border-slate-800 bg-black/20 p-3">
+                <div key={p.pitcher} className={`mb-2 rounded-2xl p-3 ${Z8_SURFACE}`}>
                   <p className="text-sm font-black text-slate-100">#{i + 1} {p.pitcher}</p>
                   <p className="text-xs text-slate-500">{p.threats} hitters · top HR edge {p.topScore} · {p.venue}</p>
                 </div>
               ))}
             </div>
             <div className="rounded-3xl border border-amber-400/20 bg-amber-400/5 p-4">
-              <p className="text-[10px] font-black font-mono uppercase text-amber-300">🔒 Pro Intel</p>
+              <p className={`${Z8_LABEL} text-amber-300`}>🔒 Pro Intel</p>
               <p className="mt-1 text-sm font-black text-white">RBI windows, stolen bases, bullpen fatigue, pitch mix, and live parlay impact.</p>
             </div>
           </div>
@@ -740,15 +751,15 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
             <div key={p.pitcher} className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-4`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-mono text-slate-500">#{i + 1} pressure target</p>
-                  <h3 className="text-lg font-black text-white">{p.pitcher}</h3>
+                  <p className={`${Z8_LABEL} text-slate-500`}>#{i + 1} pressure target</p>
+                  <h3 className={Z8_SECTION_HEADER}>{p.pitcher}</h3>
                   <p className="text-xs text-slate-400">{p.venue}</p>
                 </div>
                 <StatTile label="Top edge" value={p.topScore} tone="amber" />
               </div>
               <div className="mt-3 grid gap-2">
                 {p.rows.slice(0, 4).map((c, idx) => (
-                  <div key={`${cleanName(c)}-${idx}`} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-black/20 p-3">
+                  <div key={`${cleanName(c)}-${idx}`} className={`flex items-center justify-between rounded-2xl p-3 ${Z8_SURFACE}`}>
                     <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-200">
                       <PlayerHeadshot name={cleanName(c)} playerId={c.playerId} headshotUrl={c.headshotUrl ?? c.headshot} size={32} />
                       <span className="truncate">{cleanName(c)}</span>
@@ -766,8 +777,8 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           {gameGroups.map((g, i) => (
             <div key={g.game} className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-4`}>
-              <p className="text-[10px] font-mono text-slate-500">#{i + 1} run environment</p>
-              <h3 className="text-lg font-black text-white">{g.game}</h3>
+              <p className={`${Z8_LABEL} text-slate-500`}>#{i + 1} run environment</p>
+              <h3 className={Z8_SECTION_HEADER}>{g.game}</h3>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <StatTile label="Avg edge" value={g.avgScore} tone="sky" />
                 <StatTile label="Threats" value={g.threats} tone="emerald" />
@@ -780,7 +791,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
 
       {tab === 'judges' && (
         <section className="space-y-5">
-          <div className={`rounded-3xl border border-vouch-cyan/20 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 ${Z8_PANEL_PREMIUM}`}>
+          <div className={`rounded-3xl p-5 ${Z8_PANEL_PREMIUM}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -792,7 +803,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
                     {agentRegistryQuery.data?.agents.length ?? 5} agent slots · extensible
                   </span>
                 </div>
-                <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
+                <h2 className={Z8_SECTION_HEADER}>AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-white/55">
                   Each AI judge posts one specialty-filtered single per day. Win rate and record come from graded singles in the picks ledger — honest W/L only, no fabricated stats.
                   Risk Auditor trap avoids win when the flagged player stays cold.
@@ -800,7 +811,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
               </div>
               <button
                 onClick={loadJudges}
-                className="rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 py-2 text-sm font-black text-vouch-cyan hover:bg-vouch-cyan/20"
+                className={`rounded-2xl px-4 py-2 text-sm font-black text-vouch-cyan transition ${Z8_SURFACE} hover:border-vouch-cyan/30 hover:bg-vouch-cyan/10`}
               >
                 Refresh Judges
               </button>

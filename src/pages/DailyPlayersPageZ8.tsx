@@ -222,21 +222,21 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
   return (
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
-        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" decoding="async" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
+        <div data-page="daily-players" className={`daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${Z8_SURFACE} p-1 shadow-lg `}>
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" decoding="async" /> : <span className={`text-xs font-black text-black`}>{name.slice(0, 2)}</span>}
         </div>
       )}
 
       <div className={`min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-        <div className="truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">{name}</div>
-        <div className="text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
+        <div className={`truncate text-sm font-black text-[hsl(var(--ve-text-primary))]`}>{name}</div>
+        <div className={`text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]`}>
           {align === 'right' ? 'Home' : 'Away'}
         </div>
       </div>
 
       {align === 'right' && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" decoding="async" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${Z8_SURFACE} p-1 shadow-lg `}>
+          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" decoding="async" /> : <span className={`text-xs font-black text-black`}>{name.slice(0, 2)}</span>}
         </div>
       )}
     </div>
@@ -247,68 +247,68 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
 function DailyPlayersSkeleton() {
   return (
     <div className="space-y-5">
-      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.78),hsl(var(--ve-bg-panel)/0.92),rgba(0,240,255,0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.20)] backdrop-blur-xl">
+      <section className={`rounded-3xl border  ${Z8_PANEL_PREMIUM} p-5 shadow-2xl  backdrop-blur-xl`}>
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="h-4 w-40 animate-pulse rounded-full bg-vouch-cyan/20" />
-            <div className="mt-4 h-9 w-72 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-            <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+            <div className={`mt-4 h-9 w-72 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+            <div className={`mt-3 h-4 w-96 max-w-full animate-pulse rounded-full ${Z8_SURFACE}`} />
           </div>
           <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-vouch-cyan/10 md:block" />
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((item) => (
-            <div key={item} className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="h-3 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-              <div className="mt-3 h-7 w-16 animate-pulse rounded-xl bg-[hsl(var(--ve-surface-raised)/0.70)]" />
+            <div key={item} className={`rounded-2xl border  ${Z8_SURFACE} p-4`}>
+              <div className={`h-3 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
+              <div className={`mt-3 h-7 w-16 animate-pulse rounded-xl ${Z8_SURFACE}`} />
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
+      <section className={`rounded-3xl border  ${Z8_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
         <div className="mb-3 flex items-center justify-between">
           <div>
             <div className="h-4 w-44 animate-pulse rounded-full bg-vouch-cyan/20" />
-            <div className="mt-2 h-3 w-64 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+            <div className={`mt-2 h-3 w-64 animate-pulse rounded-full ${Z8_SURFACE}`} />
           </div>
-          <div className="hidden h-7 w-20 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] sm:block" />
+          <div className={`hidden h-7 w-20 animate-pulse rounded-full ${Z8_SURFACE} sm:block`} />
         </div>
 
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
           {[0, 1, 2, 3].map((item) => (
             <div
               key={item}
-              className="min-w-[310px] rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),rgba(0,240,255,0.08))] p-4"
+              className={`min-w-[310px] rounded-3xl border  ${Z8_PANEL_PREMIUM} p-4`}
             >
               <div className="mb-4 flex justify-between">
-                <div className="h-6 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                <div className="h-4 w-16 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className={`h-6 w-28 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                <div className={`h-4 w-16 animate-pulse rounded-full ${Z8_SURFACE}`} />
               </div>
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 <div className="flex items-center gap-2">
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                   <div>
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                    <div className="mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className={`h-4 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                    <div className={`mt-2 h-3 w-12 animate-pulse rounded-full ${Z8_SURFACE}`} />
                   </div>
                 </div>
-                <div className="h-7 w-7 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className={`h-7 w-7 animate-pulse rounded-full ${Z8_SURFACE}`} />
                 <div className="flex items-center justify-end gap-2">
                   <div>
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                    <div className="ml-auto mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className={`h-4 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                    <div className={`ml-auto mt-2 h-3 w-12 animate-pulse rounded-full ${Z8_SURFACE}`} />
                   </div>
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                 </div>
               </div>
 
-              <div className="mt-4 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3">
-                <div className="h-3 w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+              <div className={`mt-4 rounded-2xl border  ${Z8_SURFACE} p-3`}>
+                <div className={`h-3 w-full animate-pulse rounded-full ${Z8_SURFACE}`} />
+                <div className={`mt-2 h-3 w-5/6 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                <div className={`mt-2 h-3 w-4/6 animate-pulse rounded-full ${Z8_SURFACE}`} />
               </div>
             </div>
           ))}
@@ -318,29 +318,29 @@ function DailyPlayersSkeleton() {
       {[0, 1].map((game) => (
         <section
           key={game}
-          className="overflow-hidden rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
+          className={`overflow-hidden rounded-3xl border  ${Z8_SURFACE} shadow-2xl  backdrop-blur-xl`}
         >
-          <div className="border-b border-[hsl(var(--ve-border)/0.30)] bg-[linear-gradient(90deg,hsl(var(--ve-surface-raised)/0.46),hsl(var(--ve-bg-panel)/0.82))] p-4">
-            <div className="h-5 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+          <div className={`border-b  ${Z8_PANEL_PREMIUM} p-4`}>
+            <div className={`h-5 w-40 animate-pulse rounded-full ${Z8_SURFACE}`} />
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
-              <div className="h-12 w-20 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
-              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div className={`h-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+              <div className={`h-12 w-20 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+              <div className={`h-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
             </div>
           </div>
 
           <div className="grid gap-4 p-4 lg:grid-cols-2">
             {[0, 1].map((side) => (
-              <div key={side} className="rounded-3xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface)/0.66)] p-3">
-                <div className="mb-3 h-12 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div key={side} className={`rounded-3xl border  ${Z8_SURFACE} p-3`}>
+                <div className={`mb-3 h-12 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
                 <div className="grid gap-2">
                   {[0, 1, 2, 3].map((player) => (
-                    <div key={player} className="flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3">
-                      <div className="h-16 w-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div key={player} className={`flex gap-3 rounded-2xl border  ${Z8_SURFACE} p-3`}>
+                      <div className={`h-16 w-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
                       <div className="flex-1">
-                        <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                        <div className="mt-2 h-3 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
-                        <div className="mt-3 h-5 w-32 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                        <div className={`h-4 w-40 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                        <div className={`mt-2 h-3 w-28 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                        <div className={`mt-3 h-5 w-32 animate-pulse rounded-full ${Z8_SURFACE}`} />
                       </div>
                     </div>
                   ))}
@@ -475,35 +475,35 @@ function LiveTeamsStrip({ games }: { games: any[] }) {
   const marqueeGames = games.length > 0 ? [...games, ...games] : [];
 
   return (
-    <section className="daily-live-teams-strip" aria-label="Live teams today">
-      <div className="daily-live-teams-header">
+    <section className={`daily-live-teams-strip`} aria-label="Live teams today">
+      <div className={`daily-live-teams-header`}>
         <div>
-          <p className="daily-live-eyebrow">Today’s slate</p>
+          <p className={`daily-live-eyebrow`}>Today’s slate</p>
           <h2>Live Teams</h2>
         </div>
         <p>{games.length} games loaded</p>
       </div>
 
-      <div className="daily-live-teams-scroller" aria-live="off">
-        <div className="daily-live-teams-track">
+      <div className={`daily-live-teams-scroller`} aria-live="off">
+        <div className={`daily-live-teams-track`}>
         {marqueeGames.map((game: any, index: number) => {
           const away = getTeamName(game?.awayTeam || game?.away || game?.teams?.away?.team);
           const home = getTeamName(game?.homeTeam || game?.home || game?.teams?.home?.team);
 
           return (
-            <article className="daily-live-team-card" key={game?.gamePk || game?.game_id || game?.id || index}>
-              <div className="daily-live-status">
+            <article className={`daily-live-team-card`} key={game?.gamePk || game?.game_id || game?.id || index}>
+              <div className={`daily-live-status`}>
                 <span>MLB</span>
                 <strong>{getGameTime(game)}</strong>
               </div>
 
-              <div className="daily-live-matchup">
+              <div className={`daily-live-matchup`}>
                 <span>{away}</span>
                 <b>@</b>
                 <span>{home}</span>
               </div>
 
-              <div className="daily-live-card-footer">
+              <div className={`daily-live-card-footer`}>
                 <span>Open matchup</span>
                 <span>Research board →</span>
               </div>
@@ -521,18 +521,18 @@ function MatchupRail({ games }: { games: Game[] }) {
   if (!games.length) return null;
 
   return (
-    <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
+    <section className={`rounded-3xl border  ${Z8_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-black uppercase tracking-[0.22em] text-vouch-cyan">
             Today’s Matchups
           </div>
-          <div className="mt-1 text-xs text-[hsl(var(--ve-text-muted))]">
+          <div className={`mt-1 text-xs text-[hsl(var(--ve-text-muted))]`}>
             Side-scroll board updates with the day’s MLB slate.
           </div>
         </div>
 
-        <div className="hidden rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block">
+        <div className={`hidden rounded-full border  ${Z8_SURFACE} px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block`}>
           Scroll →
         </div>
       </div>
@@ -550,37 +550,37 @@ function MatchupRail({ games }: { games: Game[] }) {
               key={`${game.gamePk || game.id || index}-rail`}
               type="button"
               onClick={() => scrollToGame(game.gamePk || game.id)}
-              className="min-w-[310px] snap-start rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),rgba(0,240,255,0.08))] p-4 text-left shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] transition hover:-translate-y-0.5 hover:border-vouch-cyan/40 hover:shadow-vouch-cyan/15"
+              className={`min-w-[310px] snap-start rounded-3xl border  ${Z8_PANEL_PREMIUM} p-4 text-left shadow-xl  transition hover:-translate-y-0.5 hover:border-vouch-cyan/40 hover:shadow-vouch-cyan/15`}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
                   {status}
                 </span>
-                <span className="text-[11px] font-bold text-[hsl(var(--ve-text-muted))]">
+                <span className={`text-[11px] font-bold text-[hsl(var(--ve-text-muted))]`}>
                   {formatGameTime(game.gameTime || game.startTime)}
                 </span>
               </div>
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <TeamLogoBadge id={awayId} name={awayTeam} />
-                <div className="rounded-full border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]">
+                <div className={`rounded-full border  ${Z8_SURFACE} px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]`}>
                   @
                 </div>
                 <TeamLogoBadge id={homeId} name={homeTeam} align="right" />
               </div>
 
-              <div className="mt-4 grid gap-2 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3 text-[11px]">
+              <div className={`mt-4 grid gap-2 rounded-2xl border  ${Z8_SURFACE} p-3 text-[11px]`}>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[hsl(var(--ve-text-muted))]">Away SP</span>
+                  <span className={`text-[hsl(var(--ve-text-muted))]`}>Away SP</span>
                   <span className="truncate font-bold text-vouch-cyan">{pitcherName(game.awayPitcher)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[hsl(var(--ve-text-muted))]">Home SP</span>
+                  <span className={`text-[hsl(var(--ve-text-muted))]`}>Home SP</span>
                   <span className="truncate font-bold text-vouch-cyan">{pitcherName(game.homePitcher)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[hsl(var(--ve-text-muted))]">Venue</span>
-                  <span className="truncate font-bold text-[hsl(var(--ve-text-secondary))]">{game.venue || 'TBD'}</span>
+                  <span className={`text-[hsl(var(--ve-text-muted))]`}>Venue</span>
+                  <span className={`truncate font-bold text-[hsl(var(--ve-text-secondary))]`}>{game.venue || 'TBD'}</span>
                 </div>
               </div>
             </button>
@@ -665,8 +665,8 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
   const order = orderNumber(player) === 999 ? index + 1 : orderNumber(player);
 
   return (
-    <div className="group flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.14)] transition hover:border-vouch-cyan/40 hover:bg-[hsl(var(--ve-surface-raised)/0.58)]">
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)]">
+    <div className={`group flex gap-3 rounded-2xl border  ${Z8_SURFACE} p-3 shadow-lg  transition hover:border-vouch-cyan/40 hover:${Z8_SURFACE}`}>
+      <div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border  ${Z8_SURFACE}`}>
         {headshot ? (
           <img
             src={headshot}
@@ -682,12 +682,12 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             }}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-lg font-black text-[hsl(var(--ve-text-muted))]">
+          <div className={`flex h-full w-full items-center justify-center text-lg font-black text-[hsl(var(--ve-text-muted))]`}>
             {playerName(player).slice(0, 1)}
           </div>
         )}
 
-        <div className="absolute bottom-1 left-1 rounded-full bg-[hsl(var(--ve-bg-deep)/0.72)] px-1.5 py-0.5 text-[10px] font-black text-[hsl(var(--ve-text-primary))] backdrop-blur-sm">
+        <div className={`absolute bottom-1 left-1 rounded-full bg-[hsl(var(--ve-bg-deep)/0.72)] px-1.5 py-0.5 text-[10px] font-black text-[hsl(var(--ve-text-primary))] backdrop-blur-sm`}>
           #{order}
         </div>
       </div>
@@ -698,12 +698,12 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             <div className="truncate text-sm font-black text-white">
               {playerName(player)}
             </div>
-            <div className="mt-0.5 text-[11px] font-semibold text-[hsl(var(--ve-text-muted))]">
+            <div className={`mt-0.5 text-[11px] font-semibold text-[hsl(var(--ve-text-muted))]`}>
               {teamName(player.team)} vs {teamName(player.opponent)}
             </div>
           </div>
 
-          <span className={`rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
+          <span className={`rounded-full ${Z8_SURFACE} px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
             {player.position || '—'}
           </span>
         </div>
@@ -1259,7 +1259,7 @@ function DailyTeamIcon({ team, gameTeamId, size = 'md' }: { team: any; gameTeamI
 
   return (
     <span
-      className={`relative inline-grid ${sizeClass} shrink-0 place-items-center overflow-hidden rounded-md border border-vouch-cyan/20 bg-white/95 p-0.5 shadow-sm shadow-black/20`}
+      className={`relative inline-grid ${sizeClass} shrink-0 place-items-center overflow-hidden rounded-md border border-vouch-cyan/20 ${Z8_SURFACE} p-0.5 shadow-sm shadow-black/20`}
       aria-hidden="true"
       title={name}
     >
@@ -1273,7 +1273,7 @@ function DailyTeamIcon({ team, gameTeamId, size = 'md' }: { team: any; gameTeamI
           onError={() => setLogoFailed(true)}
         />
       ) : (
-        <span className="font-mono text-[8px] font-black uppercase leading-none text-slate-800 sm:text-[9px]">
+        <span className={`font-mono text-[8px] font-black uppercase leading-none text-black sm:text-[9px]`}>
           {abbr.slice(0, 3)}
         </span>
       )}
@@ -1583,7 +1583,7 @@ function DailyContextPlayer({
 
   return (
     <div className="relative overflow-hidden border border-white/10 bg-black/20 p-3">
-      <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.38),transparent)]" />
+      <span className={`absolute inset-x-0 top-0 h-px ${Z8_PANEL_PREMIUM}`} />
 
       <div className="text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">
         {label}
@@ -1707,7 +1707,7 @@ function DailyPlayerIntelligenceLayer({
     <section className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
         <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden p-4 sm:p-5`}>
-          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.68),transparent)]" />
+          <div className={`pointer-events-none absolute inset-x-10 top-0 h-px ${Z8_PANEL_PREMIUM}`} />
           <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-vouch-cyan/10 blur-3xl" />
 
           <div className="relative">
@@ -1736,7 +1736,7 @@ function DailyPlayerIntelligenceLayer({
 
             <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
               <div className="flex min-w-0 items-center gap-4">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-vouch-cyan/25 bg-vouch-cyan/[0.07] shadow-[0_0_34px_rgba(0,240,255,0.12)]">
+                <div className={`flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-vouch-cyan/25 bg-vouch-cyan/[0.07] shadow-[0_0_34px_rgba(0,240,255,0.12)]`}>
                   {featuredImage ? (
                     <img
                       src={featuredImage}
@@ -1943,7 +1943,7 @@ function getBootDailyPlayersBoard(): DailyBoardResponse | null {
   return null;
 }
 
-export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPageProps) {
+export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPageProps) {
   const bootBoard = getBootDailyPlayersBoard();
 
   const [data, setData] = useState<DailyBoardResponse | null>(() => bootBoard);
@@ -2066,8 +2066,9 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
 
   return (
     <main className={`${Z8_PAGE} daily-players-page min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 lg:py-5`}>
-      <div className="daily-players-content mx-0 max-w-none space-y-4">
-        <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
+      <div className="daily-players-content mx-0 max-w-none flex flex-col space-y-4 lg:flex-row lg:items-start lg:space-y-0 lg:gap-6">
+        <div className="lg:sticky lg:top-4 lg:self-start lg:w-[260px] lg:shrink-0 space-y-4">
+          <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -2127,8 +2128,8 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
           </div>
         </header>
 
-        <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between`}>
-          <label className="grid w-full gap-1 md:max-w-md">
+        <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between lg:flex-col lg:items-stretch`}>
+          <label className="grid w-full gap-1 md:max-w-md lg:max-w-none">
             <span className={`${Z8_LABEL} text-white/45`}>Find a player or team</span>
             <input
               value={search}
@@ -2153,8 +2154,10 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
             ))}
           </div>
         </section>
+        </div>
 
-        {loading && (
+        <div className="flex-1 min-w-0 space-y-4">
+          {loading && (
           <div className={`${Z8_PANEL_PREMIUM} flex items-center justify-center gap-3 p-10 text-center`}>
             <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
             <span className={`${Z8_LABEL} text-white/50`}>Loading Daily Player Board...</span>
@@ -2199,6 +2202,7 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
           />
           </>
         )}
+        </div>
       </div>
     </main>
   );

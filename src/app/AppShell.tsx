@@ -8,7 +8,7 @@ import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
 import { TerminalBackground } from '../components/layout/TerminalBackground';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
-import { AppNav } from './AppNav';
+import { AppNavZ8 } from './AppNavZ8';
 import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
@@ -113,7 +113,7 @@ export function AppShell({
                       <Suspense fallback={null}>
                         <DeployUpdateBanner />
                       </Suspense>
-                      <AppNav
+                      <AppNavZ8
                         activeSection={activeSection}
                         onNavigate={navigateSection}
                       />

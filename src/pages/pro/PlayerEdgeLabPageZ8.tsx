@@ -18,8 +18,10 @@ import {
 } from './proLabData';
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
-
+import { 
+  Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE,
+  Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PAGE_GAP
+} from '../../theme/z8Tokens';
 
 function getPlayerId(row: any, fallback: number) {
   return String(row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id ?? row?.id ?? fallback);
@@ -57,7 +59,7 @@ function getGamePk(row: any): number | null {
   return parsed && parsed > 0 ? parsed : null;
 }
 
-export default function PlayerEdgeLabPage() {
+export default function PlayerEdgeLabPageZ8() {
   const { rows, loading, error, source } = useHrBoardProData();
   const { isPro } = useEntitlements();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -83,10 +85,10 @@ export default function PlayerEdgeLabPage() {
   });
 
   return (
-    <main className={`${Z8_PAGE} px-3 py-4 sm:px-4 lg:py-5`}>
-      <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[300px_1fr]">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <div className={`mx-auto grid gap-4 lg:grid-cols-[300px_1fr]`}>
         <section className="space-y-5 lg:col-span-2">
-          <div className={`${Z8_PANEL} overflow-hidden rounded-2xl p-4`}>
+          <div className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl p-4`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
                 <Crown className="h-3.5 w-3.5" />
@@ -105,7 +107,7 @@ export default function PlayerEdgeLabPage() {
             />
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className={`${Z8_PANEL} rounded-xl px-3 py-2.5`}>
+              <div className={`${Z8_SURFACE} rounded-xl px-3 py-2.5`}>
                 <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
                   <ShieldCheck className="h-4 w-4 text-vouch-emerald" />
                   Verified Feed
@@ -113,7 +115,7 @@ export default function PlayerEdgeLabPage() {
                 <div className="mt-2 text-xl font-black text-white">{rows.length}</div>
                 <div className="text-xs text-white/45">Current player rows</div>
               </div>
-              <div className={`${Z8_PANEL} rounded-xl px-3 py-2.5`}>
+              <div className={`${Z8_SURFACE} rounded-xl px-3 py-2.5`}>
                 <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
                   <TrendingUp className="h-4 w-4 text-vouch-cyan" />
                   Selected Edge
@@ -121,7 +123,7 @@ export default function PlayerEdgeLabPage() {
                 <div className="mt-2 truncate text-base font-black text-white">{selectedRow ? getPlayerName(selectedRow) : 'No player'}</div>
                 <div className="text-xs text-white/45">Tap a player to research</div>
               </div>
-              <div className={`${Z8_PANEL} rounded-xl border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-2.5`}>
+              <div className={`${Z8_SURFACE} rounded-xl border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-2.5`}>
                 <div className={`flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}>
                   <Crown className="h-4 w-4" />
                   MLB Graphs
@@ -142,7 +144,7 @@ export default function PlayerEdgeLabPage() {
         </section>
 
         <aside className={`${Z8_PANEL} flex flex-col overflow-hidden rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]`}>
-          <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
+          <div className={`mb-4 flex shrink-0 items-center justify-between gap-3 ${Z8_SECTION_HEADER}`}>
             <div>
               <div className={`${Z8_LABEL} text-white/40`}>
                 Player Queue
@@ -210,7 +212,7 @@ export default function PlayerEdgeLabPage() {
           </div>
         </aside>
 
-        <section className="space-y-4">
+        <section className={Z8_PAGE_GAP}>
           {playerPayload ? (
             <>
               <PlayerResearchDecisionCard payload={playerPayload} />
@@ -260,7 +262,7 @@ export default function PlayerEdgeLabPage() {
           ) : null}
 
           <div className={`${Z8_PANEL} rounded-2xl p-4`}>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 ${Z8_SECTION_HEADER}`}>
               <div>
                 <div className={`${Z8_LABEL} text-white/40`}>MLB Research Graphs</div>
                 <div className="mt-1 text-sm font-black text-white">BvP, spray, pitch mix, trends</div>

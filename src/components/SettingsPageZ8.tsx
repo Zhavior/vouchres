@@ -97,7 +97,6 @@ function normalizeTier(tier?: string | null): AppTier {
   return 'BASIC';
 }
 
-// Toggle switch component
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -106,7 +105,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-        checked ? 'bg-blue-500' : 'bg-slate-700'
+        checked ? 'bg-vouch-cyan' : 'bg-white/10'
       }`}
     >
       <span
@@ -118,25 +117,22 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-// Section container
 function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div className="mb-5">
-        <h2 className="text-sm font-semibold text-white">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+    <div className={`rounded-xl ${Z8_PANEL_PREMIUM} p-4 sm:p-5 mb-6`}>
+      <div className={`${Z8_SECTION_HEADER} mb-5`}>
+        <h2 className={`${Z8_LABEL} text-white`}>{title}</h2>
+        {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
       </div>
       {children}
     </div>
   );
 }
 
-// Divider
 function Divider() {
-  return <hr className="my-8 border-slate-800" />;
+  return <hr className="my-8 border-white/5" />;
 }
 
-// Row for preference toggles
 function PrefRow({
   label,
   detail,
@@ -149,15 +145,15 @@ function PrefRow({
   return (
     <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5 sm:py-3.5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-200">{label}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{detail}</p>
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-white/50">{detail}</p>
       </div>
       <div className="shrink-0 self-start sm:self-center">{children}</div>
     </div>
   );
 }
 
-export default function SettingsPage({
+export default function SettingsPageZ8({
   onResetDatabase,
   profileName,
   profile,
@@ -557,9 +553,8 @@ export default function SettingsPage({
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
   return (
-    <div className={`relative ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom pb-24 md:pb-8 ${Z8_PAGE}`}>
-
-      {/* Toast — clear mobile FAB cluster */}
+    <div className={`relative min-h-0 min-w-0 overflow-x-hidden ve-safe-bottom pb-24 md:pb-8 ${Z8_PAGE}`}>
+      {/* Toast */}
       {toast && (
         <div className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
           toast.type === 'ok'
@@ -574,9 +569,9 @@ export default function SettingsPage({
       )}
 
       {/* Page header */}
-      <div className={`glass-command border-b border-ve-fuse/40 bg-ve-obsidian/95 py-4 sm:py-5 ${Z8_PAGE_PAD_X}`}>
+      <div className={`glass-command border-b border-white/5 bg-black/40 py-4 sm:py-5 ${Z8_PAGE_PAD_X}`}>
         <div className="mx-auto max-w-5xl">
-          <div className={`flex items-center gap-2 text-xs font-medium text-white/40 ${Z8_LABEL}`}>
+          <div className={`flex items-center gap-2 text-white/40 ${Z8_LABEL}`}>
             <Settings className="h-3.5 w-3.5" />
             Settings
           </div>
@@ -585,7 +580,7 @@ export default function SettingsPage({
       </div>
 
       {/* Body */}
-      <div className={`mx-auto max-w-5xl py-5 sm:py-8 ${Z8_PAGE_PAD_X}`}>
+      <div className={`mx-auto max-w-5xl ${Z8_PAGE_PAD_Y} ${Z8_PAGE_PAD_X}`}>
         {/* Mobile tab bar */}
         <nav className="mb-5 lg:hidden" aria-label="Settings sections">
           <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
@@ -610,13 +605,13 @@ export default function SettingsPage({
             <div className="min-w-0">
               <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-0.5 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+              <p className="text-xs text-white/50">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
             </div>
             {activeTier === 'BASIC' && (
               <button
                 type="button"
                 onClick={() => setActiveTab('billing')}
-                className="ve-touch-target shrink-0 flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-[11px] font-semibold text-white hover:bg-blue-500 transition-colors"
+                className="ve-touch-target shrink-0 flex items-center justify-center gap-1 rounded-lg bg-vouch-cyan px-3 py-2 text-[11px] font-bold text-black hover:bg-vouch-cyan/90 transition-colors"
               >
                 Upgrade <ChevronRight className="h-3 w-3" />
               </button>
@@ -625,7 +620,6 @@ export default function SettingsPage({
         </nav>
 
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-
           {/* Desktop sidebar nav */}
           <nav className="hidden w-48 shrink-0 lg:block">
             <ul className="space-y-0.5">
@@ -651,12 +645,12 @@ export default function SettingsPage({
             <div className={`mt-8 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
               <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+              <p className="text-xs text-white/50">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
               {activeTier === 'BASIC' && (
                 <button
                   type="button"
                   onClick={() => setActiveTab('billing')}
-                  className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-500 transition-colors"
+                  className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-lg bg-vouch-cyan px-2 py-1.5 text-[11px] font-bold text-black hover:bg-vouch-cyan/90 transition-colors"
                 >
                   Upgrade <ChevronRight className="h-3 w-3" />
                 </button>
@@ -670,203 +664,195 @@ export default function SettingsPage({
             {/* ── ACCOUNT ── */}
             {activeTab === 'account' && (
               <>
-              <form onSubmit={handleProfileSave} className="space-y-8">
-
-                {/* Avatar + name */}
-                <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
-                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-bold text-white">
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white">{displayName || 'Display name'}</p>
-                      <p className="text-xs text-slate-500">@{username || 'username'}</p>
-                      <p className="mt-1 text-xs text-slate-600">{customTitle || 'No title set'}</p>
-                    </div>
-                  </div>
-                </Section>
-
-                <Divider />
-
-                {/* Fields */}
-                <Section title="General" subtitle="Update your display name, username, and bio.">
-                  <div className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-slate-400">Display name</label>
-                        <input
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
-                          placeholder="Your name"
-                        />
+                <form onSubmit={handleProfileSave} className="space-y-6">
+                  {/* Avatar + name */}
+                  <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
+                    <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-vouch-cyan to-indigo-600 text-base font-bold text-white">
+                        {initials}
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-slate-400">Username</label>
-                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
-                          <span className="flex items-center pl-3 text-sm text-slate-600">@</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white">{displayName || 'Display name'}</p>
+                        <p className="text-xs text-white/50">@{username || 'username'}</p>
+                        <p className="mt-1 text-xs text-white/60">{customTitle || 'No title set'}</p>
+                      </div>
+                    </div>
+                  </Section>
+
+                  {/* Fields */}
+                  <Section title="General" subtitle="Update your display name, username, and bio.">
+                    <div className="space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-white/60">Display name</label>
                           <input
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder-slate-600 outline-none"
-                            placeholder="username"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                            placeholder="Your name"
                           />
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-white/60">Username</label>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                            <span className="flex items-center pl-3 text-sm text-white/40">@</span>
+                            <input
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder-white/40 outline-none"
+                              placeholder="username"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Profile title</label>
-                      <input
-                        value={customTitle}
-                        onChange={(e) => setCustomTitle(e.target.value)}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
-                        placeholder="e.g. MLB Researcher"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Bio</label>
-                      <textarea
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        maxLength={180}
-                        rows={3}
-                        className="w-full resize-none rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
-                        placeholder="Short bio (max 180 chars)"
-                      />
-                      <p className="text-right text-[10px] text-slate-600">{bio.length}/180</p>
-                    </div>
-                  </div>
-                </Section>
-
-                <Divider />
-
-                {/* Socials */}
-                <Section title="Social links" subtitle="Connect your public profiles and channels.">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {[
-                      { key: 'twitter', label: 'X (Twitter)', placeholder: '@handle', value: twitter, set: setTwitter },
-                      { key: 'discord', label: 'Discord', placeholder: 'server or username', value: discord, set: setDiscord },
-                      { key: 'telegram', label: 'Telegram', placeholder: '@channel', value: telegram, set: setTelegram },
-                    ].map(({ key, label, placeholder, value, set }) => (
-                      <div key={key} className="space-y-1.5">
-                        <label className="text-xs font-medium text-slate-400">{label}</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-white/60">Profile title</label>
                         <input
-                          value={value}
-                          onChange={(e) => set(e.target.value)}
-                          className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
-                          placeholder={placeholder}
+                          value={customTitle}
+                          onChange={(e) => setCustomTitle(e.target.value)}
+                          className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                          placeholder="e.g. MLB Researcher"
                         />
                       </div>
-                    ))}
-                  </div>
-                </Section>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-white/60">Bio</label>
+                        <textarea
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          maxLength={180}
+                          rows={3}
+                          className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                          placeholder="Short bio (max 180 chars)"
+                        />
+                        <p className="text-right text-[10px] text-white/40">{bio.length}/180</p>
+                      </div>
+                    </div>
+                  </Section>
 
-                <div className="flex flex-col gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-end">
-                  <button
-                    type="submit"
-                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:w-auto ${
-                      profileSaved
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-blue-600 text-white hover:bg-blue-500'
-                    }`}
+                  {/* Socials */}
+                  <Section title="Social links" subtitle="Connect your public profiles and channels.">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {[
+                        { key: 'twitter', label: 'X (Twitter)', placeholder: '@handle', value: twitter, set: setTwitter },
+                        { key: 'discord', label: 'Discord', placeholder: 'server or username', value: discord, set: setDiscord },
+                        { key: 'telegram', label: 'Telegram', placeholder: '@channel', value: telegram, set: setTelegram },
+                      ].map(({ key, label, placeholder, value, set }) => (
+                        <div key={key} className="space-y-1.5">
+                          <label className="text-xs font-medium text-white/60">{label}</label>
+                          <input
+                            value={value}
+                            onChange={(e) => set(e.target.value)}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                            placeholder={placeholder}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+
+                  <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+                    <button
+                      type="submit"
+                      className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:w-auto ${
+                        profileSaved
+                          ? 'bg-vouch-emerald text-black'
+                          : 'bg-vouch-cyan text-black hover:bg-vouch-cyan/90'
+                      }`}
+                    >
+                      {profileSaved ? <Check className="h-4 w-4" /> : null}
+                      {profileSaved ? 'Saved' : 'Save changes'}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="mt-10">
+                  <Section
+                    title="Security"
+                    subtitle="Update your password. You must be signed in to change it."
                   >
-                    {profileSaved ? <Check className="h-4 w-4" /> : null}
-                    {profileSaved ? 'Saved' : 'Save changes'}
-                  </button>
+                    <form onSubmit={handleChangePassword} className="space-y-4" autoComplete="new-password">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-white/60">New password</label>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                            <input
+                              type={showNewPw ? 'text' : 'password'}
+                              value={newPassword}
+                              onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
+                              autoComplete="new-password"
+                              placeholder="Min. 8 characters"
+                              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
+                            />
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              onClick={() => setShowNewPw((v) => !v)}
+                              className="flex items-center pr-3 text-white/40 hover:text-white/70 transition-colors"
+                              aria-label={showNewPw ? 'Hide password' : 'Show password'}
+                            >
+                              {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-white/60">Confirm password</label>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                            <input
+                              type={showConfirmPw ? 'text' : 'password'}
+                              value={confirmPassword}
+                              onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
+                              autoComplete="new-password"
+                              placeholder="Repeat new password"
+                              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
+                            />
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              onClick={() => setShowConfirmPw((v) => !v)}
+                              className="flex items-center pr-3 text-white/40 hover:text-white/70 transition-colors"
+                              aria-label={showConfirmPw ? 'Hide password' : 'Show password'}
+                            >
+                              {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {newPassword.length > 0 && newPassword.length < 8 && (
+                        <p className="text-xs text-vouch-amber">
+                          {8 - newPassword.length} more character{8 - newPassword.length !== 1 ? 's' : ''} needed
+                        </p>
+                      )}
+
+                      {passwordError && (
+                        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5">
+                          <Lock className="h-3.5 w-3.5 shrink-0 text-red-400" />
+                          <p className="text-xs text-red-300">{passwordError}</p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+                        <button
+                          type="submit"
+                          disabled={passwordLoading || newPassword.length < 8 || newPassword !== confirmPassword}
+                          className="ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 transition-all sm:w-auto"
+                        >
+                          {passwordLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                          Update password
+                        </button>
+                      </div>
+                    </form>
+                  </Section>
                 </div>
-              </form>
-
-              {/* ── Security / Change Password (separate form so Enter doesn't submit profile) ── */}
-              <div className="mt-10 border-t border-slate-800 pt-8">
-                <Section
-                  title="Security"
-                  subtitle="Update your password. You must be signed in to change it."
-                >
-                  <form onSubmit={handleChangePassword} className="space-y-4" autoComplete="new-password">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-slate-400">New password</label>
-                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
-                          <input
-                            type={showNewPw ? 'text' : 'password'}
-                            value={newPassword}
-                            onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
-                            autoComplete="new-password"
-                            placeholder="Min. 8 characters"
-                            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-slate-600 outline-none"
-                          />
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onClick={() => setShowNewPw((v) => !v)}
-                            className="flex items-center pr-3 text-slate-600 hover:text-slate-400 transition-colors"
-                            aria-label={showNewPw ? 'Hide password' : 'Show password'}
-                          >
-                            {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-slate-400">Confirm password</label>
-                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
-                          <input
-                            type={showConfirmPw ? 'text' : 'password'}
-                            value={confirmPassword}
-                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
-                            autoComplete="new-password"
-                            placeholder="Repeat new password"
-                            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-slate-600 outline-none"
-                          />
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onClick={() => setShowConfirmPw((v) => !v)}
-                            className="flex items-center pr-3 text-slate-600 hover:text-slate-400 transition-colors"
-                            aria-label={showConfirmPw ? 'Hide password' : 'Show password'}
-                          >
-                            {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Strength hint */}
-                    {newPassword.length > 0 && newPassword.length < 8 && (
-                      <p className="text-xs text-amber-400">
-                        {8 - newPassword.length} more character{8 - newPassword.length !== 1 ? 's' : ''} needed
-                      </p>
-                    )}
-
-                    {/* Inline error */}
-                    {passwordError && (
-                      <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5">
-                        <Lock className="h-3.5 w-3.5 shrink-0 text-red-400" />
-                        <p className="text-xs text-red-300">{passwordError}</p>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                      <button
-                        type="submit"
-                        disabled={passwordLoading || newPassword.length < 8 || newPassword !== confirmPassword}
-                        className="ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 transition-all sm:w-auto"
-                      >
-                        {passwordLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                        Update password
-                      </button>
-                    </div>
-                  </form>
-                </Section>
-              </div>
               </>
             )}
 
             {/* ── CAPPER ── */}
             {activeTab === 'capper' && (
-              <form onSubmit={handleCapperSave} className="space-y-8">
+              <form onSubmit={handleCapperSave} className="space-y-6">
                 <Section title="Club identity" subtitle="This powers how your subscriber club looks and reads across SocialOS and the club hub.">
-                  <div className={`${Z8_SURFACE} rounded-xl p-4 sm:p-5`}>
+                  <div className={`${Z8_SURFACE} rounded-xl p-4 sm:p-5 mb-4`}>
                     <div className={`rounded-2xl border p-4 ${
                       heroStyle === 'emerald'
                         ? 'border-emerald-500/30 bg-emerald-500/10'
@@ -876,7 +862,7 @@ export default function SettingsPage({
                     }`}>
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">{badgeText || 'CREATOR CLUB'}</p>
+                          <p className={`${Z8_LABEL} text-white/45`}>{badgeText || 'CREATOR CLUB'}</p>
                           <h3 className="mt-1 text-lg font-semibold text-white">{clubName || displayName || 'Your club'}</h3>
                           <p className="mt-1 text-sm text-white/65">{clubTagline || 'Shared parlays, verified wins, and clean subscriber access.'}</p>
                         </div>
@@ -888,39 +874,39 @@ export default function SettingsPage({
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Club name</label>
-                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Zhavior Club" />
+                      <label className="text-xs font-medium text-white/60">Club name</label>
+                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Zhavior Club" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Badge text</label>
-                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="CREATOR CLUB" />
+                      <label className="text-xs font-medium text-white/60">Badge text</label>
+                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="CREATOR CLUB" />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Club tagline</label>
-                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="What your club is known for" />
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-medium text-white/60">Club tagline</label>
+                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="What your club is known for" />
+                  </div>
+
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-medium text-white/60">Welcome message</label>
+                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="What a new follower should feel immediately" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Welcome message</label>
-                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="What a new follower should feel immediately" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Club look</label>
+                    <label className="text-xs font-medium text-white/60">Club look</label>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {(['midnight', 'emerald', 'crimson'] as CapperHeroStyle[]).map((style) => (
                         <button
                           key={style}
                           type="button"
                           onClick={() => setHeroStyle(style)}
-                          className={`rounded-xl border px-3 py-3 text-left text-sm transition-colors ${
+                          className={`rounded-xl px-3 py-3 text-left text-sm transition-colors ${
                             heroStyle === style
-                              ? 'border-vouch-cyan/40 bg-vouch-cyan/10 text-white'
-                              : 'border-white/10 bg-black/25 text-white/60 hover:border-white/20 hover:text-white'
+                              ? 'border border-vouch-cyan/40 bg-vouch-cyan/10 text-white'
+                              : `${Z8_SURFACE} text-white/60 hover:text-white`
                           }`}
                         >
                           <div className="font-semibold capitalize">{style}</div>
@@ -931,53 +917,49 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Offer and conversion" subtitle="This controls the language around why someone should follow your club.">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Offer headline</label>
-                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Free follow during beta" />
+                      <label className="text-xs font-medium text-white/60">Offer headline</label>
+                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Free follow during beta" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-slate-400">Primary CTA</label>
-                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Follow club" />
+                      <label className="text-xs font-medium text-white/60">Primary CTA</label>
+                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Follow club" />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Offer summary</label>
-                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Explain exactly what a follow unlocks" />
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-medium text-white/60">Offer summary</label>
+                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Explain exactly what a follow unlocks" />
+                  </div>
+
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-medium text-white/60">CTA subtext</label>
+                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Unlock shared parlays and club updates" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">CTA subtext</label>
-                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="Unlock shared parlays and club updates" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Featured tags</label>
-                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30" placeholder="MLB, Parlays, Verified" />
-                    <p className="text-[11px] text-slate-500">Comma-separated. We use up to 6 tags across your club previews.</p>
+                    <label className="text-xs font-medium text-white/60">Featured tags</label>
+                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="MLB, Parlays, Verified" />
+                    <p className="text-[11px] text-white/40">Comma-separated. We use up to 6 tags across your club previews.</p>
                   </div>
                 </Section>
 
-                <Divider />
-
-                <Section title="Products and access" subtitle="These are the actual business products behind your club, closer to a Whop-style access model.">
+                <Section title="Products and access" subtitle="These are the actual business products behind your club.">
                   <div className="grid gap-4 lg:grid-cols-2">
                     {capperProducts.map((product) => {
                       const isSaving = productSavingCode === product.code;
                       const accessScope = product.accessScope ?? {};
                       return (
-                        <div key={product.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-4">
+                        <div key={product.id} className={`rounded-xl p-4 space-y-4 ${Z8_SURFACE}`}>
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-white">{product.name}</p>
-                              <p className="mt-1 text-xs leading-relaxed text-slate-500">{product.description}</p>
+                              <p className="mt-1 text-xs leading-relaxed text-white/50">{product.description}</p>
                             </div>
                             <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
-                              product.active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-800 text-slate-500'
+                              product.active ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'bg-white/5 text-white/40'
                             }`}>
                               {product.active ? 'Live' : 'Off'}
                             </span>
@@ -985,19 +967,19 @@ export default function SettingsPage({
 
                           <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-slate-400">Product name</label>
+                              <label className="text-xs font-medium text-white/60">Product name</label>
                               <input
                                 value={product.name}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, name: e.target.value } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                               />
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-slate-400">Pricing model</label>
+                              <label className="text-xs font-medium text-white/60">Pricing model</label>
                               <select
                                 value={product.pricingModel}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, pricingModel: e.target.value as CapperBusinessProduct['pricingModel'] } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                               >
                                 <option value="free">Free</option>
                                 <option value="waitlist">Waitlist</option>
@@ -1008,43 +990,43 @@ export default function SettingsPage({
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-400">Product description</label>
+                            <label className="text-xs font-medium text-white/60">Product description</label>
                             <textarea
                               value={product.description}
                               onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, description: e.target.value } : entry))}
                               rows={3}
-                              className="w-full resize-none rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                             />
                           </div>
 
                           <div className="grid gap-3 sm:grid-cols-3">
                             <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-slate-400">Price</label>
+                              <label className="text-xs font-medium text-white/60">Price</label>
                               <input
                                 type="number"
                                 min={0}
                                 value={Math.round((product.priceCents ?? 0) / 100)}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, priceCents: Math.max(0, Number(e.target.value) || 0) * 100 } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                               />
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-slate-400">Billing</label>
+                              <label className="text-xs font-medium text-white/60">Billing</label>
                               <select
                                 value={product.billingInterval ?? 'month'}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, billingInterval: e.target.value } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                               >
                                 <option value="month">Monthly</option>
                                 <option value="year">Yearly</option>
                               </select>
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-slate-400">Visibility</label>
+                              <label className="text-xs font-medium text-white/60">Visibility</label>
                               <select
                                 value={product.visibility}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, visibility: e.target.value as CapperBusinessProduct['visibility'] } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                               >
                                 <option value="public">Public</option>
                                 <option value="hidden">Hidden</option>
@@ -1062,19 +1044,19 @@ export default function SettingsPage({
                             </PrefRow>
                           </div>
 
-                          <div className="flex items-center justify-between gap-3 border-t border-slate-800 pt-4">
+                          <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-4">
                             <div className="flex items-center gap-2">
                               <Toggle
                                 checked={product.active}
                                 onChange={(value) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, active: value } : entry))}
                               />
-                              <span className="text-xs text-slate-400">Product active</span>
+                              <span className="text-xs text-white/60">Product active</span>
                             </div>
                             <button
                               type="button"
                               disabled={isSaving}
                               onClick={() => void handleProductUpdate(product, {})}
-                              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+                              className="rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50 transition-colors"
                             >
                               {isSaving ? 'Saving…' : 'Save product'}
                             </button>
@@ -1085,10 +1067,8 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Trust and content" subtitle="Decide what proof and club surfaces stay visible to followers.">
-                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
                     <PrefRow label="Show verified record" detail="Keep your tracked record visible on the club surface.">
                       <Toggle checked={showVerifiedRecord} onChange={setShowVerifiedRecord} />
                     </PrefRow>
@@ -1107,10 +1087,8 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Moderation defaults" subtitle="These are the guardrails for how your club should behave as it grows.">
-                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
                     <PrefRow label="Profanity filter" detail="Keep basic bad-word blocking turned on for subscriber chat.">
                       <Toggle checked={profanityFilterEnabled} onChange={setProfanityFilterEnabled} />
                     </PrefRow>
@@ -1118,27 +1096,27 @@ export default function SettingsPage({
                       <Toggle checked={linksAllowed} onChange={setLinksAllowed} />
                     </PrefRow>
                     <div className="px-4 py-4 sm:px-5 sm:py-3.5">
-                      <label className="text-sm font-medium text-slate-200">Slow mode seconds</label>
-                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">0 keeps chat fully open. Higher values reduce spam.</p>
+                      <label className="text-sm font-medium text-white">Slow mode seconds</label>
+                      <p className="mt-0.5 text-xs leading-relaxed text-white/50">0 keeps chat fully open. Higher values reduce spam.</p>
                       <input
                         type="number"
                         min={0}
                         max={300}
                         value={slowModeSeconds}
                         onChange={(e) => setSlowModeSeconds(Math.min(300, Math.max(0, Number(e.target.value) || 0)))}
-                        className="mt-3 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 sm:max-w-[160px]"
+                        className="mt-3 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 sm:max-w-[160px]"
                       />
                     </div>
                   </div>
                 </Section>
 
-                <div className="flex flex-col gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-end">
+                <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
                   <button
                     type="submit"
-                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:w-auto ${
+                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:w-auto ${
                       capperSaved
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-blue-600 text-white hover:bg-blue-500'
+                        ? 'bg-vouch-emerald text-black'
+                        : 'bg-vouch-cyan text-black hover:bg-vouch-cyan/90'
                     }`}
                   >
                     {capperSaved ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
@@ -1150,26 +1128,23 @@ export default function SettingsPage({
 
             {/* ── BILLING ── */}
             {activeTab === 'billing' && (
-              <div className="space-y-8">
-
+              <div className="space-y-6">
                 <Section title="Subscription" subtitle="Manage your plan and payment method.">
-
-                  {/* Current plan row */}
-                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4`}>
+                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vouch-cyan/15 text-vouch-cyan">
                         <Zap className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-white">{PLAN_COPY[activeTier].title} plan</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-white/50">
                           {billingStatus ? `Renews ${formatDate(billingStatus.currentPeriodEnd)}` : PLAN_COPY[activeTier].price + (activeTier !== 'BASIC' ? '/month' : ' forever')}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        activeTier === 'BASIC' ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/15 text-emerald-400'
+                        activeTier === 'BASIC' ? 'bg-white/10 text-white/40' : 'bg-vouch-emerald/15 text-vouch-emerald'
                       }`}>
                         {activeTier === 'BASIC' ? 'Free' : 'Active'}
                       </span>
@@ -1177,7 +1152,7 @@ export default function SettingsPage({
                         type="button"
                         onClick={() => refreshBilling()}
                         disabled={billingLoading}
-                        className="flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-400 hover:bg-slate-900 hover:text-slate-200 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/40 hover:bg-white/10 hover:text-white disabled:opacity-50 transition-colors"
                       >
                         {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                         Refresh
@@ -1185,7 +1160,6 @@ export default function SettingsPage({
                     </div>
                   </div>
 
-                  {/* Plan cards */}
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {(Object.keys(PLAN_COPY) as AppTier[]).map((tier) => {
                       const plan = PLAN_COPY[tier];
@@ -1194,19 +1168,19 @@ export default function SettingsPage({
                       return (
                         <div
                           key={tier}
-                          className={`relative rounded-xl border p-4 transition-colors ${
+                          className={`relative rounded-xl p-4 transition-colors ${
                             isActive
-                              ? 'border-blue-500/50 bg-blue-500/5'
-                              : 'border-slate-800 bg-slate-900/30 hover:border-slate-700'
+                              ? `border border-vouch-cyan/50 bg-vouch-cyan/5`
+                              : `${Z8_SURFACE} hover:border-white/20`
                           }`}
                         >
                           {plan.badge && !isActive && (
-                            <span className="absolute right-3 top-3 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+                            <span className="absolute right-3 top-3 rounded-full bg-vouch-amber/15 px-2 py-0.5 text-[10px] font-semibold text-vouch-amber">
                               {plan.badge}
                             </span>
                           )}
                           {isActive && (
-                            <span className="absolute right-3 top-3 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                            <span className="absolute right-3 top-3 rounded-full bg-vouch-cyan/20 px-2 py-0.5 text-[10px] font-semibold text-vouch-cyan">
                               Current
                             </span>
                           )}
@@ -1214,20 +1188,20 @@ export default function SettingsPage({
                           <p className="text-sm font-semibold text-white">{plan.title}</p>
                           <p className="mt-1 text-2xl font-bold text-white">
                             {plan.price}
-                            {tier !== 'BASIC' && <span className="text-sm font-normal text-slate-500">/mo</span>}
+                            {tier !== 'BASIC' && <span className="text-sm font-normal text-white/50">/mo</span>}
                           </p>
-                          <p className="mt-2 text-xs leading-5 text-slate-500">{plan.detail}</p>
+                          <p className="mt-2 text-xs leading-5 text-white/50">{plan.detail}</p>
 
                           <button
                             type="button"
                             disabled={isActive || isLoading}
                             onClick={() => handleUpgrade(tier)}
-                            className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${
+                            className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-colors ${
                               isActive
-                                ? 'cursor-default bg-slate-800 text-slate-600'
+                                ? 'cursor-default bg-white/5 text-white/30'
                                 : tier === 'BASIC'
-                                  ? 'border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                                  : 'bg-blue-600 text-white hover:bg-blue-500'
+                                  ? 'border border-white/10 text-white/40 hover:bg-white/5 hover:text-white/60'
+                                  : 'bg-vouch-cyan text-black hover:bg-vouch-cyan/90'
                             }`}
                           >
                             {isLoading && <Loader className="h-3 w-3 animate-spin" />}
@@ -1245,8 +1219,6 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Payment method" subtitle="Update your card, view invoices, or cancel your subscription.">
                   <div className="space-y-3">
                     <VEButton
@@ -1254,11 +1226,11 @@ export default function SettingsPage({
                       onClick={handleManageBilling}
                       disabled={portalLoading}
                       variant="ghost"
-                      className="ve-touch-target w-full justify-center border-slate-700 bg-slate-900/50 text-slate-200 hover:bg-slate-800 hover:text-white sm:w-auto sm:justify-start"
+                      className={`ve-touch-target w-full justify-center ${Z8_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
                     >
                       {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                       Manage billing
-                      <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
+                      <ExternalLink className="h-3.5 w-3.5 text-white/40" />
                     </VEButton>
                     {billingPortalError && (
                       <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-3">
@@ -1284,9 +1256,9 @@ export default function SettingsPage({
 
             {/* ── NOTIFICATIONS ── */}
             {activeTab === 'notifications' && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <Section title="Email" subtitle="Control which emails VouchEdge sends to you.">
-                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
                     <PrefRow label="Account alerts" detail="Security and billing notifications.">
                       <Toggle checked={emailAlerts} onChange={setEmailAlerts} />
                     </PrefRow>
@@ -1296,10 +1268,8 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
-                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
                     <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
                       <Toggle checked={pushAlerts} onChange={(value) => { void handlePushAlertsToggle(value); }} />
                     </PrefRow>
@@ -1340,19 +1310,19 @@ export default function SettingsPage({
 
             {/* ── PRIVACY ── */}
             {activeTab === 'privacy' && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
-                  <div className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${Z8_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Data export</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">Download your picks, parlays, profile, and activity as JSON.</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-white/50">Download your picks, parlays, profile, and activity as JSON.</p>
                     </div>
                     <VEButton
                       type="button"
                       onClick={handleExportData}
                       disabled={privacyLoading === 'export'}
                       variant="ghost"
-                      className="ve-touch-target w-full shrink-0 justify-center border-slate-700 text-slate-200 sm:w-auto"
+                      className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
                     >
                       {privacyLoading === 'export' ? <Loader className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                       Export
@@ -1360,19 +1330,17 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Local data" subtitle="Reset preview data stored on this device only.">
-                  <div className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${Z8_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Reset local data</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">Clears picks, slips, vouches, and profile previews on this browser.</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-white/50">Clears picks, slips, vouches, and profile previews on this browser.</p>
                     </div>
                     <VEButton
                       type="button"
                       onClick={handleResetClick}
                       variant="ghost"
-                      className="ve-touch-target w-full shrink-0 justify-center border-slate-700 text-slate-200 sm:w-auto"
+                      className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
                     >
                       <RefreshCw className="h-4 w-4" />
                       Reset
@@ -1380,10 +1348,8 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <Divider />
-
                 <Section title="Danger zone" subtitle="Irreversible actions for your account.">
-                  <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-4 sm:p-5">
+                  <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-4 sm:p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-red-300">Delete account</p>
@@ -1406,7 +1372,6 @@ export default function SettingsPage({
                 </Section>
               </div>
             )}
-
           </div>
         </div>
       </div>

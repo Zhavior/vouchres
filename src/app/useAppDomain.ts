@@ -82,6 +82,8 @@ export function useAppDomain({
 
     const updates: Record<string, unknown> = {};
     if (updatedProfile.displayName !== undefined) updates.display_name = updatedProfile.displayName;
+    if (updatedProfile.username !== undefined) updates.username = updatedProfile.username;
+    if (updatedProfile.handle !== undefined) updates.handle = updatedProfile.handle;
     if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
     if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
     if (updatedProfile.capperSettings !== undefined) updates.capper_settings = updatedProfile.capperSettings as unknown as string | null;

@@ -7,6 +7,18 @@ import { apiClient } from '../../lib/apiClient';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
+import {
+  Z8_PAGE,
+  Z8_PAGE_SHELL,
+  Z8_PANEL,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_LABEL,
+  Z8_ICON_BOX,
+  Z8_CYAN_HEX,
+  Z8_EMERALD_HEX,
+  Z8_AMBER_HEX
+} from '../../theme/z8Tokens';
 
 // ─── Types (mirror server payload shapes) ──────────────────────────────────
 
@@ -101,8 +113,8 @@ function scaleColor(value: number | null | undefined, good: number, mid: number,
   }
   const pass = invert ? value <= good : value >= good;
   const midPass = invert ? value <= mid : value >= mid;
-  if (pass) return { background: 'rgba(0,255,148,0.16)', color: '#00FF94' };
-  if (midPass) return { background: 'rgba(251,191,36,0.14)', color: '#fbbf24' };
+  if (pass) return { background: 'rgba(0,255,148,0.16)', color: Z8_EMERALD_HEX };
+  if (midPass) return { background: 'rgba(251,191,36,0.14)', color: Z8_AMBER_HEX };
   return { background: 'rgba(251,113,133,0.14)', color: '#fb7185' };
 }
 
@@ -129,9 +141,9 @@ function sampleTier(ab: number | undefined): SampleTier {
 }
 
 const SAMPLE_COLOR: Record<SampleTier, string> = {
-  high: '#00FF94',
+  high: Z8_EMERALD_HEX,
   medium: 'rgba(255,255,255,0.75)',
-  thin: '#fbbf24',
+  thin: Z8_AMBER_HEX,
   none: '#fb7185',
 };
 
@@ -169,7 +181,7 @@ const MatchupStrip: React.FC<{
           onClick={() => onSelect(g.gamePk)}
           className={`flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border px-4 py-2.5 transition ${
             active
-              ? 'border-cyan-400/50 bg-cyan-400/10'
+              ? 'border-vouch-cyan/50 bg-vouch-cyan/10'
               : 'border-white/[0.08] bg-white/[0.02] hover:border-white/20'
           }`}
         >
@@ -201,25 +213,25 @@ const HitterHeatmapTable: React.FC<{
 }> = ({ title, pitcherName, rows }) => {
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-6 text-center text-xs text-white/40">
+      <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
         No lineup data yet for {title} vs {pitcherName}.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-black/20">
+    <div className={`${Z8_PANEL} overflow-hidden rounded-2xl border-white/[0.06] bg-black/20`}>
       <div className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
-        <Grid3x3 className="h-4 w-4 text-cyan-300" />
+        <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
         <span className="text-sm font-bold text-white">{title}</span>
         <span className="text-xs text-white/40">vs {pitcherName}</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto w-full">
         <table className="min-w-[1180px] border-separate border-spacing-0 text-left text-xs">
           <thead>
-            <tr className="text-[9px] uppercase tracking-wider text-white/40">
+            <tr className={`${Z8_LABEL} bg-black/40 text-white/40`}>
               {['Hitter', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit AVG', 'vs Pit OPS', 'Tags'].map((h) => (
-                <th key={h} className="whitespace-nowrap border-b border-white/[0.06] bg-black/40 px-3 py-2.5 font-black">{h}</th>
+                <th key={h} className="whitespace-nowrap border-b border-white/[0.06] px-3 py-2.5 font-black">{h}</th>
               ))}
             </tr>
           </thead>
@@ -298,40 +310,42 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[] }> = ({ rows }) => {
   if (top.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-3">
-      <div className="mb-2 flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-wide text-white/50">
-        <Flame className="h-3.5 w-3.5 text-amber-400" />
+    <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3`}>
+      <div className={`mb-2 flex items-center gap-2 px-1 ${Z8_LABEL} text-white/50`}>
+        <Flame className="h-3.5 w-3.5 text-vouch-amber" />
         Best Matchups — this game
         <span className="ml-auto normal-case tracking-normal text-white/30">Tile size = ISO + xwOBA + vs-pitcher OPS (real, blended)</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}>
-        {leaves.map((leaf, i) => {
-          const w = leaf.x1 - leaf.x0;
-          const h = leaf.y1 - leaf.y0;
-          const row = leaf.data.row;
-          if (!row || w < 1 || h < 1) return null;
-          return (
-            <g key={row.id ?? i} transform={`translate(${leaf.x0},${leaf.y0})`}>
-              <rect width={w} height={h} rx={4} fill="#00F0FF" fillOpacity={0.14} stroke="#00F0FF" strokeOpacity={0.5} strokeWidth={1}>
-                <title>{row.name} — score {compositeScore(row)}</title>
-              </rect>
-              {w > 50 && h > 20 && (
-                <text x={6} y={16} fontSize={11} fontWeight={700} fill="#f8fafc" style={{ pointerEvents: 'none' }}>{row.name}</text>
-              )}
-              {w > 40 && h > 34 && (
-                <text x={6} y={h - 8} fontSize={9} fill="rgba(255,255,255,0.6)" style={{ pointerEvents: 'none' }}>{compositeScore(row)}</text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+      <div className="w-full overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', minWidth: `${W}px` }} className="w-full h-auto">
+          {leaves.map((leaf, i) => {
+            const w = leaf.x1 - leaf.x0;
+            const h = leaf.y1 - leaf.y0;
+            const row = leaf.data.row;
+            if (!row || w < 1 || h < 1) return null;
+            return (
+              <g key={row.id ?? i} transform={`translate(${leaf.x0},${leaf.y0})`}>
+                <rect width={w} height={h} rx={4} fill={Z8_CYAN_HEX} fillOpacity={0.14} stroke={Z8_CYAN_HEX} strokeOpacity={0.5} strokeWidth={1}>
+                  <title>{row.name} — score {compositeScore(row)}</title>
+                </rect>
+                {w > 50 && h > 20 && (
+                  <text x={6} y={16} fontSize={11} fontWeight={700} fill="#f8fafc" style={{ pointerEvents: 'none' }}>{row.name}</text>
+                )}
+                {w > 40 && h > 34 && (
+                  <text x={6} y={h - 8} fontSize={9} fill="rgba(255,255,255,0.6)" style={{ pointerEvents: 'none' }}>{compositeScore(row)}</text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
     </div>
   );
 };
 
 // ─── Page ────────────────────────────────────────────────────────────────
 
-export default function HitterMatchupZonesPage() {
+export default function HitterMatchupZonesPageZ8() {
   const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [games, setGames] = useState<GameMatchup[]>([]);
@@ -395,32 +409,32 @@ export default function HitterMatchupZonesPage() {
   const selectedGameData = games.find((g) => g.gamePk === selectedGame);
 
   return (
-    <div className="min-h-screen bg-ve-obsidian px-4 py-6 md:px-8">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-black/20 px-5 py-4">
+    <div className={Z8_PAGE}>
+      <div className={Z8_PAGE_SHELL}>
+        <header className={`${Z8_PANEL} flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4`}>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-500/30">
+            <div className={`${Z8_ICON_BOX} h-11 w-11 rounded-xl`}>
               <Grid3x3 className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-white">HITTER MATCHUP ZONES</h1>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+              <h1 className={Z8_SECTION_HEADER}>HITTER MATCHUP ZONES</h1>
+              <p className={`${Z8_LABEL} text-white/40`}>
                 Real season + BvP + Statcast quality · {isToday ? 'Today' : date}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] px-1.5 py-1">
-            <button type="button" onClick={() => setDate((d) => isoAddDays(d, -1))} className="flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-cyan-300">
+            <button type="button" onClick={() => setDate((d) => isoAddDays(d, -1))} className="flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-vouch-cyan">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="flex items-center gap-1.5 px-2 text-xs font-bold text-white/80">
               <Calendar className="h-3.5 w-3.5 text-white/40" />
               {isToday ? 'Today' : date}
             </span>
-            <button type="button" onClick={() => setDate((d) => isoAddDays(d, 1))} className="flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-cyan-300">
+            <button type="button" onClick={() => setDate((d) => isoAddDays(d, 1))} className="flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-vouch-cyan">
               <ChevronRight className="h-4 w-4" />
             </button>
-            <button type="button" onClick={() => setDate(todayISO())} className="ml-1 flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-cyan-300" title="Jump to today">
+            <button type="button" onClick={() => setDate(todayISO())} className="ml-1 flex h-7 w-7 items-center justify-center rounded-full text-white/50 hover:bg-white/[0.06] hover:text-vouch-cyan" title="Jump to today">
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -433,11 +447,11 @@ export default function HitterMatchupZonesPage() {
           only — not betting advice.
         </p>
 
-        <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-3">
+        <div className={`${Z8_PANEL} rounded-2xl p-3 border-white/[0.06]`}>
           <MatchupStrip games={games} selected={selectedGame} onSelect={setSelectedGame} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/[0.06] bg-black/20 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wide text-white/50">
+        <div className={`${Z8_PANEL} flex flex-wrap items-center gap-4 rounded-2xl border-white/[0.06] px-4 py-2.5 ${Z8_LABEL} text-white/50`}>
           <span className="normal-case tracking-normal text-white/30">Hitter name = sample size vs this pitcher:</span>
           {(['high', 'medium', 'thin', 'none'] as SampleTier[]).map((t) => (
             <span key={t} className="inline-flex items-center gap-1.5">
@@ -455,9 +469,9 @@ export default function HitterMatchupZonesPage() {
         )}
 
         {loadingGames ? (
-          <div className="rounded-2xl border border-white/[0.06] bg-black/20 py-16 text-center text-sm text-white/40">Loading today's slate…</div>
+          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Loading today's slate…</div>
         ) : loadingLineups ? (
-          <div className="rounded-2xl border border-white/[0.06] bg-black/20 py-16 text-center text-sm text-white/40">Loading real matchup data…</div>
+          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Loading real matchup data…</div>
         ) : selectedGameData ? (
           <>
             <BestMatchupsTreemap rows={combinedRows} />
@@ -495,7 +509,7 @@ export default function HitterMatchupZonesPage() {
             )}
           </>
         ) : (
-          <div className="rounded-2xl border border-white/[0.06] bg-black/20 py-16 text-center text-sm text-white/40">Select a matchup above.</div>
+          <div className={`${Z8_PANEL} rounded-2xl border-white/[0.06] py-16 text-center text-sm text-white/40`}>Select a matchup above.</div>
         )}
       </div>
     </div>
