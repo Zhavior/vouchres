@@ -75,30 +75,6 @@
   pointer-events: auto !important;
 }
 
-.ve-terminal-ticker-track {
-  animation: ve-terminal-ticker-scroll 28s linear infinite;
-}
-
-.ve-terminal-ticker {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 120;
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
-}
-
-.ve-terminal-ticker--top {
-  bottom: auto;
-  top: 0;
-  padding-bottom: 0.5rem;
-  padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
-}
-
-.ve-terminal-ticker-track--reverse {
-  animation-direction: reverse;
-}
-
 .ve-landing-judge-slideshow {
   position: relative;
 }
@@ -137,21 +113,7 @@
   }
 }
 
-@keyframes ve-terminal-ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .ve-terminal-ticker-track {
-    animation: none;
-  }
-
   .ve-landing-judge-track {
     transition: none;
   }
@@ -303,15 +265,6 @@
 
   .ve-terminal-preview-row span:last-child {
     line-height: 1.25;
-  }
-
-  .ve-terminal-ticker {
-    padding-block: 0.45rem;
-  }
-
-  .ve-terminal-ticker-track {
-    animation-duration: 36s;
-    gap: 2.5rem;
   }
 
   .ve-judges-placeholder {

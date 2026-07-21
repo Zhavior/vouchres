@@ -21,7 +21,6 @@ import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
 import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import LandingDeviceShowcase from '../components/landing/LandingDeviceShowcase';
-import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 import '../components/landing/LandingMobileShell.css';
@@ -46,7 +45,7 @@ const pricingPlans: Array<{
     id: 'free',
     name: 'Free',
     price: 'Free',
-    descriptor: 'Start the terminal',
+    descriptor: 'Start researching',
     bullets: ['Public ledger', 'Daily slate preview', 'Community vouch actions'],
   },
   {
@@ -306,9 +305,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <LandingStatusTicker />
-
-      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-8 lg:pb-12`}>
         {/* Ambient obsidian glow */}
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
@@ -330,7 +327,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-black tracking-tight text-white">
-                  VouchEdge<span className="text-vouch-cyan">.Terminal</span>
+                  VouchEdge
                 </p>
                 <p className="truncate font-mono text-[8px] uppercase tracking-[0.18em] text-white/35">
                   MLB · Trust First
