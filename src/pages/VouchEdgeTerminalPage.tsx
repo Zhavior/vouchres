@@ -20,7 +20,6 @@ import {
 const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
 const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
 
-import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import ScrollReveal from '../components/landing/ScrollReveal';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -51,7 +50,7 @@ const pricingPlans: Array<{
     id: 'free',
     name: 'Free',
     price: 'Free',
-    descriptor: 'Start the terminal',
+    descriptor: 'Start researching',
     bullets: ['Public ledger', 'Daily slate preview', 'Community vouch actions'],
   },
   {
@@ -300,13 +299,11 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <LandingStatusTicker />
-
-      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-8 lg:pb-12`}>
         <Suspense fallback={null}>
           <LandingDynamicBackground />
         </Suspense>
-        
+
         {/* Ambient obsidian glow */}
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
@@ -328,7 +325,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-black tracking-tight text-white">
-                  VouchEdge<span className="text-vouch-cyan">.Terminal</span>
+                  VouchEdge
                 </p>
                 <p className="truncate font-mono text-[8px] uppercase tracking-[0.18em] text-white/35">
                   MLB · Trust First
