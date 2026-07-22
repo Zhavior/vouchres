@@ -50,29 +50,30 @@ type LedgerResponse = {
 
 function buildFallbackLedger(): LedgerResponse {
   const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   
   const samplePicks: LedgerPick[] = [
-    { decisionKey: 'hk-1', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 1, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-2', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 2, score: 91, confidence: 88, tier: 'Elite Power', evidenceQuality: 'official', result: 'hit' },
+    { decisionKey: 'hk-1', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 1, score: 92, confidence: 89, tier: 'Elite Power', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'hk-2', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 2, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
     { decisionKey: 'hk-3', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'PIT', rank: 3, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-4', date: today, playerName: 'Gunnar Henderson', team: 'BAL', opponent: 'BOS', rank: 4, score: 84, confidence: 82, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-5', date: today, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 5, score: 82, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'hit' },
+    { decisionKey: 'hk-4', date: yesterday, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 1, score: 85, confidence: 83, tier: 'Core Target', evidenceQuality: 'official', result: 'hit' },
+    { decisionKey: 'hk-5', date: yesterday, playerName: 'Marcell Ozuna', team: 'ATL', opponent: 'STL', rank: 2, score: 81, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'miss' },
   ];
 
   const hrPerf: Performance = {
     total: 5,
     resolved: 2,
-    pending: 0,
-    hits: 2,
-    misses: 0,
-    voids: 3,
-    hitRate: 100.0,
+    pending: 1,
+    hits: 1,
+    misses: 1,
+    voids: 2,
+    hitRate: 50.0,
     sampleWarning: null,
   };
 
   const sbPicks: LedgerPick[] = [
-    { decisionKey: 'sb-1', date: today, playerName: 'Elly De La Cruz', team: 'CIN', opponent: 'MIL', rank: 1, score: 88, confidence: 85, tier: 'Elite Speed', evidenceQuality: 'official', result: 'hit' },
-    { decisionKey: 'sb-2', date: today, playerName: 'Ronald Acuña Jr.', team: 'ATL', opponent: 'NYM', rank: 2, score: 84, confidence: 82, tier: 'Selective Speed', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'sb-1', date: today, playerName: 'Elly De La Cruz', team: 'CIN', opponent: 'SEA', rank: 1, score: 88, confidence: 85, tier: 'Elite Speed', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'sb-2', date: yesterday, playerName: 'Ronald Acuña Jr.', team: 'ATL', opponent: 'STL', rank: 1, score: 84, confidence: 82, tier: 'Selective Speed', evidenceQuality: 'official', result: 'hit' },
   ];
 
   const sbPerf: Performance = {
@@ -87,15 +88,15 @@ function buildFallbackLedger(): LedgerResponse {
   };
 
   const kPicks: LedgerPick[] = [
-    { decisionKey: 'k-1', date: today, playerName: 'Gerrit Cole', team: 'NYY', opponent: 'BOS', rank: 1, score: 92, confidence: 90, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'hit' },
-    { decisionKey: 'k-2', date: today, playerName: 'Zack Wheeler', team: 'PHI', opponent: 'MIA', rank: 2, score: 89, confidence: 86, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'hit' },
+    { decisionKey: 'k-1', date: today, playerName: 'Luis Castillo', team: 'SEA', opponent: 'CIN', rank: 1, score: 90, confidence: 88, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'k-2', date: yesterday, playerName: 'Zack Wheeler', team: 'PHI', opponent: 'MIA', rank: 1, score: 89, confidence: 86, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'hit' },
   ];
 
   const kPerf: Performance = {
     total: 2,
-    resolved: 2,
-    pending: 0,
-    hits: 2,
+    resolved: 1,
+    pending: 1,
+    hits: 1,
     misses: 0,
     voids: 0,
     hitRate: 100.0,
