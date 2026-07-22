@@ -6,6 +6,8 @@ import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, 
 import { apiClient } from '../../lib/apiClient';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { useDailyHrBoard } from '../../features/hr/hooks/useDailyHrBoard';
+import { useHrResultsForDate } from '../../features/hr/hooks/useHrResultsForDate';
+import { localISODate } from '../../features/hr/utils/localDate';
 import { useLiveGames } from '../../hooks/queries/useLiveGames';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import StadiumWindVectorWidget from '../../components/stadium/StadiumWindVectorWidget';
@@ -450,6 +452,24 @@ const HitterHeatmapTable: React.FC<{
   pitcherThrows?: 'L' | 'R' | 'U';
   rows: HitterRow[];
 }> = ({ title, pitcherName, pitcherThrows, rows }) => {
+  const todayStr = useMemo(() => localISODate(), []);
+  const { hitByPlayerId } = useHrResultsForDate(todayStr);
+
+  const hitPlayerNameSet = useMemo(() => {
+    const set = new Set<string>();
+    hitByPlayerId.forEach((event, id) => {
+      set.add(String(id));
+      if (event.playerName) {
+        const full = event.playerName.toLowerCase().trim();
+        set.add(full);
+        const parts = full.split(/\s+/);
+        if (parts.length >= 2) {
+          set.add(parts[parts.length - 1]);
+        }
+      }
+    });
+    return set;
+  }, [hitByPlayerId]);
   if (rows.length === 0) {
     return (
       <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
@@ -487,6 +507,15 @@ const HitterHeatmapTable: React.FC<{
               const season = row.seasonStats;
               const sc = row.statcast;
               
+              const lastName = row.name.toLowerCase().trim().split(/\s+/).pop() || '';
+              const hasHitHrToday = Boolean(
+                row.hitHrToday ||
+                (row.hrToday ?? 0) > 0 ||
+                hitByPlayerId.has(row.id) ||
+                hitPlayerNameSet.has(row.name.toLowerCase().trim()) ||
+                (lastName.length > 2 && hitPlayerNameSet.has(lastName))
+              );
+
               const ratingColor = math.edgeRating === 'ELITE'
                 ? 'text-vouch-emerald border-vouch-emerald/40 bg-vouch-emerald/10'
                 : math.edgeRating === 'STRONG'
@@ -503,7 +532,7 @@ const HitterHeatmapTable: React.FC<{
                       <div>
                         <div className="flex items-center gap-1.5">
                           <div className="font-bold" style={{ color: SAMPLE_COLOR[tier] }} title={SAMPLE_LABEL[tier]}>{row.name}</div>
-                          {(row.hitHrToday || (row.hrToday ?? 0) > 0) && (
+                          {hasHitHrToday && (
                             <span className="inline-flex items-center gap-1 font-mono text-[9px] font-black uppercase text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/40 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.3)]">
                               💥 HR
                             </span>
@@ -531,7 +560,7 @@ const HitterHeatmapTable: React.FC<{
                   </td>
                   {/* HR Status */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5">
-                    {row.hitHrToday || (row.hrToday ?? 0) > 0 ? (
+                    {hasHitHrToday ? (
                       <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.3)]">
                         💥 HIT HR TODAY
                       </span>
