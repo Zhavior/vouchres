@@ -276,7 +276,7 @@ const WorldChatMessageItem = React.memo(function WorldChatMessageItem({
   const proofIds = useMemo(() => extractParlayProofIds(msg.text), [msg.text]);
 
   return (
-    <div className={`flex items-end gap-2.5 px-2.5 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? 'mt-1.5' : 'mt-4'}`}>
+    <div className={`flex items-end gap-2.5 px-4 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? 'mt-2.5' : 'mt-4'}`}>
       <button
         type="button"
         onClick={openAuthor}
@@ -940,7 +940,7 @@ export default function WorldChatPanel({
       {activePage === 'world' ? (
         <div
           ref={scrollRef}
-          className="glass-panel glass-border min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl p-3"
+          className="glass-panel glass-border min-h-0 flex-1 space-y-4 overflow-y-auto rounded-2xl p-4"
         >
           {loading ? (
             <p className="text-center text-xs text-white/35 font-mono">Loading messages…</p>
