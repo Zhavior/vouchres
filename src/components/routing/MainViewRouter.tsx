@@ -274,7 +274,7 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ProGateShell featureName="Pitcher Matchup Intelligence" navigateSection={navigateSection}>
-            <PitcherMatchupIntelligencePageZ8 />
+            <PitcherMatchupIntelligencePageZ8 onNavigate={navigateSection} />
           </ProGateShell>
         </LazyRoute>
       );
@@ -290,7 +290,7 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ProGateShell featureName="Hitter Matchup Zones" navigateSection={navigateSection}>
-            <HitterMatchupZonesPageZ8 />
+            <HitterMatchupZonesPageZ8 onNavigate={navigateSection} />
           </ProGateShell>
         </LazyRoute>
       );

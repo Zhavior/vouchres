@@ -520,9 +520,11 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[]; pitcherHand?: 'L' | 'R'
   );
 };
 
+import { MatchupPageShell } from '../../features/matchup/MatchupPageShell';
+
 // ─── Page ────────────────────────────────────────────────────────────────
 
-export default function HitterMatchupZonesPageZ8() {
+export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: (section: string) => void }) {
   const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [games, setGames] = useState<GameMatchup[]>([]);
@@ -603,12 +605,12 @@ export default function HitterMatchupZonesPageZ8() {
   const selectedGameData = games.find((g) => g.gamePk === selectedGame);
 
   return (
-    <div className={`${Z8_PAGE} w-full max-w-full overflow-x-hidden min-w-0 pb-24`}>
-      <div className={Z8_PAGE_SHELL}>
+    <MatchupPageShell active="hitter" onNavigate={onNavigate}>
+      <div className="space-y-6">
         <header className={`${Z8_PANEL} flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4`}>
           <div className="flex items-center gap-3">
             <div className={`${Z8_ICON_BOX} h-11 w-11 rounded-xl`}>
-              <Grid3x3 className="h-5 w-5" />
+              <Grid3x3 className="h-5 w-5 text-vouch-cyan" />
             </div>
             <div>
               <h1 className={Z8_SECTION_HEADER}>HITTER MATCHUP ZONES</h1>
@@ -690,6 +692,6 @@ export default function HitterMatchupZonesPageZ8() {
           </div>
         )}
       </div>
-    </div>
+    </MatchupPageShell>
   );
 }

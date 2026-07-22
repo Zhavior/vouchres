@@ -341,7 +341,9 @@ async function fetchJsonResponse<T>(path: string, signal: AbortSignal): Promise<
   return apiClient.get<T>(path, undefined, signal);
 }
 
-export default function PitcherMatchupIntelligencePageZ8() {
+import { MatchupPageShell } from '../../features/matchup/MatchupPageShell';
+
+export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNavigate?: (section: string) => void }) {
   const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
@@ -542,8 +544,8 @@ export default function PitcherMatchupIntelligencePageZ8() {
   };
 
   return (
-    <main className={`${Z8_PAGE} relative overflow-hidden px-3 py-4 sm:px-4 lg:py-5`}>
-      <div className="relative mx-auto max-w-7xl space-y-4">
+    <MatchupPageShell active="pitcher" onNavigate={onNavigate}>
+      <div className="space-y-4">
         <section className={`${Z8_PANEL} relative overflow-hidden rounded-2xl p-4`}>
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/55 to-transparent" />
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-vouch-cyan/8 blur-3xl" />
@@ -1175,6 +1177,6 @@ export default function PitcherMatchupIntelligencePageZ8() {
           </div>
         </section>
       </div>
-    </main>
+    </MatchupPageShell>
   );
 }
