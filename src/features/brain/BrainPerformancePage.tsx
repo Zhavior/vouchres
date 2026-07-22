@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, Database, RefreshCw, ShieldCheck, Target, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Activity, Database, RefreshCw, ShieldCheck, Target, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { BrainPageShell } from './BrainPageShell';
 import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_PANEL } from '../../theme/z8Tokens';
@@ -46,82 +46,18 @@ type LedgerResponse = {
   pitcherStrikeouts: MarketLedger;
 };
 
-// ─── Resilient Fallback Ledger Builder ─────────────────────────────────────
-
-function buildFallbackLedger(): LedgerResponse {
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  
-  const samplePicks: LedgerPick[] = [
-    { decisionKey: 'hk-1', date: today, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 1, score: 85, confidence: 83, tier: 'Core Target', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'hk-2', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 2, score: 92, confidence: 89, tier: 'Elite Power', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'hk-3', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 3, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-4', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'PIT', rank: 4, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-5', date: yesterday, playerName: 'Marcell Ozuna', team: 'ATL', opponent: 'STL', rank: 1, score: 81, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'miss' },
-  ];
-
-  const hrPerf: Performance = {
-    total: 5,
-    resolved: 1,
-    pending: 2,
+function MarketSummary({ label, target, market }: { label: string; target: string; market?: MarketLedger }) {
+  const performance = market?.performance ?? {
+    total: 0,
+    resolved: 0,
+    pending: 0,
     hits: 0,
-    misses: 1,
-    voids: 2,
-    hitRate: 0.0,
-    sampleWarning: null,
-  };
-
-  const sbPicks: LedgerPick[] = [
-    { decisionKey: 'sb-1', date: today, playerName: 'Elly De La Cruz', team: 'CIN', opponent: 'SEA', rank: 1, score: 88, confidence: 85, tier: 'Elite Speed', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'sb-2', date: yesterday, playerName: 'Ronald Acuña Jr.', team: 'ATL', opponent: 'STL', rank: 1, score: 84, confidence: 82, tier: 'Selective Speed', evidenceQuality: 'official', result: 'hit' },
-  ];
-
-  const sbPerf: Performance = {
-    total: 2,
-    resolved: 1,
-    pending: 1,
-    hits: 1,
     misses: 0,
     voids: 0,
-    hitRate: 100.0,
+    hitRate: null,
     sampleWarning: null,
   };
 
-  const kPicks: LedgerPick[] = [
-    { decisionKey: 'k-1', date: today, playerName: 'Luis Castillo', team: 'SEA', opponent: 'CIN', rank: 1, score: 90, confidence: 88, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'k-2', date: yesterday, playerName: 'Zack Wheeler', team: 'PHI', opponent: 'MIA', rank: 1, score: 89, confidence: 86, tier: 'High Whiff Pitcher', evidenceQuality: 'official', result: 'hit' },
-  ];
-
-  const kPerf: Performance = {
-    total: 2,
-    resolved: 1,
-    pending: 1,
-    hits: 1,
-    misses: 0,
-    voids: 0,
-    hitRate: 100.0,
-    sampleWarning: null,
-  };
-
-  return {
-    picks: samplePicks,
-    performance: hrPerf,
-    modelRecords: [
-      {
-        engineVersion: 'v3.6-sabermetric-log5',
-        samples: 142,
-        readyForJudgment: true,
-        evaluation: { brierScore: 0.182, logLoss: 0.421, calibrationError: 0.024 },
-        excluded: { missingProbability: 0, invalidSnapshot: 0, temporalLeakage: 0 },
-      },
-    ],
-    stolenBase: { picks: sbPicks, performance: sbPerf },
-    pitcherStrikeouts: { picks: kPicks, performance: kPerf },
-  };
-}
-
-function MarketSummary({ label, target, market }: { label: string; target: string; market: MarketLedger }) {
-  const { performance } = market;
   return (
     <article className="brain-market-card rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
@@ -162,12 +98,8 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
     refetchInterval: 5 * 60_000,
   });
 
-  const ledger = useMemo<LedgerResponse>(() => {
-    if (query.data && query.data.performance && query.data.performance.total > 0) {
-      return query.data;
-    }
-    return buildFallbackLedger();
-  }, [query.data]);
+  const ledger = query.data;
+  const hasData = ledger && (ledger.picks?.length > 0 || ledger.performance?.total > 0);
 
   return (
     <BrainPageShell active="performance" onNavigate={onNavigate}>
@@ -179,23 +111,57 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
           </span>
           <div>
             <div className={`${Z8_LABEL} text-vouch-emerald font-bold`}>Immutable Win / Loss Accountability Ledger</div>
-            <h2 className="mt-1 text-xl font-black text-white">Every decision is recorded before game time.</h2>
+            <h2 className="mt-1 text-xl font-black text-white">Truth-First Database Performance Record</h2>
             <p className="mt-2 max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-300">
-              Brain decisions are timestamped and frozen with SHA-256 hashes prior to first pitch. 
-              As official MLB play-by-play box scores finish, wins (Hits), losses (Misses), and pushes (Voids) are automatically recorded in real time.
+              Brain decisions are snapshotted pregame with cryptographic SHA-256 hashes. 
+              Only official MLB play-by-play box scores settle final Win (Hit), Loss (Miss), or Push (Void) outcomes.
+              Zero simulated or fake historical data is ever shown.
             </p>
           </div>
         </div>
       </section>
 
       {query.isLoading && (
-        <section className="brain-panel flex min-h-48 items-center justify-center gap-3 p-6">
+        <section className="brain-panel flex min-h-48 items-center justify-center gap-3 p-6 rounded-2xl border border-white/10 bg-black/40">
           <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
-          <span className={`${Z8_LABEL} text-slate-300`}>Opening verified accountability ledger...</span>
+          <span className={`${Z8_LABEL} text-slate-300`}>Querying database performance ledger...</span>
         </section>
       )}
 
-      {ledger && (
+      {query.isError && (
+        <section className="brain-panel p-8 text-center rounded-2xl border border-rose-500/20 bg-rose-500/5">
+          <Activity className="mx-auto h-8 w-8 text-rose-400" />
+          <h2 className="mt-3 text-lg font-bold text-white">Database Ledger Disconnected</h2>
+          <p className="mt-2 text-sm text-slate-400 max-w-md mx-auto">
+            Unable to connect to the verified decision database. Truth protocol prohibits displaying simulated outcomes.
+          </p>
+        </section>
+      )}
+
+      {!query.isLoading && !query.isError && !hasData && (
+        <div className="space-y-6">
+          <section className="brain-panel p-8 text-center rounded-2xl border border-white/10 bg-black/40 space-y-3">
+            <Clock className="mx-auto h-10 w-10 text-vouch-cyan animate-pulse" />
+            <h2 className="text-xl font-black text-white">Awaiting Official Game Box Scores</h2>
+            <p className="text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+              All Brain decisions for today's slate are currently <strong className="text-amber-300 font-mono font-bold uppercase">PENDING</strong>. 
+              As MLB games conclude and official play-by-play feeds close, wins (Hits) and losses (Misses) will settle automatically in real time.
+            </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 text-xs text-vouch-cyan font-mono font-bold">
+              <AlertCircle className="h-3.5 w-3.5" /> Zero Fake Results · Truth-First Pipeline
+            </div>
+          </section>
+
+          {/* Clean Empty Market Cards */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MarketSummary label="Home Run Market" target="Any Player HR" />
+            <MarketSummary label="Stolen Base Market" target="Any Player SB" />
+            <MarketSummary label="Pitcher Strikeout Market" target="5+ Strikeouts Target" />
+          </section>
+        </div>
+      )}
+
+      {hasData && ledger && (
         <div className="space-y-6">
           {/* Main Record Header */}
           <section className="brain-panel p-5 sm:p-6 rounded-2xl border border-white/10 bg-black/40">
@@ -251,6 +217,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
                   const isHit = pick.result === 'hit';
                   const isMiss = pick.result === 'miss';
                   const isPending = pick.result === 'pending';
+                  const isVoid = pick.result === 'void';
 
                   return (
                     <div
@@ -278,6 +245,11 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
                         {isPending && (
                           <span className="flex items-center gap-1 text-amber-300 border-amber-400/40 bg-amber-400/10 px-2 py-0.5 rounded-full">
                             <Clock className="h-3.5 w-3.5" /> PENDING
+                          </span>
+                        )}
+                        {isVoid && (
+                          <span className="flex items-center gap-1 text-slate-400 border-slate-500/40 bg-slate-500/10 px-2 py-0.5 rounded-full">
+                            <AlertCircle className="h-3.5 w-3.5" /> VOID (PUSH)
                           </span>
                         )}
                       </div>
