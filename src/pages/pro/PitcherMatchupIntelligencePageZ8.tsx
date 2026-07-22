@@ -381,8 +381,12 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
 
   const isPitcherLive = (row: MatchupMatrixRow) => {
     if (row.gameId && liveTeamsSet.has(String(row.gameId))) return true;
-    if (row.team && liveTeamsSet.has(row.team.toLowerCase())) return true;
     return false;
+  };
+
+  const isPitcherFinal = (row: MatchupMatrixRow) => {
+    const timeStr = String(row.gameTime || '').toLowerCase();
+    return timeStr.includes('final') || timeStr.includes('game over') || timeStr.includes('completed') || timeStr === 'f';
   };
 
   useEffect(() => {
@@ -692,11 +696,15 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                         <h2 className={`truncate ${Z8_SECTION_HEADER} text-white`}>
                           {topPitcher.pitcherName}
                         </h2>
-                        {isPitcherLive(topPitcher) && (
-                          <span className="flex items-center gap-1 text-[10px] font-black font-mono px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
-                            <Radio className="w-3 h-3 text-rose-400 animate-pulse" /> LIVE
+                        {isPitcherLive(topPitcher) ? (
+                          <span className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/40 animate-pulse">
+                            <Radio className="w-3 h-3 text-rose-400" /> LIVE
                           </span>
-                        )}
+                        ) : isPitcherFinal(topPitcher) ? (
+                          <span className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-slate-300 bg-slate-500/25 px-2 py-0.5 rounded border border-slate-500/40">
+                            <CheckCircle2 className="w-3 h-3 text-slate-400" /> FINAL RESULT
+                          </span>
+                        ) : null}
                       </div>
                       <p className="mt-1 font-mono text-sm font-black text-vouch-cyan">
                         {topPitcher.team} vs {topPitcher.opponent}
@@ -1094,14 +1102,22 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-vouch-cyan">{row.pitcherName}</div>
-                                  {isPitcherLive(row) && (
+                                  {isPitcherLive(row) ? (
                                     <span className="flex items-center gap-1 text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
                                       <Radio className="w-2.5 h-2.5 text-rose-400" /> LIVE
                                     </span>
-                                  )}
+                                  ) : isPitcherFinal(row) ? (
+                                    <span className="flex items-center gap-1 text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-slate-500/25 border border-slate-500/40 text-slate-300 shrink-0">
+                                      <CheckCircle2 className="w-2.5 h-2.5 text-slate-400" /> FINAL
+                                    </span>
+                                  ) : null}
                                   {row.metrics.k9 != null && (
-                                    <span className="inline-flex items-center gap-0.5 font-mono text-[9px] font-black text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/40 shrink-0">
-                                      ⚡ {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks
+                                    <span className={`inline-flex items-center gap-0.5 font-mono text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
+                                      isPitcherFinal(row)
+                                        ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
+                                        : 'text-cyan-300 bg-cyan-500/20 border border-cyan-500/40'
+                                    }`}>
+                                      {isPitcherFinal(row) ? '🏁' : '⚡'} {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks {isPitcherFinal(row) ? '(Final)' : ''}
                                     </span>
                                   )}
                                 </div>
