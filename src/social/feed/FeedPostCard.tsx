@@ -36,11 +36,11 @@ import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
 
 const POST_TYPE_META: Record<string, { label: string; color: string }> = {
-  PARLAY:        { label: 'Parlay',     color: '#00F0FF' },
-  VOUCH:         { label: 'Pick',       color: '#00FF9D' },
-  AI_PICK:       { label: 'HR Alert',   color: '#FFB800' },
-  RESULT:        { label: 'Result',     color: '#00FF9D' },
-  RESEARCH_NOTE: { label: 'Lesson',     color: '#00F0FF' },
+  PARLAY:        { label: 'Parlay',     color: '#4FB8DC' },
+  VOUCH:         { label: 'Pick',       color: '#31B583' },
+  AI_PICK:       { label: 'HR Alert',   color: '#D99C4A' },
+  RESULT:        { label: 'Result',     color: '#31B583' },
+  RESEARCH_NOTE: { label: 'Lesson',     color: '#4FB8DC' },
   DISCUSSION:    { label: 'Discussion', color: '#94a3b8' },
 };
 function PostTypeBadge({ post }: { post: FeedPost }) {
@@ -431,7 +431,7 @@ function FeedPostCard({
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
       <article 
-        className="feed-post px-4 py-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2" 
+        className="feed-post z8-feed-card px-4 py-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2" 
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
@@ -504,7 +504,7 @@ function FeedPostCard({
 
   return (
     <article
-      className="feed-post px-4 py-3 hover:bg-white/[0.02] transition-colors relative"
+      className="feed-post z8-feed-card px-4 py-3 hover:bg-white/[0.02] transition-colors relative"
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
