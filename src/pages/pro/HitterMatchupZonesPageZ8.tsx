@@ -501,7 +501,14 @@ const HitterHeatmapTable: React.FC<{
                     <div className="flex items-center gap-2">
                       <PlayerHeadshot name={row.name} playerId={row.id} headshotUrl={row.headshotUrl} size={26} />
                       <div>
-                        <div className="font-bold" style={{ color: SAMPLE_COLOR[tier] }} title={SAMPLE_LABEL[tier]}>{row.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="font-bold" style={{ color: SAMPLE_COLOR[tier] }} title={SAMPLE_LABEL[tier]}>{row.name}</div>
+                          {(row.hitHrToday || (row.hrToday ?? 0) > 0) && (
+                            <span className="inline-flex items-center gap-1 font-mono text-[9px] font-black uppercase text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/40 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+                              💥 HR
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-white/35 flex items-center gap-1.5 mt-0.5">
                           <span>{row.bats} · {row.position}{row.lineupSpot ? ` · #${row.lineupSpot}` : ''}</span>
                           {row.lineupStatus === 'confirmed' && (
@@ -522,25 +529,15 @@ const HitterHeatmapTable: React.FC<{
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-black text-xs text-vouch-emerald">
                     {math.hrProbabilityPct}%
                   </td>
-                  {/* HR Indicator Badge */}
+                  {/* HR Status */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5">
-                    <div className="flex items-center gap-1.5">
-                      {row.hitHrToday || (row.hrToday ?? 0) > 0 ? (
-                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.3)]">
-                          💥 HIT HR TODAY ({row.hrToday ?? 1})
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                          <Flame className="w-3 h-3 text-amber-400" />
-                          {season?.hr ?? 0} HR
-                        </span>
-                      )}
-                      {math.hrProbabilityPct >= 20 && !row.hitHrToday && (
-                        <span className="inline-flex items-center gap-0.5 font-mono text-[9px] font-black uppercase text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
-                          💣 HIGH HR WATCH
-                        </span>
-                      )}
-                    </div>
+                    {row.hitHrToday || (row.hrToday ?? 0) > 0 ? (
+                      <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.3)]">
+                        💥 HIT HR TODAY
+                      </span>
+                    ) : (
+                      <span className="text-white/20 font-mono">—</span>
+                    )}
                   </td>
                   {/* Rating Badge */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5">
