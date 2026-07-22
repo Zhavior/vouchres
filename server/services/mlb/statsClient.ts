@@ -157,40 +157,84 @@ function parseInnings(value: unknown): number {
   return (Number.isFinite(whole) ? whole : 0) + (Number.isFinite(thirds) ? thirds / 3 : 0);
 }
 
+export async function getSingleSeasonHitterStats(playerId: number, year: number): Promise<HitterSeasonStats | null> {
+  try {
+    const data = await fetchJson<any>(
+      `${BASE}/v1/people/${playerId}/stats?stats=season&group=hitting&season=${year}`
+    );
+    const s = data?.stats?.[0]?.splits?.[0]?.stat;
+    if (!s) return null;
+
+    const pa = Number(s.plateAppearances) || 0;
+    const hr = Number(s.homeRuns) || 0;
+    return {
+      homeRuns: hr,
+      atBats: Number(s.atBats) || 0,
+      plateAppearances: pa,
+      avg: parseFloat(s.avg) || 0,
+      slg: parseFloat(s.slg) || 0,
+      ops: parseFloat(s.ops) || 0,
+      hrPerPA: pa > 0 ? hr / pa : 0,
+      gamesPlayed: Number(s.gamesPlayed) || 0,
+      onBasePercentage: parseFloat(s.obp) || 0,
+      stolenBases: Number(s.stolenBases) || 0,
+      caughtStealing: Number(s.caughtStealing) || 0,
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
 export async function getHitterStats(playerId: number): Promise<HitterStats> {
-  return hitterCache.getOrSet(`hitter:${playerId}:${SEASON}`, async () => {
+  return hitterCache.getOrSet(`hitter_2yr:${playerId}:${SEASON}`, async () => {
     let season: HitterSeasonStats | null = null;
     let recentGames: RecentGame[] = [];
 
     try {
-      const data = await fetchJson<any>(
-        `${BASE}/v1/people/${playerId}/stats?stats=season&group=hitting&season=${SEASON}`
-      );
-      const s = data?.stats?.[0]?.splits?.[0]?.stat;
-      if (s) {
-        const pa = Number(s.plateAppearances) || 0;
-        const hr = Number(s.homeRuns) || 0;
-        season = {
-          homeRuns: hr,
-          atBats: Number(s.atBats) || 0,
-          plateAppearances: pa,
-          avg: parseFloat(s.avg) || 0,
-          slg: parseFloat(s.slg) || 0,
-          ops: parseFloat(s.ops) || 0,
-          hrPerPA: pa > 0 ? hr / pa : 0,
-          gamesPlayed: Number(s.gamesPlayed) || 0,
-          onBasePercentage: parseFloat(s.obp) || 0,
-          stolenBases: Number(s.stolenBases) || 0,
-          caughtStealing: Number(s.caughtStealing) || 0,
-        };
+      const [curr, prev] = await Promise.all([
+        getSingleSeasonHitterStats(playerId, SEASON),
+        getSingleSeasonHitterStats(playerId, SEASON - 1),
+      ]);
+
+      if (curr && !prev) {
+        season = curr;
+      } else if (!curr && prev) {
+        season = prev;
+      } else if (curr && prev) {
+        const pa = curr.plateAppearances + prev.plateAppearances;
+        const ab = curr.atBats + prev.atBats;
+        const hr = curr.homeRuns + prev.homeRuns;
+
+        if (pa > 0 && ab > 0) {
+          const avg = (curr.avg * curr.atBats + prev.avg * prev.atBats) / ab;
+          const obp = (curr.onBasePercentage * curr.plateAppearances + prev.onBasePercentage * prev.plateAppearances) / pa;
+          const slg = (curr.slg * curr.atBats + prev.slg * prev.atBats) / ab;
+          const ops = obp + slg;
+
+          season = {
+            homeRuns: hr,
+            atBats: ab,
+            plateAppearances: pa,
+            avg,
+            slg,
+            ops,
+            hrPerPA: hr / pa,
+            gamesPlayed: curr.gamesPlayed + prev.gamesPlayed,
+            onBasePercentage: obp,
+            stolenBases: curr.stolenBases + prev.stolenBases,
+            caughtStealing: curr.caughtStealing + prev.caughtStealing,
+          };
+        } else {
+          season = curr;
+        }
       }
     } catch (err) {
-      console.warn(`[statsClient] hitter season stats failed for ${playerId}:`, (err as Error).message);
+      console.warn(`[statsClient] 2-season hitter stats failed for ${playerId}:`, (err as Error).message);
     }
 
     try {
       const data = await fetchJson<any>(
-        `${BASE}/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=${SEASON}&limit=7`
+        `${BASE}/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=${SEASON}&limit=10`
       );
       const splits = data?.stats?.[0]?.splits ?? [];
       recentGames = splits.map((sp: any) => ({

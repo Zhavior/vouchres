@@ -103,13 +103,10 @@ function seasonYear(): number {
   return new Date().getUTCFullYear();
 }
 
-/** Season Statcast quality for all qualified batters (>= MIN_PA), keyed by MLB player id.
- *  Success is cached 12h (daily data); a failed fetch caches an empty map for
- *  30 minutes so we retry soon without hammering Savant. */
-export async function getStatcastBatterMap(
+export async function getSingleYearStatcastBatterMap(
   year = seasonYear(),
 ): Promise<StatcastBatterMap> {
-  const cacheKey = `batters:${year}`;
+  const cacheKey = `batters_single:${year}`;
   const cached = statcastCache.get(cacheKey);
 
   if (cached !== undefined) {
@@ -119,7 +116,6 @@ export async function getStatcastBatterMap(
   const existingRequest = statcastBatterInflight.get(year);
 
   if (existingRequest) {
-    console.log(`[statcastClient] awaiting in-flight batter map for ${year}`);
     return existingRequest;
   }
 
@@ -180,17 +176,12 @@ export async function getStatcastBatterMap(
       }
 
       statcastCache.set(cacheKey, map);
-      console.log(
-        `[statcastClient] loaded ${Object.keys(map).length} batters for ${year}`,
-      );
-
       return map;
     } catch (err) {
       console.warn(
-        "[statcastClient] leaderboard fetch failed:",
+        `[statcastClient] leaderboard fetch failed for ${year}:`,
         err instanceof Error ? err.message : String(err),
       );
-
       const emptyMap: StatcastBatterMap = {};
       statcastCache.set(cacheKey, emptyMap, 30 * 60_000);
       return emptyMap;
@@ -201,6 +192,69 @@ export async function getStatcastBatterMap(
 
   statcastBatterInflight.set(year, request);
   return request;
+}
+
+/** 2-Season Rolling Statcast quality for all batters, combining current and previous season weighted by PA. */
+export async function getStatcastBatterMap(
+  year = seasonYear(),
+): Promise<StatcastBatterMap> {
+  const cacheKey = `batters_2yr:${year}`;
+  const cached = statcastCache.get(cacheKey);
+
+  if (cached !== undefined) {
+    return cached as StatcastBatterMap;
+  }
+
+  const currentMap = await getSingleYearStatcastBatterMap(year);
+  const prevMap = await getSingleYearStatcastBatterMap(year - 1).catch(() => ({}));
+
+  const blendedMap: StatcastBatterMap = {};
+  const allPlayerIds = new Set([
+    ...Object.keys(currentMap).map(Number),
+    ...Object.keys(prevMap).map(Number),
+  ]);
+
+  for (const playerId of allPlayerIds) {
+    const curr = currentMap[playerId];
+    const prev = prevMap[playerId];
+
+    if (curr && !prev) {
+      blendedMap[playerId] = curr;
+    } else if (!curr && prev) {
+      blendedMap[playerId] = prev;
+    } else if (curr && prev) {
+      const pa1 = curr.pa ?? 0;
+      const pa2 = prev.pa ?? 0;
+      const totalPa = pa1 + pa2;
+
+      if (totalPa <= 0) {
+        blendedMap[playerId] = curr;
+        continue;
+      }
+
+      const blendVal = (v1: number | null, v2: number | null): number | null => {
+        if (v1 != null && v2 != null) return (v1 * pa1 + v2 * pa2) / totalPa;
+        return v1 ?? v2 ?? null;
+      };
+
+      blendedMap[playerId] = {
+        playerId,
+        pa: totalPa,
+        ba: blendVal(curr.ba, prev.ba),
+        xba: blendVal(curr.xba, prev.xba),
+        slg: blendVal(curr.slg, prev.slg),
+        xslg: blendVal(curr.xslg, prev.xslg),
+        woba: blendVal(curr.woba, prev.woba),
+        xwoba: blendVal(curr.xwoba, prev.xwoba),
+        barrelPct: blendVal(curr.barrelPct, prev.barrelPct),
+        hardHitPct: blendVal(curr.hardHitPct, prev.hardHitPct),
+        avgExitVelo: blendVal(curr.avgExitVelo, prev.avgExitVelo),
+      };
+    }
+  }
+
+  statcastCache.set(cacheKey, blendedMap);
+  return blendedMap;
 }
 
 export const STATCAST_MIN_PA = MIN_PA;

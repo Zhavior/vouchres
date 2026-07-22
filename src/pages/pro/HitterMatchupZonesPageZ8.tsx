@@ -387,7 +387,7 @@ const HitterHeatmapTable: React.FC<{
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-vouch-emerald font-bold">
           <Calculator className="h-3.5 w-3.5" />
-          Sabermetric Log5 Probability Engine Active
+          2-Season Rolling Sabermetric Engine Active (2025–2026)
         </div>
       </div>
       <div className="overflow-x-auto w-full">
