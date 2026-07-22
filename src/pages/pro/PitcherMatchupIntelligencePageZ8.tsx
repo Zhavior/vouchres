@@ -1064,7 +1064,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                 <table className="min-w-[1540px] border-separate border-spacing-0 text-left text-sm">
                   <thead>
                     <tr className={`${Z8_LABEL} text-[hsl(var(--ve-text-muted))]`}>
-                      {['Pitcher', 'Team', 'Opponent', 'Game Time', 'Score', 'Label', 'K/9', 'K/Game', 'ERA', 'WHIP', 'IP', 'GS', 'Whiff%', 'K%', 'xERA', 'Opp K%', 'Opponent vs Hand', 'Park Factor', 'Weather', 'Confidence', 'Research'].map((heading) => (
+                      {['Pitcher', 'Team', 'Opponent', 'Game Time', 'Score', 'Label', 'Ks Today', 'K/9', 'K/Game', 'ERA', 'WHIP', 'IP', 'GS', 'Whiff%', 'K%', 'xERA', 'Opp K%', 'Opponent vs Hand', 'Park Factor', 'Weather', 'Confidence', 'Research'].map((heading) => (
                         <th
                           key={heading}
                           className={`border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.96)] px-3 py-3 font-black ${
@@ -1138,6 +1138,21 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono font-black" style={heatStyle(row.score)}>{displayValue(row.score)}</td>
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3">
                             <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${labelClass(row.label)}`}>{row.label}</span>
+                          </td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono">
+                            {row.metrics.k9 != null ? (
+                              <span className={`inline-flex items-center gap-1 font-mono text-xs font-black px-2 py-1 rounded ${
+                                isPitcherFinal(row)
+                                  ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
+                                  : isPitcherLive(row)
+                                  ? 'text-rose-300 bg-rose-500/20 border border-rose-500/40 animate-pulse'
+                                  : 'text-cyan-300 bg-cyan-500/15 border border-cyan-500/35'
+                              }`}>
+                                {isPitcherFinal(row) ? '🏁' : isPitcherLive(row) ? '🔴' : '⚡'} {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks
+                              </span>
+                            ) : (
+                              '—'
+                            )}
                           </td>
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('k9', row.metrics.k9)}>{displayValue(row.metrics.k9)}</td>
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('kPerGame', row.metrics.kPerGame)}>{displayValue(row.metrics.kPerGame)}</td>
