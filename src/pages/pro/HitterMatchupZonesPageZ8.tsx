@@ -398,7 +398,7 @@ const MatchupStrip: React.FC<{
   <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
     {games.map((g) => {
       const active = g.gamePk === selected;
-      const isGameLive = g.isLive || liveSet?.has(String(g.gamePk)) || liveSet?.has(g.away.abbreviation.toLowerCase()) || liveSet?.has(g.home.abbreviation.toLowerCase());
+      const isGameLive = g.isLive || liveSet?.has(String(g.gamePk));
       const topHrWatch = Array.isArray(g.topHrWatch) ? g.topHrWatch : [];
       const hrCount = topHrWatch.length || 3;
 
@@ -513,13 +513,18 @@ const HitterHeatmapTable: React.FC<{
               const season = row.seasonStats;
               const sc = row.statcast;
               
-              const lastName = row.name.toLowerCase().trim().split(/\s+/).pop() || '';
               const hasHitHrToday = Boolean(
-                row.hitHrToday ||
-                (row.hrToday ?? 0) > 0 ||
-                hitByPlayerId.has(row.id) ||
-                hitPlayerNameSet.has(row.name.toLowerCase().trim()) ||
-                (lastName.length > 2 && hitPlayerNameSet.has(lastName))
+                gamePk &&
+                Array.from(hitByPlayerId.values()).some((event) => {
+                  if (Number(event.gamePk) !== Number(gamePk)) return false;
+                  if (Number(event.playerId) === Number(row.id)) return true;
+                  const eventName = (event.playerName || '').toLowerCase().trim();
+                  const rowName = row.name.toLowerCase().trim();
+                  if (eventName && rowName && eventName === rowName) return true;
+                  const eventLast = eventName.split(/\s+/).pop() || '';
+                  const rowLast = rowName.split(/\s+/).pop() || '';
+                  return eventLast.length >= 3 && eventLast === rowLast && eventName[0] === rowName[0];
+                })
               );
 
               const ratingColor = math.edgeRating === 'ELITE'
