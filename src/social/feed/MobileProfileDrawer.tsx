@@ -10,7 +10,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { getPrimaryProductNavigation } from '../../app/productNavigation';
@@ -24,6 +24,7 @@ import { NotificationBellButton } from '../../components/notifications/UnifiedNo
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
+import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -147,6 +148,16 @@ function MobileProfileDrawer({
     })).filter(g => g.items.length > 0);
   }, [open, featureLayout]);
 
+  const sectionIdsByGroup = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const { group, items } of groups) {
+      map.set(group, items.map((item) => item.id));
+    }
+    return map;
+  }, [groups]);
+
+  const { isCollapsed, toggleGroup } = useSidebarGroupCollapse(activeSection, sectionIdsByGroup);
+
   const go = useCallback((section: string) => {
     onSectionChange(section);
     onClose();
@@ -242,10 +253,26 @@ function MobileProfileDrawer({
 
             {/* Nav groups — same registry as the desktop sidebar */}
             <nav className="flex-1 overflow-y-auto px-2 py-3">
-              {groups.map(({ group, items }) => (
+              {groups.map(({ group, items }) => {
+                const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
+                const collapsed = isCollapsed(group);
+                return (
                 <div key={group} className={`mb-3 overflow-hidden ${Z8_SIDEBAR_PANEL}`}>
-                  <p className={`px-3 py-2 ${Z8_LABEL} text-[9px] tracking-[0.18em] text-vouch-cyan`}>{group}</p>
-                  <div className="px-1.5 py-1.5 space-y-0.5">
+                  <button
+                    type="button"
+                    aria-expanded={!collapsed}
+                    aria-controls={`${sectionId}-items`}
+                    onClick={() => toggleGroup(group)}
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 ${Z8_LABEL} text-[11px] tracking-[0.16em] text-vouch-cyan`}
+                  >
+                    <span>{group}</span>
+                    <ChevronDown
+                      className={`h-3 w-3 shrink-0 text-white/30 transition-transform ${collapsed ? '-rotate-90' : ''}`}
+                      aria-hidden
+                    />
+                  </button>
+                  {!collapsed && (
+                  <div id={`${sectionId}-items`} className="px-1.5 py-1.5 space-y-0.5">
                     {items.map((item) => {
                       const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
                       const Icon = ICON_MAP[resolvedIcon] || Settings;
@@ -266,14 +293,14 @@ function MobileProfileDrawer({
                           {isActive && (
                             <span
                               aria-hidden
-                              className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.95)]"
+                              className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-vouch-cyan"
                             />
                           )}
                           <span
                             className={[
                               'h-7 w-7 shrink-0 transition-all',
                               isActive
-                                ? 'flex items-center justify-center bg-ve-ion/20 text-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.35)]'
+                                ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
                                 : Z8_SIDEBAR_ICON_BOX,
                             ].join(' ')}
                           >
@@ -289,8 +316,9 @@ function MobileProfileDrawer({
                       );
                     })}
                   </div>
+                  )}
                 </div>
-              ))}
+              );})}
             </nav>
 
             {/* Footer */}
