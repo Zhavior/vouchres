@@ -41,6 +41,15 @@ export function findPlayerLiveGame(
   player: Pick<MLBPlayer, "team"> & Partial<PlayerTeamFields>,
   liveGames: LiveGameRef[],
 ): LiveGameRef | undefined {
+  const targetPk = player.resolvedGamePk ?? (player as any).gamePk ?? (player as any).gameId;
+  if (targetPk != null && String(targetPk).trim() !== "" && !String(targetPk).toUpperCase().includes("TBD")) {
+    const targetStr = String(targetPk).trim();
+    const exactMatch = liveGames.find(
+      (game) => String(game.gamePk ?? game.id) === targetStr,
+    );
+    if (exactMatch) return exactMatch;
+  }
+
   const extraLabels = [
     (player as PlayerTeamFields).teamAbbrev,
     (player as PlayerTeamFields).sourceTeamAbbrev,

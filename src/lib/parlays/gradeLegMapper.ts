@@ -113,6 +113,8 @@ export function resolveGradeGamePk(input: GradeLegPayloadInput): string | undefi
   const candidates = [
     input.gamePk,
     input.gameId,
+    (input as any).resolvedGamePk,
+    (input as any).resolved_game_pk,
     input.game_pk,
     input.game_id,
     input.eventId,

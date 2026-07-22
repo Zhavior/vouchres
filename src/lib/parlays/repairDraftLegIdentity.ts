@@ -91,11 +91,15 @@ export function findGameByMatchupLabel(
 }
 
 function resolveDraftGamePk(leg: DraftParlayLeg, liveGames: LiveGameRef[]): string | undefined {
-  const existing = cleanId(leg.gamePk) ?? cleanId(leg.gameId);
+  const existing = cleanId(leg.gamePk) ?? cleanId(leg.gameId) ?? cleanId((leg as any).resolvedGamePk);
   if (existing && !existing.toUpperCase().includes("TBD")) return existing;
 
   if (leg.teamLabel) {
-    const matched = findPlayerLiveGame({ team: leg.teamLabel, teamId: leg.teamId ?? undefined }, liveGames);
+    const matched = findPlayerLiveGame({
+      team: leg.teamLabel,
+      teamId: leg.teamId ?? undefined,
+      resolvedGamePk: (leg as any).gamePk ?? (leg as any).gameId ?? (leg as any).resolvedGamePk,
+    }, liveGames);
     const pk = resolveLiveGamePk(matched);
     if (pk) return pk;
   }
