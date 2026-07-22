@@ -644,7 +644,8 @@ export default function WorldChatPanel({
               accentColor: raw.accent_color ?? 'cyan',
               text: raw.text,
               winRate: raw.win_rate ?? null,
-              statusLine: raw.status_line ?? null,
+              statusLine: raw.status_line ?? '',
+              profilePath: `/profile/${raw.user_id}`,
               createdAt: raw.created_at,
               reactions: [],
               replyTo: null,
@@ -707,13 +708,14 @@ export default function WorldChatPanel({
       userId: user?.id ?? 'me',
       displayName: resolvedProfile.displayName,
       username: resolvedProfile.username,
-      handle: resolvedProfile.handle,
+      handle: resolvedProfile.username,
       avatarUrl: resolvedProfile.avatarUrl ?? null,
       borderId: resolvedProfile.borderId ?? null,
       accentColor: resolvedProfile.accentColor ?? 'cyan',
       text,
       winRate: resolvedProfile.winRate ?? null,
-      statusLine: resolvedProfile.statusLine ?? null,
+      statusLine: resolvedProfile.statusLine ?? '',
+      profilePath: `/profile/${user?.id ?? 'me'}`,
       createdAt: new Date().toISOString(),
       reactions: [],
       replyTo: replyTarget ? { id: replyTarget.id, displayName: replyTarget.displayName, handle: replyTarget.handle, text: replyTarget.text, userId: replyTarget.userId } : null,
@@ -1172,7 +1174,7 @@ export default function WorldChatPanel({
           isOwnProfile={selectedProfile.userId === user?.id}
           onClose={() => setSelectedProfile(null)}
           onOpenFullProfile={() => {
-            openAuthorProfile(selectedProfile.userId);
+            if (selectedProfile.userId && onNavigateProfile) onNavigateProfile(selectedProfile.userId);
             setSelectedProfile(null);
           }}
           onToggleFollow={handleToggleFollow}
