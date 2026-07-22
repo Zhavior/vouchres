@@ -135,6 +135,7 @@ export default function LandingJudgesDeck() {
               <button
                 key={item.id}
                 type="button"
+                aria-label={`Show ${item.displayName}`}
                 aria-current={active}
                 onMouseEnter={() => setIndex(judgeIndex)}
                 onFocus={() => setIndex(judgeIndex)}

@@ -23,6 +23,7 @@ import { performAppLogout } from '../../lib/appLogout';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
+import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -221,7 +222,16 @@ function MobileProfileDrawer({
               {/* Real proof stats (like X's follower row, but ours are graded numbers) */}
               <div className="mt-3 flex items-center gap-4 text-xs">
                 <span><strong className="text-white">{profile.totalPicks}</strong> <span className="text-white/40">picks</span></span>
-                <span><strong className="text-white">{profile.winRate.toFixed(1)}%</strong> <span className="text-white/40">win rate</span></span>
+                <span>
+                  {profileHasGradedPicks(profile) ? (
+                    <>
+                      <strong className="text-white">{profile.winRate.toFixed(1)}%</strong>{' '}
+                      <span className="text-white/40">win rate</span>
+                    </>
+                  ) : (
+                    <span className="text-white/50">No graded picks yet</span>
+                  )}
+                </span>
                 <span>
                   <strong className={profile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}>
                     {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}u
@@ -245,6 +255,8 @@ function MobileProfileDrawer({
                           key={item.id}
                           type="button"
                           onClick={() => go(item.id)}
+                          aria-label={item.label}
+                          title={item.label}
                           aria-current={isActive ? 'page' : undefined}
                           className={[
                             'relative flex min-h-[44px] w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',

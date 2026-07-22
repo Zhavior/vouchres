@@ -34,6 +34,7 @@ import { performAppLogout } from '../../lib/appLogout';
 import { SECTIONS_USING_LIVE_GAMES } from '../../app/sectionNavigation';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
+import { formatProfileWinRate } from '../../lib/profileWinRateDisplay';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -307,6 +308,7 @@ function FeedSidebar({
                 key={sport.id}
                 onClick={() => handleSportClick(sport.id)}
                 disabled={!sport.enabled}
+                aria-label={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 id={`sidebar-sport-${sport.id}`}
                 className={[
@@ -454,9 +456,7 @@ function FeedSidebar({
               )}
             </div>
             <p className={`mt-0.5 ${Z8_LABEL} text-white/40 truncate`}>
-              {profile.winRate != null && profile.winRate > 0
-                ? `${Math.round(profile.winRate * 100)}% win rate`
-                : 'No graded picks yet'}
+              {formatProfileWinRate(profile, { suffix: 'win rate' })}
             </p>
           </div>
         </button>
