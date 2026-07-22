@@ -55,8 +55,14 @@ export const Z8_SIDEBAR_ACTIVE =
 export const Z8_SIDEBAR_IDLE =
   'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(79,184,220,0.1)]';
 
-/** Mono label typography. */
-export const Z8_LABEL = `${Z8_FONT_MONO} text-[11px] font-bold uppercase tracking-[0.08em]`;
+/** Mono label typography — semibold weight for clean hierarchy without visual clutter. */
+export const Z8_LABEL = `${Z8_FONT_MONO} text-[11px] font-semibold uppercase tracking-[0.08em]`;
+
+/** Muted secondary badge — clean depth without visual noise. */
+export const Z8_BADGE_MUTED = 'inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 font-mono text-[10px] font-semibold text-white/70';
+
+/** Primary active neon badge. */
+export const Z8_BADGE_NEON = 'inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-vouch-cyan';
 
 /** Page root background — transparent; unified obsidian base lives on .z8-app-shell. */
 export const Z8_PAGE = 'bg-transparent font-z8 text-white min-h-full';
