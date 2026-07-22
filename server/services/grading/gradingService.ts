@@ -7,6 +7,7 @@ import { getGrader, type LegOutcome } from "./sportGraders";
 import { gradePick } from "../persistence/pickService";
 import { createParlayGradedNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
+import { trustLedgerRepository } from "../../repositories/trustLedgerRepository";
 
 /**
  * Grading service — resolves pick outcomes by fetching results from the
@@ -263,6 +264,18 @@ async function runGradePendingPicks(opts: {
                 ];
               }
             }
+          }
+
+          const trustDelta = result.status === "won" ? 25 : result.status === "lost" ? -15 : 0;
+          if (pick.user_id) {
+            void trustLedgerRepository.recordEvent({
+              user_id: pick.user_id,
+              event_type: "GRADE",
+              pick_id: pick.id,
+              parlay_id: pick.id,
+              trust_delta: trustDelta,
+              metadata: { status: result.status, settled_units: result.settled_units },
+            });
           }
           if (pick.leg_type === "parlay" && pick.user_id) {
             const legResults = result.leg_results ?? [];

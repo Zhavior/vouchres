@@ -122,6 +122,8 @@ export interface ScoredHrCandidate {
   battingOrder?: number | null;
 }
 
+import { GameWeather } from "./weatherService";
+
 /* ============ Game context for validation ============ */
 
 export interface GameContext {
@@ -132,6 +134,7 @@ export interface GameContext {
   awayTeamAbbrev: string;
   homeTeamAbbrev: string;
   venueName?: string;
+  weather?: GameWeather | null;
   probablePitchers: {
     away: { pitcherId: number; pitcherName: string; teamId: number; throws?: "L" | "R" | "U" } | null;
     home: { pitcherId: number; pitcherName: string; teamId: number; throws?: "L" | "R" | "U" } | null;

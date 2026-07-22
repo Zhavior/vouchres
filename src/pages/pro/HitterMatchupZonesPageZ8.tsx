@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { ProLockedCard } from "../../components/pro/ProLockedCard";
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
-import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle } from 'lucide-react';
+import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { useDailyHrBoard } from '../../features/hr/hooks/useDailyHrBoard';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
+import StadiumWindVectorWidget from '../../components/stadium/StadiumWindVectorWidget';
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
 import {
@@ -79,6 +80,7 @@ interface HitterRow {
   bats: 'L' | 'R' | 'S' | 'U';
   position: string;
   lineupSpot: number | null;
+  lineupStatus?: string | null;
   headshotUrl?: string | null;
   recentForm: { games: number; hr: number; hits: number; atBats: number; strikeOuts: number } | null;
   vsPitcher: BvpStats | null;
@@ -278,6 +280,7 @@ function buildLineupFromHrBoard(
     bats: (r.bats === 'L' || r.bats === 'R' || r.bats === 'S') ? r.bats : 'R',
     position: String(r.position || 'DH'),
     lineupSpot: r.battingOrder ?? r.lineupSpot ?? (idx + 1),
+    lineupStatus: r.lineupStatus,
     headshotUrl: r.headshot ?? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${r.playerId}/headshot/67/current`,
     recentForm: r.recentForm ?? { games: 10, hr: r.seasonHr ? Math.round(r.seasonHr / 10) : 1, hits: 8, atBats: 32, strikeOuts: 6 },
     vsPitcher: {
@@ -421,7 +424,15 @@ const HitterHeatmapTable: React.FC<{
                       <PlayerHeadshot name={row.name} playerId={row.id} headshotUrl={row.headshotUrl} size={26} />
                       <div>
                         <div className="font-bold" style={{ color: SAMPLE_COLOR[tier] }} title={SAMPLE_LABEL[tier]}>{row.name}</div>
-                        <div className="text-[10px] text-white/35">{row.bats} · {row.position}{row.lineupSpot ? ` · #${row.lineupSpot}` : ''}</div>
+                        <div className="text-[10px] text-white/35 flex items-center gap-1.5 mt-0.5">
+                          <span>{row.bats} · {row.position}{row.lineupSpot ? ` · #${row.lineupSpot}` : ''}</span>
+                          {row.lineupStatus === 'confirmed' && (
+                            <span className="flex items-center gap-1 text-vouch-emerald bg-vouch-emerald/10 px-1.5 py-0.5 rounded border border-vouch-emerald/20 font-medium">
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              CONFIRMED
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -665,6 +676,15 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
 
         {games.length > 0 && selectedGameData && (
           <div className="space-y-6">
+            <StadiumWindVectorWidget
+              venue={selectedGameData.venue}
+              tempF={76}
+              windMph={11}
+              windCompass="NE"
+              status="forecast"
+              parkFactor={108}
+            />
+
             <BestMatchupsTreemap rows={combinedRows} pitcherHand={awayVsHome?.pitcher.throws} />
 
             {loadingLineups ? (

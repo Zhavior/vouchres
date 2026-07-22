@@ -42,18 +42,18 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
 
   const totalSlips = savedParlays.length;
 
-  // Chart data for Pie
+  // Chart data for Pie using canonical design tokens
   const pieData = [
-    { name: 'Low Risk', value: counts.LOW, color: '#34d399', rawTier: 'LOW' },
-    { name: 'Medium Risk', value: counts.MEDIUM, color: '#f59e0b', rawTier: 'MEDIUM' },
-    { name: 'High Risk', value: counts.HIGH, color: '#f43f5e', rawTier: 'HIGH' }
+    { name: 'Low Risk', value: counts.LOW, color: '#31B583', rawTier: 'LOW' },
+    { name: 'Medium Risk', value: counts.MEDIUM, color: '#D99C4A', rawTier: 'MEDIUM' },
+    { name: 'High Risk', value: counts.HIGH, color: '#D96459', rawTier: 'HIGH' }
   ].filter(item => item.value > 0);
 
   // Fallback preset data when there are no saved slips, to let users preview the dynamic dashboard
   const fallbackData = [
-    { name: 'Low Risk', value: 4, color: '#34d399', rawTier: 'LOW' },
-    { name: 'Medium Risk', value: 8, color: '#f59e0b', rawTier: 'MEDIUM' },
-    { name: 'High Risk', value: 3, color: '#f43f5e', rawTier: 'HIGH' }
+    { name: 'Low Risk', value: 4, color: '#31B583', rawTier: 'LOW' },
+    { name: 'Medium Risk', value: 8, color: '#D99C4A', rawTier: 'MEDIUM' },
+    { name: 'High Risk', value: 3, color: '#D96459', rawTier: 'HIGH' }
   ];
 
   const activeData = totalSlips > 0 ? pieData : fallbackData;
@@ -183,7 +183,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
           <div className="space-y-1 bg-ve-graphite/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-amber-500">
-                <span className="w-2 h-2 rounded-full bg-amber-50" style={{ backgroundColor: '#f59e0b' }} />
+                <span className="w-2 h-2 rounded-full bg-amber-50" style={{ backgroundColor: 'var(--color-ve-caution)' }} />
                 MEDIUM RISK
               </span>
               <span className="font-mono text-slate-350">
@@ -208,7 +208,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
           <div className="space-y-1 bg-ve-graphite/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-rose-500">
-                <span className="w-2 h-2 rounded-full bg-rose-50" style={{ backgroundColor: '#f43f5e' }} />
+                <span className="w-2 h-2 rounded-full bg-rose-50" style={{ backgroundColor: 'var(--color-ve-negative)' }} />
                 HIGH RISK
               </span>
               <span className="font-mono text-slate-350">

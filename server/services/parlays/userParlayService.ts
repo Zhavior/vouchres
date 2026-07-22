@@ -18,6 +18,7 @@ import {
   type TrustAudience,
 } from "../../repositories/parlayRepository";
 import { insertPickAuditLog, listPickAuditLogs, type PickAuditRow } from "../../repositories/pickAuditRepository";
+import { trustLedgerRepository } from "../../repositories/trustLedgerRepository";
 import { assessParlayIdentity } from "./parlayIdentityService";
 
 export interface ParlayWithLegs extends ParlayRow {
@@ -223,6 +224,15 @@ export async function commitParlayTrustLedger(input: {
     console.warn("[commitParlayTrustLedger] audit log failed", (err as Error)?.message);
   });
 
+  void trustLedgerRepository.recordEvent({
+    user_id: input.userId,
+    event_type: "COMMIT",
+    pick_id: input.parlayId,
+    parlay_id: input.parlayId,
+    trust_delta: 0,
+    metadata: { audience, committedAt, trustLockAt },
+  });
+
   return parlay;
 }
 
@@ -249,13 +259,24 @@ export async function finalizeParlayTrustLock(input: {
 
   if (!parlay) return existing;
 
-  return applyTrustLockProof({
+  const lockedParlay = await applyTrustLockProof({
     parlayId: input.parlayId,
     userId: input.userId,
     parlay,
     lockedAt,
     auditAction: "lock_trust_ledger",
   });
+
+  void trustLedgerRepository.recordEvent({
+    user_id: input.userId,
+    event_type: "LOCK",
+    pick_id: input.parlayId,
+    parlay_id: input.parlayId,
+    trust_delta: 5,
+    metadata: { audience, lockedAt, proofHash: lockedParlay.proof_hash },
+  });
+
+  return lockedParlay;
 }
 
 export async function finalizeDueTrustLocks(limit = 50): Promise<{ finalized: number; ids: string[] }> {

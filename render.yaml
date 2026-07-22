@@ -68,6 +68,8 @@ services:
         sync: false
       - key: UPSTASH_REDIS_REST_TOKEN
         sync: false
+      - key: DISABLE_LEGACY_CANONICAL_PARLAY_ROUTE_LABELS
+        value: legacy.parlay.detail,legacy.parlay.list,legacy.parlay.commit_trust,legacy.parlay.finalize_trust_lock,legacy.parlay.save
 
   - type: cron
     name: vouchedge-grader

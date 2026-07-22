@@ -39,6 +39,7 @@ import {
   LineupStatus,
   isPlaceholder,
 } from "./hrValidation";
+import { getTodayGamesWeather } from "./weatherService";
 
 /* ============ Caches (each has its own TTL) ============ */
 
@@ -197,29 +198,36 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
   // STEP 3: Fetch rosters ONLY for today's teams (cached 20 min per team-set)
   const hittersByTeam = await getActiveHittersByTeam(teamIdList);
 
+  // STEP 3.5: Fetch weather
+  const weatherList = await getTodayGamesWeather(date);
+
   // STEP 4: Build game contexts for validation
-  const gameContexts: GameContext[] = games.map((g) => ({
-    gamePk: g.gamePk,
-    gameDate: g.gameDate,
-    awayTeamId: g.awayTeam?.teamId ?? 0,
-    homeTeamId: g.homeTeam?.teamId ?? 0,
-    awayTeamAbbrev: g.awayTeam?.abbreviation ?? "???",
-    homeTeamAbbrev: g.homeTeam?.abbreviation ?? "???",
-    venueName:
-      (g as any).venueName ??
-      (g as any).venue?.name ??
-      (g as any).venue ??
-      "Unknown venue",
-    probablePitchers: {
-      away: g.probablePitchers.away
-        ? { pitcherId: g.probablePitchers.away.pitcherId, pitcherName: g.probablePitchers.away.pitcherName, teamId: g.probablePitchers.away.teamId, throws: g.probablePitchers.away.throws }
-        : null,
-      home: g.probablePitchers.home
-        ? { pitcherId: g.probablePitchers.home.pitcherId, pitcherName: g.probablePitchers.home.pitcherName, teamId: g.probablePitchers.home.teamId, throws: g.probablePitchers.home.throws }
-        : null,
-    },
-    status: g.status,
-  }));
+  const gameContexts: GameContext[] = games.map((g) => {
+    const weather = weatherList.find((w) => w.gamePk === g.gamePk) ?? null;
+    return {
+      gamePk: g.gamePk,
+      gameDate: g.gameDate,
+      awayTeamId: g.awayTeam?.teamId ?? 0,
+      homeTeamId: g.homeTeam?.teamId ?? 0,
+      awayTeamAbbrev: g.awayTeam?.abbreviation ?? "???",
+      homeTeamAbbrev: g.homeTeam?.abbreviation ?? "???",
+      venueName:
+        (g as any).venueName ??
+        (g as any).venue?.name ??
+        (g as any).venue ??
+        "Unknown venue",
+      weather,
+      probablePitchers: {
+        away: g.probablePitchers.away
+          ? { pitcherId: g.probablePitchers.away.pitcherId, pitcherName: g.probablePitchers.away.pitcherName, teamId: g.probablePitchers.away.teamId, throws: g.probablePitchers.away.throws }
+          : null,
+        home: g.probablePitchers.home
+          ? { pitcherId: g.probablePitchers.home.pitcherId, pitcherName: g.probablePitchers.home.pitcherName, teamId: g.probablePitchers.home.teamId, throws: g.probablePitchers.home.throws }
+          : null,
+      },
+      status: g.status,
+    };
+  });
 
   // STEP 4.5: Fetch official batting orders from MLB boxscores when available.
   // If lineups are not posted yet, this map stays empty and the board remains projected.
@@ -628,13 +636,27 @@ function scoreCandidate(
     ? (seasonHR / plateAppearances) * 4.25
     : 0.018;
 
+  let weatherBoost = 0;
+  let weatherSource = "unavailable";
+  if (game.weather) {
+    weatherSource = game.weather.source || "unavailable";
+    if (game.weather.tempF !== null) {
+      if (game.weather.tempF >= 85) weatherBoost = 3;
+      else if (game.weather.tempF >= 70) weatherBoost = 1;
+      else if (game.weather.tempF <= 50) weatherBoost = -3;
+    }
+  }
+
+  hrScore = clamp(hrScore + weatherBoost, 1, 100);
+
   const estimatedHrProbability = Number(clamp(
     baseHrProbability *
       (0.75 + hitterPower / 160) *
       (0.85 + pitcherVulnerability / 250) *
       hrMultiplier *
       (0.9 + lineupVolume / 500) *
-      (1 - penalties / 500),
+      (1 - penalties / 500) *
+      (1 + weatherBoost / 100),
     0.003,
     0.14
   ).toFixed(4));
@@ -711,8 +733,8 @@ function scoreCandidate(
     parkFactor,
     parkSource: (park as any).source ?? "park_factor_table",
     hrMultiplier,
-    weatherBoost: 0,
-    weatherSource: "unavailable",
+    weatherBoost,
+    weatherSource,
     lineupStatus: player.lineupStatus as LineupStatus,
     battingOrder: player.battingOrder ?? null,
     injuryStatus: player.injuryStatus,

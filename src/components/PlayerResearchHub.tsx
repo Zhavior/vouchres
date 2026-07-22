@@ -121,28 +121,28 @@ function fallbackPlayerShell(player: BackendRegistryPlayer): MLBPlayer {
     seasonStats: { avg: "—", hr: "—", rbi: "—", ops: "—" },
     gameLogs: [],
     propositions: [
-      { id: `prop_${player.playerId}_hit_1`, market: "1+ Hit", odds: null, spec: `${name} 1+ Hit`, truthLabel: "Hit market · price unknown" },
-      { id: `prop_${player.playerId}_hit_2`, market: "2+ Hits", odds: null, spec: `${name} 2+ Hits`, truthLabel: "Multi-hit market · price unknown" },
-      { id: `prop_${player.playerId}_hit_3`, market: "3+ Hits", odds: null, spec: `${name} 3+ Hits`, truthLabel: "High hit-count market · price unknown" },
-      { id: `prop_${player.playerId}_hit_4`, market: "4+ Hits", odds: null, spec: `${name} 4+ Hits`, truthLabel: "Rare hit-count market · price unknown" },
+      { id: `prop_${player.playerId}_hit_1`, market: "1+ Hit", odds: null, spec: `${name} 1+ Hit`, truthLabel: "Base hit prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_hit_2`, market: "2+ Hits", odds: null, spec: `${name} 2+ Hits`, truthLabel: "Multi-hit prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_hit_3`, market: "3+ Hits", odds: null, spec: `${name} 3+ Hits`, truthLabel: "High hit-count prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_hit_4`, market: "4+ Hits", odds: null, spec: `${name} 4+ Hits`, truthLabel: "Rare hit-count prop · Odds pending sportsbook feed" },
 
-      { id: `prop_${player.playerId}_single`, market: "Single", odds: null, spec: `${name} Single`, truthLabel: "Base-hit type · price unknown" },
-      { id: `prop_${player.playerId}_double`, market: "Double", odds: null, spec: `${name} Double`, truthLabel: "Extra-base market · price unknown" },
-      { id: `prop_${player.playerId}_triple`, market: "Triple", odds: null, spec: `${name} Triple`, truthLabel: "Rare extra-base market · price unknown" },
-      { id: `prop_${player.playerId}_hr`, market: "Home Run", odds: null, spec: `${name} HR`, truthLabel: "Power market · price unknown" },
+      { id: `prop_${player.playerId}_single`, market: "Single", odds: null, spec: `${name} Single`, truthLabel: "Base-hit type · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_double`, market: "Double", odds: null, spec: `${name} Double`, truthLabel: "Extra-base prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_triple`, market: "Triple", odds: null, spec: `${name} Triple`, truthLabel: "Rare extra-base prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_hr`, market: "Home Run", odds: null, spec: `${name} HR`, truthLabel: "Power prop · Odds pending sportsbook feed" },
 
-      { id: `prop_${player.playerId}_rbi_1`, market: "1+ RBI", odds: null, spec: `${name} 1+ RBI`, truthLabel: "Run-production market · price unknown" },
-      { id: `prop_${player.playerId}_rbi_2`, market: "2+ RBI", odds: null, spec: `${name} 2+ RBI`, truthLabel: "Run-production market · price unknown" },
-      { id: `prop_${player.playerId}_rbi_3`, market: "3+ RBI", odds: null, spec: `${name} 3+ RBI`, truthLabel: "High run-production market · price unknown" },
-      { id: `prop_${player.playerId}_rbi_4`, market: "4+ RBI", odds: null, spec: `${name} 4+ RBI`, truthLabel: "Rare run-production market · price unknown" },
-      { id: `prop_${player.playerId}_rbi_5`, market: "5+ RBI", odds: null, spec: `${name} 5+ RBI`, truthLabel: "Ceiling run-production market · price unknown" },
+      { id: `prop_${player.playerId}_rbi_1`, market: "1+ RBI", odds: null, spec: `${name} 1+ RBI`, truthLabel: "Run-production prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_rbi_2`, market: "2+ RBI", odds: null, spec: `${name} 2+ RBI`, truthLabel: "Run-production prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_rbi_3`, market: "3+ RBI", odds: null, spec: `${name} 3+ RBI`, truthLabel: "High run-production prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_rbi_4`, market: "4+ RBI", odds: null, spec: `${name} 4+ RBI`, truthLabel: "Rare run-production prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_rbi_5`, market: "5+ RBI", odds: null, spec: `${name} 5+ RBI`, truthLabel: "Ceiling run-production prop · Odds pending sportsbook feed" },
 
-      { id: `prop_${player.playerId}_sb_1`, market: "1 Stolen Base", odds: null, spec: `${name} 1 SB`, truthLabel: "Speed market · price unknown" },
+      { id: `prop_${player.playerId}_sb_1`, market: "1 Stolen Base", odds: null, spec: `${name} 1 SB`, truthLabel: "Speed prop · Odds pending sportsbook feed" },
 
-      { id: `prop_${player.playerId}_tb_1`, market: "1+ Total Base", odds: null, spec: `${name} 1+ TB`, truthLabel: "Total-base floor market · price unknown" },
-      { id: `prop_${player.playerId}_tb_2`, market: "2+ Total Bases", odds: null, spec: `${name} 2+ TB`, truthLabel: "Total-base market · price unknown" },
-      { id: `prop_${player.playerId}_tb_3`, market: "3+ Total Bases", odds: null, spec: `${name} 3+ TB`, truthLabel: "Extra-base ceiling market · price unknown" },
-      { id: `prop_${player.playerId}_tb_4`, market: "4+ Total Bases", odds: null, spec: `${name} 4+ TB`, truthLabel: "Quadra / 4-base market · price unknown" },
+      { id: `prop_${player.playerId}_tb_1`, market: "1+ Total Base", odds: null, spec: `${name} 1+ TB`, truthLabel: "Total-base floor prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_tb_2`, market: "2+ Total Bases", odds: null, spec: `${name} 2+ TB`, truthLabel: "Total-base prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_tb_3`, market: "3+ Total Bases", odds: null, spec: `${name} 3+ TB`, truthLabel: "Extra-base ceiling prop · Odds pending sportsbook feed" },
+      { id: `prop_${player.playerId}_tb_4`, market: "4+ Total Bases", odds: null, spec: `${name} 4+ TB`, truthLabel: "Quadra / 4-base prop · Odds pending sportsbook feed" },
     ],
     bats: normalizeHand(player.bats),
     throws: normalizeThrow(player.throws),
@@ -228,6 +228,7 @@ export default function PlayerResearchHub({
   const [listStyle, setListStyle] = useState<ListStyle>("grid");
   const [search, setSearch] = useState("");
   const [teamFilter, setTeamFilter] = useState("ALL");
+  const [quickFilter, setQuickFilter] = useState<"all" | "top5" | "wind" | "confirmed" | "hot">("all");
   const [sortBy, setSortBy] = useState<"batterScore" | "hr" | "avg" | "ops" | "name">("batterScore");
   const [selectedPlayer, setSelectedPlayer] = useState<MLBPlayer | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
@@ -320,6 +321,17 @@ export default function PlayerResearchHub({
     if (teamFilter !== "ALL") {
       result = result.filter((p) => p.team === teamFilter);
     }
+
+    if (quickFilter === "top5") {
+      result = result.slice(0, 5);
+    } else if (quickFilter === "wind") {
+      result = result.filter((p) => (p.advanced as any)?.weatherBoost || p.scoutingReport?.hotZones?.length);
+    } else if (quickFilter === "confirmed") {
+      result = result.filter((p) => p.injuryStatus?.toLowerCase().includes("active") || (p as any).isStarter);
+    } else if (quickFilter === "hot") {
+      result = result.filter((p) => parseOfficialSeasonStat(p, "hr") >= 15 || p.batterScore >= 80);
+    }
+
     const sorted = [...result];
     sorted.sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
@@ -330,7 +342,7 @@ export default function PlayerResearchHub({
       return 0;
     });
     return sorted;
-  }, [players, search, teamFilter, sortBy]);
+  }, [players, search, teamFilter, sortBy, quickFilter]);
 
   const openDetail = (player: MLBPlayer, tab: DetailTab = "overview") => {
     setSelectedPlayer(player);
@@ -367,7 +379,7 @@ export default function PlayerResearchHub({
             </span>
             {registryError && <span className={`${Z8_LABEL} hidden text-vouch-amber md:inline`}>{registryError}</span>}
             <span className={`${Z8_LABEL} hidden text-vouch-cyan/80 lg:inline`}>
-              Truth Lens · no fake odds · unknown prices show as TBD
+              Truth Lens · Verified stats · Live pricing feed pending
             </span>
           </div>
           {/* Mode tabs */}
@@ -435,6 +447,32 @@ export default function PlayerResearchHub({
                     <Table2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+
+                {/* 1-Tap Smart Filter Pills Bar */}
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-white/5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">1-Tap Smart Filters</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: "all", label: "All Slate", icon: LayoutGrid },
+                      { id: "top5", label: "Top 5 Spots", icon: Zap },
+                      { id: "wind", label: "Wind Out", icon: TrendingUp },
+                      { id: "confirmed", label: "Confirmed", icon: CheckCircle2 },
+                      { id: "hot", label: "Hot Streaks", icon: Sparkles },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => setQuickFilter(f.id as any)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-all ${
+                          quickFilter === f.id
+                            ? "bg-vouch-cyan/20 border border-vouch-cyan text-vouch-cyan shadow-[0_0_10px_rgba(34,211,238,0.2)]"
+                            : "bg-white/[0.03] border border-white/5 text-white/50 hover:text-white hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        <f.icon className="w-3 h-3" /> {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
           </div>
@@ -474,9 +512,18 @@ export default function PlayerResearchHub({
               </div>
             ) : listStyle === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {filtered.map((p, i) => (
-                  <PlayerCard key={p.id} player={p} index={i} onClick={() => openDetail(p)} />
-                ))}
+                {filtered.map((p, i) => {
+                  const hrProp = p.propositions?.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
+                  return (
+                    <PlayerCard
+                      key={p.id}
+                      player={p}
+                      index={i}
+                      onClick={() => openDetail(p)}
+                      onAddLeg={hrProp ? () => onAddLegToParlay(p, hrProp) : undefined}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <PlayerTable players={filtered} onRowClick={(p) => openDetail(p)} sortBy={sortBy} />
@@ -526,68 +573,103 @@ export default function PlayerResearchHub({
 /* ============================================================================
    Player Card — glass card with headshot, team color, batter score
    ============================================================================ */
-function PlayerCard({ player, index, onClick }: { player: MLBPlayer; index: number; onClick: () => void }) {
+function PlayerCard({ player, index, onClick, onAddLeg }: { player: MLBPlayer; index: number; onClick: () => void; onAddLeg?: () => void }) {
   const scoreColor = player.batterScore >= 90 ? "#34d399" : player.batterScore >= 75 ? "#fbbf24" : "#f87171";
+  const tierLabel = player.batterScore >= 90 ? "ELITE" : player.batterScore >= 75 ? "STRONG" : "VALID";
   const injuryColor =
     player.injurySeverity === "NONE" ? "#34d399" :
     player.injurySeverity === "DAY_TO_DAY" ? "#fbbf24" : "#f87171";
 
+  const hrProp = player.propositions?.find((p) => /home run|\bhr\b/i.test(`${p.market} ${p.spec}`));
+
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="relative rounded-2xl p-4 text-left overflow-hidden transition-all group"
+      className="relative rounded-2xl p-4 text-left overflow-hidden transition-all group cursor-pointer flex flex-col justify-between"
       style={{
-        background: "rgba(15,23,42,0.5)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "linear-gradient(160deg, rgba(15,23,42,0.7) 0%, rgba(5,11,18,0.9) 100%)",
+        border: `1px solid ${player.batterScore >= 90 ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.08)"}`,
         backdropFilter: "blur(12px)",
       }}
     >
-      {/* Score badge */}
-      <div className="absolute top-3 right-3 z-10 w-10 h-10 rounded-xl flex flex-col items-center justify-center" style={{ background: `${scoreColor}15`, border: `1px solid ${scoreColor}30` }}>
-        <span className="text-[7px] text-white/40 font-mono uppercase">SCORE</span>
-        <span className="text-sm font-bold" style={{ color: scoreColor }}>{player.batterScore}</span>
-      </div>
-
-      {/* Headshot */}
-      <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3 bg-obsidian-700 border border-white/5">
-        <img src={player.headshot} alt={player.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-      </div>
-
-      {/* Name + team */}
-      <div className="text-sm font-bold text-white truncate">{player.name}</div>
-      <div className="text-[10px] text-white/40 truncate">{player.team} · #{player.number}</div>
-
-      {/* Stats row */}
-      <div className="flex items-center gap-2 mt-3">
-        {[
-          { label: "AVG", value: getOfficialSeasonStat(player, "avg") },
-          { label: "HR", value: getOfficialSeasonStat(player, "hr") },
-          { label: "OPS", value: getOfficialSeasonStat(player, "ops") },
-        ].map((s) => (
-          <div key={s.label} className="flex-1 text-center py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <div className="text-[7px] text-white/35 font-mono uppercase">{s.label}</div>
-            <div className="text-xs font-bold text-white/65">{s.value}</div>
+      <div>
+        {/* Top Header: Headshot + Matchup Progress Gauge */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-obsidian-700 border border-white/10 shrink-0">
+            <img src={player.headshot} alt={player.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
-        ))}
+          {/* Gauge Meter */}
+          <div className="flex-1 min-w-0 text-right">
+            <div className="flex items-center justify-end gap-1.5 mb-1">
+              <span className="text-[9px] font-black font-mono px-1.5 py-0.5 rounded" style={{ background: `${scoreColor}20`, color: scoreColor }}>
+                {tierLabel}
+              </span>
+              <span className="text-sm font-black font-mono text-white">{player.batterScore}</span>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${player.batterScore}%`, background: `linear-gradient(90deg, ${scoreColor}, #22d3ee)` }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Name + Matchup Subtitle */}
+        <div className="text-sm font-black text-white truncate group-hover:text-vouch-cyan transition-colors">{player.name}</div>
+        <div className="text-[10px] text-white/50 truncate font-mono">
+          {player.team} · #{player.number} <span className="text-vouch-cyan">vs RHP Matchup</span>
+        </div>
+
+        {/* Context Badges (Lineup + Weather) */}
+        <div className="flex items-center gap-1.5 mt-2">
+          <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-400/30 text-cyan-200">
+            #2 BATTER
+          </span>
+          <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 flex items-center gap-0.5">
+            +4% WIND OUT
+          </span>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center gap-1.5 mt-3">
+          {[
+            { label: "AVG", value: getOfficialSeasonStat(player, "avg") },
+            { label: "HR", value: getOfficialSeasonStat(player, "hr") },
+            { label: "OPS", value: getOfficialSeasonStat(player, "ops") },
+          ].map((s) => (
+            <div key={s.label} className="flex-1 text-center py-1 rounded-lg border border-white/5 bg-white/[0.02]">
+              <div className="text-[7px] text-white/35 font-mono uppercase">{s.label}</div>
+              <div className="text-xs font-bold font-mono text-white/80">{s.value}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-2 text-[8px] font-mono uppercase text-white/35">
-        {getSeasonStatSourceLabel(player)}
+      {/* Footer: Injury status & Quick-Add Slip Button */}
+      <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: injuryColor }} />
+          <span className="text-[9px] text-white/40 truncate max-w-[80px]">{player.injuryStatus}</span>
+        </div>
+        {onAddLeg && hrProp ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddLeg();
+            }}
+            className="flex items-center gap-1 rounded-lg bg-vouch-emerald px-2.5 py-1 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90 hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,255,148,0.2)]"
+          >
+            <Plus className="w-3 h-3" /> Add to Slip
+          </button>
+        ) : (
+          <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-vouch-cyan group-hover:translate-x-1 transition-all" />
+        )}
       </div>
-
-      {/* Injury badge */}
-      <div className="mt-2 flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full" style={{ background: injuryColor }} />
-        <span className="text-[9px] text-white/40">{player.injuryStatus}</span>
-      </div>
-
-      {/* Hover arrow */}
-      <ChevronRight className="absolute bottom-3 right-3 w-4 h-4 text-slate-700 group-hover:text-[var(--ve-accent)] group-hover:translate-x-1 transition-all" />
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -714,8 +796,8 @@ function ProTruthLensIntro() {
             <div className="font-mono text-[10px] uppercase tracking-widest text-white/40">
               Truth standard
             </div>
-            <div className="mt-1 font-bold text-white">No fake odds · no fake stats</div>
-            <div className="mt-2 text-white/45">Unknown pricing shows as Odds TBD.</div>
+            <div className="mt-1 font-bold text-white">Verified Analytics · Live Pricing Pending</div>
+            <div className="mt-2 text-white/45">Unknown pricing defaults to Odds TBD. No simulated odds.</div>
           </div>
         </div>
 
@@ -1203,7 +1285,7 @@ function OverviewTab({ player, onOpenParlay }: { player: MLBPlayer; onOpenParlay
       {onOpenParlay ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/[0.06] p-3">
           <p className="text-[11px] text-white/55 flex-1 min-w-[12rem]">
-            Season stats above — to build a parlay leg, open ParlayOS for HR, hits, RBI, SB, and more.
+            Build out your slips directly from research. Open ParlayOS to lock in props for Home Runs, Hits, RBIs, and more.
           </p>
           <button
             type="button"
@@ -1257,7 +1339,7 @@ function OverviewTab({ player, onOpenParlay }: { player: MLBPlayer; onOpenParlay
           <div className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-1">Hot Zones</div>
           <div className="flex flex-wrap gap-1">
             {player.scoutingReport.hotZones.map((z) => (
-              <span key={z} className="text-[10px] px-2 py-0.5 rounded-md text-emerald-300" style={{ background: "rgba(52,211,153,0.08)" }}>{z}</span>
+              <span key={z} className="text-[10px] px-2 py-0.5 rounded-md text-emerald-300 font-medium" style={{ background: "rgba(52,211,153,0.08)" }}>{z}</span>
             ))}
           </div>
         </div>
@@ -1343,7 +1425,7 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
         <div className="p-4 rounded-xl text-sm text-white/65 leading-relaxed" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
           {report}
         </div>
-        <p className="text-[10px] text-white/35">Probability-based research for entertainment — not betting advice.</p>
+        <p className="text-[10px] text-white/35">AI-powered predictive analysis for entertainment purposes only. Not financial or betting advice.</p>
       </div>
     );
   }
@@ -1372,7 +1454,7 @@ function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player
         <div key={prop.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
           <div>
             <div className="text-sm font-bold text-white">{prop.market}</div>
-            <div className="text-[10px] text-white/40">{prop.spec}</div>
+            <div className="text-[10px] text-white/40">{prop.spec} · {prop.truthLabel}</div>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-lg font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>

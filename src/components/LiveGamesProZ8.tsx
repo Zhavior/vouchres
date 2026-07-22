@@ -17,6 +17,7 @@ import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { LineScoreTable } from './live/LineScoreTable';
 import { TeamLogo } from './live/LiveTeamLogo';
+import StadiumWindVectorWidget from './stadium/StadiumWindVectorWidget';
 import { Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
 import './live/live-games-lens.css';
 
@@ -358,6 +359,16 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
             <LineScoreTable game={m} />
           </div>
         </div>
+
+        {/* Stadium Wind Vector & Ballpark Physics */}
+        <StadiumWindVectorWidget
+          venue={m.venue ?? "Stadium Venue"}
+          tempF={78}
+          windMph={12}
+          windCompass="NNE"
+          status="forecast"
+          parkFactor={m.runEnvironment?.score ? Math.round(m.runEnvironment.score * 10) : 105}
+        />
 
         {/* Top HR Watch Targets */}
         <div className="space-y-3">

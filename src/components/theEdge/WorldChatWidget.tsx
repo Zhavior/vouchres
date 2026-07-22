@@ -55,18 +55,22 @@ export default function WorldChatWidget() {
             className={`pointer-events-auto fixed inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] bottom-36 shadow-2xl rounded-2xl overflow-hidden border border-white/10 md:static md:inset-auto md:mb-4 md:w-[calc(100vw-2rem)] md:max-w-[420px] md:h-[min(85vh,860px)] md:min-h-[480px] ${Z8_SURFACE}`}
           >
             {/* Header / Draggable Area */}
-            <div className="h-12 border-b border-white/10 flex items-center justify-between px-4 bg-black/40 backdrop-blur-md">
-              <h3 className="font-bold text-sm text-white tracking-widest uppercase">World Chat</h3>
+            <div className="h-12 border-b border-ve-charged/40 flex items-center justify-between px-4 bg-ve-obsidian/80 backdrop-blur-xl">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <h3 className="font-bold text-xs text-white tracking-widest uppercase font-mono">World Chat Live</h3>
+              </div>
               <button 
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className={`p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors`}
+                className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Chat Body */}
-            <div className="h-[calc(100%-3rem)] bg-black/60 relative">
+            <div className="h-[calc(100%-3rem)] bg-ve-obsidian/60 backdrop-blur-md relative">
               <WorldChatPanel profile={profile} isLoggedIn={true} />
             </div>
           </motion.div>
@@ -74,12 +78,13 @@ export default function WorldChatWidget() {
       </AnimatePresence>
 
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`pointer-events-auto w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${
-          isOpen ? 'hidden md:flex bg-white/10 text-white' : 'flex ' + Z8_ACTIVE + ' text-black'
+        className={`pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-ve-glow-cyan transition-all hover:scale-105 active:scale-95 border border-ve-charged ${
+          isOpen ? 'hidden md:flex bg-ve-storm/80 text-white' : 'flex bg-ve-ion text-black font-bold'
         }`}
       >
-        {isOpen ? <X className="w-4.5 h-4.5 sm:w-6 sm:h-6" /> : <MessageSquare className="w-4.5 h-4.5 sm:w-6 sm:h-6" />}
+        {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />}
       </button>
     </div>
   );
