@@ -34,7 +34,8 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   nba_nfl: () => import('../components/NbaNflArena'),
   pro_command_center: () => import('../pages/pro/ProCommandCenterPageZ8'),
   player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPageZ8'),
-  team_matchup_lab: () => import('../pages/pro/TeamMatchupIntelligencePageZ8'),
+  team_matchup_lab: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
+  pitcher_matchup_intelligence: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
   hitter_matchup_zones: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
   pro_graphs_lab: () => import('../pages/pro/ProGraphsLabPageZ8'),
 };
