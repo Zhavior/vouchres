@@ -11,6 +11,7 @@ export type ChatAuthor = {
   borderId?: string | null;
   accentColor?: string;
   winRate?: number | null;
+  statusLine?: string;
 };
 
 type Props = {
