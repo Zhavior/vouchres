@@ -53,21 +53,21 @@ function buildFallbackLedger(): LedgerResponse {
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   
   const samplePicks: LedgerPick[] = [
-    { decisionKey: 'hk-1', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 1, score: 92, confidence: 89, tier: 'Elite Power', evidenceQuality: 'official', result: 'pending' },
-    { decisionKey: 'hk-2', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 2, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-3', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'PIT', rank: 3, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
-    { decisionKey: 'hk-4', date: yesterday, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 1, score: 85, confidence: 83, tier: 'Core Target', evidenceQuality: 'official', result: 'hit' },
-    { decisionKey: 'hk-5', date: yesterday, playerName: 'Marcell Ozuna', team: 'ATL', opponent: 'STL', rank: 2, score: 81, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'miss' },
+    { decisionKey: 'hk-1', date: today, playerName: 'Kyle Schwarber', team: 'PHI', opponent: 'MIA', rank: 1, score: 85, confidence: 83, tier: 'Core Target', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'hk-2', date: today, playerName: 'Shohei Ohtani', team: 'LAD', opponent: 'SF', rank: 2, score: 92, confidence: 89, tier: 'Elite Power', evidenceQuality: 'official', result: 'pending' },
+    { decisionKey: 'hk-3', date: today, playerName: 'Aaron Judge', team: 'NYY', opponent: 'PIT', rank: 3, score: 94, confidence: 91, tier: 'Elite Power', evidenceQuality: 'official', result: 'void' },
+    { decisionKey: 'hk-4', date: today, playerName: 'Juan Soto', team: 'NYY', opponent: 'PIT', rank: 4, score: 87, confidence: 85, tier: 'Core Target', evidenceQuality: 'official', result: 'void' },
+    { decisionKey: 'hk-5', date: yesterday, playerName: 'Marcell Ozuna', team: 'ATL', opponent: 'STL', rank: 1, score: 81, confidence: 80, tier: 'Core Target', evidenceQuality: 'official', result: 'miss' },
   ];
 
   const hrPerf: Performance = {
     total: 5,
-    resolved: 2,
-    pending: 1,
-    hits: 1,
+    resolved: 1,
+    pending: 2,
+    hits: 0,
     misses: 1,
     voids: 2,
-    hitRate: 50.0,
+    hitRate: 0.0,
     sampleWarning: null,
   };
 
