@@ -27,23 +27,23 @@ real bugs. This doc is the punch list. Check items off as fixed.
 
 ## P1 — visual defects
 
-- [ ] **Modals/panels have no backdrop scrim.** The onboarding tour ("AI
+- [x] **Modals/panels have no backdrop scrim.** The onboarding tour ("AI
   Judge Council") and the World Chat panel both render with no dimming
   behind them, so background page content stays fully legible and visually
   collides with the modal's own text. Add a consistent
   `bg-black/60 backdrop-blur` (or whatever the design system's existing
   scrim token is) behind every overlay — check if one already exists and is
   just not applied to these two.
-- [ ] **Sidebar icon-only nav buttons have no accessible label** in the
+- [x] **Sidebar icon-only nav buttons have no accessible label** in the
   collapsed Pro Labs rail — several buttons expose no text to the a11y tree.
   Add `aria-label` at minimum; a hover tooltip would also fix the sighted-user
   version of the same problem.
 
 ## P2 — polish
 
-- [ ] World Chat message bubbles are cramped against the panel edge, no
+- [x] World Chat message bubbles are cramped against the panel edge, no
   breathing room between consecutive same-sender messages.
-- [ ] "0% WIN RATE" reads as a failing grade for new/guest accounts with no
+- [x] "0% WIN RATE" reads as a failing grade for new/guest accounts with no
   graded picks yet. Swap to an empty state ("No graded picks yet") when
   pick count is 0.
 
