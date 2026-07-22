@@ -1,6 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
-import { Terminal } from 'lucide-react';
-import { apiClient } from '../lib/apiClient';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -16,7 +14,7 @@ import {
   Z8_LABEL,
   Z8_PAGE,
   Z8_PANEL_PREMIUM,
-  Z8_SURFACE,
+  Z8_CYAN_RGB,
 } from '../theme/z8Tokens';
 
 const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
@@ -235,77 +233,6 @@ function PricingGrid({
   );
 }
 
-function TerminalChatDemo() {
-  const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'system', text: string }[]>([
-    { role: 'system', text: 'VouchEdge Terminal Ready. How can I help you today?' }
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const submitPrompt = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim() || isLoading) return;
-    const userMsg = prompt;
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setPrompt('');
-    setIsLoading(true);
-    try {
-      await apiClient.get<any>('/api/mlb/hr-board/today');
-      setMessages(prev => [...prev, { role: 'system', text: `Fetched data from hr-board. Terminal access secured.` }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'system', text: 'Error connecting to Edge OS. Please try again.' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <section className={`mx-auto w-full max-w-2xl rounded-2xl ${Z8_PANEL_PREMIUM} p-4 mt-8 mb-8 flex flex-col gap-4 text-left border border-white/10 shadow-[0_0_48px_rgba(0,240,255,0.06)]`}>
-      <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-        <Terminal className="h-4 w-4 text-vouch-cyan" />
-        <span className={Z8_LABEL}>AI Edge Terminal Chat</span>
-      </div>
-      
-      {/* chat window */}
-      <div className={`flex flex-col gap-3 overflow-y-auto p-4 rounded-xl h-64 ${Z8_SURFACE} ${Z8_INTERACTIVE}`}>
-        {messages.map((m, i) => (
-          <div key={i} className={`flex flex-col gap-1 max-w-[85%] ${m.role === 'user' ? 'self-end items-end' : 'self-start items-start'}`}>
-            <span className={`${Z8_LABEL} ${m.role === 'user' ? 'text-white/40' : 'text-vouch-cyan'}`}>
-              {m.role === 'user' ? 'You' : 'System'}
-            </span>
-            <div className={`p-3 rounded-xl text-sm ${m.role === 'user' ? 'bg-vouch-cyan/20 text-white' : 'bg-black/40 text-white/70 border border-white/5'}`}>
-              {m.text}
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="self-start flex items-center gap-2 mt-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" />
-            <span className="text-xs text-white/40 font-mono">Processing...</span>
-          </div>
-        )}
-      </div>
-
-      {/* prompt input area */}
-      <form onSubmit={submitPrompt} className={`relative flex items-center gap-2 rounded-xl ${Z8_SURFACE} p-1 ${Z8_INTERACTIVE}`}>
-        <input 
-          value={prompt} 
-          onChange={e => setPrompt(e.target.value)}
-          placeholder="Query the terminal..."
-          className="flex-1 bg-transparent text-sm text-white outline-none min-h-[44px] px-3 font-mono placeholder:text-white/30"
-        />
-        <button 
-          type="submit" 
-          disabled={!prompt.trim() || isLoading}
-          className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-black bg-vouch-cyan rounded-lg min-h-[44px] disabled:opacity-50 transition-opacity"
-        >
-          Execute
-        </button>
-      </form>
-    </section>
-  );
-}
-
 export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
@@ -336,7 +263,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
           style={{
-            background: `radial-gradient(circle at 30% 20%, rgba(0,240,255,0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
+            background: `radial-gradient(circle at 30% 20%, rgba(${Z8_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
         <div className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
@@ -471,10 +398,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
-              <TerminalChatDemo />
-            </ScrollReveal>
-
-            <ScrollReveal>
               <LandingFeatureSlideshow features={FEATURES} />
             </ScrollReveal>
 
@@ -493,7 +416,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             <ScrollReveal>
               <section
               className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
-              style={{ boxShadow: `0 0 48px rgba(0,240,255,0.06)` }}
+              style={{ boxShadow: `0 0 48px rgba(${Z8_CYAN_RGB},0.06)` }}
             >
               <p className={`${Z8_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
               <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">

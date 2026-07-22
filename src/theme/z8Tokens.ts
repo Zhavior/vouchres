@@ -52,7 +52,7 @@ export const Z8_SIDEBAR_ICON_BOX =
 
 /** Active sidebar nav — cyan glow rail (absolute in component), no borders. */
 export const Z8_SIDEBAR_ACTIVE =
-  'bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(79,184,220,0.22),0_0_32px_rgba(79,184,220,0.14)]';
+  'bg-vouch-cyan/12 text-white shadow-[inset_4px_0_20px_rgba(79,184,220,0.18)]';
 
 /** Idle sidebar nav — background contrast + hover glow, no borders. */
 export const Z8_SIDEBAR_IDLE =
@@ -92,6 +92,16 @@ export const Z8_INTERACTIVE = 'z8-interactive';
 export const Z8_CYAN_HEX = '#4FB8DC';
 export const Z8_EMERALD_HEX = '#31B583';
 export const Z8_AMBER_HEX = '#D99C4A';
+
+/** RGB tuple for inline rgba() — matches vouch-cyan. */
+export const Z8_CYAN_RGB = '79, 184, 220';
+
+/** Auth / primary CTA gradient + shadow — use instead of hardcoded #00F0FF. */
+export const Z8_AUTH_GRADIENT = `linear-gradient(135deg, ${Z8_CYAN_HEX}, #2563eb)`;
+export const Z8_AUTH_SHADOW = `0 8px 32px rgba(${Z8_CYAN_RGB}, 0.22)`;
+
+/** Discord-style accent for magic-link affordance only. */
+export const Z8_BLURPLE_HEX = '#5865F2';
 
 /** Resolve legacy --ve-accent-* status tokens to Z8 hex; passthrough for semantic ve-* vars. */
 export function z8StatusColor(token: string): string {
