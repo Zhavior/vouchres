@@ -332,7 +332,8 @@ function buildLineupFromHrBoard(
   }
 
   const projectedLineup: HitterRow[] = filtered.map((r: any, idx: number) => {
-    const hrToday = Number(r.hrToday ?? r.todayHr ?? r.statsToday?.homeRuns ?? 0);
+    const isSameGame = r.gamePk == null || Number(r.gamePk) === Number(gamePk);
+    const hrToday = isSameGame ? Number(r.hrToday ?? r.todayHr ?? r.statsToday?.homeRuns ?? 0) : 0;
     return {
       id: Number(r.playerId || r.id || idx + 1000),
       name: String(r.playerName || r.name || 'Hitter'),
@@ -451,13 +452,18 @@ const HitterHeatmapTable: React.FC<{
   pitcherName: string;
   pitcherThrows?: 'L' | 'R' | 'U';
   rows: HitterRow[];
-}> = ({ title, pitcherName, pitcherThrows, rows }) => {
+  gamePk?: number | null;
+}> = ({ title, pitcherName, pitcherThrows, rows, gamePk }) => {
   const todayStr = useMemo(() => localISODate(), []);
   const { hitByPlayerId } = useHrResultsForDate(todayStr);
 
   const hitPlayerNameSet = useMemo(() => {
     const set = new Set<string>();
     hitByPlayerId.forEach((event, id) => {
+      // Doubleheader Isolation: Match gamePk so HRs in Game 1 don't leak into Game 2!
+      if (gamePk != null && event.gamePk != null && Number(event.gamePk) !== Number(gamePk)) {
+        return;
+      }
       set.add(String(id));
       if (event.playerName) {
         const full = event.playerName.toLowerCase().trim();
@@ -469,7 +475,7 @@ const HitterHeatmapTable: React.FC<{
       }
     });
     return set;
-  }, [hitByPlayerId]);
+  }, [hitByPlayerId, gamePk]);
   if (rows.length === 0) {
     return (
       <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
@@ -845,6 +851,7 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
                   pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Pitcher'}
                   pitcherThrows={awayVsHome?.pitcher.throws}
                   rows={awayVsHome?.opponent.projectedLineup ?? []}
+                  gamePk={selectedGame}
                 />
 
                 <HitterHeatmapTable
@@ -852,6 +859,7 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
                   pitcherName={homeVsAway?.pitcher.name ?? selectedGameData.home.probablePitcher?.name ?? 'Pitcher'}
                   pitcherThrows={homeVsAway?.pitcher.throws}
                   rows={homeVsAway?.opponent.projectedLineup ?? []}
+                  gamePk={selectedGame}
                 />
               </div>
             )}
