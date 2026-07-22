@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, Database, RefreshCw, ShieldCheck, Target, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Activity, Database, RefreshCw, ShieldCheck, Target, CheckCircle2, XCircle, Clock, AlertCircle, Calendar } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { BrainPageShell } from './BrainPageShell';
 import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_PANEL } from '../../theme/z8Tokens';
@@ -201,15 +201,19 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
             <MarketSummary label="Pitcher Strikeout Market" target="5+ Strikeouts Target" market={ledger.pitcherStrikeouts} />
           </section>
 
-          {/* Decision History Table */}
+          {/* Decision History Table with Prominent Date Badges */}
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
             <article className="brain-panel p-5 sm:p-6 rounded-2xl border border-white/10 bg-black/40">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
                 <div>
                   <div className={`${Z8_LABEL} text-vouch-cyan`}>Decision History Ledger</div>
-                  <h2 className="mt-1 text-lg font-black text-white uppercase tracking-wider">Frozen Wins & Losses</h2>
+                  <h2 className="mt-1 text-lg font-black text-white uppercase tracking-wider">Frozen Wins & Losses by Date</h2>
                 </div>
-                <Target className="h-5 w-5 text-vouch-cyan" />
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 font-mono text-xs font-bold text-vouch-cyan">
+                    <Calendar className="h-3.5 w-3.5" /> Date Verified
+                  </span>
+                </div>
               </div>
 
               <div className="mt-4 space-y-2.5">
@@ -219,36 +223,49 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
                   const isPending = pick.result === 'pending';
                   const isVoid = pick.result === 'void';
 
+                  // Format raw YYYY-MM-DD to readable date
+                  const dateParts = pick.date.split('-');
+                  const formattedDate = dateParts.length === 3
+                    ? new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2])).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : pick.date;
+
                   return (
                     <div
                       key={pick.decisionKey}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 hover:border-white/20 transition"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 hover:border-white/20 transition"
                     >
-                      <div className="min-w-0">
-                        <strong className="block truncate text-sm font-bold text-white">{pick.playerName}</strong>
-                        <span className="mt-0.5 block font-mono text-[10px] uppercase text-slate-400">
-                          {pick.date} · {pick.team} vs {pick.opponent} · Score {pick.score} · {pick.evidenceQuality}
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Dedicated Prominent Date Pill */}
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-white/15 bg-white/5 font-mono text-xs font-black text-vouch-cyan">
+                            <Calendar className="h-3 w-3 text-vouch-cyan shrink-0" />
+                            {formattedDate}
+                          </span>
+                          <strong className="truncate text-sm font-bold text-white">{pick.playerName}</strong>
+                        </div>
+                        <span className="block font-mono text-[11px] uppercase text-slate-400">
+                          {pick.team} vs {pick.opponent} · Model Score {pick.score} · {pick.evidenceQuality}
                         </span>
                       </div>
 
-                      <div className="shrink-0 flex items-center gap-1.5 font-mono text-xs font-black uppercase px-3 py-1 rounded-lg border">
+                      <div className="shrink-0 flex items-center gap-1.5 font-mono text-xs font-black uppercase self-start sm:self-center">
                         {isHit && (
-                          <span className="flex items-center gap-1 text-vouch-emerald border-vouch-emerald/40 bg-vouch-emerald/10 px-2 py-0.5 rounded-full">
+                          <span className="flex items-center gap-1 text-vouch-emerald border border-vouch-emerald/40 bg-vouch-emerald/10 px-2.5 py-1 rounded-full">
                             <CheckCircle2 className="h-3.5 w-3.5" /> WIN (HIT)
                           </span>
                         )}
                         {isMiss && (
-                          <span className="flex items-center gap-1 text-rose-300 border-rose-500/40 bg-rose-500/10 px-2 py-0.5 rounded-full">
+                          <span className="flex items-center gap-1 text-rose-300 border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 rounded-full">
                             <XCircle className="h-3.5 w-3.5" /> LOSS (MISS)
                           </span>
                         )}
                         {isPending && (
-                          <span className="flex items-center gap-1 text-amber-300 border-amber-400/40 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                          <span className="flex items-center gap-1 text-amber-300 border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 rounded-full">
                             <Clock className="h-3.5 w-3.5" /> PENDING
                           </span>
                         )}
                         {isVoid && (
-                          <span className="flex items-center gap-1 text-slate-400 border-slate-500/40 bg-slate-500/10 px-2 py-0.5 rounded-full">
+                          <span className="flex items-center gap-1 text-slate-400 border border-slate-500/40 bg-slate-500/10 px-2.5 py-1 rounded-full">
                             <AlertCircle className="h-3.5 w-3.5" /> VOID (PUSH)
                           </span>
                         )}
