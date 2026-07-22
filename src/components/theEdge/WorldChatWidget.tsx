@@ -40,7 +40,7 @@ export default function WorldChatWidget() {
             type="button"
             aria-label="Close World Chat"
             onClick={() => setIsOpen(false)}
-            className="pointer-events-auto fixed inset-0 z-0 bg-black/75 backdrop-blur-md md:hidden"
+            className="pointer-events-auto fixed inset-0 z-0 bg-black/60 backdrop-blur-sm transition-opacity"
           />
         )}
       </AnimatePresence>

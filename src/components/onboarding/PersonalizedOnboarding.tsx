@@ -34,8 +34,8 @@ export function PersonalizedOnboarding({ onComplete }: Props) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ve-obsidian px-4 py-10 text-white">
-      <section className="w-full max-w-3xl border border-white/10 bg-black/30 p-5 sm:p-8">
+    <main className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4 py-10 text-white overflow-y-auto">
+      <section className="w-full max-w-3xl border border-white/10 bg-[#070c14] p-5 sm:p-8 rounded-3xl shadow-2xl">
         <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-vouch-emerald">Welcome to VouchEdge</p>
         <h1 className="mt-3 max-w-xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">What do you want to do first?</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">Choose a starting point. Nothing is locked in, and every tool remains available from navigation.</p>

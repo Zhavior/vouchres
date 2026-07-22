@@ -52,6 +52,6 @@ export interface WorldChatMessage {
 }
 
 export function formatChatWinRate(winRate: number | null | undefined): string | null {
-  if (winRate == null || !Number.isFinite(winRate)) return null;
+  if (winRate == null || !Number.isFinite(winRate) || winRate <= 0) return null;
   return `${winRate.toFixed(1)}%`;
 }

@@ -97,6 +97,12 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
         preloadSection(section);
       }
       requestAnimationFrame(() => inputRef.current?.focus());
+      const t1 = setTimeout(() => inputRef.current?.focus(), 50);
+      const t2 = setTimeout(() => inputRef.current?.focus(), 150);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
   }, [open]);
 
@@ -200,6 +206,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
           <Search className="h-4 w-4 shrink-0 text-white/40" />
           <input
             ref={inputRef}
+            autoFocus
             type="text"
             value={query}
             onChange={e => { setQuery(e.target.value); setCursor(0); }}

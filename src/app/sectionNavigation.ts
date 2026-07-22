@@ -272,6 +272,21 @@ export function resolveDevSectionFromLocation() {
     return 'live_games';
   }
 
+  // General fallback normalization for all valid section route names
+  const clean = target.replace(/^\//, '').replace(/-/g, '_');
+  const validSections = new Set([
+    'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
+    'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
+    'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
+    'pro_graphs_lab', 'live_games', 'research', 'board', 'leaderboard', 'results',
+    'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
+    'premium', 'themestore', 'subscriber_hub', 'settings', 'customize',
+  ]);
+  if (validSections.has(clean)) {
+    return clean;
+  }
+
   return null;
 }
 

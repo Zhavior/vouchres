@@ -100,6 +100,8 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       onMouseEnter={handleIntent}
       onFocus={handleIntent}
       id={`sidebar-link-${id}`}
+      aria-label={label}
+      title={label}
       aria-current={isActive ? 'page' : undefined}
       className={[
         'group relative w-full flex items-center gap-3',
@@ -452,9 +454,9 @@ function FeedSidebar({
               )}
             </div>
             <p className={`mt-0.5 ${Z8_LABEL} text-white/40 truncate`}>
-              {profile.winRate != null
+              {profile.winRate != null && profile.winRate > 0
                 ? `${Math.round(profile.winRate * 100)}% win rate`
-                : 'View profile'}
+                : 'No graded picks yet'}
             </p>
           </div>
         </button>

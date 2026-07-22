@@ -818,7 +818,10 @@ export default function AuthModal({
                 autoComplete="email"
                 placeholder="you@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
                 className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
               />
             </Field>
@@ -836,6 +839,7 @@ export default function AuthModal({
                       onChange={(e) => {
                         const next = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                         setHandle(next);
+                        if (error) setError(null);
                         checkHandle(next);
                       }}
                       className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
@@ -860,7 +864,10 @@ export default function AuthModal({
                   autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   placeholder="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
                   className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                 />
                 <button type="button" onClick={() => setShowPw((v) => !v)} className="text-slate-500 hover:text-slate-300">
@@ -971,7 +978,16 @@ export default function AuthModal({
               <div className="flex-1 h-px bg-white/10" />
             </div>
             <button
-              onClick={onGuest}
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.setItem('vouchedge_guest_session', 'true');
+                } catch {
+                  // ignore
+                }
+                if (onGuest) onGuest();
+                else onClose();
+              }}
               className={`w-full py-2.5 rounded-xl text-[13px] font-bold text-white/55 hover:text-white hover:bg-white/5 transition-colors ${Z8_INTERACTIVE}`}
             >
               Continue as guest

@@ -276,7 +276,7 @@ const WorldChatMessageItem = React.memo(function WorldChatMessageItem({
   const proofIds = useMemo(() => extractParlayProofIds(msg.text), [msg.text]);
 
   return (
-    <div className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? '' : 'mt-1'}`}>
+    <div className={`flex items-end gap-2.5 px-2.5 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? 'mt-1.5' : 'mt-4'}`}>
       <button
         type="button"
         onClick={openAuthor}
