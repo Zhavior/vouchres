@@ -85,6 +85,8 @@ interface HitterRow {
   lineupSpot: number | null;
   lineupStatus?: string | null;
   headshotUrl?: string | null;
+  hrToday?: number;
+  hitHrToday?: boolean;
   recentForm: { games: number; hr: number; hits: number; atBats: number; strikeOuts: number } | null;
   vsPitcher: BvpStats | null;
   seasonStats: SeasonStats | null;
@@ -327,44 +329,49 @@ function buildLineupFromHrBoard(
     filtered = rows.slice(0, 9);
   }
 
-  const projectedLineup: HitterRow[] = filtered.map((r: any, idx: number) => ({
-    id: Number(r.playerId || r.id || idx + 1000),
-    name: String(r.playerName || r.name || 'Hitter'),
-    bats: (r.bats === 'L' || r.bats === 'R' || r.bats === 'S') ? r.bats : 'R',
-    position: String(r.position || 'DH'),
-    lineupSpot: r.battingOrder ?? r.lineupSpot ?? (idx + 1),
-    lineupStatus: r.lineupStatus,
-    headshotUrl: r.headshot ?? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${r.playerId}/headshot/67/current`,
-    recentForm: r.recentForm ?? { games: 10, hr: r.seasonHr ? Math.round(r.seasonHr / 10) : 1, hits: 8, atBats: 32, strikeOuts: 6 },
-    vsPitcher: {
-      ab: r.bvpAb ?? 0,
-      h: r.bvpHits ?? 0,
-      hr: r.bvpHr ?? 0,
-      bb: 0,
-      k: 0,
-      avgText: r.bvpAvg ? String(r.bvpAvg) : null,
-      slgText: null,
-      opsText: r.bvpOps ? String(r.bvpOps) : null,
-    },
-    seasonStats: {
-      pa: r.pa ?? 300,
-      avg: r.avg ?? 0.260,
-      obp: r.obp ?? 0.330,
-      slg: r.slg ?? 0.450,
-      iso: r.iso ?? (r.slg && r.avg ? r.slg - r.avg : 0.180),
-      ops: r.ops ?? 0.780,
-      hr: r.hr ?? r.seasonHr ?? 15,
-    },
-    statcast: {
-      playerId: Number(r.playerId || 0),
-      pa: r.pa ?? 300,
-      xwoba: r.xwoba ?? 0.335,
-      barrelPct: r.barrelPct ?? 9.2,
-      hardHitPct: r.hardHitPct ?? 42.1,
-      avgExitVelo: r.avgExitVelo ?? 89.5,
-    },
-    tags: Array.isArray(r.tags) ? r.tags : ['Verified MLB Stats'],
-  }));
+  const projectedLineup: HitterRow[] = filtered.map((r: any, idx: number) => {
+    const hrToday = Number(r.hrToday ?? r.todayHr ?? r.statsToday?.homeRuns ?? 0);
+    return {
+      id: Number(r.playerId || r.id || idx + 1000),
+      name: String(r.playerName || r.name || 'Hitter'),
+      bats: (r.bats === 'L' || r.bats === 'R' || r.bats === 'S') ? r.bats : 'R',
+      position: String(r.position || 'DH'),
+      lineupSpot: r.battingOrder ?? r.lineupSpot ?? (idx + 1),
+      lineupStatus: r.lineupStatus,
+      headshotUrl: r.headshot ?? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${r.playerId}/headshot/67/current`,
+      hrToday,
+      hitHrToday: hrToday > 0,
+      recentForm: r.recentForm ?? { games: 10, hr: r.seasonHr ? Math.round(r.seasonHr / 10) : 1, hits: 8, atBats: 32, strikeOuts: 6 },
+      vsPitcher: {
+        ab: r.bvpAb ?? 0,
+        h: r.bvpHits ?? 0,
+        hr: r.bvpHr ?? 0,
+        bb: 0,
+        k: 0,
+        avgText: r.bvpAvg ? String(r.bvpAvg) : null,
+        slgText: null,
+        opsText: r.bvpOps ? String(r.bvpOps) : null,
+      },
+      seasonStats: {
+        pa: r.pa ?? 300,
+        avg: r.avg ?? 0.260,
+        obp: r.obp ?? 0.330,
+        slg: r.slg ?? 0.450,
+        iso: r.iso ?? (r.slg && r.avg ? r.slg - r.avg : 0.180),
+        ops: r.ops ?? 0.780,
+        hr: r.hr ?? r.seasonHr ?? 15,
+      },
+      statcast: {
+        playerId: Number(r.playerId || 0),
+        pa: r.pa ?? 300,
+        xwoba: r.xwoba ?? 0.335,
+        barrelPct: r.barrelPct ?? 9.2,
+        hardHitPct: r.hardHitPct ?? 42.1,
+        avgExitVelo: r.avgExitVelo ?? 89.5,
+      },
+      tags: Array.isArray(r.tags) ? r.tags : ['Verified MLB Stats'],
+    };
+  });
 
   return {
     gamePk,
@@ -518,11 +525,17 @@ const HitterHeatmapTable: React.FC<{
                   {/* HR Indicator Badge */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                        <Flame className="w-3 h-3 text-amber-400" />
-                        {season?.hr ?? 0} HR
-                      </span>
-                      {math.hrProbabilityPct >= 20 && (
+                      {row.hitHrToday || (row.hrToday ?? 0) > 0 ? (
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.3)]">
+                          💥 HIT HR TODAY ({row.hrToday ?? 1})
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                          <Flame className="w-3 h-3 text-amber-400" />
+                          {season?.hr ?? 0} HR
+                        </span>
+                      )}
+                      {math.hrProbabilityPct >= 20 && !row.hitHrToday && (
                         <span className="inline-flex items-center gap-0.5 font-mono text-[9px] font-black uppercase text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
                           💣 HIGH HR WATCH
                         </span>
