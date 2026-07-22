@@ -398,7 +398,9 @@ const MatchupStrip: React.FC<{
   <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
     {games.map((g) => {
       const active = g.gamePk === selected;
+      const statusLower = String(g.status ?? '').toLowerCase();
       const isGameLive = g.isLive || liveSet?.has(String(g.gamePk));
+      const isGameFinal = g.isFinal || statusLower.includes('final') || statusLower.includes('game over') || statusLower.includes('completed') || statusLower === 'f';
       const topHrWatch = Array.isArray(g.topHrWatch) ? g.topHrWatch : [];
       const hrCount = topHrWatch.length || 3;
 
@@ -425,6 +427,10 @@ const MatchupStrip: React.FC<{
             {isGameLive ? (
               <span className="flex items-center gap-1 text-[9.5px] font-black font-mono px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse">
                 <Radio className="w-3 h-3 text-rose-400" /> LIVE
+              </span>
+            ) : isGameFinal ? (
+              <span className="flex items-center gap-1 text-[9.5px] font-black font-mono px-2 py-0.5 rounded bg-slate-500/25 border border-slate-500/40 text-slate-300">
+                <CheckCircle2 className="w-3 h-3 text-slate-400" /> FIN
               </span>
             ) : (
               <span className="text-[10px] font-mono font-semibold text-white/40">
@@ -490,7 +496,14 @@ const HitterHeatmapTable: React.FC<{
         <div className="flex items-center gap-2">
           <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
           <span className="text-sm font-bold text-white">{title}</span>
-          <span className="text-xs text-white/40">vs {pitcherName} ({pitcherThrows ?? 'R'})</span>
+          <span className="text-xs text-white/40 flex items-center gap-1.5">
+            vs {pitcherName} ({pitcherThrows ?? 'R'})
+            {rows[0]?.vsPitcher?.k != null && (
+              <span className="inline-flex items-center gap-0.5 font-mono text-[10px] font-black text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/40">
+                ⚡ {rows[0].vsPitcher.k} Ks
+              </span>
+            )}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-vouch-emerald font-bold">
           <Calculator className="h-3.5 w-3.5" />

@@ -1092,11 +1092,16 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
                               </div>
                               <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
                                   <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-vouch-cyan">{row.pitcherName}</div>
                                   {isPitcherLive(row) && (
                                     <span className="flex items-center gap-1 text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
                                       <Radio className="w-2.5 h-2.5 text-rose-400" /> LIVE
+                                    </span>
+                                  )}
+                                  {row.metrics.k9 != null && (
+                                    <span className="inline-flex items-center gap-0.5 font-mono text-[9px] font-black text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/40 shrink-0">
+                                      ⚡ {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks
                                     </span>
                                   )}
                                 </div>
