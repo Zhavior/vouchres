@@ -23,10 +23,10 @@ app chrome, auth, and landing. Check items off as fixed.
 ## P2 — typography & color polish
 
 - [x] **Sidebar label floor.** Group headers raised to 11px minimum.
-- [ ] **Feed card legacy CSS migration.** Move `legacy/feed.css` card overrides
-  to Z8 panel primitives (separate pass — high file count).
-- [ ] **Profile proof surfaces.** Remove emoji stat decorations and yellow
-  `#FFE81F` stamp from share card (separate pass).
+- [x] **Feed card legacy CSS migration.** Z8 palette in `legacy/feed.css` vars;
+  `.feed-post.z8-feed-card` opt-in on `FeedPostCard`; post-type badges use Z8 hex.
+- [x] **Profile proof surfaces.** Share card uses Z8 panels/stats; emoji and
+  `#FFE81F` yellow stamp removed.
 - [ ] **Mobile chrome unification.** Resolve bottom nav vs World Chat FAB vs
   ParlayOS dock stacking (separate pass).
 
