@@ -88,6 +88,26 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // Capture printable keys that arrive before autofocus lands on the input.
+  useEffect(() => {
+    if (!open) return;
+
+    const handler = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === 'Escape' || event.key === 'Enter' || event.key.startsWith('Arrow')) return;
+      if (event.key.length !== 1) return;
+      if (document.activeElement === inputRef.current) return;
+
+      event.preventDefault();
+      setQuery((current) => current + event.key);
+      setCursor(0);
+      inputRef.current?.focus();
+    };
+
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, [open]);
+
   // Focus input when opened + prefetch common lazy routes
   useEffect(() => {
     if (open) {
