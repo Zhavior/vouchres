@@ -1,6 +1,7 @@
 import React from 'react';
 import { Award, ShieldAlert, ArrowUpRight } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
+import { formatProfileWinRateShort } from '../../lib/profileWinRateDisplay';
 
 interface ProofBuildersPanelProps {
   profile: CreatorProofProfile;
@@ -41,7 +42,7 @@ export default function ProofBuildersPanel({ profile }: ProofBuildersPanelProps)
               </div>
               <div className="text-right">
                 <div className="text-xs font-bold text-vouch-emerald">
-                  {profile.winRate.toFixed(1)}% WR
+                  {formatProfileWinRateShort(profile)}
                 </div>
                 <div className="text-[10px] text-white/40">
                   {profile.wonPicks}/{profile.totalPicks} picks

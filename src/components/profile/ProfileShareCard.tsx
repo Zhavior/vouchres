@@ -4,6 +4,7 @@ import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
 import { DeferredBubbleField } from '../vouchedge/DeferredBubbleField';
+import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 
 interface ProfileShareCardProps {
   profile: CreatorProofProfile;
@@ -25,7 +26,11 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
     };
   };
 
-  const shareText = `🔥 Check out my verified sport outcomes on VouchEdge! \n\n🎯 Win Rate: ${profile.winRate}%\n💰 Net Profit: +${profile.unitsNetProfit} Units\n🛡️ Verified Handle: @${profile.username}\n\nJoin my tailing circle and build transparent edge! #VouchEdge #SportsBetting`;
+  const winRateLabel = profileHasGradedPicks(profile)
+    ? `${profile.winRate}%`
+    : 'No graded picks yet';
+
+  const shareText = `🔥 Check out my verified sport outcomes on VouchEdge! \n\n🎯 Win Rate: ${winRateLabel}\n💰 Net Profit: +${profile.unitsNetProfit} Units\n🛡️ Verified Handle: @${profile.username}\n\nJoin my tailing circle and build transparent edge! #VouchEdge #SportsBetting`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://vouchedge.app/capper/${profile.username}`);
@@ -118,8 +123,12 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
           <div className="grid grid-cols-2 gap-3.5 pt-2">
             <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
               <div className="absolute top-2 right-2 text-[10px] text-emerald-400 opacity-60">🎯</div>
-              <span className="text-2xl font-black text-slate-100 tracking-tight font-mono">{profile.winRate}%</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">WIN RATE PROOF</span>
+              <span className="text-2xl font-black text-slate-100 tracking-tight font-mono">
+                {profileHasGradedPicks(profile) ? `${profile.winRate}%` : '—'}
+              </span>
+              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">
+                {profileHasGradedPicks(profile) ? 'WIN RATE PROOF' : 'NO GRADED PICKS YET'}
+              </span>
             </div>
 
             <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
