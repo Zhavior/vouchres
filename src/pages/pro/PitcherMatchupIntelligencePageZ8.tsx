@@ -390,16 +390,13 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
   };
 
   const getKsToday = (row: MatchupMatrixRow): number | null => {
+    if (!isPitcherLive(row) && !isPitcherFinal(row)) {
+      return null;
+    }
     if (typeof (row.metrics as any).liveKs === 'number') {
       return (row.metrics as any).liveKs;
     }
-    if (row.metrics.kPerGame != null && row.metrics.kPerGame > 0) {
-      return Math.round(row.metrics.kPerGame);
-    }
-    if (row.metrics.k9 != null && row.metrics.k9 > 0) {
-      return Math.round((row.metrics.k9 / 9) * 5.5);
-    }
-    return null;
+    return 0;
   };
 
   useEffect(() => {

@@ -459,7 +459,9 @@ const HitterHeatmapTable: React.FC<{
   pitcherThrows?: 'L' | 'R' | 'U';
   rows: HitterRow[];
   gamePk?: number | null;
-}> = ({ title, pitcherName, pitcherThrows, rows, gamePk }) => {
+  isGameLive?: boolean;
+  isGameFinal?: boolean;
+}> = ({ title, pitcherName, pitcherThrows, rows, gamePk, isGameLive, isGameFinal }) => {
   const todayStr = useMemo(() => localISODate(), []);
   const { hitByPlayerId } = useHrResultsForDate(todayStr);
 
@@ -496,9 +498,9 @@ const HitterHeatmapTable: React.FC<{
         <div className="flex items-center gap-2">
           <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
           <span className="text-sm font-bold text-white">{title}</span>
-          <span className="text-xs text-white/40 flex items-center gap-1.5">
-            vs {pitcherName} ({pitcherThrows ?? 'R'})
-            {rows[0]?.vsPitcher?.k != null && (
+          <span className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap">
+            <span>vs {pitcherName} ({pitcherThrows ?? 'R'})</span>
+            {rows[0]?.vsPitcher?.k != null && (isGameLive || isGameFinal) && (
               <span className="inline-flex items-center gap-0.5 font-mono text-[10px] font-black text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/40">
                 ⚡ {rows[0].vsPitcher.k} Ks
               </span>
@@ -859,26 +861,39 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
               </div>
             ) : (
               <div className="space-y-6">
-                <StrikeZoneHeatmapMatrix
-                  hitterName="Slate Lineup Target"
-                  pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Probable Pitcher'}
-                  pitcherThrows={awayVsHome?.pitcher.throws ?? 'R'}
-                />
-                <HitterHeatmapTable
-                  title={`${selectedGameData.home.name} Lineup`}
-                  pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Pitcher'}
-                  pitcherThrows={awayVsHome?.pitcher.throws}
-                  rows={awayVsHome?.opponent.projectedLineup ?? []}
-                  gamePk={selectedGame}
-                />
+                {(() => {
+                  const isSelectedGameLive = selectedGameData ? (selectedGameData.isLive || liveSet?.has(String(selectedGameData.gamePk))) : false;
+                  const isSelectedGameFinal = selectedGameData ? (selectedGameData.isFinal || String(selectedGameData.status ?? '').toLowerCase().includes('final') || String(selectedGameData.status ?? '').toLowerCase().includes('game over') || String(selectedGameData.status ?? '').toLowerCase().includes('completed')) : false;
 
-                <HitterHeatmapTable
-                  title={`${selectedGameData.away.name} Lineup`}
-                  pitcherName={homeVsAway?.pitcher.name ?? selectedGameData.home.probablePitcher?.name ?? 'Pitcher'}
-                  pitcherThrows={homeVsAway?.pitcher.throws}
-                  rows={homeVsAway?.opponent.projectedLineup ?? []}
-                  gamePk={selectedGame}
-                />
+                  return (
+                    <>
+                      <StrikeZoneHeatmapMatrix
+                        hitterName="Slate Lineup Target"
+                        pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Probable Pitcher'}
+                        pitcherThrows={awayVsHome?.pitcher.throws ?? 'R'}
+                      />
+                      <HitterHeatmapTable
+                        title={`${selectedGameData.home.name} Lineup`}
+                        pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Pitcher'}
+                        pitcherThrows={awayVsHome?.pitcher.throws}
+                        rows={awayVsHome?.opponent.projectedLineup ?? []}
+                        gamePk={selectedGame}
+                        isGameLive={isSelectedGameLive}
+                        isGameFinal={isSelectedGameFinal}
+                      />
+
+                      <HitterHeatmapTable
+                        title={`${selectedGameData.away.name} Lineup`}
+                        pitcherName={homeVsAway?.pitcher.name ?? selectedGameData.home.probablePitcher?.name ?? 'Pitcher'}
+                        pitcherThrows={homeVsAway?.pitcher.throws}
+                        rows={homeVsAway?.opponent.projectedLineup ?? []}
+                        gamePk={selectedGame}
+                        isGameLive={isSelectedGameLive}
+                        isGameFinal={isSelectedGameFinal}
+                      />
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
