@@ -389,6 +389,19 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
     return timeStr.includes('final') || timeStr.includes('game over') || timeStr.includes('completed') || timeStr === 'f';
   };
 
+  const getKsToday = (row: MatchupMatrixRow): number | null => {
+    if (typeof (row.metrics as any).liveKs === 'number') {
+      return (row.metrics as any).liveKs;
+    }
+    if (row.metrics.kPerGame != null && row.metrics.kPerGame > 0) {
+      return Math.round(row.metrics.kPerGame);
+    }
+    if (row.metrics.k9 != null && row.metrics.k9 > 0) {
+      return Math.round((row.metrics.k9 / 9) * 5.5);
+    }
+    return null;
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(!hasRowsRef.current);
@@ -1111,13 +1124,13 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                       <CheckCircle2 className="w-2.5 h-2.5 text-slate-400" /> FINAL
                                     </span>
                                   ) : null}
-                                  {row.metrics.k9 != null && (
+                                  {getKsToday(row) != null && (
                                     <span className={`inline-flex items-center gap-0.5 font-mono text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
                                       isPitcherFinal(row)
                                         ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
                                         : 'text-cyan-300 bg-cyan-500/20 border border-cyan-500/40'
                                     }`}>
-                                      {isPitcherFinal(row) ? '🏁' : '⚡'} {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks {isPitcherFinal(row) ? '(Final)' : ''}
+                                      {isPitcherFinal(row) ? '🏁' : '⚡'} {getKsToday(row)} Ks {isPitcherFinal(row) ? '(Final)' : ''}
                                     </span>
                                   )}
                                 </div>
@@ -1140,7 +1153,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                             <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${labelClass(row.label)}`}>{row.label}</span>
                           </td>
                           <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono">
-                            {row.metrics.k9 != null ? (
+                            {getKsToday(row) != null ? (
                               <span className={`inline-flex items-center gap-1 font-mono text-xs font-black px-2 py-1 rounded ${
                                 isPitcherFinal(row)
                                   ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
@@ -1148,7 +1161,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                   ? 'text-rose-300 bg-rose-500/20 border border-rose-500/40 animate-pulse'
                                   : 'text-cyan-300 bg-cyan-500/15 border border-cyan-500/35'
                               }`}>
-                                {isPitcherFinal(row) ? '🏁' : isPitcherLive(row) ? '🔴' : '⚡'} {Math.round((row.metrics.k9 * (row.metrics.ip ?? 5)) / 9)} Ks
+                                {isPitcherFinal(row) ? '🏁' : isPitcherLive(row) ? '🔴' : '⚡'} {getKsToday(row)} Ks
                               </span>
                             ) : (
                               '—'
