@@ -13,10 +13,12 @@ import {
   Filter,
   Flame,
   Plus,
+  Radio,
   RefreshCcw,
   ShieldAlert,
   Target,
 } from 'lucide-react';
+import { useLiveGames } from '../../hooks/queries/useLiveGames';
 import { VerifiedDataNotice } from '../../components/pro';
 import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
@@ -345,6 +347,7 @@ import { MatchupPageShell } from '../../features/matchup/MatchupPageShell';
 
 export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNavigate?: (section: string) => void }) {
   const { isPro } = useEntitlements();
+  const { data: liveData } = useLiveGames();
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -359,6 +362,28 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [selectedPitcher, setSelectedPitcher] = useState<MatchupMatrixRow | null>(null);
   const hasRowsRef = useRef(false);
+
+  const liveTeamsSet = useMemo(() => {
+    const set = new Set<string>();
+    if (liveData?.games) {
+      for (const g of liveData.games) {
+        if (g.isLive || String(g.status ?? '').toLowerCase().includes('in progress') || String(g.status ?? '').toLowerCase().includes('live')) {
+          set.add(String(g.id));
+          if (g.awayTeam) set.add(g.awayTeam.toLowerCase());
+          if (g.awayAbbr) set.add(g.awayAbbr.toLowerCase());
+          if (g.homeTeam) set.add(g.homeTeam.toLowerCase());
+          if (g.homeAbbr) set.add(g.homeAbbr.toLowerCase());
+        }
+      }
+    }
+    return set;
+  }, [liveData]);
+
+  const isPitcherLive = (row: MatchupMatrixRow) => {
+    if (row.gameId && liveTeamsSet.has(String(row.gameId))) return true;
+    if (row.team && liveTeamsSet.has(row.team.toLowerCase())) return true;
+    return false;
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -663,9 +688,16 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                     </div>
 
                     <div className="min-w-0">
-                      <h2 className={`truncate ${Z8_SECTION_HEADER} text-white`}>
-                        {topPitcher.pitcherName}
-                      </h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className={`truncate ${Z8_SECTION_HEADER} text-white`}>
+                          {topPitcher.pitcherName}
+                        </h2>
+                        {isPitcherLive(topPitcher) && (
+                          <span className="flex items-center gap-1 text-[10px] font-black font-mono px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
+                            <Radio className="w-3 h-3 text-rose-400 animate-pulse" /> LIVE
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 font-mono text-sm font-black text-vouch-cyan">
                         {topPitcher.team} vs {topPitcher.opponent}
                       </p>
@@ -852,7 +884,14 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                         size={48}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-base font-black uppercase tracking-tight text-white">{row.pitcherName}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="truncate text-base font-black uppercase tracking-tight text-white">{row.pitcherName}</div>
+                          {isPitcherLive(row) && (
+                            <span className="flex items-center gap-1 text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
+                              <Radio className="w-2.5 h-2.5 text-rose-400" /> LIVE
+                            </span>
+                          )}
+                        </div>
                         <div className="mt-1 font-mono text-[11px] font-bold text-slate-200">
                           <span className="text-vouch-cyan">{row.team}</span> vs <span className="text-white">{row.opponent}</span>
                         </div>
@@ -1053,7 +1092,14 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
                               </div>
                               <div className="min-w-0">
-                                <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-vouch-cyan">{row.pitcherName}</div>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-vouch-cyan">{row.pitcherName}</div>
+                                  {isPitcherLive(row) && (
+                                    <span className="flex items-center gap-1 text-[9px] font-black font-mono px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse shrink-0">
+                                      <Radio className="w-2.5 h-2.5 text-rose-400" /> LIVE
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   <span className="rounded-md border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-1.5 py-0.5 text-[10px] font-black uppercase text-[hsl(var(--ve-text-muted))]">
                                     {row.pitcherHand === 'U' ? 'Hand TBD' : `${row.pitcherHand}HP`}

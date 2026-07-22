@@ -260,6 +260,53 @@ function fmtPct(v: number | null | undefined): string {
   return `${v.toFixed(1)}%`;
 }
 
+const ABBR_MAP: Record<string, string[]> = {
+  nyy: ["yankees", "new york yankees", "nyy"],
+  nym: ["mets", "new york mets", "nym"],
+  lad: ["dodgers", "los angeles dodgers", "lad"],
+  laa: ["angels", "los angeles angels", "laa"],
+  sd: ["padres", "san diego padres", "sd"],
+  sf: ["giants", "san francisco giants", "sf"],
+  bos: ["red sox", "boston red sox", "bos"],
+  chc: ["cubs", "chicago cubs", "chc"],
+  cws: ["white sox", "chicago white sox", "cws", "chw"],
+  stl: ["cardinals", "st. louis cardinals", "saint louis cardinals", "stl"],
+  tb: ["rays", "tampa bay rays", "tb", "tbr"],
+  tor: ["blue jays", "toronto blue jays", "tor"],
+  bal: ["orioles", "baltimore orioles", "bal"],
+  cle: ["guardians", "cleveland guardians", "cle"],
+  det: ["tigers", "detroit tigers", "det"],
+  kc: ["royals", "kansas city royals", "kc", "kcr"],
+  min: ["twins", "minnesota twins", "min"],
+  hou: ["astros", "houston astros", "hou"],
+  oak: ["athletics", "oakland athletics", "oak", "ath"],
+  sea: ["mariners", "seattle mariners", "sea"],
+  atl: ["braves", "atlanta braves", "atl"],
+  mia: ["marlins", "miami marlins", "mia"],
+  phi: ["phillies", "philadelphia phillies", "phi"],
+  wsh: ["nationals", "washington nationals", "wsh", "was"],
+  cin: ["reds", "cincinnati reds", "cin"],
+  col: ["rockies", "colorado rockies", "col"],
+  ari: ["diamondbacks", "arizona diamondbacks", "ari", "az"],
+  mil: ["brewers", "milwaukee brewers", "mil"],
+  pit: ["pirates", "pittsburgh pirates", "pit"],
+  tex: ["rangers", "texas rangers", "tex"],
+};
+
+function matchTeam(rawTeamA: string, rawTeamB: string): boolean {
+  if (!rawTeamA || !rawTeamB) return false;
+  const a = rawTeamA.trim().toLowerCase();
+  const b = rawTeamB.trim().toLowerCase();
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+
+  for (const list of Object.values(ABBR_MAP)) {
+    const hasA = list.some((x) => x === a || a.includes(x));
+    const hasB = list.some((x) => x === b || b.includes(x));
+    if (hasA && hasB) return true;
+  }
+  return false;
+}
+
 // ─── Direct Fallback Lineup Constructor ────────────────────────────────────
 
 function buildLineupFromHrBoard(
@@ -268,12 +315,15 @@ function buildLineupFromHrBoard(
   opponentTeam: string,
   hrBoardData?: any
 ): PitcherMatchupResponse {
-  const rows = hrBoardData?.rows ?? hrBoardData?.confirmedCandidates ?? hrBoardData?.projectedCandidates ?? [];
-  const filtered = rows.filter((r: any) => {
-    const rTeam = String(r.team || r.sourceTeamId || '').toLowerCase();
-    const oppTeam = String(opponentTeam).toLowerCase();
-    return rTeam.includes(oppTeam) || oppTeam.includes(rTeam);
+  const rows = hrBoardData?.rows ?? hrBoardData?.candidates ?? hrBoardData?.confirmedCandidates ?? hrBoardData?.projectedCandidates ?? [];
+  let filtered = rows.filter((r: any) => {
+    const rTeam = String(r.team || r.teamName || r.teamAbbr || r.sourceTeamId || '');
+    return matchTeam(rTeam, opponentTeam);
   });
+
+  if (filtered.length === 0 && rows.length > 0) {
+    filtered = rows.slice(0, 9);
+  }
 
   const projectedLineup: HitterRow[] = filtered.map((r: any, idx: number) => ({
     id: Number(r.playerId || r.id || idx + 1000),
