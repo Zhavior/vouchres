@@ -867,8 +867,8 @@ function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
 
   for (const players of teams) {
     for (const player of Object.values(players || {}) as any[]) {
-      const fullName = String(player?.person?.fullName || player?.name || "").toLowerCase();
-      if (fullName && fullName.includes(wantedName.toLowerCase())) {
+      const fullName = String(player?.person?.fullName || player?.name || "");
+      if (fullName && isPlayerNameMatch(fullName, wantedName)) {
         return player;
       }
     }
@@ -1094,13 +1094,49 @@ function settlePush(pick: { id: string }, reason: string): GradeResult {
   };
 }
 
+export function isPlayerNameMatch(fullNameRaw: string, wantedNameRaw: string): boolean {
+  const full = fullNameRaw.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  const wanted = wantedNameRaw.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "");
+
+  if (!full || !wanted) return false;
+  if (full === wanted || full.includes(wanted) || wanted.includes(full)) return true;
+
+  const fullTokens = full.split(/\s+/).filter(Boolean);
+  const wantedTokens = wanted.split(/\s+/).filter(Boolean);
+
+  const fullLast = fullTokens[fullTokens.length - 1];
+  const wantedLast = wantedTokens[wantedTokens.length - 1];
+
+  if (fullLast && wantedLast && fullLast === wantedLast) {
+    const fullFirst = fullTokens[0] ?? "";
+    const wantedFirst = wantedTokens[0] ?? "";
+
+    if (
+      fullFirst[0] === wantedFirst[0] &&
+      (fullFirst.startsWith(wantedFirst) || wantedFirst.startsWith(fullFirst) || fullFirst.slice(0, 3) === wantedFirst.slice(0, 3))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function extractPlayerName(selection: string, _market: string): string {
   const cleaned = selection
     .replace(/^avoid\s+/i, "")
-    .replace(/\b\d+\+?\s*(HR|RBI|RUN|RUNS)\b/i, "")
+    .replace(/\bto\s+hit\s+a?\s*home\s*runs?\b/i, "")
+    .replace(/\bto\s+record\s+a?\s*hits?\b/i, "")
+    .replace(/\bhome\s*runs?\b/i, "")
+    .replace(/\btotal\s*bases?\b/i, "")
+    .replace(/\b\d+\+?\s*(HR|RBI|RUN|RUNS|HITS?|TB|BASES?)\b/i, "")
     .replace(/\([^)]*\)/g, "")
-    .replace(/\b(HR|RBI|RUN|RUNS)\b/i, "")
+    .replace(/\b(HR|RBI|RUNS?|HITS?|TB|BASES?)\b/i, "")
     .replace(/\bover\s+[\d.]+\b/i, "")
+    .replace(/\bunder\s+[\d.]+\b/i, "")
+    .replace(/\bto\s+hit\b/i, "")
+    .replace(/\bto\s+record\b/i, "")
+    .replace(/\s{2,}/g, " ")
     .trim();
   return cleaned;
 }
@@ -1119,7 +1155,6 @@ function extractThreshold(selection: string): number {
  */
 export function countPlayerStat(boxscore: any, playerName: string, stat: string): number | null {
   if (!boxscore?.teams) return null;
-  const nameLower = playerName.toLowerCase();
 
   for (const side of ["away", "home"]) {
     const players = boxscore.teams[side]?.players;
@@ -1127,10 +1162,10 @@ export function countPlayerStat(boxscore: any, playerName: string, stat: string)
 
     for (const playerKey of Object.keys(players)) {
       const p = players[playerKey];
-      const fullName = p?.person?.fullName?.toLowerCase();
+      const fullName = String(p?.person?.fullName || p?.name || "");
       if (!fullName) continue;
 
-      if (fullName === nameLower || fullName.endsWith(" " + nameLower)) {
+      if (isPlayerNameMatch(fullName, playerName)) {
         // Player IS in the box score. A missing stat key means the stat was
         // 0 for a player who actually appeared — that's a real 0, not a DNP.
         const statValue = p?.stats?.batting?.[stat];

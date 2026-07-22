@@ -14,6 +14,7 @@
 
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { isMlbFinalStatusText } from "../mlb/gameStatus";
+import { isPlayerNameMatch } from "./gradingService";
 
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
 
@@ -125,15 +126,14 @@ function extractPlayerName(selection: string): string {
 /** Read a batting stat for a named player from an MLB boxscore. */
 function countPlayerStat(raw: any, playerName: string, stat: string): number | null {
   if (!raw?.teams) return null;
-  const nameLower = playerName.toLowerCase();
   for (const side of ["away", "home"]) {
     const players = raw.teams[side]?.players;
     if (!players) continue;
     for (const key of Object.keys(players)) {
       const p = players[key];
-      const fullName = p?.person?.fullName?.toLowerCase();
+      const fullName = String(p?.person?.fullName || p?.name || "");
       if (!fullName) continue;
-      if (fullName === nameLower || fullName.endsWith(" " + nameLower)) {
+      if (isPlayerNameMatch(fullName, playerName)) {
         const v = p?.stats?.batting?.[stat];
         return typeof v === "number" ? v : 0;
       }
