@@ -33,7 +33,7 @@ import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
-import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_AUTH_GRADIENT, Z8_AUTH_SHADOW, Z8_CYAN_HEX, Z8_BLURPLE_HEX } from '../../theme/z8Tokens';
 import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
@@ -130,10 +130,6 @@ interface AuthModalProps {
   onAuthed?: () => void;
 }
 
-const CYAN_GRADIENT = 'linear-gradient(135deg, #00F0FF, #2563eb)';
-const CYAN_SHADOW = '0 8px 32px rgba(0,240,255,0.22)';
-const CYAN = '#00F0FF';
-const BLURPLE = '#5865F2';
 
 export default function AuthModal({
   open,
@@ -407,7 +403,7 @@ export default function AuthModal({
           {/* Glow header band */}
           <div
             className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
-            style={{ background: 'radial-gradient(120% 100% at 50% 0%, rgba(0,240,255,0.12), transparent 70%)' }}
+            style={{ background: 'radial-gradient(120% 100% at 50% 0%, rgba(79, 184, 220,0.12), transparent 70%)' }}
           >
             <button
               ref={closeButtonRef}
@@ -424,7 +420,7 @@ export default function AuthModal({
             </div>
 
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 font-black text-sm text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.15)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 font-black text-sm text-vouch-cyan shadow-[0_0_16px_rgba(79, 184, 220,0.15)]">
                 VE
               </div>
               <div>
@@ -467,7 +463,7 @@ export default function AuthModal({
             /* ── Check-your-email confirmation ── */
             <div className="px-6 py-6 flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10"
-                style={{ boxShadow: '0 0 24px rgba(0,240,255,0.12)' }}>
+                style={{ boxShadow: '0 0 24px rgba(79, 184, 220,0.12)' }}>
                 <MailCheck className="w-8 h-8 text-vouch-cyan" />
               </div>
               <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
@@ -478,7 +474,7 @@ export default function AuthModal({
               <button
                 onClick={() => { setEmailSent(false); }}
                 className={`mt-5 w-full py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
               >
                 Got it
               </button>
@@ -498,7 +494,7 @@ export default function AuthModal({
                   return (
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center border border-vouch-cyan/30 bg-vouch-cyan/10"
-                      style={{ boxShadow: '0 0 24px rgba(0,240,255,0.12)' }}
+                      style={{ boxShadow: '0 0 24px rgba(79, 184, 220,0.12)' }}
                     >
                       <Icon className="w-8 h-8 text-vouch-cyan" />
                     </div>
@@ -512,7 +508,7 @@ export default function AuthModal({
                   <span
                     key={i}
                     className="h-1.5 rounded-full transition-all"
-                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#00F0FF' : 'rgba(255,255,255,0.15)' }}
+                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#4FB8DC' : 'rgba(255,255,255,0.15)' }}
                   />
                 ))}
               </div>
@@ -535,7 +531,7 @@ export default function AuthModal({
                     else setSignupStep('questionnaire');
                   }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
                 >
                   {introIndex < INTRO_SLIDES.length - 1 ? 'Next' : "Let's go"}
                   <ArrowRight className="w-4 h-4" />
@@ -572,8 +568,8 @@ export default function AuthModal({
                       borderColor: 'rgba(255,255,255,0.08)',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(0,240,255,0.4)';
-                      e.currentTarget.style.background = 'rgba(0,240,255,0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(79, 184, 220,0.4)';
+                      e.currentTarget.style.background = 'rgba(79, 184, 220,0.05)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -617,7 +613,7 @@ export default function AuthModal({
                       onClick={() => setPlan(opt.id)}
                       className="w-full text-left rounded-xl border p-3.5 transition-colors"
                       style={{
-                        background: selected ? 'rgba(0,240,255,0.08)' : 'rgba(0,0,0,0.35)',
+                        background: selected ? 'rgba(79, 184, 220,0.08)' : 'rgba(0,0,0,0.35)',
                         borderColor: selected ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)',
                       }}
                     >
@@ -626,12 +622,12 @@ export default function AuthModal({
                           className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                           style={{ background: selected ? 'rgba(34,211,238,0.16)' : 'rgba(255,255,255,0.05)' }}
                         >
-                          <Icon className="w-4 h-4" style={{ color: selected ? CYAN : '#94a3b8' }} />
+                          <Icon className="w-4 h-4" style={{ color: selected ? Z8_CYAN_HEX : '#94a3b8' }} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-black text-white">{opt.label}</span>
-                            <span className="text-xs font-bold" style={{ color: CYAN }}>{opt.price}</span>
+                            <span className="text-xs font-bold" style={{ color: Z8_CYAN_HEX }}>{opt.price}</span>
                             {opt.beta && (
                               <span
                                 className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
@@ -645,7 +641,7 @@ export default function AuthModal({
                           <ul className="mt-1.5 space-y-0.5">
                             {opt.perks.map((perk) => (
                               <li key={perk} className="flex items-start gap-1.5 text-[10px] text-slate-500">
-                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? CYAN : '#64748b' }} />
+                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? Z8_CYAN_HEX : '#64748b' }} />
                                 {perk}
                               </li>
                             ))}
@@ -653,9 +649,9 @@ export default function AuthModal({
                         </div>
                         <div
                           className="w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center"
-                          style={{ borderColor: selected ? CYAN : 'rgba(255,255,255,0.2)' }}
+                          style={{ borderColor: selected ? Z8_CYAN_HEX : 'rgba(255,255,255,0.2)' }}
                         >
-                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: CYAN }} />}
+                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: Z8_CYAN_HEX }} />}
                         </div>
                       </div>
                     </button>
@@ -682,7 +678,7 @@ export default function AuthModal({
                   type="button"
                   onClick={() => setSignupStep('policy')}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
                 >
                   Continue
                   <ArrowRight className="w-4 h-4" />
@@ -709,15 +705,15 @@ export default function AuthModal({
                     key={item.id}
                     className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
                     style={{
-                      background: agreements[item.id] ? 'rgba(0,240,255,0.06)' : 'rgba(0,0,0,0.35)',
+                      background: agreements[item.id] ? 'rgba(79, 184, 220,0.06)' : 'rgba(0,0,0,0.35)',
                       borderColor: agreements[item.id] ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     <span
                       className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
                       style={{
-                        borderColor: agreements[item.id] ? CYAN : 'rgba(255,255,255,0.2)',
-                        background: agreements[item.id] ? CYAN : 'transparent',
+                        borderColor: agreements[item.id] ? Z8_CYAN_HEX : 'rgba(255,255,255,0.2)',
+                        background: agreements[item.id] ? Z8_CYAN_HEX : 'transparent',
                       }}
                     >
                       {agreements[item.id] && <Check className="w-3 h-3" style={{ color: '#0b1322' }} />}
@@ -747,7 +743,7 @@ export default function AuthModal({
                   disabled={!agreements.age || !agreements.terms || !agreements.research}
                   onClick={() => setSignupStep('form')}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
                 >
                   Agree & continue
                   <ArrowRight className="w-4 h-4" />
@@ -917,7 +913,7 @@ export default function AuthModal({
                   </Field>
                   <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
                     VouchEdge is in private beta. No code?{' '}
-                    <a href="/premium" className="font-semibold underline" style={{ color: BLURPLE }}>
+                    <a href="/premium" className="font-semibold underline" style={{ color: Z8_BLURPLE_HEX }}>
                       Join the waitlist
                     </a>
                     .
@@ -950,7 +946,7 @@ export default function AuthModal({
               type="submit"
               disabled={busy || redirectingToCheckout}
               className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${Z8_INTERACTIVE}`}
-              style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+              style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
             >
               {redirectingToCheckout ? (
                 <>
@@ -976,7 +972,7 @@ export default function AuthModal({
               disabled={busy}
               className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-white/10 text-white/80 transition-colors disabled:opacity-60 hover:border-vouch-cyan/30 hover:text-white ${Z8_INTERACTIVE}`}
             >
-              <Wand2 className="w-3.5 h-3.5" style={{ color: BLURPLE }} />
+              <Wand2 className="w-3.5 h-3.5" style={{ color: Z8_BLURPLE_HEX }} />
               Email me a magic link instead
             </button>
           </form>
