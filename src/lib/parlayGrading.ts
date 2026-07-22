@@ -117,10 +117,10 @@ export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
 /** Merge a grade response back into a parlay (leg statuses, overall status, payout). */
 export function applyGrade(p: Parlay, g: GradeResponse): Parlay {
   const bySelection = new Map(g.legs.map((l) => [l.selection, l]));
-  const legs = (p.legs || []).map((l) => {
-    const graded = bySelection.get(l.selection);
+  const legs = (p.legs || []).map((l, index) => {
+    const graded = g.legs[index] ?? bySelection.get(l.selection);
     if (!graded) return l;
-    return { ...l, status: LEG_STATUS[graded.status] ?? l.status, actual: graded.actual };
+    return { ...l, status: LEG_STATUS[graded.status] ?? l.status, actual: graded.actual ?? l.actual };
   });
   return {
     ...p,

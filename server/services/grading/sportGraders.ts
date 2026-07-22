@@ -44,27 +44,27 @@ async function fetchMLBGameData(gamePk: string): Promise<GameData | null> {
 
 async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
   try {
-    // Step 1: linescore → check isComplete (fast, no player stat data)
-    const ls = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/linescore`, {
-      cacheKey: `grading:linescore:${gamePk}`,
-      ttlMs: 2 * 60_000,
-      timeoutMs: 8_000,
-      retries: 1,
-      debugLabel: "sportGraders",
-    });
-    if (ls?.isComplete !== true && !isMlbFinalStatusText(ls?.status)) {
-      return { final: false, raw: null };
-    }
-
-    // Step 2: boxscore for player batting stats (only for final games)
     const raw = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
       cacheKey: `grading:boxscore:${gamePk}`,
-      ttlMs: 10 * 60_000,
+      ttlMs: 30_000,
       timeoutMs: 10_000,
       retries: 1,
       debugLabel: "sportGraders",
     });
-    return { final: true, raw };
+
+    const feed = await sportsFetchJson<any>(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
+      cacheKey: `grading:feed:${gamePk}`,
+      ttlMs: 30_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: "sportGraders",
+    }).catch(() => null);
+
+    const statusObj = feed?.gameData?.status || raw?.gameData?.status;
+    const statusStr = statusObj?.detailedState || statusObj?.abstractGameState || "";
+    const isFinal = isMlbFinalStatusText(statusStr) || isMlbFinalStatusText(statusObj);
+
+    return { final: isFinal, raw: raw || feed?.liveData?.boxscore };
   } catch (err) {
     console.warn(
       `[sportGraders] MLB game fetch failed gamePk=${gamePk}:`,
@@ -170,14 +170,37 @@ const mlbGrader: SportGrader = {
     const player = extractPlayerName(leg.selection);
     const actual = countPlayerStat(game.raw, player, def.stat);
     if (actual === null) {
-      // Player not in boxscore — DNP / wrong game. Treat as push (refund).
-      return { status: "push", actual: null, note: `player_not_found:${player}` };
+      if (game.final) {
+        return { status: "push", actual: null, note: `player_not_found:${player}` };
+      }
+      return { status: "pending", actual: null, note: `game_in_progress:${player}` };
     }
+
     const threshold = leg.threshold ?? def.threshold;
+
+    // 1. If player hit target (e.g. 1+ HR), mark WON immediately
+    if (actual >= threshold) {
+      return {
+        status: "won",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+)`,
+      };
+    }
+
+    // 2. If game is FINAL and player did NOT hit target, mark LOST
+    if (game.final) {
+      return {
+        status: "lost",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+, Final)`,
+      };
+    }
+
+    // 3. Otherwise (game still live, target not hit yet) -> keep PENDING
     return {
-      status: actual >= threshold ? "won" : "lost",
+      status: "pending",
       actual,
-      note: `${player}: ${actual} ${def.stat} (need ${threshold}+)`,
+      note: `${player}: ${actual}/${threshold} ${def.stat} (In Progress)`,
     };
   },
 };
