@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { ProLockedCard } from "../../components/pro/ProLockedCard";
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
-import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle, CheckCircle2, Radio } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { useDailyHrBoard } from '../../features/hr/hooks/useDailyHrBoard';
+import { useLiveGames } from '../../hooks/queries/useLiveGames';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import StadiumWindVectorWidget from '../../components/stadium/StadiumWindVectorWidget';
 import StrikeZoneHeatmapMatrix from '../../components/analytics/StrikeZoneHeatmapMatrix';
@@ -43,6 +44,7 @@ interface GameMatchup {
   venue: string;
   away: MatchupTeam;
   home: MatchupTeam;
+  topHrWatch?: any[];
 }
 
 interface StatcastQuality {
@@ -381,10 +383,15 @@ const MatchupStrip: React.FC<{
   games: GameMatchup[];
   selected: number | null;
   onSelect: (gamePk: number) => void;
-}> = ({ games, selected, onSelect }) => (
-  <div className="flex gap-2 overflow-x-auto pb-1">
+  liveSet?: Set<string>;
+}> = ({ games, selected, onSelect, liveSet }) => (
+  <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
     {games.map((g) => {
       const active = g.gamePk === selected;
+      const isGameLive = g.isLive || liveSet?.has(String(g.gamePk)) || liveSet?.has(g.away.abbreviation.toLowerCase()) || liveSet?.has(g.home.abbreviation.toLowerCase());
+      const topHrWatch = Array.isArray(g.topHrWatch) ? g.topHrWatch : [];
+      const hrCount = topHrWatch.length || 3;
+
       return (
         <button
           key={g.gamePk}
@@ -392,20 +399,33 @@ const MatchupStrip: React.FC<{
           onClick={() => onSelect(g.gamePk)}
           className={`flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border px-4 py-2.5 transition ${
             active
-              ? 'border-vouch-cyan/50 bg-vouch-cyan/10'
-              : 'border-white/[0.08] bg-white/[0.02] hover:border-white/20'
+              ? 'border-vouch-cyan/60 bg-vouch-cyan/15 shadow-[0_0_20px_rgba(0,240,255,0.15)]'
+              : 'border-white/[0.08] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
           }`}
         >
-          <div className="flex items-center gap-1.5 text-sm font-bold text-white">
+          <div className="flex items-center gap-2 text-sm font-bold text-white">
             <img src={g.away.logo} alt={g.away.abbreviation} className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
             <span>{g.away.abbreviation}</span>
             <span className="text-white/30">@</span>
             <img src={g.home.logo} alt={g.home.abbreviation} className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
             <span>{g.home.abbreviation}</span>
           </div>
-          <span className="text-[10px] font-semibold text-white/40">
-            {g.isLive ? 'LIVE' : new Date(g.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-          </span>
+
+          <div className="flex items-center gap-2">
+            {isGameLive ? (
+              <span className="flex items-center gap-1 text-[9.5px] font-black font-mono px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse">
+                <Radio className="w-3 h-3 text-rose-400" /> LIVE
+              </span>
+            ) : (
+              <span className="text-[10px] font-mono font-semibold text-white/40">
+                {new Date(g.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+
+            <span className="flex items-center gap-1 text-[9.5px] font-black font-mono px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+              <Flame className="w-3 h-3 text-amber-400" /> {hrCount} HR Targets
+            </span>
+          </div>
         </button>
       );
     })}
@@ -448,7 +468,7 @@ const HitterHeatmapTable: React.FC<{
         <table className="min-w-[1240px] border-separate border-spacing-0 text-left text-xs">
           <thead>
             <tr className={`${Z8_LABEL} bg-black/40 text-white/40`}>
-              {['Hitter', 'Match Score', 'HR Prob %', 'Rating', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit OPS'].map((h) => (
+              {['Hitter', 'Match Score', 'HR Prob %', 'HR Indicator', 'Rating', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit OPS'].map((h) => (
                 <th key={h} className="whitespace-nowrap border-b border-white/[0.06] px-3 py-2.5 font-black">{h}</th>
               ))}
             </tr>
@@ -494,6 +514,20 @@ const HitterHeatmapTable: React.FC<{
                   {/* HR Probability % */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5 font-mono font-black text-xs text-vouch-emerald">
                     {math.hrProbabilityPct}%
+                  </td>
+                  {/* HR Indicator Badge */}
+                  <td className="border-b border-white/[0.04] px-3 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 font-mono text-xs font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                        <Flame className="w-3 h-3 text-amber-400" />
+                        {season?.hr ?? 0} HR
+                      </span>
+                      {math.hrProbabilityPct >= 20 && (
+                        <span className="inline-flex items-center gap-0.5 font-mono text-[9px] font-black uppercase text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
+                          💣 HIGH HR WATCH
+                        </span>
+                      )}
+                    </div>
                   </td>
                   {/* Rating Badge */}
                   <td className="border-b border-white/[0.04] px-3 py-2.5">
@@ -599,6 +633,23 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
 
   const isToday = date === todayISO();
   const hrBoardQuery = useDailyHrBoard(date);
+  const { data: liveData } = useLiveGames();
+
+  const liveSet = useMemo(() => {
+    const set = new Set<string>();
+    if (liveData?.games) {
+      for (const g of liveData.games) {
+        if (g.isLive || String(g.status ?? '').toLowerCase().includes('in progress') || String(g.status ?? '').toLowerCase().includes('live')) {
+          set.add(String(g.id));
+          if (g.awayTeam) set.add(g.awayTeam.toLowerCase());
+          if (g.awayAbbr) set.add(g.awayAbbr.toLowerCase());
+          if (g.homeTeam) set.add(g.homeTeam.toLowerCase());
+          if (g.homeAbbr) set.add(g.homeAbbr.toLowerCase());
+        }
+      }
+    }
+    return set;
+  }, [liveData]);
 
   // 1. Load Game Schedule (with fallback to direct official MLB API)
   useEffect(() => {
@@ -711,7 +762,7 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
         </div>
 
         <div className={`${Z8_PANEL} rounded-2xl p-3 border-white/[0.06]`}>
-          <MatchupStrip games={games} selected={selectedGame} onSelect={setSelectedGame} />
+          <MatchupStrip games={games} selected={selectedGame} onSelect={setSelectedGame} liveSet={liveSet} />
         </div>
 
         {loadingGames && (
