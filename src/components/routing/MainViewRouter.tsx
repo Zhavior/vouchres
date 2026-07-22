@@ -270,6 +270,7 @@ function MainViewRouter({
           </ProGateShell>
         </LazyRoute>
       );
+    case 'pitcher_matchup':
     case 'pitcher_matchup_intelligence':
       return (
         <LazyRoute>
@@ -286,6 +287,7 @@ function MainViewRouter({
           </ProGateShell>
         </LazyRoute>
       );
+    case 'hitter_matchup':
     case 'hitter_matchup_zones':
       return (
         <LazyRoute>

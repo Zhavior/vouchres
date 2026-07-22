@@ -45,7 +45,7 @@ export function MatchupPageShell({
               <button
                 type="button"
                 data-active={active === 'hitter'}
-                onClick={() => handleNav('hitter_matchup')}
+                onClick={() => handleNav('hitter_matchup_zones')}
                 className={`group flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl border font-mono text-xs font-black uppercase tracking-wider transition ${
                   active === 'hitter'
                     ? 'border-vouch-emerald/50 bg-vouch-emerald/15 text-vouch-emerald shadow-lg shadow-vouch-emerald/10'
@@ -59,7 +59,7 @@ export function MatchupPageShell({
               <button
                 type="button"
                 data-active={active === 'pitcher'}
-                onClick={() => handleNav('pitcher_matchup')}
+                onClick={() => handleNav('pitcher_matchup_intelligence')}
                 className={`group flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl border font-mono text-xs font-black uppercase tracking-wider transition ${
                   active === 'pitcher'
                     ? 'border-vouch-cyan/50 bg-vouch-cyan/15 text-vouch-cyan shadow-lg shadow-vouch-cyan/10'
