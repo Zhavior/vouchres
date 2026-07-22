@@ -10,7 +10,8 @@ import { recordHrBoardCacheControl } from "./hrBoardCache";
  *   - Content-Type: application/json  (when body present)
  *   - X-Client-Version: from package.json (for client-compat checks)
  *
- * On 401, automatically signs the user out via Supabase.
+ * On 401 from /api/auth/me, signs the user out via Supabase. Other 401s are
+ * surfaced to callers without killing the session (tier gates, etc.).
  */
 const CLIENT_VERSION = import.meta.env.VITE_CLIENT_VERSION ?? "0.1.0-beta";
 
@@ -62,16 +63,17 @@ async function request<T = any>(
     credentials: "include",
   });
 
-  // Handle 401 — only force a global sign-out when we actually sent a token
-  // and the server rejected it (genuinely expired/invalid session). A 401 on
-  // a request that never had a token (e.g. one that raced ahead of session
-  // hydration at boot) just means "not authenticated yet" — signing out here
-  // would kick an otherwise-valid session out from under the user.
+  // Handle 401 — only force sign-out for session validation, not tier-gated resources.
+  // Pro Lab routes can return 401 for Basic users; signing out globally would drop
+  // them back to the logged-out landing page instead of showing the paywall.
   if (res.status === 401) {
-    if (token) {
+    const body = await res.json().catch(() => ({ error: 'unauthorized' }));
+    const isAuthMe = path.startsWith('/api/auth/me');
+    if (token && isAuthMe) {
       await supabase.auth.signOut();
     }
-    throw { error: "unauthorized", status: 401 } as ApiError;
+    const parsed = parseApiErrorBody(body, res.status) as ApiError;
+    throw { ...parsed, status: 401 } as ApiError;
   }
 
   // Handle 402 / 429 — paywall / quota — caller decides UX

@@ -79,6 +79,14 @@ export function ProAccessGate({
 }: ProAccessGateProps) {
   const entitlements = useEntitlements();
 
+  if (entitlements.loading) {
+    return (
+      <main className="ve-page-shell flex min-h-[50vh] items-center justify-center px-4 py-10">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" role="status" aria-label="Checking access" />
+      </main>
+    );
+  }
+
   if (
     hasTierAccess(profile, requiredTier) ||
     entitlements.isPro ||
