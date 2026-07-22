@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, CornerUpLeft, ExternalLink, Globe, Loader, Lock, MessageCircle, Send, Settings2, X } from 'lucide-react';
 import type { CreatorProofProfile } from '../../types';
@@ -139,12 +139,12 @@ function SharedParlayProofCard({ pickId }: { pickId: string }) {
   const { data: proof, isLoading } = useQuery({
     queryKey: ['world-chat-proof-card', pickId],
     queryFn: () => fetchParlayProofRecord(pickId),
-    staleTime: 60_000,
+    staleTime: 120_000,
   });
 
   if (isLoading) {
     return (
-      <div className="mt-2 rounded-2xl border border-cyan-400/15 bg-cyan-950/10 p-3 text-xs text-cyan-100/70">
+      <div className="mt-2 rounded-2xl border border-cyan-400/15 bg-cyan-950/10 p-3 text-xs text-cyan-100/70 font-mono">
         Loading shared parlay proof...
       </div>
     );
@@ -208,7 +208,7 @@ function ParlayProofInlineLink({ pickId, label }: { pickId: string; label: strin
     queryKey: ['world-chat-proof-preview', pickId],
     queryFn: () => fetchParlayProofRecord(pickId),
     enabled: hovered,
-    staleTime: 60_000,
+    staleTime: 120_000,
   });
 
   return (
@@ -232,6 +232,180 @@ function ParlayProofInlineLink({ pickId, label }: { pickId: string; label: strin
     </span>
   );
 }
+
+// ─── Memoized Message Item Component (Prevents Typing Re-render Bottleneck) ───
+
+type MessageItemProps = {
+  msg: WorldChatMessage;
+  isMine: boolean;
+  isGrouped: boolean;
+  accent: string;
+  emojis: WorldChatCustomEmoji[];
+  isLoggedIn: boolean;
+  reactingKey: string | null;
+  onOpenAuthor: (author: ChatAuthor) => void;
+  onSetReplyTarget: (ref: WorldChatReplyRef) => void;
+  onHandleReaction: (messageId: string, emojiId: string) => void;
+};
+
+const WorldChatMessageItem = React.memo(function WorldChatMessageItem({
+  msg,
+  isMine,
+  isGrouped,
+  accent,
+  emojis,
+  isLoggedIn,
+  reactingKey,
+  onOpenAuthor,
+  onSetReplyTarget,
+  onHandleReaction,
+}: MessageItemProps) {
+  const openAuthor = () =>
+    onOpenAuthor({
+      userId: msg.userId,
+      displayName: msg.displayName,
+      username: msg.username,
+      handle: msg.handle,
+      avatarUrl: msg.avatarUrl,
+      borderId: msg.borderId,
+      accentColor: msg.accentColor,
+      winRate: msg.winRate,
+      statusLine: msg.statusLine,
+    });
+
+  const proofIds = useMemo(() => extractParlayProofIds(msg.text), [msg.text]);
+
+  return (
+    <div className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? '' : 'mt-1'}`}>
+      <button
+        type="button"
+        onClick={openAuthor}
+        disabled={isMine}
+        className={`mb-0.5 shrink-0 self-end transition ${isMine ? 'cursor-default' : 'hover:opacity-80'} ${isGrouped ? 'invisible' : ''}`}
+        aria-label={isMine ? 'You' : `Open ${msg.displayName}'s profile`}
+      >
+        <ProfileAvatarBorder
+          borderId={msg.borderId ?? undefined}
+          avatarUrl={msg.avatarUrl || undefined}
+          displayName={msg.displayName}
+          initials={msg.displayName.slice(0, 2) || '??'}
+          size="sm"
+          winRate={msg.winRate ?? undefined}
+        />
+      </button>
+
+      <div className={`flex min-w-0 max-w-[78%] flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+        {!isMine && !isGrouped ? (
+          <button
+            type="button"
+            onClick={openAuthor}
+            className="mb-1 px-1 text-[11px] font-bold transition hover:opacity-80"
+            style={{ color: accent }}
+          >
+            {msg.displayName}
+          </button>
+        ) : null}
+
+        <div
+          className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm ${
+            isMine
+              ? 'rounded-br-md border border-vouch-cyan/25 bg-vouch-cyan/[0.16] text-white'
+              : 'rounded-bl-md border border-white/8 bg-white/[0.05] text-white/88'
+          }`}
+        >
+          {renderMessageText(msg.text)}
+        </div>
+
+        <span className="mt-1 px-1 text-[10px] text-white/25 font-mono">{formatTime(msg.createdAt)}</span>
+
+        {msg.replyTo ? (
+          <button
+            type="button"
+            onClick={() =>
+              onOpenAuthor({
+                userId: msg.replyTo!.userId,
+                displayName: msg.replyTo!.displayName,
+                username: msg.replyTo!.handle,
+                handle: msg.replyTo!.handle,
+                winRate: null,
+                statusLine: 'From World Chat reply',
+              })
+            }
+            className="mt-1 block w-full max-w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left transition hover:border-white/15"
+          >
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/65">
+              Replying to @{msg.replyTo.handle}
+            </p>
+            <p className="mt-1 line-clamp-2 text-xs text-white/55">{msg.replyTo.text}</p>
+          </button>
+        ) : null}
+
+        {proofIds.length > 0 ? (
+          <div className="mt-2 w-full space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/60">
+              Shared proof link · open to tail on your own profile
+            </p>
+            {proofIds.map((pickId) => (
+              <SharedParlayProofCard key={`${msg.id}:${pickId}`} pickId={pickId} />
+            ))}
+          </div>
+        ) : null}
+
+        <div className={`mt-1.5 flex flex-wrap gap-1.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
+          {!isMine ? (
+            <button
+              type="button"
+              onClick={() =>
+                onSetReplyTarget({
+                  id: msg.id,
+                  userId: msg.userId,
+                  displayName: msg.displayName,
+                  handle: msg.handle,
+                  text: msg.text,
+                })
+              }
+              aria-label="Reply"
+              title="Reply"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/55 transition hover:border-white/25 hover:text-white/85"
+            >
+              <CornerUpLeft className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+
+          {emojis.length > 0
+            ? emojis.map((emoji) => {
+                const reaction = msg.reactions.find((item) => item.emojiId === emoji.id);
+                const selected = Boolean(reaction?.reactedByViewer);
+                const count = reaction?.count ?? 0;
+                const disabled = !isLoggedIn || reactingKey === `${msg.id}:${emoji.id}`;
+                return (
+                  <button
+                    key={`${msg.id}:${emoji.id}`}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void onHandleReaction(msg.id, emoji.id)}
+                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition ${
+                      selected
+                        ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                        : 'border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white/85'
+                    } disabled:opacity-50`}
+                    title={emoji.altText}
+                  >
+                    <img
+                      src={emoji.imageUrl}
+                      alt={emoji.altText}
+                      className="h-4 w-4 rounded-sm object-cover"
+                    />
+                    {count > 0 ? <span>{count}</span> : null}
+                  </button>
+                );
+              })
+            : null}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 type SocialProfilePreview = ChatAuthor & {
   statusLine?: string;
@@ -377,6 +551,8 @@ export default function WorldChatPanel({
   const [chatPrefs, setChatPrefs] = useState<VouchEdgeChatProfile>(() => loadChatProfile());
   const [dmDraft, setDmDraft] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Lazy activate DM polling only when DM tab is open
   const dm = useDirectMessages(Boolean(isLoggedIn && activePage === 'messages'));
   const followingHub = useFollowingHub(Boolean(isLoggedIn && activePage === 'messages'));
 
@@ -429,6 +605,7 @@ export default function WorldChatPanel({
     return () => window.clearInterval(timer);
   }, [fetchMessages, isLoggedIn]);
 
+  // Realtime Supabase Broadcast Channel Listener with Direct Optimistic Appending
   useEffect(() => {
     if (!isLoggedIn || activePage !== 'world') return;
 
@@ -444,26 +621,43 @@ export default function WorldChatPanel({
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'world_chat_messages',
             filter: `channel_id=eq.${activeChannelId}`,
           },
-          () => void fetchMessages(),
+          (payload) => {
+            if (!payload.new) {
+              void fetchMessages();
+              return;
+            }
+            const raw = payload.new as any;
+            const newMsg: WorldChatMessage = {
+              id: raw.id,
+              channelId: raw.channel_id,
+              userId: raw.user_id,
+              displayName: raw.display_name ?? 'User',
+              username: raw.username ?? 'user',
+              handle: raw.handle ?? raw.username ?? 'user',
+              avatarUrl: raw.avatar_url ?? null,
+              borderId: raw.border_id ?? null,
+              accentColor: raw.accent_color ?? 'cyan',
+              text: raw.text,
+              winRate: raw.win_rate ?? null,
+              statusLine: raw.status_line ?? null,
+              createdAt: raw.created_at,
+              reactions: [],
+              replyTo: null,
+            };
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg].slice(-100);
+            });
+          },
         )
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'world_chat_message_reactions' },
-          () => void fetchMessages(),
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'world_chat_custom_emojis' },
-          () => void fetchMessages(),
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'world_chat_channels' },
           () => void fetchMessages(),
         )
         .subscribe();
@@ -477,14 +671,23 @@ export default function WorldChatPanel({
     };
   }, [activeChannelId, activePage, fetchMessages, isLoggedIn]);
 
+  // Non-blocking Auto-scroll Execution
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 140;
+    if (isNearBottom) {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
+    }
   }, [messages.length]);
 
   useEffect(() => {
     setReplyTarget(null);
   }, [activeChannelId]);
 
+  // Instant Optimistic Message Dispatch
   const handlePost = async (e?: FormEvent) => {
     e?.preventDefault();
     const text = input.trim();
@@ -497,8 +700,30 @@ export default function WorldChatPanel({
       return;
     }
 
-    setPosting(true);
+    const optimisticId = `opt-${Date.now()}`;
+    const optimisticMessage: WorldChatMessage = {
+      id: optimisticId,
+      channelId: activeChannelId,
+      userId: user?.id ?? 'me',
+      displayName: resolvedProfile.displayName,
+      username: resolvedProfile.username,
+      handle: resolvedProfile.handle,
+      avatarUrl: resolvedProfile.avatarUrl ?? null,
+      borderId: resolvedProfile.borderId ?? null,
+      accentColor: resolvedProfile.accentColor ?? 'cyan',
+      text,
+      winRate: resolvedProfile.winRate ?? null,
+      statusLine: resolvedProfile.statusLine ?? null,
+      createdAt: new Date().toISOString(),
+      reactions: [],
+      replyTo: replyTarget ? { id: replyTarget.id, displayName: replyTarget.displayName, handle: replyTarget.handle, text: replyTarget.text, userId: replyTarget.userId } : null,
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage].slice(-100));
     setInput('');
+    setReplyTarget(null);
+    setPosting(true);
+
     try {
       const data = await apiClient.post<{ message: WorldChatMessage }>('/api/world-chat/messages', {
         text,
@@ -508,15 +733,16 @@ export default function WorldChatPanel({
         statusLine: chatPrefs.statusLine,
         borderId: resolvedProfile.borderId ?? null,
       });
+
       if (data.message) {
-        setMessages((prev) => [...prev, data.message].slice(-100));
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimisticId ? data.message : m)),
+        );
         setPreviewMode(false);
-        setReplyTarget(null);
-      } else {
-        await fetchMessages();
       }
       setError(null);
     } catch (err: any) {
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       setInput(text);
       setError(err?.message ?? 'Failed to post message.');
     } finally {
@@ -524,40 +750,39 @@ export default function WorldChatPanel({
     }
   };
 
-  const handleReaction = async (messageId: string, emojiId: string) => {
-    if (!isLoggedIn || reactingKey) return;
-    const key = `${messageId}:${emojiId}`;
-    setReactingKey(key);
-    try {
-      const data = await apiClient.post<{ messageId: string; reactions: WorldChatReaction[] }>(
-        '/api/world-chat/reactions',
-        { messageId, emojiId },
-      );
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.id === messageId ? { ...message, reactions: data.reactions ?? [] } : message,
-        ),
-      );
-      setError(null);
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to update reaction.');
-    } finally {
-      setReactingKey(null);
-    }
-  };
+  const handleReaction = useCallback(
+    async (messageId: string, emojiId: string) => {
+      if (!isLoggedIn || reactingKey) return;
+      const key = `${messageId}:${emojiId}`;
+      setReactingKey(key);
+      try {
+        const data = await apiClient.post<{ messageId: string; reactions: WorldChatReaction[] }>(
+          '/api/world-chat/reactions',
+          { messageId, emojiId },
+        );
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, reactions: data.reactions ?? [] } : message,
+          ),
+        );
+        setError(null);
+      } catch (err: any) {
+        setError(err?.message ?? 'Failed to update reaction.');
+      } finally {
+        setReactingKey(null);
+      }
+    },
+    [isLoggedIn, reactingKey],
+  );
 
   const signIn = () => {
     onSectionChange?.('welcome');
     onClose?.();
   };
 
-  const openAuthorProfile = (userId: string) => {
-    if (userId && onNavigateProfile) onNavigateProfile(userId);
-  };
-
-  const openAuthorPreview = (author: SocialProfilePreview) => {
+  const openAuthorPreview = useCallback((author: SocialProfilePreview) => {
     setSelectedProfile(author);
-  };
+  }, []);
 
   const handleToggleFollow = async () => {
     if (!selectedProfile || !user?.id || selectedProfile.userId === user.id) return;
@@ -593,9 +818,6 @@ export default function WorldChatPanel({
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
   const sharedProofIdsInDraft = useMemo(() => extractParlayProofIds(input), [input]);
 
-  // DM starters: anyone you follow, plus anyone who's actually posted in
-  // World Chat — not just your existing follow graph, so you can message
-  // people you've actually seen talking.
   const dmStarters = useMemo(() => {
     const merged = new Map<string, { userId: string; displayName: string; username: string }>();
     for (const person of followingHub.people) {
@@ -719,7 +941,7 @@ export default function WorldChatPanel({
           className="glass-panel glass-border min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl p-3"
         >
           {loading ? (
-            <p className="text-center text-xs text-white/35">Loading messages…</p>
+            <p className="text-center text-xs text-white/35 font-mono">Loading messages…</p>
           ) : messages.length === 0 ? (
             <p className="text-center text-xs text-white/40">
               {previewMode
@@ -732,142 +954,21 @@ export default function WorldChatPanel({
               const prev = messages[index - 1];
               const isGrouped = Boolean(prev) && prev.userId === msg.userId && !prev.replyTo;
               const accent = accentHex((msg.accentColor as ChatAccentColor) ?? 'cyan');
-              const openThisAuthor = () => openAuthorPreview({
-                userId: msg.userId,
-                displayName: msg.displayName,
-                username: msg.username,
-                handle: msg.handle,
-                avatarUrl: msg.avatarUrl,
-                borderId: msg.borderId,
-                accentColor: msg.accentColor,
-                winRate: msg.winRate,
-                statusLine: msg.statusLine,
-              });
 
               return (
-                <div key={msg.id} className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''} ${isGrouped ? '' : 'mt-1'}`}>
-                  <button
-                    type="button"
-                    onClick={openThisAuthor}
-                    disabled={isMine}
-                    className={`mb-0.5 shrink-0 self-end transition ${isMine ? 'cursor-default' : 'hover:opacity-80'} ${isGrouped ? 'invisible' : ''}`}
-                    aria-label={isMine ? 'You' : `Open ${msg.displayName}'s profile`}
-                  >
-                    <ProfileAvatarBorder
-                      borderId={msg.borderId ?? undefined}
-                      avatarUrl={msg.avatarUrl || undefined}
-                      displayName={msg.displayName}
-                      initials={msg.displayName.slice(0, 2) || '??'}
-                      size="sm"
-                      winRate={msg.winRate ?? undefined}
-                    />
-                  </button>
-
-                  <div className={`flex min-w-0 max-w-[78%] flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                    {!isMine ? (
-                      <button
-                        type="button"
-                        onClick={openThisAuthor}
-                        className="mb-1 px-1 text-[11px] font-bold transition hover:opacity-80"
-                        style={{ color: accent }}
-                      >
-                        {msg.displayName}
-                      </button>
-                    ) : null}
-
-                    <div
-                      className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm ${
-                        isMine
-                          ? 'rounded-br-md border border-vouch-cyan/25 bg-vouch-cyan/[0.16] text-white'
-                          : 'rounded-bl-md border border-white/8 bg-white/[0.05] text-white/88'
-                      }`}
-                    >
-                      {renderMessageText(msg.text)}
-                    </div>
-
-                    <span className="mt-1 px-1 text-[10px] text-white/25">{formatTime(msg.createdAt)}</span>
-
-                    {msg.replyTo ? (
-                      <button
-                        type="button"
-                        onClick={() => openAuthorPreview({
-                          userId: msg.replyTo!.userId,
-                          displayName: msg.replyTo!.displayName,
-                          username: msg.replyTo!.handle,
-                          handle: msg.replyTo!.handle,
-                          winRate: null,
-                          statusLine: 'From World Chat reply',
-                        })}
-                        className="mt-1 block w-full max-w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left transition hover:border-white/15"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/65">
-                          Replying to @{msg.replyTo.handle}
-                        </p>
-                        <p className="mt-1 line-clamp-2 text-xs text-white/55">{msg.replyTo.text}</p>
-                      </button>
-                    ) : null}
-
-                    {extractParlayProofIds(msg.text).length > 0 ? (
-                      <div className="mt-2 w-full space-y-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/60">
-                          Shared proof link · open to tail on your own profile
-                        </p>
-                        {extractParlayProofIds(msg.text).map((pickId) => (
-                          <SharedParlayProofCard key={`${msg.id}:${pickId}`} pickId={pickId} />
-                        ))}
-                      </div>
-                    ) : null}
-
-                    <div className={`mt-1.5 flex flex-wrap gap-1.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      {!isMine ? (
-                        <button
-                          type="button"
-                          onClick={() => setReplyTarget({
-                            id: msg.id,
-                            userId: msg.userId,
-                            displayName: msg.displayName,
-                            handle: msg.handle,
-                            text: msg.text,
-                          })}
-                          aria-label="Reply"
-                          title="Reply"
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/55 transition hover:border-white/25 hover:text-white/85"
-                        >
-                          <CornerUpLeft className="h-3.5 w-3.5" />
-                        </button>
-                      ) : null}
-                      {emojis.length > 0
-                        ? emojis.map((emoji) => {
-                            const reaction = msg.reactions.find((item) => item.emojiId === emoji.id);
-                            const selected = Boolean(reaction?.reactedByViewer);
-                            const count = reaction?.count ?? 0;
-                            const disabled = !isLoggedIn || reactingKey === `${msg.id}:${emoji.id}`;
-                            return (
-                              <button
-                                key={`${msg.id}:${emoji.id}`}
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => void handleReaction(msg.id, emoji.id)}
-                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition ${
-                                  selected
-                                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                                    : 'border-white/10 bg-black/20 text-white/55 hover:border-white/25 hover:text-white/85'
-                                } disabled:opacity-50`}
-                                title={emoji.altText}
-                              >
-                                <img
-                                  src={emoji.imageUrl}
-                                  alt={emoji.altText}
-                                  className="h-4 w-4 rounded-sm object-cover"
-                                />
-                                {count > 0 ? <span>{count}</span> : null}
-                              </button>
-                            );
-                          })
-                        : null}
-                    </div>
-                  </div>
-                </div>
+                <WorldChatMessageItem
+                  key={msg.id}
+                  msg={msg}
+                  isMine={isMine}
+                  isGrouped={isGrouped}
+                  accent={accent}
+                  emojis={emojis}
+                  isLoggedIn={isLoggedIn}
+                  reactingKey={reactingKey}
+                  onOpenAuthor={openAuthorPreview}
+                  onSetReplyTarget={setReplyTarget}
+                  onHandleReaction={handleReaction}
+                />
               );
             })
           )}
@@ -948,111 +1049,74 @@ export default function WorldChatPanel({
                       >
                         <div className="flex items-center gap-3">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <p
-                                className={`truncate text-sm font-bold ${
-                                  conversation.unread ? 'text-white' : 'text-white/88'
-                                }`}
-                              >
-                                {conversation.displayName}
-                              </p>
-                              {conversation.unread ? <span className="h-2 w-2 rounded-full bg-vouch-emerald" /> : null}
-                            </div>
-                            <p
-                              className={`truncate text-xs ${
-                                conversation.unread ? 'text-white/72' : 'text-white/45'
-                              }`}
-                            >
-                              {conversation.lastMessage ? String(conversation.lastMessage.body ?? 'Start chatting') : 'Start chatting'}
-                            </p>
+                            <p className="truncate text-xs font-bold text-white">{conversation.displayName}</p>
+                            <p className="truncate text-[11px] text-white/40">@{conversation.username}</p>
                           </div>
+                          {conversation.unread ? (
+                            <span className="h-2 w-2 rounded-full bg-vouch-emerald" />
+                          ) : null}
                         </div>
                       </button>
                     ))
                   )}
                 </div>
               </div>
-              <div className="flex min-h-[420px] flex-col">
-                {dm.activeConversationId ? (
+
+              <div className="flex flex-col">
+                {dm.activeConversation ? (
                   <>
-                    <div className="border-b border-white/10 px-4 py-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/70">
-                        Active conversation
-                      </p>
-                      <div className="mt-1 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-white">
-                            {dm.activeConversation?.displayName ?? 'Conversation'}
-                          </p>
-                          <p className="truncate text-[11px] text-white/45">
-                            @{dm.activeConversation?.username ?? 'member'}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => dm.setActiveConversationId(null)}
-                          className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-bold text-white/55 transition hover:border-white/25 hover:text-white/85"
-                        >
-                          Back
-                        </button>
-                      </div>
+                    <div className="border-b border-white/10 p-3">
+                      <p className="text-xs font-bold text-white">{dm.activeConversation.displayName}</p>
+                      <p className="text-[10px] text-white/40">@{dm.activeConversation.username}</p>
                     </div>
                     <div className="flex-1 space-y-3 overflow-y-auto p-4">
-                      {dm.messages.length === 0 ? (
-                        <p className="text-sm text-white/45">No messages yet. Say hello.</p>
-                      ) : (
-                        dm.messages.map((message) => {
-                          const isMine = message.sender_id === user?.id;
-                          return (
+                      {dm.messages.map((m) => {
+                        const isSelf = m.sender_id === user?.id;
+                        return (
+                          <div key={m.id} className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
                             <div
-                              key={message.id}
-                              className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
-                                isMine
-                                  ? 'ml-auto border border-vouch-cyan/20 bg-vouch-cyan/15 text-white'
-                                  : 'mr-auto border border-white/10 bg-black/30 text-white/85'
+                              className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
+                                isSelf
+                                  ? 'border border-vouch-cyan/30 bg-vouch-cyan/15 text-white'
+                                  : 'border border-white/10 bg-white/[0.04] text-white/85'
                               }`}
                             >
-                              <p>{message.body}</p>
-                              <p className="mt-1 text-[10px] text-white/35">
-                                {formatTime(message.created_at)}
-                              </p>
+                              {m.body}
+                              <span className="mt-1 block text-[9px] text-white/30 font-mono">{formatTime(m.created_at)}</span>
                             </div>
-                          );
-                        })
-                      )}
+                          </div>
+                        );
+                      })}
                     </div>
                     <form
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        const body = dmDraft.trim();
-                        if (!body) return;
-                        void dm.sendMessage(body).then(() => setDmDraft(''));
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!dmDraft.trim()) return;
+                        const text = dmDraft;
+                        setDmDraft('');
+                        await dm.sendMessage(text);
                       }}
-                      className="flex gap-2 border-t border-white/10 p-4"
+                      className="border-t border-white/10 p-3 flex gap-2"
                     >
                       <input
+                        type="text"
                         value={dmDraft}
-                        onChange={(event) => setDmDraft(event.target.value)}
+                        onChange={(e) => setDmDraft(e.target.value)}
                         placeholder="Write a message..."
-                        className="glass-panel glass-border min-w-0 flex-1 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/40 focus:outline-none"
+                        className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-vouch-cyan/50 focus:outline-none"
                       />
                       <button
                         type="submit"
                         disabled={!dmDraft.trim()}
-                        className="glass-panel glass-border grid h-10 w-10 shrink-0 place-items-center rounded-xl text-vouch-cyan transition hover:border-vouch-cyan/50 disabled:opacity-40"
-                        aria-label="Send direct message"
+                        className="rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/15 px-3 py-2 text-xs font-bold text-vouch-cyan disabled:opacity-40"
                       >
-                        <Send className="h-4 w-4" />
+                        <Send className="h-3.5 w-3.5" />
                       </button>
                     </form>
                   </>
                 ) : (
-                  <div className="flex flex-1 items-center justify-center p-8 text-center">
-                    <div>
-                      <MessageCircle className="mx-auto h-8 w-8 text-white/40" />
-                      <p className="mt-3 text-sm font-bold text-white">Open a conversation</p>
-                      <p className="mt-1 text-xs text-white/45">Pick someone from your circle or inbox to start messaging.</p>
-                    </div>
+                  <div className="flex h-full items-center justify-center p-8 text-center text-xs text-white/40 font-mono">
+                    Select a conversation to view direct messages.
                   </div>
                 )}
               </div>
@@ -1061,72 +1125,51 @@ export default function WorldChatPanel({
         </div>
       )}
 
-      {error ? <p className="mt-2 text-center text-[11px] text-rose-400/90">{error}</p> : null}
+      {/* Input bar for World Chat */}
+      {activePage === 'world' && isLoggedIn ? (
+        <form onSubmit={(e) => void handlePost(e)} className="mt-3 shrink-0">
+          {replyTarget ? (
+            <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-vouch-cyan/20 bg-vouch-cyan/10 px-3 py-1.5 text-xs text-vouch-cyan">
+              <span className="truncate">Replying to @{replyTarget.handle}</span>
+              <button
+                type="button"
+                onClick={() => setReplyTarget(null)}
+                className="text-vouch-cyan hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : null}
 
-      {activePage === 'world' && sharedProofIdsInDraft.length > 0 ? (
-        <div className="mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-950/10 px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300/70">
-            Proof link detected
-          </p>
-          <p className="mt-1 text-xs text-white/55">
-            This will send as a shared parlay link with a preview card in chat.
-          </p>
-        </div>
-      ) : null}
+          {sharedProofIdsInDraft.length > 0 ? (
+            <div className="mb-2 rounded-xl border border-cyan-400/20 bg-cyan-950/20 px-3 py-1.5 text-[11px] text-cyan-200">
+              Sharing parlay proof link · cards will attach automatically
+            </div>
+          ) : null}
 
-      {activePage === 'world' && replyTarget ? (
-        <div className="mt-3 flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300/70">
-              Replying to @{replyTarget.handle}
-            </p>
-            <p className="mt-1 line-clamp-2 text-xs text-white/55">{replyTarget.text}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setReplyTarget(null)}
-            className="rounded-full border border-white/10 p-1 text-white/45 transition hover:border-white/20 hover:text-white/75"
-            aria-label="Cancel reply"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ) : null}
-
-      {activePage === 'world' ? (
-        <>
-          <form onSubmit={handlePost} className="mt-3 flex shrink-0 gap-2">
+          <div className="flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              maxLength={500}
-              disabled={!isLoggedIn || posting}
-              placeholder={isLoggedIn ? `Message as @${resolvedProfile.username}…` : 'Sign in to join World Chat'}
-              className="glass-panel glass-border min-w-0 flex-1 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/40 focus:outline-none disabled:opacity-50"
+              placeholder="Share an edge, pick, or research note..."
+              className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-white placeholder-white/30 focus:border-vouch-cyan/50 focus:outline-none"
             />
             <button
               type="submit"
-              disabled={!isLoggedIn || posting || !input.trim()}
-              className="glass-panel glass-border grid h-10 w-10 shrink-0 place-items-center rounded-xl text-vouch-cyan transition hover:border-vouch-cyan/50 disabled:opacity-40"
-              aria-label="Send message"
+              disabled={!input.trim() || posting}
+              className="inline-flex items-center justify-center rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/15 px-4 py-2.5 text-sm font-bold text-vouch-cyan transition hover:bg-vouch-cyan/25 disabled:opacity-40"
             >
-              <Send className="h-4 w-4" />
+              {posting ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
-          </form>
-          <p className="mt-2 text-center text-[10px] text-white/25">
-            Trust-first lounge — no bots, no fake users. Research &amp; entertainment only.
-          </p>
-        </>
-      ) : (
-        <p className="mt-2 text-center text-[10px] text-white/25">
-          Private messages for your SocialOS circle.
-        </p>
-      )}
+          </div>
+        </form>
+      ) : null}
+
       {selectedProfile ? (
         <SocialProfilePreviewSheet
           profile={selectedProfile}
-          isOwnProfile={Boolean(user?.id && selectedProfile.userId === user.id)}
+          isOwnProfile={selectedProfile.userId === user?.id}
           onClose={() => setSelectedProfile(null)}
           onOpenFullProfile={() => {
             openAuthorProfile(selectedProfile.userId);
