@@ -6,21 +6,21 @@ real bugs. This doc is the punch list. Check items off as fixed.
 
 ## P0 — functional blockers
 
-- [ ] **Signup email validation stuck.** Entering a valid email
+- [x] **Signup email validation stuck.** Entering a valid email
   (`name@example.com`) into the signup form keeps showing "Please enter a
   valid email address" even after correcting it and resubmitting. Error
   state isn't clearing on valid input. Find the signup form component
   (`AuthModal.tsx` per grep) and check whether the error is keyed off stale
   state or a regex that's actually wrong.
-- [ ] **Session drops on Pro Labs navigation.** Clicking a gated Pro Labs
+- [x] **Session drops on Pro Labs navigation.** Clicking a gated Pro Labs
   sidebar item (e.g. Pitchers Matchup) while on Basic tier doesn't show an
   upgrade prompt — it silently deauths back to the logged-out landing page.
   Should show an upsell/paywall, not kill the session. Repro: log in on
   Basic plan, click Pitchers Matchup in the Pro Labs sidebar section.
-- [ ] **"Continue as guest" is a dead button.** Closes the auth modal, does
+- [x] **"Continue as guest" is a dead button.** Closes the auth modal, does
   nothing else — no guest session, no redirect. Either wire it up or remove
   it from the modal.
-- [ ] **Command palette (⌘K) ignores keystrokes on open.** Typing
+- [x] **Command palette (⌘K) ignores keystrokes on open.** Typing
   immediately after opening loses focus — you have to click the search
   input first. Likely a focus-timing bug (autofocus not firing before the
   open animation/mount settles).
