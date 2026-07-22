@@ -46,13 +46,7 @@ function RouteFallback() {
   );
 }
 
-function PublicLanding({
-  onAuthed,
-  onGuest,
-}: {
-  onAuthed: () => void;
-  onGuest: () => void;
-}) {
+function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   useEffect(() => {
     void warmGuestHrBoardCache();
     void queryClient.prefetchQuery({
@@ -67,7 +61,7 @@ function PublicLanding({
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
             <div id="inner-view-slot">
-              <VouchEdgeTerminalPage onAuthed={onAuthed} onGuest={onGuest} />
+              <VouchEdgeTerminalPage onAuthed={onAuthed} />
             </div>
           </div>
         </div>
@@ -87,7 +81,7 @@ function MainAppRoutes() {
     !canRenderLoggedOutRoute;
 
   if (showPublicLanding) {
-    return <PublicLanding onAuthed={navigation.handleLoginSuccess} onGuest={navigation.handleGuestBrowse} />;
+    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
   }
 
   return (

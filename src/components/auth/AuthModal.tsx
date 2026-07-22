@@ -128,8 +128,6 @@ interface AuthModalProps {
   onClose: () => void;
   /** Called after a successful sign-in / sign-up so the host can route into the app. */
   onAuthed?: () => void;
-  /** Called when the user chooses to skip auth and browse as a guest. */
-  onGuest?: () => void;
 }
 
 const CYAN_GRADIENT = 'linear-gradient(135deg, #00F0FF, #2563eb)';
@@ -143,7 +141,6 @@ export default function AuthModal({
   initialPlan = 'free',
   onClose,
   onAuthed,
-  onGuest,
 }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [signupStep, setSignupStep] = useState<SignupStep>(() =>
@@ -920,9 +917,9 @@ export default function AuthModal({
                   </Field>
                   <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
                     VouchEdge is in private beta. No code?{' '}
-                    <button type="button" onClick={onGuest} className="font-semibold underline" style={{ color: BLURPLE }}>
+                    <a href="/premium" className="font-semibold underline" style={{ color: BLURPLE }}>
                       Join the waitlist
-                    </button>
+                    </a>
                     .
                   </p>
                 </div>
@@ -984,28 +981,8 @@ export default function AuthModal({
             </button>
           </form>
 
-          {/* Footer — guest + trust */}
-          <div className="px-6 pb-6 pt-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-[11px] uppercase tracking-widest text-slate-600 font-mono">or</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  localStorage.setItem('vouchedge_guest_session', 'true');
-                } catch {
-                  // ignore
-                }
-                if (onGuest) onGuest();
-                else onClose();
-              }}
-              className={`w-full py-2.5 rounded-xl text-[13px] font-bold text-white/55 hover:text-white hover:bg-white/5 transition-colors ${Z8_INTERACTIVE}`}
-            >
-              Continue as guest
-            </button>
+          {/* Footer — trust */}
+          <div className="px-6 pb-6 pt-1">
             <p className="text-[10px] text-center leading-relaxed text-slate-600">
               By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
               <span className="text-slate-400">Privacy Policy</span>. You must be of legal age in your jurisdiction

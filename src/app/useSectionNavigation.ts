@@ -120,18 +120,6 @@ export function useSectionNavigation() {
     })();
   }, [navigateSection]);
 
-  const handleGuestBrowse = useCallback(() => {
-    try {
-      localStorage.setItem('vouchedge_guest_session', 'true');
-    } catch {
-      // ignore storage failures
-    }
-    if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', '/hr-board');
-    }
-    commitSection('hr_board');
-  }, [commitSection]);
-
   const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
     window.history.replaceState(null, '', '/');
@@ -186,7 +174,6 @@ export function useSectionNavigation() {
     navigateToUserProfile,
     handleClearProfileViewUser,
     handleLoginSuccess,
-    handleGuestBrowse,
     handleLogoutComplete,
     commitSection,
     isLoggedIn,

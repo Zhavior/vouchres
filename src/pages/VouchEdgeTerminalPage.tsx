@@ -306,13 +306,7 @@ function TerminalChatDemo() {
   );
 }
 
-export default function VouchEdgeTerminalPage({
-  onAuthed,
-  onGuest,
-}: {
-  onAuthed?: () => void;
-  onGuest?: () => void;
-}) {
+export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [authPlan, setAuthPlan] = useState<SignupPlan>('free');
@@ -534,10 +528,6 @@ export default function VouchEdgeTerminalPage({
             onAuthed={() => {
               setAuthOpen(false);
               onAuthed?.();
-            }}
-            onGuest={() => {
-              setAuthOpen(false);
-              onGuest?.();
             }}
           />
         </Suspense>
