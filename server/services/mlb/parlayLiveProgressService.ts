@@ -1,4 +1,5 @@
 import { fetchMlbGameLiveState } from "../data/sportsDataGateway";
+import { isPlayerNameMatch, extractPlayerName } from "../grading/gradingService";
 
 const MARKET_STAT_MAP: Record<string, { side: "batting" | "pitching"; stat: string }> = {
   ANYTIME_HR: { side: "batting", stat: "homeRuns" },
@@ -26,7 +27,9 @@ function readPitcherOuts(bucket: Record<string, unknown>): number {
 export type ParlayLegProgressRequest = {
   id?: string;
   gamePk: string;
-  playerId: string | number;
+  playerId?: string | number | null;
+  selection?: string | null;
+  playerName?: string | null;
   marketCode?: string | null;
   statTarget?: number | null;
 };
@@ -44,19 +47,51 @@ function playerKey(playerId: string | number): string {
   return `ID${raw}`;
 }
 
-function readPlayerStat(boxscore: any, playerId: string | number, marketCode: string): number | null {
+function playerNumericId(playerId: string | number): string {
+  return String(playerId).replace(/\D/g, "");
+}
+
+function readPlayerStat(
+  boxscore: any,
+  playerId: string | number | null | undefined,
+  selectionOrName: string | null | undefined,
+  marketCode: string
+): number | null {
   const mapping = MARKET_STAT_MAP[String(marketCode).toUpperCase()];
   if (!mapping || !boxscore?.teams) return null;
 
+  const pIdStr = playerId != null ? playerNumericId(playerId) : "";
+
   for (const side of ["away", "home"]) {
-    const player = boxscore.teams[side]?.players?.[playerKey(playerId)];
-    if (!player) continue;
-    const bucket = player.stats?.[mapping.side];
-    if (!bucket) return 0;
-    if (mapping.stat === "outsRecorded") return readPitcherOuts(bucket);
-    const value = bucket[mapping.stat];
-    return typeof value === "number" ? value : 0;
+    const players = boxscore.teams[side]?.players;
+    if (!players) continue;
+
+    if (pIdStr) {
+      const playerById = players[`ID${pIdStr}`];
+      if (playerById) {
+        const bucket = playerById.stats?.[mapping.side];
+        if (!bucket) return 0;
+        if (mapping.stat === "outsRecorded") return readPitcherOuts(bucket);
+        const value = bucket[mapping.stat];
+        return typeof value === "number" ? value : 0;
+      }
+    }
+
+    const cleanSelection = selectionOrName ? extractPlayerName(String(selectionOrName), marketCode) : "";
+    if (cleanSelection) {
+      for (const p of Object.values(players) as any[]) {
+        const fullName = String(p?.person?.fullName || p?.name || "");
+        if (fullName && isPlayerNameMatch(fullName, cleanSelection)) {
+          const bucket = p.stats?.[mapping.side];
+          if (!bucket) return 0;
+          if (mapping.stat === "outsRecorded") return readPitcherOuts(bucket);
+          const value = bucket[mapping.stat];
+          return typeof value === "number" ? value : 0;
+        }
+      }
+    }
   }
+
   return null;
 }
 
@@ -105,12 +140,12 @@ export async function fetchParlayLegProgressBatch(
       const marketCode = String(leg.marketCode ?? "ANYTIME_HR");
       const code = marketCode.toUpperCase();
       const isHrMarket = code.includes("HR") || code === "HOME_RUN";
-      const playerIdKey = String(leg.playerId).replace(/\D/g, "");
+      const playerIdKey = leg.playerId ? String(leg.playerId).replace(/\D/g, "") : "";
       const hrFromFeed = isHrMarket && playerIdKey ? hrCountByPlayer[playerIdKey] : undefined;
       const current = hrFromFeed !== undefined
         ? hrFromFeed
         : boxscore
-          ? readPlayerStat(boxscore, leg.playerId, marketCode)
+          ? readPlayerStat(boxscore, leg.playerId, leg.selection || leg.playerName, marketCode)
           : null;
       results.push({
         id: leg.id,

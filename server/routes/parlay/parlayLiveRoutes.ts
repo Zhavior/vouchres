@@ -25,6 +25,8 @@ parlayLiveRoutes.post(
         sport: leg.sport ?? leg.sport_id ?? "mlb",
         gamePk: String(leg.gamePk ?? leg.game_pk ?? leg.gameId ?? leg.game_id ?? ""),
         playerId: leg.playerId ?? leg.player_id ?? "",
+        selection: String(leg.selection ?? leg.playerName ?? ""),
+        playerName: leg.playerName ? String(leg.playerName) : undefined,
         marketCode: leg.marketCode ?? leg.market_code ?? null,
         statTarget: leg.statTarget ?? leg.stat_target ?? 1,
       })),

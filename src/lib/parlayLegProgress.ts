@@ -27,13 +27,14 @@ export function deriveLegProgress(leg: {
   const actual = leg.actual != null && Number.isFinite(Number(leg.actual)) ? Number(leg.actual) : null;
 
   if (isHrMarket(leg)) {
-    if (status === "won" || status === "live_hit") {
-      return { current: 1, target: 1, label: "HR hit" };
+    const hrCount = actual != null ? Number(actual) : 0;
+    if (status === "won" || status === "live_hit" || hrCount >= 1) {
+      return { current: Math.max(1, hrCount), target: 1, label: "HR hit" };
     }
     if (status === "lost" || status === "void" || status === "cancelled") {
-      return { current: 0, target: 1, label: "Final" };
+      return { current: hrCount, target: 1, label: "Final" };
     }
-    return { current: 0, target: 1, label: "Awaiting HR" };
+    return { current: hrCount, target: 1, label: "Awaiting HR" };
   }
 
   const code = String(leg.marketCode ?? "").toUpperCase();

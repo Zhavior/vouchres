@@ -186,8 +186,12 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, [syncSlips, syncProfile]);
 
   useEffect(() => {
-    if (activeSection === 'results' || activeSection === 'live_parlays') handleGradeResults();
-  }, [activeSection, handleGradeResults]);
+    handleGradeResults();
+    const interval = setInterval(() => {
+      handleGradeResults();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [handleGradeResults]);
 
   useEffect(() => {
     if (liveGames.length === 0 || savedSlips.length === 0) return;

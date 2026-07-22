@@ -1122,7 +1122,7 @@ export function isPlayerNameMatch(fullNameRaw: string, wantedNameRaw: string): b
   return false;
 }
 
-function extractPlayerName(selection: string, _market: string): string {
+export function extractPlayerName(selection: string, _market: string): string {
   const cleaned = selection
     .replace(/^avoid\s+/i, "")
     .replace(/\bto\s+hit\s+a?\s*home\s*runs?\b/i, "")
