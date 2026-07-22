@@ -17,9 +17,9 @@ real bugs. This doc is the punch list. Check items off as fixed.
   upgrade prompt — it silently deauths back to the logged-out landing page.
   Should show an upsell/paywall, not kill the session. Repro: log in on
   Basic plan, click Pitchers Matchup in the Pro Labs sidebar section.
-- [x] **"Continue as guest" is a dead button.** Closes the auth modal, does
-  nothing else — no guest session, no redirect. Either wire it up or remove
-  it from the modal.
+- [x] **"Continue as guest" removed.** Guest browse entry points were removed
+  from the auth modal and legacy landing nav — sign-in is required to enter
+  the app beyond public research URLs.
 - [x] **Command palette (⌘K) ignores keystrokes on open.** Typing
   immediately after opening loses focus — you have to click the search
   input first. Likely a focus-timing bug (autofocus not firing before the

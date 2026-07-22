@@ -44,13 +44,7 @@ function RouteFallback() {
   );
 }
 
-function PublicLanding({
-  onAuthed,
-  onGuest,
-}: {
-  onAuthed: () => void;
-  onGuest: () => void;
-}) {
+function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   useEffect(() => {
     // HR board warm only — live games are owned by LandingLiveGamesCenter to avoid duplicate fetches.
     void warmGuestHrBoardCache();
@@ -63,7 +57,7 @@ function PublicLanding({
           <div id="center-main-content-column">
             <div id="inner-view-slot">
               <Suspense fallback={<RouteFallback />}>
-                <VouchEdgeTerminalPage onAuthed={onAuthed} onGuest={onGuest} />
+                <VouchEdgeTerminalPage onAuthed={onAuthed} />
               </Suspense>
             </div>
           </div>
@@ -84,7 +78,7 @@ function MainAppRoutes() {
     !canRenderLoggedOutRoute;
 
   if (showPublicLanding) {
-    return <PublicLanding onAuthed={navigation.handleLoginSuccess} onGuest={navigation.handleGuestBrowse} />;
+    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
   }
 
   return (

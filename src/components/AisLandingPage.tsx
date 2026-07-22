@@ -668,14 +668,6 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => onSectionChange('feed')}
-            className="hidden sm:inline-block px-4 py-2 bg-black/30 hover:bg-slate-800 hover:text-white text-white/45 border border-white/10 hover:border-white/10 font-mono text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer outline-none"
-            id="nav-guest-entrance-btn"
-          >
-            Browse as Guest
-          </button>
-          <button
-            type="button"
             onClick={() => {
               if (isRegistered) {
                 onSectionChange('feed');
