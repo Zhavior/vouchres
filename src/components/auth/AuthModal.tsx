@@ -265,11 +265,23 @@ export default function AuthModal({
     const m = raw.toLowerCase();
     if (m.includes('invalid login')) return 'Email or password is incorrect.';
     if (m.includes('already registered') || m.includes('already been registered')) return 'That email is already registered — try logging in.';
+    if (m.includes('email not confirmed') || m.includes('confirm your email')) {
+      return 'Confirm your email before logging in.';
+    }
     if (m.includes('password')) return 'Password must be at least 6 characters.';
-    if (m.includes('email')) return 'Please enter a valid email address.';
+    if (
+      m.includes('invalid email')
+      || m.includes('unable to validate email')
+      || m.includes('valid email address')
+      || m.includes('email format')
+    ) {
+      return 'Please enter a valid email address.';
+    }
     if (m.includes('rate')) return 'Too many attempts. Please wait a moment and try again.';
     return raw;
   };
+
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -284,6 +296,7 @@ export default function AuthModal({
     }
 
     if (!email.trim()) { setError('Enter your email.'); return; }
+    if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
     if (!password) { setError('Enter your password.'); return; }
     if (mode === 'signup') {
       const normalizedHandle = handle.trim().toLowerCase();
@@ -350,6 +363,7 @@ export default function AuthModal({
       return;
     }
     if (!email.trim()) { setError('Enter your email first.'); return; }
+    if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
     setBusy(true);
     try {
       const { error } = await signInWithMagicLink(email.trim());
