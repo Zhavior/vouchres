@@ -8,6 +8,7 @@ import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { useDailyHrBoard } from '../../features/hr/hooks/useDailyHrBoard';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import StadiumWindVectorWidget from '../../components/stadium/StadiumWindVectorWidget';
+import StrikeZoneHeatmapMatrix from '../../components/analytics/StrikeZoneHeatmapMatrix';
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
 import {
@@ -694,6 +695,11 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
               </div>
             ) : (
               <div className="space-y-6">
+                <StrikeZoneHeatmapMatrix
+                  hitterName="Slate Lineup Target"
+                  pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Probable Pitcher'}
+                  pitcherThrows={awayVsHome?.pitcher.throws ?? 'R'}
+                />
                 <HitterHeatmapTable
                   title={`${selectedGameData.home.name} Lineup`}
                   pitcherName={awayVsHome?.pitcher.name ?? selectedGameData.away.probablePitcher?.name ?? 'Pitcher'}

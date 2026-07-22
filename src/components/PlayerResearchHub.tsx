@@ -23,6 +23,7 @@ import {
 
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
+import StrikeZoneHeatmapMatrix from "./analytics/StrikeZoneHeatmapMatrix";
 import { apiClient } from "../lib/apiClient";
 import { openParlayAdd } from "../lib/parlays/parlayAddContract";
 import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
@@ -1321,6 +1322,14 @@ function OverviewTab({ player, onOpenParlay }: { player: MLBPlayer; onOpenParlay
           ))}
         </div>
       </div>
+
+      {/* 3x3 Strike Zone Collision Heatmap */}
+      <StrikeZoneHeatmapMatrix
+        hitterName={player.name}
+        pitcherName="Opposing Pitcher"
+        pitcherThrows={player.throws ?? "R"}
+        hitterHand={player.bats ?? "R"}
+      />
 
       {/* Scouting report */}
       <div>
