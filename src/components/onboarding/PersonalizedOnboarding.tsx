@@ -1,5 +1,6 @@
 import { BarChart3, Radio, ShieldCheck } from 'lucide-react';
 import { ProductEvents } from '../../lib/productEvents';
+import { Z8_OVERLAY_SCRIM } from '../../theme/z8Tokens';
 
 type Props = {
   onComplete: (section?: string) => void;
@@ -34,7 +35,7 @@ export function PersonalizedOnboarding({ onComplete }: Props) {
   }
 
   return (
-    <main className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4 py-10 text-white overflow-y-auto">
+    <main className={`fixed inset-0 z-[100] flex items-center justify-center px-4 py-10 text-white overflow-y-auto ${Z8_OVERLAY_SCRIM}`}>
       <section className="w-full max-w-3xl border border-white/10 bg-[#070c14] p-5 sm:p-8 rounded-3xl shadow-2xl">
         <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-vouch-emerald">Welcome to VouchEdge</p>
         <h1 className="mt-3 max-w-xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">What do you want to do first?</h1>

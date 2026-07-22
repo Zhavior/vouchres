@@ -22,6 +22,9 @@ export const Z8_PANEL_PREMIUM =
 /** Compact inner surface (nav items, inputs). */
 export const Z8_SURFACE = 'border border-white/10 bg-black/35';
 
+/** Full-viewport overlay scrim for modals, sheets, and panels. */
+export const Z8_OVERLAY_SCRIM = 'bg-black/60 backdrop-blur-sm';
+
 /** Icon / chip box. */
 export const Z8_ICON_BOX =
   'flex items-center justify-center border border-white/10 bg-black/40 text-vouch-cyan/70';
