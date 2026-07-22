@@ -4,6 +4,7 @@ import React, { Suspense, lazy } from 'react';
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer from './MobileProfileDrawer';
+import CmdKPalette from './CmdKPalette';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
 import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
@@ -14,7 +15,6 @@ import { useNavUiStore } from '../../stores/navUiStore';
 import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 
-const CmdKPalette = lazy(() => import('./CmdKPalette'));
 const WorldChatWidget = lazy(() => import('../../components/theEdge/WorldChatWidget'));
 
 interface HomeFeedLayoutProps {
@@ -205,13 +205,11 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
       )}
 
       {!isPublicFrontPage && cmdKOpen && (
-        <Suspense fallback={null}>
-          <CmdKPalette
-            open={cmdKOpen}
-            onClose={handleCloseCmdK}
-            onNavigate={handleSectionChange}
-          />
-        </Suspense>
+        <CmdKPalette
+          open={cmdKOpen}
+          onClose={handleCloseCmdK}
+          onNavigate={handleSectionChange}
+        />
       )}
 
       {!isPublicFrontPage && (
