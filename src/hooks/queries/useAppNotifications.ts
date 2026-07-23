@@ -11,6 +11,7 @@ import { apiClient } from '../../lib/apiClient';
 import { ensureRealtimeAuth, supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../lib/useAuth';
 import { queryKeys } from './queryKeys';
+import { visibilityAwareInterval } from '../../lib/queryVisibility';
 
 type ServerNotificationType =
   | 'HOME_RUN'
@@ -163,9 +164,10 @@ export function useAppNotifications() {
   const query = useQuery({
     queryKey: queryKeys.appNotifications(),
     queryFn: readNotifications,
-    staleTime: 15_000,
+    staleTime: 45_000,
     gcTime: 5 * 60_000,
-    refetchInterval: user?.id ? 20_000 : false,
+    // Realtime invalidation is primary; polling is a slow visible-tab fallback.
+    refetchInterval: visibilityAwareInterval(user?.id ? 90_000 : false),
   });
 
   return {

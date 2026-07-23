@@ -674,9 +674,9 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             width={64}
             height={64}
             className={MLB_HEADSHOT_IMG_CLASS}
-            loading="eager"
+            loading={index < 2 ? 'eager' : 'lazy'}
             decoding="async"
-            fetchPriority="high"
+            fetchPriority={index < 2 ? 'high' : 'auto'}
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}
@@ -782,9 +782,9 @@ function CompactRosterColumn({
                     width={48}
                     height={48}
                     className={MLB_HEADSHOT_IMG_CLASS}
-                    loading="eager"
+                    loading="lazy"
                     decoding="async"
-                    fetchPriority="high"
+                    fetchPriority="auto"
                   />
                 ) : (
                   name.slice(0, 2).toUpperCase()

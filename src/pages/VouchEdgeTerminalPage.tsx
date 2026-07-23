@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Terminal } from 'lucide-react';
 import { apiClient } from '../lib/apiClient';
 import {
@@ -22,12 +22,7 @@ import {
 const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
 const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
 
-import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
-import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
-import LandingDeviceShowcase from '../components/landing/LandingDeviceShowcase';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
-import LandingDynamicBackground from '../components/landing/LandingDynamicBackground';
-import LandingFAQ from '../components/landing/LandingFAQ';
 import ScrollReveal from '../components/landing/ScrollReveal';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -37,6 +32,11 @@ type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
 const LandingVouchCardShowcase = lazy(() => import('../components/landing/LandingVouchCardShowcase'));
+const LandingDeviceShowcase = lazy(() => import('../components/landing/LandingDeviceShowcase'));
+const LandingLiveGamesCenter = lazy(() => import('../components/landing/LandingLiveGamesCenter'));
+const LandingFeatureSlideshow = lazy(() => import('../components/landing/LandingFeatureSlideshow'));
+const LandingDynamicBackground = lazy(() => import('../components/landing/LandingDynamicBackground'));
+const LandingFAQ = lazy(() => import('../components/landing/LandingFAQ'));
 const preloadAuthModal = () => {
   void import('../components/auth/AuthModal');
 };
@@ -126,8 +126,54 @@ function AuthModalFallback() {
   );
 }
 
+function SectionPlaceholder({ heightClass = 'h-72' }: { heightClass?: string }) {
+  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} ${heightClass} animate-pulse`} aria-hidden="true" />;
+}
+
+function DeferredSection({
+  children,
+  rootMargin = '420px 0px',
+  heightClass,
+}: {
+  children: ReactNode;
+  rootMargin?: string;
+  heightClass?: string;
+}) {
+  const [ready, setReady] = useState(false);
+  const markerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker || !('IntersectionObserver' in window)) {
+      setReady(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  if (!ready) {
+    return (
+      <div ref={markerRef}>
+        <SectionPlaceholder heightClass={heightClass} />
+      </div>
+    );
+  }
+
+  return <Suspense fallback={<SectionPlaceholder heightClass={heightClass} />}>{children}</Suspense>;
+}
+
 function VouchCardShowcasePlaceholder() {
-  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} h-96 animate-pulse`} aria-hidden="true" />;
+  return <SectionPlaceholder heightClass="h-96" />;
 }
 
 function DeferredVouchCardShowcase() {
@@ -330,7 +376,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       <LandingStatusTicker />
 
       <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
-        <LandingDynamicBackground />
+        <Suspense fallback={null}>
+          <LandingDynamicBackground />
+        </Suspense>
         
         {/* Ambient obsidian glow */}
         <div
@@ -463,11 +511,15 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
-              <LandingDeviceShowcase />
+              <DeferredSection heightClass="h-[28rem]">
+                <LandingDeviceShowcase />
+              </DeferredSection>
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
-              <LandingLiveGamesCenter />
+              <DeferredSection heightClass="h-96">
+                <LandingLiveGamesCenter />
+              </DeferredSection>
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
@@ -475,7 +527,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </ScrollReveal>
 
             <ScrollReveal>
-              <LandingFeatureSlideshow features={FEATURES} />
+              <DeferredSection heightClass="h-80">
+                <LandingFeatureSlideshow features={FEATURES} />
+              </DeferredSection>
             </ScrollReveal>
 
             <ScrollReveal>
@@ -487,7 +541,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </ScrollReveal>
 
             <ScrollReveal>
-              <LandingFAQ />
+              <DeferredSection heightClass="h-72">
+                <LandingFAQ />
+              </DeferredSection>
             </ScrollReveal>
 
             <ScrollReveal>

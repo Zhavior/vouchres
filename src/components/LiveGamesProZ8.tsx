@@ -8,7 +8,7 @@ import { vouchedgeApi } from '../api/vouchedgeApi';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
 import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
 import { todayISO } from '../hooks/queries/hrBoardQuery';
-import type { GameMatchup, HrWatch } from '../types/matchup';
+import type { GameMatchup, HrWatch, LiveScore } from '../types/matchup';
 import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
@@ -176,12 +176,31 @@ export function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): 
   return sortBySchedule(Array.from(byGame.values()));
 }
 
+/** Merge live scores into matchup list by gamePk. Final status always clears live. */
+export function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
+  if (!scores.length) return matchups;
+  const map = new Map(scores.map((s) => [String(s.gamePk), s]));
+  return matchups.map((m) => {
+    const s = map.get(String(m.gamePk));
+    if (!s) return m;
+    const isFinal = s.isFinal || isFinalStatus(s.status);
+    return {
+      ...m,
+      score: s.score,
+      isFinal,
+      isLive: !isFinal && (s.isLive || isLiveStatus(s.status)),
+      status: s.status,
+    };
+  });
+}
+
 export function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
   if (official.length === 0) return enriched;
 
   const officialByPk = new Map(official.map((game) => [String(game.gamePk), game]));
   const seen = new Set<string>();
 
+  // Preserve the caller's schedule order so polling cannot reshuffle the slate.
   const merged = enriched.map((game) => {
     const key = String(game.gamePk);
     seen.add(key);
@@ -204,7 +223,7 @@ export function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: Game
     if (!seen.has(key)) merged.push(game);
   }
 
-  return sortBySchedule(merged);
+  return merged;
 }
 
 function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
@@ -420,7 +439,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
 
   const hrBoardQuery = useDailyHrBoard(todayISO());
-  const liveGamesQuery = useLiveGames({ refetchInterval: 10_000 }); // Fast 10s live stream polling
+  const liveGamesQuery = useLiveGames(); // Adaptive poll: ~12s live / ~60s idle, pauses when hidden
 
   const hrBoardDataRef = useRef(hrBoardQuery.data);
   hrBoardDataRef.current = hrBoardQuery.data;
@@ -521,7 +540,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                   Real-time Stream
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium mt-1">Official MLB pitch-by-pitch feeds, live scoreboards, and in-game HR signals.</p>
+              <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
               <div className="flex items-center gap-2 mt-2 font-mono text-[10px] text-vouch-emerald font-bold">
                 <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-ping" />
                 <span>{sourceNote}</span>
@@ -591,7 +610,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
         <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-sm text-rose-300 mb-6">
           <p>{error}</p>
           <button type="button" onClick={handleManualRefresh} className="mt-4 rounded-xl border border-rose-400/40 bg-rose-500/20 px-4 py-2 font-bold text-white hover:bg-rose-500/30">
-            Reconnect Stream
+            Try again
           </button>
         </div>
       )}
@@ -607,13 +626,13 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
       {!error && matchups.length > 0 && (
         filteredGames.length === 0 ? (
           <div className="rounded-2xl border border-white/12 bg-black/40 p-12 text-center text-sm text-slate-400 space-y-3">
-            <p className="font-bold text-white">No games found for this filter tab.</p>
+            <p className="font-bold text-white">{filterTab === 'live' ? 'No games are live right now.' : 'No games found for this filter tab.'}</p>
             <button
               type="button"
               onClick={() => setFilterTab('all')}
               className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-4 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/20"
             >
-              Show All Games ({matchups.length})
+              Show today&apos;s schedule
             </button>
           </div>
         ) : (
@@ -621,11 +640,11 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
 
             {/* ── Featured Active Spotlight Hero Scoreboard ─────────────────── */}
             {activeGame && (
-              <section className="rounded-2xl border border-white/15 bg-gradient-to-br from-[#0c192c] via-[#07111e] to-[#040810] p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+              <section className="live-game-scoreboard rounded-2xl border border-white/15 bg-gradient-to-br from-[#0c192c] via-[#07111e] to-[#040810] p-4 sm:p-6 shadow-2xl relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan tracking-wider">Spotlight Game Telemetry</span>
+                      <span className="font-mono text-[10px] font-black uppercase text-vouch-cyan tracking-wider">Current game</span>
                     </div>
                     <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">
                       {activeGame.away.abbreviation} vs {activeGame.home.abbreviation}
@@ -641,7 +660,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                       onClick={() => setSelectedGamePk(activeGame.gamePk)}
                       className="rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/10 px-3 py-1.5 text-xs font-black text-vouch-emerald hover:bg-vouch-emerald/20 transition"
                     >
-                      Deep Dive
+                      Open matchup
                     </button>
                   </div>
                 </div>
@@ -724,7 +743,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                 Today&apos;s MLB Game Slate ({filteredGames.length})
               </h3>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                 {filteredGames.map((m) => (
                   <button
                     key={m.gamePk}

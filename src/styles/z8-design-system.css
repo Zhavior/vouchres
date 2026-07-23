@@ -31,13 +31,24 @@
 
 @utility glass-panel {
   position: relative;
-  background-color: rgba(5, 10, 20, 0.28);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background-color: rgba(5, 10, 20, 0.42);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
   border: 1px solid rgba(231, 236, 243, 0.05);
   box-shadow: 
     0 8px 32px 0 rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 767px) {
+  .glass-panel,
+  .glass-panel-strong,
+  .glass-panel-premium,
+  .z8-sidebar-shell,
+  .z8-sidebar-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 @utility glass-border {
@@ -68,7 +79,7 @@
     rgba(5, 10, 20, 0.28) 55%,
     rgba(5, 10, 20, 0.20) 100%
   );
-  backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.15);
   box-shadow:
     4px 0 40px rgba(0, 0, 0, 0.45),
     0 0 32px rgba(79, 184, 220, 0.08);

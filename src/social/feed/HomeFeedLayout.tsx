@@ -2,8 +2,6 @@ import React, { Suspense, lazy } from 'react';
 // App chrome policy: no top header bar — branding, notifications, and logout
 // live only in FeedSidebar (md+) and MobileProfileDrawer (mobile).
 import FeedSidebar from './FeedSidebar';
-import FeedRightRail from './FeedRightRail';
-import MobileProfileDrawer from './MobileProfileDrawer';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
 import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
@@ -15,6 +13,8 @@ import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 
 const CmdKPalette = lazy(() => import('./CmdKPalette'));
+const FeedRightRail = lazy(() => import('./FeedRightRail'));
+const MobileProfileDrawer = lazy(() => import('./MobileProfileDrawer'));
 const WorldChatWidget = lazy(() => import('../../components/theEdge/WorldChatWidget'));
 
 interface HomeFeedLayoutProps {
@@ -70,12 +70,14 @@ const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
 
   return (
     <div className="ve-edge-rail ve-edge-rail-right">
-      <FeedRightRail
-        posts={posts}
-        profile={profile}
-        savedVouchIds={savedVouchIds}
-        onSaveVouch={saveVouchAction}
-      />
+      <Suspense fallback={null}>
+        <FeedRightRail
+          posts={posts}
+          profile={profile}
+          savedVouchIds={savedVouchIds}
+          onSaveVouch={saveVouchAction}
+        />
+      </Suspense>
     </div>
   );
 });
@@ -94,14 +96,16 @@ const MobileDrawerHost = React.memo(function MobileDrawerHost({
   const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
 
   return (
-    <MobileProfileDrawer
-      open={mobileDrawerOpen}
-      onClose={closeMobileDrawer}
-      profile={profile}
-      activeSection={activeSection}
-      onSectionChange={onSectionChange}
-      onLogoutComplete={onLogoutComplete}
-    />
+    <Suspense fallback={null}>
+      <MobileProfileDrawer
+        open={mobileDrawerOpen}
+        onClose={closeMobileDrawer}
+        profile={profile}
+        activeSection={activeSection}
+        onSectionChange={onSectionChange}
+        onLogoutComplete={onLogoutComplete}
+      />
+    </Suspense>
   );
 });
 

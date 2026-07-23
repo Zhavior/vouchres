@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useAppProfile } from '../../context/AppShellContext';
-import WorldChatPanel from './WorldChatPanel';
-import { Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_LABEL, Z8_ACTIVE } from '../../theme/z8Tokens';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Z8_SURFACE, Z8_ACTIVE } from '../../theme/z8Tokens';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useNavUiStore } from '../../stores/navUiStore';
+
+const WorldChatPanel = lazy(() => import('./WorldChatPanel'));
 
 export default function WorldChatWidget() {
   const profile = useAppProfile();
   const [isOpen, setIsOpen] = useState(false);
-  // ParlayOS's floating FAB/dock shares this corner. On desktop it's just a
-  // small FAB, so chat only dodges upward. On mobile the dock is a
-  // near-full-screen sheet, so chat has to disappear entirely instead.
   const parlayDockOpen = useParlayOsStore((state) => state.sheetOpen);
   const setWorldChatOpen = useNavUiStore((state) => state.setWorldChatOpen);
 
@@ -20,72 +17,85 @@ export default function WorldChatWidget() {
     if (parlayDockOpen) setIsOpen(false);
   }, [parlayDockOpen]);
 
-  // Mirror local open state into the shared store so the mobile bottom nav
-  // pill can hide itself while World Chat is open.
   useEffect(() => {
     setWorldChatOpen(isOpen);
     return () => setWorldChatOpen(false);
   }, [isOpen, setWorldChatOpen]);
 
+  const hideFab = parlayDockOpen;
+
   return (
-    <div
-      className={`fixed bottom-36 right-4 z-[95] transition-opacity duration-150 md:bottom-6 md:right-6 md:z-50 ${
-        parlayDockOpen ? 'invisible opacity-0 md:visible md:opacity-100' : 'visible opacity-100'
-      } ${parlayDockOpen ? '' : 'lg:bottom-24'} flex flex-col items-end pointer-events-none`}
-    >
-      
-      <AnimatePresence>
-        {isOpen && (
-          <button
-            type="button"
-            aria-label="Close World Chat"
-            onClick={() => setIsOpen(false)}
-            className="pointer-events-auto fixed inset-0 z-0 bg-black/60 backdrop-blur-sm transition-opacity"
-          />
-        )}
-      </AnimatePresence>
+    <>
+      {isOpen ? (
+        <button
+          type="button"
+          aria-label="Close World Chat"
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm transition-opacity"
+        />
+      ) : null}
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className={`pointer-events-auto fixed inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] bottom-36 shadow-2xl rounded-2xl overflow-hidden border border-white/10 md:static md:inset-auto md:mb-4 md:w-[calc(100vw-2rem)] md:max-w-[420px] md:h-[min(85vh,860px)] md:min-h-[480px] ${Z8_SURFACE}`}
-          >
-            {/* Header / Draggable Area */}
-            <div className="h-12 border-b border-ve-charged/40 flex items-center justify-between px-4 bg-ve-obsidian/80 backdrop-blur-xl">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="font-bold text-xs text-white tracking-widest uppercase font-mono">World Chat Live</h3>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {isOpen ? (
+        <div
+          className={[
+            'pointer-events-auto fixed z-[91] overflow-hidden rounded-2xl border border-white/10 shadow-2xl',
+            Z8_SURFACE,
+            'inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] bottom-36',
+            'md:inset-x-auto md:bottom-24 md:right-6 md:top-auto md:left-auto',
+            'md:h-[min(85vh,860px)] md:min-h-[480px] md:w-[min(420px,calc(100vw-2rem))]',
+            'animate-in fade-in zoom-in-95 duration-200',
+          ].join(' ')}
+        >
+          <div className="flex h-12 items-center justify-between border-b border-ve-charged/40 bg-ve-obsidian/80 px-4 backdrop-blur-xl">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-white">World Chat Live</h3>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close World Chat"
+              className="rounded-full p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-            {/* Chat Body */}
-            <div className="h-[calc(100%-3rem)] bg-ve-obsidian/60 backdrop-blur-md relative">
+          <div className="relative h-[calc(100%-3rem)] bg-ve-obsidian/60 backdrop-blur-md">
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center font-mono text-[10px] uppercase tracking-widest text-white/40">
+                  Loading chat…
+                </div>
+              }
+            >
               <WorldChatPanel profile={profile} isLoggedIn={true} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </Suspense>
+          </div>
+        </div>
+      ) : null}
 
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-ve-glow-cyan transition-all hover:scale-105 active:scale-95 border border-ve-charged ${
-          isOpen ? 'hidden md:flex bg-ve-storm/80 text-white' : 'flex bg-ve-ion text-black font-bold'
-        }`}
+      <div
+        className={`fixed bottom-36 right-4 z-[92] transition-opacity duration-150 md:bottom-6 md:right-6 ${
+          hideFab ? 'invisible opacity-0 md:visible md:opacity-100' : 'visible opacity-100'
+        } ${hideFab ? '' : 'lg:bottom-24'}`}
       >
-        {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />}
-      </button>
-    </div>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? 'Close World Chat' : 'Open World Chat'}
+          aria-expanded={isOpen}
+          className={`flex h-12 w-12 items-center justify-center rounded-full border border-ve-charged shadow-ve-glow-cyan transition-all hover:scale-105 active:scale-95 sm:h-14 sm:w-14 ${
+            isOpen ? 'hidden bg-ve-storm/80 text-white md:flex' : `flex ${Z8_ACTIVE} font-bold text-black`
+          }`}
+        >
+          {isOpen ? (
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          ) : (
+            <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+          )}
+        </button>
+      </div>
+    </>
   );
 }

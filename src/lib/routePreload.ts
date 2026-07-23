@@ -36,37 +36,54 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPageZ8'),
   team_matchup_lab: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
   pitcher_matchup_intelligence: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
+  pitcher_matchup: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
   hitter_matchup_zones: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
+  hitter_matchup: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
+  most_vouched_today: () => import('../pages/MostVouchedTodayPageZ8'),
+  most_vouched: () => import('../pages/MostVouchedTodayPageZ8'),
   pro_graphs_lab: () => import('../pages/pro/ProGraphsLabPageZ8'),
 };
 
 const WARM_NEIGHBORS: Record<string, string[]> = {
-  feed: ['today', 'hr_board', 'live_parlays', 'following'],
-  following: ['feed', 'subscriber_hub'],
-  today: ['feed', 'hr_board', 'intel'],
-  hr_board: ['mlb_stats', 'daily_players'],
-  brain_picks: ['brain_performance', 'hr_board'],
-  brain_performance: ['brain_picks', 'hr_board'],
-  mlb_stats: ['hr_board', 'daily_players'],
-  daily_players: ['hr_board', 'live_games'],
-  live_parlays: ['build', 'ai_engine'],
-  build: ['live_parlays', 'ai_engine'],
-  ai_engine: ['ai_pilot', 'build'],
-  pro_command_center: ['player_edge_lab', 'team_matchup_lab'],
-  profile: ['settings', 'customize'],
-  settings: ['profile', 'customize'],
+  feed: ['today', 'hr_board'],
+  following: ['feed'],
+  today: ['hr_board'],
+  hr_board: ['daily_players'],
+  brain_picks: ['brain_performance'],
+  brain_performance: ['brain_picks'],
+  mlb_stats: ['hr_board'],
+  daily_players: ['hr_board'],
+  live_parlays: ['build'],
+  build: ['live_parlays'],
+  ai_engine: ['ai_pilot'],
+  pro_command_center: ['player_edge_lab'],
+  profile: ['settings'],
+  settings: ['profile'],
 };
+
+/** Heavy first-paint routes — do not compete with their own chunk/network work. */
+const HEAVY_ROUTES = new Set([
+  'hr_board',
+  'daily_players',
+  'research',
+  'live_games',
+  'mlb_stats',
+  'pitcher_matchup_intelligence',
+  'hitter_matchup_zones',
+  'live_parlays',
+  'build',
+]);
 
 const MAIN_ROUTER_KEY = '__main_router__';
 
-function scheduleIdle(task: () => void): void {
+function scheduleIdle(task: () => void, timeout = 2800): void {
   if (typeof window === 'undefined') return;
   const ric = window.requestIdleCallback;
   if (typeof ric === 'function') {
-    ric(() => task(), { timeout: 1800 });
+    ric(() => task(), { timeout });
     return;
   }
-  window.setTimeout(task, 250);
+  window.setTimeout(task, Math.min(timeout, 600));
 }
 
 function canWarmRoutes(): boolean {
@@ -99,17 +116,26 @@ export function preloadMainRouter(): void {
 
 /** Idle-warm likely next routes from the current section (and a small default set). */
 export function warmLikelyRoutes(activeSection?: string): void {
-  scheduleIdle(() => {
-    if (!canWarmRoutes()) return;
-    preloadMainRouter();
-    const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
-    // Brain stays isolated until the user intentionally opens a Brain route.
-    const defaults = ['today', 'hr_board'];
-    const candidates = [...new Set([...neighbors, ...defaults])]
-      .filter((section) => section !== activeSection)
-      .slice(0, 4);
-    for (const section of candidates) {
-      preloadSection(section);
-    }
-  });
+  const run = () => {
+    scheduleIdle(() => {
+      if (!canWarmRoutes()) return;
+      preloadMainRouter();
+      if (activeSection && HEAVY_ROUTES.has(activeSection)) return;
+
+      const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
+      const defaults = activeSection === 'today' ? ['hr_board'] : activeSection ? [] : ['today'];
+      const candidates = [...new Set([...neighbors, ...defaults])]
+        .filter((section) => section !== activeSection)
+        .slice(0, 2);
+      for (const section of candidates) {
+        preloadSection(section);
+      }
+    }, 3200);
+  };
+
+  if (typeof window !== 'undefined' && document.readyState !== 'complete') {
+    window.addEventListener('load', run, { once: true });
+    return;
+  }
+  run();
 }
