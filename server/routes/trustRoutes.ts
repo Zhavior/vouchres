@@ -6,16 +6,32 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { trustLedgerRepository } from "../repositories/trustLedgerRepository";
 import { boundedInt } from "../lib/requestValidators";
+import { sendV3CapperTrustResponse, sendV3UserTrustResponse } from "../v3/modules/trust/handlers";
 
 /**
- * TrustOS Routes — Canonical Immutable Ledger Endpoints
+ * TrustOS Routes
  *
+ *   GET /api/trust/user/:userId      — Legacy score+badge trust summary for a user
+ *                                       (kept alive because src/api/vouchedgeApi.ts still
+ *                                       calls this path — do not remove without updating
+ *                                       the frontend client first)
+ *   GET /api/trust/capper/:capperId  — Legacy score+badge trust summary + verified record
  *   GET /api/v3/trust/ledger/me      — Authenticated user's trust event history
  *   GET /api/v3/trust/ledger/user/:userId — Public trust event history for a specific user
  */
 export const trustRoutes = Router();
 
 type AuthedRequestWithContext = AuthedRequest & RequestWithContext;
+
+trustRoutes.get(
+  "/api/trust/user/:userId",
+  asyncHandler(async (req: RequestWithContext, res: Response) => sendV3UserTrustResponse(req, res)),
+);
+
+trustRoutes.get(
+  "/api/trust/capper/:capperId",
+  asyncHandler(async (req: RequestWithContext, res: Response) => sendV3CapperTrustResponse(req, res)),
+);
 
 trustRoutes.get(
   "/api/v3/trust/ledger/me",

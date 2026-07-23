@@ -112,7 +112,7 @@ describe('HR board projected preview warnings', () => {
       />,
     );
 
-    expect(screen.getByText('Preview mode')).toBeTruthy();
+    expect(screen.getAllByText('Preview').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Map' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
   });

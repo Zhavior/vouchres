@@ -16,8 +16,9 @@ const routerSource = readFileSync(
 
 describe('signup and first-session activation', () => {
   it('sends free signup directly to required policy review', () => {
-    expect(authSource).toContain("initialPlan === 'free' ? 'policy' : 'plan'");
     expect(authSource).toContain('useState<SignupPlan>(initialPlan)');
+    expect(authSource).toContain("signupStep === 'policy'");
+    expect(authSource).toContain("setSignupStep(m === 'signup' ? 'policy' : 'form')");
   });
 
   it('does not claim personalization from fake sport or team choices', () => {

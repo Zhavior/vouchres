@@ -10,10 +10,10 @@ describe('Today decision-first layout', () => {
   it('leads with the real slate summary and compact briefing rail', () => {
     expect(source).toContain("buildTodayDecision({");
     expect(source).toContain('<TodayDecisionReel');
-    expect(source).toContain('>Briefing<');
+    expect(source).toContain('Daily Intelligence Briefing');
     // Status chip communicates slate state directly instead of a separate
     // "Today slate status" heading — Syncing / Partial data / All clear.
-    expect(source).toContain("isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'All clear'");
+    expect(source).toContain("isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active'");
   });
 
   it('routes the quick-access cards to canonical workspaces', () => {
@@ -46,6 +46,6 @@ describe('Today decision-first layout', () => {
   });
 
   it('shows a compact VE brand mark in the sticky header', () => {
-    expect(source).toContain('text-vouch-emerald tracking-tight">VE</span>');
+    expect(source).toContain('>\n            VE\n          </span>');
   });
 });

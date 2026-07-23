@@ -7,8 +7,7 @@ const sidebarSource = readFileSync('src/social/feed/FeedSidebar.tsx', 'utf8');
 
 describe('sidebar and full-page boundary', () => {
   it('uses one responsive sidebar width for the shell columns', () => {
-    expect(shellCss).toContain('--ve-sidebar-width: 72px');
-    expect(shellCss).toContain('--ve-sidebar-width: 280px');
+    expect(shellCss).toContain('--ve-sidebar-width: 264px');
     expect(shellCss).toContain('grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr)');
   });
 

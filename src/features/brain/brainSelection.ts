@@ -72,6 +72,11 @@ export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
     ranked = rows
       .filter((row) => row.riskTier !== 'Blocked')
       .map((row) => ({ row, score: selectionScore(row) }))
+      .filter(({ row, score }) => {
+        const primaryTier = row.riskTier === 'Elite' || row.riskTier === 'Core';
+        const exceptionalWatch = row.riskTier === 'Watch' && score >= 74;
+        return (primaryTier || exceptionalWatch || score >= 55) && score >= 55 && numeric(row.dataConfidence, 0) >= 55;
+      })
       .sort((a, b) => b.score - a.score || numeric(a.row.rank, 999) - numeric(b.row.rank, 999));
   }
 

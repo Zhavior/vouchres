@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import type { GameMatchup, LiveScore } from '../src/types/matchup';
+import type { GameMatchup } from '../src/types/matchup';
 import {
-  applyScores,
   mergeMatchups,
   mergeOfficialLiveUpdates,
 } from '../src/components/LiveGamesProZ8';
@@ -49,15 +48,16 @@ describe('Live Games polling stability', () => {
     expect(result).toMatchObject({ isFinal: true, isLive: false, status: 'Final' });
   });
 
-  it('keeps schedule order stable when a game becomes live', () => {
+  it('surfaces a game to the top of the schedule once it goes live', () => {
     const original = [game(1), game(2)];
     const updated = mergeOfficialLiveUpdates(original, [game(2, { status: 'Live', isLive: true })]);
-    expect(updated.map((item) => item.gamePk)).toEqual([1, 2]);
+    expect(updated.map((item) => item.gamePk)).toEqual([2, 1]);
   });
 
-  it('treats a final score update as not live', () => {
-    const score: LiveScore = { gamePk: 1, status: 'Final', isLive: true, isFinal: true, score: { away: 3, home: 1 } };
-    const [result] = applyScores([game(1, { isLive: true })], [score]);
+  it('treats an official final update as not live even if the prior state was live', () => {
+    const enriched = game(1, { status: 'Top 9', isLive: true });
+    const official = game(1, { status: 'Final', isFinal: true, score: { away: 3, home: 1 } });
+    const [result] = mergeOfficialLiveUpdates([enriched], [official]);
     expect(result).toMatchObject({ isFinal: true, isLive: false, score: { away: 3, home: 1 } });
   });
 });

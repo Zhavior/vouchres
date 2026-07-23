@@ -66,7 +66,7 @@ describe('ParlayOS universal add contract', () => {
       '../src/components/TodayDashboardZ8.tsx',
       '../src/features/hr/pages/HomeRunIntelligencePageZ8.tsx',
       '../src/components/PlayerResearchHub.tsx',
-      '../src/pages/pro/TeamMatchupIntelligencePageZ8.tsx',
+      '../src/pages/pro/PitcherMatchupIntelligencePageZ8.tsx',
       '../src/components/vouch-system/VouchCard.tsx',
     ];
 

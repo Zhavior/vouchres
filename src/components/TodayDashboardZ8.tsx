@@ -118,10 +118,25 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
     if (!featuredPlayer) return undefined;
     if (featuredPlayer.truthStatus === 'blocked') return undefined;
     return () => {
-      onSectionChange('hr_board');
-      return;
+      openParlayAdd({
+        player: toHrParlayPickerPlayer(featuredPlayer),
+        propHint: {
+          id: `hr-watch-${featuredPlayer.stableId}`,
+          market: 'Home Runs',
+          odds: featuredPlayer.bookOdds ?? null,
+          spec: `${featuredPlayer.playerName} 1+ Home Run`,
+          gamePk: featuredPlayer.gamePk ?? undefined,
+          playerId: featuredPlayer.playerId ?? undefined,
+        },
+        initialFamily: 'home_runs',
+        isPitcher: false,
+        source: 'today',
+        dataStatus: featuredPlayer.truthStatus === 'official' ? 'official' : featuredPlayer.truthStatus === 'projected' ? 'projected' : 'unknown',
+        reasoningSnapshot: featuredPlayer.reasons[0] ?? null,
+        riskSnapshot: featuredPlayer.warnings[0] ?? null,
+      });
     };
-  }, [featuredPlayer, onSectionChange]);
+  }, [featuredPlayer]);
 
   const activeSlip = pendingSlipList[0] ?? null;
   const isLoading = dailyReportQuery.isLoading || hrBoardQuery.loading;
