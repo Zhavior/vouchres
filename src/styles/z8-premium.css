@@ -2,7 +2,7 @@
  * Values below mirror the approved palette in vouchedge-tokens.css — see
  * that file's header comment for the canonical hex list. */
 :root {
-  --ve-sidebar-width: 264px;
+  --ve-sidebar-width: 280px;
   --ve-bg: 220 60% 5%;
   --ve-bg-deep: 220 65% 3%;
   --ve-bg-panel: 220 49% 8%;
@@ -91,7 +91,11 @@ html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; backgrou
 
 .ve-terminal-preview-row { background: rgba(5,10,20,.46); }
 
-@media (max-width: 1180px) { #layout-inner-frame.ve-layout-feed { grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); } .ve-edge-rail-right { display: none; } }
+@media (max-width: 1180px) {
+  :root { --ve-sidebar-width: 72px; }
+  #layout-inner-frame.ve-layout-feed { grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); }
+  .ve-edge-rail-right { display: none; }
+}
 @media (max-width: 767px) {
   #layout-inner-frame.ve-layout-feed, #layout-inner-frame.ve-layout-wide { display: block; }
   .ve-edge-rail-left { display: none; }

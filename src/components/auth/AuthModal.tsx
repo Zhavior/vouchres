@@ -140,7 +140,7 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [signupStep, setSignupStep] = useState<SignupStep>(() =>
-    initialMode === 'signup' ? 'intro' : 'form',
+    initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
   );
   const [introIndex, setIntroIndex] = useState(0);
   const [plan, setPlan] = useState<SignupPlan>(initialPlan);
@@ -168,7 +168,7 @@ export default function AuthModal({
       setError(null);
       setNotice(null);
       setEmailSent(false);
-      setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
+      setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
       setIntroIndex(0);
       setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });

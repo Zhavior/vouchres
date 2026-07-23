@@ -334,9 +334,18 @@ export default function ProfilePageZ8({
 
   return (
     <ProfileThemeWrapper themeId={displayedProfile.profileThemeId || displayedProfile.activeTheme || 'cyber-blue'}>
-      <div className={`\${Z8_PAGE} \${Z8_PAGE_PAD_X} \${Z8_PAGE_GAP}`} id="profile-details-view">
+      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_GAP}`} id="profile-details-view">
 
 
+        {!isOwnProfile && onClearViewUser ? (
+          <button
+            type="button"
+            onClick={onClearViewUser}
+            className="mb-2 inline-flex min-h-10 items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 text-xs font-bold text-vouch-cyan"
+          >
+            Back to your profile
+          </button>
+        ) : null}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
@@ -641,6 +650,14 @@ export default function ProfilePageZ8({
                 SETTLED DATA
               </span>
             </div>
+
+            <p className="text-[11px] text-slate-400">
+              Performance metrics are calculated from settled results available to this profile. Unsettled picks and local-only drafts are excluded. Historical results do not guarantee future outcomes.
+            </p>
+
+            <p className={`${Z8_LABEL} text-vouch-cyan`}>
+              {displayedProfile.totalPicks > 0 ? `${displayedProfile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'}
+            </p>
 
             {(() => {
               const graphRows = profileDays
