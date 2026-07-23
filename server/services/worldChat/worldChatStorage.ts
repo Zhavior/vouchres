@@ -23,6 +23,20 @@ function hasSupabaseAdminConfig(): boolean {
   );
 }
 
+/**
+ * When true, World Chat must not silently write to process memory.
+ * Default: on in production, off elsewhere (tests / local without DB).
+ * Override with WORLD_CHAT_REQUIRE_DURABLE=1|0.
+ */
+export function requireDurableWorldChat(): boolean {
+  const raw = String(process.env.WORLD_CHAT_REQUIRE_DURABLE ?? "")
+    .trim()
+    .toLowerCase();
+  if (raw === "1" || raw === "true" || raw === "yes") return true;
+  if (raw === "0" || raw === "false" || raw === "no") return false;
+  return process.env.NODE_ENV === "production";
+}
+
 export function durableWorldChatStorageMeta(): WorldChatStorageMeta {
   return {
     mode: "supabase_durable",
@@ -58,9 +72,21 @@ export function worldChatStorageMeta(): WorldChatStorageMeta {
 
 export function logWorldChatEphemeralBootNotice(): void {
   if (process.env.NODE_ENV !== "production") return;
-  if (hasSupabaseAdminConfig()) return;
 
-  console.log(
-    "[boot] World chat is in-memory ephemeral because Supabase admin config is unavailable.",
-  );
+  if (!hasSupabaseAdminConfig()) {
+    if (requireDurableWorldChat()) {
+      console.error(
+        "[boot] World Chat requires durable storage in production, but Supabase admin config is unavailable. Writes will fail closed.",
+      );
+      return;
+    }
+    console.log(
+      "[boot] World chat is in-memory ephemeral because Supabase admin config is unavailable.",
+    );
+    return;
+  }
+
+  if (requireDurableWorldChat()) {
+    console.log("[boot] World Chat durable-only mode enabled (WORLD_CHAT_REQUIRE_DURABLE).");
+  }
 }

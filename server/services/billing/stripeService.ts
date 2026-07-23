@@ -247,6 +247,8 @@ export function effectiveTierForSubscriptionStatus(
   return { tier: "free", warning: `unknown subscription status ${status}; defaulted entitlements to free` };
 }
 
+export type StripeWebhookLedgerStatus = "queued" | "processing" | "processed" | "failed";
+
 export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
   shouldProcess: boolean;
   duplicate: boolean;
@@ -257,11 +259,12 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
   const { error } = await supabaseAdmin.from("stripe_webhook_events").insert({
     id: event.id,
     type: event.type,
-    status: "processing",
+    status: "queued",
+    payload: event,
     received_at: now,
   });
 
-  if (!error) return { shouldProcess: true, duplicate: false, status: "processing" };
+  if (!error) return { shouldProcess: true, duplicate: false, status: "queued" };
 
   if (error.code !== "23505") {
     console.warn("[stripe] webhook idempotency insert failed", error.message);
@@ -278,18 +281,28 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
   if (data?.status === "failed") {
     const retry = await supabaseAdmin
       .from("stripe_webhook_events")
-      .update({ status: "processing", type: event.type, last_error: null, received_at: now })
+      .update({
+        status: "queued",
+        type: event.type,
+        payload: event,
+        last_error: null,
+        received_at: now,
+      })
       .eq("id", event.id)
       .eq("status", "failed");
     if (retry.error) throw retry.error;
-    return { shouldProcess: true, duplicate: true, status: "processing" };
+    return { shouldProcess: true, duplicate: true, status: "queued" };
   }
 
   console.log(`[stripe] duplicate webhook skipped event=${event.id} status=${data?.status ?? "unknown"}`);
   return { shouldProcess: false, duplicate: true, status: data?.status ?? "unknown" };
 }
 
-export async function finishStripeWebhookEvent(eventId: string, status: "processed" | "failed", errorMessage?: string): Promise<void> {
+export async function finishStripeWebhookEvent(
+  eventId: string,
+  status: "processed" | "failed",
+  errorMessage?: string,
+): Promise<void> {
   const supabaseAdmin = await getSupabaseAdmin();
   const { error } = await supabaseAdmin
     .from("stripe_webhook_events")
@@ -302,6 +315,63 @@ export async function finishStripeWebhookEvent(eventId: string, status: "process
   if (error) {
     console.warn(`[stripe] webhook event finalization failed event=${eventId}`, error.message);
   }
+}
+
+export interface QueuedStripeWebhookRow {
+  id: string;
+  type: string;
+  payload: Stripe.Event | null;
+  attempts: number;
+}
+
+/**
+ * Claim a batch of queued Stripe webhook events for the entitlement worker.
+ * Uses select-then-conditional-update (same pattern as notification_jobs).
+ */
+export async function claimQueuedStripeWebhookEvents(limit = 25): Promise<QueuedStripeWebhookRow[]> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: rows, error: fetchError } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .select("id, type, payload, attempts")
+    .eq("status", "queued")
+    .order("received_at", { ascending: true })
+    .limit(limit);
+
+  if (fetchError) {
+    if (String(fetchError.code ?? "") === "42P01" || String(fetchError.code ?? "") === "PGRST205") {
+      return [];
+    }
+    console.warn("[stripe] claim queued fetch failed", fetchError.message);
+    return [];
+  }
+  if (!rows || rows.length === 0) return [];
+
+  const ids = rows.map((row) => row.id);
+  const { data: claimed, error: claimError } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .update({ status: "processing" })
+    .in("id", ids)
+    .eq("status", "queued")
+    .select("id, type, payload, attempts");
+
+  if (claimError || !claimed || claimed.length === 0) return [];
+  return claimed.map((row) => ({
+    id: String(row.id),
+    type: String(row.type),
+    payload: (row.payload ?? null) as Stripe.Event | null,
+    attempts: Number(row.attempts ?? 0),
+  }));
+}
+
+export async function bumpStripeWebhookAttempts(eventId: string): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .select("attempts")
+    .eq("id", eventId)
+    .maybeSingle();
+  const next = Number(data?.attempts ?? 0) + 1;
+  await supabaseAdmin.from("stripe_webhook_events").update({ attempts: next }).eq("id", eventId);
 }
 
 /**

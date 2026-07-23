@@ -15,6 +15,7 @@ import {
 import { setPickVisibilityPublic } from "../repositories/parlayRepository";
 import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
 import { notifyFollowersOfAuthorPost } from "../services/social/followService";
+import { socialOutboxRepository } from "../repositories/socialOutboxRepository";
 
 async function denyUnlessOwns(
   userId: string,
@@ -228,12 +229,28 @@ postRoutes.post(
       });
     }
 
-    notifyFollowersOfAuthorPost({
-      authorId: req.user!.id,
-      postId: String(data.id),
-      body: postBody,
-      pickId: pick_id ?? null,
-    }).catch((err) => {
+    void (async () => {
+      const authorId = req.user!.id;
+      const postId = String(data.id);
+      const queued = await socialOutboxRepository.queueEvent({
+        user_id: authorId,
+        event_type: "NOTE_UPSERT",
+        payload: {
+          authorId,
+          postId,
+          body: postBody,
+          pickId: pick_id ?? null,
+        },
+      });
+      if (!queued) {
+        await notifyFollowersOfAuthorPost({
+          authorId,
+          postId,
+          body: postBody,
+          pickId: pick_id ?? null,
+        });
+      }
+    })().catch((err) => {
       console.warn("[posts] follower notifications failed", (err as Error)?.message);
     });
 
