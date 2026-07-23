@@ -35,6 +35,16 @@ parlayUserRoutes.get(
   listMyParlaysHandler,
 );
 
+/** Compat alias — older clients POST here; canonical write path is /api/v3/parlays/save. */
+parlayUserRoutes.post(
+  "/me/parlays",
+  markLegacyParlayRoute("legacy.parlay.save"),
+  requireAuth,
+  requireLegalConfirmed,
+  validate({ body: SaveMeParlaySchema }),
+  saveMeParlayHandler,
+);
+
 parlayUserRoutes.post(
   "/parlays/save",
   markLegacyParlayRoute("legacy.parlay.save"),

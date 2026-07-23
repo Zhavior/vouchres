@@ -741,6 +741,36 @@ openapiRegistry.registerPath({
 });
 
 openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/me/parlays",
+  summary: "Save a parlay (compat alias for /api/v3/parlays/save)",
+  tags: ["Parlays"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: SaveMeParlayDocSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Parlay saved (deduped)",
+      content: { "application/json": { schema: OkEnvelopeSchema } },
+    },
+    201: {
+      description: "Parlay created",
+      content: { "application/json": { schema: OkEnvelopeSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
   method: "get",
   path: "/api/mlb/hr-feed/today",
   summary: "Real home-run plays from today's MLB games",

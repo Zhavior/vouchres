@@ -74,7 +74,7 @@ export async function pushParlayToBackend(parlay: Parlay): Promise<Parlay> {
 
     const payload = buildBackendSavePayloadFromParlay(parlay);
 
-    const result = await apiClient.post<BackendParlay & { deduped?: boolean }>('/api/me/parlays', payload);
+    const result = await apiClient.post<BackendParlay & { deduped?: boolean }>('/api/v3/parlays/save', payload);
 
     if (result?.id) {
       syncSlips(

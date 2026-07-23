@@ -18,6 +18,7 @@ import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
 import { fetchAuthMe } from '../hooks/queries/useAuthMe';
 import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { mapBackendParlay, mapBackendVouch } from './backendMappers';
+import { reconcileParlays } from '../domain/parlay/reconcileParlays';
 import { normalizeSlipStatus } from '../lib/parlayDisplay';
 import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
@@ -130,7 +131,10 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     if (!accountId || backendParlayRows === undefined) return;
 
     const backendParlays = backendParlayRows.map(mapBackendParlay);
-    syncSlips(backendParlays);
+    const reconciled = reconcileParlays(backendParlays, useSlipsStore.getState().savedSlips, {
+      authenticated: true,
+    });
+    syncSlips(reconciled);
   }, [accountId, backendParlayRows, syncSlips]);
 
   useEffect(() => {
@@ -154,6 +158,9 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
       const { parlays, newlySettled, changed } = await gradePendingParlays(useSlipsStore.getState().savedSlips);
       if (!changed) return;
       syncSlips(parlays);
+      // Stateless /api/parlays/grade updates local UX immediately. Refresh the
+      // server list so cron-settled DB rows can replace local preview grades.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myParlays() });
       if (newlySettled.length) {
         let wins = 0, losses = 0, units = 0;
         for (const s of newlySettled) {
