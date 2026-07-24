@@ -59,6 +59,8 @@ function getGamePk(row: any): number | null {
   return parsed && parsed > 0 ? parsed : null;
 }
 
+const MAX_VISIBLE_PLAYERS = 30;
+
 export default function PlayerEdgeLabPageZ8() {
   const { rows, loading, error, source } = useHrBoardProData();
   const { isPro } = useEntitlements();
@@ -113,7 +115,7 @@ export default function PlayerEdgeLabPageZ8() {
                   Verified Feed
                 </div>
                 <div className="mt-2 text-xl font-black text-white">{rows.length}</div>
-                <div className="text-xs text-white/45">Current player rows</div>
+                <div className="text-sm text-white/60">Current player rows</div>
               </div>
               <div className={`${Z8_SURFACE} rounded-xl px-3 py-2.5`}>
                 <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
@@ -165,13 +167,13 @@ export default function PlayerEdgeLabPageZ8() {
                 <button
                   key={`${id}-${index}`}
                   type="button"
-                  className={`group w-[260px] shrink-0 snap-start overflow-hidden lg:w-full rounded-2xl border p-3 text-left transition ${
-                    active ? Z8_ACTIVE : Z8_IDLE
+                  className={`group w-[260px] shrink-0 snap-start snap-always overflow-hidden lg:w-full rounded-2xl border p-3 text-left transition ${
+                    active ? `${Z8_ACTIVE} scale-[1.02] border-vouch-cyan shadow-2xl shadow-vouch-cyan/20 ring-1 ring-vouch-cyan/30` : `${Z8_IDLE} hover:border-vouch-cyan/30 hover:bg-white/[0.03]`
                   }`}
                   onClick={() => setSelectedId(id)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30`}>
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-vouch-cyan/20 bg-black/40 shadow-lg`}>
                       {getMlbHeadshotUrl(id) ? (
                         <img
                           src={getMlbHeadshotUrl(id)}
@@ -188,13 +190,13 @@ export default function PlayerEdgeLabPageZ8() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-black text-white">
+                      <div className="text-base font-black text-white leading-tight">
                         {getPlayerName(row)}
                       </div>
-                      <div className="mt-1 text-xs text-white/45">
+                      <div className="text-sm text-white/60">
                         {safeText(row.team, 'MLB')} · {safeText(row.riskLabel ?? row.riskTier ?? row.risk, 'Review')}
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                      <div className="mt-2 mt-3 flex flex-wrap justify-center gap-2.5">
                         {getSignalTags(row).map((tag) => (
                           <span
                             key={tag}
@@ -265,7 +267,7 @@ export default function PlayerEdgeLabPageZ8() {
             <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 ${Z8_SECTION_HEADER}`}>
               <div>
                 <div className={`${Z8_LABEL} text-white/40`}>MLB Research Graphs</div>
-                <div className="mt-1 text-sm font-black text-white">BvP, spray, pitch mix, trends</div>
+                <div className="mt-1 text-lg font-black tracking-tight text-white">BvP, spray, pitch mix, trends</div>
               </div>
               <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
                 {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}
