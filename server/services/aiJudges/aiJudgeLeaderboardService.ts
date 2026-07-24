@@ -39,7 +39,7 @@ async function getCapperStatsByNames(names: string[]) {
   };
 
   try {
-    const supabaseAdmin = await getSupabaseAdmin();
+    const supabaseAdmin = await withTimeout(getSupabaseAdmin(), 1_500);
     const { data: cappers, error: capperError } = await supabaseAdmin
       .from("cappers")
       .select("id, display_name")
