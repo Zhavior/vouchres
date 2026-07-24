@@ -27,6 +27,7 @@ import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
 import { useAppProfile } from '../../../../context/AppShellContext';
+import { useBodyScrollLock } from '../../../../lib/scroll/useBodyScrollLock';
 import {
   GameLogEmpty,
   GameLogLoading,
@@ -261,6 +262,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
+  useBodyScrollLock(isOpen);
   const profile = useAppProfile();
   const {
     research,
@@ -277,16 +279,6 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
     if (isOpen) document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
   }, [isOpen, onClose]);
-
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
 
   const canonicalLogs = useMemo(
     () => canonicalGameLogs(research?.charts.signalTimeline ?? []),
