@@ -15,6 +15,13 @@ describe('Profile trust layout', () => {
     expect(source).toContain('displayedProfile.totalPicks');
   });
 
+  it('renders a server-backed proof snapshot instead of only local post results', () => {
+    expect(source).toContain("['profile-proof', profileUserId]");
+    expect(source).toContain('Verified record');
+    expect(source).toContain('Recent locked picks');
+    expect(source).toContain('Pending picks never improve this record.');
+  });
+
   it('keeps owner-only actions off community profiles', () => {
     expect(source).toContain('const isOwnProfile = !viewUserId || viewUserId === user?.id;');
     expect(source).toContain('{isOwnProfile && (');

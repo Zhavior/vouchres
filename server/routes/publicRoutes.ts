@@ -418,6 +418,69 @@ publicRoutes.get("/profile/:id/stats", asyncHandler(async (req: RequestWithConte
   return res.json(apiOkFlat(req, stats as unknown as Record<string, unknown>));
 }));
 
+/**
+ * The proof snapshot is deliberately built from settled pick rows, rather
+ * than trusting a client-side profile cache. It is safe to show publicly:
+ * no private notes, idempotency keys, or raw grading data leave the server.
+ */
+publicRoutes.get("/profile/:id/proof", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  const { id } = req.params;
+  const [profileResult, picksResult, social] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("id, won_picks, lost_picks, pushed_picks, net_units")
+      .eq("id", id)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("picks")
+      .select("id, market, selection, status, settled_units, created_at, locked_at, graded_at")
+      .eq("user_id", id)
+      .in("status", ["won", "lost", "push"])
+      .order("graded_at", { ascending: false, nullsFirst: false })
+      .limit(5),
+    getProfileSocialStats(id),
+  ]);
+
+  if (profileResult.error) throw profileResult.error;
+  if (!profileResult.data) {
+    throw new AppError({ status: 404, code: "not_found", message: "Profile not found." });
+  }
+  if (picksResult.error) throw picksResult.error;
+
+  const settledPicks = (picksResult.data ?? []) as Array<Record<string, unknown>>;
+  // These values are maintained by the grading service when a pick settles;
+  // using the profile snapshot gives the full record, while the query above
+  // only needs to fetch the five rows rendered on this page.
+  const wins = Number(profileResult.data.won_picks ?? 0);
+  const losses = Number(profileResult.data.lost_picks ?? 0);
+  const pushes = Number(profileResult.data.pushed_picks ?? 0);
+  const settled = wins + losses + pushes;
+  const decisionCount = wins + losses;
+  const netUnits = Number(profileResult.data.net_units ?? 0);
+
+  return res.json(apiOkFlat(req, {
+    record: {
+      wins,
+      losses,
+      pushes,
+      settled,
+      winRate: decisionCount > 0 ? Math.round((wins / decisionCount) * 1000) / 10 : null,
+      netUnits: Math.round(netUnits * 100) / 100,
+    },
+    recentSettled: settledPicks.map((pick) => ({
+      id: String(pick.id),
+      market: String(pick.market ?? "pick"),
+      selection: String(pick.selection ?? "Untitled pick"),
+      status: String(pick.status),
+      settledUnits: Number(pick.settled_units ?? 0),
+      lockedAt: pick.locked_at ?? null,
+      gradedAt: pick.graded_at ?? null,
+      createdAt: pick.created_at ?? null,
+    })),
+    social,
+  }));
+}));
+
 publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);

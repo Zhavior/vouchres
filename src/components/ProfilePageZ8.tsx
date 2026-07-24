@@ -48,6 +48,28 @@ interface ProfilePageProps {
 
 type SubscriptionTier = 'BASIC' | 'GOLD' | 'SELLER_PRO';
 
+type ProfileProofSnapshot = {
+  record: {
+    wins: number;
+    losses: number;
+    pushes: number;
+    settled: number;
+    winRate: number | null;
+    netUnits: number;
+  };
+  recentSettled: Array<{
+    id: string;
+    market: string;
+    selection: string;
+    status: 'won' | 'lost' | 'push';
+    settledUnits: number;
+    lockedAt: string | null;
+    gradedAt: string | null;
+    createdAt: string | null;
+  }>;
+  social: { followers: number; following: number; subscribers: number };
+};
+
 const TIER_CONFIG: Record<SubscriptionTier, {
   label: string;
   badge: string;
@@ -159,6 +181,12 @@ export default function ProfilePageZ8({
     enabled: Boolean(viewUserId) && !isOwnProfile,
     staleTime: 60_000,
   });
+  const proofQuery = useQuery({
+    queryKey: ['profile-proof', profileUserId],
+    queryFn: () => apiClient.get<ProfileProofSnapshot>(`/api/profile/${encodeURIComponent(profileUserId!)}/proof`),
+    enabled: Boolean(profileUserId),
+    staleTime: 60_000,
+  });
   const displayedProfile = buildViewedProfile(profile, viewedProfileQuery.data ?? null);
   const displayedTier = normalizeSubscriptionTier(displayedProfile.subscriptionTier);
   const tierConfig = TIER_CONFIG[displayedTier];
@@ -178,6 +206,7 @@ export default function ProfilePageZ8({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const headerInputRef = useRef<HTMLInputElement>(null);
   const [hoveredDayYmd, setHoveredDayYmd] = useState<string | null>(null);
+  const proof = proofQuery.data ?? null;
   const entitlements = useEntitlements();
   const canEditHeader = canCustomizeProfileHeader(displayedProfile, {
     isPro: entitlements.isPro,
@@ -553,6 +582,30 @@ export default function ProfilePageZ8({
                 ) : null}
               </div>
 
+              <section className="mx-auto mt-5 w-full max-w-2xl rounded-xl border border-vouch-cyan/20 bg-black/25 p-4 text-left" aria-label="Verified profile record">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className={`${Z8_LABEL} text-vouch-cyan`}>Verified record</p>
+                    <p className="mt-1 text-xs text-white/45">Settled picks only. Pending picks never improve this record.</p>
+                  </div>
+                  {proofQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin text-vouch-cyan" /> : null}
+                </div>
+                {proof ? (
+                  <>
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Record</p><p className="mt-1 text-sm font-black text-white">{proof.record.wins}–{proof.record.losses}{proof.record.pushes ? `–${proof.record.pushes}` : ''}</p></div>
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Win rate</p><p className="mt-1 text-sm font-black text-white">{proof.record.winRate === null ? '—' : `${proof.record.winRate}%`}</p></div>
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Net units</p><p className={`mt-1 text-sm font-black ${proof.record.netUnits >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}`}>{proof.record.netUnits >= 0 ? '+' : ''}{proof.record.netUnits.toFixed(2)}u</p></div>
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Settled</p><p className="mt-1 text-sm font-black text-white">{proof.record.settled}</p></div>
+                    </div>
+                    <div className="mt-4 border-t border-white/10 pt-3">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-white/45">Recent locked picks</p>
+                      {proof.recentSettled.length ? <div className="mt-2 space-y-2">{proof.recentSettled.map((pick) => <div key={pick.id} className="flex items-center justify-between gap-3 text-xs"><span className="min-w-0 truncate text-white/70">{pick.selection}</span><span className={`shrink-0 font-black uppercase ${pick.status === 'won' ? 'text-vouch-emerald' : pick.status === 'lost' ? 'text-rose-300' : 'text-white/45'}`}>{pick.status} · {pick.settledUnits >= 0 ? '+' : ''}{pick.settledUnits.toFixed(2)}u</span></div>)}</div> : <p className="mt-2 text-xs text-white/35">No settled picks yet. This profile will build its record in public.</p>}
+                    </div>
+                  </>
+                ) : <p className="mt-3 text-xs text-white/35">The verified record is temporarily unavailable.</p>}
+              </section>
+
               {isEditing ? (
                 <form onSubmit={handleProfileSave} className="space-y-3.5 rounded-xl border border-slate-850" id="profile-edit-subform">
                   <div className="space-y-1">
@@ -730,7 +783,7 @@ export default function ProfilePageZ8({
                   Performance Graphs
                 </h3>
                 <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                  Real ledger data from your settled outcomes.
+                  Activity from the profile result feed. The verified record above is calculated directly from settled picks.
                 </p>
               </div>
               <span className="text-[9px] font-mono font-black text-vouch-cyan bg-cyan-950/40 rounded-full border border-cyan-900/40 uppercase">
