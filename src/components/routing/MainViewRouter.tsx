@@ -27,7 +27,7 @@ const PlayerResearchHub = lazy(() => import('../PlayerResearchHub'));
 const CustomizePage = lazy(() => import('../CustomizePage'));
 const ResultsStudio = lazy(() => import('../results/ResultsStudio'));
 const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
-const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHubZ8'));
+const MlbIntelligenceHub = lazy(() => import('../../features/brain-edge/BrainEdgeLabPage'));
 const Leaderboard = lazy(() => import('../Leaderboard'));
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
 const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));

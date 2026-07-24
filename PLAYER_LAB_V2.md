@@ -1,37 +1,39 @@
 # Player Lab V2
 
 ## Sprint 1
-- [ ] Premium Player Cards
-- [ ] Typecheck
-- [ ] Build
-- [ ] Commit
+- [x] Premium Player Cards
+- [x] Typecheck
+- [x] Build
+- [x] Commit
 
 ## Sprint 2
-- [ ] Featured Hero
-- [ ] Typecheck
-- [ ] Build
+- [x] Featured Hero
+- [x] Typecheck
+- [x] Build
 - [ ] Commit
 
 ## Sprint 3
-- [ ] Research Tabs
-- [ ] Typecheck
-- [ ] Build
+- [x] Research Tabs
+- [x] Typecheck
+- [x] Build
 - [ ] Commit
 
 ## Sprint 4
-- [ ] Graph Workspace
-- [ ] Typecheck
-- [ ] Build
+- [x] Graph Workspace
+- [x] Typecheck
+- [x] Build
 - [ ] Commit
 
 ## Sprint 5
-- [ ] Quick Actions
-- [ ] Typecheck
-- [ ] Build
+- [x] Quick Actions
+- [x] Typecheck
+- [x] Build
 - [ ] Commit
 
 ## Sprint 6
-- [ ] Polish
-- [ ] Typecheck
-- [ ] Build
+- [x] Polish
+- [x] Typecheck
+- [x] Build
 - [ ] Commit
+
+Verification for Sprints 2–6 was completed against the combined final patch.

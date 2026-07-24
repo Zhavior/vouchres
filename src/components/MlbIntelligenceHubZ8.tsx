@@ -9,14 +9,16 @@ import {
   RefreshCw,
   Target,
   Zap,
+  X,
 } from 'lucide-react';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useAiJudgeLeaderboard } from '../hooks/queries/useAiJudgeLeaderboard';
 import { useAiAgentRegistry } from '../hooks/queries/useAiAgentRegistry';
 import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import type { HrBoardResponse } from '../types/hrBoard';
-import { pushHrResearchPlayer } from '../features/hr/utils/hrResearchRoute';
+import type { NormalizedPlayerPayload } from '../adapters/normalized';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
+import PlayerResearchDecisionCard from './player/PlayerResearchDecisionCard';
 import AgentDock from './agents/AgentDock';
 import ProGraphsLabPageZ8 from '../pages/pro/ProGraphsLabPageZ8';
 import { hydrateAgentSlots } from '../services/agents/agentSlots';
@@ -212,6 +214,36 @@ function extractCandidatesFromBoard(board: HrBoardResponse): Candidate[] {
   return merged;
 }
 
+function toNormalizedPlayerPayload(
+  candidate: Candidate,
+): NormalizedPlayerPayload {
+  const score = num(candidate.hrScore, 0);
+
+  return {
+    player: {
+      playerId: candidate.playerId ?? null,
+      playerName: cleanName(candidate),
+      team: candidate.team ?? '',
+      opponent: cleanOpponent(candidate),
+      opponentPitcherName: candidate.opponentPitcherName ?? null,
+      headshot: candidate.headshotUrl ?? candidate.headshot ?? null,
+      vouchScore: score,
+      hrEdge: score,
+      riskLabel: candidate.riskTier ?? candidate.confidenceTier ?? null,
+    },
+    scoreBreakdown: {
+      finalScore: score,
+      ...(candidate.scoreBreakdown ?? {}),
+    },
+    matchup: {
+      opponent: cleanOpponent(candidate),
+      opponentPitcherName: candidate.opponentPitcherName ?? null,
+      venue: candidate.venue ?? null,
+    },
+    recentForm: null,
+  } as NormalizedPlayerPayload;
+}
+
 function buildIntelligenceReport(board: HrBoardResponse): IntelligenceReport {
   return {
     date: board.date ?? new Date().toISOString().slice(0, 10),
@@ -287,11 +319,11 @@ function StatTile({ label, value, tone = 'slate' }: { label: string; value: Reac
 function CandidateCard({
   c,
   rank,
-  onOpenResearch,
+  onSelect,
 }: {
   c: Candidate;
   rank: number;
-  onOpenResearch: (candidate: Candidate) => void;
+  onSelect: (candidate: Candidate) => void;
 }) {
   const score = num(c.hrScore, 0);
   const reasons = safeArray<string>(c.reasons).slice(0, 3);
@@ -301,9 +333,9 @@ function CandidateCard({
   return (
     <button
       type="button"
-      onClick={() => onOpenResearch(c)}
-      className={`w-full rounded-3xl ${Z8_PANEL_PREMIUM} p-4 text-left transition hover:border-vouch-cyan/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70`}
-      aria-label={`Open ${cleanName(c)} research workspace`}
+      onClick={() => onSelect(c)}
+      className={`group w-full rounded-3xl ${Z8_PANEL_PREMIUM} p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-vouch-cyan/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/60`}
+      aria-label={`Open ${cleanName(c)} inside AI Edge Lab`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
@@ -539,6 +571,14 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
 }
 
 export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+
+  const selectedPlayerPayload = useMemo(
+    () => selectedCandidate
+      ? toNormalizedPlayerPayload(selectedCandidate)
+      : null,
+    [selectedCandidate],
+  );
   const [tab, setTab] = useState<Tab>('overview');
   const hrBoardQuery = useHrBoardToday();
   const judgeQuery = useAiJudgeLeaderboard();
@@ -572,16 +612,6 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
   };
 
   const candidates = safeArray<Candidate>(report?.candidates);
-
-  const openCandidateResearch = React.useCallback(
-    (candidate: Candidate) => {
-      if (candidate.playerId == null) return;
-
-      pushHrResearchPlayer(candidate.playerId);
-      onSectionChange?.('hr_board');
-    },
-    [onSectionChange],
-  );
 
   const topTargets = useMemo(
     () => [...candidates].sort((a, b) => num(b.hrScore) - num(a.hrScore)).slice(0, 12),
@@ -751,11 +781,116 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
         </div>
       )}
 
+
+      {selectedCandidate && (
+        <section
+          aria-label={`${cleanName(selectedCandidate)} research workspace`}
+          className={`relative overflow-hidden rounded-[28px] ${Z8_PANEL_PREMIUM}`}
+        >
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/70 to-transparent" />
+
+          <div className="flex items-start justify-between gap-4 border-b border-white/8 px-4 py-4 sm:px-6">
+            <div className="min-w-0">
+              <p className={`${Z8_LABEL} text-vouch-cyan`}>
+                Active player workspace
+              </p>
+              <h2 className="mt-1 truncate text-xl font-black text-white sm:text-2xl">
+                {cleanName(selectedCandidate)}
+              </h2>
+              <p className="mt-1 text-xs text-white/45 sm:text-sm">
+                AI decision, matchup context, verified signals and Pro Graphs — without leaving the Edge Lab.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCandidate(null)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/60 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+              aria-label="Close player workspace"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)] sm:p-6">
+            <div className="space-y-4">
+              {selectedPlayerPayload && (
+                <PlayerResearchDecisionCard payload={selectedPlayerPayload} />
+              )}
+
+              <div className={`rounded-2xl p-4 ${Z8_SURFACE}`}>
+                <p className={`${Z8_LABEL} text-white/40`}>
+                  Matchup intelligence
+                </p>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <StatTile
+                    label="Opponent"
+                    value={<span className="text-sm">{cleanOpponent(selectedCandidate)}</span>}
+                  />
+                  <StatTile
+                    label="Pitcher"
+                    value={<span className="text-sm">{cleanPitcher(selectedCandidate)}</span>}
+                  />
+                  <StatTile
+                    label="HR edge"
+                    value={num(selectedCandidate.hrScore)}
+                    tone="sky"
+                  />
+                  <StatTile
+                    label="Estimated HR"
+                    value={pct(selectedCandidate.estimatedHrProbability)}
+                    tone="emerald"
+                  />
+                </div>
+              </div>
+
+              {(selectedCandidate.reasons?.length ?? 0) > 0 && (
+                <div className={`rounded-2xl p-4 ${Z8_SURFACE}`}>
+                  <p className={`${Z8_LABEL} text-white/40`}>
+                    AI evidence
+                  </p>
+
+                  <div className="mt-3 space-y-2">
+                    {safeArray<string>(selectedCandidate.reasons)
+                      .slice(0, 5)
+                      .map((reason, index) => (
+                        <div
+                          key={`${reason}-${index}`}
+                          className="flex gap-2 rounded-xl border border-white/6 bg-black/20 px-3 py-2 text-xs leading-relaxed text-white/70"
+                        >
+                          <span className="font-mono text-vouch-cyan">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-white/8 bg-black/20">
+              <div className="border-b border-white/8 px-4 py-3">
+                <p className={`${Z8_LABEL} text-vouch-cyan`}>
+                  Pro Graphs
+                </p>
+                <p className="mt-1 text-xs text-white/40">
+                  Advanced visual research remains inside the active player workspace.
+                </p>
+              </div>
+
+              <ProGraphsLabPageZ8 embedded />
+            </div>
+          </div>
+        </section>
+      )}
+
       {!loading && candidates.length > 0 && tab === 'overview' && (
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 grid gap-4 md:grid-cols-2">
             {topTargets.slice(0, 6).map((c, i) => (
-              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} onOpenResearch={openCandidateResearch} />
+              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} onSelect={setSelectedCandidate} />
             ))}
           </div>
           <div className="space-y-3">
@@ -778,7 +913,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
 
       {!loading && candidates.length > 0 && tab === 'targets' && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} onOpenResearch={openCandidateResearch} />)}
+          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} onSelect={setSelectedCandidate} />)}
         </div>
       )}
 
