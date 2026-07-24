@@ -15,12 +15,14 @@ export type BrainEdgeView = 'intelligence' | 'graphs';
 type Props = {
   activeView: BrainEdgeView;
   onViewChange: (view: BrainEdgeView) => void;
+  header?: ReactNode;
   children: ReactNode;
 };
 
 export default function BrainEdgeShell({
   activeView,
   onViewChange,
+  header,
   children,
 }: Props) {
   return (
@@ -83,6 +85,8 @@ export default function BrainEdgeShell({
             </div>
           </div>
         </header>
+
+        {header ? <div className="brain-edge-sticky-header">{header}</div> : null}
 
         <section
           className="brain-edge-module brain-reveal min-w-0"
