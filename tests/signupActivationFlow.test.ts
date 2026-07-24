@@ -23,15 +23,17 @@ const landingFaqSource = readFileSync(
 );
 
 describe('signup and first-session activation', () => {
-  it('keeps signup to plan, required policy review, then account creation', () => {
+  it('keeps the restored intro, questionnaire, plan, policy, and account creation flow', () => {
     expect(authSource).toContain('useState<SignupPlan>(initialPlan)');
-    expect(authSource).toContain("initialMode === 'signup' ? 'plan' : 'form'");
+    expect(authSource).toContain("initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form'");
+    expect(authSource).toContain("signupStep === 'intro'");
+    expect(authSource).toContain("signupStep === 'questionnaire'");
     expect(authSource).toContain("signupStep === 'plan'");
     expect(authSource).toContain("signupStep === 'policy'");
-    expect(authSource).toContain("setSignupStep(m === 'signup' ? 'plan' : 'form')");
-    expect(authSource).not.toContain("signupStep === 'intro'");
-    expect(authSource).not.toContain("signupStep === 'questionnaire'");
-    expect(authSource).not.toContain('AuthJudgeWelcome');
+    expect(authSource).toContain("setSignupStep('questionnaire')");
+    expect(authSource).toContain("setSignupStep('plan')");
+    expect(authSource).toContain("setSignupStep(m === 'signup' ? 'policy' : 'form')");
+    expect(authSource).toContain('AuthJudgeWelcome');
   });
 
   it('does not claim personalization from fake sport or team choices', () => {

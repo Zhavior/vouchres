@@ -31,6 +31,7 @@ import {
 import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
+import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_AUTH_GRADIENT, Z8_AUTH_SHADOW, Z8_CYAN_HEX, Z8_BLURPLE_HEX } from '../../theme/z8Tokens';
 import '../../styles/auth-modal.css';
@@ -151,6 +152,8 @@ export default function AuthModal({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
+  useBodyScrollLock(open);
+
   // Sync mode when reopened with a different intent
   useEffect(() => {
     if (open) {
@@ -170,9 +173,6 @@ export default function AuthModal({
     if (!open) return;
 
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
     const focusFrame = window.requestAnimationFrame(() => {
       (emailInputRef.current ?? closeButtonRef.current)?.focus();
     });
@@ -211,7 +211,6 @@ export default function AuthModal({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [open, onClose]);

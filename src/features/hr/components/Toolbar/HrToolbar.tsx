@@ -3,6 +3,7 @@ import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2, LayoutDashb
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrRiskTier } from '../Cards/HrPlayerCard';
 import { HR_EXPORT_ENABLED, HR_MAP_ENABLED } from '../../featureAvailability';
+import { useBodyScrollLock } from '../../../../lib/scroll/useBodyScrollLock';
 
 export type HrSourceMode = 'confirmed' | 'preview' | 'all';
 export type HrViewMode = 'cards' | 'table' | 'treemap';
@@ -247,6 +248,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
   previewCount,
 }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  useBodyScrollLock(filtersOpen);
   const exportDisabled = rows.length === 0;
   const countLabel = useMemo(
     () => `${visibleCount} player${visibleCount === 1 ? '' : 's'}`,
@@ -263,10 +265,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
     if (!filtersOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFiltersOpen(false); };
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
     };
   }, [filtersOpen]);
 
