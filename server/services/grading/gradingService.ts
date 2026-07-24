@@ -110,13 +110,21 @@ export async function gradePendingPicks(opts: {
     return gradePendingInflight;
   }
 
-  gradePendingInflight = runWithDistributedLock(
+  let resolveInflight!: (value: GradeRunResult) => void;
+  let rejectInflight!: (reason?: unknown) => void;
+  const inflight = new Promise<GradeRunResult>((resolve, reject) => {
+    resolveInflight = resolve;
+    rejectInflight = reject;
+  });
+  gradePendingInflight = inflight;
+
+  void runWithDistributedLock(
     GRADE_PENDING_LOCK,
     () => runGradePendingPicks(opts),
-  ).finally(() => {
-    gradePendingInflight = null;
+  ).then(resolveInflight, rejectInflight).finally(() => {
+    if (gradePendingInflight === inflight) gradePendingInflight = null;
   });
-  return gradePendingInflight;
+  return inflight;
 }
 
 async function runGradePendingPicks(opts: {
