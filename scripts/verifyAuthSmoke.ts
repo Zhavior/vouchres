@@ -143,7 +143,8 @@ includesAll(billingScope, [
   "requireAuth",
   'billingRoutes.get(\n  "/status",\n  requireAuth,',
   'billingRoutes.get(\n  "/subscription",\n  requireAuth,',
-  ".eq(\"profile_id\", req.user!.id)",
+  "buildBillingStatusPayload(req.user!.id, req.user!.profile.tier)",
+  ".eq(\"profile_id\", profileId)",
 ], "billing auth scope");
 
 includesAll(results, [
