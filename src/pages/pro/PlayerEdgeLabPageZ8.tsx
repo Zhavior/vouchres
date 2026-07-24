@@ -143,7 +143,7 @@ export default function PlayerEdgeLabPageZ8() {
           />
         </section>
 
-        <aside className={`${Z8_PANEL} flex flex-col overflow-hidden rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]`}>
+        <aside className={`${Z8_PANEL} flex flex-col rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]`}>
           <div className={`mb-4 flex shrink-0 items-center justify-between gap-3 ${Z8_SECTION_HEADER}`}>
             <div>
               <div className={`${Z8_LABEL} text-white/40`}>
@@ -155,17 +155,17 @@ export default function PlayerEdgeLabPageZ8() {
               <Crown className="h-4 w-4" />
             </div>
           </div>
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+          <div className="-mx-3 flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-3 pb-2 lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-2 lg:space-y-2 lg:overflow-x-hidden lg:overflow-y-auto lg:px-0 lg:pb-0 lg:pr-1">
             {loading ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>Loading verified HR board candidates...</div> : null}
             {!loading && !rows.length ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>No verified player rows available.</div> : null}
-            {rows.slice(0, 30).map((row, index) => {
+            {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
               const id = String(row.playerId ?? row.player_id ?? row.id ?? index);
               const active = String(selectedRow?.playerId ?? selectedRow?.player_id ?? selectedRow?.id) === id;
               return (
                 <button
                   key={`${id}-${index}`}
                   type="button"
-                  className={`group w-full overflow-hidden rounded-2xl border p-3 text-left transition ${
+                  className={`group w-[260px] shrink-0 snap-start overflow-hidden lg:w-full rounded-2xl border p-3 text-left transition ${
                     active ? Z8_ACTIVE : Z8_IDLE
                   }`}
                   onClick={() => setSelectedId(id)}
