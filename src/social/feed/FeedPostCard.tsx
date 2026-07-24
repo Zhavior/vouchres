@@ -431,7 +431,7 @@ function FeedPostCard({
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
       <article 
-        className="feed-post z8-feed-card px-4 py-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2" 
+        className="feed-post z8-feed-card px-4 py-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2"
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
