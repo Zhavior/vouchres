@@ -17,7 +17,7 @@ import { syncLegacyCapperSettingsToCreatorBusiness } from "../services/business/
  *
  *   GET  /api/auth/me              — current user's full profile (auth required)
  *   POST /api/auth/signout         — invalidate session (Supabase handles client-side)
- *   PATCH /api/auth/profile        — update handle, display_name, bio, avatar_url
+ *   PATCH /api/auth/profile        — update handle, display_name, bio, avatar_url, header_url
  *   GET  /api/auth/handle-check    — public handle availability check
  *   GET  /api/auth/username-check  — legacy alias for handle-check
  */
@@ -31,6 +31,7 @@ const ME_PROFILE_COLUMNS = `
   handle,
   display_name,
   avatar_url,
+  header_url,
   bio,
   tier,
   trust_score,
@@ -47,6 +48,18 @@ const ME_PROFILE_COLUMNS = `
   created_at,
   updated_at
 `;
+
+const HEADER_URL_SCHEMA = z
+  .string()
+  .url()
+  .max(500)
+  .refine((value) => {
+    try {
+      return new URL(value).protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, { message: "URL must use https" });
 
 authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
   const { data: profile, error } = await supabaseAdmin
@@ -133,7 +146,15 @@ const ProfileUpdateSchema = z.object({
   bio: z.string().max(500).optional(),
   avatar_url: HttpsUrlSchema.max(500).optional().nullable(),
   capper_settings: CapperSettingsSchema.optional(),
+  header_url: HEADER_URL_SCHEMA.optional().nullable(),
 });
+
+function canCustomizeHeader(profile: { tier?: string; is_staff?: boolean } | undefined): boolean {
+  if (!profile) return false;
+  if (profile.is_staff) return true;
+  const tier = String(profile.tier ?? "free").toLowerCase();
+  return tier === "gold" || tier === "seller_pro" || tier === "pro" || tier === "creator";
+}
 
 async function assertHandleAvailable(handle: string, excludeUserId: string) {
   const { data: existing } = await supabaseAdmin
@@ -171,6 +192,17 @@ authRoutes.patch(
     if (updates.bio !== undefined) safeUpdates.bio = updates.bio;
     if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url;
     if (updates.capper_settings !== undefined) safeUpdates.capper_settings = normalizeCapperSettings(updates.capper_settings);
+    if (updates.header_url !== undefined) {
+      if (updates.header_url !== null && !canCustomizeHeader(req.user?.profile)) {
+        throw new AppError({
+          status: 403,
+          code: "entitlement_required",
+          message: "Gold is required to customize your profile header.",
+          details: { error: "header_customization_requires_gold" },
+        });
+      }
+      safeUpdates.header_url = updates.header_url;
+    }
 
     if (Object.keys(safeUpdates).length === 0) {
       throw new AppError({

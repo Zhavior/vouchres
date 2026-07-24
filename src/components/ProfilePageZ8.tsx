@@ -15,7 +15,7 @@ import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../lib/useAuth';
 import { useDirectMessages } from '../hooks/useFollowingHub';
 import { useProfileSocialStats, useSocialGraph } from '../hooks/useSocialGraph';
-import { uploadProfileAvatar } from '../lib/profileAvatarUpload';
+import { uploadProfileAvatar, uploadProfileHeader } from '../lib/profileAvatarUpload';
 import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
 import {
   Area,
@@ -123,6 +123,7 @@ function buildViewedProfile(base: CreatorProofProfile, remote?: Record<string, u
     username: String(remote.username ?? base.username ?? ''),
     handle: String(remote.handle ?? remote.username ?? base.handle ?? ''),
     avatarUrl: String(remote.avatar_url ?? base.avatarUrl ?? ''),
+    headerUrl: String(remote.header_url ?? base.headerUrl ?? ''),
     bio: String(remote.bio ?? base.bio ?? ''),
     verified: Boolean(remote.is_staff) || base.verified,
     subscriptionTier: normalizeSubscriptionTier(remote.tier ?? base.subscriptionTier),
@@ -170,9 +171,12 @@ export default function ProfilePageZ8({
   const [displayName, setDisplayName] = useState(displayedProfile.displayName);
   const [bio, setBio] = useState(displayedProfile.bio);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [headerError, setHeaderError] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingHeader, setIsUploadingHeader] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'vouches' | 'replies'>('posts');
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const headerInputRef = useRef<HTMLInputElement>(null);
   const [hoveredDayYmd, setHoveredDayYmd] = useState<string | null>(null);
   const entitlements = useEntitlements();
   const canEditHeader = canCustomizeProfileHeader(displayedProfile, {
@@ -279,6 +283,22 @@ export default function ProfilePageZ8({
     }
   };
 
+  const handleHeaderFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setHeaderError(null);
+    setIsUploadingHeader(true);
+    try {
+      const headerUrl = await uploadProfileHeader(file);
+      onUpdateProfile({ headerUrl });
+    } catch (error) {
+      setHeaderError(error instanceof Error ? error.message : 'Header image upload failed.');
+    } finally {
+      setIsUploadingHeader(false);
+    }
+  };
+
   // Filter user's posts (all types)
   const userPosts = posts.filter(
     p => (p.userId === 'u-user-current' || p.username === displayedProfile.username || p.displayName === displayedProfile.displayName)
@@ -354,6 +374,70 @@ export default function ProfilePageZ8({
             
             {/* Main card */}
             <div className={`${Z8_PANEL_PREMIUM} rounded-2xl overflow-hidden relative transition-all duration-300 ${ activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans' }`} id="profile-primary-card">
+              <div
+                className={`relative h-28 overflow-hidden border-b border-vouch-cyan/15 bg-gradient-to-r ${
+                  displayedProfile.headerUrl
+                    ? 'from-black/40 to-black/40'
+                    : activeThemeData?.coverBg || 'from-sky-600/25 to-indigo-600/25'
+                }`}
+              >
+                {displayedProfile.headerUrl ? (
+                  <img
+                    src={displayedProfile.headerUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : null}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                {isOwnProfile ? (
+                  <div className="absolute right-3 top-3 z-10 flex flex-wrap justify-end gap-2">
+                    {canEditHeader ? (
+                      <>
+                        <input
+                          ref={headerInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="sr-only"
+                          onChange={(event) => void handleHeaderFile(event)}
+                        />
+                        <button
+                          type="button"
+                          id="upload-profile-header-btn"
+                          onClick={() => headerInputRef.current?.click()}
+                          disabled={isUploadingHeader}
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-vouch-cyan backdrop-blur-sm hover:border-vouch-cyan/60 disabled:cursor-wait disabled:opacity-70"
+                        >
+                          {isUploadingHeader ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                          {isUploadingHeader ? 'Uploading' : 'Upload header'}
+                        </button>
+                        {displayedProfile.headerUrl ? (
+                          <button
+                            type="button"
+                            id="remove-profile-header-btn"
+                            onClick={() => {
+                              setHeaderError(null);
+                              onUpdateProfile({ headerUrl: '' });
+                            }}
+                            className="min-h-9 rounded-full border border-white/15 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-white/70 backdrop-blur-sm hover:border-white/30 hover:text-white"
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        id="locked-profile-header-btn"
+                        onClick={() => onSectionChange?.('premium')}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/15 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-white/65 backdrop-blur-sm hover:border-vouch-emerald/40 hover:text-vouch-emerald"
+                      >
+                        <Lock className="h-3.5 w-3.5" />
+                        Gold header
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+              </div>
               <div className="p-4 sm:p-6 flex flex-col items-center text-center relative">
                   <div className="relative">
                     <ProfileAvatarBorder 
@@ -391,6 +475,9 @@ export default function ProfilePageZ8({
 
             {avatarError && isOwnProfile && (
               <p className="text-sm text-rose-200" role="alert">{avatarError}</p>
+            )}
+            {headerError && isOwnProfile && (
+              <p className="px-4 text-sm text-rose-200" role="alert">{headerError}</p>
             )}
 
             <div className="space-y-4 w-full px-4 pb-6">

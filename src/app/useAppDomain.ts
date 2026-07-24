@@ -87,6 +87,7 @@ export function useAppDomain({
     if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
     if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
     if (updatedProfile.capperSettings !== undefined) updates.capper_settings = updatedProfile.capperSettings as unknown as string | null;
+    if (updatedProfile.headerUrl !== undefined) updates.header_url = updatedProfile.headerUrl || null;
     if (Object.keys(updates).length === 0) return;
 
     void apiClient.patch<Record<string, unknown>>('/api/auth/profile', updates)
