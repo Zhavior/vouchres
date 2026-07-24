@@ -48,10 +48,10 @@ describe('Live Games polling stability', () => {
     expect(result).toMatchObject({ isFinal: true, isLive: false, status: 'Final' });
   });
 
-  it('surfaces a game to the top of the schedule once it goes live', () => {
+  it('preserves schedule order when a game goes live', () => {
     const original = [game(1), game(2)];
     const updated = mergeOfficialLiveUpdates(original, [game(2, { status: 'Live', isLive: true })]);
-    expect(updated.map((item) => item.gamePk)).toEqual([2, 1]);
+    expect(updated.map((item) => item.gamePk)).toEqual([1, 2]);
   });
 
   it('treats an official final update as not live even if the prior state was live', () => {

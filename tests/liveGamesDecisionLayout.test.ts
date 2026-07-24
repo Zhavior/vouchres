@@ -8,9 +8,10 @@ const source = readFileSync(
 
 describe('Live Games decision-first layout', () => {
   it('puts the official spotlight scoreboard before deeper research panels', () => {
-    expect(source).toContain('Spotlight Game Telemetry');
+    expect(source).toContain('live-game-scoreboard');
+    expect(source).toContain('Current game');
     expect(source).toContain('Live In-Game Score');
-    expect(source).toContain('Deep Dive');
+    expect(source).toContain('Open matchup');
   });
 
   it('uses the dedicated live scoreboard visual system', () => {
@@ -24,13 +25,13 @@ describe('Live Games decision-first layout', () => {
   });
 
   it('uses an adaptive selector instead of nested horizontal scrolling for the game slate', () => {
-    expect(source).toContain('grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3');
+    expect(source).toContain('grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4');
     expect(source).not.toContain('flex gap-2 overflow-x-auto');
   });
 
   it('provides recovery for unavailable and empty live states', () => {
-    expect(source).toContain('Reconnect Stream');
-    expect(source).toContain('Show All Games');
+    expect(source).toContain('Try again');
+    expect(source).toContain('Show today&apos;s schedule');
   });
 
   it('does not duplicate the game collection or cover mobile content with an upsell', () => {
