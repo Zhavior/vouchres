@@ -25,7 +25,7 @@ import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 import '../components/landing/LandingMobileShell.css';
 
-type SignupPlan = 'free' | 'pro' | 'capper';
+type SignupPlan = 'free' | 'pro';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
 const LandingVouchCardShowcase = lazy(() => import('../components/landing/LandingVouchCardShowcase'));
@@ -55,18 +55,11 @@ const pricingPlans: Array<{
   },
   {
     id: 'pro',
-    name: 'Pro',
-    price: '$19.99 USD',
-    descriptor: 'Research command',
+    name: 'VouchEdge Beta',
+    price: '$7.99 / month',
+    descriptor: '7 days free · cancel anytime',
     bullets: ['All Pro Labs', 'Signal graphs', 'Verified profile tools'],
     featured: true,
-  },
-  {
-    id: 'capper',
-    name: 'Capper',
-    price: '$34.99 USD',
-    descriptor: 'Monetize proof',
-    bullets: ['Everything in Pro', 'Subscriber club tools', 'Creator storefront'],
   },
 ];
 
@@ -229,11 +222,11 @@ function PricingGrid({
           <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Choose your plan</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
-          Early VouchEdge pricing in USD. No fake trials, no bait-and-switch.
+          $7.99/month after a 7-day free trial. Cancel anytime.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {pricingPlans.map((plan) => (
           <button
             key={plan.id}

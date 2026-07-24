@@ -28,8 +28,8 @@ import {
 type BillingRequest = AuthedRequest & RequestWithContext;
 
 export const BillingCheckoutSchema = z.object({
-  tier: z.enum(["pro", "creator"]),
-  interval: z.enum(["monthly", "yearly"]).default("monthly"),
+  tier: z.literal("pro").default("pro"),
+  interval: z.literal("monthly").default("monthly"),
 });
 
 function getSafeFrontendOrigin(): string {
@@ -122,11 +122,11 @@ export async function sendV3BillingCheckoutResponse(
   const checkoutTier = normalized.tier as PaidCanonicalTier;
   const billingInterval = interval as BillingInterval;
 
-  if (checkoutTier !== "pro" && checkoutTier !== "creator") {
+  if (checkoutTier !== "pro") {
     throw new AppError({
       status: 400,
       code: "bad_request",
-      message: "Checkout supports pro and creator subscriptions.",
+      message: "Checkout supports the VouchEdge Beta subscription.",
       details: { reason: "unsupported_billing_tier", warnings: normalized.warnings },
     });
   }

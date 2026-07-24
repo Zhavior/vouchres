@@ -1,4 +1,4 @@
-/** Typed wrappers for the billing API (Stripe test mode). */
+/** Typed wrappers for the billing API. */
 import { apiClient } from "./apiClient";
 
 type CheckoutTier = 'gold' | 'seller_pro';
@@ -19,10 +19,10 @@ interface BillingStatus {
   cancelAtPeriodEnd?: boolean;
 }
 
-/** Redirect to Stripe Checkout for the given tier (test mode). */
+/** Redirect to the single $7.99/month Beta checkout. */
 export async function startStripeCheckout(tier: CheckoutTier): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
-    const data = await apiClient.post<CheckoutResponse>('/api/billing/checkout', { tier });
+    const data = await apiClient.post<CheckoutResponse>('/api/billing/checkout', { tier: 'pro', interval: 'monthly' });
     if (!data.url) return { ok: false, error: 'No checkout URL returned' };
     return { ok: true, url: data.url };
   } catch (err: any) {

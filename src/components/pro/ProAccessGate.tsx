@@ -37,10 +37,10 @@ interface TierTheme {
 
 const TIER_THEMES: Record<RequiredTier, TierTheme> = {
   GOLD: {
-    badge: 'VEdge Gold — Pro Analyst',
+    badge: 'VouchEdge Beta',
     tone: 'gold',
-    price: '$12.99/mo',
-    ctaLabel: 'Upgrade to Gold — Unlock Pro Labs',
+    price: '7 days free, then $7.99/mo',
+    ctaLabel: 'Start 7-Day Free Trial',
     benefits: [
             { icon: Star, text: 'Top Player Lab — verified HR edge scores and risk tiers' },
       { icon: Zap, text: 'Pitchers Matchup — runs, hits, and pitcher vulnerability' },
@@ -130,7 +130,7 @@ export function ProAccessGate({
             {requiredTier === 'SELLER_PRO' ? (
               <>This is our top tier — deep research tools, your own paid pick storefront, and subscriber chat/clubs. {isUpgradeFromGold ? 'Upgrade from Gold to unlock it.' : 'Available on Research Seller PRO.'}</>
             ) : (
-              <>Upgrade to <span className="font-bold text-[hsl(var(--ve-accent-gold))]">VEdge Gold</span> to unlock real-time analytics labs, signal graphs, and verified data tools.</>
+              <>Start the <span className="font-bold text-[hsl(var(--ve-accent-gold))]">VouchEdge Beta</span> trial to unlock real-time analytics labs, signal graphs, and verified data tools.</>
             )}
           </p>
         </div>

@@ -186,14 +186,50 @@ export async function getSingleSeasonHitterStats(playerId: number, year: number)
 }
 
 export async function getHitterStats(playerId: number): Promise<HitterStats> {
-  return hitterCache.getOrSet(`hitter_season:${playerId}:${SEASON}`, async () => {
+  return hitterCache.getOrSet(`hitter_2yr:${playerId}:${SEASON}`, async () => {
     let season: HitterSeasonStats | null = null;
     let recentGames: RecentGame[] = [];
 
     try {
-      season = await getSingleSeasonHitterStats(playerId, SEASON);
+      const [curr, prev] = await Promise.all([
+        getSingleSeasonHitterStats(playerId, SEASON),
+        getSingleSeasonHitterStats(playerId, SEASON - 1),
+      ]);
+
+      if (curr && !prev) {
+        season = curr;
+      } else if (!curr && prev) {
+        season = prev;
+      } else if (curr && prev) {
+        const pa = curr.plateAppearances + prev.plateAppearances;
+        const ab = curr.atBats + prev.atBats;
+        const hr = curr.homeRuns + prev.homeRuns;
+
+        if (pa > 0 && ab > 0) {
+          const avg = (curr.avg * curr.atBats + prev.avg * prev.atBats) / ab;
+          const obp = (curr.onBasePercentage * curr.plateAppearances + prev.onBasePercentage * prev.plateAppearances) / pa;
+          const slg = (curr.slg * curr.atBats + prev.slg * prev.atBats) / ab;
+          const ops = obp + slg;
+
+          season = {
+            homeRuns: hr,
+            atBats: ab,
+            plateAppearances: pa,
+            avg,
+            slg,
+            ops,
+            hrPerPA: hr / pa,
+            gamesPlayed: curr.gamesPlayed + prev.gamesPlayed,
+            onBasePercentage: obp,
+            stolenBases: curr.stolenBases + prev.stolenBases,
+            caughtStealing: curr.caughtStealing + prev.caughtStealing,
+          };
+        } else {
+          season = curr;
+        }
+      }
     } catch (err) {
-      console.warn(`[statsClient] current-season hitter stats failed for ${playerId}:`, (err as Error).message);
+      console.warn(`[statsClient] 2-season hitter stats failed for ${playerId}:`, (err as Error).message);
     }
 
     try {

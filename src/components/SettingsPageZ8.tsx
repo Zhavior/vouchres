@@ -70,10 +70,10 @@ const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string;
     detail: 'Core MLB research, saved slips, and account tools.',
   },
   GOLD: {
-    title: 'Gold',
-    price: '$12.99',
-    detail: 'Pro labs, advanced graphs, and verified profile perks.',
-    badge: 'Popular',
+    title: 'VouchEdge Beta',
+    price: '$7.99',
+    detail: '7 days free, then $7.99/month. Includes Pro labs, advanced graphs, and verified profile perks.',
+    badge: '7 days free',
   },
   SELLER_PRO: {
     title: 'Seller Pro',
@@ -1160,8 +1160,8 @@ export default function SettingsPageZ8({
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {(Object.keys(PLAN_COPY) as AppTier[]).map((tier) => {
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {(['BASIC', 'GOLD'] as AppTier[]).map((tier) => {
                       const plan = PLAN_COPY[tier];
                       const isActive = activeTier === tier;
                       const isLoading = checkoutLoading === tier;

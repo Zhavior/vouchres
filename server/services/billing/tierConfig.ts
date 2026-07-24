@@ -94,6 +94,9 @@ export function getTierEntitlements(tier: unknown): TierEntitlements {
 }
 
 export function getStripePriceId(tier: PaidCanonicalTier, interval: BillingInterval): string | undefined {
+  if (tier === "pro" && interval === "monthly") {
+    return process.env.STRIPE_BETA_MONTHLY_PRICE_ID ?? process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
+  }
   const envName = `STRIPE_${tier.toUpperCase()}_${interval.toUpperCase()}_PRICE_ID`;
   return process.env[envName];
 }
@@ -101,8 +104,8 @@ export function getStripePriceId(tier: PaidCanonicalTier, interval: BillingInter
 export function getStripePriceMatrix() {
   return {
     pro: {
-      monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? null,
-      yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? null,
+      monthly: getStripePriceId("pro", "monthly") ?? null,
+      yearly: null,
     },
     creator: {
       monthly: process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID ?? null,

@@ -261,6 +261,10 @@ export async function createCheckoutSession(opts: {
           target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
         },
         subscription_data: {
+          trial_period_days: 7,
+          trial_settings: {
+            end_behavior: { missing_payment_method: "pause" },
+          },
           metadata: {
             profile_id: opts.profileId,
             target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",

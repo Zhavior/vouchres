@@ -102,7 +102,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
           Upgrade
         </h2>
         <p className="text-xs text-white/40 mt-1">
-          Unlock Pro research labs, or go Capper and sell your own picks.
+          Unlock every Pro research lab with one simple Beta plan.
         </p>
       </div>
 
@@ -115,9 +115,9 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
           <span className="terminal-text bg-amber-400/10 text-amber-400 px-2 py-0.5 rounded-full">
             Beta
           </span>
-          <p className="text-sm font-bold text-white mt-1.5">Pro and Capper are in beta.</p>
+          <p className="text-sm font-bold text-white mt-1.5">VouchEdge Beta is one simple plan.</p>
           <p className="text-xs text-white/40 leading-normal mt-0.5">
-            Signing up now helps support development and locks in your price — $19.99 for Pro, $34.99 for Capper — for as long as you stay subscribed. These are Beta Prices.
+            Start with 7 days free. Then it is $7.99/month, and you can cancel anytime from the Stripe billing portal.
           </p>
         </div>
       </div>
@@ -130,11 +130,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             Plans
           </h3>
           <p className="text-[11px] text-white/40 mt-1">
-            <span className="text-vouch-emerald font-bold">Pro ($19.99)</span> unlocks every research lab. <span className="text-vouch-cyan font-bold">Capper ($34.99)</span> adds pick selling and your own subscriber chat & clubs. These are Beta Prices.
+            <span className="text-vouch-emerald font-bold">VouchEdge Beta ($7.99/month)</span> unlocks every research lab after a 7-day free trial.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" id="upgrade-tiers-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="upgrade-tiers-grid">
 
           {/* Tier 1: Basic */}
           <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
@@ -205,15 +205,15 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
               {/* Badge & Price */}
               <div className="space-y-1">
                 <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                  Pro
+                  VouchEdge Beta
                   <ShieldCheck className="w-4 h-4 text-vouch-emerald" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-vouch-emerald font-sans">$19.99</span>
+                  <span className="text-2xl font-black text-vouch-emerald font-sans">$7.99</span>
                   <span className="text-white/40 text-xs">/ Month</span>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed pt-1">
-                  Unlock Vouch AI intelligence, Featured Edge analysis, all Pro Labs, advanced graphs, and matchup research. Locked-in beta price — won't increase later.
+                  First 7 days free, then $7.99/month. Unlock Vouch AI intelligence, Featured Edge analysis, all Pro Labs, advanced graphs, and matchup research. Cancel anytime.
                 </p>
               </div>
 
@@ -250,13 +250,13 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                 }`}
               >
                 {checkoutLoading === 'GOLD' && <Loader className="h-3.5 w-3.5 animate-spin" />}
-                {activeTier === 'GOLD' ? 'Active Pro Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Upgrade to Pro'}
+                {activeTier === 'GOLD' ? 'Active Beta Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Start 7-Day Free Trial'}
               </button>
             </div>
           </div>
 
-          {/* Tier 3: Capper */}
-          <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
+          {/* Legacy Seller Pro members keep access and can manage their existing plan. It is not sold to new customers. */}
+          {activeTier === 'SELLER_PRO' && <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
             activeTier === 'SELLER_PRO' ? 'border-vouch-cyan/50' : ''
           }`} id="plan-tier-seller">
 
@@ -321,7 +321,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                 {activeTier === 'SELLER_PRO' ? 'Active Storefront' : checkoutLoading === 'SELLER_PRO' ? 'Redirecting to Stripe...' : 'Become a Capper'}
               </button>
             </div>
-          </div>
+          </div>}
 
         </div>
       </div>

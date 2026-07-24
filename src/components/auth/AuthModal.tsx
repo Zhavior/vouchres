@@ -19,7 +19,6 @@ import {
   MailCheck,
   FlaskConical,
   Trophy,
-  Coins,
   ClipboardCheck,
   ScrollText,
 } from 'lucide-react';
@@ -38,7 +37,7 @@ import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
 type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
-type SignupPlan = 'free' | 'pro' | 'capper';
+type SignupPlan = 'free' | 'pro';
 type SignupStep = 'intro' | 'questionnaire' | 'plan' | 'policy' | 'form';
 type AgreementKey = 'age' | 'terms' | 'research';
 
@@ -53,15 +52,15 @@ const POLICY_SECTIONS = [
   },
   {
     title: 'No guaranteed returns',
-    body: 'Pro and Capper unlock research tools and publishing features, not winning picks. Past grading history (yours or anyone else’s) is not a promise of future results. Never research or wager more than you can afford to lose.',
+    body: 'The Beta plan unlocks research tools and publishing features, not winning picks. Past grading history (yours or anyone else’s) is not a promise of future results. Never research or wager more than you can afford to lose.',
   },
   {
     title: 'Your data',
     body: 'We store your email, username, saved picks, and grading history to run your account. We don’t sell your data to third parties. You can request deletion of your account and data at any time from Settings.',
   },
   {
-    title: 'Billing (Pro & Capper only)',
-    body: 'Paid plans renew monthly via Stripe until you cancel. Beta pricing is locked in for as long as you stay subscribed without a lapse. You can cancel or manage billing anytime from the Upgrade page — no phone call or email required.',
+    title: 'Billing (Beta plan)',
+    body: 'The Beta plan is free for 7 days, then renews at $7.99/month via Stripe until you cancel. You can cancel or manage billing anytime from the Upgrade page — no phone call or email required.',
   },
 ] as const;
 
@@ -103,20 +102,11 @@ const PLAN_OPTIONS: Array<{
   },
   {
     id: 'pro',
-    label: 'Pro',
-    price: '$19.99/mo',
+    label: 'VouchEdge Beta',
+    price: '7 days free, then $7.99/mo',
     icon: FlaskConical,
-    tagline: 'Unlock every research lab.',
-    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'Verified badge', 'Signal graphs & confidence meters', 'Locked-in beta price — won’t increase later'],
-    beta: true,
-  },
-  {
-    id: 'capper',
-    label: 'Capper',
-    price: '$34.99/mo',
-    icon: Coins,
-    tagline: 'Sell picks, run your own club.',
-    perks: ['Everything in Pro', 'Paid storefront, 0% commission', 'Subscriber chat & clubs', 'Locked-in beta price — won’t increase later'],
+    tagline: 'Unlock every research lab. Cancel anytime.',
+    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'Verified badge', 'Signal graphs & confidence meters', '7-day free trial, then $7.99/month'],
     beta: true,
   },
 ];
@@ -316,9 +306,9 @@ export default function AuthModal({
           // already returned a live session, so the user is logged in right
           // now. Route them straight in instead of showing a false
           // "check your inbox" step for an email that isn't coming.
-          if (plan === 'pro' || plan === 'capper') {
+          if (plan === 'pro') {
             setRedirectingToCheckout(true);
-            const result = await startStripeCheckout(plan === 'pro' ? 'gold' : 'seller_pro');
+            const result = await startStripeCheckout('gold');
             if (result.ok) {
               window.location.href = result.url;
               return;
@@ -659,9 +649,9 @@ export default function AuthModal({
                 })}
               </div>
 
-              {(plan === 'pro' || plan === 'capper') && (
+              {plan === 'pro' && (
                 <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#fbbf24' }}>
-                  This tier is in beta — you're an early supporter and lock in this price for as long as you stay subscribed.
+                  Your first 7 days are free. After that, it is $7.99/month until you cancel.
                 </p>
               )}
 
