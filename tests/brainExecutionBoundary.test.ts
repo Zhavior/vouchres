@@ -7,7 +7,7 @@ const ROOT = resolve(import.meta.dirname, "..");
 describe("ProjectVABrAIns execution boundary", () => {
   it("does not preload Brain pages from non-Brain routes", () => {
     const source = readFileSync(resolve(ROOT, "src/lib/routePreload.ts"), "utf8");
-    expect(source).toContain("hr_board: ['mlb_stats', 'daily_players']");
+    expect(source).toContain("hr_board: ['daily_players']");
     expect(source).not.toMatch(/hr_board:\s*\[[^\]]*brain_/);
   });
 

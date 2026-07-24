@@ -18,7 +18,6 @@ import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
 import { fetchAuthMe } from '../hooks/queries/useAuthMe';
 import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { mapBackendParlay, mapBackendVouch } from './backendMappers';
-import { reconcileParlays } from '../domain/parlay/reconcileParlays';
 import { normalizeSlipStatus } from '../lib/parlayDisplay';
 import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
@@ -131,10 +130,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     if (!accountId || backendParlayRows === undefined) return;
 
     const backendParlays = backendParlayRows.map(mapBackendParlay);
-    const reconciled = reconcileParlays(backendParlays, useSlipsStore.getState().savedSlips, {
-      authenticated: true,
-    });
-    syncSlips(reconciled);
+    syncSlips(backendParlays);
   }, [accountId, backendParlayRows, syncSlips]);
 
   useEffect(() => {
