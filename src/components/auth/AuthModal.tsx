@@ -259,6 +259,9 @@ export default function AuthModal({
     ) {
       return 'Please enter a valid email address.';
     }
+    if (m.includes('email rate limit') || m.includes('email send rate limit')) {
+      return 'Confirmation email sending is temporarily at its limit. Please try again later.';
+    }
     if (m.includes('rate')) return 'Too many attempts. Please wait a moment and try again.';
     return raw;
   };
@@ -384,11 +387,11 @@ export default function AuthModal({
           className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
         >
           {/* Judge welcome — desktop sidebar */}
-          <div className="hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
+          <div className="ve-auth-judge-panel hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
             <AuthJudgeWelcome className="h-full w-full rounded-none border-0 shadow-none" />
           </div>
 
-          <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="ve-auth-form-panel relative flex min-w-0 flex-1 flex-col">
           {/* Glow header band */}
           <div
             className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"

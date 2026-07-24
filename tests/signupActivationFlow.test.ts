@@ -5,6 +5,10 @@ const authSource = readFileSync(
   new URL('../src/components/auth/AuthModal.tsx', import.meta.url),
   'utf8',
 );
+const authStyles = readFileSync(
+  new URL('../src/styles/auth-modal.css', import.meta.url),
+  'utf8',
+);
 const onboardingSource = readFileSync(
   new URL('../src/components/onboarding/PersonalizedOnboarding.tsx', import.meta.url),
   'utf8',
@@ -34,6 +38,20 @@ describe('signup and first-session activation', () => {
     expect(authSource).toContain("setSignupStep('plan')");
     expect(authSource).toContain("setSignupStep(m === 'signup' ? 'policy' : 'form')");
     expect(authSource).toContain('AuthJudgeWelcome');
+  });
+
+  it('keeps the desktop signup form from collapsing beside the judge panel', () => {
+    expect(authSource).toContain('ve-auth-judge-panel');
+    expect(authSource).toContain('ve-auth-form-panel');
+    expect(authStyles).toContain('.ve-auth-dialog');
+    expect(authStyles).toContain('max-width: 56rem');
+    expect(authStyles).toContain('flex: 0 0 clamp(16.25rem, 38%, 20rem)');
+    expect(authStyles).toContain('flex: 1 1 0%');
+  });
+
+  it('explains the live confirmation-email limit without blaming the user', () => {
+    expect(authSource).toContain("m.includes('email rate limit')");
+    expect(authSource).toContain('Confirmation email sending is temporarily at its limit.');
   });
 
   it('does not claim personalization from fake sport or team choices', () => {
