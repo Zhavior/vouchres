@@ -110,16 +110,13 @@ export async function gradePendingPicks(opts: {
     return gradePendingInflight;
   }
 
-  return runWithDistributedLock(GRADE_PENDING_LOCK, async () => {
-    if (gradePendingInflight) {
-      return gradePendingInflight;
-    }
-
-    gradePendingInflight = runGradePendingPicks(opts).finally(() => {
-      gradePendingInflight = null;
-    });
-    return gradePendingInflight;
+  gradePendingInflight = runWithDistributedLock(
+    GRADE_PENDING_LOCK,
+    () => runGradePendingPicks(opts),
+  ).finally(() => {
+    gradePendingInflight = null;
   });
+  return gradePendingInflight;
 }
 
 async function runGradePendingPicks(opts: {

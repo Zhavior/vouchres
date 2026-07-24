@@ -15,6 +15,7 @@ vi.mock("../server/middleware/auth", () => ({
   },
   requireStaff: (_req: unknown, _res: unknown, next: () => void) => next(),
   requireLegalConfirmed: (_req: unknown, _res: unknown, next: () => void) => next(),
+  bumpAuthUserEpoch: vi.fn(async () => undefined),
   getSupabaseAdmin: vi.fn(async () => ({
     from: () => ({
       update: () => ({ eq: async () => ({ error: null }) }),

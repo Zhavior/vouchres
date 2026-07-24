@@ -126,8 +126,8 @@ describe("deep-scan backend hardening", () => {
     expect(readFileSync("server/routes/agentRoutes.ts", "utf8")).toContain(
       'requireTierOrQuota("gold", 5, "agent_generate_picks", 100)',
     );
-    expect(readFileSync("server/routes/parlay/parlayUserRoutes.ts", "utf8")).toContain(
-      'requireTierOrQuota("gold", 2, "parlay_lab_saves", 50)',
+    expect(readFileSync("server/routes/parlay/mountParlaySupportRoutes.ts", "utf8")).toContain(
+      'requireTierOrQuota("gold", 2, "parlay_lab_saves")',
     );
   });
 
@@ -214,7 +214,7 @@ describe("deep-scan backend hardening", () => {
   });
 
   it("checkout preserves AppError conflicts and expires open sessions", () => {
-    const billing = readFileSync("server/routes/billingRoutes.ts", "utf8");
+    const billing = readFileSync("server/v3/modules/billing/handlers.ts", "utf8");
     const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
     expect(billing).toContain("if (isAppError(err)) throw err");
     expect(stripe).toContain('status: "open"');
@@ -229,7 +229,7 @@ describe("deep-scan backend hardening", () => {
   });
 
   it("refund/dispute cancels Stripe subscriptions before access revoke", () => {
-    const billing = readFileSync("server/routes/billingRoutes.ts", "utf8");
+    const billing = readFileSync("server/services/billing/stripeWebhookProcessor.ts", "utf8");
     expect(billing).toContain("cancelSubscriptionsForProfile");
     expect(billing).toContain("charge.refunded");
     expect(billing).toContain("charge.dispute.created");

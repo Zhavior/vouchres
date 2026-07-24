@@ -26,7 +26,7 @@ describe("beginStripeWebhookEvent reclaim race", () => {
     vi.resetModules();
   });
 
-  it("does not process when failed→processing reclaim loses the race", async () => {
+  it("requeues a failed webhook for the worker", async () => {
     insert.mockResolvedValueOnce({
       error: { code: "23505", message: "duplicate" },
     });
@@ -34,7 +34,30 @@ describe("beginStripeWebhookEvent reclaim race", () => {
       data: { status: "failed" },
       error: null,
     });
-    updateSelect.mockResolvedValueOnce({ data: [], error: null });
+    const { beginStripeWebhookEvent } = await import(
+      "../server/services/billing/stripeService"
+    );
+    const result = await beginStripeWebhookEvent({
+      id: "evt_race",
+      type: "customer.subscription.updated",
+    } as any);
+
+    expect(result).toEqual({
+      shouldProcess: true,
+      duplicate: true,
+      status: "queued",
+    });
+    expect(updateEqStatus).toHaveBeenCalledWith("status", "failed");
+  });
+
+  it("skips a duplicate webhook that is already queued", async () => {
+    insert.mockResolvedValueOnce({
+      error: { code: "23505", message: "duplicate" },
+    });
+    maybeSingle.mockResolvedValueOnce({
+      data: { status: "queued" },
+      error: null,
+    });
 
     const { beginStripeWebhookEvent } = await import(
       "../server/services/billing/stripeService"
@@ -47,32 +70,7 @@ describe("beginStripeWebhookEvent reclaim race", () => {
     expect(result).toEqual({
       shouldProcess: false,
       duplicate: true,
-      status: "processing",
-    });
-  });
-
-  it("processes when reclaim wins the race", async () => {
-    insert.mockResolvedValueOnce({
-      error: { code: "23505", message: "duplicate" },
-    });
-    maybeSingle.mockResolvedValueOnce({
-      data: { status: "failed" },
-      error: null,
-    });
-    updateSelect.mockResolvedValueOnce({ data: [{ id: "evt_race" }], error: null });
-
-    const { beginStripeWebhookEvent } = await import(
-      "../server/services/billing/stripeService"
-    );
-    const result = await beginStripeWebhookEvent({
-      id: "evt_race",
-      type: "customer.subscription.updated",
-    } as any);
-
-    expect(result).toEqual({
-      shouldProcess: true,
-      duplicate: true,
-      status: "processing",
+      status: "queued",
     });
   });
 

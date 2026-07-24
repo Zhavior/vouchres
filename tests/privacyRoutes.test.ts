@@ -14,6 +14,8 @@ const profile = {
 
 const updateEq = vi.fn(async () => ({ error: null }));
 const update = vi.fn(() => ({ eq: updateEq }));
+const selectEq = vi.fn(async () => ({ data: [], error: null }));
+const select = vi.fn(() => ({ eq: selectEq }));
 
 const { attachUser, bumpAuthUserEpoch } = vi.hoisted(() => {
   const attachUser = (req: any, _res: unknown, next: () => void) => {
@@ -28,7 +30,7 @@ vi.mock("../server/middleware/auth", () => ({
   requireAuthAllowPendingDeletion: attachUser,
   bumpAuthUserEpoch,
   supabaseAdmin: {
-    from: vi.fn(() => ({ update })),
+    from: vi.fn(() => ({ update, select })),
     rpc: vi.fn(),
   },
 }));

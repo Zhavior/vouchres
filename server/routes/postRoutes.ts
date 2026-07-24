@@ -117,7 +117,7 @@ async function loadPostForViewAcl(postId: string): Promise<{
     .from("posts")
     .select("id, author_id, is_demo")
     .eq("id", postId)
-    .maybeSingle();
+    .single();
 
   if (error || !data) {
     throw new AppError({

@@ -201,7 +201,7 @@ export async function sendV3BillingPortalResponse(
     throw new AppError({
       status: 400,
       code: "bad_request",
-      message: err instanceof Error ? err.message : "billing_portal_failed",
+      message: "Unable to open the billing portal. Please try again.",
       cause: err,
     });
   });

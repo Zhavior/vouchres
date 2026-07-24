@@ -5,7 +5,7 @@ describe("leakage hardening invariants", () => {
   it("billing portal AppError never embeds raw upstream messages", async () => {
     // Source-level guard: portal catch must use a fixed client message.
     const fs = await import("node:fs/promises");
-    const src = await fs.readFile(new URL("../server/routes/billingRoutes.ts", import.meta.url), "utf8");
+    const src = await fs.readFile(new URL("../server/v3/modules/billing/handlers.ts", import.meta.url), "utf8");
     expect(src).toContain('message: "Unable to open the billing portal. Please try again."');
     expect(src).not.toMatch(/message:\s*err instanceof Error \? err\.message/);
   });

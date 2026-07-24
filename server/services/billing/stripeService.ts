@@ -421,6 +421,7 @@ export async function finishStripeWebhookEvent(
     .eq("id", eventId);
   if (error) {
     console.warn(`[stripe] webhook event finalization failed event=${eventId}`, error.message);
+    throw error;
   }
 }
 
