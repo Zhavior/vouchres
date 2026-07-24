@@ -15,6 +15,7 @@ import { useAiJudgeLeaderboard } from '../hooks/queries/useAiJudgeLeaderboard';
 import { useAiAgentRegistry } from '../hooks/queries/useAiAgentRegistry';
 import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import type { HrBoardResponse } from '../types/hrBoard';
+import { pushHrResearchPlayer } from '../features/hr/utils/hrResearchRoute';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import AgentDock from './agents/AgentDock';
 import ProGraphsLabPageZ8 from '../pages/pro/ProGraphsLabPageZ8';
@@ -283,14 +284,27 @@ function StatTile({ label, value, tone = 'slate' }: { label: string; value: Reac
   );
 }
 
-function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
+function CandidateCard({
+  c,
+  rank,
+  onOpenResearch,
+}: {
+  c: Candidate;
+  rank: number;
+  onOpenResearch: (candidate: Candidate) => void;
+}) {
   const score = num(c.hrScore, 0);
   const reasons = safeArray<string>(c.reasons).slice(0, 3);
   const warnings = safeArray<string>(c.warnings).slice(0, 2);
   const breakdown = c.scoreBreakdown ?? {};
 
   return (
-    <div className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-4 hover:border-vouch-cyan/30 transition`}>
+    <button
+      type="button"
+      onClick={() => onOpenResearch(c)}
+      className={`w-full rounded-3xl ${Z8_PANEL_PREMIUM} p-4 text-left transition hover:border-vouch-cyan/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70`}
+      aria-label={`Open ${cleanName(c)} research workspace`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <PlayerHeadshot name={cleanName(c)} playerId={c.playerId} headshotUrl={c.headshotUrl ?? c.headshot} size={54} />
@@ -344,7 +358,7 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
           ))}
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -559,6 +573,16 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
 
   const candidates = safeArray<Candidate>(report?.candidates);
 
+  const openCandidateResearch = React.useCallback(
+    (candidate: Candidate) => {
+      if (candidate.playerId == null) return;
+
+      pushHrResearchPlayer(candidate.playerId);
+      onSectionChange?.('hr_board');
+    },
+    [onSectionChange],
+  );
+
   const topTargets = useMemo(
     () => [...candidates].sort((a, b) => num(b.hrScore) - num(a.hrScore)).slice(0, 12),
     [candidates]
@@ -731,7 +755,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 grid gap-4 md:grid-cols-2">
             {topTargets.slice(0, 6).map((c, i) => (
-              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} />
+              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} onOpenResearch={openCandidateResearch} />
             ))}
           </div>
           <div className="space-y-3">
@@ -754,7 +778,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
 
       {!loading && candidates.length > 0 && tab === 'targets' && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} />)}
+          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} onOpenResearch={openCandidateResearch} />)}
         </div>
       )}
 
