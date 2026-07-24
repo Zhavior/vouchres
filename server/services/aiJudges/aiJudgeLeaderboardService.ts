@@ -9,6 +9,22 @@ import {
 
 export { AI_JUDGES } from "./agentRegistry";
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("AI judge board lookup timed out.")), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 async function getCapperStatsByNames(names: string[]) {
   const empty = {
     capperMap: new Map<string, { id: string; display_name: string }>(),
@@ -79,7 +95,9 @@ function trustFirstCandidates(payload: Record<string, unknown>): JudgeCandidate[
 }
 
 export async function buildAiJudgeLeaderboard() {
-  const board = (await getCachedValidatedHrBoard()) as any;
+  // The public leaderboard must remain responsive when the upstream HR-board
+  // cache is unavailable. An empty board still renders all four judges.
+  const board = await withTimeout(getCachedValidatedHrBoard(), 1_500).catch(() => null) as any;
   const payload = board?.payload ?? board ?? {};
   const candidates = trustFirstCandidates(payload);
 
