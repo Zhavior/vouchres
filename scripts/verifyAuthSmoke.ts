@@ -126,7 +126,7 @@ includesAll(notifications, [
   "notificationRoutes.post(\"/notifications/read-all\", requireAuth",
   "notificationRoutes.post(\"/notifications/push/subscribe\", requireAuth",
   "notificationRoutes.post(\"/notifications/push/unsubscribe\", requireAuth",
-  "notificationRoutes.post(\"/notifications/scan-hr\", requireAuth, requireStaff",
+  "notificationRoutes.post(\n  \"/notifications/scan-hr\",\n  requireAuth,\n  requireStaff,",
 ], "notification route auth");
 
 includesAll(notificationService, [
