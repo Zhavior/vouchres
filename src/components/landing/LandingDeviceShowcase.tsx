@@ -292,7 +292,7 @@ function MockHomeFeed() {
         ))}
       </div>
       <MockFeedPost initials="SP" name="sharp_props" handle="sharp_props" content="Twins lineup confirmed. Buxton cleanup tonight — launch angle data is screaming." accent="emerald" likes={24} vouches={8} comments={5} />
-      <MockFeedPost initials="VE" name="VouchEdge AI" handle="ve_data_scout" content="HR Board alert: 3 Elite-tier candidates just moved to confirmed lineups." accent="cyan" likes={41} vouches={14} comments={9} />
+      <MockFeedPost initials="VE" name="VouchEdge Research" handle="ve_research" content="HR Board alert: 3 Elite-tier candidates just moved to confirmed lineups." accent="cyan" likes={41} vouches={14} comments={9} />
       <MockFeedPost initials="MR" name="momentum_read" handle="momentum_read" content="CHC @ CIN run environment 82/100. Park factor + bullpen fatigue = value." accent="amber" likes={18} vouches={6} comments={3} />
       <MockFeedPost initials="JK" name="jake_capper" handle="jakecapper" content="2-leg parlay locked: Buxton HR + Twins ML. Card posted to the board." likes={32} vouches={11} comments={7} />
     </div>

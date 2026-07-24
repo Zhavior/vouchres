@@ -22,6 +22,7 @@ import {
 import { performAppLogout } from '../../lib/appLogout';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
@@ -123,12 +124,7 @@ function MobileProfileDrawer({
   const { data: liveGamesPayload } = useLiveGames({ enabled: open });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, [open]);
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open) return;

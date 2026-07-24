@@ -80,9 +80,9 @@ const FEATURES = [
   },
   {
     icon: FlaskConical,
-    eyebrow: 'AI Edge Lab',
-    title: 'Judge-powered research room',
-    copy: 'Four AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
+    eyebrow: 'Matchup Research',
+    title: 'A clear research room',
+    copy: 'Review today\'s player and matchup context, build your own card, and see what is confirmed versus projected.',
     route: 'mlb_intelligence',
   },
   {

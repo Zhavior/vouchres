@@ -8,6 +8,28 @@
   overflow-y: auto;
 }
 
+/*
+ * Keep the desktop columns usable even if Tailwind omits responsive width
+ * utilities during CSS generation. Without these explicit flex bounds, the
+ * judge panel can consume the full dialog and collapse the signup form to 0px.
+ */
+@media (min-width: 64rem) {
+  .ve-auth-dialog {
+    max-width: 56rem;
+  }
+
+  .ve-auth-judge-panel {
+    flex: 0 0 clamp(16.25rem, 38%, 20rem);
+    min-width: 16.25rem;
+    max-width: 20rem;
+  }
+
+  .ve-auth-form-panel {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+}
+
 .ve-auth-reveal,
 .ve-auth-message,
 .ve-auth-judge-swap {

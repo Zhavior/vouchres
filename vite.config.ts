@@ -6,7 +6,7 @@ import { writeFileSync } from 'node:fs';
 import path from 'path';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { LIGHTNINGCSS_TARGETS } from './css/lightningcss-targets.mjs';
 
@@ -50,12 +50,43 @@ function buildIdPlugin(buildId: string): Plugin {
   };
 }
 
+function normalizePublicSiteUrl(value: string | undefined): string {
+  const fallback = 'https://vouchres.vercel.app';
+  const candidate = value?.trim() || fallback;
+
+  try {
+    return new URL(candidate).origin;
+  } catch {
+    console.warn(`[seo] Ignoring invalid VITE_PUBLIC_SITE_URL: ${candidate}`);
+    return fallback;
+  }
+}
+
+function publicSeoPlugin(siteUrl: string): Plugin {
+  const homepageUrl = `${siteUrl}/`;
+  const robots = `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /auth/\nDisallow: /settings/\nDisallow: /account/\nSitemap: ${homepageUrl}sitemap.xml\n`;
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${homepageUrl}</loc>\n  </url>\n</urlset>\n`;
+
+  return {
+    name: 'vouchedge-public-seo',
+    transformIndexHtml(html) {
+      return html.replaceAll('__PUBLIC_SITE_URL__', siteUrl);
+    },
+    closeBundle() {
+      writeFileSync(join(process.cwd(), 'dist', 'robots.txt'), robots, 'utf8');
+      writeFileSync(join(process.cwd(), 'dist', 'sitemap.xml'), sitemap, 'utf8');
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
   const disableHmr = process.env.DISABLE_HMR === 'true';
   const analyze = mode === 'analyze';
   const buildId = resolveBuildId();
   const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
   const sentryRelease = `vouchedge-frontend@${buildId}`;
+  const publicSiteUrl = normalizePublicSiteUrl(env.VITE_PUBLIC_SITE_URL);
 
   return {
     define: {
@@ -66,6 +97,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       buildIdPlugin(buildId),
+      publicSeoPlugin(publicSiteUrl),
       analyze
         ? visualizer({
             filename: 'dist/bundle-report.html',

@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation, PanInfo } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 
 interface SwipeDrawerProps {
   isOpen: boolean;
@@ -13,16 +14,12 @@ export default function SwipeDrawer({ isOpen, onClose, children, title }: SwipeD
   const controls = useAnimation();
   const drawerRef = useRef<HTMLDivElement>(null);
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       controls.start({ y: 0, transition: { type: 'spring', damping: 20, stiffness: 200 } });
-    } else {
-      document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen, controls]);
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

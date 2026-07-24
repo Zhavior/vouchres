@@ -31,6 +31,7 @@ import {
 import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
+import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_AUTH_GRADIENT, Z8_AUTH_SHADOW, Z8_CYAN_HEX, Z8_BLURPLE_HEX } from '../../theme/z8Tokens';
 import '../../styles/auth-modal.css';
@@ -151,6 +152,8 @@ export default function AuthModal({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
+  useBodyScrollLock(open);
+
   // Sync mode when reopened with a different intent
   useEffect(() => {
     if (open) {
@@ -170,9 +173,6 @@ export default function AuthModal({
     if (!open) return;
 
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
     const focusFrame = window.requestAnimationFrame(() => {
       (emailInputRef.current ?? closeButtonRef.current)?.focus();
     });
@@ -211,7 +211,6 @@ export default function AuthModal({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [open, onClose]);
@@ -259,6 +258,9 @@ export default function AuthModal({
       || m.includes('email format')
     ) {
       return 'Please enter a valid email address.';
+    }
+    if (m.includes('email rate limit') || m.includes('email send rate limit')) {
+      return 'Confirmation email sending is temporarily at its limit. Please try again later.';
     }
     if (m.includes('rate')) return 'Too many attempts. Please wait a moment and try again.';
     return raw;
@@ -385,11 +387,11 @@ export default function AuthModal({
           className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
         >
           {/* Judge welcome — desktop sidebar */}
-          <div className="hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
+          <div className="ve-auth-judge-panel hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
             <AuthJudgeWelcome className="h-full w-full rounded-none border-0 shadow-none" />
           </div>
 
-          <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="ve-auth-form-panel relative flex min-w-0 flex-1 flex-col">
           {/* Glow header band */}
           <div
             className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"

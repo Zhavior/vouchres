@@ -39,7 +39,7 @@ export default function LandingFeatureSlideshow({ features }: { features: readon
           Built for the full research loop
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-          Verified HR boards, live slate context, judge research, and player intelligence — honest about what is confirmed vs projected.
+          Verified HR boards, live slate context, matchup research, and player intelligence — honest about what is confirmed versus projected.
         </p>
       </div>
 

@@ -9,9 +9,9 @@ const FAQS = [
       'No. VouchEdge is an intelligence and research platform. You cannot place bets or deposit funds here. We exist to provide transparent probability research and immutable record keeping.',
   },
   {
-    question: 'How do the AI Judges work?',
+    question: 'Where does the research come from?',
     answer:
-      'Our AI Judges (DS, PH, MR, RA) run specialized Monte Carlo simulations over thousands of data points daily—including park factors, weather, and batter vs. pitcher splits—to output a confident edge probability for each matchup.',
+      'VouchEdge brings together public MLB context such as confirmed lineups, park conditions, pitcher and batter history, and recent results. We label what is confirmed and what is projected so you can make your own call.',
   },
   {
     question: 'Do you guarantee winning picks?',
@@ -19,14 +19,14 @@ const FAQS = [
       'No. We provide probability research for entertainment purposes only. Sports are inherently unpredictable, and any platform claiming a "guaranteed lock" is lying. We publish wins and losses transparently so you always see the real record.',
   },
   {
-    question: 'Can I cancel my Pro or Capper plan anytime?',
+    question: 'Can I cancel VouchEdge Beta anytime?',
     answer:
       'Yes, absolutely. There are no long-term contracts. You can downgrade or cancel directly from your settings page with one click—no need to email support or call anyone.',
   },
   {
-    question: 'Why do you ask for my experience level on signup?',
+    question: 'What happens when I sign up?',
     answer:
-      'We tailor your onboarding experience so you don\'t get overwhelmed. If you\'re new, we highlight basic probability tools. If you\'re a pro, we fast-track you to advanced edge signals and audience-building tools.',
+      'Choose Basic or VouchEdge Beta, review the terms, and create your account. Basic is free. Beta starts with a 7-day free trial, then costs $7.99/month unless you cancel.',
   },
 ];
 
