@@ -156,10 +156,11 @@ export async function sendV3BillingCheckoutResponse(
     cancelUrl,
   }).catch((err) => {
     console.error("[billing] checkout failed", err);
+    if (err instanceof AppError) throw err;
     throw new AppError({
       status: 500,
       code: "internal_server_error",
-      message: err instanceof Error ? err.message : "checkout_failed",
+      message: "Unable to start checkout. Please try again.",
       cause: err,
     });
   });
@@ -201,7 +202,7 @@ export async function sendV3BillingPortalResponse(
     throw new AppError({
       status: 400,
       code: "bad_request",
-      message: err instanceof Error ? err.message : "billing_portal_failed",
+      message: "Unable to open the billing portal. Please try again.",
       cause: err,
     });
   });

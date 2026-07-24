@@ -19,17 +19,32 @@ function buildEventKey(match: any): string {
   return `mlb:${gamePk}:${playerId}:home_run:${inning}:${timestamp}`;
 }
 
-function deriveParentStatusFromLegs(legs: Array<{ status: string | null }>): "won" | "lost" | "push" | "void" | null {
+const TERMINAL_LEG_STATUSES = new Set(["won", "lost", "push", "void"]);
+
+/**
+ * Parent status only when every leg is a known terminal state.
+ * Unknown/empty/open statuses must not allow a premature "won".
+ */
+export function deriveParentStatusFromLegs(
+  legs: Array<{ status: string | null }>,
+): "won" | "lost" | "push" | "void" | null {
   if (!legs.length) return null;
 
-  const statuses = legs.map((leg) => String(leg.status ?? "").toLowerCase());
-  const hasOpenLeg = statuses.some((status) => status === "pending" || status === "grading" || status === "live" || status === "open" || status === "active" || status === "in_progress");
+  const statuses = legs.map((leg) => String(leg.status ?? "").trim().toLowerCase());
+  if (statuses.some((status) => !TERMINAL_LEG_STATUSES.has(status))) {
+    return null;
+  }
 
-  if (hasOpenLeg) return null;
   if (statuses.some((status) => status === "lost")) return "lost";
-  if (statuses.some((status) => status === "won")) return "won";
   if (statuses.every((status) => status === "push")) return "push";
   if (statuses.every((status) => status === "void")) return "void";
+  // Parlay win: at least one won, remainder won/push/void, none lost.
+  if (
+    statuses.some((status) => status === "won")
+    && statuses.every((status) => status === "won" || status === "push" || status === "void")
+  ) {
+    return "won";
+  }
 
   return null;
 }
@@ -37,7 +52,7 @@ function deriveParentStatusFromLegs(legs: Array<{ status: string | null }>): "wo
 async function refreshParentPickStatusFromLegs(admin: any, pickId: string): Promise<boolean> {
   const { data: legs, error: legError } = await admin
     .from("pick_legs")
-    .select("status")
+    .select("status, odds_decimal, leg_index")
     .eq("pick_id", pickId);
 
   if (legError) {
@@ -48,22 +63,52 @@ async function refreshParentPickStatusFromLegs(admin: any, pickId: string): Prom
   const nextStatus = deriveParentStatusFromLegs(legs ?? []);
   if (!nextStatus) return false;
 
-  const { error: pickError } = await admin
+  const { data: pick, error: pickLoadError } = await admin
     .from("picks")
-    .update({
-      status: nextStatus,
-      graded_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .select("id, stake_units, status")
     .eq("id", pickId)
-    .in("status", ["pending", "grading", "live", "open", "active", "in_progress"]);
-
-  if (pickError) {
-    console.error("[liveHrParlayWrite] parent refresh failed", pickError.message);
+    .maybeSingle();
+  if (pickLoadError || !pick) {
+    console.error("[liveHrParlayWrite] parent pick load failed", pickLoadError?.message);
     return false;
   }
 
-  return true;
+  const stake = Number(pick.stake_units ?? 1);
+  let settledUnits: number | null = null;
+  if (nextStatus === "lost") {
+    settledUnits = -Number(stake.toFixed(2));
+  } else if (nextStatus === "push" || nextStatus === "void") {
+    settledUnits = 0;
+  } else if (nextStatus === "won") {
+    const wonLegs = (legs ?? []).filter(
+      (leg: { status?: string | null }) => String(leg.status ?? "").toLowerCase() === "won",
+    );
+    const combinedOdds = wonLegs.reduce(
+      (product: number, leg: { odds_decimal?: number | null }) =>
+        product * Number(leg.odds_decimal ?? 1),
+      1,
+    );
+    settledUnits = Number((stake * (combinedOdds - 1)).toFixed(2));
+  }
+
+  // gradePick writes settled_units and recomputes trust. It only mutates pending
+  // parents — the normal live-HR path keeps parents pending until legs are terminal.
+  if (String(pick.status ?? "").toLowerCase() !== "pending") {
+    return false;
+  }
+
+  try {
+    const { gradePick } = await import("../persistence/pickService");
+    return await gradePick({
+      pickId,
+      status: nextStatus,
+      settledUnits,
+      learningNote: `Live HR sync settled parent as ${nextStatus}.`,
+    });
+  } catch (error) {
+    console.error("[liveHrParlayWrite] parent gradePick failed", (error as Error)?.message);
+    return false;
+  }
 }
 
 

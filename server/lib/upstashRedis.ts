@@ -81,16 +81,58 @@ export async function redisDel(key: string): Promise<void> {
   await redisCommand(["DEL", key]);
 }
 
-/** Increment a counter and set TTL on first hit. Returns null when Redis is disabled. */
+/**
+ * Atomically delete `key` only if its value equals `token`.
+ * Prevents a stale lock holder from deleting a newer holder's lock after TTL expiry.
+ */
+export async function redisReleaseLock(key: string, token: string): Promise<boolean> {
+  if (!isUpstashEnabled()) return false;
+
+  const script = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end`;
+  const result = await redisCommand<number>(["EVAL", script, 1, key, token]);
+  return Number(result) === 1;
+}
+
+/** Lightweight connectivity probe for readiness/ops. Returns false when Redis is down. */
+export async function redisPing(): Promise<boolean> {
+  if (!isUpstashEnabled()) return false;
+  try {
+    const result = await redisCommand<string>(["PING"]);
+    return result === "PONG" || result === "pong";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Increment a counter and set TTL on first hit. Returns null when Redis is disabled.
+ * Heals keys that lost their TTL (INCR succeeded but EXPIRE failed) so rate-limit
+ * counters cannot stick forever and lock an IP/user out of the API.
+ */
 export async function redisIncr(key: string, ttlSeconds: number): Promise<number | null> {
   if (!isUpstashEnabled()) return null;
 
   const count = await redisCommand<number>(["INCR", key]);
-  if (count === 1 && ttlSeconds > 0) {
-    await redisCommand(["EXPIRE", key, ttlSeconds]);
+  if (typeof count !== "number") return null;
+
+  if (ttlSeconds > 0) {
+    if (count === 1) {
+      await redisCommand(["EXPIRE", key, ttlSeconds]);
+    } else {
+      const ttl = await redisCommand<number>(["TTL", key]);
+      // -1 = no expiry, -2 = missing (shouldn't happen after INCR)
+      if (typeof ttl === "number" && ttl < 0) {
+        await redisCommand(["EXPIRE", key, ttlSeconds]);
+      }
+    }
   }
 
-  return typeof count === "number" ? count : null;
+  return count;
 }
 
 export async function sleep(ms: number): Promise<void> {

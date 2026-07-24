@@ -101,18 +101,20 @@ describe("post routes", () => {
   });
 
   it("returns discover feed with ok envelope", async () => {
-    fromMock.mockReturnValueOnce({
-      select: () => ({
-        order: () => ({
-          limit: async () => ({ data: [], error: null }),
-        }),
+    const eq = vi.fn(() => ({
+      order: () => ({
+        limit: async () => ({ data: [], error: null }),
       }),
+    }));
+    fromMock.mockReturnValueOnce({
+      select: () => ({ eq }),
     });
 
     const response = await fetch(`${baseUrl}/api/feed/discover`);
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(eq).toHaveBeenCalledWith("is_demo", true);
     expect(body).toMatchObject({
       ok: true,
       posts: [],

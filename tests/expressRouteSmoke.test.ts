@@ -26,7 +26,7 @@ async function requestJson(path: string, init?: RequestInit): Promise<{ status: 
 }
 
 beforeAll(async () => {
-  vi.stubEnv("CRON_SECRET", "");
+  vi.stubEnv("CRON_SECRET", "test-cron-secret");
 
   const app = express();
   app.use(requestContext);
@@ -223,21 +223,28 @@ describe("API route smoke envelopes", () => {
   });
 
   it("normalizes cron query validation errors before side effects", async () => {
-    const badDays = await requestJson("/api/cron/parlays/grade-due?days=bad");
+    const cronAuth = { Authorization: "Bearer test-cron-secret" };
+    const badDays = await requestJson("/api/cron/parlays/grade-due?days=bad", { headers: cronAuth });
     expect(badDays.status).toBe(400);
     expect(badDays.body.error).toMatchObject({
       code: "validation_error",
       message: "days must be an integer between 1 and 7.",
     });
 
-    const badDryRun = await requestJson("/api/cron/parlays/repair-identity?dryRun=maybe", { method: "POST" });
+    const badDryRun = await requestJson("/api/cron/parlays/repair-identity?dryRun=maybe", {
+      method: "POST",
+      headers: cronAuth,
+    });
     expect(badDryRun.status).toBe(400);
     expect(badDryRun.body.error).toMatchObject({
       code: "validation_error",
       message: "dryRun must be true or false.",
     });
 
-    const badLimit = await requestJson("/api/cron/parlays/quarantine-legacy?limit=500", { method: "POST" });
+    const badLimit = await requestJson("/api/cron/parlays/quarantine-legacy?limit=500", {
+      method: "POST",
+      headers: cronAuth,
+    });
     expect(badLimit.status).toBe(400);
     expect(badLimit.body.error).toMatchObject({
       code: "validation_error",

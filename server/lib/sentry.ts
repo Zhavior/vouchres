@@ -27,11 +27,80 @@ const SENTRY_DSN = process.env.SENTRY_DSN ?? "";
 /** Prefer SENTRY_ENVIRONMENT when set (e.g. staging); falls back to NODE_ENV. */
 const SENTRY_ENV = process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? "development";
 
+const SENSITIVE_KEY_RE =
+  /password|passwd|token|secret|api[_-]?key|authorization|cookie|email|stripe|bearer|session/i;
+
 let initialized = false;
 let missingDsnLogged = false;
 
 export function isSentryEnabled(): boolean {
   return initialized;
+}
+
+function scrubQueryString(query: string): string {
+  try {
+    const params = new URLSearchParams(query.startsWith("?") ? query.slice(1) : query);
+    for (const key of [...params.keys()]) {
+      if (SENSITIVE_KEY_RE.test(key)) params.set(key, "[scrubbed]");
+    }
+    return params.toString();
+  } catch {
+    return "[scrubbed-query]";
+  }
+}
+
+/** Deep-scrub objects/arrays used in Sentry request bodies, extras, and breadcrumbs. */
+export function scrubSensitiveValue(value: unknown, depth = 0): unknown {
+  if (depth > 6 || value == null) return value;
+  if (Array.isArray(value)) return value.map((item) => scrubSensitiveValue(item, depth + 1));
+  if (typeof value !== "object") return value;
+
+  const out: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+    out[key] = SENSITIVE_KEY_RE.test(key) ? "[scrubbed]" : scrubSensitiveValue(nested, depth + 1);
+  }
+  return out;
+}
+
+/** Testable beforeSend scrubber — mutates and returns the event. */
+export function scrubSentryEvent<T extends Record<string, any>>(event: T): T {
+  const mutableEvent = event as Record<string, any>;
+  if (event.request) {
+    if (event.request.data != null) {
+      event.request.data = scrubSensitiveValue(event.request.data);
+    }
+    if (typeof event.request.query_string === "string") {
+      event.request.query_string = scrubQueryString(event.request.query_string);
+    } else if (event.request.query_string && typeof event.request.query_string === "object") {
+      event.request.query_string = scrubSensitiveValue(event.request.query_string);
+    }
+    if (event.request.headers) {
+      const headers = { ...event.request.headers } as Record<string, unknown>;
+      for (const key of Object.keys(headers)) {
+        if (/authorization|cookie|x-api-key|x-cron/i.test(key)) {
+          headers[key] = "[scrubbed]";
+        }
+      }
+      event.request.headers = headers;
+    }
+  }
+
+  if (Array.isArray(mutableEvent.breadcrumbs)) {
+    mutableEvent.breadcrumbs = mutableEvent.breadcrumbs.map((crumb: Record<string, unknown>) => ({
+      ...crumb,
+      data: crumb.data != null ? scrubSensitiveValue(crumb.data) : crumb.data,
+      message:
+        typeof crumb.message === "string" && /apiKey=|Bearer\s+/i.test(crumb.message)
+          ? "[scrubbed]"
+          : crumb.message,
+    }));
+  }
+
+  if (mutableEvent.extra) {
+    mutableEvent.extra = scrubSensitiveValue(mutableEvent.extra);
+  }
+
+  return event;
 }
 
 export function initServerSentry(app?: Express) {
@@ -59,28 +128,7 @@ export function initServerSentry(app?: Express) {
     profilesSampleRate: SENTRY_ENV === "production" ? 0.1 : 0,
 
     beforeSend(event) {
-      // Scrub sensitive data from request bodies before sending to Sentry
-      if (event.request?.data) {
-        const data = event.request.data as any;
-        const scrubbed = { ...data };
-        for (const key of Object.keys(scrubbed)) {
-          if (/password|token|secret|key|authorization|email|stripe/i.test(key)) {
-            scrubbed[key] = "[scrubbed]";
-          }
-        }
-        event.request.data = scrubbed;
-      }
-      // Scrub auth header
-      if (event.request?.headers) {
-        const headers = event.request.headers as any;
-        if (headers.authorization) {
-          headers.authorization = "[scrubbed]";
-        }
-        if (headers.cookie) {
-          headers.cookie = "[scrubbed]";
-        }
-      }
-      return event;
+      return scrubSentryEvent(event);
     },
   });
 
@@ -129,9 +177,31 @@ export function captureException(err: Error | unknown, context?: SentryCaptureCo
         scope.setTag(key, value);
       }
     }
-    if (context?.extra) {
-      scope.setExtras(context.extra);
+    // Promote first-class fields used by errorHandler / grading into tags+extras.
+    // Previously only nested `tags`/`extra` were applied, so requestId/path/code were dropped.
+    if (context?.requestId) scope.setTag("request_id", context.requestId);
+    if (context?.method) scope.setTag("http_method", context.method);
+    if (context?.path) scope.setTag("http_path", context.path);
+    if (context?.code) scope.setTag("error_code", context.code);
+    if (context?.userId) {
+      scope.setTag("user_id", context.userId);
+      scope.setUser({ id: context.userId });
     }
+    if (context?.vouchId) scope.setTag("vouch_id", context.vouchId);
+
+    const promotedExtra: Record<string, unknown> = {
+      ...(context?.extra ?? {}),
+    };
+    if (context?.requestId) promotedExtra.requestId = context.requestId;
+    if (context?.method) promotedExtra.method = context.method;
+    if (context?.path) promotedExtra.path = context.path;
+    if (context?.code) promotedExtra.code = context.code;
+    if (context?.userId) promotedExtra.userId = context.userId;
+    if (context?.vouchId) promotedExtra.vouchId = context.vouchId;
+    if (Object.keys(promotedExtra).length) {
+      scope.setExtras(promotedExtra);
+    }
+
     Sentry.captureException(err);
   });
 }

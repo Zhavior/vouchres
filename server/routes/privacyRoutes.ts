@@ -1,13 +1,21 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
+import {
+  AuthedRequest,
+  bumpAuthUserEpoch,
+  requireAuth,
+  requireAuthAllowPendingDeletion,
+  supabaseAdmin,
+} from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
-import { AppError } from "../errors/AppError";
+import { AppError, isAppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { validate } from "../middleware/validation";
 import { PrivacyDeleteAccountSchema } from "../validators/mutationSchemas";
+import { runWithDistributedLock } from "../lib/distributedLock";
+import { isProductionRuntime } from "../lib/runtime";
 
 /**
  * Privacy routes — GDPR / CCPA / CPRA compliance endpoints.
@@ -28,16 +36,31 @@ export const privacyRoutes = Router();
 
 type PrivacyReq = AuthedRequest & RequestWithContext;
 
+async function loadDsarRows(
+  table: string,
+  column: string,
+  userId: string,
+): Promise<{ rows: unknown[]; warning?: string }> {
+  const result = await supabaseAdmin.from(table).select("*").eq(column, userId);
+  if (!result.error) return { rows: result.data ?? [] };
+  const code = String(result.error.code ?? "");
+  if (code === "42P01" || code === "42703" || code === "PGRST205" || code === "PGRST204") {
+    return { rows: [], warning: `skip missing ${table}.${column}` };
+  }
+  throw new Error(`${table} export failed: ${result.error.message}`);
+}
+
 privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+  const userId = req.user!.id;
   const { data, error } = await supabaseAdmin
-    .rpc("export_user_data", { p_user_id: req.user!.id });
+    .rpc("export_user_data", { p_user_id: userId });
 
   if (error) {
     structuredLog({
       level: "error",
       event: "privacy_export_failed",
       requestId: req.requestId,
-      userId: req.user!.id,
+      userId,
       message: error.message,
     });
     throw new AppError({
@@ -48,11 +71,30 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, r
     });
   }
 
+  // Supplement RPC export with surfaces hard-deletion already covers.
+  const supplementalSpecs: Array<{ key: string; table: string; column: string }> = [
+    { key: "notifications", table: "notifications", column: "user_id" },
+    { key: "vouches", table: "vouches", column: "user_id" },
+    { key: "stories", table: "user_stories", column: "user_id" },
+    { key: "dm_messages", table: "dm_messages", column: "sender_id" },
+    { key: "dm_participations", table: "dm_participants", column: "user_id" },
+    { key: "parlay_tails", table: "parlay_tails", column: "user_id" },
+    { key: "daily_quotas", table: "daily_quotas", column: "profile_id" },
+    { key: "push_subscriptions", table: "push_subscriptions", column: "user_id" },
+  ];
+  const supplemental: Record<string, unknown> = {};
+  const warnings: string[] = [];
+  for (const spec of supplementalSpecs) {
+    const loaded = await loadDsarRows(spec.table, spec.column, userId);
+    supplemental[spec.key] = loaded.rows;
+    if (loaded.warning) warnings.push(loaded.warning);
+  }
+
   structuredLog({
     level: "info",
     event: "privacy_dsar_export",
     requestId: req.requestId,
-    userId: req.user!.id,
+    userId,
   });
 
   res.setHeader("Content-Type", "application/json");
@@ -61,7 +103,14 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, r
     `attachment; filename="vouchedge-data-export-${req.user!.profile.username}-${Date.now()}.json"`,
   );
 
-  return res.json(apiOkFlat(req, { data }));
+  const base = data && typeof data === "object" ? (data as Record<string, unknown>) : { rpc: data };
+  return res.json(apiOkFlat(req, {
+    data: {
+      ...base,
+      ...supplemental,
+      export_warnings: warnings,
+    },
+  }));
 }));
 
 privacyRoutes.post(
@@ -80,14 +129,54 @@ privacyRoutes.post(
 
   const deletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
+  // Cancel billing BEFORE scheduling deletion so a failed cancel never leaves
+  // a scheduled deletion with inconsistent entitlement state to roll back.
+  try {
+    const { cancelSubscriptionsForProfile } = await import("../services/billing/stripeService");
+    const cancelResult = await cancelSubscriptionsForProfile(req.user!.id);
+    structuredLog({
+      level: cancelResult.warnings.length ? "warn" : "info",
+      event: "privacy_stripe_cancel_on_deletion",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      canceled: cancelResult.canceled,
+      warnings: cancelResult.warnings,
+    });
+    if (cancelResult.warnings.length > 0 && isProductionRuntime()) {
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Could not cancel billing. Account deletion was not scheduled. Please try again.",
+        details: { error: "stripe_cancel_incomplete", warnings: cancelResult.warnings },
+        expose: true,
+      });
+    }
+  } catch (err) {
+    if (isAppError(err)) throw err;
+    structuredLog({
+      level: "error",
+      event: "privacy_stripe_cancel_failed",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    if (isProductionRuntime()) {
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Could not cancel billing. Account deletion was not scheduled. Please try again.",
+        details: { error: "stripe_cancel_failed" },
+        expose: true,
+      });
+    }
+  }
+
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       deletion_scheduled_at: deletionDate.toISOString(),
-      is_banned: true,
     })
     .eq("id", req.user!.id);
-
 
   if (error) {
     structuredLog({
@@ -105,16 +194,7 @@ privacyRoutes.post(
     });
   }
 
-  if ((req.user!.profile as any).stripe_subscription_id) {
-    structuredLog({
-      level: "warn",
-      event: "privacy_stripe_cancel_skipped",
-      requestId: req.requestId,
-      userId: req.user!.id,
-      subscriptionId: (req.user!.profile as any).stripe_subscription_id,
-      message: "Stripe subscription cancellation helper is not wired yet.",
-    });
-  }
+  await bumpAuthUserEpoch(req.user!.id);
 
   structuredLog({
     level: "info",
@@ -133,7 +213,7 @@ privacyRoutes.post(
   }));
 }));
 
-privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+privacyRoutes.post("/cancel-deletion", requireAuthAllowPendingDeletion, asyncHandler(async (req: PrivacyReq, res: Response) => {
   if (!(req.user!.profile as any).deletion_scheduled_at) {
     throw new AppError({
       status: 400,
@@ -147,7 +227,6 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Pri
     .from("profiles")
     .update({
       deletion_scheduled_at: null,
-      is_banned: false,
     })
     .eq("id", req.user!.id);
 
@@ -160,6 +239,8 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Pri
     });
   }
 
+  await bumpAuthUserEpoch(req.user!.id);
+
   structuredLog({
     level: "info",
     event: "privacy_deletion_canceled",
@@ -170,7 +251,7 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Pri
   return res.json(apiOkFlat(req, { message: "Account deletion canceled." }));
 }));
 
-privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+privacyRoutes.get("/deletion-status", requireAuthAllowPendingDeletion, asyncHandler(async (req: PrivacyReq, res: Response) => {
   return res.json(apiOkFlat(req, {
     deletion_scheduled_at: (req.user!.profile as any).deletion_scheduled_at ?? null,
     grace_period_days: 30,
@@ -182,6 +263,25 @@ privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: Priv
  * Called by server/cron/dailyDeleteJob.ts (similar pattern to dailyGradeJob.ts).
  */
 export async function processScheduledDeletions(): Promise<{
+  processed: number;
+  errors: string[];
+}> {
+  try {
+    return await runWithDistributedLock(
+      "cron:account-deletion",
+      () => processScheduledDeletionsUnlocked(),
+      { ttlSeconds: 900, waitMs: 5_000 },
+    );
+  } catch (err) {
+    if (isAppError(err) && err.code === "conflict") {
+      console.warn("[deletion] skipped — another deletion job holds the lock");
+      return { processed: 0, errors: ["deletion job already running"] };
+    }
+    throw err;
+  }
+}
+
+async function processScheduledDeletionsUnlocked(): Promise<{
   processed: number;
   errors: string[];
 }> {
@@ -209,31 +309,85 @@ export async function processScheduledDeletions(): Promise<{
     try {
       console.log(`[deletion] processing user ${user.id} (${user.username})`);
 
-      await supabaseAdmin.rpc("anonymize_user_picks", { p_user_id: user.id });
+      const { error: anonymizeError } = await supabaseAdmin.rpc("anonymize_user_picks", {
+        p_user_id: user.id,
+      });
+      if (anonymizeError) {
+        throw new Error(`anonymize_user_picks failed: ${anonymizeError.message}`);
+      }
 
-      await Promise.all([
-        supabaseAdmin.from("post_likes").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("post_comments").delete().eq("author_id", user.id),
-        supabaseAdmin.from("posts").delete().eq("author_id", user.id),
-        supabaseAdmin.from("follows").delete().eq("follower_id", user.id),
-        supabaseAdmin.from("follows").delete().eq("following_profile_id", user.id),
-        supabaseAdmin.from("daily_quotas").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("subscriptions").delete().eq("profile_id", user.id),
-        supabaseAdmin.from("beta_signups").delete().eq("activated_user_id", user.id),
-      ]);
+      // Belt-and-suspenders: trust_scores has no FK to profiles — always wipe explicitly.
+      const trustWipe = await supabaseAdmin
+        .from("trust_scores")
+        .delete()
+        .eq("subject_type", "user")
+        .eq("subject_id", String(user.id));
+      if (trustWipe.error) {
+        const code = String(trustWipe.error.code ?? "");
+        if (code !== "42P01" && code !== "PGRST205") {
+          throw new Error(`trust_scores wipe failed: ${trustWipe.error.message}`);
+        }
+        console.warn(`[deletion] skip trust_scores: ${trustWipe.error.message}`);
+      }
 
-      await supabaseAdmin.from("profiles").delete().eq("id", user.id);
+      // Best-effort wipe of user-owned rows. Missing tables are ignored; other errors fail the job.
+      const deleteSpecs: Array<{ table: string; column: string }> = [
+        { table: "post_likes", column: "profile_id" },
+        { table: "post_comments", column: "author_id" },
+        { table: "posts", column: "author_id" },
+        { table: "follows", column: "follower_id" },
+        { table: "follows", column: "following_profile_id" },
+        { table: "daily_quotas", column: "profile_id" },
+        { table: "subscriptions", column: "profile_id" },
+        { table: "beta_signups", column: "activated_user_id" },
+        { table: "notifications", column: "user_id" },
+        { table: "push_subscriptions", column: "user_id" },
+        { table: "vouches", column: "user_id" },
+        { table: "user_status_notes", column: "user_id" },
+        { table: "user_stories", column: "user_id" },
+        { table: "story_views", column: "viewer_id" },
+        { table: "comment_likes", column: "profile_id" },
+        { table: "parlay_tails", column: "user_id" },
+        { table: "parlay_tails", column: "source_user_id" },
+        { table: "dm_messages", column: "sender_id" },
+        { table: "dm_participants", column: "user_id" },
+        { table: "subscriber_channel_messages", column: "author_id" },
+      ];
 
-      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-      if (authErr) {
-        throw new Error(`auth delete failed: ${authErr.message}`);
+      for (const spec of deleteSpecs) {
+        const result = await supabaseAdmin.from(spec.table).delete().eq(spec.column, user.id);
+        if (!result.error) continue;
+        const code = String(result.error.code ?? "");
+        // Undefined table / column in some envs — do not block erasure of the rest.
+        if (code === "42P01" || code === "42703" || code === "PGRST205" || code === "PGRST204") {
+          console.warn(`[deletion] skip missing ${spec.table}.${spec.column}: ${result.error.message}`);
+          continue;
+        }
+        throw new Error(`related-row delete failed (${spec.table}): ${result.error.message}`);
       }
 
       if (user.stripe_customer_id) {
-        console.warn(
-          "[privacy] Stripe customer deletion helper is not wired yet; skipping remote customer deletion",
-          { customerId: user.stripe_customer_id },
-        );
+        const { deleteStripeCustomer } = await import("../services/billing/stripeService");
+        await deleteStripeCustomer(String(user.stripe_customer_id));
+      }
+
+      // Auth user first so a failure keeps the profile in the deletion queue for retry.
+      // Profile delete after Auth prevents orphaned auth.users with no recoverable row.
+      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+      if (authErr) {
+        const msg = String(authErr.message ?? "");
+        const alreadyGone =
+          /user not found/i.test(msg)
+          || /not found/i.test(msg)
+          || (authErr as { status?: number }).status === 404;
+        if (!alreadyGone) {
+          throw new Error(`auth delete failed: ${authErr.message}`);
+        }
+      }
+
+      const profileDelete = await supabaseAdmin.from("profiles").delete().eq("id", user.id);
+      if (profileDelete.error) {
+        throw new Error(`profile delete failed: ${profileDelete.error.message}`);
       }
 
       processed++;

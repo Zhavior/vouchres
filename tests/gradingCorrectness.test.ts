@@ -98,4 +98,27 @@ describe("evaluatePick — a scratched player is PUSHED, never graded as a loss"
     );
     expect(result.status).toBe("lost");
   });
+
+  it("rejects client avoid markets instead of inverting settle logic", async () => {
+    const result = await evaluatePick(
+      { ...basePick, id: "p4", market: "hr_avoid", selection: "Aaron Judge 1+ HR" },
+      boxNoOhtani,
+    );
+    expect(result.status).toBe("graded_error");
+    expect(result.error).toBe("client_avoid_market_rejected");
+  });
+
+  it("only inverts HR settle when judge_verdict is avoid", async () => {
+    const result = await evaluatePick(
+      {
+        ...basePick,
+        id: "p5",
+        market: "hr",
+        selection: "Aaron Judge 1+ HR",
+        judge_verdict: "avoid",
+      },
+      boxNoOhtani,
+    );
+    expect(result.status).toBe("lost");
+  });
 });

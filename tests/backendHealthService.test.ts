@@ -123,9 +123,9 @@ describe("backend health report", () => {
       expect.objectContaining({
         envReady: expect.any(Boolean),
         soakPending: expect.arrayContaining([
-          expect.objectContaining({ id: "db_grading_soak", ready: true }),
-          expect.objectContaining({ id: "multi_instance_soak", ready: true }),
-          expect.objectContaining({ id: "upstream_fallback_coverage", ready: true }),
+          expect.objectContaining({ id: "db_grading_soak", ready: false }),
+          expect.objectContaining({ id: "multi_instance_soak", ready: false }),
+          expect.objectContaining({ id: "upstream_fallback_coverage", ready: false }),
         ]),
         items: expect.any(Array),
       }),
@@ -155,7 +155,7 @@ describe("backend health report", () => {
     expect(report.productionProof.items.find((item) => item.id === "cron_secret")?.ready).toBe(true);
     expect(report.productionProof.items.find((item) => item.id === "sentry_dsn")?.ready).toBe(true);
     expect(report.productionProof.items.find((item) => item.id === "upstash_redis")?.ready).toBe(true);
-    expect(report.productionProof.soakPending.every((item) => item.ready === true)).toBe(true);
+    expect(report.productionProof.soakPending.every((item) => item.ready === false)).toBe(true);
     expect(report.warnings.join(" ")).not.toContain("Production proof env incomplete");
   });
 });

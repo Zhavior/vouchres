@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { z } from "zod";
-import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, bumpAuthUserEpoch, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
@@ -177,7 +177,15 @@ adminRoutes.get(
       .range(offset, offset + limit - 1);
 
     if (search) {
-      query = query.or(`username.ilike.%${search}%,display_name.ilike.%${search}%`);
+      // Strip PostgREST filter metacharacters — never interpolate raw search into .or().
+      const cleaned = String(search)
+        .replace(/[%_,.()\\]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 64);
+      if (cleaned) {
+        query = query.or(`username.ilike.%${cleaned}%,display_name.ilike.%${cleaned}%`);
+      }
     }
 
     const { data, count, error } = await query;
@@ -248,6 +256,9 @@ adminRoutes.patch(
         cause: error,
       });
     }
+
+    // Ban/tier/staff changes must not ride a stale 30s auth session cache.
+    await bumpAuthUserEpoch(id);
 
     console.log(
       `[admin] staff ${req.user!.id} updated user ${id}:`,

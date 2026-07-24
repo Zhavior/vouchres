@@ -240,8 +240,24 @@ export async function listConversations(userId: string) {
   });
 }
 
+async function assertMutualFollowForDm(userId: string, otherUserId: string): Promise<void> {
+  const { getRelationshipForTarget } = await import("./followService");
+  const relationship = await getRelationshipForTarget({
+    viewerId: userId,
+    profileId: otherUserId,
+  });
+  if (!relationship.isFriend) {
+    const err = new Error("You can only message mutual followers.");
+    (err as Error & { code?: string }).code = "dm_requires_mutual_follow";
+    throw err;
+  }
+}
+
 export async function findOrCreateDirectConversation(userId: string, otherUserId: string) {
   if (userId === otherUserId) throw new Error("Cannot message yourself.");
+
+  // Anti-harassment: only mutual followers may start a DM thread.
+  await assertMutualFollowForDm(userId, otherUserId);
 
   const supabaseAdmin = await admin();
   const { data: myMemberships } = await supabaseAdmin
@@ -318,6 +334,19 @@ export async function sendDirectMessage(input: {
     .eq("user_id", input.senderId)
     .maybeSingle();
   if (!membership) throw new Error("Not a participant in this conversation.");
+
+  // Re-check on every send so unfollows freeze existing threads (not only create).
+  const { data: otherParticipant } = await supabaseAdmin
+    .from("dm_participants")
+    .select("user_id")
+    .eq("conversation_id", input.conversationId)
+    .neq("user_id", input.senderId)
+    .limit(1)
+    .maybeSingle();
+  if (!otherParticipant?.user_id) {
+    throw new Error("Conversation peer is missing.");
+  }
+  await assertMutualFollowForDm(input.senderId, String(otherParticipant.user_id));
 
   const trimmed = input.body.trim().slice(0, 2000);
   const { data, error } = await supabaseAdmin

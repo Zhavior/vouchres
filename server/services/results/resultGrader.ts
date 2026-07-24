@@ -19,7 +19,8 @@ export function gradeResult(pick: PickRecord, outcome: GameOutcome): ResultStatu
   if (!outcome.final) return "pending";
 
   const market = pick.market.toLowerCase();
-  if (market.includes("hr") || market.includes("home run")) {
+  // Word-boundary match — bare includes("hr") false-positives on "threshold", etc.
+  if (/\bhome\s*runs?\b/.test(market) || /(^|[^a-z0-9])hr([^a-z0-9]|$)/.test(market)) {
     return outcome.hitHomeRun ? "win" : "loss";
   }
   if ((market.includes("total") || market.includes("team total")) && typeof outcome.teamRuns === "number" && typeof outcome.line === "number") {

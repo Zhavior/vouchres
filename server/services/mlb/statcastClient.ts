@@ -33,11 +33,19 @@ const MIN_PA = 25;
 const statcastCache = new TTLCache<unknown>(12 * 60 * 60_000, "mlb:statcast");
 
 type StatcastBatterMap = Record<number, StatcastBatterQuality>;
+export type StatcastFeedStatus = "ok" | "unavailable";
+
+export type StatcastBatterMapResult = {
+  map: StatcastBatterMap;
+  feedStatus: StatcastFeedStatus;
+  errorMessage?: string;
+};
 
 const statcastBatterInflight = new Map<
   number,
   Promise<StatcastBatterMap>
 >();
+const statcastFeedErrors = new Map<number, string>();
 
 /** Minimal CSV line parser that respects double-quoted fields ("Last, First"). */
 function parseCsvLine(line: string): string[] {
@@ -175,13 +183,16 @@ export async function getSingleYearStatcastBatterMap(
         map[playerId] = existing;
       }
 
+      statcastFeedErrors.delete(year);
       statcastCache.set(cacheKey, map);
       return map;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       console.warn(
         `[statcastClient] leaderboard fetch failed for ${year}:`,
-        err instanceof Error ? err.message : String(err),
+        errorMessage,
       );
+      statcastFeedErrors.set(year, errorMessage);
       const emptyMap: StatcastBatterMap = {};
       statcastCache.set(cacheKey, emptyMap, 30 * 60_000);
       return emptyMap;
@@ -257,6 +268,16 @@ export async function getStatcastBatterMap(
   return blendedMap;
 }
 
+export async function getStatcastBatterMapResult(
+  year = seasonYear(),
+): Promise<StatcastBatterMapResult> {
+  const map = await getStatcastBatterMap(year);
+  const errorMessage = statcastFeedErrors.get(year);
+  return errorMessage
+    ? { map: {}, feedStatus: "unavailable", errorMessage }
+    : { map, feedStatus: "ok" };
+}
+
 export const STATCAST_MIN_PA = MIN_PA;
 
 export interface StatcastBattedBallProfile {
@@ -290,15 +311,46 @@ export interface StatcastPitchMixRow {
   pitches: number | null;
 }
 
-/** Season spray / batted-ball direction from Savant Batted Ball Profile leaderboard. */
-export async function getBattedBallProfileMap(
-  year = seasonYear(),
-): Promise<Record<number, StatcastBattedBallProfile>> {
-  const cacheKey = `battedBall:${year}`;
+type FeedMapResult<T> = {
+  map: Record<number, T>;
+  feedStatus: StatcastFeedStatus;
+  errorMessage?: string;
+};
+
+function isFeedMapResult<T>(value: unknown): value is FeedMapResult<T> {
+  return Boolean(value && typeof value === "object" && "map" in value && "feedStatus" in value);
+}
+
+async function loadFeedMap<T>(
+  cacheKey: string,
+  label: string,
+  producer: () => Promise<Record<number, T>>,
+): Promise<FeedMapResult<T>> {
   const cached = statcastCache.get(cacheKey);
-  if (cached !== undefined) return cached as Record<number, StatcastBattedBallProfile>;
+  if (cached !== undefined) {
+    if (isFeedMapResult<T>(cached)) return cached;
+    return { map: cached as Record<number, T>, feedStatus: "ok" };
+  }
 
   try {
+    const map = await producer();
+    const result: FeedMapResult<T> = { map, feedStatus: "ok" };
+    statcastCache.set(cacheKey, result);
+    return result;
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.warn(`[statcastClient] ${label} fetch failed:`, errorMessage);
+    const result: FeedMapResult<T> = { map: {}, feedStatus: "unavailable", errorMessage };
+    statcastCache.set(cacheKey, result, 30 * 60_000);
+    return result;
+  }
+}
+
+/** Season spray / batted-ball direction from Savant Batted Ball Profile leaderboard. */
+export async function getBattedBallProfileMapResult(
+  year = seasonYear(),
+): Promise<FeedMapResult<StatcastBattedBallProfile>> {
+  return loadFeedMap(`battedBall:v2:${year}`, "batted-ball", async () => {
     const rows = await fetchCsv(
       `https://baseballsavant.mlb.com/leaderboard/batted-ball?type=batter&seasonStart=${year}&seasonEnd=${year}&gameType=Regular&minSwings=q&minGroupSwings=1&csv=true`,
     );
@@ -318,24 +370,21 @@ export async function getBattedBallProfileMap(
         pullAirPct: pct(row.pull_air_rate),
       };
     }
-    statcastCache.set(cacheKey, map);
     return map;
-  } catch (err) {
-    console.warn("[statcastClient] batted-ball fetch failed:", (err as Error).message);
-    statcastCache.set(cacheKey, {}, 30 * 60_000);
-    return {};
-  }
+  });
+}
+
+export async function getBattedBallProfileMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastBattedBallProfile>> {
+  return (await getBattedBallProfileMapResult(year)).map;
 }
 
 /** Season plate discipline from Savant Percentile Rankings (raw values, not percentiles). */
-export async function getPlateDisciplineMap(
+export async function getPlateDisciplineMapResult(
   year = seasonYear(),
-): Promise<Record<number, StatcastPlateDiscipline>> {
-  const cacheKey = `plateDiscipline:${year}`;
-  const cached = statcastCache.get(cacheKey);
-  if (cached !== undefined) return cached as Record<number, StatcastPlateDiscipline>;
-
-  try {
+): Promise<FeedMapResult<StatcastPlateDiscipline>> {
+  return loadFeedMap(`plateDiscipline:v2:${year}`, "plate-discipline", async () => {
     const rows = await fetchCsv(
       `https://baseballsavant.mlb.com/leaderboard/percentile-rankings?type=batter&year=${year}&csv=true`,
     );
@@ -351,24 +400,21 @@ export async function getPlateDisciplineMap(
         bbPct: num(row.bb_percent),
       };
     }
-    statcastCache.set(cacheKey, map);
     return map;
-  } catch (err) {
-    console.warn("[statcastClient] plate-discipline fetch failed:", (err as Error).message);
-    statcastCache.set(cacheKey, {}, 30 * 60_000);
-    return {};
-  }
+  });
+}
+
+export async function getPlateDisciplineMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastPlateDiscipline>> {
+  return (await getPlateDisciplineMapResult(year)).map;
 }
 
 /** Season pitch-type breakdown per batter from Savant Pitch Arsenal Stats. */
-export async function getPitchMixMap(
+export async function getPitchMixMapResult(
   year = seasonYear(),
-): Promise<Record<number, StatcastPitchMixRow[]>> {
-  const cacheKey = `pitchMix:${year}`;
-  const cached = statcastCache.get(cacheKey);
-  if (cached !== undefined) return cached as Record<number, StatcastPitchMixRow[]>;
-
-  try {
+): Promise<FeedMapResult<StatcastPitchMixRow[]>> {
+  return loadFeedMap(`pitchMix:v2:${year}`, "pitch-mix", async () => {
     const rows = await fetchCsv(
       `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=batter&year=${year}&min=${MIN_PA}&csv=true`,
     );
@@ -392,13 +438,14 @@ export async function getPitchMixMap(
     for (const playerId of Object.keys(map)) {
       map[Number(playerId)].sort((a, b) => (b.pitchUsage ?? 0) - (a.pitchUsage ?? 0));
     }
-    statcastCache.set(cacheKey, map);
     return map;
-  } catch (err) {
-    console.warn("[statcastClient] pitch-mix fetch failed:", (err as Error).message);
-    statcastCache.set(cacheKey, {}, 30 * 60_000);
-    return {};
-  }
+  });
+}
+
+export async function getPitchMixMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastPitchMixRow[]>> {
+  return (await getPitchMixMapResult(year)).map;
 }
 
 /** Convert 0–1 rate fields to 0–100 display percentages. */

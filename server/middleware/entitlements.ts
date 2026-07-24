@@ -6,6 +6,7 @@ import {
   type TierEntitlements,
 } from "../services/billing/tierConfig";
 import { AppError } from "../errors/AppError";
+import { runWithDistributedLock } from "../lib/distributedLock";
 
 /**
  * Entitlements — server-side feature gates.
@@ -41,6 +42,8 @@ type QuotaRequest = AuthedRequest & {
     day: string;
     count: number;
     limit: number;
+    /** True when middleware reserved a slot; refunded on non-2xx responses. */
+    pending?: boolean;
   };
 };
 
@@ -118,51 +121,93 @@ export function requireTierOrQuota(
     const effectiveLimit = isPaid ? (paidDailyLimit as number) : freeDailyLimit;
 
     const day = todayUtc();
-    const { supabaseAdmin } = await import("./auth");
-    const { data, error } = await supabaseAdmin
-      .from("daily_quotas")
-      .select("count")
-      .eq("profile_id", req.user!.id)
-      .eq("quota_key", quotaKey)
-      .eq("day", day)
-      .maybeSingle();
+    const profileId = req.user!.id;
 
-    if (error) {
-      console.error("[entitlements] quota lookup failed", {
-        profileId: req.user!.id,
-        quotaKey,
-        day,
-        error,
-      });
-      return next(new AppError({
-        status: 503,
-        code: "external_service_error",
-        message: "Quota check is temporarily unavailable.",
-        expose: true,
-        cause: error,
-      }));
-    }
+    // Reserve a slot under a per-user lock before the handler runs so parallel
+    // requests cannot all pass a stale check-then-act read.
+    try {
+      const reserved = await runWithDistributedLock(
+        `quota:${profileId}:${quotaKey}:${day}`,
+        async () => {
+          const { supabaseAdmin } = await import("./auth");
+          const { data, error } = await supabaseAdmin
+            .from("daily_quotas")
+            .select("count")
+            .eq("profile_id", profileId)
+            .eq("quota_key", quotaKey)
+            .eq("day", day)
+            .maybeSingle();
 
-    const count = Number(data?.count ?? 0);
-    if (count >= effectiveLimit) {
-      return next(new AppError({
-        status: 429,
-        code: "quota_exceeded",
-        message: isPaid
-          ? "Daily usage limit reached for this feature."
-          : "Daily free quota exceeded.",
-        details: {
-          quotaKey,
-          limit: effectiveLimit,
-          count,
-          requiredTier: normalizeSubscriptionTier(required).tier,
-          currentTier: normalizeSubscriptionTier(profile.tier).tier,
+          if (error) {
+            throw new AppError({
+              status: 503,
+              code: "external_service_error",
+              message: "Quota check is temporarily unavailable.",
+              expose: true,
+              cause: error,
+            });
+          }
+
+          const count = Number(data?.count ?? 0);
+          if (count >= effectiveLimit) {
+            throw new AppError({
+              status: 429,
+              code: "quota_exceeded",
+              message: isPaid
+                ? "Daily usage limit reached for this feature."
+                : "Daily free quota exceeded.",
+              details: {
+                quotaKey,
+                limit: effectiveLimit,
+                count,
+                requiredTier: normalizeSubscriptionTier(required).tier,
+                currentTier: normalizeSubscriptionTier(profile.tier).tier,
+              },
+            });
+          }
+
+          await incrementQuotaCounter(profileId, quotaKey, day);
+          return count + 1;
         },
-      }));
-    }
+        { ttlSeconds: 30, waitMs: 10_000 },
+      );
 
-    req.__quota = { key: quotaKey, day, count, limit: effectiveLimit };
-    return next();
+      req.__quota = {
+        key: quotaKey,
+        day,
+        count: reserved,
+        limit: effectiveLimit,
+        pending: true,
+      };
+
+      // Refund the reserved slot if the handler fails (keeps race-safe reserve
+      // without permanently burning quota on 4xx/5xx / aborted requests).
+      let settled = false;
+      const maybeRefund = (reason: "finish" | "close") => {
+        if (settled) return;
+        settled = true;
+        const q = req.__quota;
+        if (!q?.pending) return;
+        q.pending = false;
+        const failed =
+          reason === "close"
+            ? !res.writableEnded
+            : res.statusCode < 200 || res.statusCode >= 400;
+        if (!failed) return;
+        void refundQuotaCounter(profileId, quotaKey, day).catch((err) => {
+          console.warn(
+            "[entitlements] quota refund failed",
+            (err as Error)?.message ?? err,
+          );
+        });
+      };
+      res.once("finish", () => maybeRefund("finish"));
+      res.once("close", () => maybeRefund("close"));
+
+      return next();
+    } catch (error) {
+      return next(error);
+    }
   };
 }
 
@@ -190,10 +235,20 @@ export async function getUserEntitlements(userId: string): Promise<TierEntitleme
 }
 
 /**
- * Helper to call after a quota-gated operation succeeds.
- * Increments the daily quota counter.
+ * Legacy helper kept for route call sites. Quota is reserved atomically inside
+ * requireTierOrQuota before the handler; this remains a no-op so successful
+ * handlers do not double-count. Failed responses refund via the middleware hook.
  */
 export async function incrementQuota(
+  _profileId: string,
+  _quotaKey: string,
+  _day: string
+): Promise<void> {
+  return;
+}
+
+/** Internal counter bump used by the reserved quota gate. */
+async function incrementQuotaCounter(
   profileId: string,
   quotaKey: string,
   day: string
@@ -209,7 +264,13 @@ export async function incrementQuota(
 
   if (seed.error) {
     console.error("[entitlements] quota seed failed", seed.error);
-    return;
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: seed.error,
+    });
   }
 
   const increment = await supabaseAdmin.rpc("increment_quota", {
@@ -232,7 +293,13 @@ export async function incrementQuota(
 
   if (current.error) {
     console.error("[entitlements] quota fallback read failed", current.error);
-    return;
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: current.error,
+    });
   }
 
   const nextCount = Number(current.data?.count ?? 0) + 1;
@@ -245,7 +312,46 @@ export async function incrementQuota(
 
   if (fallback.error) {
     console.error("[entitlements] quota fallback increment failed", fallback.error);
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Quota tracking is temporarily unavailable.",
+      expose: true,
+      cause: fallback.error,
+    });
   }
+}
+
+/** Best-effort decrement after a reserved request fails. */
+async function refundQuotaCounter(
+  profileId: string,
+  quotaKey: string,
+  day: string,
+): Promise<void> {
+  await runWithDistributedLock(
+    `quota:${profileId}:${quotaKey}:${day}`,
+    async () => {
+      const { supabaseAdmin } = await import("./auth");
+      const current = await supabaseAdmin
+        .from("daily_quotas")
+        .select("count")
+        .eq("profile_id", profileId)
+        .eq("quota_key", quotaKey)
+        .eq("day", day)
+        .maybeSingle();
+
+      if (current.error) throw current.error;
+      const nextCount = Math.max(0, Number(current.data?.count ?? 0) - 1);
+      const { error } = await supabaseAdmin
+        .from("daily_quotas")
+        .upsert(
+          { profile_id: profileId, quota_key: quotaKey, day, count: nextCount },
+          { onConflict: "profile_id,quota_key,day" },
+        );
+      if (error) throw error;
+    },
+    { ttlSeconds: 30, waitMs: 10_000 },
+  );
 }
 
 /*

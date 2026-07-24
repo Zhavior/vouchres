@@ -147,9 +147,9 @@ function productionProofChecklist(checks: ConfigCheck[]): {
   const envItems: ProductionProofItem[] = [
     {
       id: "cron_secret",
-      label: "CRON_SECRET set (cron fails closed in production)",
+      label: "CRON_SECRET set (cron fails closed unless ALLOW_INSECURE_CRON)",
       ready: Boolean(cron?.configured),
-      detail: "Verify GET /api/cron/parlays/grade-due returns 401 without Authorization Bearer CRON_SECRET; staff-only POST /api/parlays/grade-due returns 403 for non-staff users.",
+      detail: "Verify GET /api/cron/parlays/grade-due returns 503/401 without Authorization Bearer CRON_SECRET; staff-only POST /api/parlays/grade-due returns 403 for non-staff users.",
     },
     {
       id: "sentry_dsn",
@@ -171,30 +171,31 @@ function productionProofChecklist(checks: ConfigCheck[]): {
     },
   ];
 
+  // ready:false until a human verifies staging soaks — never pretend soak is done.
   const soakPending: ProductionProofItem[] = [
     {
       id: "db_grading_soak",
       label: "DB-backed grading fixture soak",
-      ready: true,
+      ready: false,
       detail:
         "Automated tests cover gradePendingPicks coalescing, idempotent pending-query, and dry-run grading. " +
-        "Staging should still seed pending picks and confirm settle + grading_logs rows.",
+        "Staging still needs seeded pending picks with settle + grading_logs confirmation.",
     },
     {
       id: "multi_instance_soak",
       label: "Multi-instance soak (Redis rate limit + HR cache)",
-      ready: true,
+      ready: false,
       detail:
         "Automated tests cover distributed Redis lock exclusivity and grade-due coalescing. " +
-        "Staging should still run ≥2 instances behind a load balancer with Upstash enabled.",
+        "Staging still needs ≥2 instances behind a load balancer with Upstash enabled.",
     },
     {
       id: "upstream_fallback_coverage",
       label: "Upstream last-good fallback coverage (MLB feeds)",
-      ready: true,
+      ready: false,
       detail:
         "Automated tests cover last-good snapshots (L1 + Redis L2 read-through) for HR board hub, HR feed, daily report, live at-bat, and lineup board. " +
-        "Staging should still kill Stats API briefly and confirm honest warnings on /api/mlb/lineup/today and /api/mlb/hr-board/today.",
+        "Staging still needs a brief Stats API outage check with honest warnings on lineup/HR board routes.",
     },
   ];
 

@@ -13,8 +13,34 @@ import {
   canViewerAccessCapperSubscriberContent,
   canViewerAccessProfileSubscriberContent,
 } from "../services/social/socialProjectionService";
+import { PUBLIC_PICK_COLUMNS, toPublicPickDto } from "../lib/publicPickDto";
 
 export const subscriberRoutes = Router();
+
+/** Follower-gated delivery: public + subscriber. Never expose private. */
+const FOLLOWER_PICK_VISIBILITIES = ["public", "subscriber"] as const;
+
+function isFollowerVisiblePick(visibility: unknown): boolean {
+  return visibility === "public" || visibility === "subscriber";
+}
+
+async function loadFollowingIds(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("follows")
+    .select("following_profile_id, following_capper_id")
+    .eq("follower_id", userId);
+
+  if (error) throw error;
+
+  const profileIds = (data ?? [])
+    .map((row: { following_profile_id?: string | null }) => row.following_profile_id)
+    .filter(Boolean) as string[];
+  const capperIds = (data ?? [])
+    .map((row: { following_capper_id?: string | null }) => row.following_capper_id)
+    .filter(Boolean) as string[];
+
+  return { profileIds, capperIds };
+}
 
 async function assertFollowsCapper(userId: string, capperId: string): Promise<void> {
   const allowed = await canViewerAccessCapperSubscriberContent(userId, capperId);
@@ -80,14 +106,22 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
   const { data, error } = await supabaseAdmin
     .from("picks")
-    .select("*")
+    .select(PUBLIC_PICK_COLUMNS)
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
+    // Missing visibility column → fail closed (no private-capper dump).
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn(
+        "[subscriber] picks.visibility unavailable — refusing unfiltered capper parlays",
+      );
+      return res.json(apiOkFlat(req, { picks: [] }));
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",
@@ -96,12 +130,12 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
     });
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as unknown as Record<string, unknown>[];
   const legsByPickId = await findLegsForPicks(rows.map((row: { id: string }) => String(row.id)));
 
   return res.json(apiOkFlat(req, {
     picks: rows.map((row: Record<string, unknown>) => ({
-      ...row,
+      ...toPublicPickDto(row),
       legs: legsByPickId[String(row.id)] ?? [],
     })),
   }));
@@ -115,12 +149,13 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
 
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
 
-  // Public/shared parlays only: visibility=public when available, else linked to a feed post.
+  // Follower-gated shared parlays: public + subscriber. Private never. Feed-linked fallback stays public-only.
   const query = supabaseAdmin
     .from("picks")
-    .select("*")
+    .select(PUBLIC_PICK_COLUMNS)
     .eq("user_id", profileId)
     .eq("leg_type", "parlay")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -135,27 +170,17 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     });
   }
 
-  let rows = data ?? [];
+  // Fail closed: if visibility column is missing/unavailable, never dump all parlays.
+  // Fall through to feed-linked picks only (posts prove intentional public share).
+  let rows: Record<string, unknown>[] = [];
   if (error?.code === "42703" || error?.code === "PGRST204") {
-    const fallback = await supabaseAdmin
-      .from("picks")
-      .select("*")
-      .eq("user_id", profileId)
-      .eq("leg_type", "parlay")
-      .is("user_hidden_at", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (fallback.error) {
-      throw new AppError({
-        status: 500,
-        code: "internal_server_error",
-        message: "Failed to load profile parlays.",
-        cause: fallback.error,
-      });
-    }
-    rows = fallback.data ?? [];
+    console.warn(
+      "[subscriber] picks.visibility unavailable — refusing unfiltered profile parlays; using feed-linked only",
+    );
+    rows = [];
   } else {
-    rows = (data ?? []).filter((row: { visibility?: string }) => row.visibility === "public");
+    rows = ((data ?? []) as unknown as Record<string, unknown>[])
+      .filter((row) => isFollowerVisiblePick(row.visibility));
   }
 
   if (rows.length === 0) {
@@ -174,20 +199,29 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     if (pickIds.length > 0) {
       const { data: postedPicks, error: postedError } = await supabaseAdmin
         .from("picks")
-        .select("*")
+        .select(PUBLIC_PICK_COLUMNS)
         .in("id", pickIds)
         .eq("leg_type", "parlay")
+        .eq("visibility", "public")
         .is("user_hidden_at", null);
 
       if (postedError) {
-        throw new AppError({
-          status: 500,
-          code: "internal_server_error",
-          message: "Failed to load posted parlays.",
-          cause: postedError,
-        });
+        if (postedError.code === "42703" || postedError.code === "PGRST204") {
+          console.warn(
+            "[subscriber] picks.visibility unavailable — refusing unfiltered feed-linked parlays",
+          );
+          rows = [];
+        } else {
+          throw new AppError({
+            status: 500,
+            code: "internal_server_error",
+            message: "Failed to load posted parlays.",
+            cause: postedError,
+          });
+        }
+      } else {
+        rows = (postedPicks ?? []) as unknown as Record<string, unknown>[];
       }
-      rows = postedPicks ?? [];
     }
   }
 
@@ -195,7 +229,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
 
   return res.json(apiOkFlat(req, {
     picks: rows.map((row: Record<string, unknown>) => ({
-      ...row,
+      ...toPublicPickDto(row),
       legs: legsByPickId[String(row.id)] ?? [],
     })),
   }));
@@ -248,6 +282,18 @@ subscriberRoutes.get("/subscriber/me/posts", requireAuth, asyncHandler(async (re
 type SubscriberChannelKind = "owner" | "capper" | "profile";
 
 async function assertCanAccessSubscriberChannel(userId: string, kind: SubscriberChannelKind, targetId: string) {
+  if (kind === "owner") {
+    // Owner channels are private to the account holder — never open to followers.
+    if (targetId !== userId) {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "Owner channel access is restricted to the account holder.",
+        details: { error: "owner_channel_forbidden" },
+      });
+    }
+    return;
+  }
   if (kind === "capper") {
     await assertFollowsCapper(userId, targetId);
     return;
@@ -262,11 +308,18 @@ async function loadCapperAnnouncementPosts(capperId: string, limit: number) {
     .select("id, explanation, selection, created_at, status")
     .eq("capper_id", capperId)
     .eq("leg_type", "parlay")
+    .in("visibility", [...FOLLOWER_PICK_VISIBILITIES])
     .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn(
+        "[subscriber] picks.visibility unavailable — refusing unfiltered capper announcements",
+      );
+      return [];
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",

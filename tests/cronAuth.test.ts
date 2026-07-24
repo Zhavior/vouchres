@@ -15,17 +15,28 @@ describe("cron auth", () => {
     vi.unstubAllEnvs();
   });
 
-  it("allows cron requests in development when CRON_SECRET is unset", () => {
+  it("denies cron requests when CRON_SECRET is unset (fail closed)", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("CRON_SECRET", "");
+    vi.stubEnv("ALLOW_INSECURE_CRON", "");
+
+    expect(isAuthorizedCronRequest(mockRequest())).toBe(false);
+    expect(() => assertCronAuthorized(mockRequest())).toThrow(/Cron authentication is not configured/i);
+  });
+
+  it("allows local insecure cron only with explicit ALLOW_INSECURE_CRON", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("CRON_SECRET", "");
+    vi.stubEnv("ALLOW_INSECURE_CRON", "true");
 
     expect(isAuthorizedCronRequest(mockRequest())).toBe(true);
     expect(() => assertCronAuthorized(mockRequest())).not.toThrow();
   });
 
-  it("denies cron requests in production when CRON_SECRET is unset", () => {
+  it("never allows insecure cron in production even with ALLOW_INSECURE_CRON", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("CRON_SECRET", "");
+    vi.stubEnv("ALLOW_INSECURE_CRON", "true");
 
     expect(isAuthorizedCronRequest(mockRequest())).toBe(false);
     expect(() => assertCronAuthorized(mockRequest())).toThrow(/Cron authentication is not configured/i);

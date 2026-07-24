@@ -76,7 +76,15 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
       vi.advanceTimersByTime(901_000);
 
       const second = await getCachedValidatedHrBoard();
-      expect(second.candidates[0]?.playerName).toBe("Aaron Judge");
+      // Expired SWR: demote confirmed → projected; never keep stale candidates[].
+      expect(second.candidates).toEqual([]);
+      expect(second.projectedCandidates.some((row) => row.playerName === "Aaron Judge")).toBe(true);
+      expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.dataQuality).toBe(
+        "projection_preview",
+      );
+      expect(second.debug?.staleDataWarnings).toContain(
+        "Cached board expired — confirmed lineup rows demoted until a fresh board builds.",
+      );
 
       await vi.runAllTimersAsync();
 
@@ -103,11 +111,17 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     expect(second.lastGoodWarnings).toContain(
       "Serving last good snapshot — upstream temporarily unavailable",
     );
-    expect(second.candidates).toEqual(first.candidates);
+    // Honesty: last-good must not re-publish stale confirmed candidates[].
+    expect(second.candidates).toEqual([]);
+    expect(second.projectedCandidates.some((row) => row.playerName === "Aaron Judge")).toBe(true);
+    expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.dataQuality).toBe(
+      "projection_preview",
+    );
     expect(second.projectedCandidates[0]?.dataQuality).toBe("projection_preview");
     expect(second.debug?.staleDataWarnings).toContain(
       "Serving last good snapshot — upstream temporarily unavailable",
     );
+    expect(first.candidates).toHaveLength(1);
   });
 
   it("throws an honest error when upstream fails and no last-good snapshot exists", async () => {

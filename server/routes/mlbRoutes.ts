@@ -12,7 +12,7 @@ import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
 import { getTodayLineups } from "../services/mlb/lineupService";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { requireAuth, type AuthedRequest } from "../middleware/auth";
-import { mlbMutationLimiter } from "../middleware/rateLimit";
+import { mlbMutationLimiter, mlbReadLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import {
   ParlayLegProgressSchema,
@@ -58,7 +58,7 @@ export function registerMlbRoutes(app: Express): void {
     return res.json(apiOkFlat(req, getSportsDataGatewayStatus()));
   }));
 
-  app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/live", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const live = await getLiveGames(date);
     res.setHeader("Cache-Control", "private, max-age=4, stale-while-revalidate=15");
@@ -120,11 +120,11 @@ export function registerMlbRoutes(app: Express): void {
     }
   };
 
-  app.get("/api/mlb/lineup/today", asyncHandler(lineupTodayHandler));
-  app.get("/api/mlb/daily-player-board", asyncHandler(lineupTodayHandler));
-  app.get("/api/daily-players", asyncHandler(lineupTodayHandler));
+  app.get("/api/mlb/lineup/today", mlbReadLimiter, asyncHandler(lineupTodayHandler));
+  app.get("/api/mlb/daily-player-board", mlbReadLimiter, asyncHandler(lineupTodayHandler));
+  app.get("/api/daily-players", mlbReadLimiter, asyncHandler(lineupTodayHandler));
 
-  app.get("/api/mlb/games/date/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/games/date/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
     const games = await getScheduleByDate(date);
@@ -141,7 +141,7 @@ export function registerMlbRoutes(app: Express): void {
     logEndpoint(req, "/api/mlb/games/date/:date", start);
   }));
 
-  app.get("/api/mlb/game/:gamePk", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/game/:gamePk", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
     const feed = await getGameFeed(gamePk);
@@ -158,7 +158,7 @@ export function registerMlbRoutes(app: Express): void {
     logEndpoint(req, "/api/mlb/game/:gamePk", start);
   }));
 
-  app.get("/api/mlb/probable-pitchers/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/probable-pitchers/:date", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
     res.json(apiOkFlat(req, {
@@ -169,7 +169,7 @@ export function registerMlbRoutes(app: Express): void {
     logEndpoint(req, "/api/mlb/probable-pitchers/:date", start);
   }));
 
-  app.get("/api/mlb/reports/daily", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/daily", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = optionalDateQuery(req.query.date);
     try {
@@ -182,7 +182,7 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/reports/vulnerable-pitchers", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/vulnerable-pitchers", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
@@ -192,7 +192,7 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/reports/hr-targets", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/hr-targets", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
@@ -202,7 +202,7 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/reports/sneaky-hr", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/sneaky-hr", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
@@ -212,7 +212,7 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/reports/rbi-targets", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/rbi-targets", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
@@ -222,7 +222,7 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/reports/run-environments", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/reports/run-environments", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);

@@ -1,7 +1,10 @@
+import { createHash } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
+import { TTLCache } from "../lib/cache";
 import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
+import { isUpstashEnabled, redisDel, redisGet, redisGetJson, redisSet, redisSetJson } from "../lib/upstashRedis";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -71,109 +74,278 @@ export interface AuthedRequest extends Request {
       age_confirmed_at: string | null;
       jurisdiction_confirmed_at: string | null;
       jurisdiction: string | null;
+      deletion_scheduled_at?: string | null;
     };
   };
 }
 
-export async function requireAuth(
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) {
+type CachedAuthSession = NonNullable<AuthedRequest["user"]> & { authEpoch: number };
+
+/** Short-lived auth session cache — L1 memory + optional L2 Redis for multi-instance. */
+const AUTH_SESSION_TTL_MS = 30_000;
+const AUTH_SESSION_TTL_SECONDS = 30;
+/** Epoch TTL must outlive session cache so ban/tier bumps are visible until sessions expire. */
+const AUTH_EPOCH_TTL_SECONDS = 120;
+/**
+ * Soft L1 for epochs when Redis is on. Must be short so another instance's
+ * bumpAuthUserEpoch is observed quickly (not stuck until the 30s session TTL).
+ */
+const AUTH_EPOCH_L1_TTL_MS = 1_000;
+const authSessionCache = new TTLCache<CachedAuthSession>(AUTH_SESSION_TTL_MS, "auth:session");
+type AuthEpochL1Entry = { epoch: number; expiresAt: number };
+const authEpochL1 = new Map<string, AuthEpochL1Entry>();
+
+function authTokenCacheKey(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function authRedisKey(tokenHash: string): string {
+  return `auth:session:${tokenHash}`;
+}
+
+function authEpochRedisKey(userId: string): string {
+  return `auth:epoch:${userId}`;
+}
+
+/**
+ * Returns the auth epoch, or `null` when Redis is enabled but unreadable.
+ * Callers must treat `null` as "do not trust cached sessions".
+ */
+async function getAuthUserEpoch(userId: string): Promise<number | null> {
+  const local = authEpochL1.get(userId);
+
+  // Without Redis, process-local epoch is the source of truth.
+  if (!isUpstashEnabled()) {
+    return local?.epoch ?? 0;
+  }
+
+  // With Redis, only trust a fresh L1 hit — otherwise re-read so cross-instance bumps apply.
+  if (local && local.expiresAt > Date.now()) {
+    return local.epoch;
+  }
+
   try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
+    const remote = await redisGet(authEpochRedisKey(userId));
+    const n = remote == null ? 0 : Number(remote);
+    const epoch = Number.isFinite(n) ? n : 0;
+    authEpochL1.set(userId, { epoch, expiresAt: Date.now() + AUTH_EPOCH_L1_TTL_MS });
+    return epoch;
+  } catch (error) {
+    console.warn("[auth] redis epoch read failed", (error as Error)?.message ?? error);
+    return null;
+  }
+}
+
+/**
+ * Invalidate cached auth sessions for a user (ban, tier, staff, deletion schedule).
+ * Next request reloads profile from DB instead of serving a stale 30s cache hit.
+ */
+export async function bumpAuthUserEpoch(userId: string): Promise<void> {
+  if (!userId) return;
+  const current = (await getAuthUserEpoch(userId)) ?? authEpochL1.get(userId)?.epoch ?? 0;
+  const next = current + 1;
+  authEpochL1.set(userId, { epoch: next, expiresAt: Date.now() + AUTH_EPOCH_L1_TTL_MS });
+  if (!isUpstashEnabled()) return;
+  try {
+    await redisSet(authEpochRedisKey(userId), String(next), { exSeconds: AUTH_EPOCH_TTL_SECONDS });
+  } catch (error) {
+    console.warn("[auth] redis epoch bump failed", (error as Error)?.message ?? error);
+  }
+}
+
+async function readAuthSessionCache(tokenHash: string): Promise<CachedAuthSession | null> {
+  const local = authSessionCache.get(tokenHash);
+  const candidate = local ?? (isUpstashEnabled()
+    ? await (async () => {
+        try {
+          const remote = await redisGetJson<CachedAuthSession>(authRedisKey(tokenHash));
+          if (!remote?.id || !remote.profile) return null;
+          authSessionCache.set(tokenHash, remote, AUTH_SESSION_TTL_MS);
+          return remote;
+        } catch (error) {
+          console.warn("[auth] redis session read failed", (error as Error)?.message ?? error);
+          return null;
+        }
+      })()
+    : null);
+
+  if (!candidate) return null;
+
+  const epoch = await getAuthUserEpoch(candidate.id);
+  // Redis epoch unread ⇒ cache miss (never treat unknown epoch as 0 / pre-ban).
+  if (epoch === null || (candidate.authEpoch ?? 0) !== epoch) {
+    authSessionCache.delete(tokenHash);
+    if (isUpstashEnabled()) {
+      try {
+        await redisDel(authRedisKey(tokenHash));
+      } catch (error) {
+        console.warn("[auth] redis session delete failed", (error as Error)?.message ?? error);
+      }
     }
+    return null;
+  }
 
-    const token = header.slice(7);
+  return candidate;
+}
 
-    // Verify the JWT via Supabase auth admin API
-    const supabaseAdmin = await getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data.user) {
-      console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 401, code: "invalid_token", message: "Authentication token is invalid." }));
-    }
+async function writeAuthSessionCache(
+  tokenHash: string,
+  session: NonNullable<AuthedRequest["user"]>,
+): Promise<void> {
+  const epoch = (await getAuthUserEpoch(session.id)) ?? 0;
+  const cached: CachedAuthSession = { ...session, authEpoch: epoch };
+  authSessionCache.set(tokenHash, cached, AUTH_SESSION_TTL_MS);
+  if (!isUpstashEnabled()) return;
+  try {
+    await redisSetJson(authRedisKey(tokenHash), cached, AUTH_SESSION_TTL_SECONDS);
+  } catch (error) {
+    console.warn("[auth] redis session write failed", (error as Error)?.message ?? error);
+  }
+}
 
-    const PROFILE_COLUMNS = `
+/** Test-only: clear cached sessions between cases. */
+export function resetAuthSessionCacheForTests(): void {
+  authSessionCache.clear();
+  authEpochL1.clear();
+}
+
+type RequireAuthOptions = {
+  /** Allow users with deletion_scheduled_at to reach cancel/status privacy routes. */
+  allowPendingDeletion?: boolean;
+};
+
+function pendingDeletionAuthError(profile: NonNullable<AuthedRequest["user"]>["profile"]) {
+  return new AppError({
+    status: 403,
+    code: "forbidden",
+    message: "Your account is scheduled for deletion. Visit Settings to cancel.",
+    details: { deletion_scheduled_at: profile.deletion_scheduled_at },
+  });
+}
+
+function bannedAuthError() {
+  return new AppError({ status: 403, code: "forbidden", message: "Account is banned." });
+}
+
+/** Deletion schedule and staff bans are independent gates. */
+function authAccessError(
+  profile: NonNullable<AuthedRequest["user"]>["profile"],
+  options: RequireAuthOptions,
+): AppError | null {
+  if (profile.deletion_scheduled_at && !options.allowPendingDeletion) {
+    return pendingDeletionAuthError(profile);
+  }
+  if (profile.is_banned) {
+    return bannedAuthError();
+  }
+  return null;
+}
+
+function createRequireAuth(options: RequireAuthOptions = {}) {
+  return async function requireAuthImpl(
+    req: AuthedRequest,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const header = req.headers.authorization;
+      if (!header?.startsWith("Bearer ")) {
+        console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
+      }
+
+      const token = header.slice(7);
+      const cacheKey = authTokenCacheKey(token);
+      const cached = await readAuthSessionCache(cacheKey);
+      if (cached) {
+        const blocked = authAccessError(cached.profile, options);
+        if (blocked) return next(blocked);
+        req.user = cached;
+        return next();
+      }
+
+      // Verify the JWT via Supabase auth admin API
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (error || !data.user) {
+        console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 401, code: "invalid_token", message: "Authentication token is invalid." }));
+      }
+
+      const PROFILE_COLUMNS = `
     id, username, handle, tier, is_banned, is_staff, is_demo,
     age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
     deletion_scheduled_at
   `;
 
-    // Load profile from public.profiles (bypasses RLS via service role)
-    let { data: profile, error: pErr } = await supabaseAdmin
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .eq("id", data.user.id)
-      .maybeSingle();
-
-  // Lazy provisioning: if the auth user has no profile row yet (the
-  // handle_new_user trigger is missing or didn't run for this account),
-  // create a minimal one now so a valid logged-in user is never locked out.
-  // Idempotent — a concurrent insert just falls back to a re-select.
-    if (!pErr && !profile) {
-      const shortId = data.user.id.replace(/-/g, "").slice(0, 8);
-      const handle = `user_${shortId}`;
-      const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
-
-      const { data: created, error: cErr } = await supabaseAdmin
+      // Load profile from public.profiles (bypasses RLS via service role)
+      let { data: profile, error: pErr } = await supabaseAdmin
         .from("profiles")
-        .insert({ id: data.user.id, username: handle, handle, display_name: displayName })
         .select(PROFILE_COLUMNS)
-        .single();
+        .eq("id", data.user.id)
+        .maybeSingle();
 
-      if (created) {
-        profile = created;
-      } else if (cErr) {
-        // Likely a race (unique violation) — the row now exists; re-read it.
-        const reread = await supabaseAdmin
+      // Lazy provisioning: if the auth user has no profile row yet (the
+      // handle_new_user trigger is missing or didn't run for this account),
+      // create a minimal one now so a valid logged-in user is never locked out.
+      // Idempotent — a concurrent insert just falls back to a re-select.
+      if (!pErr && !profile) {
+        const shortId = data.user.id.replace(/-/g, "").slice(0, 8);
+        const handle = `user_${shortId}`;
+        const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
+
+        const { data: created, error: cErr } = await supabaseAdmin
           .from("profiles")
+          .insert({ id: data.user.id, username: handle, handle, display_name: displayName })
           .select(PROFILE_COLUMNS)
-          .eq("id", data.user.id)
-          .maybeSingle();
-        profile = reread.data ?? null;
-        pErr = reread.error ?? cErr;
+          .single();
+
+        if (created) {
+          profile = created;
+        } else if (cErr) {
+          // Likely a race (unique violation) — the row now exists; re-read it.
+          const reread = await supabaseAdmin
+            .from("profiles")
+            .select(PROFILE_COLUMNS)
+            .eq("id", data.user.id)
+            .maybeSingle();
+          profile = reread.data ?? null;
+          pErr = reread.error ?? cErr;
+        }
       }
-    }
 
-    if (pErr || !profile) {
-      console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
-      return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
-    }
-
-    if (profile.is_banned) {
-      // Distinguish "banned by moderator" from "scheduled for deletion"
-      if (profile.deletion_scheduled_at) {
-        return next(new AppError({
-          status: 403,
-          code: "forbidden",
-          message: "Your account is scheduled for deletion. Visit Settings to cancel.",
-          details: { deletion_scheduled_at: profile.deletion_scheduled_at },
-        }));
+      if (pErr || !profile) {
+        console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
       }
-      return next(new AppError({ status: 403, code: "forbidden", message: "Account is banned." }));
+
+      const blocked = authAccessError(profile, options);
+      if (blocked) return next(blocked);
+
+      req.user = {
+        id: data.user.id,
+        email: data.user.email,
+        profile,
+      };
+      await writeAuthSessionCache(cacheKey, req.user);
+
+      next();
+    } catch (error) {
+      next(new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Authentication check failed.",
+        expose: false,
+        cause: error,
+      }));
     }
-
-    req.user = {
-      id: data.user.id,
-      email: data.user.email,
-      profile,
-    };
-
-    next();
-  } catch (error) {
-    next(new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Authentication check failed.",
-      expose: false,
-      cause: error,
-    }));
-  }
+  };
 }
+
+export const requireAuth = createRequireAuth();
+
+/** Privacy cancel/status only — scheduled-deletion users must still authenticate. */
+export const requireAuthAllowPendingDeletion = createRequireAuth({ allowPendingDeletion: true });
 
 /**
  * Optional auth — attaches user if token present, does not 401 if absent.
@@ -194,6 +366,15 @@ export async function optionalAuth(
   // feed/leaderboard/profile routes that use it.
   try {
     const token = header.slice(7);
+    const cacheKey = authTokenCacheKey(token);
+    const cached = await readAuthSessionCache(cacheKey);
+    if (cached) {
+      if (!cached.profile.is_banned && !cached.profile.deletion_scheduled_at) {
+        req.user = cached;
+      }
+      return next();
+    }
+
     const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin.auth.getUser(token);
     if (error || !data.user) return next();
@@ -208,8 +389,9 @@ export async function optionalAuth(
       .eq("id", data.user.id)
       .single();
 
-    if (profile && !profile.is_banned) {
+    if (profile && !profile.is_banned && !profile.deletion_scheduled_at) {
       req.user = { id: data.user.id, email: data.user.email, profile };
+      await writeAuthSessionCache(cacheKey, req.user);
     }
   } catch (err) {
     // Degrade to anonymous — do not surface the error to the client.

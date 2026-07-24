@@ -20,18 +20,32 @@ export interface LiveHrLegMatch {
   };
 }
 
-function isAnytimeHrMarket(
+const CANONICAL_HR_MARKET_CODES = new Set([
+  "HR",
+  "HOME_RUN",
+  "ANYTIME_HR",
+  "BATTER_HR",
+  "TO_HIT_A_HR",
+  "PLAYER_HR",
+]);
+
+/** True only for anytime HR markets — rejects substring false positives like "threshold". */
+export function isAnytimeHrMarket(
   market: string | null | undefined,
   selection: string | null | undefined,
   marketCode?: string | null | undefined
 ): boolean {
   const canonicalMarket = String(marketCode ?? "").trim().toUpperCase();
-  if (canonicalMarket === "HR" || canonicalMarket === "HOME_RUN" || canonicalMarket === "ANYTIME_HR") {
-    return true;
+  if (canonicalMarket.length > 0) {
+    return CANONICAL_HR_MARKET_CODES.has(canonicalMarket);
   }
 
   const haystack = `${market ?? ""} ${selection ?? ""}`.toLowerCase();
-  return haystack.includes("hr") || haystack.includes("home run") || haystack.includes("homer");
+  if (/\bhome\s*runs?\b/.test(haystack) || /\bhomer(?:s|un)?\b/.test(haystack)) {
+    return true;
+  }
+  // Word-boundary "hr" only — never bare includes("hr") (matches "threshold", "other", …).
+  return /(^|[^a-z0-9])hr([^a-z0-9]|$)/.test(haystack);
 }
 
 function ymdFromValue(value: unknown): string {
@@ -55,8 +69,8 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
     .eq("status", "pending");
 
   if (legsError) {
-    console.warn("[liveHrParlay] pending legs query failed", legsError.message);
-    return [];
+    console.error("[liveHrParlay] pending legs query failed", legsError.message);
+    throw legsError;
   }
 
   const candidateLegs = (pendingLegs ?? []).filter((leg: any) =>

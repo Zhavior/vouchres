@@ -177,7 +177,7 @@ export async function recomputeTrustForPick(pickId: string): Promise<void> {
 
   if (error) {
     console.error("[picks] trust recompute query failed", error);
-    return;
+    throw error;
   }
 
   const won = graded?.filter((p) => p.status === "won").length ?? 0;
@@ -200,7 +200,7 @@ export async function recomputeTrustForPick(pickId: string): Promise<void> {
   const clampedScore = Math.max(0, Math.min(100, Number(score.toFixed(2))));
 
   // 4. Upsert trust_scores
-  await supabaseAdmin.from("trust_scores").upsert(
+  const { error: upsertError } = await supabaseAdmin.from("trust_scores").upsert(
     {
       subject_type: subjectType,
       subject_id: subjectId,
@@ -217,10 +217,11 @@ export async function recomputeTrustForPick(pickId: string): Promise<void> {
     },
     { onConflict: "subject_type,subject_id,scope" }
   );
+  if (upsertError) throw upsertError;
 
   // 5. Mirror to profiles if subject is a user
   if (isUser) {
-    await supabaseAdmin
+    const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({
         trust_score: clampedScore,
@@ -231,6 +232,7 @@ export async function recomputeTrustForPick(pickId: string): Promise<void> {
         net_units: Number(netUnits.toFixed(2)),
       })
       .eq("id", subjectId);
+    if (profileError) throw profileError;
   }
 }
 

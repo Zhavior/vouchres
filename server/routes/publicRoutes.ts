@@ -4,6 +4,7 @@ import { AuthedRequest, optionalAuth, requireAuth, requireStaff, supabaseAdmin }
 import { generationLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
+import { PUBLIC_PICK_COLUMNS, toPublicPickDtos } from "../lib/publicPickDto";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { validate } from "../middleware/validation";
@@ -307,16 +308,33 @@ publicRoutes.get("/cappers/:id", asyncHandler(async (req: RequestWithContext, re
       .eq("subject_id", id),
     supabaseAdmin
       .from("picks")
-      .select("id, market, selection, status, settled_units, created_at, graded_at, event_id")
+      .select("id, market, selection, status, settled_units, created_at, graded_at, event_id, visibility")
       .eq("capper_id", id)
+      .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
 
+  let recentPicks = picksRes.data ?? [];
+  if (picksRes.error) {
+    // Missing visibility column → fail closed (never dump private capper slips).
+    if (picksRes.error.code === "42703" || picksRes.error.code === "PGRST204") {
+      console.warn("[public] picks.visibility unavailable — refusing unfiltered capper recent picks");
+      recentPicks = [];
+    } else {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to fetch capper picks.",
+        cause: picksRes.error,
+      });
+    }
+  }
+
   return res.json(apiOkFlat(req, {
     ...capper,
     trust_scores: scoresRes.data ?? [],
-    recent_picks: picksRes.data ?? [],
+    recent_picks: recentPicks,
   }));
 }));
 
@@ -328,8 +346,9 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
 
   let query = supabaseAdmin
     .from("picks")
-    .select("*", { count: "exact" })
+    .select(PUBLIC_PICK_COLUMNS, { count: "exact" })
     .eq("capper_id", id)
+    .eq("visibility", "public")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -337,6 +356,10 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
 
   const { data, count, error } = await query;
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      console.warn("[public] picks.visibility unavailable — refusing unfiltered capper picks");
+      return res.json(apiOkFlat(req, { picks: [], total: 0, limit, offset }));
+    }
     throw new AppError({
       status: 500,
       code: "internal_server_error",
@@ -345,7 +368,12 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
     });
   }
 
-  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
+  return res.json(apiOkFlat(req, {
+    picks: toPublicPickDtos((data ?? []) as unknown as Array<Record<string, unknown>>),
+    total: count ?? 0,
+    limit,
+    offset,
+  }));
 }));
 
 publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -368,7 +396,6 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, re
       pushed_picks,
       net_units,
       is_demo,
-      is_staff,
       created_at
     `)
     .eq("id", id)
@@ -407,7 +434,7 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
 
   let query = supabaseAdmin
     .from("picks")
-    .select("*", { count: "exact" })
+    .select(PUBLIC_PICK_COLUMNS, { count: "exact" })
     .eq("user_id", id)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -424,7 +451,12 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
     });
   }
 
-  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
+  return res.json(apiOkFlat(req, {
+    picks: toPublicPickDtos((data ?? []) as unknown as Array<Record<string, unknown>>),
+    total: count ?? 0,
+    limit,
+    offset,
+  }));
 }));
 
 publicRoutes.post(

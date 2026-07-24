@@ -1,5 +1,6 @@
 import { AppError } from "../../errors/AppError";
 import { runWithDistributedLock } from "../../lib/distributedLock";
+import { isProductionRuntime } from "../../lib/runtime";
 import { captureGradingFailure } from "../../lib/sentry";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
@@ -109,16 +110,21 @@ export async function gradePendingPicks(opts: {
     return gradePendingInflight;
   }
 
-  return runWithDistributedLock(GRADE_PENDING_LOCK, async () => {
-    if (gradePendingInflight) {
-      return gradePendingInflight;
-    }
-
-    gradePendingInflight = runGradePendingPicks(opts).finally(() => {
-      gradePendingInflight = null;
-    });
-    return gradePendingInflight;
+  let resolveInflight!: (value: GradeRunResult) => void;
+  let rejectInflight!: (reason?: unknown) => void;
+  const inflight = new Promise<GradeRunResult>((resolve, reject) => {
+    resolveInflight = resolve;
+    rejectInflight = reject;
   });
+  gradePendingInflight = inflight;
+
+  void runWithDistributedLock(
+    GRADE_PENDING_LOCK,
+    () => runGradePendingPicks(opts),
+  ).then(resolveInflight, rejectInflight).finally(() => {
+    if (gradePendingInflight === inflight) gradePendingInflight = null;
+  });
+  return inflight;
 }
 
 async function runGradePendingPicks(opts: {
@@ -228,6 +234,18 @@ async function runGradePendingPicks(opts: {
 
             if (atomicSettlement.ok) {
               atomicSettlementSucceeded = true;
+            } else if (atomicSettlement.fatal) {
+              skipped.push({
+                pick_id: pick.id,
+                status: "graded_error",
+                settled_units: null,
+                error: "atomic_settlement_required",
+                warnings: [
+                  atomicSettlement.warning ??
+                    "Atomic parlay settlement failed; non-atomic fallback refused.",
+                ],
+              });
+              continue;
             } else if (atomicSettlement.warning) {
               result.warnings = [...(result.warnings ?? []), atomicSettlement.warning];
             }
@@ -443,13 +461,23 @@ export async function evaluatePick(
   }
 
   const playerName = extractPlayerName(selection, market);
-  const isAvoidPick =
-    pick.judge_verdict === "avoid" ||
-    market === "hr_avoid" ||
-    market.includes("avoid") ||
-    /^avoid\b/i.test(selection);
+  // Only trust server/AI-authored judge_verdict. Client-controlled market/selection
+  // strings must never invert settle logic (e.g. market=hr_avoid / selection="Avoid X").
+  if (
+    market === "hr_avoid"
+    || market.includes("avoid")
+    || /^avoid\b/i.test(selection)
+  ) {
+    return {
+      pick_id: pick.id,
+      status: "graded_error",
+      settled_units: null,
+      error: "client_avoid_market_rejected",
+    };
+  }
+  const isAvoidPick = pick.judge_verdict === "avoid";
 
-  if (market === "hr" || market === "hr_multi" || market === "hr_avoid" || market === "home run") {
+  if (market === "hr" || market === "hr_multi" || market === "home run") {
     const threshold = market === "hr_multi" ? 2 : 1;
     const playerHrs = countPlayerStat(boxscore, playerName, "homeRuns");
     if (playerHrs === null) {
@@ -588,13 +616,14 @@ async function gradeParlayPick(
     }
 
     if (!isLikelyMlbGamePk(rawGamePk)) {
-      legResults.push({
-        leg_index: Number(leg.leg_index),
-        status: "push",
-        odds: Number(leg.odds_decimal ?? 1),
-        note: `Skipped legacy/manual leg with invalid game id: ${rawGamePk || "missing"}`,
-      });
-      continue;
+      // Fail closed — invalid game ids must not soft-push and invent a parlay result.
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `parlay_leg_invalid_game_pk:${rawGamePk || "missing"}`,
+        warnings: [`Parlay leg ${leg.leg_index} has an invalid MLB game id.`],
+      };
     }
 
     let legBoxscore = boxscoreCache.get(rawGamePk);
@@ -890,7 +919,12 @@ type AtomicParlaySettlementResult = {
 async function settleParlayPacketAtomically(
   pickId: string,
   result: GradeResult
-): Promise<{ ok: boolean; warning?: string; proof?: AtomicParlaySettlementResult }> {
+): Promise<{
+  ok: boolean;
+  fatal?: boolean;
+  warning?: string;
+  proof?: AtomicParlaySettlementResult;
+}> {
   if (!result.leg_results?.length) {
     return { ok: false, warning: "No leg_results supplied for atomic parlay settlement." };
   }
@@ -924,6 +958,24 @@ async function settleParlayPacketAtomically(
       error.code === "42883" ||
       error.code === "PGRST202" ||
       /settle_parlay_packet/i.test(error.message ?? "");
+
+    // Production never allows non-atomic parent-then-legs fallback (split-brain
+    // risk), even if ALLOW_LEGACY_PARLAY_SETTLEMENT is set — that escape hatch
+    // is non-prod only. Local/dev may fall back when the RPC is missing or when
+    // the env override is explicitly enabled.
+    const allowLegacy =
+      !isProductionRuntime() &&
+      (process.env.ALLOW_LEGACY_PARLAY_SETTLEMENT === "true" || missingRpc);
+
+    if (!allowLegacy) {
+      return {
+        ok: false,
+        fatal: true,
+        warning: missingRpc
+          ? "Atomic settlement RPC unavailable — refusing non-atomic fallback."
+          : `Atomic settlement RPC failed — refusing non-atomic fallback. ${error.message}`,
+      };
+    }
 
     return {
       ok: false,

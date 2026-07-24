@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { AppError } from "../../errors/AppError";
+import { runWithDistributedLock } from "../../lib/distributedLock";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import {
   DATABASE_TIER_BY_CANONICAL,
@@ -91,34 +92,74 @@ export function stripePriceConfigByPriceId(priceId: string): StripePriceConfig |
  */
 export async function ensureStripeCustomer(profileId: string, email: string) {
   assertStripeConfigured();
-  const supabaseAdmin = await getSupabaseAdmin();
-  // Check if profile already has a stripe_customer_id
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("stripe_customer_id")
-    .eq("id", profileId)
-    .single();
 
-  if (profile?.stripe_customer_id) {
-    try {
-      const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
-      if (!existing.deleted) return existing;
-    } catch (err) {
-      // Customer was deleted in Stripe dashboard — fall through to create
-    }
-  }
+  // Serialize customer ensure so portal/checkout races cannot create orphans.
+  return runWithDistributedLock(
+    `stripe-customer:${profileId}`,
+    async () => {
+      const supabaseAdmin = await getSupabaseAdmin();
+      // Check if profile already has a stripe_customer_id
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("stripe_customer_id")
+        .eq("id", profileId)
+        .single();
 
-  const customer = await getStripe().customers.create({
-    email,
-    metadata: { profile_id: profileId },
-  });
+      if (profile?.stripe_customer_id) {
+        try {
+          const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
+          if (!existing.deleted) return existing;
+          // Deleted in Stripe — fall through to create + rebind.
+        } catch (error: unknown) {
+          const code =
+            error && typeof error === "object" && "code" in error
+              ? String((error as { code?: string }).code ?? "")
+              : "";
+          const statusCode =
+            error && typeof error === "object" && "statusCode" in error
+              ? Number((error as { statusCode?: number }).statusCode)
+              : NaN;
+          // Only recreate on definitive missing customer — never on transient Stripe/network errors.
+          if (code === "resource_missing" || statusCode === 404) {
+            // fall through to create
+          } else {
+            throw error;
+          }
+        }
+      }
 
-  await supabaseAdmin
-    .from("profiles")
-    .update({ stripe_customer_id: customer.id })
-    .eq("id", profileId);
+      const customer = await getStripe().customers.create({
+        email,
+        metadata: { profile_id: profileId },
+      });
 
-  return customer;
+      const { data: bound, error: bindError } = await supabaseAdmin
+        .from("profiles")
+        .update({ stripe_customer_id: customer.id })
+        .eq("id", profileId)
+        .select("id")
+        .maybeSingle();
+
+      if (bindError || !bound) {
+        // Fail closed: do not return an unbound Stripe customer (orphan billing id).
+        try {
+          await deleteStripeCustomer(customer.id);
+        } catch {
+          // Best-effort cleanup; surface the bind failure either way.
+        }
+        throw new AppError({
+          status: 503,
+          code: "upstream_unavailable",
+          message: "Unable to link billing customer. Please try again.",
+          details: { reason: "stripe_customer_bind_failed" },
+          cause: bindError ?? new Error("stripe_customer_bind_missing_row"),
+        });
+      }
+
+      return customer;
+    },
+    { ttlSeconds: 60, waitMs: 15_000 },
+  );
 }
 
 /**
@@ -134,50 +175,102 @@ export async function createCheckoutSession(opts: {
 }) {
   assertStripeConfigured();
 
-  // Guard against double-subscribing: a user with an already-active (or
-  // trialing/past_due) subscription who starts a second checkout would end up
-  // paying for two parallel subscriptions. Send them to the billing portal to
-  // change plans instead.
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data: activeSub } = await supabaseAdmin
-    .from("subscriptions")
-    .select("stripe_subscription_id, status, tier")
-    .eq("profile_id", opts.profileId)
-    .in("status", ["active", "trialing", "past_due"])
-    .maybeSingle();
+  // Serialize checkout creation per profile so concurrent requests cannot
+  // race past the active-subscription guard and open two Stripe sessions.
+  return runWithDistributedLock(
+    `checkout:${opts.profileId}`,
+    async () => {
+      // Guard against double-subscribing: a user with an already-active (or
+      // trialing/past_due) subscription who starts a second checkout would end up
+      // paying for two parallel subscriptions. Send them to the billing portal to
+      // change plans instead.
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: activeSub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("stripe_subscription_id, status, tier")
+        .eq("profile_id", opts.profileId)
+        .in("status", ["active", "trialing", "past_due"])
+        .maybeSingle();
 
-  if (activeSub) {
-    throw new AppError({
-      status: 409,
-      code: "conflict",
-      message:
-        "You already have an active subscription. Manage or change your plan from the billing portal instead of starting a new checkout.",
-      expose: true,
-      details: { reason: "already_subscribed", currentTier: activeSub.tier, status: activeSub.status },
-    });
-  }
+      if (activeSub) {
+        throw new AppError({
+          status: 409,
+          code: "conflict",
+          message:
+            "You already have an active subscription. Manage or change your plan from the billing portal instead of starting a new checkout.",
+          expose: true,
+          details: { reason: "already_subscribed", currentTier: activeSub.tier, status: activeSub.status },
+        });
+      }
 
-  const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
+      const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
+      const stripe = getStripe();
 
-  return getStripe().checkout.sessions.create({
-    mode: "subscription",
-    customer: customer.id,
-    line_items: [{ price: opts.priceId, quantity: 1 }],
-    success_url: opts.successUrl,
-    cancel_url: opts.cancelUrl,
-    client_reference_id: opts.profileId,
-    metadata: {
-      profile_id: opts.profileId,
-      target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
+      // Stripe-side guard: local DB can lag webhooks — refuse if customer already has a live sub.
+      const stripeSubs = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "all",
+        limit: 20,
+      });
+      const liveStripeSub = stripeSubs.data.find((sub) =>
+        sub.status === "active" || sub.status === "trialing" || sub.status === "past_due",
+      );
+      if (liveStripeSub) {
+        throw new AppError({
+          status: 409,
+          code: "conflict",
+          message:
+            "You already have an active subscription. Manage or change your plan from the billing portal instead of starting a new checkout.",
+          expose: true,
+          details: {
+            reason: "already_subscribed",
+            currentTier: stripePriceConfigByPriceId(
+              typeof liveStripeSub.items.data[0]?.price?.id === "string"
+                ? liveStripeSub.items.data[0].price.id
+                : "",
+            )?.tier ?? "unknown",
+            status: liveStripeSub.status,
+            source: "stripe",
+          },
+        });
+      }
+
+      // Expire leftover open Checkout Sessions so sequential clicks cannot double-subscribe.
+      const openSessions = await stripe.checkout.sessions.list({
+        customer: customer.id,
+        status: "open",
+        limit: 20,
+      });
+      for (const open of openSessions.data) {
+        try {
+          await stripe.checkout.sessions.expire(open.id);
+        } catch (error) {
+          console.warn("[stripe] expire open checkout failed", open.id, (error as Error)?.message);
+        }
+      }
+
+      return stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customer.id,
+        line_items: [{ price: opts.priceId, quantity: 1 }],
+        success_url: opts.successUrl,
+        cancel_url: opts.cancelUrl,
+        client_reference_id: opts.profileId,
+        metadata: {
+          profile_id: opts.profileId,
+          target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
+        },
+        subscription_data: {
+          metadata: {
+            profile_id: opts.profileId,
+            target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
+          },
+        },
+        allow_promotion_codes: true,
+      });
     },
-    subscription_data: {
-      metadata: {
-        profile_id: opts.profileId,
-        target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
-      },
-    },
-    allow_promotion_codes: true,
-  });
+    { ttlSeconds: 60, waitMs: 15_000 },
+  );
 }
 
 /**
@@ -190,24 +283,14 @@ export async function createPortalSession(opts: {
   returnUrl: string;
 }) {
   assertStripeConfigured();
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data: profile, error: profileErr } = await supabaseAdmin
-    .from("profiles")
-    .select("stripe_customer_id")
-    .eq("id", opts.profileId)
-    .single();
 
-  if (profileErr) {
-    console.error("[stripe] profile lookup failed:", profileErr.message);
-  }
-
-  const customerId = profile?.stripe_customer_id
-    ? profile.stripe_customer_id
-    : ((await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer).id;
+  // Always go through ensureStripeCustomer so deleted/stale Stripe customer IDs
+  // are retrieved/recreated instead of failing the portal with a dead cus_ id.
+  const customer = (await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer;
 
   try {
     return await getStripe().billingPortal.sessions.create({
-      customer: customerId,
+      customer: customer.id,
       return_url: opts.returnUrl,
     });
   } catch (err: any) {
@@ -273,7 +356,7 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
 
   const { data, error: lookupError } = await supabaseAdmin
     .from("stripe_webhook_events")
-    .select("status")
+    .select("status, received_at")
     .eq("id", event.id)
     .maybeSingle();
   if (lookupError) throw lookupError;
@@ -292,6 +375,30 @@ export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
       .eq("status", "failed");
     if (retry.error) throw retry.error;
     return { shouldProcess: true, duplicate: true, status: "queued" };
+  }
+
+  // Crash mid-handler can leave status=processing forever — reclaim after TTL.
+  if (data?.status === "processing") {
+    const staleMs = Number(process.env.STRIPE_WEBHOOK_STALE_MS ?? 15 * 60_000);
+    const receivedAtMs = Date.parse(String(data.received_at ?? ""));
+    const isStale = Number.isFinite(receivedAtMs) && Date.now() - receivedAtMs >= staleMs;
+    if (isStale) {
+      const cutoff = new Date(Date.now() - staleMs).toISOString();
+      const retry = await supabaseAdmin
+        .from("stripe_webhook_events")
+        .update({ status: "processing", type: event.type, last_error: null, received_at: now })
+        .eq("id", event.id)
+        .eq("status", "processing")
+        .lt("received_at", cutoff)
+        .select("id");
+      if (retry.error) throw retry.error;
+      if (!retry.data?.length) {
+        console.log(`[stripe] stale processing reclaim lost race event=${event.id}`);
+        return { shouldProcess: false, duplicate: true, status: "processing" };
+      }
+      console.warn(`[stripe] reclaimed stale processing webhook event=${event.id}`);
+      return { shouldProcess: true, duplicate: true, status: "processing" };
+    }
   }
 
   console.log(`[stripe] duplicate webhook skipped event=${event.id} status=${data?.status ?? "unknown"}`);
@@ -314,6 +421,7 @@ export async function finishStripeWebhookEvent(
     .eq("id", eventId);
   if (error) {
     console.warn(`[stripe] webhook event finalization failed event=${eventId}`, error.message);
+    throw error;
   }
 }
 
@@ -392,25 +500,26 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   }
 
   if (!profileId) {
-    console.error("[stripe] subscription has no profile_id metadata", subscription.id);
-    return;
+    throw new Error(`[stripe] subscription ${subscription.id} has no profile_id metadata`);
   }
 
   const priceId = subscription.items.data[0]?.price?.id;
   const tier = priceId ? tierFromPriceId(priceId) : null;
   if (!tier) {
-    console.error("[stripe] could not resolve tier for price", priceId);
-    return;
+    throw new Error(`[stripe] could not resolve tier for price ${priceId ?? "unknown"} on subscription ${subscription.id}`);
   }
 
   const status = subscription.status; // 'active' | 'trialing' | 'past_due' | 'canceled' | etc.
-  const effective = effectiveTierForSubscriptionStatus(status, tier);
+  let effective = effectiveTierForSubscriptionStatus(status, tier);
+  let profileSubscriptionId = subscription.id;
+  const profileCustomerId = subscription.customer as string;
+  let profileTier = effective.tier;
 
-  // Upsert subscription row
-  await supabaseAdmin.from("subscriptions").upsert(
+  // Upsert this subscription row first (source of truth for this event).
+  const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
     {
       profile_id: profileId,
-      stripe_customer_id: subscription.customer as string,
+      stripe_customer_id: profileCustomerId,
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId,
       tier,
@@ -421,18 +530,165 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
     },
     { onConflict: "stripe_subscription_id" }
   );
+  if (upsertError) throw upsertError;
 
-  // Update profile tier
-  await supabaseAdmin
+  // If this event would downgrade, keep the best paid entitlement from any other live sub.
+  if (profileTier === "free" && isStripeConfigured() && profileCustomerId) {
+    try {
+      const others = await getStripe().subscriptions.list({
+        customer: profileCustomerId,
+        status: "all",
+        limit: 20,
+      });
+      const tierRank: Record<string, number> = { free: 0, gold: 1, seller_pro: 2 };
+      let bestRank = 0;
+      for (const sub of others.data) {
+        if (sub.id === subscription.id) continue;
+        if (sub.status !== "active" && sub.status !== "trialing") continue;
+        const livePriceId = sub.items.data[0]?.price?.id;
+        const liveTier = livePriceId ? tierFromPriceId(livePriceId) : null;
+        if (!liveTier) continue;
+        const liveEffective = effectiveTierForSubscriptionStatus(sub.status, liveTier);
+        const rank = tierRank[liveEffective.tier] ?? 0;
+        if (rank > bestRank) {
+          bestRank = rank;
+          profileTier = liveEffective.tier;
+          profileSubscriptionId = sub.id;
+          effective = liveEffective;
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "[stripe] live-sub reconciliation failed; applying event entitlement",
+        (error as Error)?.message,
+      );
+    }
+  }
+
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({
-      tier: effective.tier,
-      stripe_customer_id: subscription.customer as string,
-      stripe_subscription_id: subscription.id,
+      tier: profileTier,
+      stripe_customer_id: profileCustomerId,
+      stripe_subscription_id: profileSubscriptionId,
     })
     .eq("id", profileId);
+  if (profileError) throw profileError;
+
+  // Tier changes must invalidate the 30s auth session cache immediately.
+  const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+  await bumpAuthUserEpoch(profileId);
 
   console.log(
-    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effective.tier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
+    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${profileTier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
   );
+}
+
+/**
+ * Cancel all active Stripe subscriptions for a profile (account deletion schedule).
+ * Also downgrades local tier so paid entitlements stop immediately.
+ */
+export async function cancelSubscriptionsForProfile(profileId: string): Promise<{
+  canceled: number;
+  warnings: string[];
+}> {
+  const warnings: string[] = [];
+  if (!profileId) return { canceled: 0, warnings: ["missing_profile_id"] };
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  const [{ data: subs }, { data: profile }] = await Promise.all([
+    supabaseAdmin
+      .from("subscriptions")
+      .select("stripe_subscription_id, status")
+      .eq("profile_id", profileId),
+    supabaseAdmin
+      .from("profiles")
+      .select("stripe_subscription_id")
+      .eq("id", profileId)
+      .maybeSingle(),
+  ]);
+
+  const subscriptionIds = new Set<string>();
+  for (const row of subs ?? []) {
+    const id = String((row as { stripe_subscription_id?: string | null }).stripe_subscription_id ?? "").trim();
+    if (id) subscriptionIds.add(id);
+  }
+  const profileSub = String(profile?.stripe_subscription_id ?? "").trim();
+  if (profileSub) subscriptionIds.add(profileSub);
+
+  let canceled = 0;
+  if (subscriptionIds.size > 0 && isStripeConfigured()) {
+    const stripe = getStripe();
+    for (const subscriptionId of subscriptionIds) {
+      try {
+        await stripe.subscriptions.cancel(subscriptionId);
+        canceled += 1;
+      } catch (error: unknown) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String((error as { code?: string }).code ?? "")
+            : "";
+        const statusCode =
+          error && typeof error === "object" && "statusCode" in error
+            ? Number((error as { statusCode?: number }).statusCode)
+            : NaN;
+        if (code === "resource_missing" || statusCode === 404) continue;
+        warnings.push(`cancel_failed:${subscriptionId}`);
+        console.warn("[stripe] cancel subscription failed", subscriptionId, error);
+      }
+    }
+  } else if (subscriptionIds.size > 0) {
+    warnings.push("stripe_not_configured");
+  }
+
+  // Do not mutate local entitlements when Stripe cancel was incomplete —
+  // callers treat warnings as failure and can retry without a half-downgrade.
+  if (warnings.length > 0) {
+    return { canceled, warnings };
+  }
+
+  const { error: subErr } = await supabaseAdmin
+    .from("subscriptions")
+    .update({ status: "canceled", cancel_at_period_end: true })
+    .eq("profile_id", profileId);
+  if (subErr) warnings.push(`local_subscription_update_failed:${subErr.message}`);
+
+  const { error: profileErr } = await supabaseAdmin
+    .from("profiles")
+    .update({ tier: "free", stripe_subscription_id: null })
+    .eq("id", profileId);
+  if (profileErr) warnings.push(`local_profile_downgrade_failed:${profileErr.message}`);
+
+  if (warnings.length === 0) {
+    const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+    await bumpAuthUserEpoch(profileId);
+  }
+
+  return { canceled, warnings };
+}
+
+/**
+ * Permanently delete a Stripe customer during account teardown.
+ * Treats already-missing customers as success so re-runs stay idempotent.
+ */
+export async function deleteStripeCustomer(customerId: string): Promise<void> {
+  if (!customerId?.trim()) return;
+  if (!isStripeConfigured()) {
+    throw new Error("stripe_secret_key_not_configured");
+  }
+
+  try {
+    await getStripe().customers.del(customerId);
+  } catch (error: unknown) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: string }).code ?? "")
+        : "";
+    const statusCode =
+      error && typeof error === "object" && "statusCode" in error
+        ? Number((error as { statusCode?: number }).statusCode)
+        : NaN;
+    if (code === "resource_missing" || statusCode === 404) return;
+    throw error;
+  }
 }

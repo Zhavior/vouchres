@@ -3,7 +3,7 @@ import type { Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
-import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
+import { AuthedRequest, bumpAuthUserEpoch, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { validate } from "../middleware/validation";
@@ -54,6 +54,8 @@ coreRoutes.post(
       .eq("id", req.user!.id);
 
     if (error) throw error;
+    // Legal gates are epoch-cached; bump so requireLegalConfirmed sees the confirm immediately.
+    await bumpAuthUserEpoch(req.user!.id);
     return res.json(apiOkFlat(req, {}));
   })
 );
@@ -70,7 +72,7 @@ coreRoutes.post(
   requireAuth,
   requireLegalConfirmed,
   pickLimiter,
-  requireTierOrQuota("gold", 3, "picks_per_day"),
+  requireTierOrQuota("gold", 3, "picks_per_day", 100),
   validate({ body: CreatePickSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const body = req.body as CreatePickInput;
@@ -89,7 +91,8 @@ coreRoutes.post(
       judge_risk: body.judge_risk ?? null,
       judge_bias: body.judge_bias ?? null,
       judge_trust: body.judge_trust ?? null,
-      judge_verdict: body.judge_verdict ?? null,
+      // Never accept client-authored judge_verdict (grading integrity).
+      judge_verdict: null,
       explanation: body.explanation ?? null,
       is_demo: false,
     });

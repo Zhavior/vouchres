@@ -42,13 +42,14 @@ import { getLegacyRouteMetricsSnapshot } from "../lib/observability/legacyRouteM
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
-import { isUpstashEnabled } from "../lib/upstashRedis";
+import { isUpstashEnabled, redisPing } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
 import type { Response } from "express";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { getSafePublicOrigin } from "../lib/publicOrigin";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -160,16 +161,28 @@ export function registerApiRoutes(app: Express): void {
         new Promise((_, reject) => setTimeout(() => reject(new Error("db probe timed out after 3s")), 3000)),
       ])) as { error?: { message?: string } | null };
       checks.database = probe?.error
-        ? { ok: false, detail: probe.error.message ?? "query error" }
+        ? { ok: false, detail: "database unreachable" }
         : { ok: true };
+      if (probe?.error) {
+        console.warn("[health/ready] database probe failed:", probe.error.message ?? "query error");
+      }
     } catch (err) {
-      checks.database = { ok: false, detail: (err as Error)?.message ?? "unreachable" };
+      console.warn("[health/ready] database probe error:", (err as Error)?.message ?? err);
+      checks.database = { ok: false, detail: "database unreachable" };
     }
 
-    checks.redis = isUpstashEnabled()
-      ? { ok: true, detail: "upstash" }
-      : { ok: true, detail: "not configured (degraded to in-memory)" };
+    if (isUpstashEnabled()) {
+      const redisOk = await redisPing();
+      checks.redis = redisOk
+        ? { ok: true, detail: "upstash pong" }
+        : { ok: false, detail: "upstash unreachable" };
+    } else {
+      // Not configured is fine for readiness — prod boot validates Redis separately.
+      checks.redis = { ok: true, detail: "not configured (degraded to in-memory)" };
+    }
 
+    // Fail readiness only on database. Redis check is observational so a blip
+    // does not flap the load balancer.
     const ready = checks.database.ok;
     res.status(ready ? 200 : 503).json({
       ok: ready,
@@ -207,7 +220,7 @@ export function registerApiRoutes(app: Express): void {
   app.get("/v/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getPublicVouchWithAuthor(req.params.id);
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const baseUrl = getSafePublicOrigin();
 
       if (!result) {
         res.status(404);
@@ -275,7 +288,7 @@ export function registerApiRoutes(app: Express): void {
 
   app.get("/p/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const baseUrl = getSafePublicOrigin();
       const proof = await getPublicParlayProof(req.params.id, baseUrl);
 
       if (!proof) {

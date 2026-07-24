@@ -15,12 +15,13 @@ describe("SportsDataGateway", () => {
     vi.mocked(sportsFetchJson).mockReset();
   });
 
-  it("returns gateway status with provider catalog", () => {
+  it("returns lean public gateway status without recon fields", () => {
     const status = getSportsDataGatewayStatus();
     expect(status.gateway).toBe("sports_data_v1");
     expect(status.providers.some((p) => p.id === "mlb_stats")).toBe(true);
-    expect(status.architecture.hrBoardCanonical).toBe("validated_pipeline");
-    expect(status.architecture.clientDirectMlbFallback).toBe("disabled_in_production_by_default");
+    expect((status as { mlbApiBase?: string }).mlbApiBase).toBeUndefined();
+    expect((status as { architecture?: unknown }).architecture).toBeUndefined();
+    expect(status.providers.every((p) => !("baseUrl" in p))).toBe(true);
   });
 
   it("prefers live feed for game state and counts home runs from play-by-play", async () => {

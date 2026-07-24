@@ -6,6 +6,7 @@ import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
+import { HttpsUrlSchema } from "../lib/httpsUrlSchema";
 import type { RequestWithContext } from "../middleware/requestContext";
 import {
   buildFollowingHub,
@@ -49,7 +50,7 @@ socialHubRoutes.delete("/status-note", requireAuth, asyncHandler(async (req: Aut
 const CreateStorySchema = z.object({
   kind: z.enum(["text", "image"]).optional(),
   body: z.string().max(280).optional().nullable(),
-  media_url: z.string().url().optional().nullable(),
+  media_url: HttpsUrlSchema.max(2000).optional().nullable(),
   background: z.string().max(32).optional().nullable(),
 });
 
@@ -81,8 +82,23 @@ const StartConversationSchema = z.object({
 
 socialHubRoutes.post("/messages/conversations", requireAuth, validate({ body: StartConversationSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { user_id } = req.body as z.infer<typeof StartConversationSchema>;
-  const conversationId = await findOrCreateDirectConversation(req.user!.id, user_id);
-  return res.status(201).json(apiOkFlat(req, { conversationId }));
+  try {
+    const conversationId = await findOrCreateDirectConversation(req.user!.id, user_id);
+    return res.status(201).json(apiOkFlat(req, { conversationId }));
+  } catch (error: unknown) {
+    const code = error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code ?? "")
+      : "";
+    if (code === "dm_requires_mutual_follow") {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "You can only message mutual followers.",
+        details: { reason: "dm_requires_mutual_follow" },
+      });
+    }
+    throw error;
+  }
 }));
 
 socialHubRoutes.get("/messages/conversations/:id", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -102,11 +118,23 @@ socialHubRoutes.post("/messages/conversations/:id", requireAuth, validate({ body
       body: (req.body as z.infer<typeof SendMessageSchema>).body,
     });
     return res.status(201).json(apiOkFlat(req, { message }));
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const code = error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code ?? "")
+      : "";
+    if (code === "dm_requires_mutual_follow") {
+      throw new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "You can only message mutual followers.",
+        details: { reason: "dm_requires_mutual_follow" },
+      });
+    }
+    const message = error instanceof Error ? error.message : "Cannot send message.";
     throw new AppError({
       status: 403,
       code: "forbidden",
-      message: error?.message ?? "Cannot send message.",
+      message,
     });
   }
 }));

@@ -33,6 +33,9 @@ async function main() {
       for (const err of result.errors) {
         console.log(`    ${err}`);
       }
+      // Fail the process so the cron platform retries / alerts instead of
+      // treating a partial deletion batch as success.
+      process.exit(1);
     }
   } catch (err) {
     console.error("[deleteJob] fatal error", err);
@@ -43,3 +46,5 @@ async function main() {
 if (require.main === module) {
   main();
 }
+
+export { main as runDailyDeleteJob };

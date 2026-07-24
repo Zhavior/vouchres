@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "../server/errors/AppError";
-import { isUpstashEnabled, redisDel, redisGet, redisSet, sleep } from "../server/lib/upstashRedis";
+import { isUpstashEnabled, redisReleaseLock, redisSet, sleep } from "../server/lib/upstashRedis";
 
 vi.mock("../server/lib/upstashRedis", () => ({
   isUpstashEnabled: vi.fn(() => false),
   redisSet: vi.fn(),
-  redisGet: vi.fn(),
-  redisDel: vi.fn(),
+  redisReleaseLock: vi.fn(),
   sleep: vi.fn(async () => undefined),
 }));
 
@@ -46,15 +45,37 @@ describe("runWithDistributedLock", () => {
     expect(maxActive).toBe(1);
   });
 
-  it("acquires Redis lock with SET NX and releases only when token matches", async () => {
+  it("stress: many concurrent memory waiters never overlap (no thundering herd)", async () => {
+    let active = 0;
+    let maxActive = 0;
+    const order: number[] = [];
+
+    const jobs = Array.from({ length: 40 }, (_, i) =>
+      runWithDistributedLock("test:memory-stress", async () => {
+        active += 1;
+        maxActive = Math.max(maxActive, active);
+        order.push(i);
+        await Promise.resolve();
+        active -= 1;
+        return i;
+      }),
+    );
+
+    const results = await Promise.all(jobs);
+    expect(maxActive).toBe(1);
+    expect(results).toHaveLength(40);
+    expect(new Set(results).size).toBe(40);
+    expect(order).toHaveLength(40);
+  });
+
+  it("acquires Redis lock with SET NX and releases via atomic token compare-and-delete", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
     let heldToken = "";
     vi.mocked(redisSet).mockImplementation(async (_key, token) => {
       heldToken = String(token);
       return true;
     });
-    vi.mocked(redisGet).mockImplementation(async () => heldToken);
-    vi.mocked(redisDel).mockResolvedValueOnce(1);
+    vi.mocked(redisReleaseLock).mockImplementation(async (_key, token) => token === heldToken);
 
     const result = await runWithDistributedLock("test:redis", async () => "graded", {
       waitMs: 100,
@@ -66,8 +87,7 @@ describe("runWithDistributedLock", () => {
       nx: true,
       exSeconds: 600,
     });
-    expect(redisGet).toHaveBeenCalledWith("lock:test:redis");
-    expect(redisDel).toHaveBeenCalledWith("lock:test:redis");
+    expect(redisReleaseLock).toHaveBeenCalledWith("lock:test:redis", heldToken);
   });
 
   it("throws conflict when Redis lock cannot be acquired before waitMs", async () => {
@@ -85,14 +105,14 @@ describe("runWithDistributedLock", () => {
     expect(sleep).toHaveBeenCalled();
   });
 
-  it("does not delete Redis lock when token no longer matches", async () => {
+  it("uses atomic release so stale holders cannot delete a newer lock", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
     vi.mocked(redisSet).mockResolvedValueOnce(true);
-    vi.mocked(redisGet).mockResolvedValueOnce("other-holder");
+    vi.mocked(redisReleaseLock).mockResolvedValueOnce(false);
 
     await runWithDistributedLock("test:stale", async () => "ok");
 
-    expect(redisDel).not.toHaveBeenCalled();
+    expect(redisReleaseLock).toHaveBeenCalledWith("lock:test:stale", expect.any(String));
   });
 });
 

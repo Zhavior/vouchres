@@ -12,9 +12,19 @@ import { AppError } from "../errors/AppError";
 import { upstreamUnavailable } from "../lib/requestValidators";
 import type { RequestWithContext } from "../middleware/requestContext";
 
+function publicCapperView(agent: ReturnType<typeof getAgent>) {
+  if (!agent) return null;
+  const { promptTemplate: _promptTemplate, ...safe } = agent;
+  void _promptTemplate;
+  return safe;
+}
+
 export function registerAgentRoutes(app: Express): void {
   app.get("/api/agents", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    return res.json(apiOkFlat(req, { cappers: listAgents(), judges: JUDGE_AGENTS }));
+    return res.json(apiOkFlat(req, {
+      cappers: listAgents().map((agent) => publicCapperView(agent)),
+      judges: JUDGE_AGENTS,
+    }));
   }));
 
   app.get("/api/agents/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -26,7 +36,7 @@ export function registerAgentRoutes(app: Express): void {
         message: "Agent not found.",
       });
     }
-    return res.json(apiOkFlat(req, { ...agent }));
+    return res.json(apiOkFlat(req, { ...publicCapperView(agent) }));
   }));
 
   /**
@@ -39,7 +49,7 @@ export function registerAgentRoutes(app: Express): void {
     "/api/agents/:id/generate-picks",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 5, "agent_generate_picks"),
+    requireTierOrQuota("gold", 5, "agent_generate_picks", 100),
     asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const start = Date.now();
     const agent = getAgent(req.params.id);

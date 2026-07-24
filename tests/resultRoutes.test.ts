@@ -17,18 +17,14 @@ vi.mock("../server/middleware/rateLimit", () => ({
   gradingLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
+const gradePick = vi.fn(async () => true);
+
 vi.mock("../server/services/persistence/pickService", () => ({
   getLedger: vi.fn(async () => ({
     picks: [{ id: "pick-1", status: "pending" }],
     total: 1,
   })),
-}));
-
-vi.mock("../server/services/results/learningNoteService", () => ({
-  gradeAndLearn: vi.fn(async () => ({
-    pick: { id: "pick-1", status: "win" },
-    learningNote: "note",
-  })),
+  gradePick: (...args: unknown[]) => gradePick(...args),
 }));
 
 let server: Server;
@@ -78,7 +74,8 @@ describe("result routes", () => {
     expect(body.picks).toHaveLength(1);
   });
 
-  it("returns ok envelope for staff grading", async () => {
+  it("grades via Postgres persistence (not in-memory seed ledger)", async () => {
+    gradePick.mockResolvedValueOnce(true);
     const response = await fetch(`${baseUrl}/api/results/grade`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -91,9 +88,18 @@ describe("result routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(gradePick).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pickId: "pick-1",
+        status: "won",
+        learningNote: "home run",
+      }),
+    );
     expect(body).toMatchObject({
       ok: true,
-      pick: { id: "pick-1", status: "win" },
+      pickId: "pick-1",
+      status: "won",
+      source: "postgres",
       meta: {
         requestId: expect.any(String),
         timestamp: expect.any(String),

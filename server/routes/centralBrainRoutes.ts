@@ -17,13 +17,14 @@ import { assertCronAuthorized } from "../lib/cronAuth";
 import { evaluateBrainHrHistory } from "../services/intelligence/centralBrain/brainLearningService";
 import { requireTier } from "../middleware/entitlements";
 import { getBrainGeminiReviews } from "../services/intelligence/centralBrain/brainGeminiReviewService";
+import { generationLimiter } from "../middleware/rateLimit";
 
 export function registerCentralBrainRoutes(app: Express): void {
   app.get("/api/intelligence/brain", requireAuth, requireTier("gold"), (req: RequestWithContext, res: Response) =>
     res.json(apiOkFlat(req, { identity: BRAIN_PRODUCT_IDENTITY, sports: listCentralBrainSports() })),
   );
 
-  app.get("/api/intelligence/brain/mlb/daily", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/intelligence/brain/mlb/daily", requireAuth, requireTier("gold"), generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const parsedQuery = CentralBrainDailyQuerySchema.safeParse(req.query);
     if (!parsedQuery.success) {
       throw new AppError({
@@ -38,7 +39,7 @@ export function registerCentralBrainRoutes(app: Express): void {
     return res.json(apiOkFlat(req, { snapshot }));
   }));
 
-  app.get("/api/intelligence/brain/mlb/performance", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/intelligence/brain/mlb/performance", requireAuth, requireTier("gold"), generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const parsedQuery = CentralBrainDailyQuerySchema.safeParse(req.query);
     if (!parsedQuery.success) {
       throw new AppError({ status: 400, code: "validation_error", message: "date must use YYYY-MM-DD format.", details: parsedQuery.error.issues });
@@ -58,7 +59,7 @@ export function registerCentralBrainRoutes(app: Express): void {
     return res.json(apiOkFlat(req, { ...homeRuns, stolenBase, pitcherStrikeouts, aiReviews }));
   }));
 
-  app.get("/api/intelligence/brain/mlb/scan", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/intelligence/brain/mlb/scan", requireAuth, requireTier("gold"), generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const parsedQuery = CentralBrainDailyQuerySchema.safeParse(req.query);
     if (!parsedQuery.success) {
       throw new AppError({ status: 400, code: "validation_error", message: "date must use YYYY-MM-DD format.", details: parsedQuery.error.issues });

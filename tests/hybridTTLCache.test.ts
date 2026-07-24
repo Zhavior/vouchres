@@ -77,4 +77,20 @@ describe("HybridTTLCache", () => {
     expect(producer).toHaveBeenCalledTimes(1);
     warn.mockRestore();
   });
+
+  it("serves warm L1 without an Upstash round-trip", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    vi.mocked(redisGetJson).mockResolvedValueOnce(null);
+    vi.mocked(redisSetJson).mockResolvedValueOnce(undefined as never);
+
+    const cache = new HybridTTLCache<string>(60_000, "test:hybrid", "test:redis");
+    const producer = vi.fn(async () => "local-hot");
+
+    await cache.getOrSet("board:l1", producer);
+    await cache.getOrSet("board:l1", producer);
+
+    expect(producer).toHaveBeenCalledTimes(1);
+    // First miss may hit Redis; second warm L1 must not.
+    expect(redisGetJson).toHaveBeenCalledTimes(1);
+  });
 });

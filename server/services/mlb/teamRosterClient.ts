@@ -6,6 +6,7 @@
  */
 import { TTLCache, limitConcurrency } from "../../lib/cache";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { todayISO } from "./mlbClient";
 import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
 import { parseMlbPeopleResponse, parseMlbRosterResponse, parseMlbTeamsResponse, type MlbRosterEntry } from "./mlbStatsApiSchemas";
 
@@ -148,8 +149,9 @@ async function getTeamActiveHitters(team: { id: number; name: string; abbreviati
 }
 
 
+/** America/New_York calendar date — must match mlbClient.todayISO(), not UTC. */
 function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayISO();
 }
 
 async function getTodayTeamIds(): Promise<number[]> {
@@ -182,7 +184,8 @@ async function getTodayTeamIds(): Promise<number[]> {
     return [...ids];
   } catch (err) {
     console.warn("[teamRosterClient] failed to resolve today's team IDs:", (err as Error).message);
-    return [];
+    // Do not return [] — that used to look like "no games" and trigger an all-30-team fallback.
+    throw err;
   }
 }
 
@@ -243,8 +246,9 @@ export async function getActiveHittersByTeam(
           teams = allTeams.filter((team) => wantedTeamIds.has(team.id));
           console.log(`[teamRosterClient] No teamIds provided; using today's slate (${teams.length} teams)`);
         } else {
-          teams = await getMlbTeams();
-          console.warn(`[teamRosterClient] No schedule team IDs found; falling back to all ${teams.length} teams`);
+          // Honest empty slate — do not expand to all 30 teams when the schedule is empty.
+          teams = [];
+          console.warn("[teamRosterClient] No schedule team IDs found; returning empty roster map (no all-30 fallback)");
         }
       }
 

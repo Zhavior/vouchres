@@ -4,6 +4,7 @@ import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
 import { assertCronAuthorized } from "../../lib/cronAuth";
 import { AppError } from "../../errors/AppError";
+import { runWithDistributedLock } from "../../lib/distributedLock";
 import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
@@ -41,20 +42,27 @@ parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Requ
   assertCronAuthorized(req);
 
   const date = optionalYmd(req.query.date);
-  const repair = await repairLegacyParlayIdentityForSync({
-    dryRun: false,
-    limit: 100,
-    externalProvider: "cron_live_hr_sync_repair",
-  });
-  const result = await applyLiveHrParlayMatches(date);
+  const payload = await runWithDistributedLock(
+    "parlays:live-hr-sync",
+    async () => {
+      const repair = await repairLegacyParlayIdentityForSync({
+        dryRun: false,
+        limit: 100,
+        externalProvider: "cron_live_hr_sync_repair",
+      });
+      const result = await applyLiveHrParlayMatches(date);
+      return {
+        mode: "cron_live_hr_sync",
+        date: date ?? null,
+        repair,
+        ...result,
+        checkedAt: new Date().toISOString(),
+      };
+    },
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
-  return res.json(apiOkFlat(req, {
-    mode: "cron_live_hr_sync",
-    date: date ?? null,
-    repair,
-    ...result,
-    checkedAt: new Date().toISOString(),
-  }));
+  return res.json(apiOkFlat(req, payload));
 }));
 
 parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -174,11 +182,16 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
 
   const dryRun = boolQuery(req.query.dryRun, true);
   const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
-  const result = await repairLegacyParlayIdentityForSync({
-    dryRun,
-    limit,
-    externalProvider: "repair_identity",
-  });
+  const result = await runWithDistributedLock(
+    "parlays:repair-identity",
+    () =>
+      repairLegacyParlayIdentityForSync({
+        dryRun,
+        limit,
+        externalProvider: "repair_identity",
+      }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     ...result,
@@ -191,11 +204,16 @@ parlayCronRoutes.get("/cron/parlays/repair-identity", asyncHandler(async (req: R
 
   const dryRun = boolQuery(req.query.dryRun, true);
   const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
-  const result = await repairLegacyParlayIdentityForSync({
-    dryRun,
-    limit,
-    externalProvider: "repair_identity",
-  });
+  const result = await runWithDistributedLock(
+    "parlays:repair-identity",
+    () =>
+      repairLegacyParlayIdentityForSync({
+        dryRun,
+        limit,
+        externalProvider: "repair_identity",
+      }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     ...result,
@@ -210,6 +228,21 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
   const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
   const legacyReason = "Legacy pick saved before canonical grading identity existed; cannot be honestly graded.";
 
+  const payload = await runWithDistributedLock(
+    "parlays:quarantine-legacy",
+    async () => quarantineLegacyPicks({ dryRun, limit, legacyReason }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
+
+  return res.json(apiOkFlat(req, payload));
+}));
+
+async function quarantineLegacyPicks(input: {
+  dryRun: boolean;
+  limit: number;
+  legacyReason: string;
+}) {
+  const { dryRun, limit, legacyReason } = input;
   const supabaseAdmin = await getSupabaseAdmin();
 
   const { data: picks, error } = await supabaseAdmin
@@ -255,21 +288,8 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     };
 
     if (!dryRun) {
-      const { error: pickUpdateError } = await supabaseAdmin
-        .from("picks")
-        .update(pickPatch)
-        .eq("id", pick.id);
-
-      if (pickUpdateError) {
-        skipped.push({
-          pick_id: pick.id,
-          event_id: pick.event_id,
-          reason: "pick_update_failed",
-          message: pickUpdateError.message,
-        });
-        continue;
-      }
-
+      // Legs first, then pick — never leave a void pick with pending legs.
+      // If the pick update fails after legs void, revert legs to pending.
       const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
         .from("pick_legs")
         .update(legPatch)
@@ -295,6 +315,27 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
         });
         continue;
       }
+
+      const { error: pickUpdateError } = await supabaseAdmin
+        .from("picks")
+        .update(pickPatch)
+        .eq("id", pick.id)
+        .eq("status", "pending");
+
+      if (pickUpdateError) {
+        const legIds = updatedLegs.map((leg) => leg.id);
+        await supabaseAdmin
+          .from("pick_legs")
+          .update({ status: "pending", graded_at: null })
+          .in("id", legIds);
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "pick_update_failed_reverted_legs",
+          message: pickUpdateError.message,
+        });
+        continue;
+      }
     }
 
     quarantined.push({
@@ -305,7 +346,7 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     });
   }
 
-  return res.json(apiOkFlat(req, {
+  return {
     dryRun,
     scanned: picks?.length ?? 0,
     quarantinedCount: quarantined.length,
@@ -313,14 +354,18 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     quarantined: quarantined.slice(0, 20),
     skipped: skipped.slice(0, 20),
     checkedAt: new Date().toISOString(),
-  }));
-}));
+  };
+}
 
 parlayCronRoutes.get("/cron/parlays/finalize-trust-locks", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
   const limit = boundedInt(req.query.limit, "limit", 50, 1, 200);
-  const result = await finalizeDueTrustLocks(limit);
+  const result = await runWithDistributedLock(
+    "parlays:finalize-trust-locks",
+    () => finalizeDueTrustLocks(limit),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     mode: "finalize_trust_locks",
@@ -333,7 +378,11 @@ parlayCronRoutes.get("/cron/parlays/anchor-ots", asyncHandler(async (req: Reques
   assertCronAuthorized(req);
 
   const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
-  const result = await backfillOpenTimestampsForLockedPicks({ limit });
+  const result = await runWithDistributedLock(
+    "parlays:anchor-ots",
+    () => backfillOpenTimestampsForLockedPicks({ limit }),
+    { ttlSeconds: 300, waitMs: 5_000 },
+  );
 
   return res.json(apiOkFlat(req, {
     mode: "anchor_ots",

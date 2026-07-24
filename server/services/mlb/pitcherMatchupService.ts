@@ -19,7 +19,7 @@ import {
 import { headshotUrl, type NormalizedPlayer, type NormalizedTeam } from "./mlbTypes";
 import { reportCache } from "./mlbCache";
 import { limitConcurrency } from "../../lib/cache";
-import { getStatcastBatterMap, type StatcastBatterQuality } from "./statcastClient";
+import { getStatcastBatterMapResult, type StatcastBatterQuality } from "./statcastClient";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const MAX_BATTERS = 13;
@@ -325,13 +325,21 @@ export async function getPitcherMatchup(
         }
       }
 
-      const statcastMap = await getStatcastBatterMap().catch((err) => {
+      const statcastResult = await getStatcastBatterMapResult().catch((err) => {
         console.warn(
           "[pitcherMatchup] statcast map failed:",
           err instanceof Error ? err.message : String(err),
         );
-        return {} as Record<number, StatcastBatterQuality>;
+        return {
+          map: {} as Record<number, StatcastBatterQuality>,
+          feedStatus: "unavailable" as const,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        };
       });
+      const statcastMap = statcastResult.map;
+      if (statcastResult.feedStatus === "unavailable") {
+        warnings.push("Statcast season leaderboard unavailable (Savant feed down).");
+      }
 
       const projectedLineup = await limitConcurrency<PitcherMatchupBatter, typeof batters[number]>(
         batters,

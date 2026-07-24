@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import { structuredLog } from "../../lib/structuredLog";
 import { getSupabaseAdmin } from "../../middleware/auth";
-import { getStripe, syncSubscription } from "./stripeService";
+import { cancelSubscriptionsForProfile, getStripe, syncSubscription } from "./stripeService";
 
 /**
  * Apply entitlement side-effects for a verified Stripe webhook event.
@@ -88,14 +88,18 @@ export async function processStripeWebhookEvent(event: Stripe.Event): Promise<vo
           event: "stripe.access_revoked",
           message: `${event.type} for customer ${customerId} — revoking paid access (tier -> free).`,
         });
-        await supabaseAdmin
-          .from("subscriptions")
-          .update({ status: "canceled" })
-          .eq("stripe_customer_id", customerId);
-        await supabaseAdmin
+        const { data: profile, error: profileError } = await supabaseAdmin
           .from("profiles")
-          .update({ tier: "free", stripe_subscription_id: null })
-          .eq("stripe_customer_id", customerId);
+          .select("id")
+          .eq("stripe_customer_id", customerId)
+          .maybeSingle();
+        if (profileError) throw profileError;
+        if (profile?.id) {
+          const cancellation = await cancelSubscriptionsForProfile(String(profile.id));
+          if (cancellation.warnings.length > 0) {
+            throw new Error(`stripe_subscription_cancel_failed:${cancellation.warnings.join(",")}`);
+          }
+        }
       } else {
         structuredLog({
           level: "info",
