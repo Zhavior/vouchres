@@ -576,11 +576,23 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
       return cached.board;
     }
 
+    const activeBuild = localValidatedHrBoardBuilds.get(key);
+    if (activeBuild) {
+      console.log(`[HR_BOARD_HUB] validated awaiting active stale refresh key=${key}`);
+      return activeBuild;
+    }
+
     console.log(`[HR_BOARD_HUB] validated stale hit key=${key} — refreshing in background`);
     scheduleValidatedRefresh(key, date, ttlSeconds);
-    // Honesty: expired hot cache must not keep serving candidates[] as confirmed
-    // while a background refresh is in flight (lineups can change).
-    return demoteConfirmedCandidatesForStaleServe(cached.board, STALE_CACHE_CONFIRMED_WARNING);
+
+    // Honesty: the first request after expiry receives the stale board with
+    // confirmed candidates demoted while one shared background refresh begins.
+    // Later callers await that shared refresh instead of repeatedly receiving
+    // the stale demoted board.
+    return demoteConfirmedCandidatesForStaleServe(
+      cached.board,
+      STALE_CACHE_CONFIRMED_WARNING,
+    );
   }
 
   const activeBuild = localValidatedHrBoardBuilds.get(key);
