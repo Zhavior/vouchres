@@ -21,6 +21,7 @@ import PlayerHeadshot from './parlays/PlayerHeadshot';
 import PlayerResearchDecisionCard from './player/PlayerResearchDecisionCard';
 import AgentDock from './agents/AgentDock';
 import ProGraphsLabPageZ8 from '../pages/pro/ProGraphsLabPageZ8';
+import { usePickSelectionContext } from "@/features/brain-edge/context/PickSelectionContext";
 import { hydrateAgentSlots } from '../services/agents/agentSlots';
 import { 
   Z8_ACTIVE, 
@@ -213,6 +214,8 @@ function extractCandidatesFromBoard(board: HrBoardResponse): Candidate[] {
 
   return merged;
 }
+
+
 
 function toNormalizedPlayerPayload(
   candidate: Candidate,
@@ -573,6 +576,29 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
 export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
+  const { setPick } = usePickSelectionContext();
+
+  const handleCandidateSelect = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+
+    setPick({
+      sport: "MLB",
+      league: "MLB",
+      eventId: String(candidate.gamePk ?? candidate.gameId ?? ""),
+      gameDate: "",
+      playerId: String(candidate.playerId ?? ""),
+      playerName: cleanName(candidate),
+      team: candidate.team ?? "",
+      opponent: cleanOpponent(candidate),
+      market: "Home Run",
+      selection: "yes",
+      line: null,
+      odds: null,
+      sportsbook: null,
+      source: "hr-board",
+    });
+  };
+
   const selectedPlayerPayload = useMemo(
     () => selectedCandidate
       ? toNormalizedPlayerPayload(selectedCandidate)
@@ -890,7 +916,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 grid gap-4 md:grid-cols-2">
             {topTargets.slice(0, 6).map((c, i) => (
-              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} onSelect={setSelectedCandidate} />
+              <CandidateCard key={`${cleanName(c)}-${i}`} c={c} rank={i + 1} onSelect={handleCandidateSelect} />
             ))}
           </div>
           <div className="space-y-3">
@@ -913,7 +939,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
 
       {!loading && candidates.length > 0 && tab === 'targets' && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} onSelect={setSelectedCandidate} />)}
+          {topTargets.map((c, i) => <CandidateCard key={`${cleanName(c)}-target-${i}`} c={c} rank={i + 1} onSelect={handleCandidateSelect} />)}
         </div>
       )}
 

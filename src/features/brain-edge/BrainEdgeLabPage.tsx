@@ -1,13 +1,18 @@
-import { lazy, Suspense, useState } from 'react';
-import BrainEdgeShell, { type BrainEdgeView } from './BrainEdgeShell';
-import './brain-edge.css';
+import { lazy, Suspense, useState } from "react";
+import BrainEdgeShell, { type BrainEdgeView } from "./BrainEdgeShell";
+import PickConfirmationBar from "./components/PickConfirmationBar";
+import {
+  PickSelectionProvider,
+  usePickSelectionContext,
+} from "./context/PickSelectionContext";
+import "./brain-edge.css";
 
 const IntelligenceWorkspace = lazy(
-  () => import('../../components/MlbIntelligenceHubZ8'),
+  () => import("../../components/MlbIntelligenceHubZ8")
 );
 
 const ProGraphsWorkspace = lazy(
-  () => import('../../pages/pro/ProGraphsLabPageZ8'),
+  () => import("../../pages/pro/ProGraphsLabPageZ8")
 );
 
 type Props = {
@@ -31,20 +36,23 @@ function ModuleLoadingState() {
   );
 }
 
-export default function BrainEdgeLabPage({
+function BrainEdgeContent({
   profile,
   onSectionChange,
 }: Props) {
   const [activeView, setActiveView] =
-    useState<BrainEdgeView>('intelligence');
+    useState<BrainEdgeView>("intelligence");
+
+  const { pick } = usePickSelectionContext();
 
   return (
     <BrainEdgeShell
       activeView={activeView}
       onViewChange={setActiveView}
+      header={<PickConfirmationBar pick={pick} />}
     >
       <Suspense fallback={<ModuleLoadingState />}>
-        {activeView === 'intelligence' ? (
+        {activeView === "intelligence" ? (
           <IntelligenceWorkspace
             profile={profile}
             onSectionChange={onSectionChange}
@@ -54,5 +62,13 @@ export default function BrainEdgeLabPage({
         )}
       </Suspense>
     </BrainEdgeShell>
+  );
+}
+
+export default function BrainEdgeLabPage(props: Props) {
+  return (
+    <PickSelectionProvider>
+      <BrainEdgeContent {...props} />
+    </PickSelectionProvider>
   );
 }
