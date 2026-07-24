@@ -231,6 +231,8 @@ export async function commitParlayTrustLedger(input: {
     parlay_id: input.parlayId,
     trust_delta: 0,
     metadata: { audience, committedAt, trustLockAt },
+  }).catch((err) => {
+    console.warn("[commitParlayTrustLedger] trust ledger event failed", (err as Error)?.message);
   });
 
   return parlay;
@@ -274,6 +276,8 @@ export async function finalizeParlayTrustLock(input: {
     parlay_id: input.parlayId,
     trust_delta: 5,
     metadata: { audience, lockedAt, proofHash: lockedParlay.proof_hash },
+  }).catch((err) => {
+    console.warn("[finalizeParlayTrustLock] trust ledger event failed", (err as Error)?.message);
   });
 
   return lockedParlay;
