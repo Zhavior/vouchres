@@ -52,8 +52,8 @@ no name, cross-check against a screenshot before clicking.
 - P0 #2 (session drop on Pro Labs nav): log in on Basic plan, click a Pro
   Labs sidebar item (e.g. "Pitchers Matchup"), confirm you see an upgrade
   prompt, not the logged-out landing page.
-- P0 #3 (guest button dead): click "Continue as guest" on the auth modal,
-  confirm it either starts a guest session or is removed.
+- P0 #3 (guest removed): auth modal no longer shows "Continue as guest";
+  sign-in is required beyond public research URLs.
 - P0 #4 (⌘K focus): open command palette, type immediately without
   clicking, confirm the list filters.
 - P1 #1 (modal scrim): open the onboarding tour and World Chat, confirm

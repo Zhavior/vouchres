@@ -27,6 +27,7 @@ import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import { getFounderPointsLabel } from "../lib/founderAccess";
 import { canCustomizeProfileHeader } from './pro/proAccessUtils';
+import { formatProfileWinRateShort } from '../lib/profileWinRateDisplay';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
 
 interface ThemeStoreProps {
@@ -631,7 +632,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     <p className="text-xs text-white/40">@{profile.username}</p>
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-950/40 px-1.5 py-0.2 rounded">
-                        {profile.winRate.toFixed(1)}% WR
+                        {formatProfileWinRateShort(profile)}
                       </span>
                     </div>
                   </div>

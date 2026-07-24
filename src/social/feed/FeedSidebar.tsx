@@ -4,7 +4,7 @@
  * Design rules:
  *  - Z8 tokens only: vouch-emerald (primary), vouch-cyan (secondary), borderless depth
  *  - Single fixed width from tablet up (no icon-only middle state, no xl: label toggle)
- *  - Flat nav list with lightweight section dividers — no collapsible boxes/localStorage state
+ *  - Collapsible nav groups (Daily open; Pro Labs / AI / etc. collapsed by default)
  *  - Sport pill switcher (MLB / NBA / NFL) at top
  *  - Notifications: one bell in sidebar brand row (desktop) / drawer header (mobile)
  *  - Logout: sidebar footer (desktop) / drawer footer (mobile) only
@@ -21,7 +21,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair
+  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown,
 } from 'lucide-react';
 import { loadFeatureLayout, getSidebarFeatures } from '../../lib/featureConfig';
 import { preloadSection } from '../../lib/routePreload';
@@ -34,6 +34,8 @@ import { performAppLogout } from '../../lib/appLogout';
 import { SECTIONS_USING_LIVE_GAMES } from '../../app/sectionNavigation';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
+import { formatProfileWinRate } from '../../lib/profileWinRateDisplay';
+import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -106,21 +108,21 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       className={[
         'group relative w-full flex items-center gap-3',
         'pl-3 pr-2 py-2.5 text-sm tracking-wide transition-all outline-none font-z8',
-        isActive ? `${Z8_SIDEBAR_ACTIVE} shadow-[0_0_28px_rgba(0,240,255,0.22)]` : Z8_SIDEBAR_IDLE,
+        isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
       ].join(' ')}
     >
       {isActive && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.95)]"
+          className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-vouch-cyan"
         />
       )}
       <span
         className={[
           'relative z-10 h-7 w-7 shrink-0 transition-all',
           isActive
-            ? 'flex items-center justify-center bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
-            : `${Z8_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan group-hover:shadow-[0_0_10px_rgba(0,240,255,0.15)]`,
+            ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
+            : `${Z8_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan`,
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
@@ -143,6 +145,8 @@ interface SidebarSectionProps {
   activeSection: string;
   onNavigate: (id: string) => void;
   liveGamesActive?: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
 const SidebarSection = React.memo(function SidebarSection({
@@ -151,23 +155,42 @@ const SidebarSection = React.memo(function SidebarSection({
   activeSection,
   onNavigate,
   liveGamesActive = false,
+  collapsed,
+  onToggle,
 }: SidebarSectionProps) {
+  const sectionId = `sidebar-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
+
   return (
     <div className="space-y-1">
-      <p className={`${Z8_LABEL} px-3 pb-1 pt-2 text-[9px] tracking-[0.2em] text-white/35`}>
-        {group}
-      </p>
-      {items.map(f => (
-        <NavItem
-          key={f.id}
-          id={f.id}
-          label={f.label}
-          icon={f.icon}
-          isActive={activeSection === f.id}
-          onNavigate={onNavigate}
-          showLiveOnAir={liveGamesActive && f.id === 'live_games'}
+      <button
+        type="button"
+        id={sectionId}
+        aria-expanded={!collapsed}
+        aria-controls={`${sectionId}-items`}
+        onClick={onToggle}
+        className={`flex w-full items-center justify-between gap-2 px-3 pb-1 pt-2 ${Z8_LABEL} text-[11px] tracking-[0.16em] text-white/40 transition hover:text-white/60`}
+      >
+        <span>{group}</span>
+        <ChevronDown
+          className={`h-3 w-3 shrink-0 text-white/30 transition-transform ${collapsed ? '-rotate-90' : ''}`}
+          aria-hidden
         />
-      ))}
+      </button>
+      {!collapsed && (
+        <div id={`${sectionId}-items`} className="space-y-0.5">
+          {items.map(f => (
+            <NavItem
+              key={f.id}
+              id={f.id}
+              label={f.label}
+              icon={f.icon}
+              isActive={activeSection === f.id}
+              onNavigate={onNavigate}
+              showLiveOnAir={liveGamesActive && f.id === 'live_games'}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 });
@@ -230,6 +253,16 @@ function FeedSidebar({
       })).filter(s => s.items.length > 0),
     [sidebarFeatures],
   );
+
+  const sectionIdsByGroup = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const { group, items } of grouped) {
+      map.set(group, items.map((item) => item.id));
+    }
+    return map;
+  }, [grouped]);
+
+  const { isCollapsed, toggleGroup } = useSidebarGroupCollapse(activeSection, sectionIdsByGroup);
 
   const profileInitials = useMemo(
     () => profile.displayName.split(' ').map(n => n[0]).join(''),
@@ -307,6 +340,7 @@ function FeedSidebar({
                 key={sport.id}
                 onClick={() => handleSportClick(sport.id)}
                 disabled={!sport.enabled}
+                aria-label={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 id={`sidebar-sport-${sport.id}`}
                 className={[
@@ -372,32 +406,20 @@ function FeedSidebar({
               activeSection={activeSection}
               onNavigate={handleNavigate}
               liveGamesActive={liveGamesActive}
+              collapsed={isCollapsed(group)}
+              onToggle={() => toggleGroup(group)}
             />
           ))}
-
-          <button
-            type="button"
-            onClick={handleOpenAllTools}
-            disabled={!onOpenCmdK}
-            className={`group flex w-full items-center gap-3 border border-dashed border-vouch-cyan/25 px-3 py-3 text-vouch-cyan transition-colors hover:border-vouch-cyan/55 hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35 ${Z8_LABEL}`}
-            aria-label="Explore every VouchEdge tool"
-          >
-            <Grid3x3 className="h-4 w-4 shrink-0" />
-            <span className="text-[10px] tracking-[0.15em]">Explore all tools</span>
-          </button>
         </nav>
       </div>
 
       <div className="z8-sidebar-dock relative z-10 -mx-3 -mb-4 mt-2 space-y-2 px-3 pb-3 pt-2.5">
         <div className="flex items-center justify-between gap-2 px-1">
           <span className={`inline-flex min-w-0 items-center gap-2 ${Z8_LABEL} text-white/40`}>
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-vouch-cyan/60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-vouch-cyan" />
-            </span>
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vouch-cyan/80" aria-hidden />
             <span className="truncate tracking-[0.18em]">Live data</span>
           </span>
-          <span className={`inline-flex shrink-0 items-center bg-vouch-cyan/10 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)] ${Z8_LABEL}`}>
+          <span className={`inline-flex shrink-0 items-center bg-vouch-cyan/10 px-2 py-0.5 text-[11px] tracking-widest text-vouch-cyan ${Z8_LABEL}`}>
             Online
           </span>
         </div>
@@ -454,9 +476,7 @@ function FeedSidebar({
               )}
             </div>
             <p className={`mt-0.5 ${Z8_LABEL} text-white/40 truncate`}>
-              {profile.winRate != null && profile.winRate > 0
-                ? `${Math.round(profile.winRate * 100)}% win rate`
-                : 'No graded picks yet'}
+              {formatProfileWinRate(profile, { suffix: 'win rate' })}
             </p>
           </div>
         </button>

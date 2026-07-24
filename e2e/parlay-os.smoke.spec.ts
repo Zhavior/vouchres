@@ -23,9 +23,9 @@ test.describe("ParlayOS smoke", () => {
     const hub = page.getByRole("region", { name: /parlayos/i });
     await expect(hub).toBeVisible({ timeout: 30_000 });
 
-    const buildWithParlay = page.getByText(/build with parlayos/i);
+    const emptyBuildState = page.getByRole("heading", { name: /build from your research/i });
     const openSlip = page.getByRole("button", { name: /open slip/i });
-    const hasEmpty = await buildWithParlay.isVisible().catch(() => false);
+    const hasEmpty = await emptyBuildState.isVisible().catch(() => false);
     const hasSlip = await openSlip.isVisible().catch(() => false);
     expect(hasEmpty || hasSlip).toBeTruthy();
   });

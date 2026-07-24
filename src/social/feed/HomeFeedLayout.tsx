@@ -209,13 +209,11 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
       )}
 
       {!isPublicFrontPage && cmdKOpen && (
-        <Suspense fallback={null}>
-          <CmdKPalette
-            open={cmdKOpen}
-            onClose={handleCloseCmdK}
-            onNavigate={handleSectionChange}
-          />
-        </Suspense>
+        <CmdKPalette
+          open={cmdKOpen}
+          onClose={handleCloseCmdK}
+          onNavigate={handleSectionChange}
+        />
       )}
 
       {!isPublicFrontPage && (

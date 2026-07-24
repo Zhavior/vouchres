@@ -178,9 +178,11 @@ export async function getPitcherMatchup(
   pitcherId: number,
   date = todayISO()
 ): Promise<PitcherMatchupResponse | null> {
-  return reportCache.getOrSet(
-    `pitcher_matchup_v1:${gamePk}:${pitcherId}:${date}`,
-    async () => {
+  const cacheKey = `pitcher_matchup_v2:${gamePk}:${pitcherId}:${date}`;
+  const cached = reportCache.get(cacheKey) as PitcherMatchupResponse | undefined | null;
+  if (cached) return cached;
+
+  const response = await (async (): Promise<PitcherMatchupResponse | null> => {
       const resolved = await findGameByPkNearDate(gamePk, date);
       if (!resolved) return null;
       const { game, resolvedDate } = resolved;
@@ -257,18 +259,50 @@ export async function getPitcherMatchup(
       if (lineupRaw.length === 0) {
         // Fallback: active roster hitters (order not official).
         warnings.push("Projected lineup may change");
-        const byTeam = await getActiveHittersByTeam([opponentTeam.teamId]);
-        const roster: NormalizedPlayer[] = byTeam.get(opponentTeam.teamId) ?? [];
-        lineupRaw = roster.slice(0, MAX_BATTERS).map((p) => ({
-          id: p.playerId,
-          battingOrder: null,
-          position: p.position,
-          bats: p.bats,
-          name: p.playerName,
-        }));
+        try {
+          const byTeam = await getActiveHittersByTeam([opponentTeam.teamId]);
+          const roster: NormalizedPlayer[] = byTeam.get(opponentTeam.teamId) ?? [];
+          lineupRaw = roster.slice(0, MAX_BATTERS).map((p) => ({
+            id: p.playerId,
+            battingOrder: null,
+            position: p.position,
+            bats: p.bats,
+            name: p.playerName,
+          }));
+        } catch (err) {
+          console.warn(
+            `[pitcherMatchup] active roster fallback failed team=${opponentTeam.teamId}:`,
+            err instanceof Error ? err.message : String(err),
+          );
+          warnings.push("Active roster unavailable for opponent hitters");
+        }
       } else if (!official) {
         warnings.push("Projected lineup may change");
       }
+
+      // Second chance: if roster map was empty for this teamId, try unfiltered slate cache.
+      if (lineupRaw.length === 0) {
+        try {
+          const byTeam = await getActiveHittersByTeam();
+          const roster: NormalizedPlayer[] = byTeam.get(opponentTeam.teamId) ?? [];
+          if (roster.length > 0) {
+            warnings.push("Recovered opponent hitters from slate roster cache");
+            lineupRaw = roster.slice(0, MAX_BATTERS).map((p) => ({
+              id: p.playerId,
+              battingOrder: null,
+              position: p.position,
+              bats: p.bats,
+              name: p.playerName,
+            }));
+          }
+        } catch (err) {
+          console.warn(
+            `[pitcherMatchup] slate roster recovery failed team=${opponentTeam.teamId}:`,
+            err instanceof Error ? err.message : String(err),
+          );
+        }
+      }
+
       warnings.push("BvP can be small sample");
 
       const batters = lineupRaw.slice(0, MAX_BATTERS);
@@ -370,14 +404,20 @@ export async function getPitcherMatchup(
         }
       );
 
-      const response: PitcherMatchupResponse = {
+      return {
         gamePk,
         pitcher,
         opponent: { team: opponentTeam.name, projectedLineup },
         warnings: Array.from(new Set(warnings)),
       };
-      return response;
-    },
-    3 * 60_000
-  ) as Promise<PitcherMatchupResponse | null>;
+  })();
+
+  // Never pin empty lineups in the long TTL — they poison the drawer / zones page.
+  if (response && response.opponent.projectedLineup.length > 0) {
+    reportCache.set(cacheKey, response, 3 * 60_000);
+  } else if (response) {
+    reportCache.set(cacheKey, response, 20_000);
+  }
+
+  return response;
 }

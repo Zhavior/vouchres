@@ -443,7 +443,39 @@ export default function PitcherMatchupDrawer({
         { date },
         controller.signal,
       )
-      .then(setData)
+      .then(async (payload) => {
+        if ((payload.opponent?.projectedLineup?.length ?? 0) > 0) {
+          if (!controller.signal.aborted) setData(payload);
+          return;
+        }
+        try {
+          const roster = await activeRosterFallback({
+            gamePk,
+            pitcherId,
+            date,
+            pitcherName: pitcherName || payload.pitcher?.name,
+            pitcherHand: pitcherHand || payload.pitcher?.throws,
+            team: team || payload.pitcher?.team,
+            opponent: opponent || payload.opponent?.team,
+          });
+          if (!controller.signal.aborted) {
+            setData({
+              ...payload,
+              opponent: {
+                team: payload.opponent?.team || roster.opponent.team,
+                projectedLineup: roster.opponent.projectedLineup,
+              },
+              warnings: Array.from(new Set([
+                ...(payload.warnings ?? []),
+                ...(roster.warnings ?? []),
+                'Live lineup empty — recovered active roster hitters',
+              ])),
+            });
+          }
+        } catch {
+          if (!controller.signal.aborted) setData(payload);
+        }
+      })
       .catch(async (err) => {
         if (err.name !== 'AbortError') {
           try {

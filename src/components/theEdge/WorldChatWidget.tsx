@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useAppProfile } from '../../context/AppShellContext';
-import { Z8_SURFACE, Z8_ACTIVE } from '../../theme/z8Tokens';
+import { Z8_SURFACE, Z8_ACTIVE, Z8_OVERLAY_SCRIM } from '../../theme/z8Tokens';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useNavUiStore } from '../../stores/navUiStore';
 
@@ -31,7 +31,7 @@ export default function WorldChatWidget() {
           type="button"
           aria-label="Close World Chat"
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm transition-opacity"
+          className={`fixed inset-0 z-[90] ${Z8_OVERLAY_SCRIM}`}
         />
       ) : null}
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Share, Twitter, Copy, Check, ExternalLink, ShieldCheck, Sparkles, Trophy } from 'lucide-react';
+import { Share, Twitter, Copy, Check, ShieldCheck, TrendingUp, BarChart3 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
-import { DeferredBubbleField } from '../vouchedge/DeferredBubbleField';
+import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
+import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_STAT_CHIP } from '../../theme/z8Tokens';
 
 interface ProfileShareCardProps {
   profile: CreatorProofProfile;
@@ -14,18 +15,14 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   const [copied, setCopied] = useState(false);
   const [copiedDraft, setCopiedDraft] = useState(false);
 
-  // Get active profile theme
   const themeId = profile.profileThemeId || profile.activeTheme || 'cyber-blue';
   const activeTheme = THEME_REGISTRY.find(t => t.id === themeId) || THEME_REGISTRY[0];
 
-  const getThemeVars = () => {
-    return {
-      '--theme-border-color': activeTheme.borderColor || 'rgba(6,182,212,0.2)',
-      '--theme-accent-color': activeTheme.accentText.includes('cyan') ? '#22d3ee' : activeTheme.accentText.includes('orange') ? '#f97316' : activeTheme.accentText.includes('emerald') ? '#10b981' : activeTheme.accentText.includes('rose') ? '#e11d48' : '#eab308',
-    };
-  };
+  const winRateLabel = profileHasGradedPicks(profile)
+    ? `${profile.winRate}%`
+    : 'No graded picks yet';
 
-  const shareText = `🔥 Check out my verified sport outcomes on VouchEdge! \n\n🎯 Win Rate: ${profile.winRate}%\n💰 Net Profit: +${profile.unitsNetProfit} Units\n🛡️ Verified Handle: @${profile.username}\n\nJoin my tailing circle and build transparent edge! #VouchEdge #SportsBetting`;
+  const shareText = `Check out my verified sport outcomes on VouchEdge.\n\nWin Rate: ${winRateLabel}\nNet Profit: +${profile.unitsNetProfit} Units\nHandle: @${profile.username}\n\n#VouchEdge #SportsBetting`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://vouchedge.app/capper/${profile.username}`);
@@ -40,145 +37,124 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   };
 
   return (
-    <div className="bg-ve-graphite/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
-      {/* Glow Layer matching theme Accent */}
-      <div className={`absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-sky-500`} />
-      <div className={`absolute -bottom-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 bg-indigo-600`} />
-
-      <div className="flex justify-between items-center relative z-10 border-b border-slate-800 pb-4">
+    <div className={`${Z8_PANEL_PREMIUM} max-w-lg w-full mx-auto p-6 space-y-6 text-white relative overflow-hidden select-none`}>
+      <div className="flex justify-between items-center relative z-10 border-b border-white/10 pb-4">
         <div>
           <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
-            <Share className="w-5 h-5 text-sky-400" />
+            <Share className="w-5 h-5 text-vouch-cyan" />
             Social Share Studio
           </h3>
-          <p className="text-xs text-slate-400">Flex your transparent track record to X / Twitter</p>
+          <p className="text-xs text-white/45 mt-0.5">Share your verified track record</p>
         </div>
         {onClose && (
-          <button 
+          <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-100 text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all uppercase"
+            className={`${Z8_LABEL} text-white/45 hover:text-white px-2.5 py-1 rounded-lg border border-white/10 bg-black/30 hover:bg-white/5 transition-all`}
           >
             Close
           </button>
         )}
       </div>
 
-      {/* Share Card Outer frame with equipped Theme styling */}
-      <div 
-        className={`p-1 rounded-2xl relative transition-all duration-500 shadow-2xl ${
-          activeTheme.pageBg || 'bg-gradient-to-b from-[#110c27] to-[#03040c]'
-        }`}
-        style={getThemeVars() as React.CSSProperties}
+      <div
+        className={`rounded-2xl p-1 ${activeTheme.pageBg || 'bg-gradient-to-b from-[#110c27] to-[#03040c]'}`}
         id="social-share-card-preview"
       >
-        {/* Glass bubble accents */}
-        {activeTheme.id !== 'cyber-blue' && (
-          <DeferredBubbleField count={3} mobileCount={2} variant="pulse" className="opacity-30 p-4" />
-        )}
-
-        <div className={`rounded-[14px] p-6 bg-slate-950/90 border border-white/5 relative z-10 space-y-4`}>
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <ProfileAvatarBorder 
+        <div className="rounded-xl p-6 bg-black/50 border border-white/8 space-y-4">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex items-center gap-4 min-w-0">
+              <ProfileAvatarBorder
                 borderId={profile.profileBorderId}
                 avatarUrl={profile.avatarUrl}
                 displayName={profile.displayName}
-                initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
+                initials={profile.displayName.split(' ').map(n => n[0]).join('')}
                 size="lg"
                 winRate={profile.winRate}
                 isVerified={profile.verified}
               />
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-extrabold text-sm text-slate-100 leading-none">{profile.displayName}</h4>
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 fill-emerald-400/10" />
+                  <h4 className="font-extrabold text-sm text-white leading-none truncate">{profile.displayName}</h4>
+                  {profile.verified && (
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-vouch-emerald fill-vouch-emerald/10" />
+                  )}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5 font-mono">@{profile.username}</p>
-                <div className="mt-1.5">
-                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border ${
-                    activeTheme.id === 'cyber-blue' 
-                      ? 'bg-sky-950/40 text-sky-400 border-sky-800/40' 
-                      : 'bg-indigo-950/40 text-indigo-400 border-indigo-800/40'
-                  }`}>
-                    {activeTheme.name} EQUIP
-                  </span>
-                </div>
+                <p className="text-xs text-white/45 mt-0.5 font-mono">@{profile.username}</p>
+                <span className={`mt-1.5 inline-block ${Z8_LABEL} text-[10px] px-2 py-0.5 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
+                  {activeTheme.name}
+                </span>
               </div>
             </div>
-
-            {/* VouchEdge Watermark badge */}
-            <div className="text-right">
-              <span className="text-[10px] font-black text-[#FFE81F] font-mono tracking-wider border border-[#FFE81F]/30 px-2 py-0.5 rounded-md bg-yellow-300/5 shadow-[0_0_10px_rgba(255,232,31,0.1)]">
-                ★ VOUCH<span className="text-white">EDGE</span>
+            <div className="text-right shrink-0">
+              <span className={`${Z8_LABEL} text-[10px] text-vouch-cyan border border-vouch-cyan/30 px-2 py-0.5 rounded-md bg-vouch-cyan/10`}>
+                VOUCH<span className="text-white">EDGE</span>
               </span>
-              <p className="text-[8px] text-slate-500 font-bold uppercase mt-1">Verified Proof Guard</p>
+              <p className={`${Z8_LABEL} text-[10px] text-white/35 mt-1`}>Verified proof</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3.5 pt-2">
-            <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
-              <div className="absolute top-2 right-2 text-[10px] text-emerald-400 opacity-60">🎯</div>
-              <span className="text-2xl font-black text-slate-100 tracking-tight font-mono">{profile.winRate}%</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">WIN RATE PROOF</span>
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className={`${Z8_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
+              <TrendingUp className="w-3.5 h-3.5 mx-auto mb-1 text-vouch-emerald/70" aria-hidden />
+              <span className="text-2xl font-black text-white tracking-tight font-mono z8-tabular-nums">
+                {profileHasGradedPicks(profile) ? `${profile.winRate}%` : '—'}
+              </span>
+              <span className={`${Z8_LABEL} text-[10px] text-white/40 mt-1`}>
+                {profileHasGradedPicks(profile) ? 'Win rate' : 'No graded picks yet'}
+              </span>
             </div>
-
-            <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
-              <div className="absolute top-2 right-2 text-[10px] text-amber-400 opacity-60">💰</div>
-              <span className="text-2xl font-black text-amber-400 tracking-tight font-mono">+{profile.unitsNetProfit}U</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">NET LEDGER UNITS</span>
+            <div className={`${Z8_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
+              <BarChart3 className="w-3.5 h-3.5 mx-auto mb-1 text-vouch-amber/70" aria-hidden />
+              <span className="text-2xl font-black text-vouch-amber tracking-tight font-mono z8-tabular-nums">
+                {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit}u
+              </span>
+              <span className={`${Z8_LABEL} text-[10px] text-white/40 mt-1`}>Net ledger units</span>
             </div>
           </div>
 
-          {/* Bio quote box */}
-          <div className="bg-ve-obsidian border border-slate-900/60 p-3 rounded-xl text-left">
-            <p className="text-xs text-slate-300 italic leading-relaxed font-sans line-clamp-2">
-              "{profile.bio}"
-            </p>
-          </div>
-
-          {/* Security stamp verification footer */}
-          <div className="flex items-center justify-between text-[9px] text-slate-500 font-semibold font-mono border-t border-slate-900 pt-3">
-            <div className="flex items-center gap-1">
-              <Trophy className="w-3.5 h-3.5 text-amber-500" />
-              <span>STREAK: 100% AUDITED</span>
+          {profile.bio && (
+            <div className="border border-white/8 bg-black/30 p-3 rounded-xl text-left">
+              <p className="text-xs text-white/65 italic leading-relaxed line-clamp-2">&ldquo;{profile.bio}&rdquo;</p>
             </div>
-            <span>ID: {profile.username.toUpperCase()}_GUARD</span>
+          )}
+
+          <div className={`flex items-center justify-between ${Z8_LABEL} text-[10px] text-white/35 border-t border-white/8 pt-3`}>
+            <span>Graded picks only</span>
+            <span>@{profile.username}</span>
           </div>
         </div>
       </div>
 
-      {/* Copy / Action controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
         <button
           onClick={handleCopyDraft}
-          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-xs font-bold uppercase tracking-wider"
+          className={`${Z8_LABEL} border border-white/10 bg-black/35 hover:bg-white/5 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white/70 hover:text-white`}
         >
           {copiedDraft ? (
             <>
-              <Check className="w-4 h-4 text-emerald-400" />
-              <span>Draft Copied!</span>
+              <Check className="w-4 h-4 text-vouch-emerald" />
+              <span>Draft copied</span>
             </>
           ) : (
             <>
-              <Twitter className="w-4 h-4 text-sky-400" />
-              <span>Copy X/Twitter Draft</span>
+              <Twitter className="w-4 h-4 text-vouch-cyan" />
+              <span>Copy X draft</span>
             </>
           )}
         </button>
-
         <button
           onClick={handleCopyLink}
-          className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-xs font-bold uppercase tracking-wider shadow-md"
+          className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 hover:bg-vouch-cyan/25 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white`}
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4 text-emerald-100" />
-              <span>Link Copied!</span>
+              <Check className="w-4 h-4 text-vouch-emerald" />
+              <span>Link copied</span>
             </>
           ) : (
             <>
               <Copy className="w-4 h-4" />
-              <span>Copy Profile URL</span>
+              <span>Copy profile URL</span>
             </>
           )}
         </button>

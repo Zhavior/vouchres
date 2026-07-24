@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { ProLockedCard } from "../../components/pro/ProLockedCard";
-import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
-import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, Sparkles, HelpCircle, CheckCircle2, Radio } from 'lucide-react';
+import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame, Calculator, CheckCircle2, Radio } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { useDailyHrBoard } from '../../features/hr/hooks/useDailyHrBoard';
@@ -15,8 +13,10 @@ import StrikeZoneHeatmapMatrix from '../../components/analytics/StrikeZoneHeatma
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
 import {
-  Z8_PAGE,
-  Z8_PAGE_SHELL,
+  buildOpponentLineupFromHrBoard,
+  hasProjectedHitters,
+} from '../../lib/matchups/buildOpponentLineupFallback';
+import {
   Z8_PANEL,
   Z8_PANEL_PREMIUM,
   Z8_SECTION_HEADER,
@@ -266,125 +266,21 @@ function fmtPct(v: number | null | undefined): string {
   return `${v.toFixed(1)}%`;
 }
 
-const ABBR_MAP: Record<string, string[]> = {
-  nyy: ["yankees", "new york yankees", "nyy"],
-  nym: ["mets", "new york mets", "nym"],
-  lad: ["dodgers", "los angeles dodgers", "lad"],
-  laa: ["angels", "los angeles angels", "laa"],
-  sd: ["padres", "san diego padres", "sd"],
-  sf: ["giants", "san francisco giants", "sf"],
-  bos: ["red sox", "boston red sox", "bos"],
-  chc: ["cubs", "chicago cubs", "chc"],
-  cws: ["white sox", "chicago white sox", "cws", "chw"],
-  stl: ["cardinals", "st. louis cardinals", "saint louis cardinals", "stl"],
-  tb: ["rays", "tampa bay rays", "tb", "tbr"],
-  tor: ["blue jays", "toronto blue jays", "tor"],
-  bal: ["orioles", "baltimore orioles", "bal"],
-  cle: ["guardians", "cleveland guardians", "cle"],
-  det: ["tigers", "detroit tigers", "det"],
-  kc: ["royals", "kansas city royals", "kc", "kcr"],
-  min: ["twins", "minnesota twins", "min"],
-  hou: ["astros", "houston astros", "hou"],
-  oak: ["athletics", "oakland athletics", "oak", "ath"],
-  sea: ["mariners", "seattle mariners", "sea"],
-  atl: ["braves", "atlanta braves", "atl"],
-  mia: ["marlins", "miami marlins", "mia"],
-  phi: ["phillies", "philadelphia phillies", "phi"],
-  wsh: ["nationals", "washington nationals", "wsh", "was"],
-  cin: ["reds", "cincinnati reds", "cin"],
-  col: ["rockies", "colorado rockies", "col"],
-  ari: ["diamondbacks", "arizona diamondbacks", "ari", "az"],
-  mil: ["brewers", "milwaukee brewers", "mil"],
-  pit: ["pirates", "pittsburgh pirates", "pit"],
-  tex: ["rangers", "texas rangers", "tex"],
-};
-
-function matchTeam(rawTeamA: string, rawTeamB: string): boolean {
-  if (!rawTeamA || !rawTeamB) return false;
-  const a = rawTeamA.trim().toLowerCase();
-  const b = rawTeamB.trim().toLowerCase();
-  if (a === b || a.includes(b) || b.includes(a)) return true;
-
-  for (const list of Object.values(ABBR_MAP)) {
-    const hasA = list.some((x) => x === a || a.includes(x));
-    const hasB = list.some((x) => x === b || b.includes(x));
-    if (hasA && hasB) return true;
-  }
-  return false;
-}
-
 // ─── Direct Fallback Lineup Constructor ────────────────────────────────────
+// Prefer shared helper — teamId / abbreviation / gamePk matching, not name-includes.
 
 function buildLineupFromHrBoard(
   gamePk: number,
   pitcher: { id: number; name: string; team: string; throws: 'L' | 'R' | 'U' },
-  opponentTeam: string,
-  hrBoardData?: any
+  opponent: { teamId?: number | null; name?: string | null; abbreviation?: string | null },
+  hrBoardData?: unknown,
 ): PitcherMatchupResponse {
-  const rows = hrBoardData?.rows ?? hrBoardData?.candidates ?? hrBoardData?.confirmedCandidates ?? hrBoardData?.projectedCandidates ?? [];
-  let filtered = rows.filter((r: any) => {
-    const rTeam = String(r.team || r.teamName || r.teamAbbr || r.sourceTeamId || '');
-    return matchTeam(rTeam, opponentTeam);
-  });
-
-  if (filtered.length === 0 && rows.length > 0) {
-    filtered = rows.slice(0, 9);
-  }
-
-  const projectedLineup: HitterRow[] = filtered.map((r: any, idx: number) => {
-    const isSameGame = r.gamePk == null || Number(r.gamePk) === Number(gamePk);
-    const hrToday = isSameGame ? Number(r.hrToday ?? r.todayHr ?? r.statsToday?.homeRuns ?? 0) : 0;
-    return {
-      id: Number(r.playerId || r.id || idx + 1000),
-      name: String(r.playerName || r.name || 'Hitter'),
-      bats: (r.bats === 'L' || r.bats === 'R' || r.bats === 'S') ? r.bats : 'R',
-      position: String(r.position || 'DH'),
-      lineupSpot: r.battingOrder ?? r.lineupSpot ?? (idx + 1),
-      lineupStatus: r.lineupStatus,
-      headshotUrl: r.headshot ?? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${r.playerId}/headshot/67/current`,
-      hrToday,
-      hitHrToday: hrToday > 0,
-      recentForm: r.recentForm ?? { games: 10, hr: r.seasonHr ? Math.round(r.seasonHr / 10) : 1, hits: 8, atBats: 32, strikeOuts: 6 },
-      vsPitcher: {
-        ab: r.bvpAb ?? 0,
-        h: r.bvpHits ?? 0,
-        hr: r.bvpHr ?? 0,
-        bb: 0,
-        k: 0,
-        avgText: r.bvpAvg ? String(r.bvpAvg) : null,
-        slgText: null,
-        opsText: r.bvpOps ? String(r.bvpOps) : null,
-      },
-      seasonStats: {
-        pa: r.pa ?? 300,
-        avg: r.avg ?? 0.260,
-        obp: r.obp ?? 0.330,
-        slg: r.slg ?? 0.450,
-        iso: r.iso ?? (r.slg && r.avg ? r.slg - r.avg : 0.180),
-        ops: r.ops ?? 0.780,
-        hr: r.hr ?? r.seasonHr ?? 15,
-      },
-      statcast: {
-        playerId: Number(r.playerId || 0),
-        pa: r.pa ?? 300,
-        xwoba: r.xwoba ?? 0.335,
-        barrelPct: r.barrelPct ?? 9.2,
-        hardHitPct: r.hardHitPct ?? 42.1,
-        avgExitVelo: r.avgExitVelo ?? 89.5,
-      },
-      tags: Array.isArray(r.tags) ? r.tags : ['Verified MLB Stats'],
-    };
-  });
-
-  return {
+  return buildOpponentLineupFromHrBoard({
     gamePk,
     pitcher,
-    opponent: {
-      team: opponentTeam,
-      projectedLineup,
-    },
-    warnings: [],
-  };
+    opponent,
+    hrBoard: hrBoardData as Parameters<typeof buildOpponentLineupFromHrBoard>[0]['hrBoard'],
+  }) as PitcherMatchupResponse;
 }
 
 // ─── Matchup selector strip ─────────────────────────────────────────────────
@@ -487,7 +383,7 @@ const HitterHeatmapTable: React.FC<{
   if (rows.length === 0) {
     return (
       <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
-        No lineup data yet for {title} vs {pitcherName}.
+        No lineup data yet for {title} vs {pitcherName}. Official batting order or active roster hitters will appear when MLB posts them.
       </div>
     );
   }
@@ -686,7 +582,6 @@ import { MatchupPageShell } from '../../features/matchup/MatchupPageShell';
 // ─── Page ────────────────────────────────────────────────────────────────
 
 export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: (section: string) => void }) {
-  const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [games, setGames] = useState<GameMatchup[]>([]);
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
@@ -716,13 +611,17 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
     return set;
   }, [liveData]);
 
-  // 1. Load Game Schedule (with fallback to direct official MLB API)
+  // 1. Load Game Schedule for the selected date (today helper + dated route)
   useEffect(() => {
     let alive = true;
     setLoadingGames(true);
     setError(null);
 
-    vouchedgeApi.matchupsToday()
+    const load = isToday
+      ? vouchedgeApi.matchupsToday()
+      : apiClient.get<{ matchups?: GameMatchup[] }>(`/api/mlb/matchups/date/${encodeURIComponent(date)}`);
+
+    load
       .then((data) => {
         if (!alive) return;
         const list: GameMatchup[] = data.matchups ?? [];
@@ -732,40 +631,76 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
       .catch((err) => {
         if (!alive) return;
         setError(err.message || 'Matchups stream reconnecting...');
+        setGames([]);
+        setSelectedGame(null);
       })
       .finally(() => { if (alive) setLoadingGames(false); });
 
     return () => { alive = false; };
-  }, [date]);
+  }, [date, isToday]);
 
-  // 2. Load Pitcher/Lineup Matrix (with automatic fallback to HR Board candidate rows)
+  // 2. Load Pitcher/Lineup Matrix — empty API lineups soft-fail into HR board fallback
   useEffect(() => {
     const game = games.find((g) => g.gamePk === selectedGame);
     if (!game) { setAwayVsHome(null); setHomeVsAway(null); return; }
     let alive = true;
     setLoadingLineups(true);
 
-    const fetchSide = (
+    const fetchSide = async (
       pitcher: { id: number; name: string; throws: string } | null,
-      pitcherTeam: string,
-      oppTeam: string
+      pitcherTeam: GameMatchup['away'],
+      oppTeam: GameMatchup['home'],
     ): Promise<PitcherMatchupResponse | null> => {
       const pitcherId = pitcher?.id;
       const pitcherHand: 'L' | 'R' | 'U' = (pitcher?.throws === 'L' || pitcher?.throws === 'R') ? pitcher.throws : 'R';
-      const pitcherObj = { id: pitcherId ?? 0, name: pitcher?.name ?? 'Pitcher', team: pitcherTeam, throws: pitcherHand };
+      const pitcherObj = {
+        id: pitcherId ?? 0,
+        name: pitcher?.name ?? 'Pitcher',
+        team: pitcherTeam.name,
+        throws: pitcherHand,
+      };
+      const opponentRef = {
+        teamId: oppTeam.teamId,
+        name: oppTeam.name,
+        abbreviation: oppTeam.abbreviation,
+      };
 
-      if (!pitcherId) {
-        return Promise.resolve(buildLineupFromHrBoard(game.gamePk, pitcherObj, oppTeam, hrBoardQuery.data));
+      const fallback = () =>
+        buildLineupFromHrBoard(game.gamePk, pitcherObj, opponentRef, hrBoardQuery.data);
+
+      if (!pitcherId) return fallback();
+
+      try {
+        const payload = await apiClient.get<PitcherMatchupResponse>(
+          `/api/mlb/matchup-matrix/${game.gamePk}/pitcher/${pitcherId}`,
+          { date },
+        );
+        if (hasProjectedHitters(payload)) return payload;
+        // Successful but empty — do not strand the UI; merge board hitters.
+        const board = fallback();
+        if (hasProjectedHitters(board)) {
+          return {
+            ...payload,
+            opponent: {
+              team: payload.opponent?.team || board.opponent.team,
+              projectedLineup: board.opponent.projectedLineup,
+            },
+            warnings: Array.from(new Set([
+              ...(payload.warnings ?? []),
+              ...(board.warnings ?? []),
+              'Live lineup empty — showing board hitters for this matchup',
+            ])),
+          };
+        }
+        return payload;
+      } catch {
+        return fallback();
       }
-
-      return apiClient
-        .get<PitcherMatchupResponse>(`/api/mlb/matchup-matrix/${game.gamePk}/pitcher/${pitcherId}`, { date })
-        .catch(() => buildLineupFromHrBoard(game.gamePk, pitcherObj, oppTeam, hrBoardQuery.data));
     };
 
     Promise.all([
-      fetchSide(game.away.probablePitcher, game.away.name, game.home.name),
-      fetchSide(game.home.probablePitcher, game.home.name, game.away.name),
+      fetchSide(game.away.probablePitcher, game.away, game.home),
+      fetchSide(game.home.probablePitcher, game.home, game.away),
     ]).then(([awayPitcherVsHomeLineup, homePitcherVsAwayLineup]) => {
       if (!alive) return;
       setAwayVsHome(awayPitcherVsHomeLineup);

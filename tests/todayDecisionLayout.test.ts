@@ -8,11 +8,9 @@ const source = readFileSync(
 
 describe('Today decision-first layout', () => {
   it('leads with the real slate summary and compact briefing rail', () => {
-    expect(source).toContain("buildTodayDecision({");
+    expect(source).toContain('buildTodayDecision({');
     expect(source).toContain('<TodayDecisionReel');
     expect(source).toContain('Daily Intelligence Briefing');
-    // Status chip communicates slate state directly instead of a separate
-    // "Today slate status" heading — Syncing / Partial data / All clear.
     expect(source).toContain("isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active'");
   });
 
@@ -46,6 +44,7 @@ describe('Today decision-first layout', () => {
   });
 
   it('shows a compact VE brand mark in the sticky header', () => {
-    expect(source).toContain('>\n            VE\n          </span>');
+    expect(source).toContain('font-mono text-[10px] font-black text-vouch-emerald');
+    expect(source).toMatch(/>\s*VE\s*<\/span>/);
   });
 });
