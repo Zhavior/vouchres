@@ -1,8 +1,12 @@
 /**
  * Client-side parlay grading — calls the stateless POST /api/parlays/grade
  * endpoint (which grades against the live sport feed) and merges results back
- * into the local Parlay objects. This is the bridge that connects saved
- * parlays → MLB outcomes → Results.
+ * into the local Parlay objects. This is the fast UX preview path.
+ *
+ * Durable DB settlement is owned by gradePendingPicks() via
+ * GET /api/cron/parlays/grade-due (and staff /api/parlays/grade-due). That path
+ * only sees parlays that were saved through /api/v3/parlays/save (or the
+ * /api/me/parlays POST compat alias).
  *
  * Wire-compatible with the production Supabase pipeline: the same leg shape
  * ({ sport, gamePk, market, selection }) is what POST /api/parlays expects.
