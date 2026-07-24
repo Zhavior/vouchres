@@ -27,6 +27,8 @@ const results = read("server/routes/resultRoutes.ts");
 const notifications = read("server/routes/notificationRoutes.ts");
 const notificationService = read("server/services/notifications/notificationService.ts");
 const billing = read("server/routes/billingRoutes.ts");
+const billingHandlers = read("server/v3/modules/billing/handlers.ts");
+const billingScope = `${billing}\n${billingHandlers}`;
 const posts = read("server/routes/postRoutes.ts");
 const core = read("server/routes/coreRoutes.ts");
 const pickService = read("server/services/persistence/pickService.ts");
@@ -135,12 +137,12 @@ includesAll(notificationService, [
   ".eq(\"endpoint\", endpoint)",
 ], "notification service ownership");
 
-includesAll(billing, [
+includesAll(billingScope, [
   '"/checkout"',
   '"/portal"',
   "requireAuth",
-  'billingRoutes.get("/status", requireAuth, billingStatusHandler)',
-  'billingRoutes.get("/subscription", requireAuth, billingStatusHandler)',
+  'billingRoutes.get(\n  "/status",\n  requireAuth,',
+  'billingRoutes.get(\n  "/subscription",\n  requireAuth,',
   ".eq(\"profile_id\", req.user!.id)",
 ], "billing auth scope");
 
