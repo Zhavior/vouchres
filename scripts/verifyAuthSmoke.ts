@@ -20,6 +20,8 @@ function includesAll(source: string, snippets: string[], label: string): void {
 const auth = read("server/middleware/auth.ts");
 const ownership = read("server/middleware/ownership.ts");
 const parlayUserRoutes = read("server/routes/parlay/parlayUserRoutes.ts");
+const parlaySupportRoutes = read("server/routes/parlay/mountParlaySupportRoutes.ts");
+const parlayRoutes = `${parlayUserRoutes}\n${parlaySupportRoutes}`;
 const parlayController = read("server/controllers/parlayController.ts");
 const results = read("server/routes/resultRoutes.ts");
 const notifications = read("server/routes/notificationRoutes.ts");
@@ -97,7 +99,7 @@ includesAll(ownership, [
   "[ownership] rejected cross-user access",
 ], "ownership helper");
 
-includesAll(parlayUserRoutes, [
+includesAll(parlayRoutes, [
   '"/parlays/save"',
   "requireAuth",
   '"/me/parlays"',
