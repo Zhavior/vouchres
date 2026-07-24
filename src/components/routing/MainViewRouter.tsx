@@ -297,7 +297,7 @@ function MainViewRouter({
     case 'pro_graphs_lab':
       return (
         <LazyRoute>
-          <AiPilotShell navigateSection={navigateSection} />
+          <IntelShell navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'live_games':

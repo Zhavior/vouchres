@@ -23,7 +23,13 @@ import {
 import { BarChart3, Flame, ShieldAlert, Sparkles, SlidersHorizontal, Users, Target, Activity } from 'lucide-react';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 
-export default function ProGraphsLabPageZ8() {
+type ProGraphsLabPageZ8Props = {
+  embedded?: boolean;
+};
+
+export default function ProGraphsLabPageZ8({
+  embedded = false,
+}: ProGraphsLabPageZ8Props) {
   const { rows, groups, topRow, loading, error, source } = useHrBoardProData();
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
 
@@ -46,14 +52,21 @@ export default function ProGraphsLabPageZ8() {
   const activeMatchupGroup = useMemo(() => groups[0] || null, [groups]);
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} py-6 pb-24 text-white font-z8`}>
+    <main
+      className={
+        embedded
+          ? "min-w-0 text-white font-z8"
+          : `${Z8_PAGE} ${Z8_PAGE_PAD_X} py-6 pb-24 text-white font-z8`
+      }
+    >
       <div className={Z8_PAGE_GAP}>
-        {/* Header */}
-        <ProPageHeader
-          title="Pro Analytics & Graphs Lab"
-          subtitle="Real-time sabermetric visual analytics for HR Edge, team pressure, pitcher vulnerability, and head-to-head comparisons."
-          badge="Graph Pro Z8"
-        />
+        {!embedded && (
+          <ProPageHeader
+            title="Pro Analytics & Graphs Lab"
+            subtitle="Real-time sabermetric visual analytics for HR Edge, team pressure, pitcher vulnerability, and head-to-head comparisons."
+            badge="Graph Pro Z8"
+          />
+        )}
 
         <VerifiedDataNotice
           variant={source === 'network' ? 'coming-soon' : 'feed-required'}

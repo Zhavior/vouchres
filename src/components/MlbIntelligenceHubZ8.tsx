@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
+  BarChart3,
   Brain,
   Flame,
   Plug,
@@ -16,6 +17,7 @@ import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import type { HrBoardResponse } from '../types/hrBoard';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import AgentDock from './agents/AgentDock';
+import ProGraphsLabPageZ8 from '../pages/pro/ProGraphsLabPageZ8';
 import { hydrateAgentSlots } from '../services/agents/agentSlots';
 import { 
   Z8_ACTIVE, 
@@ -126,7 +128,14 @@ type AiJudgeLeaderboard = {
   leaderboard: AiJudge[];
 };
 
-type Tab = 'overview' | 'targets' | 'pitchers' | 'games' | 'judges' | 'agents';
+type Tab =
+  | 'overview'
+  | 'targets'
+  | 'pitchers'
+  | 'games'
+  | 'graphs'
+  | 'judges'
+  | 'agents';
 
 const safeArray = <T,>(value: unknown): T[] => Array.isArray(value) ? value as T[] : [];
 
@@ -609,10 +618,10 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
                 AI game room
               </p>
               <h1 className={Z8_SECTION_HEADER}>
-                VouchEdge AI Edge Lab
+                The Vouch AI Edge Lab
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-white/55">
-                A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
+                The complete MLB intelligence workspace powered by the working HR Board engine. Research HR projections, pitcher pressure, game environments, player comparisons, verified graphs, and AI judge signals in one place.
               </p>
             </div>
           </div>
@@ -680,6 +689,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
           ['targets', 'HR Targets', Target],
           ['pitchers', 'Pitcher Pressure', Activity],
           ['games', 'Game Environments', Zap],
+          ['graphs', 'Pro Graphs', BarChart3],
           ['judges', 'Judge Leaderboard', Flame],
         ].map(([id, label, Icon]) => {
           const active = tab === id;
@@ -699,13 +709,16 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
         })}
       </div>
 
-      {loading && tab !== 'judges' && (
+      {loading && tab !== 'judges' && tab !== 'graphs' && (
         <div className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-8 text-center text-white/50`}>
           Loading AI Edge Lab…
         </div>
       )}
 
-      {!loading && candidates.length === 0 && tab !== 'judges' && (
+      {!loading &&
+        candidates.length === 0 &&
+        tab !== 'judges' &&
+        tab !== 'graphs' && (
         <div className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-8 text-center`}>
           <p className="text-lg font-black text-white">No intelligence rows available yet.</p>
           <p className="mt-2 text-sm text-white/50">
@@ -787,6 +800,25 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
             </div>
           ))}
         </div>
+      )}
+
+
+      {tab === 'graphs' && (
+        <section className="min-w-0">
+          <div className={`mb-4 rounded-3xl ${Z8_PANEL_PREMIUM} p-5`}>
+            <p className={`${Z8_LABEL} text-vouch-cyan`}>
+              Verified visual intelligence
+            </p>
+            <h2 className={Z8_SECTION_HEADER}>Pro Graphs</h2>
+            <p className="mt-2 max-w-3xl text-sm text-white/55">
+              Explore HR signal spectra, player comparisons, team pressure,
+              pitcher vulnerability, and matchup evidence without leaving
+              The Vouch AI Edge Lab.
+            </p>
+          </div>
+
+          <ProGraphsLabPageZ8 embedded />
+        </section>
       )}
 
       {tab === 'judges' && (

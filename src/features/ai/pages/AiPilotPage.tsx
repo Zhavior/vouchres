@@ -192,13 +192,13 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
           <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               <div className={`${Z8_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
-                <Brain className="h-3.5 w-3.5" /> ProjectVABrAIns · The Vouch AI Edge Lab
+                <Brain className="h-3.5 w-3.5" /> ProjectVABrAIns · AI Generation Lab
               </div>
               <h1 className="mt-3 max-w-3xl text-3xl font-black leading-[1.05] tracking-tight text-white sm:text-4xl">
-                Project every game. Explain every edge. <span className="text-vouch-emerald">Build from evidence.</span>
+                Build the slip from evidence, <span className="text-vouch-emerald">not instinct.</span>
               </h1>
               <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/55 sm:text-sm">
-                The Vouch AI Edge Lab combines home-run projections, player signals, matchup pressure, pitcher vulnerability, historical context, and locked AI builds inside one auditable research workspace.
+                The Brain scans today&apos;s verified player pool, applies your market constraints, and assembles a locked AI-made parlay with an auditable result trail.
               </p>
             </div>
 
@@ -246,111 +246,15 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
           />
         </section>
 
-        <section className="brain-panel rounded-2xl border border-white/8 bg-black/20 p-4 sm:p-5">
-          <div className="flex flex-col gap-4 border-b border-white/8 pb-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
-                <Activity className="h-3.5 w-3.5" /> HR projection command board
-              </div>
-              <h2 className="mt-1 text-lg font-black tracking-tight text-white">
-                Home-run projections by slate, game, and player
-              </h2>
-              <p className="mt-1 max-w-3xl text-xs leading-relaxed text-white/40">
-                Review the strongest projected home-run signals across today&apos;s verified MLB slate. Every row is derived from the same production candidate pipeline used by the Vouch AI builder.
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-white/8 bg-black/25 px-3 py-2 text-center">
-                <div className={`${Z8_LABEL} text-white/35`}>Slate</div>
-                <div className="mt-1 text-sm font-black text-white">Today</div>
-              </div>
-              <div className="rounded-xl border border-white/8 bg-black/25 px-3 py-2 text-center">
-                <div className={`${Z8_LABEL} text-white/35`}>Games</div>
-                <div className="mt-1 text-sm font-black text-white">{candidatesLoading ? '—' : boardStats.games}</div>
-              </div>
-              <div className="rounded-xl border border-white/8 bg-black/25 px-3 py-2 text-center">
-                <div className={`${Z8_LABEL} text-white/35`}>Players</div>
-                <div className="mt-1 text-sm font-black text-white">{candidatesLoading ? '—' : boardStats.total}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 overflow-hidden rounded-xl border border-white/8">
-            <div className="hidden grid-cols-[44px_minmax(180px,1.5fr)_minmax(130px,1fr)_90px_90px_90px] gap-3 border-b border-white/8 bg-white/[0.025] px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white/35 md:grid">
-              <span>Rank</span><span>Player</span><span>Game</span><span>HR edge</span><span>Data</span><span>Status</span>
-            </div>
-
-            <div className="divide-y divide-white/6">
-              {realCandidates.slice(0, 12).map((candidate, index) => {
-                const playerName = String(candidate.playerName || 'MLB Hitter');
-                const team = String(candidate.team ?? 'MLB');
-                const opponent = String(candidate.opponent || 'OPP');
-                const edge =
-                  typeof candidate.score === 'number'
-                    ? Math.round(candidate.score)
-                    : typeof candidate.dataConfidence === 'number'
-                      ? Math.round(candidate.dataConfidence)
-                      : null;
-                const dataConfidence = typeof candidate.dataConfidence === 'number'
-                  ? Math.round(candidate.dataConfidence)
-                  : null;
-                const lineupStatus = String(candidate.lineupStatus ?? 'projected');
-                const id = String(candidate.playerId || `${playerName}-${index}`);
-
-                return (
-                  <div key={id} className="grid gap-3 px-4 py-3 transition hover:bg-white/[0.025] md:grid-cols-[44px_minmax(180px,1.5fr)_minmax(130px,1fr)_90px_90px_90px] md:items-center">
-                    <div className="font-mono text-[11px] font-black text-white/30">#{index + 1}</div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-black text-white">{playerName}</div>
-                      <div className="mt-0.5 text-[11px] text-white/35">{team}</div>
-                    </div>
-                    <div className="text-xs font-bold text-white/60">{team} <span className="text-white/25">vs</span> {opponent}</div>
-                    <div>
-                      <div className="text-sm font-black text-vouch-emerald">{edge == null ? '—' : `${edge}%`}</div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/5">
-                        <div className="h-full rounded-full bg-vouch-emerald" style={{ width: `${Math.max(5, Math.min(100, edge ?? 0))}%` }} />
-                      </div>
-                    </div>
-                    <div className="font-mono text-xs font-bold text-vouch-cyan">{dataConfidence == null ? '—' : `${dataConfidence}%`}</div>
-                    <div><span className={`${Z8_LABEL} rounded-full border border-white/10 bg-white/[0.035] px-2 py-1 text-white/50`}>{lineupStatus}</span></div>
-                  </div>
-                );
-              })}
-
-              {!candidatesLoading && realCandidates.length === 0 && (
-                <div className="px-4 py-10 text-center text-xs text-white/35">No verified HR projection candidates are available for this slate yet.</div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          <div className="brain-panel rounded-2xl border border-vouch-cyan/15 bg-vouch-cyan/[0.03] p-4">
-            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}><Gauge className="h-3.5 w-3.5" /> Player projections</div>
-            <h3 className="mt-2 text-sm font-black text-white">Signal-first player view</h3>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/40">Rank hitters by HR edge, source confidence, lineup status, and matchup context.</p>
-          </div>
-          <div className="brain-panel rounded-2xl border border-vouch-amber/15 bg-vouch-amber/[0.03] p-4">
-            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-amber`}><Radar className="h-3.5 w-3.5" /> Game projections</div>
-            <h3 className="mt-2 text-sm font-black text-white">Every matchup in one slate</h3>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/40">See where home-run pressure concentrates across games before opening deeper player research.</p>
-          </div>
-          <div className="brain-panel rounded-2xl border border-vouch-emerald/15 bg-vouch-emerald/[0.03] p-4">
-            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-emerald`}><Layers3 className="h-3.5 w-3.5" /> Graph intelligence</div>
-            <h3 className="mt-2 text-sm font-black text-white">Pro Graphs absorbed here</h3>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/40">Signal graphs, player comparisons, matchup pressure, and pitcher vulnerability now belong to this workspace.</p>
-          </div>
-        </section>
-
         <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
           <div className="brain-panel min-w-0 rounded-2xl border border-white/8 bg-black/20 p-3 sm:p-4">
             <div className="mb-4 flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
-                  <Sparkles className="h-3.5 w-3.5" /> AI Edge workspace
+                  <Sparkles className="h-3.5 w-3.5" /> Generation workspace
                 </div>
-                <h2 className="mt-1 text-lg font-black tracking-tight text-white">Research, project, and build</h2>
-                <p className="mt-1 text-xs text-white/40">Use the verified slate to inspect projected HR outcomes, compare signal strength, and generate locked Vouch AI builds.</p>
+                <h2 className="mt-1 text-lg font-black tracking-tight text-white">Configure the Brain&apos;s build</h2>
+                <p className="mt-1 text-xs text-white/40">Set the market, threshold, and leg count. The engine handles candidate selection.</p>
               </div>
               {usingProjectedPreview && (
                 <span className={`${Z8_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/8 px-3 py-1 text-vouch-amber`}>
