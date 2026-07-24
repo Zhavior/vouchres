@@ -141,7 +141,7 @@ export default function StrikeZoneHeatmapMatrix({
               const pVuln = pitcherZoneVulnerability[zone] ?? 0.450;
               const isCollision = hPower >= 0.580 && pVuln >= 0.580;
 
-              let valToDisplay = mode === "hitter" ? hPower : mode === "pitcher" ? pVuln : (hPower + pVuln) / 2;
+              const valToDisplay = mode === "hitter" ? hPower : mode === "pitcher" ? pVuln : (hPower + pVuln) / 2;
               let bgStyle = "bg-white/[0.04]";
               let textColor = "text-slate-400";
               let borderStyle = "border-white/5";
