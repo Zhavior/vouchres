@@ -216,7 +216,7 @@ describe("deep-scan backend hardening", () => {
   it("checkout preserves AppError conflicts and expires open sessions", () => {
     const billing = readFileSync("server/v3/modules/billing/handlers.ts", "utf8");
     const stripe = readFileSync("server/services/billing/stripeService.ts", "utf8");
-    expect(billing).toContain("if (isAppError(err)) throw err");
+    expect(billing).toContain("if (err instanceof AppError) throw err");
     expect(stripe).toContain('status: "open"');
     expect(stripe).toContain("checkout.sessions.expire");
     expect(stripe).toContain("subscriptions.list");

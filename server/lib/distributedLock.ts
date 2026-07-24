@@ -72,14 +72,14 @@ export async function runWithDistributedLock<T>(
  * Avoids the thundering-herd bug where many waiters wake on one release and all enter.
  */
 async function runWithMemoryLock<T>(lockName: string, fn: () => Promise<T>): Promise<T> {
-  const previous = memoryLockTails.get(lockName) ?? Promise.resolve();
+  const previous = memoryLockTails.get(lockName);
   let release!: () => void;
   const mine = new Promise<void>((resolve) => {
     release = resolve;
   });
   memoryLockTails.set(lockName, mine);
 
-  await previous;
+  if (previous) await previous;
   try {
     return await fn();
   } finally {
