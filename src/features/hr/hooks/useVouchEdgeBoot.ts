@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { vouchEdgeBootJobs, type VouchEdgeBootJob } from "../../../lib/boot/bootJobs";
+import { vouchEdgeBootJobs, vouchEdgeIdleBootJobs, type VouchEdgeBootJob } from "../../../lib/boot/bootJobs";
 
 type BootJobStatus = "pending" | "running" | "success" | "error" | "timeout";
 
@@ -15,8 +15,8 @@ export type VouchEdgeBootState = {
   jobs: Record<string, BootJobStatus>;
 };
 
-const MIN_BOOT_MS = 1800;
-const MAX_BOOT_MS = 8000;
+const MIN_BOOT_MS = 250;
+const MAX_BOOT_MS = 4500;
 
 function runWithTimeout(job: VouchEdgeBootJob, signal: AbortSignal): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -39,12 +39,14 @@ export function useVouchEdgeBoot(enabled = true): VouchEdgeBootState {
   const [completed, setCompleted] = useState(0);
   const [timedOut, setTimedOut] = useState(false);
   const [jobs, setJobs] = useState<Record<string, BootJobStatus>>(() =>
-    Object.fromEntries(vouchEdgeBootJobs.map((job) => [job.id, "pending"]))
+    Object.fromEntries(
+      [...vouchEdgeBootJobs, ...vouchEdgeIdleBootJobs].map((job) => [job.id, "pending" as BootJobStatus]),
+    )
   );
 
   const startedAtRef = useRef(0);
 
-  const total = vouchEdgeBootJobs.length;
+  const total = vouchEdgeBootJobs.length + vouchEdgeIdleBootJobs.length;
 
   const requiredWeight = useMemo(
     () => vouchEdgeBootJobs.filter((job) => job.required).reduce((sum, job) => sum + job.weight, 0),
@@ -109,6 +111,7 @@ export function useVouchEdgeBoot(enabled = true): VouchEdgeBootState {
         }
       };
 
+      // Required jobs first — Island can open without optional registry/live warmups.
       await Promise.all(vouchEdgeBootJobs.map(runJob));
 
       if (cancelled) return;
@@ -127,7 +130,14 @@ export function useVouchEdgeBoot(enabled = true): VouchEdgeBootState {
         setProgress(100);
         window.setTimeout(() => {
           if (!cancelled) setReady(true);
-        }, 300);
+        }, 120);
+
+        // Optional warmups after first paint.
+        const idle = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 12 } as IdleDeadline), 900));
+        idle(() => {
+          if (cancelled) return;
+          void Promise.all(vouchEdgeIdleBootJobs.map(runJob));
+        }, { timeout: 2500 });
       }, remainingPolishTime);
     }
 

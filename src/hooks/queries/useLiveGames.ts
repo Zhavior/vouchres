@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { queryKeys } from './queryKeys';
 import type { LiveGamesPayload } from '../../types/liveGames';
+import { visibilityAwareInterval } from '../../lib/queryVisibility';
 
 export type { LiveGamesPayload } from '../../types/liveGames';
 
-const LIVE_POLL_MS = 6_000;
-const IDLE_POLL_MS = 45_000;
-const LIVE_STALE_MS = 4_500;
+const LIVE_POLL_MS = 12_000;
+const IDLE_POLL_MS = 60_000;
+const LIVE_STALE_MS = 8_000;
 
 export function hasLiveGames(payload: LiveGamesPayload | undefined): boolean {
   if (!payload?.games?.length) return false;
@@ -27,8 +28,10 @@ export function useLiveGames(options?: { enabled?: boolean; refetchInterval?: nu
     refetchOnMount: false,
     placeholderData: (prev) => prev,
     refetchInterval: (query) => {
-      if (options?.refetchInterval !== undefined) return options.refetchInterval;
-      return hasLiveGames(query.state.data) ? LIVE_POLL_MS : IDLE_POLL_MS;
+      if (options?.refetchInterval !== undefined) {
+        return visibilityAwareInterval(options.refetchInterval);
+      }
+      return visibilityAwareInterval(hasLiveGames(query.state.data) ? LIVE_POLL_MS : IDLE_POLL_MS);
     },
     enabled: options?.enabled ?? true,
   });

@@ -231,6 +231,7 @@ export default function PlayerResearchHub({
   const [teamFilter, setTeamFilter] = useState("ALL");
   const [quickFilter, setQuickFilter] = useState<"all" | "top5" | "wind" | "confirmed" | "hot">("all");
   const [sortBy, setSortBy] = useState<"batterScore" | "hr" | "avg" | "ops" | "name">("batterScore");
+  const [visibleLimit, setVisibleLimit] = useState(48);
   const [selectedPlayer, setSelectedPlayer] = useState<MLBPlayer | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [registryPlayers, setRegistryPlayers] = useState<MLBPlayer[]>(MLB_PLAYER_RECORDS);
@@ -344,6 +345,12 @@ export default function PlayerResearchHub({
     });
     return sorted;
   }, [players, search, teamFilter, sortBy, quickFilter]);
+
+  useEffect(() => {
+    setVisibleLimit(48);
+  }, [search, teamFilter, sortBy, quickFilter, listStyle]);
+
+  const visiblePlayers = useMemo(() => filtered.slice(0, visibleLimit), [filtered, visibleLimit]);
 
   const openDetail = (player: MLBPlayer, tab: DetailTab = "overview") => {
     setSelectedPlayer(player);
@@ -512,22 +519,34 @@ export default function PlayerResearchHub({
                 <p className="mt-1 text-xs text-white/40">Try another player, team, or position.</p>
               </div>
             ) : listStyle === "grid" ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {filtered.map((p, i) => {
-                  const hrProp = p.propositions?.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
-                  return (
-                    <PlayerCard
-                      key={p.id}
-                      player={p}
-                      index={i}
-                      onClick={() => openDetail(p)}
-                      onAddLeg={hrProp ? () => onAddLegToParlay(p, hrProp) : undefined}
-                    />
-                  );
-                })}
-              </div>
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {visiblePlayers.map((p) => {
+                    const hrProp = p.propositions?.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
+                    return (
+                      <PlayerCard
+                        key={p.id}
+                        player={p}
+                        onClick={() => openDetail(p)}
+                        onAddLeg={hrProp ? () => onAddLegToParlay(p, hrProp) : undefined}
+                      />
+                    );
+                  })}
+                </div>
+                {filtered.length > visiblePlayers.length ? (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setVisibleLimit((limit) => limit + 48)}
+                      className="rounded-xl border border-white/15 bg-black/35 px-4 py-2 text-xs font-bold text-white/70 hover:border-vouch-cyan/40 hover:text-vouch-cyan"
+                    >
+                      Show more players ({filtered.length - visiblePlayers.length} remaining)
+                    </button>
+                  </div>
+                ) : null}
+              </>
             ) : (
-              <PlayerTable players={filtered} onRowClick={(p) => openDetail(p)} sortBy={sortBy} />
+              <PlayerTable players={visiblePlayers} onRowClick={(p) => openDetail(p)} sortBy={sortBy} />
             )}
           </>
         )}
@@ -574,7 +593,7 @@ export default function PlayerResearchHub({
 /* ============================================================================
    Player Card — glass card with headshot, team color, batter score
    ============================================================================ */
-function PlayerCard({ player, index, onClick, onAddLeg }: { player: MLBPlayer; index: number; onClick: () => void; onAddLeg?: () => void }) {
+function PlayerCard({ player, onClick, onAddLeg }: { player: MLBPlayer; onClick: () => void; onAddLeg?: () => void }) {
   const scoreColor = player.batterScore >= 90 ? "#34d399" : player.batterScore >= 75 ? "#fbbf24" : "#f87171";
   const tierLabel = player.batterScore >= 90 ? "ELITE" : player.batterScore >= 75 ? "STRONG" : "VALID";
   const injuryColor =
@@ -584,17 +603,12 @@ function PlayerCard({ player, index, onClick, onAddLeg }: { player: MLBPlayer; i
   const hrProp = player.propositions?.find((p) => /home run|\bhr\b/i.test(`${p.market} ${p.spec}`));
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03 }}
-      whileHover={{ y: -2 }}
+    <div
       onClick={onClick}
-      className="relative rounded-2xl p-4 text-left overflow-hidden transition-all group cursor-pointer flex flex-col justify-between"
+      className="relative rounded-2xl p-4 text-left overflow-hidden transition-all group cursor-pointer flex flex-col justify-between hover:-translate-y-0.5"
       style={{
         background: "linear-gradient(160deg, rgba(15,23,42,0.7) 0%, rgba(5,11,18,0.9) 100%)",
         border: `1px solid ${player.batterScore >= 90 ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.08)"}`,
-        backdropFilter: "blur(12px)",
       }}
     >
       <div>
@@ -670,7 +684,7 @@ function PlayerCard({ player, index, onClick, onAddLeg }: { player: MLBPlayer; i
           <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-vouch-cyan group-hover:translate-x-1 transition-all" />
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

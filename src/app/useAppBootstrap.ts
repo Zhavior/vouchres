@@ -193,10 +193,22 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, [syncSlips, syncProfile]);
 
   useEffect(() => {
-    handleGradeResults();
-    const interval = setInterval(() => {
-      handleGradeResults();
-    }, 30_000);
+    const hasPending = useSlipsStore.getState().savedSlips.some(
+      (slip) => slip.status === 'PENDING',
+    );
+    if (!hasPending) return;
+
+    const run = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      const stillPending = useSlipsStore.getState().savedSlips.some(
+        (slip) => slip.status === 'PENDING',
+      );
+      if (!stillPending) return;
+      void handleGradeResults();
+    };
+
+    run();
+    const interval = setInterval(run, 60_000);
     return () => clearInterval(interval);
   }, [handleGradeResults]);
 
@@ -291,12 +303,13 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
 
   useEffect(() => {
     const tick = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       runScheduledAiGeneration();
       checkTrustLockSchedule();
       checkParlayLocks();
     };
-    const warmup = window.setTimeout(tick, 1500);
-    const id = window.setInterval(tick, 60_000);
+    const warmup = window.setTimeout(tick, 4000);
+    const id = window.setInterval(tick, 90_000);
     return () => { window.clearTimeout(warmup); window.clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

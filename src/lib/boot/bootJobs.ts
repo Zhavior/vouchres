@@ -37,15 +37,33 @@ async function runAndCache(
   return data;
 }
 
+const LINEUP_TODAY_PATH = "/api/mlb/lineup/today";
+const HR_BOARD_TODAY_PATH = "/api/mlb/hr-board/today?previewLimit=120";
+
+async function lineupTodayShared(signal: AbortSignal): Promise<unknown> {
+  if (bootDataStore.has("lineupToday")) {
+    return bootDataStore.get("lineupToday");
+  }
+  return runAndCache("lineupToday", LINEUP_TODAY_PATH, signal);
+}
+
+async function hrBoardTodayShared(signal: AbortSignal): Promise<unknown> {
+  if (bootDataStore.has("dailyHrBoard")) {
+    return bootDataStore.get("dailyHrBoard");
+  }
+  return runAndCache("dailyHrBoard", HR_BOARD_TODAY_PATH, signal);
+}
+
+/** Required boot jobs only — optional warmups run after first paint via idle. */
 export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
   {
     id: "lineupToday",
     label: "Syncing today’s MLB slate",
     feature: "Daily slate",
     required: true,
-    weight: 22,
+    weight: 28,
     timeoutMs: 4500,
-    run: (signal) => runAndCache("lineupToday", "/api/mlb/lineup/today", signal),
+    run: (signal) => lineupTodayShared(signal),
   },
   {
     id: "dailyPlayers",
@@ -53,24 +71,28 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     feature: "Daily Players",
     required: true,
     weight: 18,
-    timeoutMs: 5500,
-    run: (signal) => runAndCache("dailyPlayers", "/api/mlb/lineup/today", signal),
+    timeoutMs: 4500,
+    run: async (signal) => {
+      const data = await lineupTodayShared(signal);
+      bootDataStore.set("dailyPlayers", data);
+      return data;
+    },
   },
   {
     id: "dailyHrBoard",
     label: "Warming HR board signals",
     feature: "Daily HR Board",
     required: true,
-    weight: 18,
+    weight: 24,
     timeoutMs: 5500,
-    run: (signal) => runAndCache("dailyHrBoard", "/api/mlb/hr-board/today?previewLimit=350", signal),
+    run: (signal) => hrBoardTodayShared(signal),
   },
   {
     id: "savedParlays",
     label: "Checking saved parlays",
     feature: "ParlayOS",
     required: true,
-    weight: 10,
+    weight: 15,
     timeoutMs: 3500,
     run: (signal) => runAndCache("savedParlays", "/api/v3/me/parlays", signal),
   },
@@ -79,7 +101,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     label: "Scanning VouchEdge notifications",
     feature: "Notifications",
     required: true,
-    weight: 10,
+    weight: 15,
     timeoutMs: 3500,
     run: async (signal) => {
       try {
@@ -89,6 +111,10 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
       }
     },
   },
+];
+
+/** Optional post-boot warmups — never block Island entry. */
+export const vouchEdgeIdleBootJobs: VouchEdgeBootJob[] = [
   {
     id: "playerRegistryCount",
     label: "Warming player research registry",
@@ -105,6 +131,10 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     required: false,
     weight: 10,
     timeoutMs: 6500,
-    run: (signal) => runAndCache("liveGamesSummary", "/api/mlb/hr-board/today?previewLimit=350", signal),
+    run: async (signal) => {
+      const data = await hrBoardTodayShared(signal);
+      bootDataStore.set("liveGamesSummary", data);
+      return data;
+    },
   },
 ];
