@@ -41,7 +41,6 @@ const NotificationsPage = lazy(() => import('../notifications/NotificationsPage'
 const PlayerEdgeLabPageZ8 = lazy(() => import('../../pages/pro/PlayerEdgeLabPageZ8'));
 const PitcherMatchupIntelligencePageZ8 = lazy(() => import('../../pages/pro/PitcherMatchupIntelligencePageZ8'));
 const HitterMatchupZonesPageZ8 = lazy(() => import('../../pages/pro/HitterMatchupZonesPageZ8'));
-const ProGraphsLabPageZ8 = lazy(() => import('../../pages/pro/ProGraphsLabPageZ8'));
 const ProCommandCenterPageZ8 = lazy(() => import('../../pages/pro/ProCommandCenterPageZ8'));
 const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
@@ -298,9 +297,7 @@ function MainViewRouter({
     case 'pro_graphs_lab':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Pro Graphs Lab" navigateSection={navigateSection}>
-            <ProGraphsLabPageZ8 />
-          </ProGateShell>
+          <AiPilotShell navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'live_games':

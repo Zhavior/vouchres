@@ -257,7 +257,7 @@ export function resolveDevSectionFromLocation() {
   }
 
   if (target === 'pro-graphs-lab' || target === '/pro-graphs-lab') {
-    return 'pro_graphs_lab';
+    return 'ai_pilot';
   }
 
   if (target === 'brain-picks' || target === '/brain-picks' || target === 'brain_picks' || target === '/brain_picks') {
@@ -279,7 +279,7 @@ export function resolveDevSectionFromLocation() {
     'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
-    'pro_graphs_lab', 'live_games', 'research', 'board', 'leaderboard', 'results',
+    'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',
     'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
     'premium', 'themestore', 'subscriber_hub', 'settings', 'customize',
   ]);
