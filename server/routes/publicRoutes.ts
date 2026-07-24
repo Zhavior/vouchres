@@ -369,7 +369,7 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithConte
   }
 
   return res.json(apiOkFlat(req, {
-    picks: toPublicPickDtos((data ?? []) as Array<Record<string, unknown>>),
+    picks: toPublicPickDtos((data ?? []) as unknown as Array<Record<string, unknown>>),
     total: count ?? 0,
     limit,
     offset,
@@ -452,7 +452,7 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
   }
 
   return res.json(apiOkFlat(req, {
-    picks: toPublicPickDtos((data ?? []) as Array<Record<string, unknown>>),
+    picks: toPublicPickDtos((data ?? []) as unknown as Array<Record<string, unknown>>),
     total: count ?? 0,
     limit,
     offset,

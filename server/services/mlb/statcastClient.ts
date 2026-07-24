@@ -33,11 +33,19 @@ const MIN_PA = 25;
 const statcastCache = new TTLCache<unknown>(12 * 60 * 60_000, "mlb:statcast");
 
 type StatcastBatterMap = Record<number, StatcastBatterQuality>;
+export type StatcastFeedStatus = "ok" | "unavailable";
+
+export type StatcastBatterMapResult = {
+  map: StatcastBatterMap;
+  feedStatus: StatcastFeedStatus;
+  errorMessage?: string;
+};
 
 const statcastBatterInflight = new Map<
   number,
   Promise<StatcastBatterMap>
 >();
+const statcastFeedErrors = new Map<number, string>();
 
 /** Minimal CSV line parser that respects double-quoted fields ("Last, First"). */
 function parseCsvLine(line: string): string[] {
@@ -175,13 +183,16 @@ export async function getSingleYearStatcastBatterMap(
         map[playerId] = existing;
       }
 
+      statcastFeedErrors.delete(year);
       statcastCache.set(cacheKey, map);
       return map;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       console.warn(
         `[statcastClient] leaderboard fetch failed for ${year}:`,
-        err instanceof Error ? err.message : String(err),
+        errorMessage,
       );
+      statcastFeedErrors.set(year, errorMessage);
       const emptyMap: StatcastBatterMap = {};
       statcastCache.set(cacheKey, emptyMap, 30 * 60_000);
       return emptyMap;
@@ -255,6 +266,16 @@ export async function getStatcastBatterMap(
 
   statcastCache.set(cacheKey, blendedMap);
   return blendedMap;
+}
+
+export async function getStatcastBatterMapResult(
+  year = seasonYear(),
+): Promise<StatcastBatterMapResult> {
+  const map = await getStatcastBatterMap(year);
+  const errorMessage = statcastFeedErrors.get(year);
+  return errorMessage
+    ? { map: {}, feedStatus: "unavailable", errorMessage }
+    : { map, feedStatus: "ok" };
 }
 
 export const STATCAST_MIN_PA = MIN_PA;

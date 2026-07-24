@@ -511,7 +511,7 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   const status = subscription.status; // 'active' | 'trialing' | 'past_due' | 'canceled' | etc.
   let effective = effectiveTierForSubscriptionStatus(status, tier);
   let profileSubscriptionId = subscription.id;
-  let profileCustomerId = subscription.customer as string;
+  const profileCustomerId = subscription.customer as string;
   let profileTier = effective.tier;
 
   // Upsert this subscription row first (source of truth for this event).

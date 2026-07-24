@@ -130,7 +130,7 @@ subscriberRoutes.get("/subscriber/cappers/:id/picks", requireAuth, asyncHandler(
     });
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as unknown as Record<string, unknown>[];
   const legsByPickId = await findLegsForPicks(rows.map((row: { id: string }) => String(row.id)));
 
   return res.json(apiOkFlat(req, {
@@ -179,7 +179,8 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     );
     rows = [];
   } else {
-    rows = (data ?? []).filter((row: { visibility?: string }) => isFollowerVisiblePick(row.visibility));
+    rows = ((data ?? []) as unknown as Record<string, unknown>[])
+      .filter((row) => isFollowerVisiblePick(row.visibility));
   }
 
   if (rows.length === 0) {
@@ -219,7 +220,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
           });
         }
       } else {
-        rows = postedPicks ?? [];
+        rows = (postedPicks ?? []) as unknown as Record<string, unknown>[];
       }
     }
   }

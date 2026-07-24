@@ -64,6 +64,7 @@ export function scrubSensitiveValue(value: unknown, depth = 0): unknown {
 
 /** Testable beforeSend scrubber — mutates and returns the event. */
 export function scrubSentryEvent<T extends Record<string, any>>(event: T): T {
+  const mutableEvent = event as Record<string, any>;
   if (event.request) {
     if (event.request.data != null) {
       event.request.data = scrubSensitiveValue(event.request.data);
@@ -84,8 +85,8 @@ export function scrubSentryEvent<T extends Record<string, any>>(event: T): T {
     }
   }
 
-  if (Array.isArray(event.breadcrumbs)) {
-    event.breadcrumbs = event.breadcrumbs.map((crumb: Record<string, unknown>) => ({
+  if (Array.isArray(mutableEvent.breadcrumbs)) {
+    mutableEvent.breadcrumbs = mutableEvent.breadcrumbs.map((crumb: Record<string, unknown>) => ({
       ...crumb,
       data: crumb.data != null ? scrubSensitiveValue(crumb.data) : crumb.data,
       message:
@@ -95,8 +96,8 @@ export function scrubSentryEvent<T extends Record<string, any>>(event: T): T {
     }));
   }
 
-  if (event.extra) {
-    event.extra = scrubSensitiveValue(event.extra) as typeof event.extra;
+  if (mutableEvent.extra) {
+    mutableEvent.extra = scrubSensitiveValue(mutableEvent.extra);
   }
 
   return event;
