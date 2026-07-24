@@ -1,6 +1,6 @@
 import express from "express";
 import type { Server } from "node:http";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { requestContext } from "../server/middleware/requestContext";
 import { billingRoutes } from "../server/routes/billingRoutes";
@@ -24,6 +24,13 @@ vi.mock("../server/middleware/auth", () => ({
     };
     next();
   },
+  getSupabaseAdmin: vi.fn(async () => ({
+    from: vi.fn(() => ({
+      update: () => ({
+        eq: async () => ({ error: null }),
+      }),
+    })),
+  })),
   supabaseAdmin: {
     from: vi.fn(() => ({
       select: () => ({
@@ -86,6 +93,11 @@ afterAll(async () => {
 });
 
 describe("billing routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("STRIPE_WEBHOOK_PROCESS_INLINE", "");
+  });
+
   it("returns ok envelope with request metadata for billing status", async () => {
     const response = await fetch(`${baseUrl}/api/billing/status`);
     const body = await response.json();
@@ -179,7 +191,7 @@ describe("billing routes", () => {
     expect(response.headers.get("x-request-id")).toBe(body.error.requestId);
   });
 
-  it("returns unified 500 envelope when webhook handler fails after signature verify", async () => {
+  it("acks verified webhooks as queued without applying entitlements inline", async () => {
     const stripeService = await import("../server/services/billing/stripeService");
     const event = {
       id: "evt_fail_1",
@@ -194,9 +206,9 @@ describe("billing routes", () => {
     vi.mocked(stripeService.isStripeConfigured).mockReturnValue(true);
     vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
       shouldProcess: true,
-      status: "processing",
+      duplicate: false,
+      status: "queued",
     } as any);
-    vi.mocked(stripeService.finishStripeWebhookEvent).mockResolvedValueOnce(undefined as never);
     vi.mocked(stripeService.getStripe).mockReturnValue({
       webhooks: {
         constructEvent: vi.fn(() => event),
@@ -208,6 +220,7 @@ describe("billing routes", () => {
       },
     } as any);
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+    vi.stubEnv("STRIPE_WEBHOOK_PROCESS_INLINE", "");
 
     const response = await fetch(`${baseUrl}/api/billing/webhook`, {
       method: "POST",
@@ -219,23 +232,18 @@ describe("billing routes", () => {
     });
     const body = await response.json();
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(200);
     expect(body).toMatchObject({
-      ok: false,
-      error: {
-        code: "internal_server_error",
-        message: "Internal server error.",
-      },
+      ok: true,
+      received: true,
+      queued: true,
+      status: "queued",
     });
-    expect(typeof body.error.requestId).toBe("string");
-    expect(stripeService.finishStripeWebhookEvent).toHaveBeenCalledWith(
-      "evt_fail_1",
-      "failed",
-      "stripe retrieve failed",
-    );
+    expect(stripeService.syncSubscription).not.toHaveBeenCalled();
+    expect(stripeService.finishStripeWebhookEvent).not.toHaveBeenCalled();
   });
 
-  it("processes a signed checkout.session.completed webhook and returns ok received", async () => {
+  it("queues a signed checkout.session.completed webhook for the entitlement worker", async () => {
     const stripeService = await import("../server/services/billing/stripeService");
     const event = {
       id: "evt_test_1",
@@ -262,12 +270,12 @@ describe("billing routes", () => {
     vi.mocked(stripeService.isStripeConfigured).mockReturnValue(true);
     vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
       shouldProcess: true,
-      status: "processing",
+      duplicate: false,
+      status: "queued",
     } as any);
-    vi.mocked(stripeService.finishStripeWebhookEvent).mockResolvedValueOnce(undefined as any);
-    vi.mocked(stripeService.syncSubscription).mockResolvedValueOnce(undefined as any);
     vi.mocked(stripeService.getStripe).mockReturnValue(stripeClient as any);
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+    vi.stubEnv("STRIPE_WEBHOOK_PROCESS_INLINE", "");
 
     const response = await fetch(`${baseUrl}/api/billing/webhook`, {
       method: "POST",
@@ -280,9 +288,62 @@ describe("billing routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({ ok: true, received: true });
+    expect(body).toMatchObject({ ok: true, received: true, queued: true, status: "queued" });
+    expect(stripeService.syncSubscription).not.toHaveBeenCalled();
+    expect(stripeService.finishStripeWebhookEvent).not.toHaveBeenCalled();
+  });
+
+  it("processes entitlements inline when STRIPE_WEBHOOK_PROCESS_INLINE=1", async () => {
+    const stripeService = await import("../server/services/billing/stripeService");
+    const event = {
+      id: "evt_inline_1",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          subscription: "sub_inline_1",
+        },
+      },
+    };
+
+    vi.mocked(stripeService.isStripeConfigured).mockReturnValue(true);
+    vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
+      shouldProcess: true,
+      duplicate: false,
+      status: "queued",
+    } as any);
+    vi.mocked(stripeService.finishStripeWebhookEvent).mockResolvedValueOnce(undefined as any);
+    vi.mocked(stripeService.syncSubscription).mockResolvedValueOnce(undefined as any);
+    vi.mocked(stripeService.getStripe).mockReturnValue({
+      webhooks: {
+        constructEvent: vi.fn(() => event),
+      },
+      subscriptions: {
+        retrieve: vi.fn(async () => ({
+          id: "sub_inline_1",
+          status: "active",
+          metadata: { profile_id: "user_billing_1" },
+          items: { data: [{ price: { id: "price_test" } }] },
+          customer: "cus_test",
+        })),
+      },
+    } as any);
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+    vi.stubEnv("STRIPE_WEBHOOK_PROCESS_INLINE", "1");
+
+    const response = await fetch(`${baseUrl}/api/billing/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=1,v1=good",
+      },
+      body: JSON.stringify({ type: "checkout.session.completed" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ ok: true, received: true, processed: true });
     expect(stripeService.syncSubscription).toHaveBeenCalled();
-    expect(stripeService.finishStripeWebhookEvent).toHaveBeenCalledWith("evt_test_1", "processed");
+    expect(stripeService.finishStripeWebhookEvent).toHaveBeenCalledWith("evt_inline_1", "processed");
   });
 
   it("skips duplicate Stripe webhook events", async () => {

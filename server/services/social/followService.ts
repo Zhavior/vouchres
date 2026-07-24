@@ -8,6 +8,7 @@ import {
   cancelMembershipForFollower,
   ensureActiveMembershipForFollower,
 } from "../business/creatorBusinessService";
+import { socialOutboxRepository } from "../../repositories/socialOutboxRepository";
 
 export type RelationshipType = "follow" | "tail" | "subscribe";
 export type SocialGraphBucket = "all" | "following" | "followers" | "friends" | "subscribers" | "tailing";
@@ -172,13 +173,26 @@ export async function upsertFollow(input: {
       });
     }
 
-    await createNewFollowerNotification({
-      followerId: input.followerId,
-      followingProfileId: input.followingProfileId,
-      relationshipType,
-    }).catch((err) => {
-      console.warn("[follow] new follower notification failed", (err as Error)?.message);
+    const queued = await socialOutboxRepository.queueEvent({
+      user_id: input.followingProfileId,
+      event_type: "FOLLOW",
+      payload: {
+        followerId: input.followerId,
+        followingProfileId: input.followingProfileId,
+        relationshipType,
+      },
     });
+
+    // If outbox table is missing / queue fails, keep sync notification so follows still alert.
+    if (!queued) {
+      await createNewFollowerNotification({
+        followerId: input.followerId,
+        followingProfileId: input.followingProfileId,
+        relationshipType,
+      }).catch((err) => {
+        console.warn("[follow] new follower notification failed", (err as Error)?.message);
+      });
+    }
   }
 
   return { ok: true, relationshipType, notifyEnabled };

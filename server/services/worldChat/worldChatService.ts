@@ -2,15 +2,24 @@
  * World Chat storage service.
  *
  * Prefers durable Supabase-backed persistence when the admin client and tables
- * are available, and degrades to in-memory storage only as a safe fallback.
+ * are available. In-memory fallback is allowed only when durable-only mode is off
+ * (non-production by default, or WORLD_CHAT_REQUIRE_DURABLE=0).
  */
 
 import { getSupabaseAdmin } from "../../middleware/auth";
 import {
   durableWorldChatStorageMeta,
   ephemeralWorldChatStorageMeta,
+  requireDurableWorldChat,
   type WorldChatStorageMeta,
 } from "./worldChatStorage";
+
+const WORLD_CHAT_DURABLE_UNAVAILABLE = "world_chat_durable_unavailable";
+
+function refuseMemoryWrite(operation: string): never {
+  console.error(`[world-chat] refusing memory ${operation}; durable storage required`);
+  throw new Error(WORLD_CHAT_DURABLE_UNAVAILABLE);
+}
 
 export type ChatProfileJson = {
   statusLine: string;
@@ -565,12 +574,14 @@ async function tryDurableList(
 export async function listWorldChatChannels(): Promise<WorldChatChannel[]> {
   const durable = await tryDurableListChannels();
   if (durable) return durable;
+  if (requireDurableWorldChat()) return [DEFAULT_WORLD_CHAT_CHANNEL];
   return sortChannelList([...memoryChannels.values()]);
 }
 
 export async function listWorldChatEmojis(): Promise<WorldChatCustomEmoji[]> {
   const durable = await tryDurableListEmojis();
   if (durable) return durable;
+  if (requireDurableWorldChat()) return [];
   return sortEmojiList([...memoryCustomEmojis.values()]);
 }
 
@@ -582,6 +593,7 @@ export async function listWorldChatMessages(
   const safeChannelId = sanitizeChannelId(opts.channelId);
   const durable = await tryDurableList(cap, safeChannelId, opts.viewerId);
   if (durable) return durable;
+  if (requireDurableWorldChat()) return [];
   return messages
     .filter((message) => message.channelId === safeChannelId)
     .slice(-cap)
@@ -707,6 +719,7 @@ export async function postWorldChatMessage(input: {
     replyTo,
   });
   if (durable) return durable;
+  if (requireDurableWorldChat()) refuseMemoryWrite("post");
 
   const safeChannelId = sanitizeChannelId(input.channelId);
   ensureMemoryChannel(safeChannelId);
@@ -780,6 +793,7 @@ async function tryDurableGetProfile(userId: string): Promise<ChatProfileJson | n
 export async function getChatProfile(userId: string): Promise<ChatProfileJson | null> {
   const durable = await tryDurableGetProfile(userId);
   if (durable !== undefined) return durable;
+  if (requireDurableWorldChat()) return null;
   return chatProfiles.get(userId) ?? null;
 }
 
@@ -818,6 +832,7 @@ async function tryDurablePutProfile(userId: string, profile: ChatProfileJson): P
 export async function putChatProfile(userId: string, profile: ChatProfileJson): Promise<ChatProfileJson> {
   const durable = await tryDurablePutProfile(userId, profile);
   if (durable) return durable;
+  if (requireDurableWorldChat()) refuseMemoryWrite("profile");
   return buildMemoryProfile(userId, profile);
 }
 
@@ -860,6 +875,7 @@ async function tryDurableUpsertEmoji(input: WorldChatEmojiInput): Promise<WorldC
 export async function upsertWorldChatEmoji(input: WorldChatEmojiInput): Promise<WorldChatCustomEmoji> {
   const durable = await tryDurableUpsertEmoji(input);
   if (durable) return durable;
+  if (requireDurableWorldChat()) refuseMemoryWrite("emoji");
 
   const safe = safeEmoji(input);
   memoryCustomEmojis.set(safe.id, safe);
@@ -1019,6 +1035,7 @@ export async function toggleWorldChatReaction(input: {
 }): Promise<WorldChatReaction[]> {
   const durable = await tryDurableToggleReaction(input);
   if (durable) return durable;
+  if (requireDurableWorldChat()) refuseMemoryWrite("reaction");
 
   const message = findMemoryMessage(input.messageId);
   if (!message) {
@@ -1056,6 +1073,9 @@ export async function toggleWorldChatReaction(input: {
 export async function getResolvedWorldChatStorageMeta(): Promise<WorldChatStorageMeta> {
   const durableMessages = await tryDurableList(1, DEFAULT_WORLD_CHAT_CHANNEL.id);
   if (durableMessages) return durableWorldChatStorageMeta();
+  if (requireDurableWorldChat()) {
+    return ephemeralWorldChatStorageMeta("durable_required_but_unavailable");
+  }
   return ephemeralWorldChatStorageMeta("supabase_world_chat_tables_unavailable");
 }
 

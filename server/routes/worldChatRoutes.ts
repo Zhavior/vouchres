@@ -136,6 +136,15 @@ worldChatRoutes.post(
           message: "That reply target is no longer available in this room.",
         });
       }
+      if ((error as Error)?.message === "world_chat_durable_unavailable") {
+        throw new AppError({
+          status: 503,
+          code: "external_service_error",
+          message: "World Chat durable storage is unavailable. Try again shortly.",
+          details: { reason: "world_chat_durable_unavailable" },
+          expose: true,
+        });
+      }
       throw error;
     }
 
@@ -180,6 +189,15 @@ worldChatRoutes.post(
           status: 404,
           code: "not_found",
           message: "That World Chat message could not be found.",
+        });
+      }
+      if (message === "world_chat_durable_unavailable") {
+        throw new AppError({
+          status: 503,
+          code: "external_service_error",
+          message: "World Chat durable storage is unavailable. Try again shortly.",
+          details: { reason: "world_chat_durable_unavailable" },
+          expose: true,
         });
       }
       throw error;
