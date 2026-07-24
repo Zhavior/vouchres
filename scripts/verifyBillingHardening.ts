@@ -22,8 +22,10 @@ function includesAll(source: string, snippets: string[], label: string): void {
   }
 }
 
-const server = read("server.ts");
+const server = read("server/api/bootstrap.ts");
 const billingRoutes = read("server/routes/billingRoutes.ts");
+const billingHandlers = read("server/v3/modules/billing/handlers.ts");
+const billingScope = `${billingRoutes}\n${billingHandlers}`;
 const stripeService = read("server/services/billing/stripeService.ts");
 const tierConfig = read("server/services/billing/tierConfig.ts");
 const migration = read("supabase/migrations/0011_stripe_webhook_events.sql");
@@ -44,15 +46,15 @@ assert(
   "Stripe webhook raw body middleware must be mounted before express.json"
 );
 
-includesAll(billingRoutes, [
+includesAll(billingScope, [
   "const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? \"\"",
   "getStripe().webhooks.constructEvent",
   "beginStripeWebhookEvent(event)",
   "finishStripeWebhookEvent(event.id, \"processed\")",
   "finishStripeWebhookEvent(",
   "duplicate: true",
-  'billingRoutes.get("/subscription", requireAuth, billingStatusHandler)',
-  ".eq(\"profile_id\", req.user!.id)",
+  '"/subscription"',
+  ".eq(\"profile_id\", profileId)",
   'tier: z.enum(["pro", "creator"])',
 ], "billing route hardening");
 
