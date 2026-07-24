@@ -32,8 +32,8 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
     id: 'players',
     label: 'Players',
     description: 'Search, compare, and monitor players',
-    defaultSection: 'daily_players',
-    sections: ['daily_players', 'research', 'player_research', 'game_research'],
+    defaultSection: 'research',
+    sections: ['research', 'daily_players', 'player_research', 'game_research'],
   },
   {
     id: 'parlays',
