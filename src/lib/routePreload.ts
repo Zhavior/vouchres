@@ -41,7 +41,7 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   hitter_matchup: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
   most_vouched_today: () => import('../pages/MostVouchedTodayPageZ8'),
   most_vouched: () => import('../pages/MostVouchedTodayPageZ8'),
-  pro_graphs_lab: () => import('../pages/pro/ProGraphsLabPageZ8'),
+  pro_graphs_lab: () => import('../components/MlbIntelligenceHubZ8'),
 };
 
 const WARM_NEIGHBORS: Record<string, string[]> = {

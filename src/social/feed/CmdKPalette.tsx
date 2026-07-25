@@ -52,7 +52,6 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'player_edge_lab', label: 'Top Player Lab',        group: 'Pro Labs',      icon: UserRoundSearch, keywords: ['player', 'edge', 'breakdown', 'score', 'top'] },
   { id: 'team_matchup_lab',label: 'Pitchers Matchup',      group: 'Pro Labs',      icon: Swords,          keywords: ['matchup', 'team', 'pitcher', 'k9', 'era', 'whip'] },
   { id: 'hitter_matchup_zones', label: 'Hitter Matchup Zones', group: 'Pro Labs', icon: LineChart,       keywords: ['hitter', 'zones', 'heatmap', 'matchup'] },
-  { id: 'pro_graphs_lab',  label: 'Pro Graphs Lab',        group: 'Pro Labs',      icon: LineChart,       keywords: ['graphs', 'charts', 'trends', 'data'] },
   { id: 'nba_nfl',         label: 'NBA / NFL Arena',       group: 'Pro Labs',      icon: Trophy,          keywords: ['nba', 'nfl', 'basketball', 'football'] },
   // AI
   { id: 'ai_pilot',        label: 'V.A.I Dynamic Creator', group: 'AI',            icon: Cpu,             keywords: ['ai', 'pilot', 'dynamic', 'creator', 'parlay', 'vai'] },

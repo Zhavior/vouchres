@@ -25,7 +25,7 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
     defaultSection: 'hr_board',
     sections: [
       'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'intel', 'player_edge_lab', 'team_matchup_lab',
-      'hitter_matchup_zones', 'pro_graphs_lab', 'ai_pilot', 'ai_engine',
+      'hitter_matchup_zones', 'ai_pilot', 'ai_engine',
     ],
   },
   {

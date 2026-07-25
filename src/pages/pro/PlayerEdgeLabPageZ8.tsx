@@ -1,27 +1,47 @@
-import PlayerResearchDecisionCard from "@/components/player/PlayerResearchDecisionCard";
+import PlayerResearchDecisionCard from '@/components/player/PlayerResearchDecisionCard';
 import { useMemo, useState } from 'react';
-import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
+import {
+  Activity,
+  Brain,
+  ChevronRight,
+  Crown,
+  Database,
+  LockKeyhole,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 
 import {
   HrSignalGraphs,
   PlayerEdgeGraphs,
-  ProPageHeader,
   VerifiedDataNotice,
   VerifiedGraphEmptyState,
 } from '../../components/pro';
-
+import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
+import {
+  Z8_ACTIVE,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL,
+  Z8_SECTION_HEADER,
+  Z8_SURFACE,
+} from '../../theme/z8Tokens';
 import {
   buildPlayerPayload,
   safeNumber,
   safeText,
   useHrBoardProData,
 } from './proLabData';
-import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
-import { 
-  Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE,
-  Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PAGE_GAP
-} from '../../theme/z8Tokens';
+
+const MAX_VISIBLE_PLAYERS = 30;
 
 function getPlayerId(row: any, fallback: number) {
   return String(row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id ?? row?.id ?? fallback);
@@ -36,34 +56,66 @@ function getMlbHeadshotUrl(playerId?: string | number | null) {
   return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${playerId}/headshot/67/current`;
 }
 
-function getSignalTags(row: any) {
-  const risk = String(row?.riskLabel ?? row?.riskTier ?? row?.risk ?? '').toLowerCase();
-  const tags = ['AI Watch'];
-
-  if (risk.includes('hot') || risk.includes('high') || risk.includes('green')) tags.push('Hot Bat');
-  if (risk.includes('hr') || risk.includes('power')) tags.push('HR Watch');
-  if (risk.includes('value') || risk.includes('sneaky')) tags.push('Value Slip');
-
-  return tags.slice(0, 3);
-}
-
 function getPitcherId(row: any): number | null {
-  const raw = row?.opponentPitcherId ?? row?.opponent_pitcher_id ?? row?.pitcherId ?? row?.pitcher_id;
-  const parsed = safeNumber(raw);
+  const parsed = safeNumber(
+    row?.opponentPitcherId ?? row?.opponent_pitcher_id ?? row?.pitcherId ?? row?.pitcher_id,
+  );
   return parsed && parsed > 0 ? parsed : null;
 }
 
 function getGamePk(row: any): number | null {
-  const raw = row?.gamePk ?? row?.game_pk ?? row?.game_id;
-  const parsed = safeNumber(raw);
+  const parsed = safeNumber(row?.gamePk ?? row?.game_pk ?? row?.game_id);
   return parsed && parsed > 0 ? parsed : null;
+}
+
+function getScore(row: any) {
+  const value = safeNumber(
+    row?.hrScore ?? row?.hr_score ?? row?.edgeScore ?? row?.edge_score ?? row?.score ?? row?.powerScore,
+  );
+  return value === null ? null : Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getConfidence(row: any) {
+  const value = safeNumber(row?.confidence ?? row?.confidencePct ?? row?.confidence_pct ?? row?.edgePct);
+  if (value === null) return null;
+  const normalized = value <= 1 ? value * 100 : value;
+  return Math.max(0, Math.min(100, Math.round(normalized)));
+}
+
+function getTier(row: any) {
+  return safeText(row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk, 'Review');
+}
+
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof Activity;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="border-l border-white/10 pl-4 first:border-l-0 first:pl-0">
+      <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
+        <Icon className="h-3.5 w-3.5 text-vouch-cyan" />
+        {label}
+      </div>
+      <div className="mt-2 truncate text-xl font-black tracking-tight text-white">{value}</div>
+      <div className="mt-0.5 text-[11px] text-white/45">{detail}</div>
+    </div>
+  );
 }
 
 export default function PlayerEdgeLabPageZ8() {
   const { rows, loading, error, source } = useHrBoardProData();
   const { isPro } = useEntitlements();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedRow = rows.find((row) => String(row.playerId ?? row.player_id ?? row.id) === selectedId) || rows[0] || null;
+
+  const selectedRow =
+    rows.find((row) => String(row.playerId ?? row.player_id ?? row.id) === selectedId) || rows[0] || null;
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
   const playerId = selectedRow ? getPlayerId(selectedRow, 0) : null;
   const pitcherId = selectedRow ? getPitcherId(selectedRow) : null;
@@ -72,6 +124,8 @@ export default function PlayerEdgeLabPageZ8() {
   const pitcherName = selectedRow
     ? safeText(selectedRow.opponentPitcherName ?? selectedRow.opposingPitcher ?? selectedRow.pitcherName, '')
     : '';
+  const score = selectedRow ? getScore(selectedRow) : null;
+  const confidence = selectedRow ? getConfidence(selectedRow) : null;
 
   const {
     data: research,
@@ -85,124 +139,175 @@ export default function PlayerEdgeLabPageZ8() {
   });
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto grid gap-4 lg:grid-cols-[300px_1fr]`}>
-        <section className="space-y-5 lg:col-span-2">
-          <div className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl p-4`}>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
-                <Crown className="h-3.5 w-3.5" />
-                Pro Player Edge
-              </span>
-              <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
-                <Sparkles className="h-3.5 w-3.5" />
-                AI Edge Lab
-              </span>
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} overflow-x-hidden`}>
+      <div className="mx-auto max-w-[1600px] space-y-4">
+        <section className="relative overflow-hidden border border-white/10 bg-black/30">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(31,226,255,0.14),transparent_34%),radial-gradient(circle_at_86%_18%,rgba(74,222,128,0.10),transparent_32%)]" />
+          <div className="relative grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-7">
+            <div className="flex min-w-0 flex-col justify-between gap-6">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+                    <Brain className="h-3.5 w-3.5" />
+                    Player Brain
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Verified inputs only
+                  </span>
+                </div>
+
+                <p className={`mt-5 ${Z8_LABEL} text-white/35`}>MLB decision intelligence</p>
+                <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-5xl">
+                  One player. Every signal. One clear research decision.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base">
+                  Move from the live player queue into matchup evidence, power quality, pitcher vulnerability,
+                  and verified trend context without leaving the workspace.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 sm:grid-cols-4">
+                <Metric icon={Database} label="Player pool" value={String(rows.length)} detail="current board rows" />
+                <Metric icon={Target} label="Edge score" value={score === null ? '—' : String(score)} detail="selected player" />
+                <Metric icon={Activity} label="Confidence" value={confidence === null ? '—' : `${confidence}%`} detail="signal strength" />
+                <Metric icon={Radar} label="Research feed" value={researchSource === 'network' && research ? 'Live' : 'Standby'} detail="MLB evidence layer" />
+              </div>
             </div>
 
-            <ProPageHeader
-              title="Top Player Lab"
-              subtitle="Premium player research for HR form, matchup context, hitter power, pitcher vulnerability, hot bats, and value slip signals."
-              badge="Player Pro"
-            />
+            <div className="relative min-h-[260px] overflow-hidden border border-white/10 bg-white/[0.025] p-5">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(31,226,255,0.08),transparent_48%,rgba(74,222,128,0.06))]" />
+              {selectedRow ? (
+                <div className="relative flex h-full flex-col justify-between gap-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className={`${Z8_LABEL} text-vouch-cyan`}>Current focus</div>
+                      <div className="mt-2 text-2xl font-black tracking-tight text-white">{getPlayerName(selectedRow)}</div>
+                      <div className="mt-1 text-sm text-white/50">
+                        {safeText(selectedRow.team, 'MLB')} {opponent ? `vs ${opponent}` : ''}
+                      </div>
+                    </div>
+                    <span className="border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 text-xs font-black uppercase tracking-widest text-vouch-emerald">
+                      {getTier(selectedRow)}
+                    </span>
+                  </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className={`${Z8_SURFACE} rounded-xl px-3 py-2.5`}>
-                <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
-                  <ShieldCheck className="h-4 w-4 text-vouch-emerald" />
-                  Verified Feed
+                  <div className="flex flex-1 items-end justify-between gap-5">
+                    <div className="space-y-2 text-xs font-medium text-white/60">
+                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Verified board identity</div>
+                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Matchup evidence routed</div>
+                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Trend layer ready</div>
+                    </div>
+                    <div className="relative h-44 w-40 shrink-0 overflow-hidden">
+                      <div className="absolute inset-x-4 bottom-0 h-24 bg-vouch-cyan/15 blur-3xl" />
+                      <img
+                        src={getMlbHeadshotUrl(playerId)}
+                        alt={getPlayerName(selectedRow)}
+                        className="relative h-full w-full object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.6)]"
+                        decoding="async"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-px bg-white/10">
+                    <div className="bg-black/60 px-3 py-2.5">
+                      <div className={`${Z8_LABEL} text-white/35`}>Score</div>
+                      <div className="mt-1 text-lg font-black text-white">{score ?? '—'}</div>
+                    </div>
+                    <div className="bg-black/60 px-3 py-2.5">
+                      <div className={`${Z8_LABEL} text-white/35`}>Confidence</div>
+                      <div className="mt-1 text-lg font-black text-white">{confidence === null ? '—' : `${confidence}%`}</div>
+                    </div>
+                    <div className="bg-black/60 px-3 py-2.5">
+                      <div className={`${Z8_LABEL} text-white/35`}>Pitcher</div>
+                      <div className="mt-1 truncate text-sm font-black text-white">{pitcherName || 'Pending'}</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-2 text-xl font-black text-white">{rows.length}</div>
-                <div className="text-xs text-white/45">Current player rows</div>
-              </div>
-              <div className={`${Z8_SURFACE} rounded-xl px-3 py-2.5`}>
-                <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
-                  <TrendingUp className="h-4 w-4 text-vouch-cyan" />
-                  Selected Edge
+              ) : (
+                <div className="relative flex h-full flex-col items-center justify-center text-center">
+                  <Brain className="h-10 w-10 text-white/20" />
+                  <div className="mt-4 text-lg font-black text-white">Waiting for verified player data</div>
+                  <div className="mt-2 max-w-xs text-sm text-white/45">
+                    The Brain will not create substitute players or simulated evidence.
+                  </div>
                 </div>
-                <div className="mt-2 truncate text-base font-black text-white">{selectedRow ? getPlayerName(selectedRow) : 'No player'}</div>
-                <div className="text-xs text-white/45">Tap a player to research</div>
-              </div>
-              <div className={`${Z8_SURFACE} rounded-xl border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-2.5`}>
-                <div className={`flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}>
-                  <Crown className="h-4 w-4" />
-                  MLB Graphs
-                </div>
-                <div className="mt-2 text-base font-black text-white">
-                  {researchSource === 'network' && research ? 'Live API' : 'Select player'}
-                </div>
-                <div className="text-xs text-white/45">BvP, trends, Statcast quality</div>
-              </div>
+              )}
             </div>
           </div>
-
-          <VerifiedDataNotice
-            variant={source === 'network' ? 'no-data' : 'feed-required'}
-            title={loading ? 'Loading verified player feed' : source === 'network' ? 'Verified HR player feed' : 'Verified data feed required'}
-            detail={error ? `${error}. No fake player data shown.` : 'Player panels use only the current production HR Board payload.'}
-          />
         </section>
 
-        <aside className={`${Z8_PANEL} flex flex-col overflow-hidden rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]`}>
-          <div className={`mb-4 flex shrink-0 items-center justify-between gap-3 ${Z8_SECTION_HEADER}`}>
+        <VerifiedDataNotice
+          variant={source === 'network' ? 'no-data' : 'feed-required'}
+          title={loading ? 'Loading verified player feed' : source === 'network' ? 'Verified HR player feed' : 'Verified data feed required'}
+          detail={error ? `${error}. No fake player data shown.` : 'Every Player Brain panel uses the current production HR Board payload.'}
+        />
+
+        <section className={`${Z8_PANEL} overflow-hidden p-0`}>
+          <div className={`flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 ${Z8_SECTION_HEADER}`}>
             <div>
-              <div className={`${Z8_LABEL} text-white/40`}>
-                Player Queue
-              </div>
-              <div className="mt-1 text-[11px] text-white/45">New player signals with premium headshots</div>
+              <div className={`${Z8_LABEL} text-white/40`}>Neural player queue</div>
+              <div className="mt-1 text-sm font-black text-white">Choose the next player to route through the Brain</div>
             </div>
-            <div className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 p-2 text-vouch-emerald">
-              <Crown className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs font-medium text-white/40">
+              <Zap className="h-4 w-4 text-vouch-cyan" />
+              {Math.min(rows.length, MAX_VISIBLE_PLAYERS)} visible
             </div>
           </div>
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-            {loading ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>Loading verified HR board candidates...</div> : null}
-            {!loading && !rows.length ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>No verified player rows available.</div> : null}
-            {rows.slice(0, 30).map((row, index) => {
-              const id = String(row.playerId ?? row.player_id ?? row.id ?? index);
-              const active = String(selectedRow?.playerId ?? selectedRow?.player_id ?? selectedRow?.id) === id;
+
+          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 py-3 sm:px-5">
+            {loading ? <div className={`${Z8_SURFACE} min-w-[230px] p-4 text-sm text-white/45`}>Loading verified candidates…</div> : null}
+            {!loading && !rows.length ? <div className={`${Z8_SURFACE} min-w-[230px] p-4 text-sm text-white/45`}>No verified player rows available.</div> : null}
+            {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
+              const id = getPlayerId(row, index);
+              const active = selectedRow ? getPlayerId(selectedRow, -1) === id : false;
+              const rowScore = getScore(row);
+              const rowConfidence = getConfidence(row);
+
               return (
                 <button
                   key={`${id}-${index}`}
                   type="button"
-                  className={`group w-full overflow-hidden rounded-2xl border p-3 text-left transition ${
-                    active ? Z8_ACTIVE : Z8_IDLE
+                  className={`group min-w-[245px] snap-start border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] sm:min-w-[270px] ${
+                    active ? `${Z8_ACTIVE} border-vouch-cyan/60 bg-vouch-cyan/[0.07]` : `${Z8_IDLE} hover:-translate-y-0.5 hover:border-vouch-cyan/30`
                   }`}
                   onClick={() => setSelectedId(id)}
+                  aria-pressed={active}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30`}>
-                      {getMlbHeadshotUrl(id) ? (
-                        <img
-                          src={getMlbHeadshotUrl(id)}
-                          alt={getPlayerName(row)}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                          onError={(event) => {
-                            event.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      ) : null}
-                      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-vouch-cyan/16 to-vouch-emerald/8" />
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-white/10 bg-black/40">
+                      <img
+                        src={getMlbHeadshotUrl(id)}
+                        alt={getPlayerName(row)}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-vouch-cyan/15 to-vouch-emerald/5" />
                     </div>
-
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-black text-white">
-                        {getPlayerName(row)}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-black text-white">{getPlayerName(row)}</div>
+                          <div className="mt-1 truncate text-xs text-white/45">{safeText(row.team, 'MLB')} · {getTier(row)}</div>
+                        </div>
+                        <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${active ? 'text-vouch-cyan' : 'text-white/20 group-hover:translate-x-0.5 group-hover:text-white/50'}`} />
                       </div>
-                      <div className="mt-1 text-xs text-white/45">
-                        {safeText(row.team, 'MLB')} · {safeText(row.riskLabel ?? row.riskTier ?? row.risk, 'Review')}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {getSignalTags(row).map((tag) => (
-                          <span
-                            key={tag}
-                            className={`border border-vouch-cyan/20 bg-vouch-cyan/10 px-2 py-0.5 ${Z8_LABEL} text-vouch-cyan`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="border-t border-white/10 pt-2">
+                          <div className={`${Z8_LABEL} text-white/30`}>Edge</div>
+                          <div className="mt-0.5 text-sm font-black text-white">{rowScore ?? '—'}</div>
+                        </div>
+                        <div className="border-t border-white/10 pt-2">
+                          <div className={`${Z8_LABEL} text-white/30`}>Confidence</div>
+                          <div className="mt-0.5 text-sm font-black text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -210,78 +315,98 @@ export default function PlayerEdgeLabPageZ8() {
               );
             })}
           </div>
-        </aside>
+        </section>
 
-        <section className={Z8_PAGE_GAP}>
-          {playerPayload ? (
-            <>
-              <PlayerResearchDecisionCard payload={playerPayload} />
-
-              {isPro ? (
-                <HrSignalGraphs
-                  payload={playerPayload}
-                  showLockedFutureGraphs={false}
-                />
-              ) : (
-                <div className={`${Z8_PANEL} rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10 p-5`}>
-                  <div className="text-lg font-black text-white">
-                    🔒 Pro Player Edge Intelligence
-                  </div>
-
-                  <p className="mt-2 text-sm text-white/70">
-                    Unlock matchup graphs, pitcher vulnerability,
-                    Statcast quality, and deeper AI research.
-                  </p>
-
-                  <button
-                    type="button"
-                    className="mt-4 rounded-xl bg-vouch-cyan px-5 py-2 text-sm font-black text-black"
-                    onClick={() => window.dispatchEvent(new CustomEvent("vouch:navigate", {
-                      detail: { section: "premium" }
-                    }))}
-                  >
-                    Upgrade to Pro
-                  </button>
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <div className="min-w-0 space-y-4">
+            <div className={`${Z8_PANEL} p-4 sm:p-5`}>
+              <div className={`mb-4 flex items-center justify-between gap-3 ${Z8_SECTION_HEADER}`}>
+                <div>
+                  <div className={`${Z8_LABEL} text-vouch-cyan`}>Brain decision layer</div>
+                  <div className="mt-1 text-lg font-black tracking-tight text-white">What the current evidence means</div>
                 </div>
-              )}
-            </>
-          ) : (
-            <VerifiedGraphEmptyState
-              variant="feed-required"
-              title="Verified data feed required"
-              detail="The Top Player Lab needs HR board player rows before rendering signal graphs."
-            />
-          )}
-
-          {research?.warnings?.length ? (
-            <div className={`${Z8_SURFACE} rounded-xl border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-amber-100/90`}>
-              {research.warnings.slice(0, 4).map((warning) => (
-                <div key={warning}>{warning}</div>
-              ))}
-            </div>
-          ) : null}
-
-          <div className={`${Z8_PANEL} rounded-2xl p-4`}>
-            <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 ${Z8_SECTION_HEADER}`}>
-              <div>
-                <div className={`${Z8_LABEL} text-white/40`}>MLB Research Graphs</div>
-                <div className="mt-1 text-sm font-black text-white">BvP, spray, pitch mix, trends</div>
+                <Sparkles className="h-5 w-5 text-vouch-cyan" />
               </div>
-              <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
-                {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}
-              </span>
+
+              {playerPayload ? (
+                <PlayerResearchDecisionCard payload={playerPayload} />
+              ) : (
+                <VerifiedGraphEmptyState
+                  variant="feed-required"
+                  title="Verified data feed required"
+                  detail="Player Brain needs HR board player rows before rendering its decision layer."
+                />
+              )}
             </div>
 
-            <PlayerEdgeGraphs
-              research={research}
-              loading={researchLoading}
-              error={researchError}
-              pitcherName={pitcherName || null}
-              opponent={opponent || null}
-            />
+            {isPro && playerPayload ? (
+              <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
+            ) : playerPayload ? (
+              <div className={`${Z8_PANEL} border border-vouch-cyan/25 bg-vouch-cyan/[0.05] p-5`}>
+                <div className="flex items-start gap-3">
+                  <div className="border border-vouch-cyan/25 bg-vouch-cyan/10 p-2 text-vouch-cyan">
+                    <LockKeyhole className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-black text-white">Unlock the complete signal stack</div>
+                    <p className="mt-2 text-sm leading-6 text-white/60">
+                      Pro adds matchup graphs, pitcher vulnerability, Statcast quality, and deeper player evidence.
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-4 inline-flex items-center gap-2 bg-vouch-cyan px-4 py-2.5 text-sm font-black text-black transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98]"
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new CustomEvent('vouch:navigate', {
+                            detail: { section: 'premium' },
+                          }),
+                        )
+                      }
+                    >
+                      <Crown className="h-4 w-4" />
+                      Upgrade to Pro
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="min-w-0 space-y-4">
+            {research?.warnings?.length ? (
+              <div className={`${Z8_SURFACE} border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-amber-100/90`}>
+                {research.warnings.slice(0, 4).map((warning) => (
+                  <div key={warning}>{warning}</div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className={`${Z8_PANEL} overflow-hidden p-0`}>
+              <div className={`flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5 ${Z8_SECTION_HEADER}`}>
+                <div>
+                  <div className={`${Z8_LABEL} text-vouch-emerald`}>Evidence workspace</div>
+                  <div className="mt-1 text-lg font-black tracking-tight text-white">BvP, spray, pitch mix, and trend intelligence</div>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}
+                </span>
+              </div>
+
+              <div className="p-3 sm:p-5">
+                <PlayerEdgeGraphs
+                  research={research}
+                  loading={researchLoading}
+                  error={researchError}
+                  pitcherName={pitcherName || null}
+                  opponent={opponent || null}
+                />
+              </div>
+            </div>
           </div>
         </section>
       </div>
     </main>
   );
 }
+

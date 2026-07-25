@@ -1,0 +1,28 @@
+{
+  "name": "VouchEdge",
+  "version": "1.0.0",
+  "frontend": {
+    "root": "src",
+    "features": "src/features",
+    "shared": [
+      "src/components",
+      "src/lib",
+      "src/hooks",
+      "src/types"
+    ]
+  },
+  "backend": {
+    "root": "api",
+    "services": "src/server"
+  },
+  "documentation": {
+    "aurora": "aurora",
+    "agents": "AGENTS.md"
+  },
+  "reports": {
+    "output": "aurora/reports"
+  },
+  "generated": {
+    "output": "aurora/generated"
+  }
+}

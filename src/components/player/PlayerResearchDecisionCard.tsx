@@ -30,41 +30,41 @@ export default function PlayerResearchDecisionCard({
     0;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/40 p-5 shadow-xl backdrop-blur">
-      <div className="flex gap-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/40 p-3 shadow-xl backdrop-blur sm:rounded-3xl sm:p-5">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         {player.headshot && (
           <img
             src={player.headshot}
             alt={player.playerName ?? "Player"}
-            className="h-24 w-24 rounded-2xl object-cover"
+            className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl"
           />
         )}
 
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-white">
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-bold text-white sm:text-2xl">
             {player.playerName}
           </h2>
 
-          <p className="text-sm text-white/60">
+          <p className="truncate text-xs text-white/60 sm:text-sm">
             {player.team} vs {player.opponent}
           </p>
 
           {player.opponentPitcherName && (
-            <p className="mt-1 text-sm text-white/50">
+            <p className="mt-1 truncate text-xs text-white/50 sm:text-sm">
               vs {player.opponentPitcherName}
             </p>
           )}
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl bg-white/5 p-4">
+      <div className="mt-3 rounded-xl bg-white/5 p-3 sm:mt-6 sm:rounded-2xl sm:p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-white/60">
+          <span className="text-xs text-white/60 sm:text-sm">
             VouchEdge Score
           </span>
 
           <span
-            className={`text-3xl font-black ${scoreColor(score)}`}
+            className={`text-2xl font-black sm:text-3xl ${scoreColor(score)}`}
           >
             {score}
           </span>
@@ -80,7 +80,7 @@ export default function PlayerResearchDecisionCard({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
         <Signal
           label="HR Edge"
           value={
@@ -121,7 +121,7 @@ export default function PlayerResearchDecisionCard({
       </div>
 
       {player.riskLabel && (
-        <div className="mt-5 rounded-xl bg-white/5 px-4 py-3 text-sm text-white/70">
+        <div className="mt-3 rounded-xl bg-white/5 px-3 py-2 text-xs text-white/70 sm:mt-5 sm:px-4 sm:py-3 sm:text-sm">
           Risk:
           <span className="ml-2 font-semibold text-white">
             {player.riskLabel}
@@ -149,16 +149,15 @@ function Signal({
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-white/5 p-3">
-      <div className="text-xs uppercase tracking-wide text-white/40">
+    <div className="min-w-0 rounded-xl bg-white/5 p-2.5 sm:p-3">
+      <div className="truncate text-[10px] uppercase tracking-wide text-white/40 sm:text-xs">
         {label}
       </div>
 
-      <div className="mt-1 text-lg font-bold text-white">
+      <div className="mt-1 truncate text-base font-bold text-white sm:text-lg">
         {value}
       </div>
     </div>
   );
 }
-
 

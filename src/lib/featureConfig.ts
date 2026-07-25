@@ -60,7 +60,6 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "player_edge_lab", label: "Top Player Lab", icon: "UserRoundSearch", enabled: true, order: 9, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "team_matchup_lab", label: "Pitchers Matchup", icon: "Swords", enabled: true, order: 10, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "hitter_matchup_zones", label: "Hitter Matchup Zones", icon: "Grid3x3", enabled: true, order: 10.5, group: "Pro Labs", sports: ALL_SPORTS },
-  { id: "pro_graphs_lab", label: "Pro Graphs Lab", icon: "LineChart", enabled: true, order: 11, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 11.5, group: "Pro Labs" },
 
   // AI — V.A.I pilot tools
