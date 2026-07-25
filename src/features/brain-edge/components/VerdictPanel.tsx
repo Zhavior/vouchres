@@ -2,6 +2,7 @@ import type { VerdictResult } from "../scoring/verdictEngine";
 
 import EvidenceCard from "./EvidenceCard";
 import JudgeMeter from "./JudgeMeter";
+import JudgeStack from "./JudgeStack";
 import RiskSummary from "./RiskSummary";
 
 interface VerdictPanelProps {
@@ -60,6 +61,11 @@ export default function VerdictPanel({
       <div className="mt-6">
         <JudgeMeter score={verdict.score} />
       </div>
+
+      <div className="mt-6">
+        <JudgeStack />
+      </div>
+
 
       <div className="mt-6">
         <EvidenceCard
