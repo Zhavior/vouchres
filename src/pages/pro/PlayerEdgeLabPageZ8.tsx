@@ -259,17 +259,17 @@ export default function PlayerEdgeLabPageZ8() {
           </div>
 
           <div
-            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-3 py-3 scroll-px-3 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-5 sm:scroll-px-5"
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth overscroll-x-contain px-4 py-4 scroll-px-4 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-5 sm:scroll-px-5"
             role="listbox"
             aria-label="Select a player to research"
           >
             {loading ? (
-              <div className={`${Z8_SURFACE} w-[78vw] max-w-[270px] shrink-0 snap-start p-4 text-sm text-white/45`}>
+              <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
                 Loading verified candidates…
               </div>
             ) : null}
             {!loading && !rows.length ? (
-              <div className={`${Z8_SURFACE} w-[78vw] max-w-[270px] shrink-0 snap-start p-4 text-sm text-white/45`}>
+              <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
                 No verified player rows available.
               </div>
             ) : null}
@@ -283,10 +283,10 @@ export default function PlayerEdgeLabPageZ8() {
                 <button
                   key={`${id}-${index}`}
                   type="button"
-                  className={`group w-[78vw] max-w-[270px] shrink-0 snap-start scroll-ml-3 border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
+                  className={`group w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 scroll-ml-3 border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
                     active
                       ? `${Z8_ACTIVE} border-vouch-cyan/70 bg-vouch-cyan/[0.09]`
-                      : `${Z8_IDLE} active:scale-[0.985] sm:hover:-translate-y-0.5 sm:hover:border-vouch-cyan/30`
+                      : `${Z8_IDLE} hover:-translate-y-1 hover:border-vouch-cyan/40 active:scale-[0.97]`
                   }`}
                   onClick={() => setSelectedId(id)}
                   aria-label={`Research ${getPlayerName(row)}, ${rowScore ?? 'unknown'} edge score, ${
@@ -296,7 +296,7 @@ export default function PlayerEdgeLabPageZ8() {
                   aria-selected={active}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-white/10 bg-black/40">
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
                       <img
                         src={getMlbHeadshotUrl(id)}
                         alt={getPlayerName(row)}
@@ -320,12 +320,18 @@ export default function PlayerEdgeLabPageZ8() {
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <div className="border-t border-white/10 pt-2">
                           <div className={`${Z8_LABEL} text-white/30`}>Edge</div>
-                          <div className="mt-0.5 text-sm font-black text-white">{rowScore ?? '—'}</div>
+                          <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowScore ?? '—'}</div>
                         </div>
                         <div className="border-t border-white/10 pt-2">
                           <div className={`${Z8_LABEL} text-white/30`}>Confidence</div>
-                          <div className="mt-0.5 text-sm font-black text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
+                          <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
                         </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-vouch-cyan/10 px-2 py-1 text-[10px] font-bold text-vouch-cyan">Barrel</span>
+                        <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">Matchup</span>
+                        <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300">Park</span>
                       </div>
                     </div>
                   </div>
