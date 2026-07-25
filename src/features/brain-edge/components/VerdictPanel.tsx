@@ -1,5 +1,9 @@
 import type { VerdictResult } from "../scoring/verdictEngine";
 
+import EvidenceCard from "./EvidenceCard";
+import JudgeMeter from "./JudgeMeter";
+import RiskSummary from "./RiskSummary";
+
 interface VerdictPanelProps {
   verdict: VerdictResult | null;
 }
@@ -32,59 +36,41 @@ export default function VerdictPanel({
   return (
     <div className="rounded-xl border border-white/10 bg-black/30 p-6 backdrop-blur">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">
-          Verdict Engine
-        </h2>
+        <div>
+          <h2 className="text-lg font-bold text-white">
+            Verdict Engine
+          </h2>
 
-        <span
-          className={`font-bold uppercase ${COLORS[verdict.verdict]}`}
-        >
+          <p className="text-xs uppercase tracking-wide text-white/50">
+            Decision Summary
+          </p>
+        </div>
+
+        <span className={`font-bold uppercase ${COLORS[verdict.verdict]}`}>
           {verdict.verdict}
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-4">
-        <Metric
-          label="Score"
-          value={verdict.score}
-        />
+      <div className="mt-6 grid grid-cols-3 gap-4">
+        <Metric label="Score" value={verdict.score} />
+        <Metric label="Confidence" value={`${verdict.confidence}%`} />
+        <Metric label="Edge" value={`${verdict.edge}%`} />
+      </div>
 
-        <Metric
-          label="Confidence"
-          value={`${verdict.confidence}%`}
-        />
+      <div className="mt-6">
+        <JudgeMeter score={verdict.score} />
+      </div>
 
-        <Metric
-          label="Edge"
-          value={`${verdict.edge}%`}
+      <div className="mt-6">
+        <EvidenceCard
+          title="Positive Signals"
+          items={verdict.positives}
         />
       </div>
 
       <div className="mt-6">
-        <h3 className="mb-2 text-sm font-semibold text-white">
-          Positive Signals
-        </h3>
-
-        <ul className="space-y-1 text-sm text-emerald-300">
-          {verdict.positives.map((item) => (
-            <li key={item}>✓ {item}</li>
-          ))}
-        </ul>
+        <RiskSummary risks={verdict.negatives} />
       </div>
-
-      {verdict.negatives.length > 0 && (
-        <div className="mt-6">
-          <h3 className="mb-2 text-sm font-semibold text-white">
-            Risks
-          </h3>
-
-          <ul className="space-y-1 text-sm text-red-300">
-            {verdict.negatives.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
