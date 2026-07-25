@@ -1,4 +1,6 @@
 import PlayerResearchDecisionCard from '@/components/player/PlayerResearchDecisionCard';
+import IntelligenceConsole from '@/components/intelligence/IntelligenceConsole';
+import { buildPlayerIntelligenceAnalysis } from "../../components/intelligence/IntelligenceConsole/buildPlayerIntelligenceAnalysis";
 import { useMemo, useState } from 'react';
 import {
   Activity,
@@ -82,8 +84,31 @@ function getConfidence(row: any) {
   return Math.max(0, Math.min(100, Math.round(normalized)));
 }
 
-function getTier(row: any) {
-  return safeText(row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk, 'Review');
+function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' {
+  const value = safeText(
+    row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk,
+    'Watch',
+  )
+    .trim()
+    .toLowerCase();
+
+  switch (value) {
+    case 's':
+    case 'elite':
+      return 'S';
+    case 'a':
+    case 'strong':
+      return 'A';
+    case 'b':
+    case 'moderate':
+      return 'B';
+    case 'c':
+    case 'review':
+      return 'C';
+    case 'watch':
+    default:
+      return 'Watch';
+  }
 }
 
 function Metric({
@@ -126,6 +151,13 @@ export default function PlayerEdgeLabPageZ8() {
     : '';
   const score = selectedRow ? getScore(selectedRow) : null;
   const confidence = selectedRow ? getConfidence(selectedRow) : null;
+
+const edge =
+  selectedRow?.edge != null
+    ? Number(selectedRow.edge)
+    : selectedRow?.projectedEdge != null
+      ? Number(selectedRow.projectedEdge)
+      : null;
 
   const {
     data: research,
@@ -238,6 +270,23 @@ export default function PlayerEdgeLabPageZ8() {
             </div>
           </div>
         </section>
+
+
+          {selectedRow && (
+            <div className="mt-6">
+              <IntelligenceConsole
+                player={selectedRow}
+                analysis={buildPlayerIntelligenceAnalysis({
+                  score,
+                  edge,
+                  confidence,
+                  pitcherName,
+                  opponent,
+                  tier: getTier(selectedRow),
+                })}
+              />
+            </div>
+          )}
 
         <VerifiedDataNotice
           variant={source === 'network' ? 'no-data' : 'feed-required'}
