@@ -1,6 +1,4 @@
 import PlayerResearchDecisionCard from '@/components/player/PlayerResearchDecisionCard';
-import IntelligenceConsole from '@/components/intelligence/IntelligenceConsole';
-import { buildPlayerIntelligenceAnalysis } from "../../components/intelligence/IntelligenceConsole/buildPlayerIntelligenceAnalysis";
 import { useMemo, useState } from 'react';
 import {
   Activity,
@@ -84,31 +82,8 @@ function getConfidence(row: any) {
   return Math.max(0, Math.min(100, Math.round(normalized)));
 }
 
-function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' {
-  const value = safeText(
-    row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk,
-    'Watch',
-  )
-    .trim()
-    .toLowerCase();
-
-  switch (value) {
-    case 's':
-    case 'elite':
-      return 'S';
-    case 'a':
-    case 'strong':
-      return 'A';
-    case 'b':
-    case 'moderate':
-      return 'B';
-    case 'c':
-    case 'review':
-      return 'C';
-    case 'watch':
-    default:
-      return 'Watch';
-  }
+function getTier(row: any) {
+  return safeText(row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk, 'Review');
 }
 
 function Metric({
@@ -152,13 +127,6 @@ export default function PlayerEdgeLabPageZ8() {
   const score = selectedRow ? getScore(selectedRow) : null;
   const confidence = selectedRow ? getConfidence(selectedRow) : null;
 
-const edge =
-  selectedRow?.edge != null
-    ? Number(selectedRow.edge)
-    : selectedRow?.projectedEdge != null
-      ? Number(selectedRow.projectedEdge)
-      : null;
-
   const {
     data: research,
     loading: researchLoading,
@@ -189,12 +157,13 @@ const edge =
                   </span>
                 </div>
 
-                <p className={`mt-5 ${Z8_LABEL} text-white/35`}>VOUCHEDGE PLAYER LAB</p>
+                <p className={`mt-5 ${Z8_LABEL} text-white/35`}>MLB decision intelligence</p>
                 <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-5xl">
-                  Professional MLB Intelligence Command
+                  One player. Every signal. One clear research decision.
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base">
-                  Professional-grade research workspace combining matchup intelligence, Statcast, pitch analysis, market context, and AI decision support into a single command center.
+                  Move from the live player queue into matchup evidence, power quality, pitcher vulnerability,
+                  and verified trend context without leaving the workspace.
                 </p>
               </div>
 
@@ -270,23 +239,6 @@ const edge =
             </div>
           </div>
         </section>
-
-
-          {selectedRow && (
-            <div className="mt-6">
-              <IntelligenceConsole
-                player={selectedRow}
-                analysis={buildPlayerIntelligenceAnalysis({
-                  score,
-                  edge,
-                  confidence,
-                  pitcherName,
-                  opponent,
-                  tier: getTier(selectedRow),
-                })}
-              />
-            </div>
-          )}
 
         <VerifiedDataNotice
           variant={source === 'network' ? 'no-data' : 'feed-required'}
@@ -454,60 +406,15 @@ const edge =
             ) : null}
 
             <div className={`${Z8_PANEL} overflow-hidden p-0`}>
-              <div className={`border-b border-white/10 px-5 py-5 ${Z8_SECTION_HEADER}`}>
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-
-                  <div className="flex-1">
-                    <div className="inline-flex items-center rounded-full border border-vouch-gold/30 bg-vouch-gold/10 px-3 py-1 text-[11px] font-black tracking-[0.25em] uppercase text-vouch-gold">
-                      ★★★★★ VERIFIED PLAY
-                    </div>
-
-                    <div className="mt-3 text-3xl font-black tracking-tight text-white">
-                      {playerPayload?.player?.playerName ?? 'Select Player'}
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-3">
-
-                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-                        <div className={Z8_LABEL}>EDGE</div>
-                        <div className="mt-1 text-3xl font-black text-emerald-300">
-                          {playerPayload?.player?.hrEdge ?? '--'}
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3">
-                        <div className={Z8_LABEL}>CONFIDENCE</div>
-                        <div className="mt-1 text-3xl font-black text-cyan-300">
-                          A+
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl border border-vouch-gold/20 bg-vouch-gold/10 px-4 py-3">
-                        <div className={Z8_LABEL}>DATA</div>
-                        <div className="mt-1 flex items-center gap-2 text-sm font-bold text-vouch-gold">
-                          <TrendingUp className="h-4 w-4" />
-                          {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Awaiting Player'}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <div className={`${Z8_LABEL} text-vouch-cyan`}>
-                      WHY VOUCHEDGE LIKES THIS
-                    </div>
-
-                    <div className="mt-3 space-y-2 text-sm text-white/80">
-                      <div>✓ Elite matchup profile</div>
-                      <div>✓ Strong barrel opportunity</div>
-                      <div>✓ Favorable pitch mix</div>
-                      <div>✓ Positive run environment</div>
-                      <div>✓ AI model consensus</div>
-                    </div>
-                  </div>
-
+              <div className={`flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5 ${Z8_SECTION_HEADER}`}>
+                <div>
+                  <div className={`${Z8_LABEL} text-vouch-emerald`}>Evidence workspace</div>
+                  <div className="mt-1 text-lg font-black tracking-tight text-white">BvP, spray, pitch mix, and trend intelligence</div>
                 </div>
+                <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}
+                </span>
               </div>
 
               <div className="p-3 sm:p-5">
