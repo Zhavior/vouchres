@@ -6,7 +6,7 @@ type Props = {
 
 export default function PickConfirmationBar({ pick }: Props) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#0b1220] p-5">
+    <section className="rounded-2xl border border-white/10 bg-ve-surface-panel p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
