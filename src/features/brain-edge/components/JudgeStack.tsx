@@ -1,7 +1,7 @@
-import type { JudgeScore } from "../scoring/judgeWeights";
+import type { JudgeResult } from "../scoring/judges/types";
 
 interface JudgeStackProps {
-  judges: JudgeScore[];
+  judges: JudgeResult[];
 }
 
 export default function JudgeStack({
@@ -33,7 +33,9 @@ export default function JudgeStack({
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-vouch-cyan transition-all duration-500"
-              style={{ width: `${judge.score}%` }}
+              style={{
+                width: `${judge.score}%`,
+              }}
             />
           </div>
         </div>

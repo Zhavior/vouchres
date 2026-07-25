@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "qualityThreshold": 95,
+  "maxComponentLines": 300,
+  "maxFunctionLines": 80,
+  "maxNestingDepth": 4,
+  "requireTests": true,
+  "requireStrictTypes": true,
+  "allowBusinessLogicInUI": false,
+  "allowCircularDependencies": false,
+  "sports": [
+    "MLB",
+    "NBA",
+    "NFL",
+    "NHL",
+    "WNBA"
+  ]
+}

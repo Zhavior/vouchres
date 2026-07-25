@@ -3,6 +3,7 @@ import type { NormalizedPlayerPayload } from "@/adapters/normalized";
 import { runJudges } from "./judges";
 import { aggregateJudges } from "./aggregateJudges";
 import { buildVerdict } from "./buildVerdict";
+import { buildEvidence } from "./buildEvidence";
 import type { JudgeResult } from "./judges/types";
 
 export type Verdict =
@@ -24,6 +25,7 @@ export interface VerdictResult {
   positives: string[];
   negatives: string[];
   judges: JudgeResult[];
+  evidence: import("./buildEvidence").EvidenceItem[];
 }
 
 export function verdictEngine(
@@ -47,5 +49,6 @@ export function verdictEngine(
     negatives: aggregate.weaknesses,
 
     judges,
+    evidence: buildEvidence(judges),
   };
 }

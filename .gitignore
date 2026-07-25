@@ -22,3 +22,6 @@ _code_backups/
 *.zip
 __MACOSX/
 .DS_Store
+
+# Aurora generated artifacts
+aurora/generated/*.json
