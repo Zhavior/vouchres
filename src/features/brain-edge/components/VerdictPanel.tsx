@@ -1,0 +1,110 @@
+import type { VerdictResult } from "../scoring/verdictEngine";
+
+interface VerdictPanelProps {
+  verdict: VerdictResult | null;
+}
+
+const COLORS = {
+  elite: "text-emerald-400",
+  strong: "text-green-400",
+  good: "text-blue-400",
+  neutral: "text-yellow-400",
+  avoid: "text-red-400",
+} as const;
+
+export default function VerdictPanel({
+  verdict,
+}: VerdictPanelProps) {
+  if (!verdict) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-black/30 p-6">
+        <h2 className="text-lg font-semibold text-white">
+          Verdict Engine
+        </h2>
+
+        <p className="mt-2 text-sm text-white/60">
+          Select a player to generate a verdict.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/30 p-6 backdrop-blur">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-white">
+          Verdict Engine
+        </h2>
+
+        <span
+          className={`font-bold uppercase ${COLORS[verdict.verdict]}`}
+        >
+          {verdict.verdict}
+        </span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-4">
+        <Metric
+          label="Score"
+          value={verdict.score}
+        />
+
+        <Metric
+          label="Confidence"
+          value={`${verdict.confidence}%`}
+        />
+
+        <Metric
+          label="Edge"
+          value={`${verdict.edge}%`}
+        />
+      </div>
+
+      <div className="mt-6">
+        <h3 className="mb-2 text-sm font-semibold text-white">
+          Positive Signals
+        </h3>
+
+        <ul className="space-y-1 text-sm text-emerald-300">
+          {verdict.positives.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+      </div>
+
+      {verdict.negatives.length > 0 && (
+        <div className="mt-6">
+          <h3 className="mb-2 text-sm font-semibold text-white">
+            Risks
+          </h3>
+
+          <ul className="space-y-1 text-sm text-red-300">
+            {verdict.negatives.map((item) => (
+              <li key={item}>• {item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded-lg bg-white/5 p-4 text-center">
+      <div className="text-2xl font-bold text-white">
+        {value}
+      </div>
+
+      <div className="mt-1 text-xs uppercase tracking-wide text-white/50">
+        {label}
+      </div>
+    </div>
+  );
+}

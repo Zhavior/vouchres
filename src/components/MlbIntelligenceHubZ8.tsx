@@ -21,6 +21,8 @@ import PlayerHeadshot from './parlays/PlayerHeadshot';
 import PlayerResearchDecisionCard from './player/PlayerResearchDecisionCard';
 import AgentDock from './agents/AgentDock';
 import ProGraphsLabPageZ8 from '../pages/pro/ProGraphsLabPageZ8';
+import { useVerdict } from "@/features/brain-edge/hooks/useVerdict";
+import VerdictPanel from "@/features/brain-edge/components/VerdictPanel";
 import { usePickSelectionContext } from "@/features/brain-edge/context/PickSelectionContext";
 import { hydrateAgentSlots } from '../services/agents/agentSlots';
 import { 
@@ -605,6 +607,9 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
       : null,
     [selectedCandidate],
   );
+
+
+  const verdict = useVerdict(selectedPlayerPayload);
   const [tab, setTab] = useState<Tab>('overview');
   const hrBoardQuery = useHrBoardToday();
   const judgeQuery = useAiJudgeLeaderboard();
@@ -809,10 +814,12 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
 
 
       {selectedCandidate && (
-        <section
+                  <section
           aria-label={`${cleanName(selectedCandidate)} research workspace`}
           className={`relative overflow-hidden rounded-[28px] ${Z8_PANEL_PREMIUM}`}
         >
+          <VerdictPanel verdict={verdict} />
+
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/70 to-transparent" />
 
           <div className="flex items-start justify-between gap-4 border-b border-white/8 px-4 py-4 sm:px-6">
