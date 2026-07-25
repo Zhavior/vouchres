@@ -25,3 +25,4 @@ __MACOSX/
 
 # Aurora generated artifacts
 aurora/generated/*.json
+*.dmg
