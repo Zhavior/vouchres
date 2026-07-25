@@ -1,4 +1,12 @@
-import type { NormalizedPlayerPayload } from "../../../../adapters/normalized";
+import type { BrainContext } from "../brainContext";
+
+export type JudgeId =
+  | "barrel"
+  | "matchup"
+  | "park"
+  | "weather"
+  | "form"
+  | "lineup";
 
 export interface JudgeEvidence {
   label: string;
@@ -7,7 +15,7 @@ export interface JudgeEvidence {
 }
 
 export interface JudgeResult {
-  id: string;
+  id: JudgeId;
   title: string;
   score: number;
   confidence: number;
@@ -16,5 +24,5 @@ export interface JudgeResult {
 }
 
 export type Judge = (
-  payload: NormalizedPlayerPayload
+  context: BrainContext
 ) => JudgeResult;
