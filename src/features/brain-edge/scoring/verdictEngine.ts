@@ -42,9 +42,9 @@ export function verdictEngine(
 
     edge: input.payload.scoreBreakdown?.finalScore ?? 0,
 
-    positives: aggregate.strengths.map(j => j.title),
+    positives: aggregate.strengths,
 
-    negatives: aggregate.weaknesses.map(j => j.title),
+    negatives: aggregate.weaknesses,
 
     judges,
   };

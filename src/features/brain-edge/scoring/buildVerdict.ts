@@ -1,8 +1,8 @@
 import type { Verdict } from "./verdictEngine";
-import type { AggregateVerdict } from "./aggregateJudges";
+import type { AggregateJudgeResult } from "./aggregateJudges";
 
 export function buildVerdict(
-  aggregate: AggregateVerdict
+  aggregate: AggregateJudgeResult
 ): Verdict {
   if (aggregate.overallScore >= 90) return "elite";
   if (aggregate.overallScore >= 75) return "strong";
