@@ -67,7 +67,12 @@
     "quality:strict": "npm run typecheck && npm run lint:strict && npm run build",
     "knip": "knip",
     "knip:production": "knip --production",
-    "analyze": "vite build --mode analyze"
+    "analyze": "vite build --mode analyze",
+    "aurora": "tsx scripts/aurora/index.ts",
+    "aurora:maps": "tsx scripts/aurora/buildMaps.ts",
+    "aurora:agents": "tsx scripts/aurora/buildAgents.ts",
+    "aurora:docs": "tsx scripts/aurora/buildDocs.ts",
+    "aurora:validate": "tsx scripts/aurora/validate.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
@@ -92,6 +97,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "express-rate-limit": "^8.5.2",
+    "fast-glob": "^3.3.3",
     "framer-motion": "^12.42.0",
     "google-auth-library": "^10.9.0",
     "helmet": "^8.2.0",
@@ -100,6 +106,7 @@
     "motion": "^12.23.24",
     "node-cron": "^4.5.0",
     "opentimestamps": "^0.4.9",
+    "picocolors": "^1.1.1",
     "posthog-js": "^1.393.5",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
@@ -124,7 +131,7 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
+    "@types/node": "^22.20.1",
     "@types/node-cron": "^3.0.11",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
