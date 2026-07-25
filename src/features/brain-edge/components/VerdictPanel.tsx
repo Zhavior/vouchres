@@ -63,7 +63,7 @@ export default function VerdictPanel({
       </div>
 
       <div className="mt-6">
-        <JudgeStack />
+        <JudgeStack judges={verdict.judges} />
       </div>
 
 

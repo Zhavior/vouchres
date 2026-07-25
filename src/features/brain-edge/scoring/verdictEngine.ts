@@ -11,6 +11,8 @@ export interface VerdictInput {
   payload: NormalizedPlayerPayload;
 }
 
+import { buildJudgeScores, type JudgeScore } from "./judgeWeights";
+
 export interface VerdictResult {
   verdict: Verdict;
   score: number;
@@ -18,6 +20,7 @@ export interface VerdictResult {
   edge: number;
   positives: string[];
   negatives: string[];
+  judges: JudgeScore[];
 }
 
 export function verdictEngine(
@@ -49,5 +52,6 @@ export function verdictEngine(
     edge: input.payload.scoreBreakdown?.finalScore ?? 0,
     positives,
     negatives,
+    judges: buildJudgeScores(),
   };
 }

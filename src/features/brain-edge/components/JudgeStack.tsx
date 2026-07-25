@@ -1,8 +1,12 @@
-import { buildJudgeScores } from "../scoring/judgeWeights";
+import type { JudgeScore } from "../scoring/judgeWeights";
 
-export default function JudgeStack() {
-  const judges = buildJudgeScores();
+interface JudgeStackProps {
+  judges: JudgeScore[];
+}
 
+export default function JudgeStack({
+  judges,
+}: JudgeStackProps) {
   return (
     <div className="space-y-3">
       {judges.map((judge) => (
