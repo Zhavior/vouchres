@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Brain, ChartNoAxesCombined, Crosshair } from 'lucide-react';
 import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y } from '../../theme/z8Tokens';
 import './brain.css';
+import { AuroraBackground } from '../../components/aurora';
 
 export function BrainPageShell({
   active,
@@ -13,7 +14,8 @@ export function BrainPageShell({
   children: ReactNode;
 }) {
   return (
-    <main className={`${Z8_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <AuroraBackground variant="brain" className="min-h-screen">
+      <main className={`${Z8_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1380px] flex-col ${Z8_PAGE_GAP}`}>
         <header className="brain-hero rounded-2xl p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -50,6 +52,7 @@ export function BrainPageShell({
         </header>
         <div className="brain-reveal">{children}</div>
       </div>
-    </main>
+      </main>
+    </AuroraBackground>
   );
 }
