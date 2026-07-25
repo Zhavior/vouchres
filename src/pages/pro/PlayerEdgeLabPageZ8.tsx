@@ -258,9 +258,21 @@ export default function PlayerEdgeLabPageZ8() {
             </div>
           </div>
 
-          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 py-3 sm:px-5">
-            {loading ? <div className={`${Z8_SURFACE} min-w-[230px] p-4 text-sm text-white/45`}>Loading verified candidates…</div> : null}
-            {!loading && !rows.length ? <div className={`${Z8_SURFACE} min-w-[230px] p-4 text-sm text-white/45`}>No verified player rows available.</div> : null}
+          <div
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-3 py-3 scroll-px-3 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-5 sm:scroll-px-5"
+            role="listbox"
+            aria-label="Select a player to research"
+          >
+            {loading ? (
+              <div className={`${Z8_SURFACE} w-[78vw] max-w-[270px] shrink-0 snap-start p-4 text-sm text-white/45`}>
+                Loading verified candidates…
+              </div>
+            ) : null}
+            {!loading && !rows.length ? (
+              <div className={`${Z8_SURFACE} w-[78vw] max-w-[270px] shrink-0 snap-start p-4 text-sm text-white/45`}>
+                No verified player rows available.
+              </div>
+            ) : null}
             {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
               const id = getPlayerId(row, index);
               const active = selectedRow ? getPlayerId(selectedRow, -1) === id : false;
@@ -271,11 +283,17 @@ export default function PlayerEdgeLabPageZ8() {
                 <button
                   key={`${id}-${index}`}
                   type="button"
-                  className={`group min-w-[245px] snap-start border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] sm:min-w-[270px] ${
-                    active ? `${Z8_ACTIVE} border-vouch-cyan/60 bg-vouch-cyan/[0.07]` : `${Z8_IDLE} hover:-translate-y-0.5 hover:border-vouch-cyan/30`
+                  className={`group w-[78vw] max-w-[270px] shrink-0 snap-start scroll-ml-3 border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
+                    active
+                      ? `${Z8_ACTIVE} border-vouch-cyan/70 bg-vouch-cyan/[0.09]`
+                      : `${Z8_IDLE} active:scale-[0.985] sm:hover:-translate-y-0.5 sm:hover:border-vouch-cyan/30`
                   }`}
                   onClick={() => setSelectedId(id)}
-                  aria-pressed={active}
+                  aria-label={`Research ${getPlayerName(row)}, ${rowScore ?? 'unknown'} edge score, ${
+                    rowConfidence === null ? 'unknown confidence' : `${rowConfidence}% confidence`
+                  }`}
+                  role="option"
+                  aria-selected={active}
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-white/10 bg-black/40">
