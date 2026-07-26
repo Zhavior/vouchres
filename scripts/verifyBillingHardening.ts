@@ -38,13 +38,20 @@ const { effectiveTierForSubscriptionStatus, getStripePriceConfigs } = await impo
 const JSON_BODY_MIDDLEWARE = "app.use(express.json(";
 
 includesAll(server, [
-  "app.use(\"/api/billing/webhook\", express.raw({ type: \"application/json\", limit: \"1mb\" }))",
+  '["/api/billing/webhook", "/api/stripe/webhook"]',
+  'express.raw({ type: "application/json", limit: "1mb" })',
   JSON_BODY_MIDDLEWARE,
 ], "raw body webhook mount");
 assert(
-  server.indexOf("express.raw({ type: \"application/json\"") < server.indexOf(JSON_BODY_MIDDLEWARE),
+  server.indexOf('["/api/billing/webhook", "/api/stripe/webhook"]') < server.indexOf(JSON_BODY_MIDDLEWARE),
   "Stripe webhook raw body middleware must be mounted before express.json"
 );
+
+const routeIndex = read("server/routes/index.ts");
+includesAll(routeIndex, [
+  "stripeWebhookAliasRoutes",
+  'app.use("/api/stripe", stripeWebhookAliasRoutes)',
+], "live Stripe webhook compatibility alias");
 
 includesAll(billingScope, [
   "const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? \"\"",
@@ -55,7 +62,7 @@ includesAll(billingScope, [
   "duplicate: true",
   '"/subscription"',
   ".eq(\"profile_id\", profileId)",
-  'tier: z.enum(["pro", "creator"])',
+  'tier: z.literal("pro")',
 ], "billing route hardening");
 
 includesAll(stripeService, [
@@ -82,11 +89,9 @@ includesAll(tierConfig, [
   "free",
   "pro",
   "creator",
-  "STRIPE_${tier.toUpperCase()}_${interval.toUpperCase()}_PRICE_ID",
+  "STRIPE_BETA_MONTHLY_PRICE_ID",
   "STRIPE_PRO_MONTHLY_PRICE_ID",
-  "STRIPE_PRO_YEARLY_PRICE_ID",
-  "STRIPE_CREATOR_MONTHLY_PRICE_ID",
-  "STRIPE_CREATOR_YEARLY_PRICE_ID",
+  "yearly: null",
 ], "tier and price config");
 
 assert(isActiveTier("free"), "free must be an active tier");
@@ -105,21 +110,18 @@ for (const status of ["past_due", "unpaid", "canceled", "incomplete", "incomplet
 const unknown = effectiveTierForSubscriptionStatus("mystery_status", "seller_pro");
 assert(unknown.tier === "free" && unknown.warning, "unknown statuses should safely downgrade with warning");
 
-const envNames = [
-  "STRIPE_PRO_MONTHLY_PRICE_ID",
-  "STRIPE_PRO_YEARLY_PRICE_ID",
-  "STRIPE_CREATOR_MONTHLY_PRICE_ID",
-  "STRIPE_CREATOR_YEARLY_PRICE_ID",
-];
-for (const envName of envNames) process.env[envName] = `price_verify_${envName.toLowerCase()}`;
+const envNames = ["STRIPE_BETA_MONTHLY_PRICE_ID"];
+process.env.STRIPE_BETA_MONTHLY_PRICE_ID = "price_verify_beta_monthly";
+delete process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
+delete process.env.STRIPE_PRO_YEARLY_PRICE_ID;
+delete process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID;
+delete process.env.STRIPE_CREATOR_YEARLY_PRICE_ID;
 const matrix = getStripePriceMatrix();
-assert(matrix.pro.monthly === process.env.STRIPE_PRO_MONTHLY_PRICE_ID, "pro monthly env mapping failed");
-assert(matrix.pro.yearly === process.env.STRIPE_PRO_YEARLY_PRICE_ID, "pro yearly env mapping failed");
-assert(matrix.creator.monthly === process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID, "creator monthly env mapping failed");
-assert(matrix.creator.yearly === process.env.STRIPE_CREATOR_YEARLY_PRICE_ID, "creator yearly env mapping failed");
+assert(matrix.pro.monthly === process.env.STRIPE_BETA_MONTHLY_PRICE_ID, "beta monthly env mapping failed");
+assert(matrix.pro.yearly === null, "beta yearly checkout must remain disabled");
 const configs = getStripePriceConfigs();
-assert(configs.length === 4, "expected four supported Stripe price configs");
-assert(configs.every((config) => config.tier === "pro" || config.tier === "creator"), "unsupported Stripe tier config found");
+assert(configs.length === 1, "expected exactly one sellable beta Stripe price config");
+assert(configs[0]?.tier === "pro" && configs[0]?.interval === "monthly", "beta checkout must be pro monthly");
 
 console.log(
   JSON.stringify(

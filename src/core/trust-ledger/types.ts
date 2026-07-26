@@ -1,9 +1,10 @@
 export type DecisionEventType =
-  | "DecisionCreated"
-  | "ConfidenceRevised"
-  | "OutcomeResolved"
-  | "DecisionVoided"
-  | "DecisionUnresolved";
+  | "DECISION_RECORDED"
+  | "OUTCOME_CERTIFIED"
+  | "CORRECTION_CERTIFIED"
+  | "CONTRACT_VERSION_APPLIED";
+
+export type DecisionOutcome = "WIN" | "LOSS" | "VOID" | "PUSH" | "UNRESOLVED";
 
 export interface DecisionEvent<T = unknown> {
   id: string;

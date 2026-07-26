@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Flame, LayoutDashboard, Home, BadgeCheck, UserCircle } from 'lucide-react';
+import { History, LayoutDashboard, Search, UserCircle } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { useAppProfile } from '../context/AppShellContext';
 import { Z8_INTERACTIVE } from '../theme/z8Tokens';
+import { isBetaDestinationActive } from './betaNavigation';
 
 type AppNavProps = {
   activeSection: string;
@@ -55,10 +56,10 @@ export function AppNavZ8({ activeSection, onNavigate }: AppNavProps) {
   // the same mobile screen real estate — only one can be up at a time.
   const hideDock = parlayDockOpen || worldChatOpen;
 
-  const feedActive = activeSection === 'feed';
-  const proActive = activeSection === 'pro_command_center';
-  const vouchActive = activeSection === 'board';
-  const todayActive = activeSection === 'today';
+  const todayActive = isBetaDestinationActive(activeSection, 'today');
+  const researchActive = isBetaDestinationActive(activeSection, 'research');
+  const trackRecordActive = isBetaDestinationActive(activeSection, 'track_record');
+  const accountActive = isBetaDestinationActive(activeSection, 'account');
 
   return (
     <nav
@@ -67,32 +68,7 @@ export function AppNavZ8({ activeSection, onNavigate }: AppNavProps) {
       } ${collapsed ? 'w-auto px-2.5' : 'w-[92vw] max-w-md px-2'}`}
       aria-label="Mobile app navigation"
     >
-      <div className={`grid grid-cols-5 items-center transition-all duration-300 ${collapsed ? 'h-11 gap-0.5' : 'h-[64px]'}`}>
-        <DockButton
-          label="Home Feed"
-          active={feedActive}
-          icon={Home}
-          collapsed={collapsed}
-          onClick={() => onNavigate('feed')}
-          onPreload={() => preloadSection('feed')}
-        />
-        <DockButton
-          label="Pro Edges"
-          active={proActive}
-          icon={Flame}
-          collapsed={collapsed}
-          onClick={() => onNavigate('pro_command_center')}
-          onPreload={() => preloadSection('pro_command_center')}
-        />
-        <DockButton
-          label="Vouch Board"
-          active={vouchActive}
-          icon={BadgeCheck}
-          collapsed={collapsed}
-          onClick={() => onNavigate('board')}
-          onPreload={() => preloadSection('board')}
-          centerAction
-        />
+      <div className={`grid grid-cols-4 items-center transition-all duration-300 ${collapsed ? 'h-11 gap-0.5' : 'h-[64px]'}`}>
         <DockButton
           label="Today"
           active={todayActive}
@@ -101,17 +77,34 @@ export function AppNavZ8({ activeSection, onNavigate }: AppNavProps) {
           onClick={() => onNavigate('today')}
           onPreload={() => preloadSection('today')}
         />
+        <DockButton
+          label="Research"
+          active={researchActive}
+          icon={Search}
+          collapsed={collapsed}
+          onClick={() => onNavigate('hr_board')}
+          onPreload={() => preloadSection('hr_board')}
+        />
+        <DockButton
+          label="Track Record"
+          active={trackRecordActive}
+          icon={History}
+          collapsed={collapsed}
+          onClick={() => onNavigate('results')}
+          onPreload={() => preloadSection('results')}
+        />
         <button
           type="button"
           onClick={openMobileDrawer}
           aria-label="Open navigation menu and account"
+          aria-current={accountActive ? 'page' : undefined}
           title="Account"
           className={`ve-touch-target flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${Z8_INTERACTIVE} ${collapsed ? 'h-11' : 'h-12'}`}
         >
           <div
-            className={`relative flex items-center justify-center rounded-full border-2 border-white/10 shadow-lg transition-all hover:border-vouch-cyan/50 ${
+            className={`relative flex items-center justify-center rounded-full border-2 shadow-lg transition-all hover:border-vouch-cyan/50 ${
               collapsed ? 'h-7 w-7' : 'h-[34px] w-[34px]'
-            }`}
+            } ${accountActive ? 'border-vouch-cyan/60' : 'border-white/10'}`}
           >
             {profile?.avatarUrl ? (
               <img src={profile.avatarUrl} alt="Account" className="h-full w-full rounded-full object-cover bg-black" />
@@ -119,7 +112,7 @@ export function AppNavZ8({ activeSection, onNavigate }: AppNavProps) {
               <UserCircle className={collapsed ? 'h-4 w-4 text-white/55' : 'h-[22px] w-[22px] text-white/55'} strokeWidth={1.8} />
             )}
           </div>
-          {!collapsed ? <span className="text-[10px] font-bold text-white/45 tracking-wide">Menu</span> : null}
+          {!collapsed ? <span className={`text-[10px] font-bold tracking-wide ${accountActive ? 'text-white' : 'text-white/45'}`}>Account</span> : null}
         </button>
       </div>
     </nav>
@@ -137,7 +130,7 @@ function DockButton({
 }: {
   label: string;
   active: boolean;
-  icon: typeof Home;
+  icon: typeof LayoutDashboard;
   onClick: () => void;
   onPreload: () => void;
   centerAction?: boolean;

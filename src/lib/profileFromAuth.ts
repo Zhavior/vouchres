@@ -1,15 +1,9 @@
 import type { CreatorProofProfile } from "../types";
 import { normalizeCapperSettings } from "./capperSettings";
 import type { SubscriptionTier, UserProfile } from "./useAuth";
+import { tierToSubscriptionTier } from "./subscriptionTier";
 
 type AuthMePayload = Partial<UserProfile> & Record<string, unknown>;
-
-function tierToSubscriptionTier(tier: unknown): CreatorProofProfile["subscriptionTier"] {
-  const value = String(tier ?? "free").toLowerCase();
-  if (value === "gold") return "GOLD";
-  if (value === "seller_pro") return "SELLER_PRO";
-  return "BASIC";
-}
 
 /** Map /api/auth/me snake_case payload into the frontend CreatorProofProfile shape. */
 export function mapAuthMeToCreatorProof(

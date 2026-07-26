@@ -14,21 +14,21 @@ describe('Today decision-first layout', () => {
     expect(source).toContain("isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active'");
   });
 
-  it('routes the quick-access cards to canonical workspaces', () => {
+  it('routes the four focused workflow cards to canonical workspaces', () => {
     expect(source).toContain("section: 'hr_board'");
-    expect(source).toContain("section: 'team_matchup_lab'");
-    expect(source).toContain("section: 'daily_players'");
     expect(source).toContain("section: 'research'");
     expect(source).toContain("section: 'results'");
-    expect(source).toContain("section: 'live_games'");
+    expect(source).toContain("section: 'build'");
+    expect(source).toContain('4 Core Actions');
+    expect(source).not.toContain('8 Core Systems');
   });
 
   it('uses touch-safe control sizing throughout', () => {
-    // This file uses inline min-h-8/min-h-10 buttons directly rather than
+    // This file uses inline min-h-8/min-h-11 buttons directly rather than
     // the shared `z8-control` class (that class is still used by the child
     // TodayDecisionReel component this page renders) — both satisfy the
     // touch-target-size contract, just at different composition levels.
-    expect(source).toContain('min-h-10 items-center');
+    expect(source).toContain('min-h-11 flex-col items-center');
     expect(source).toContain('min-h-8 shrink-0 items-center');
   });
 

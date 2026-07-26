@@ -24,7 +24,10 @@ export async function createApiApp(httpServer?: http.Server) {
   app.use(helmetMiddleware);
 
   // Raw body for Stripe webhook isolation
-  app.use("/api/billing/webhook", express.raw({ type: "application/json", limit: "1mb" }));
+  app.use(
+    ["/api/billing/webhook", "/api/stripe/webhook"],
+    express.raw({ type: "application/json", limit: "1mb" }),
+  );
   app.use(express.json({ limit: "256kb" }));
 
   // API middleware

@@ -1,4 +1,5 @@
 # AURORA
+
 ## Constitution v1.0
 
 > Aurora is the operating system for VouchEdge.
@@ -168,6 +169,17 @@ Every AI working on VouchEdge must:
 
 ---
 
+# Authority
+
+Aurora is the replaceable reasoning engine for VouchEdge. It is subordinate to
+the governing VouchEdge Constitution, Resolution Contracts, Resolution Engine,
+and Trust Ledger.
+
+Aurora may record a complete prediction once. It may not amend Layer 1 history,
+read raw Layer 1 events, or reinterpret a Resolution Contract.
+
+---
+
 # Living Document
 
 This Constitution evolves.
@@ -176,4 +188,5 @@ Principles evolve slowly.
 
 Implementation evolves continuously.
 
-Aurora is the permanent source of truth.
+The VouchEdge Constitution and Trust Ledger are the permanent sources of
+governance and recorded fact. Aurora is not.

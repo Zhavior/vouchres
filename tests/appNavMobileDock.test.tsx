@@ -25,21 +25,22 @@ describe('AppNav Instagram-style mobile dock', () => {
     expect(dock?.className).toContain('fixed inset-x-0 bottom-0');
     expect(dock?.className).toContain('ve-safe-bottom');
     expect(dock?.className).toContain('md:hidden');
-    expect(container.querySelector('.grid-cols-5')).not.toBeNull();
-    expect(buttons).toHaveLength(5);
+    expect(container.querySelector('.grid-cols-4')).not.toBeNull();
+    expect(buttons).toHaveLength(4);
     expect(buttons.every((button) => button.className.includes('ve-touch-target'))).toBe(true);
-    expect(buttons[3]?.getAttribute('aria-current')).toBe('page');
-    expect(container.querySelector('[aria-label="Go to Home Feed"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="Go to Vouch Board"]')).not.toBeNull();
+    expect(buttons[0]?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelector('[aria-label="Go to Today"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to Research"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to Track Record"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Open navigation menu and account"]')).not.toBeNull();
     expect(container.querySelectorAll('.ve-edge-island-trigger')).toHaveLength(0);
 
-    fireEvent.click(container.querySelector('[aria-label="Go to Home Feed"]') as HTMLElement);
-    fireEvent.click(container.querySelector('[aria-label="Go to Vouch Board"]') as HTMLElement);
     fireEvent.click(container.querySelector('[aria-label="Go to Today"]') as HTMLElement);
-    expect(onNavigate).toHaveBeenNthCalledWith(1, 'feed');
-    expect(onNavigate).toHaveBeenNthCalledWith(2, 'board');
-    expect(onNavigate).toHaveBeenNthCalledWith(3, 'today');
+    fireEvent.click(container.querySelector('[aria-label="Go to Research"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[aria-label="Go to Track Record"]') as HTMLElement);
+    expect(onNavigate).toHaveBeenNthCalledWith(1, 'today');
+    expect(onNavigate).toHaveBeenNthCalledWith(2, 'hr_board');
+    expect(onNavigate).toHaveBeenNthCalledWith(3, 'results');
 
     const feedCss = readFileSync(resolve(process.cwd(), 'src/styles/legacy/feed.css'), 'utf8');
     expect(feedCss).toContain('padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;');

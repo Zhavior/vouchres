@@ -5,24 +5,23 @@ export interface DecisionProjection {
   streamId: string;
   version: number;
   latestEvent: DecisionEvent;
+  state: NonNullable<ReturnType<typeof replay>>;
 }
 
 export class ProjectionStore {
   private readonly projections = new Map<string, DecisionProjection>();
 
-  apply(event: DecisionEvent): void {
-    const projection = this.projections.get(event.streamId);
+  rebuild(events: readonly DecisionEvent[]): void {
+    const latestEvent = events.at(-1);
+    const state = replay(events);
 
-    const history = projection
-      ? [...(projection.latestEvent ? [projection.latestEvent] : []), event]
-      : [event];
+    if (!latestEvent || !state) return;
 
-    replay(history);
-
-    this.projections.set(event.streamId, {
-      streamId: event.streamId,
-      version: event.version,
-      latestEvent: event,
+    this.projections.set(latestEvent.streamId, {
+      streamId: latestEvent.streamId,
+      version: latestEvent.version,
+      latestEvent,
+      state,
     });
   }
 

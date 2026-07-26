@@ -7,6 +7,7 @@ import { TrustLedger } from "../../../src/core/trust-ledger/TrustLedger";
 
 const hrDecisionLedger = new TrustLedger();
 const hrDecisionBridge = new AuroraLedgerBridge(hrDecisionLedger);
+const PUBLISHED_MLB_HR_CONTRACT_VERSION = "1.0";
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
   value !== null && typeof value === "object"
@@ -188,7 +189,10 @@ export const materializeValidatedHrBoardAurora = (
         "validated-hr-board-v1",
     });
 
-    persisted += hrDecisionBridge.persist(evaluated).length;
+    persisted += hrDecisionBridge.persist(evaluated, {
+      marketId: "HR",
+      contractVersion: PUBLISHED_MLB_HR_CONTRACT_VERSION,
+    }).length;
   }
 
   if (candidates.length > 0) {

@@ -13,7 +13,6 @@ import {
   Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
-import { getPrimaryProductNavigation } from '../../app/productNavigation';
 import { loadFeatureLayout, getSidebarFeatures, FeatureGroup } from '../../lib/featureConfig';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,

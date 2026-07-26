@@ -31,6 +31,7 @@ import {
   openBillingPortal,
   startStripeCheckout,
   tierToSubscriptionTier,
+  type BillingStatus,
 } from '../lib/billingClient';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
@@ -72,7 +73,7 @@ const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string;
   GOLD: {
     title: 'VouchEdge Beta',
     price: '$7.99',
-    detail: '7 days free, then $7.99/month. Includes Pro labs, advanced graphs, and verified profile perks.',
+    detail: '7 days free, then $7.99/month. Includes Pro labs, advanced graphs, and matchup research.',
     badge: '7 days free',
   },
   SELLER_PRO: {
@@ -92,8 +93,8 @@ function formatDate(value?: string | null) {
 
 function normalizeTier(tier?: string | null): AppTier {
   const t = String(tier ?? '').trim().toUpperCase();
-  if (t === 'GOLD') return 'GOLD';
-  if (t === 'SELLER_PRO' || t === 'SELLER PRO' || t === 'PRO') return 'SELLER_PRO';
+  if (t === 'GOLD' || t === 'PRO') return 'GOLD';
+  if (t === 'SELLER_PRO' || t === 'SELLER PRO' || t === 'CREATOR') return 'SELLER_PRO';
   return 'BASIC';
 }
 
@@ -199,12 +200,7 @@ export default function SettingsPageZ8({
   const [portalLoading, setPortalLoading] = useState(false);
   const [billingLoading, setBillingLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
-  const [billingStatus, setBillingStatus] = useState<{
-    tier: 'free' | 'gold' | 'seller_pro';
-    status: string;
-    currentPeriodEnd?: string;
-    cancelAtPeriodEnd?: boolean;
-  } | null>(null);
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
 
   const [privacyLoading, setPrivacyLoading] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -350,7 +346,7 @@ export default function SettingsPageZ8({
     }
     setBillingStatus(status);
     const nextTier = tierToSubscriptionTier(status.tier);
-    onUpdateProfile({ subscriptionTier: nextTier, verified: nextTier !== 'BASIC' });
+    onUpdateProfile({ subscriptionTier: nextTier });
     showToast(message ?? 'Billing status refreshed.');
   };
 
@@ -453,7 +449,7 @@ export default function SettingsPageZ8({
   const handleUpgrade = async (tier: AppTier) => {
     if (tier === 'BASIC') { await handleManageBilling(); return; }
     setCheckoutLoading(tier);
-    const result = await startStripeCheckout(tier === 'GOLD' ? 'gold' : 'seller_pro');
+    const result = await startStripeCheckout();
     setCheckoutLoading(null);
     if (result.ok) {
       window.location.href = result.url;

@@ -8,9 +8,14 @@ export class TrustLedger {
     private readonly projections = new ProjectionStore(),
   ) {}
 
-  append(event: DecisionEvent) {
-    this.events.append(event);
-    this.projections.apply(event);
+  append(event: DecisionEvent): boolean {
+    const appended = this.events.append(event);
+
+    if (appended) {
+      this.projections.rebuild(this.events.stream(event.streamId));
+    }
+
+    return appended;
   }
 
   history(streamId: string) {

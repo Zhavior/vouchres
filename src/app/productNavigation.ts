@@ -1,4 +1,4 @@
-export const PRODUCT_WORKSPACE_IDS = ['today', 'intelligence', 'players', 'parlays', 'profile'] as const;
+export const PRODUCT_WORKSPACE_IDS = ['today', 'research', 'track_record', 'account'] as const;
 
 export type ProductWorkspaceId = (typeof PRODUCT_WORKSPACE_IDS)[number];
 
@@ -14,40 +14,39 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
   {
     id: 'today',
     label: 'Today',
-    description: 'Live slate, games, and daily decisions',
+    description: 'The daily decision brief',
     defaultSection: 'today',
-    sections: ['today', 'live_games', 'feed', 'following'],
+    sections: ['today', 'welcome', 'vouchedge_intro', 'island', 'legacy_studio'],
   },
   {
-    id: 'intelligence',
-    label: 'HR Intelligence',
-    description: 'Models, matchups, and verified evidence',
+    id: 'research',
+    label: 'Research',
+    description: 'Verified MLB evidence and matchup context',
     defaultSection: 'hr_board',
     sections: [
-      'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'intel', 'player_edge_lab', 'team_matchup_lab',
-      'hitter_matchup_zones', 'ai_pilot', 'ai_engine',
+      'hr_board', 'daily_hr_watch_new', 'daily_players', 'mlb_stats', 'research', 'player_research',
+      'game_research', 'live_games', 'intel', 'player_edge_lab', 'pitcher_matchup',
+      'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup', 'hitter_matchup_zones',
+      'pro_graphs_lab', 'ai_pilot', 'ai_engine', 'brain_picks', 'brain_performance', 'nba_nfl',
+      'pro_command_center',
     ],
   },
   {
-    id: 'players',
-    label: 'Players',
-    description: 'Search, compare, and monitor players',
-    defaultSection: 'research',
-    sections: ['research', 'daily_players', 'player_research', 'game_research'],
+    id: 'track_record',
+    label: 'Track Record',
+    description: 'Saved decisions and certified outcomes',
+    defaultSection: 'results',
+    sections: [
+      'results', 'build', 'live_parlays', 'parlay_proof', 'notifications', 'board', 'feed',
+      'following', 'leaderboard', 'most_vouched_today', 'most_vouched',
+    ],
   },
   {
-    id: 'parlays',
-    label: 'Parlays',
-    description: 'Build, synchronize, track, and verify',
-    defaultSection: 'live_parlays',
-    sections: ['live_parlays', 'build', 'board', 'results', 'notifications', 'parlay_proof'],
-  },
-  {
-    id: 'profile',
-    label: 'Profile',
-    description: 'Trust record, community, and account',
+    id: 'account',
+    label: 'Account',
+    description: 'Profile, billing, privacy, and support',
     defaultSection: 'profile',
-    sections: ['profile', 'leaderboard', 'subscriber_hub', 'premium', 'settings', 'customize', 'themestore'],
+    sections: ['profile', 'subscriber_hub', 'premium', 'settings', 'customize', 'themestore', 'epic_themes'],
   },
 ] as const;
 

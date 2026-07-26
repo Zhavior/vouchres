@@ -310,7 +310,7 @@ export default function AuthModal({
           // "check your inbox" step for an email that isn't coming.
           if (plan === 'pro') {
             setRedirectingToCheckout(true);
-            const result = await startStripeCheckout('gold');
+            const result = await startStripeCheckout();
             if (result.ok) {
               window.location.href = result.url;
               return;

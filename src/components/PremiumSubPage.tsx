@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Trophy,
   FlaskConical,
-  Coins,
   Check,
   Loader,
   AlertCircle,
@@ -30,13 +29,12 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'success') {
-      ProductEvents.proSubscribed("unknown");
       fetchBillingStatus().then((status) => {
         if (status) {
           const subTier = tierToSubscriptionTier(status.tier);
+          ProductEvents.proSubscribed(status.tier);
           onUpdateProfile({
             subscriptionTier: subTier,
-            verified: subTier === 'GOLD' || subTier === 'SELLER_PRO',
           });
         }
       });
@@ -49,9 +47,9 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
         console.warn('[premium] checkout URL cleanup skipped:', error);
       }
     }
-  }, []);
+  }, [onUpdateProfile]);
 
-  const handleSubscribePlan = async (tier: 'BASIC' | 'GOLD' | 'SELLER_PRO') => {
+  const handleSubscribePlan = async (tier: 'BASIC' | 'GOLD') => {
     setBillingError(null);
 
     if (tier === 'BASIC') {
@@ -60,12 +58,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
       return;
     }
 
-    const stripeTier = tier === 'GOLD' ? 'gold' : 'seller_pro';
     setCheckoutLoading(tier);
 
-    ProductEvents.checkoutStarted(stripeTier);
+    ProductEvents.checkoutStarted('pro');
 
-    const result = await startStripeCheckout(stripeTier);
+    const result = await startStripeCheckout();
     setCheckoutLoading(null);
 
     if (result.ok) {
@@ -91,6 +88,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
   };
 
   const activeTier = profile.subscriptionTier || 'BASIC';
+  const hasPaidAccess = activeTier === 'GOLD' || activeTier === 'SELLER_PRO';
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[820px] mx-auto min-h-screen bg-transparent font-z8" id="premium-hub-panel">
@@ -177,6 +175,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             <div className="pt-6">
               <button
                 onClick={() => handleSubscribePlan('BASIC')}
+                disabled={activeTier === 'BASIC'}
                 className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
                   activeTier === 'BASIC'
                     ? 'bg-white/[0.06] text-white/40 cursor-default'
@@ -190,12 +189,9 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
 
           {/* Tier 2: Pro */}
           <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
-            activeTier === 'GOLD' ? 'border-vouch-emerald/50' : ''
+            hasPaidAccess ? 'border-vouch-emerald/50' : ''
           }`} id="plan-tier-gold">
             <div className="absolute -top-3 left-4 flex items-center gap-1.5">
-              <span className="terminal-text bg-vouch-emerald/15 text-vouch-emerald px-2.5 py-0.5 rounded-full">
-                Most Popular
-              </span>
               <span className="terminal-text bg-amber-400/15 text-amber-400 px-2.5 py-0.5 rounded-full">
                 Beta
               </span>
@@ -221,7 +217,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
               <div className="border-t border-white/10 pt-3.5 space-y-2.5">
                 <div className="flex items-start gap-2 text-[11px] text-white/80 font-medium">
                   <ShieldCheck className="w-4 h-4 text-vouch-emerald shrink-0" />
-                  <span>Verification badge on posts</span>
+                  <span>Beta Member access to the complete MLB research workflow</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
@@ -242,86 +238,18 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             <div className="pt-6">
               <button
                 onClick={() => handleSubscribePlan('GOLD')}
-                disabled={checkoutLoading === 'GOLD'}
+                disabled={hasPaidAccess || checkoutLoading === 'GOLD'}
                 className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTier === 'GOLD'
+                  hasPaidAccess
                     ? 'bg-vouch-emerald/10 text-vouch-emerald cursor-default'
                     : 'bg-vouch-emerald hover:-translate-y-0.5 text-black shadow disabled:opacity-60'
                 }`}
               >
                 {checkoutLoading === 'GOLD' && <Loader className="h-3.5 w-3.5 animate-spin" />}
-                {activeTier === 'GOLD' ? 'Active Beta Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Start 7-Day Free Trial'}
+                {hasPaidAccess ? 'Active Beta Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Start 7-Day Free Trial'}
               </button>
             </div>
           </div>
-
-          {/* Legacy Seller Pro members keep access and can manage their existing plan. It is not sold to new customers. */}
-          {activeTier === 'SELLER_PRO' && <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
-            activeTier === 'SELLER_PRO' ? 'border-vouch-cyan/50' : ''
-          }`} id="plan-tier-seller">
-
-            <div className="absolute -top-3 right-4 flex items-center gap-1.5">
-              <span className="terminal-text bg-vouch-cyan/15 text-vouch-cyan px-2.5 py-0.5 rounded-full">
-                Monetize
-              </span>
-              <span className="terminal-text bg-amber-400/15 text-amber-400 px-2.5 py-0.5 rounded-full">
-                Beta
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {/* Badge & Price */}
-              <div className="space-y-1">
-                <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                  Capper
-                  <Coins className="w-4 h-4 text-vouch-cyan" />
-                </h4>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-vouch-cyan font-sans">$34.99</span>
-                  <span className="text-white/40 text-xs">/ Month</span>
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed pt-1">
-                  Everything in Pro, plus deep research, sell your picks, and your own subscriber chat & clubs. Locked-in beta price — won't increase later.
-                </p>
-              </div>
-
-              {/* Benefits list */}
-              <div className="border-t border-white/10 pt-3.5 space-y-2.5">
-                <div className="flex items-start gap-2 text-[11px] text-vouch-cyan font-bold">
-                  <Coins className="w-4 h-4 text-vouch-cyan shrink-0" />
-                  <span>Everything in Pro + deep research suite</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-cyan shrink-0 mt-0.5" />
-                  <span>Sell your picks: paid storefront, 0% commission</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-cyan shrink-0 mt-0.5" />
-                  <span>Subscriber Chat & Clubs — run your own paid community</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-cyan shrink-0 mt-0.5" />
-                  <span>Gated research sheets & cryptographic verification keys</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sub/Claim Button */}
-            <div className="pt-6">
-              <button
-                onClick={() => handleSubscribePlan('SELLER_PRO')}
-                disabled={checkoutLoading === 'SELLER_PRO'}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTier === 'SELLER_PRO'
-                    ? 'bg-vouch-cyan/10 text-vouch-cyan cursor-default'
-                    : 'bg-vouch-cyan hover:-translate-y-0.5 text-black shadow-md disabled:opacity-60'
-                }`}
-              >
-                {checkoutLoading === 'SELLER_PRO' && <Loader className="h-3.5 w-3.5 animate-spin" />}
-                {activeTier === 'SELLER_PRO' ? 'Active Storefront' : checkoutLoading === 'SELLER_PRO' ? 'Redirecting to Stripe...' : 'Become a Capper'}
-              </button>
-            </div>
-          </div>}
 
         </div>
       </div>
@@ -359,7 +287,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
         <AlertCircle className="w-4 h-4 text-white/30 shrink-0 mt-0.5" />
         <div>
           <span className="terminal-text text-white/50 block mb-0.5">Secure billing notice</span>
-          Subscriptions are processed securely via Stripe (test mode). Upgrading redirects to Stripe Checkout. Your subscription tier syncs back to VouchEdge after payment completes. Verified profile badges and Pro Lab access activate automatically.
+          Subscriptions are processed securely via Stripe Checkout. Your subscription tier syncs back to VouchEdge after payment completes. Beta Member and Pro Lab access activate automatically; payment never creates a verification badge.
         </div>
       </div>
 

@@ -2,17 +2,36 @@
 
 > Read this file before making any code changes.
 
-## Canonical Documentation
+## Governing Documentation
 
 Read these documents in order:
 
-1. aurora/CONSTITUTION.md
-2. aurora/ARCHITECTURE.md
-3. aurora/DESIGN.md
-4. aurora/COMPONENTS.md
-5. aurora/MOTION.md
-6. aurora/TOKENS.md
-7. aurora/QUALITY.md
+1. constitution/CONSTITUTION.md
+2. constitution/ARCHITECTURE.md
+3. constitution/RESOLUTION_CONTRACT_STANDARD.md
+
+These documents govern product truth, system authority, the Trust Ledger, and
+market resolution. When any other repository document conflicts with them, the
+documents above win.
+
+For Aurora implementation and UI work, continue with:
+
+4. aurora/CONSTITUTION.md
+5. aurora/ARCHITECTURE.md
+6. aurora/DESIGN.md
+7. aurora/COMPONENTS.md
+8. aurora/MOTION.md
+9. aurora/TOKENS.md
+10. aurora/QUALITY.md
+
+## Authority Chain
+
+Governance → Resolution Contracts → Resolution Engine → Trust Ledger →
+Calibration → Trust.
+
+Aurora is a replaceable reasoning engine below the Trust Ledger. It may record
+one complete decision event, but it may never amend that decision or read raw
+Layer 1 events.
 
 ## Project Mission
 
@@ -55,4 +74,3 @@ Before considering work complete:
 - Verify the UI manually if applicable.
 - Check for regressions.
 - Summarize what changed and why.
-

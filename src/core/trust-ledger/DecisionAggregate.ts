@@ -1,16 +1,13 @@
 import type { DecisionEvent } from "./types";
+import type { DecisionOutcome } from "./types";
 
 export interface DecisionState {
   streamId: string;
   version: number;
-  status:
-    | "LIVE"
-    | "PENDING_RESOLUTION"
-    | "RESOLVED"
-    | "VOID"
-    | "UNRESOLVED";
+  status: "LIVE" | "PENDING_RESOLUTION" | "RESOLVED" | "VOID" | "UNRESOLVED";
   confidence?: number;
-  outcome?: "WIN" | "LOSS" | "VOID";
+  outcome?: DecisionOutcome;
+  contractVersion?: string;
 }
 
 export function replay(events: readonly DecisionEvent[]): DecisionState | null {
@@ -26,26 +23,29 @@ export function replay(events: readonly DecisionEvent[]): DecisionState | null {
     state.version = event.version;
 
     switch (event.type) {
-      case "DecisionCreated":
+      case "DECISION_RECORDED":
         state.status = "LIVE";
         state.confidence = (event.payload as any).confidence;
         break;
 
-      case "ConfidenceRevised":
-        state.confidence = (event.payload as any).confidence;
+      case "OUTCOME_CERTIFIED": {
+        const outcome = (event.payload as any).outcome as DecisionOutcome;
+        state.outcome = outcome;
+        state.status =
+          outcome === "VOID"
+            ? "VOID"
+            : outcome === "UNRESOLVED"
+              ? "UNRESOLVED"
+              : "RESOLVED";
+        break;
+      }
+
+      case "CORRECTION_CERTIFIED":
+        state.outcome = (event.payload as any).outcome;
         break;
 
-      case "OutcomeResolved":
-        state.status = "RESOLVED";
-        state.outcome = (event.payload as any).result;
-        break;
-
-      case "DecisionVoided":
-        state.status = "VOID";
-        break;
-
-      case "DecisionUnresolved":
-        state.status = "UNRESOLVED";
+      case "CONTRACT_VERSION_APPLIED":
+        state.contractVersion = (event.payload as any).contractVersion;
         break;
     }
   }

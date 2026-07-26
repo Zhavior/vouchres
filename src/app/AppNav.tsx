@@ -1,8 +1,9 @@
-import { Menu, Flame, LayoutDashboard, Home, BadgeCheck, UserCircle } from 'lucide-react';
+import { History, LayoutDashboard, Search, UserCircle } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 import { useAppProfile } from '../context/AppShellContext';
 import { useParlayOsStore } from '../stores/parlayOsStore';
+import { isBetaDestinationActive } from './betaNavigation';
 
 type AppNavProps = {
   activeSection: string;
@@ -13,10 +14,10 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
   const profile = useAppProfile();
   const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
   const parlayDockOpen = useParlayOsStore((state) => state.sheetOpen);
-  const feedActive = activeSection === 'feed';
-  const proActive = activeSection === 'pro_command_center';
-  const vouchActive = activeSection === 'board';
-  const todayActive = activeSection === 'today';
+  const todayActive = isBetaDestinationActive(activeSection, 'today');
+  const researchActive = isBetaDestinationActive(activeSection, 'research');
+  const trackRecordActive = isBetaDestinationActive(activeSection, 'track_record');
+  const accountActive = isBetaDestinationActive(activeSection, 'account');
 
   return (
     <nav
@@ -25,29 +26,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
       }`}
       aria-label="Mobile app navigation"
     >
-      <div className="mx-auto grid h-14 max-w-md grid-cols-5 items-stretch px-2">
-        <DockButton
-          label="Home Feed"
-          active={feedActive}
-          icon={Home}
-          onClick={() => onNavigate('feed')}
-          onPreload={() => preloadSection('feed')}
-        />
-        <DockButton
-          label="Pro Edges"
-          active={proActive}
-          icon={Flame}
-          onClick={() => onNavigate('pro_command_center')}
-          onPreload={() => preloadSection('pro_command_center')}
-        />
-        <DockButton
-          label="Vouch Board"
-          active={vouchActive}
-          icon={BadgeCheck}
-          onClick={() => onNavigate('board')}
-          onPreload={() => preloadSection('board')}
-          centerAction
-        />
+      <div className="mx-auto grid h-14 max-w-md grid-cols-4 items-stretch px-2">
         <DockButton
           label="Today"
           active={todayActive}
@@ -55,15 +34,30 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
           onClick={() => onNavigate('today')}
           onPreload={() => preloadSection('today')}
         />
+        <DockButton
+          label="Research"
+          active={researchActive}
+          icon={Search}
+          onClick={() => onNavigate('hr_board')}
+          onPreload={() => preloadSection('hr_board')}
+        />
+        <DockButton
+          label="Track Record"
+          active={trackRecordActive}
+          icon={History}
+          onClick={() => onNavigate('results')}
+          onPreload={() => preloadSection('results')}
+        />
         <button
           type="button"
           onClick={openMobileDrawer}
           aria-label="Open navigation menu and account"
+          aria-current={accountActive ? 'page' : undefined}
           title="Account"
           className="ve-touch-target z8-interactive flex min-w-0 items-center justify-center transition-colors active:scale-95"
         >
           {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="Account" className="h-7 w-7 rounded-full border border-white/20 object-cover bg-black" />
+            <img src={profile.avatarUrl} alt="Account" className={`h-7 w-7 rounded-full border object-cover bg-black ${accountActive ? 'border-vouch-cyan' : 'border-white/20'}`} />
           ) : (
             <UserCircle className="h-6 w-6 text-white/55 transition-colors active:text-white" strokeWidth={1.9} />
           )}
@@ -83,7 +77,7 @@ function DockButton({
 }: {
   label: string;
   active: boolean;
-  icon: typeof Home;
+  icon: typeof LayoutDashboard;
   onClick: () => void;
   onPreload: () => void;
   centerAction?: boolean;
