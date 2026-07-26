@@ -15,6 +15,7 @@ import {
 } from "../v3/modules/billing/handlers";
 
 export const billingRoutes = Router();
+export const stripeWebhookAliasRoutes = Router();
 
 type AuthedRequestWithContext = AuthedRequest & RequestWithContext;
 
@@ -48,6 +49,16 @@ billingRoutes.get(
 );
 
 billingRoutes.post(
+  "/webhook",
+  webhookLimiter,
+  asyncHandler(async (req: AuthedRequest, res: Response) =>
+    sendV3BillingWebhookResponse(req, res)),
+);
+
+// Backward-compatible Stripe Dashboard endpoint. The live Stripe account
+// currently targets /api/stripe/webhook; keep this narrow alias until the
+// Dashboard endpoint is deliberately migrated to /api/billing/webhook.
+stripeWebhookAliasRoutes.post(
   "/webhook",
   webhookLimiter,
   asyncHandler(async (req: AuthedRequest, res: Response) =>

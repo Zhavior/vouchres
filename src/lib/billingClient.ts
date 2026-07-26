@@ -1,7 +1,8 @@
 /** Typed wrappers for the billing API. */
 import { apiClient } from "./apiClient";
+import type { BillingTier } from "./subscriptionTier";
 
-type CheckoutTier = 'gold' | 'seller_pro';
+export { tierToSubscriptionTier } from "./subscriptionTier";
 
 interface CheckoutResponse {
   url: string;
@@ -12,15 +13,15 @@ interface PortalResponse {
   url: string;
 }
 
-interface BillingStatus {
-  tier: 'free' | 'gold' | 'seller_pro';
+export interface BillingStatus {
+  tier: BillingTier;
   status: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
 }
 
 /** Redirect to the single $7.99/month Beta checkout. */
-export async function startStripeCheckout(tier: CheckoutTier): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+export async function startStripeCheckout(): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
     const data = await apiClient.post<CheckoutResponse>('/api/billing/checkout', { tier: 'pro', interval: 'monthly' });
     if (!data.url) return { ok: false, error: 'No checkout URL returned' };
@@ -48,11 +49,4 @@ export async function fetchBillingStatus(): Promise<BillingStatus | null> {
   } catch {
     return null;
   }
-}
-
-/** Map billing API tier strings to app subscriptionTier values. */
-export function tierToSubscriptionTier(tier: BillingStatus['tier']): 'BASIC' | 'GOLD' | 'SELLER_PRO' {
-  if (tier === 'gold') return 'GOLD';
-  if (tier === 'seller_pro') return 'SELLER_PRO';
-  return 'BASIC';
 }

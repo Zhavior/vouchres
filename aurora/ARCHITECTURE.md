@@ -76,6 +76,18 @@ UI
 
 Business rules never live inside UI components.
 
+Aurora begins at the presentation-model boundary. It may select hierarchy,
+format values, disclose provenance, and reveal deeper evidence. It may not
+calculate predictions, rewrite confidence, infer verification, or settle an
+outcome.
+
+The intelligence boundary is:
+
+Research Engine → Prediction Models → Trust Ledger → Resolution Engine → Aurora → User
+
+Each upstream system owns its domain. Aurora consumes typed, source-aware
+presentation models and remains replaceable without changing recorded truth.
+
 ---
 
 # Component Hierarchy
@@ -105,6 +117,10 @@ Primitive
 Dependencies always flow downward.
 
 Never create circular dependencies.
+
+Legacy Z8 components may remain during migration, but new shared UI must use
+Aurora names and contracts. Compatibility aliases must point toward Aurora;
+Aurora must never depend on a second competing design system.
 
 ---
 
@@ -186,3 +202,7 @@ Every new sport should extend the system—not fork it.
 The simplest architecture that scales wins.
 
 Complexity must always justify itself.
+
+Aurora grows through small, proven migrations. Do not pause product delivery for
+a whole-application rewrite and do not rename code without improving behavior,
+accessibility, consistency, or maintainability.

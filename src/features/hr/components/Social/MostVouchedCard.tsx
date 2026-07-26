@@ -27,14 +27,11 @@ export const MostVouchedCard: React.FC<MostVouchedCardProps> = ({
   isPending = false,
 }) => {
   const logo = logoByTeamName(player.team);
-  const totalVotes = player.totalVouches;
-  // Calculate mock consensus index for rich Smart UI visual
-  const consensusPct = Math.min(99, Math.max(65, 70 + Math.round(totalVotes * 3.5)));
 
   return (
     <div className="group relative flex flex-col justify-between rounded-xl border border-white/15 bg-[#0a121d] p-3.5 transition-all duration-200 hover:border-vouch-cyan/50 hover:bg-[#0f1c2b] shadow-md">
       <div>
-        {/* Header: Rank + Team + Consensus Pill */}
+        {/* Header: rank and matchup identity only. Never infer consensus without a real denominator. */}
         <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
           <div className="flex items-center gap-2">
             {player.rank && (
@@ -48,9 +45,6 @@ export const MostVouchedCard: React.FC<MostVouchedCardProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-1 font-mono text-[10px] font-bold text-vouch-emerald bg-vouch-emerald/10 border border-vouch-emerald/30 px-2 py-0.5 rounded">
-            <span>{consensusPct}% Consensus</span>
-          </div>
         </div>
 
         {/* Center: Headshot + Name + Edge */}

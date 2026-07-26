@@ -11,6 +11,10 @@
  */
 
 import type { SportId } from "../sports/registry";
+import {
+  FOCUSED_BETA_SHELL_ENABLED,
+  isFocusedBetaSidebarFeature,
+} from "../app/betaNavigation";
 
 export type ViewMode = "beginner" | "pro";
 
@@ -160,7 +164,9 @@ export function getSidebarFeatures(
   options: { canAccessThemeStore?: boolean; activeSport?: SportId; excludedFeatureIds?: string[] } = {},
 ): FeatureConfig[] {
   const excluded = [...SIDEBAR_HIDDEN_FEATURES, ...(options.excludedFeatureIds ?? [])];
-  return getEnabledFeatures(layout, options).filter((feature) => !excluded.includes(feature.id));
+  return getEnabledFeatures(layout, options)
+    .filter((feature) => !excluded.includes(feature.id))
+    .filter((feature) => !FOCUSED_BETA_SHELL_ENABLED || isFocusedBetaSidebarFeature(feature.id));
 }
 
 /** Toggle a feature on/off */

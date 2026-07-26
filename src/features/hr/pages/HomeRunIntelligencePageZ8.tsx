@@ -485,6 +485,8 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
             visibleCount={vm.rows?.length ?? totalCount}
             rows={(vm.rows ?? []) as unknown[]}
+            confirmedCount={vm.modeCounts?.confirmed ?? 0}
+            previewCount={vm.modeCounts?.curated ?? 0}
           />
         </header>
 

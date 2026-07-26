@@ -6,6 +6,12 @@ import { assertUserOwnsResource } from "../../../middleware/ownership";
 import { commitParlayTrustLedger, finalizeParlayTrustLock, getUserParlay, listUserParlays } from "../../../services/parlays/userParlayService";
 import { previewUserParlaySave, saveUserParlay } from "../../../services/parlays/parlayCreationService";
 import type { SaveMeParlayInput } from "../../../validators/parlaySchemas";
+import { aegisResponseMeta, executeAegis } from "../../../aegis/execute";
+import {
+  CommitParlayTrustCommand,
+  FinalizeParlayTrustLockCommand,
+  SaveParlayCommand,
+} from "./aegisContracts";
 
 export async function buildV3ParlayDetailPayload(input: {
   userId: string;
@@ -66,6 +72,15 @@ async function assertOwnedParlay(userId: string, parlayId: string): Promise<void
   }
 }
 
+function aegisHttpSource(req: RequestWithContext, fallbackPath: string) {
+  const routePath = typeof req.route?.path === "string" ? req.route.path : fallbackPath;
+  const baseUrl = typeof req.baseUrl === "string" ? req.baseUrl : "";
+  return {
+    type: "http" as const,
+    name: `${req.method || "POST"} ${baseUrl}${routePath}`,
+  };
+}
+
 export async function sendV3ParlayDetailResponse(
   req: RequestWithContext & { user?: { id: string } },
   res: Response,
@@ -122,14 +137,23 @@ export async function sendV3ParlaySaveResponse(
     throw new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." });
   }
 
-  const result = await buildV3ParlaySavePayload({
-    userId,
-    body: req.body as SaveMeParlayInput,
+  const body = req.body as SaveMeParlayInput;
+  const result = await executeAegis({
+    contract: SaveParlayCommand,
+    rawInput: { body },
+    actor: { type: "user", id: userId },
+    requestId: req.requestId,
+    source: aegisHttpSource(req, "/api/v3/parlays/save"),
+    idempotencyKey: body.clientRef ?? body.client_ref ?? undefined,
+    handler: async ({ body: validatedBody }) => ({
+      value: await buildV3ParlaySavePayload({ userId, body: validatedBody }),
+    }),
   });
 
-  return res.status(result.statusCode).json(apiOkFlat(req, {
+  return res.status(result.value.statusCode).json(apiOkFlat(req, {
     ...(options.includeVersion ? { version: "v3" } : {}),
-    ...(result.body as unknown as Record<string, unknown>),
+    ...(result.value.body as unknown as Record<string, unknown>),
+    meta: aegisResponseMeta(result),
   }));
 }
 
@@ -177,15 +201,25 @@ export async function sendV3ParlayTrustCommitResponse(
     ? (req.body as { audience?: "private" | "public" | "subscriber" }).audience
     : "private";
 
-  const parlay = await buildV3ParlayTrustCommitPayload({
-    userId,
-    parlayId: req.params.id,
-    audience,
+  const result = await executeAegis({
+    contract: CommitParlayTrustCommand,
+    rawInput: { parlayId: req.params.id, audience },
+    actor: { type: "user", id: userId },
+    requestId: req.requestId,
+    source: aegisHttpSource(req, "/api/v3/parlays/:id/commit-trust"),
+    handler: async (command) => ({
+      value: await buildV3ParlayTrustCommitPayload({
+        userId,
+        parlayId: command.parlayId,
+        audience: command.audience,
+      }),
+    }),
   });
 
   return res.json(apiOkFlat(req, {
     ...(options.includeVersion ? { version: "v3" } : {}),
-    parlay,
+    parlay: result.value,
+    meta: aegisResponseMeta(result),
   }));
 }
 
@@ -207,21 +241,31 @@ export async function sendV3ParlayTrustFinalizeResponse(
   }
 
   await assertOwnedParlay(userId, req.params.id);
-  const parlay = await buildV3ParlayTrustFinalizePayload({
-    userId,
-    parlayId: req.params.id,
+  const result = await executeAegis({
+    contract: FinalizeParlayTrustLockCommand,
+    rawInput: { parlayId: req.params.id },
+    actor: { type: "user", id: userId },
+    requestId: req.requestId,
+    source: aegisHttpSource(req, "/api/v3/parlays/:id/finalize-trust-lock"),
+    handler: async (command) => {
+      const value = await buildV3ParlayTrustFinalizePayload({
+        userId,
+        parlayId: command.parlayId,
+      });
+      if (!value?.locked_at) {
+        throw new AppError({
+          status: 409,
+          code: "domain_state_error",
+          message: "Parlay is not ready to lock yet.",
+        });
+      }
+      return { value };
+    },
   });
-
-  if (!parlay?.locked_at) {
-    throw new AppError({
-      status: 409,
-      code: "domain_state_error",
-      message: "Parlay is not ready to lock yet.",
-    });
-  }
 
   return res.json(apiOkFlat(req, {
     ...(options.includeVersion ? { version: "v3" } : {}),
-    parlay,
+    parlay: result.value,
+    meta: aegisResponseMeta(result),
   }));
 }

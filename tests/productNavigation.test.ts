@@ -12,13 +12,12 @@ const shellSources = [
 ].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'));
 
 describe('customer-facing product navigation', () => {
-  it('exposes exactly five stable product concepts', () => {
+  it('exposes exactly four stable beta product jobs', () => {
     expect(getPrimaryProductNavigation().map((item) => item.label)).toEqual([
       'Today',
-      'HR Intelligence',
-      'Players',
-      'Parlays',
-      'Profile',
+      'Research',
+      'Track Record',
+      'Account',
     ]);
   });
 
@@ -28,9 +27,9 @@ describe('customer-facing product navigation', () => {
   });
 
   it('keeps specialist routes available without promoting them to primary navigation', () => {
-    expect(getProductWorkspace('hitter_matchup_zones').id).toBe('intelligence');
-    expect(getProductWorkspace('results').id).toBe('parlays');
-    expect(getProductWorkspace('subscriber_hub').id).toBe('profile');
+    expect(getProductWorkspace('hitter_matchup_zones').id).toBe('research');
+    expect(getProductWorkspace('results').id).toBe('track_record');
+    expect(getProductWorkspace('subscriber_hub').id).toBe('account');
   });
 
   it('falls back safely to Today for unknown legacy routes', () => {

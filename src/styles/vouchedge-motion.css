@@ -62,6 +62,42 @@
 }
 
 /* Global motion preferences — keep animations opt-in and accessible */
+/* Aurora semantic motion tokens. New UI should use these instead of one-off
+   duration/easing utilities. */
+:root {
+  --aurora-motion-instant: 80ms;
+  --aurora-motion-fast: 140ms;
+  --aurora-motion-standard: 220ms;
+  --aurora-motion-deliberate: 320ms;
+  --aurora-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --aurora-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --aurora-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.aurora-pressable {
+  touch-action: manipulation;
+  transition: transform var(--aurora-motion-instant) var(--aurora-ease-standard),
+    opacity var(--aurora-motion-fast) var(--aurora-ease-standard),
+    background-color var(--aurora-motion-fast) var(--aurora-ease-standard),
+    border-color var(--aurora-motion-fast) var(--aurora-ease-standard),
+    color var(--aurora-motion-fast) var(--aurora-ease-standard);
+}
+
+.aurora-pressable:active {
+  transform: scale(0.98);
+}
+
+.aurora-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  background-size: 200% 100%;
+  animation: aurora-skeleton 1.2s var(--aurora-ease-standard) infinite;
+}
+
+@keyframes aurora-skeleton {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
 /* Mobile-safe utilities — safe areas + touch targets */
 .ve-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -93,5 +129,10 @@
     animation: none !important;
     transform: none !important;
     transition: none !important;
+  }
+
+  .aurora-skeleton {
+    animation: none !important;
+    background-position: 0 0;
   }
 }

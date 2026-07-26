@@ -110,6 +110,7 @@ export interface NormalizedMatchup {
   pitcherVulnerability?: SafeNumber;
   parkFactor?: SafeNumber;
   weatherBoost?: SafeNumber;
+  weatherSource?: SafeString;
   hrMultiplier?: SafeString | SafeNumber;
   pitcherHand?: SafeString;
 }

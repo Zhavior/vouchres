@@ -41,7 +41,7 @@ export default function BrainEdgeShell({
               </div>
 
               <h1 className="mt-2 max-w-3xl text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
-                AI Edge Lab is now a complete{' '}
+                AI Edge Lab is an{' '}
                 <span className="text-vouch-emerald">
                   evidence workspace.
                 </span>
@@ -49,7 +49,7 @@ export default function BrainEdgeShell({
 
               <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-white/60 sm:text-sm">
                 Research the slate, inspect individual player evidence, compare
-                verified graph models, review pitcher pressure, and audit judge
+                source-backed model inputs, review pitcher pressure, and audit judge
                 signals without leaving the workspace.
               </p>
             </div>

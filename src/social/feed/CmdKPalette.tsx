@@ -11,22 +11,23 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  Search, Command, Home, Flame, Users, Tv, Activity, Radio,
+  Search, Command, Home, Flame, Users, Tv, Radio,
   UserRoundSearch, Swords, LineChart, Cpu, ClipboardCheck,
   BarChart3, Trophy, Sparkles, Settings, LayoutDashboard, ShoppingBag,
   User, X,
 } from 'lucide-react';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
 import { preloadSection } from '../../lib/routePreload';
+import {
+  FOCUSED_BETA_SHELL_ENABLED,
+  isFocusedBetaCommandSection,
+} from '../../app/betaNavigation';
 
 /** Likely next destinations — warmed when the palette opens. */
 const CMDK_PREFETCH_SECTIONS = [
-  'feed',
-  'hr_board',
   'today',
-  'build',
-  'ai_engine',
-  'ai_pilot',
+  'hr_board',
+  'results',
 ] as const;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -72,6 +73,10 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'settings',        label: 'Settings',               group: 'Account',       icon: Settings,        keywords: ['settings', 'preferences', 'config', 'mode', 'beginner', 'pro'] },
   { id: 'customize',       label: 'Customize Layout',       group: 'Account',       icon: Settings,        keywords: ['customize', 'layout', 'sidebar', 'arrange'] },
 ];
+
+const VISIBLE_ITEMS = FOCUSED_BETA_SHELL_ENABLED
+  ? ALL_ITEMS.filter((item) => isFocusedBetaCommandSection(item.id))
+  : ALL_ITEMS;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -145,9 +150,9 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
   }, [open, onClose]);
 
   const filtered = useCallback(() => {
-    if (!query.trim()) return ALL_ITEMS;
+    if (!query.trim()) return VISIBLE_ITEMS;
     const q = query.toLowerCase();
-    return ALL_ITEMS.filter(
+    return VISIBLE_ITEMS.filter(
       item =>
         item.label.toLowerCase().includes(q) ||
         item.group.toLowerCase().includes(q) ||

@@ -36,6 +36,7 @@ import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { formatProfileWinRate } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
+import { FOCUSED_BETA_SHELL_ENABLED } from '../../app/betaNavigation';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -293,10 +294,10 @@ function FeedSidebar({
         <div className="relative">
           <div className="flex items-start gap-1.5">
             <button
-              onClick={() => handleNavigate('feed')}
+              onClick={() => handleNavigate(FOCUSED_BETA_SHELL_ENABLED ? 'today' : 'feed')}
               className={`group relative min-w-0 flex-1 flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
               id="brand-logo-id"
-              aria-label="Go to Home Feed"
+              aria-label={FOCUSED_BETA_SHELL_ENABLED ? 'Go to Today' : 'Go to Home Feed'}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
                 <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
@@ -327,59 +328,63 @@ function FeedSidebar({
           </span>
         </button>
 
-        <div
-          className={`flex flex-row gap-1 p-1.5 ${Z8_SIDEBAR_SURFACE}`}
-          id="sidebar-sport-switcher"
-          role="group"
-          aria-label="Sport selector"
-        >
-          {SPORT_LIST.map(sport => {
-            const isActive = activeSport === sport.id;
-            return (
-              <button
-                key={sport.id}
-                onClick={() => handleSportClick(sport.id)}
-                disabled={!sport.enabled}
-                aria-label={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
-                title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
-                id={`sidebar-sport-${sport.id}`}
-                className={[
-                  'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
-                  isActive
-                    ? 'bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.12)]'
-                    : sport.enabled
-                      ? 'text-white/40 hover:bg-vouch-cyan/5 hover:text-white hover:shadow-[0_0_12px_rgba(0,240,255,0.08)]'
-                      : 'text-white/25 cursor-not-allowed opacity-70',
-                ].join(' ')}
-              >
-                <span className="text-sm leading-none">{sport.emoji}</span>
-                <span>{sport.label}</span>
-                {!sport.enabled && (
-                  <span className={`inline-flex items-center bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${Z8_LABEL}`}>
-                    Soon
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {!FOCUSED_BETA_SHELL_ENABLED && (
+          <div
+            className={`flex flex-row gap-1 p-1.5 ${Z8_SIDEBAR_SURFACE}`}
+            id="sidebar-sport-switcher"
+            role="group"
+            aria-label="Sport selector"
+          >
+            {SPORT_LIST.map(sport => {
+              const isActive = activeSport === sport.id;
+              return (
+                <button
+                  key={sport.id}
+                  onClick={() => handleSportClick(sport.id)}
+                  disabled={!sport.enabled}
+                  aria-label={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
+                  title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
+                  id={`sidebar-sport-${sport.id}`}
+                  className={[
+                    'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
+                    isActive
+                      ? 'bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.12)]'
+                      : sport.enabled
+                        ? 'text-white/40 hover:bg-vouch-cyan/5 hover:text-white hover:shadow-[0_0_12px_rgba(0,240,255,0.08)]'
+                        : 'text-white/25 cursor-not-allowed opacity-70',
+                  ].join(' ')}
+                >
+                  <span className="text-sm leading-none">{sport.emoji}</span>
+                  <span>{sport.label}</span>
+                  {!sport.enabled && (
+                    <span className={`inline-flex items-center bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${Z8_LABEL}`}>
+                      Soon
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <nav className="space-y-1" id="sidebar-nav-container" aria-label="Main navigation">
           <div className="flex items-center justify-between gap-2 px-3">
             <span className={`${Z8_LABEL} text-[9px] tracking-[0.2em] text-white/35`}>
               Your workspace
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAllTools}
-              disabled={!onOpenCmdK}
-              className={`${Z8_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-[9px] tracking-[0.12em] text-vouch-cyan transition-colors hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35`}
-              aria-label="Explore all tools"
-              title="Explore all tools"
-            >
-              <Grid3x3 className="h-3 w-3" />
-              <span>All tools</span>
-            </button>
+            {!FOCUSED_BETA_SHELL_ENABLED && (
+              <button
+                type="button"
+                onClick={handleOpenAllTools}
+                disabled={!onOpenCmdK}
+                className={`${Z8_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-[9px] tracking-[0.12em] text-vouch-cyan transition-colors hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35`}
+                aria-label="Explore all tools"
+                title="Explore all tools"
+              >
+                <Grid3x3 className="h-3 w-3" />
+                <span>All tools</span>
+              </button>
+            )}
           </div>
           {ungrouped.length > 0 && (
             <div className="space-y-1">
@@ -424,19 +429,21 @@ function FeedSidebar({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5">
-          <button
-            onClick={() => handleNavigate('customize')}
-            className={[
-              'flex items-center justify-center gap-2 px-3 py-2 transition-all',
-              Z8_LABEL, 'tracking-[0.12em]',
-              activeSection === 'customize' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
-            ].join(' ')}
-            aria-label="Customize layout"
-          >
-            <Palette className="h-3.5 w-3.5 shrink-0" />
-            <span>Customize</span>
-          </button>
+        <div className={`grid gap-1.5 ${FOCUSED_BETA_SHELL_ENABLED ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {!FOCUSED_BETA_SHELL_ENABLED && (
+            <button
+              onClick={() => handleNavigate('customize')}
+              className={[
+                'flex items-center justify-center gap-2 px-3 py-2 transition-all',
+                Z8_LABEL, 'tracking-[0.12em]',
+                activeSection === 'customize' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+              ].join(' ')}
+              aria-label="Customize layout"
+            >
+              <Palette className="h-3.5 w-3.5 shrink-0" />
+              <span>Customize</span>
+            </button>
+          )}
           <button
             onClick={() => handleNavigate('settings')}
             className={[

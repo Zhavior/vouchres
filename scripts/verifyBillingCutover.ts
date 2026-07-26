@@ -19,6 +19,7 @@ function includesAll(source: string, snippets: string[], label: string): void {
 
 function main() {
   const handlers = read("server/v3/modules/billing/handlers.ts");
+  const processor = read("server/services/billing/stripeWebhookProcessor.ts");
   const v3Routes = read("server/v3/modules/billing/routes.ts");
   const legacyRoutes = read("server/routes/billingRoutes.ts");
   const app = read("server/v3/app.ts");
@@ -29,9 +30,12 @@ function main() {
     "export async function sendV3BillingPortalResponse",
     "export async function sendV3BillingStatusResponse",
     "export async function sendV3BillingWebhookResponse",
+  ], "billing shared handlers");
+
+  includesAll(processor, [
     "event: \"stripe.payment_failed\"",
     "event: \"stripe.access_revoked\"",
-  ], "billing shared handlers");
+  ], "billing webhook processor");
 
   includesAll(v3Routes, [
     "export const v3BillingRoutes = Router();",

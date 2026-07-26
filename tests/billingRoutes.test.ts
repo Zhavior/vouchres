@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { requestContext } from "../server/middleware/requestContext";
-import { billingRoutes } from "../server/routes/billingRoutes";
+import { billingRoutes, stripeWebhookAliasRoutes } from "../server/routes/billingRoutes";
 
 vi.mock("../server/services/billing/stripeService", () => ({
   isStripeConfigured: vi.fn(() => false),
@@ -72,7 +72,9 @@ beforeAll(async () => {
   app.use(requestContext);
   app.use(express.json());
   app.use("/api/billing", billingRoutes);
+  app.use("/api/stripe", stripeWebhookAliasRoutes);
   app.use("/api/billing", apiErrorHandler);
+  app.use("/api/stripe", apiErrorHandler);
 
   await new Promise<void>((resolve) => {
     server = app.listen(0, "127.0.0.1", () => {
@@ -117,6 +119,24 @@ describe("billing routes", () => {
 
   it("returns unified error envelope when Stripe is not configured for webhook", async () => {
     const response = await fetch(`${baseUrl}/api/billing/webhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "ping" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body).toMatchObject({
+      ok: false,
+      error: {
+        code: "external_service_error",
+        message: "Stripe is not configured.",
+      },
+    });
+  });
+
+  it("keeps the live Stripe Dashboard webhook path as a narrow compatibility alias", async () => {
+    const response = await fetch(`${baseUrl}/api/stripe/webhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "ping" }),

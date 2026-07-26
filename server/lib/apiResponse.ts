@@ -6,6 +6,7 @@ import type { RequestWithContext } from "../middleware/requestContext";
 export interface ApiRequestMeta {
   requestId: string;
   timestamp: string;
+  executionId?: string;
 }
 
 export type ApiErrorBody = {
@@ -39,10 +40,12 @@ export function buildApiErrorResponse(input: {
   message: string;
   requestId: string;
   details?: unknown;
+  executionId?: string;
 }): ApiErrorResponse {
   const meta = {
     requestId: input.requestId,
     timestamp: new Date().toISOString(),
+    ...(input.executionId ? { executionId: input.executionId } : {}),
   };
 
   return {

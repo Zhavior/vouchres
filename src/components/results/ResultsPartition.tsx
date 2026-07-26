@@ -34,7 +34,7 @@ function legTypeLabel(totalLegs: number): string {
 const W = 460;
 const H = 140;
 
-export const ResultsPartition: React.FC<ResultsPartitionProps> = ({ slips }) => {
+export function ResultsPartition({ slips }: ResultsPartitionProps) {
   const data = useMemo<PartitionDatum>(() => ({
     name: 'root',
     children: STATUS_ORDER
@@ -67,7 +67,7 @@ export const ResultsPartition: React.FC<ResultsPartitionProps> = ({ slips }) => 
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }} role="img" aria-label="Saved slips broken down by result and leg count">
-        {nodes.map((node, i) => {
+        {nodes.map((node) => {
           const w = node.x1 - node.x0;
           const h = node.y1 - node.y0;
           if (w < 0.5 || h < 0.5) return null;
@@ -76,7 +76,7 @@ export const ResultsPartition: React.FC<ResultsPartitionProps> = ({ slips }) => 
           const isStatusRow = node.depth === 1;
           const showLabel = w > 26 && h > 12;
           return (
-            <g key={i} transform={`translate(${node.x0},${node.y0})`}>
+            <g key={`${status}:${node.data.name}`} transform={`translate(${node.x0},${node.y0})`}>
               <rect
                 width={w}
                 height={h}
@@ -108,6 +108,6 @@ export const ResultsPartition: React.FC<ResultsPartitionProps> = ({ slips }) => 
       </div>
     </div>
   );
-};
+}
 
 export default ResultsPartition;

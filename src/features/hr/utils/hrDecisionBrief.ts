@@ -45,13 +45,15 @@ export function buildHrDecisionBrief(
   slipActionAvailable = true,
 ): HrDecisionBrief {
   const aurora = analyzeHrPlayer(player);
+  const primaryEvidence = aurora.evidence[0]?.description.trim();
+  const primaryRisk = aurora.risks[0]?.description.trim();
 
   const hasPlayerId = player.playerId != null && String(player.playerId).trim().length > 0;
   const isBlocked = player.truthStatus === 'blocked';
 
   return {
-    reason: aurora.summary,
-    risk: aurora.recommendation,
+    reason: primaryEvidence || 'No model rationale was supplied for this signal.',
+    risk: primaryRisk || 'No specific risk note was supplied. Verify the lineup and market before adding.',
     lineupLabel: lineupLabel(player.truthStatus),
     pitcherLabel: player.pitcherName?.trim() || 'Probable pitcher unavailable',
     freshnessLabel: freshnessLabel(freshness, generatedAt),

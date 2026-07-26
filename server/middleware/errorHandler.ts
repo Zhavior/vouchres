@@ -91,6 +91,7 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
       message: clientMessage,
       requestId,
       details: clientDetails,
+      executionId: normalized.executionId,
     }),
   );
 };

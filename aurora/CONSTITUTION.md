@@ -1,4 +1,5 @@
 # AURORA
+
 ## Constitution v1.0
 
 > Aurora is the operating system for VouchEdge.
@@ -10,6 +11,14 @@
 Build the highest quality sports intelligence platform in the world.
 
 Aurora exists to create confidence through evidence.
+
+Aurora is VouchEdge's product language. It governs design, user experience,
+information hierarchy, interaction, motion, accessibility, performance, and
+the presentation of decisions and research.
+
+Aurora is not a prediction model, chatbot, personality, visual effect, or
+marketing theme. It does not create certainty. It organizes truth so the next
+best decision is understandable.
 
 Users should never wonder:
 
@@ -168,6 +177,42 @@ Every AI working on VouchEdge must:
 
 ---
 
+# Authority
+
+Aurora is the presentation and interaction layer above VouchEdge's intelligence
+systems. It is subordinate to recorded fact and may never rewrite evidence,
+confidence, outcomes, or resolution rules.
+
+The system boundary is:
+
+Research Engine
+
+↓
+
+Prediction Models
+
+↓
+
+Trust Ledger
+
+↓
+
+Resolution Engine
+
+↓
+
+Aurora
+
+↓
+
+User
+
+Prediction models generate predictions. The Trust Ledger records immutable
+decision history. The Resolution Engine settles outcomes. Aurora explains and
+presents their outputs without changing their meaning.
+
+---
+
 # Living Document
 
 This Constitution evolves.
@@ -176,4 +221,5 @@ Principles evolve slowly.
 
 Implementation evolves continuously.
 
-Aurora is the permanent source of truth.
+The VouchEdge Constitution governs the product. The Trust Ledger and Resolution
+Contracts govern recorded fact. Aurora governs how that truth becomes usable.
