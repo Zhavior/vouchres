@@ -1,4 +1,8 @@
-import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
+import {
+  isUpstashEnabled,
+  redisGetJson,
+  redisSetJson,
+} from "../../lib/upstashRedis";
 import { buildHrBoardResponse } from "../mlb/hr-engine/buildHrBoardResponse";
 import { buildValidatedHrBoard } from "../mlb/hrPipeline";
 import { buildHrBoard } from "../mlb/dailyHrBoardService";
@@ -6,13 +10,16 @@ import { getTodayGamesWeather } from "../mlb/weatherService";
 import { getMaterializedHrResearch } from "../mlb/hrResearchSnapshotService";
 import { limitConcurrency } from "../../lib/cache";
 
-const LAST_GOOD_WARNING = "Serving last good snapshot — upstream temporarily unavailable";
+const LAST_GOOD_WARNING =
+  "Serving last good snapshot — upstream temporarily unavailable";
 const LAST_GOOD_STALE_CONFIRMED_WARNING =
   "Last-good snapshot may be stale — confirmed lineup rows demoted until a fresh board builds.";
 const STALE_CACHE_CONFIRMED_WARNING =
   "Cached board expired — confirmed lineup rows demoted until a fresh board builds.";
 /** Default 15m (was 60m) so scratched/posted lineups cannot look official for an hour. */
-const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 15 * 60_000);
+const LAST_GOOD_TTL_MS = Number(
+  process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 15 * 60_000,
+);
 
 type HrBoardSnapshot = Awaited<ReturnType<typeof buildHrBoardResponse>>;
 
@@ -28,10 +35,12 @@ function cacheKey(date?: string | null, previewLimit = 350): string {
   return `hr-board:${date ?? "today"}:preview:${previewLimit}`;
 }
 
-export async function getCachedHrBoardResponse(input: {
-  date?: string | null;
-  previewLimit?: number;
-} = {}): Promise<HrBoardSnapshot> {
+export async function getCachedHrBoardResponse(
+  input: {
+    date?: string | null;
+    previewLimit?: number;
+  } = {},
+): Promise<HrBoardSnapshot> {
   const previewLimit = input.previewLimit ?? 350;
   const key = cacheKey(input.date, previewLimit);
   const ttlSeconds = Number(process.env.HR_BOARD_HUB_TTL_SECONDS ?? 900);
@@ -78,7 +87,9 @@ export async function getCachedHrBoardResponse(input: {
   }
 }
 
-type ValidatedHrBoardSnapshot = Awaited<ReturnType<typeof buildValidatedHrBoard>>;
+type ValidatedHrBoardSnapshot = Awaited<
+  ReturnType<typeof buildValidatedHrBoard>
+>;
 type DeepHrBoardSnapshot = Awaited<ReturnType<typeof buildHrBoard>>;
 
 type ValidatedCacheEntry = {
@@ -92,8 +103,14 @@ type DeepCacheEntry = {
 };
 
 const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
-const localValidatedHrBoardBuilds = new Map<string, Promise<ValidatedHrBoardSnapshot>>();
-const lastGoodValidatedHrBoards = new Map<string, { board: ValidatedHrBoardSnapshot; storedAt: number }>();
+const localValidatedHrBoardBuilds = new Map<
+  string,
+  Promise<ValidatedHrBoardSnapshot>
+>();
+const lastGoodValidatedHrBoards = new Map<
+  string,
+  { board: ValidatedHrBoardSnapshot; storedAt: number }
+>();
 
 type ValidatedPlayerCandidate = Record<string, unknown>;
 
@@ -105,7 +122,9 @@ type ValidatedPlayerIndexEntry = {
 
 const localValidatedPlayerIndex = new Map<string, ValidatedPlayerIndexEntry>();
 
-function validatedBoardGeneratedAt(board: ValidatedHrBoardSnapshot): string | null {
+function validatedBoardGeneratedAt(
+  board: ValidatedHrBoardSnapshot,
+): string | null {
   return typeof (board as any).updatedAt === "string"
     ? (board as any).updatedAt
     : typeof (board as any).generatedAt === "string"
@@ -162,7 +181,10 @@ export type ValidatedHrBoardResult = ValidatedHrBoardSnapshot & {
   lastGoodWarnings?: string[];
 };
 
-async function persistLastGoodToRedis(key: string, entry: LastGoodEntry): Promise<void> {
+async function persistLastGoodToRedis(
+  key: string,
+  entry: LastGoodEntry,
+): Promise<void> {
   if (!isUpstashEnabled()) return;
 
   const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${key}`;
@@ -177,7 +199,9 @@ async function persistLastGoodToRedis(key: string, entry: LastGoodEntry): Promis
   }
 }
 
-async function loadLastGoodFromRedis(key: string): Promise<LastGoodEntry | null> {
+async function loadLastGoodFromRedis(
+  key: string,
+): Promise<LastGoodEntry | null> {
   if (!isUpstashEnabled()) return null;
 
   const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${key}`;
@@ -200,7 +224,10 @@ async function loadLastGoodFromRedis(key: string): Promise<LastGoodEntry | null>
   }
 }
 
-function rememberLastGoodValidatedBoard(key: string, board: ValidatedHrBoardSnapshot): void {
+function rememberLastGoodValidatedBoard(
+  key: string,
+  board: ValidatedHrBoardSnapshot,
+): void {
   const entry: LastGoodEntry = { board, storedAt: Date.now() };
   lastGoodValidatedHrBoards.set(key, entry);
   void persistLastGoodToRedis(key, entry);
@@ -227,15 +254,21 @@ function demoteConfirmedCandidatesForStaleServe(
     ]),
   );
 
-  const priorConfirmed = Array.isArray(board.candidates) ? board.candidates : [];
-  const priorProjected = Array.isArray(board.projectedCandidates) ? board.projectedCandidates : [];
+  const priorConfirmed = Array.isArray(board.candidates)
+    ? board.candidates
+    : [];
+  const priorProjected = Array.isArray(board.projectedCandidates)
+    ? board.projectedCandidates
+    : [];
   const demotedConfirmed = priorConfirmed.map((row) => ({
     ...row,
     lineupStatus: "projected_unconfirmed" as const,
     dataQuality: "projection_preview" as const,
     warnings: Array.from(
       new Set([
-        ...(Array.isArray(row.warnings) ? row.warnings.filter((w): w is string => typeof w === "string") : []),
+        ...(Array.isArray(row.warnings)
+          ? row.warnings.filter((w): w is string => typeof w === "string")
+          : []),
         "Official lineup not posted yet. Do not treat as confirmed.",
         demotionWarning,
       ]),
@@ -251,12 +284,18 @@ function demoteConfirmedCandidatesForStaleServe(
     debug: {
       ...board.debug,
       staleDataWarnings,
-      lastRefresh: board.debug?.lastRefresh ?? options.lastRefreshFallback ?? new Date().toISOString(),
+      lastRefresh:
+        board.debug?.lastRefresh ??
+        options.lastRefreshFallback ??
+        new Date().toISOString(),
     },
   };
 }
 
-async function serveLastGoodValidatedBoard(key: string, cause: unknown): Promise<ValidatedHrBoardResult | null> {
+async function serveLastGoodValidatedBoard(
+  key: string,
+  cause: unknown,
+): Promise<ValidatedHrBoardResult | null> {
   let lastGood = lastGoodValidatedHrBoards.get(key);
   if (!lastGood) {
     lastGood = (await loadLastGoodFromRedis(key)) ?? undefined;
@@ -271,11 +310,15 @@ async function serveLastGoodValidatedBoard(key: string, cause: unknown): Promise
     cause instanceof Error ? cause.message : String(cause),
   );
 
-  return demoteConfirmedCandidatesForStaleServe(lastGood.board, LAST_GOOD_STALE_CONFIRMED_WARNING, {
-    servedFromLastGood: true,
-    lastGoodWarnings: [LAST_GOOD_WARNING, LAST_GOOD_STALE_CONFIRMED_WARNING],
-    lastRefreshFallback: new Date(lastGood.storedAt).toISOString(),
-  });
+  return demoteConfirmedCandidatesForStaleServe(
+    lastGood.board,
+    LAST_GOOD_STALE_CONFIRMED_WARNING,
+    {
+      servedFromLastGood: true,
+      lastGoodWarnings: [LAST_GOOD_WARNING, LAST_GOOD_STALE_CONFIRMED_WARNING],
+      lastRefreshFallback: new Date(lastGood.storedAt).toISOString(),
+    },
+  );
 }
 
 /** Test-only reset for hub caches and last-good snapshots. */
@@ -318,11 +361,17 @@ function deepKey(date?: string | null): string {
   return `deep-hr-board:${date ?? "today"}`;
 }
 
-async function persistValidatedHotToRedis(key: string, entry: ValidatedCacheEntry): Promise<void> {
+async function persistValidatedHotToRedis(
+  key: string,
+  entry: ValidatedCacheEntry,
+): Promise<void> {
   if (!isUpstashEnabled()) return;
 
   const redisKey = `${VALIDATED_HOT_REDIS_PREFIX}:${key}`;
-  const ttlSeconds = Math.max(1, Math.floor((entry.expiresAt - Date.now()) / 1000));
+  const ttlSeconds = Math.max(
+    1,
+    Math.floor((entry.expiresAt - Date.now()) / 1000),
+  );
   try {
     await redisSetJson(redisKey, entry, ttlSeconds);
   } catch (error) {
@@ -333,7 +382,9 @@ async function persistValidatedHotToRedis(key: string, entry: ValidatedCacheEntr
   }
 }
 
-async function loadValidatedHotFromRedis(key: string): Promise<ValidatedCacheEntry | null> {
+async function loadValidatedHotFromRedis(
+  key: string,
+): Promise<ValidatedCacheEntry | null> {
   if (!isUpstashEnabled()) return null;
 
   const redisKey = `${VALIDATED_HOT_REDIS_PREFIX}:${key}`;
@@ -415,26 +466,22 @@ function scheduleProfileResearchPrewarm(
   const concurrency = Math.max(1, Math.min(4, configuredConcurrency));
   const startedAt = Date.now();
 
-  void limitConcurrency(
-    candidates,
-    concurrency,
-    async (candidate) => {
-      try {
-        await getMaterializedHrResearch({
-          candidate: candidate.candidate,
-          generatedAt: validatedBoardGeneratedAt(board),
-        });
+  void limitConcurrency(candidates, concurrency, async (candidate) => {
+    try {
+      await getMaterializedHrResearch({
+        candidate: candidate.candidate,
+        generatedAt: validatedBoardGeneratedAt(board),
+      });
 
-        return true;
-      } catch (error) {
-        console.warn(
-          `[HR_BOARD_HUB] profile prewarm failed key=${key} playerId=${candidate.playerId}:`,
-          error instanceof Error ? error.message : String(error),
-        );
-        return false;
-      }
-    },
-  )
+      return true;
+    } catch (error) {
+      console.warn(
+        `[HR_BOARD_HUB] profile prewarm failed key=${key} playerId=${candidate.playerId}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return false;
+    }
+  })
     .then((results) => {
       const warmed = results.filter(Boolean).length;
 
@@ -489,7 +536,9 @@ async function buildFreshValidatedBoard(
   buildValidatedPlayerIndex(key, board, entry.expiresAt);
   void persistValidatedHotToRedis(key, entry);
 
-  console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
+  console.log(
+    `[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`,
+  );
 
   // Background-only warmup. Never delay board availability.
   scheduleProfileResearchPrewarm(key, board);
@@ -565,9 +614,13 @@ export async function getCachedValidatedHrCandidate(
   };
 }
 
-export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardResult> {
+export async function getCachedValidatedHrBoard(
+  date?: string | null,
+): Promise<ValidatedHrBoardResult> {
   const key = validatedKey(date);
-  const ttlSeconds = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900);
+  const ttlSeconds = Number(
+    process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900,
+  );
 
   const cached = localValidatedHrBoardCache.get(key);
   if (cached) {
@@ -578,11 +631,15 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
 
     const activeBuild = localValidatedHrBoardBuilds.get(key);
     if (activeBuild) {
-      console.log(`[HR_BOARD_HUB] validated awaiting active stale refresh key=${key}`);
+      console.log(
+        `[HR_BOARD_HUB] validated awaiting active stale refresh key=${key}`,
+      );
       return activeBuild;
     }
 
-    console.log(`[HR_BOARD_HUB] validated stale hit key=${key} — refreshing in background`);
+    console.log(
+      `[HR_BOARD_HUB] validated stale hit key=${key} — refreshing in background`,
+    );
     scheduleValidatedRefresh(key, date, ttlSeconds);
 
     // Honesty: the first request after expiry receives the stale board with
@@ -625,7 +682,9 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
   }
 }
 
-export async function getCachedDeepHrBoard(date?: string | null): Promise<DeepHrBoardSnapshot> {
+export async function getCachedDeepHrBoard(
+  date?: string | null,
+): Promise<DeepHrBoardSnapshot> {
   const key = deepKey(date);
   const ttlSeconds = Number(process.env.DEEP_HR_BOARD_HUB_TTL_SECONDS ?? 1200);
 
