@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bell,
   Check,
@@ -33,6 +33,7 @@ import {
   tierToSubscriptionTier,
   type BillingStatus,
 } from '../lib/billingClient';
+import { buildPremiumAuroraModel, type BillingSourceState } from './premiumAuroraModel';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
 interface SettingsPageProps {
@@ -78,9 +79,8 @@ const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string;
   },
   SELLER_PRO: {
     title: 'Seller Pro',
-    price: '$49.99',
-    detail: 'Everything in Gold plus subscriber clubs and creator storefront.',
-    badge: 'Elite',
+    price: 'Unavailable',
+    detail: 'Creator access is not sold through the current VouchEdge Beta checkout.',
   },
 };
 
@@ -201,6 +201,7 @@ export default function SettingsPageZ8({
   const [billingLoading, setBillingLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
+  const [billingSourceState, setBillingSourceState] = useState<BillingSourceState>('checking');
 
   const [privacyLoading, setPrivacyLoading] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -218,6 +219,14 @@ export default function SettingsPageZ8({
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   const activeTier = normalizeTier(profile.subscriptionTier);
+  const billingModel = buildPremiumAuroraModel({
+    profileTier: profile.subscriptionTier,
+    billingStatus,
+    billingSourceState,
+  });
+  const activePlanPrice = activeTier === 'SELLER_PRO'
+    ? 'Creator entitlement'
+    : `${PLAN_COPY[activeTier].price}${activeTier === 'GOLD' ? '/mo' : ''}`;
 
   const nav: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'account', label: 'Profile', icon: User },
@@ -227,10 +236,28 @@ export default function SettingsPageZ8({
     { id: 'privacy', label: 'Privacy & Data', icon: Shield },
   ];
 
-  const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
+  const showToast = useCallback((msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
+
+  const refreshBilling = useCallback(async (message?: string, announce = true) => {
+    setBillingLoading(true);
+    setBillingSourceState('checking');
+    const status = await fetchBillingStatus();
+    setBillingLoading(false);
+    if (!status) {
+      setBillingStatus(null);
+      setBillingSourceState('unavailable');
+      if (announce) showToast('Billing status unavailable. Your saved profile tier is still shown.', 'err');
+      return;
+    }
+    setBillingStatus(status);
+    setBillingSourceState('confirmed');
+    const nextTier = tierToSubscriptionTier(status.tier);
+    onUpdateProfile({ subscriptionTier: nextTier });
+    if (announce) showToast(message ?? 'Billing status refreshed.');
+  }, [onUpdateProfile, showToast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -327,28 +354,15 @@ export default function SettingsPageZ8({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('checkout') !== 'success') return;
-    refreshBilling('Payment complete — your plan is updating.');
+    const checkoutSucceeded = params.get('checkout') === 'success';
+    void refreshBilling(checkoutSucceeded ? 'Payment complete — your plan is updating.' : undefined, checkoutSucceeded);
+    if (!checkoutSucceeded) return;
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete('checkout');
       window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     } catch { /* cosmetic */ }
-  }, []);
-
-  const refreshBilling = async (message?: string) => {
-    setBillingLoading(true);
-    const status = await fetchBillingStatus();
-    setBillingLoading(false);
-    if (!status) {
-      showToast('Billing status unavailable — sign in and configure Stripe.', 'err');
-      return;
-    }
-    setBillingStatus(status);
-    const nextTier = tierToSubscriptionTier(status.tier);
-    onUpdateProfile({ subscriptionTier: nextTier });
-    showToast(message ?? 'Billing status refreshed.');
-  };
+  }, [refreshBilling]);
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -601,7 +615,7 @@ export default function SettingsPageZ8({
             <div className="min-w-0">
               <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-0.5 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-white/50">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+              <p className="text-xs text-white/50">{activePlanPrice}</p>
             </div>
             {activeTier === 'BASIC' && (
               <button
@@ -641,7 +655,7 @@ export default function SettingsPageZ8({
             <div className={`mt-8 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
               <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-white/50">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+              <p className="text-xs text-white/50">{activePlanPrice}</p>
               {activeTier === 'BASIC' && (
                 <button
                   type="button"
@@ -1132,23 +1146,25 @@ export default function SettingsPageZ8({
                         <Zap className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white">{PLAN_COPY[activeTier].title} plan</p>
-                        <p className="text-xs text-white/50">
-                          {billingStatus ? `Renews ${formatDate(billingStatus.currentPeriodEnd)}` : PLAN_COPY[activeTier].price + (activeTier !== 'BASIC' ? '/month' : ' forever')}
-                        </p>
+                        <p className="text-sm font-medium text-white">{billingModel.accessLabel}</p>
+                        <p className="text-xs text-white/50">Profile tier {billingModel.activeTier}</p>
+                        <p className="mt-1 text-xs text-white/40">{billingModel.billingDetail}</p>
+                        {billingStatus?.currentPeriodEnd && (
+                          <p className="mt-1 text-xs text-white/40">Current billing period ends {formatDate(billingStatus.currentPeriodEnd)}</p>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                         activeTier === 'BASIC' ? 'bg-white/10 text-white/40' : 'bg-vouch-emerald/15 text-vouch-emerald'
                       }`}>
-                        {activeTier === 'BASIC' ? 'Free' : 'Active'}
+                        {billingModel.billingLabel}
                       </span>
                       <button
                         type="button"
                         onClick={() => refreshBilling()}
                         disabled={billingLoading}
-                        className="flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/40 hover:bg-white/10 hover:text-white disabled:opacity-50 transition-colors"
+                        className="flex min-h-11 items-center gap-1 rounded-lg border border-white/10 px-3 text-xs text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
                       >
                         {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                         Refresh
@@ -1159,7 +1175,7 @@ export default function SettingsPageZ8({
                   <div className="grid gap-3 sm:grid-cols-2">
                     {(['BASIC', 'GOLD'] as AppTier[]).map((tier) => {
                       const plan = PLAN_COPY[tier];
-                      const isActive = activeTier === tier;
+                      const isActive = tier === 'BASIC' ? activeTier === 'BASIC' : activeTier !== 'BASIC';
                       const isLoading = checkoutLoading === tier;
                       return (
                         <div
@@ -1192,7 +1208,7 @@ export default function SettingsPageZ8({
                             type="button"
                             disabled={isActive || isLoading}
                             onClick={() => handleUpgrade(tier)}
-                            className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-colors ${
+                            className={`mt-4 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-colors ${
                               isActive
                                 ? 'cursor-default bg-white/5 text-white/30'
                                 : tier === 'BASIC'
@@ -1205,9 +1221,7 @@ export default function SettingsPageZ8({
                               ? 'Your plan'
                               : tier === 'BASIC'
                                 ? 'Downgrade'
-                                : activeTier !== 'BASIC'
-                                  ? `Switch to ${plan.title}`
-                                  : `Upgrade to ${plan.title}`}
+                                : 'Start 7-day free trial'}
                           </button>
                         </div>
                       );
@@ -1215,19 +1229,25 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="Payment method" subtitle="Update your card, view invoices, or cancel your subscription.">
+                <Section title="Payment method" subtitle="Stripe manages payment methods, invoices, and cancellation for paid accounts.">
                   <div className="space-y-3">
-                    <VEButton
-                      type="button"
-                      onClick={handleManageBilling}
-                      disabled={portalLoading}
-                      variant="ghost"
-                      className={`ve-touch-target w-full justify-center ${Z8_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
-                    >
-                      {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                      Manage billing
-                      <ExternalLink className="h-3.5 w-3.5 text-white/40" />
-                    </VEButton>
+                    {billingModel.shouldManageBilling ? (
+                      <VEButton
+                        type="button"
+                        onClick={handleManageBilling}
+                        disabled={portalLoading}
+                        variant="ghost"
+                        className={`ve-touch-target w-full justify-center ${Z8_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
+                      >
+                        {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                        Manage billing
+                        <ExternalLink className="h-3.5 w-3.5 text-white/40" />
+                      </VEButton>
+                    ) : (
+                      <p className="text-xs leading-relaxed text-white/45">
+                        The billing portal becomes available after a paid subscription is attached to this account.
+                      </p>
+                    )}
                     {billingPortalError && (
                       <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-3">
                         <Zap className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
