@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "allowedStatuses": [
+    "legacy",
+    "mapped",
+    "migrating",
+    "aurora-compliant",
+    "deprecated",
+    "removed"
+  ],
+  "entries": [
+    {
+      "flow": "Today decision briefing",
+      "path": "src/components/TodayDashboardZ8.tsx",
+      "status": "migrating",
+      "decision": "What should I research today?",
+      "primaryAction": "Open the relevant research surface"
+    },
+    {
+      "flow": "HR Board",
+      "path": "src/features/hr/pages/HomeRunIntelligencePageZ8.tsx",
+      "status": "migrating",
+      "decision": "Which current HR candidate deserves deeper research?",
+      "primaryAction": "Open player evidence"
+    },
+    {
+      "flow": "HR player research",
+      "path": "src/pages/pro/PlayerEdgeLabPageZ8.tsx",
+      "status": "migrating",
+      "decision": "Does the available evidence support this player?",
+      "primaryAction": "Add a source-backed selection to the slip"
+    },
+    {
+      "flow": "Pro Graphs comparison",
+      "path": "src/pages/pro/ProGraphsLabPageZ8.tsx",
+      "status": "aurora-compliant",
+      "decision": "How do two current candidates compare?",
+      "primaryAction": "Select candidates and inspect disclosed inputs"
+    },
+    {
+      "flow": "Track Record",
+      "path": "src/components/results/ResultsStudio.tsx",
+      "status": "aurora-compliant",
+      "decision": "What is actually recorded about my saved decisions?",
+      "primaryAction": "Inspect a recorded slip state"
+    },
+    {
+      "flow": "Account access",
+      "path": "src/components/PremiumSubPage.tsx",
+      "status": "aurora-compliant",
+      "decision": "What can my account access, and is billing confirmed?",
+      "primaryAction": "Start Beta checkout or manage billing"
+    },
+    {
+      "flow": "Pro access gate",
+      "path": "src/components/pro/ProAccessGate.tsx",
+      "status": "aurora-compliant",
+      "decision": "Why is this surface locked and what access is required?",
+      "primaryAction": "Review account access"
+    },
+    {
+      "flow": "Settings billing",
+      "path": "src/components/SettingsPageZ8.tsx",
+      "status": "migrating",
+      "decision": "What is my billing source state?",
+      "primaryAction": "Refresh status or manage confirmed billing"
+    },
+    {
+      "flow": "Legacy Z8 token aliases",
+      "path": "src/theme/z8Tokens.ts",
+      "status": "mapped",
+      "decision": "N/A compatibility layer",
+      "primaryAction": "Migrate consumers to Aurora tokens"
+    }
+  ]
+}
