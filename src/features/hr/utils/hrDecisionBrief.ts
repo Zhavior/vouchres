@@ -1,4 +1,5 @@
 import type { MLBPlayer } from '../../../types';
+import { analyzeHrPlayer } from "./aurora/hrAuroraAdapter";
 import type { HrWatchRow, TruthStatus } from '../types/hrWatch';
 
 export type HrBoardFreshness = 'fresh' | 'delayed' | 'stale';
@@ -43,12 +44,14 @@ export function buildHrDecisionBrief(
   generatedAt: Date | null,
   slipActionAvailable = true,
 ): HrDecisionBrief {
+  const aurora = analyzeHrPlayer(player);
+
   const hasPlayerId = player.playerId != null && String(player.playerId).trim().length > 0;
   const isBlocked = player.truthStatus === 'blocked';
 
   return {
-    reason: player.reasons[0]?.trim() || 'No model rationale was supplied for this signal.',
-    risk: player.warnings[0]?.trim() || 'No specific risk note was supplied. Verify the lineup and market before adding.',
+    reason: aurora.summary,
+    risk: aurora.recommendation,
     lineupLabel: lineupLabel(player.truthStatus),
     pitcherLabel: player.pitcherName?.trim() || 'Probable pitcher unavailable',
     freshnessLabel: freshnessLabel(freshness, generatedAt),
