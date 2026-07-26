@@ -1,76 +1,111 @@
-import { ProductEvents } from "../lib/productEvents";
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Sparkles,
-  ShieldCheck,
-  Trophy,
-  FlaskConical,
-  Check,
-  Loader,
   AlertCircle,
+  Check,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  FlaskConical,
+  Loader,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
-import { CreatorProofProfile } from '../types';
-import { startStripeCheckout, openBillingPortal, fetchBillingStatus, tierToSubscriptionTier } from '../lib/billingClient';
+import { ProductEvents } from '../lib/productEvents';
+import {
+  fetchBillingStatus,
+  openBillingPortal,
+  startStripeCheckout,
+  tierToSubscriptionTier,
+  type BillingStatus,
+} from '../lib/billingClient';
+import {
+  AURORA_LABEL,
+  AURORA_PANEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SURFACE,
+} from '../theme/auroraTokens';
+import type { CreatorProofProfile } from '../types';
+import {
+  buildPremiumAuroraModel,
+  type BillingSourceState,
+} from './premiumAuroraModel';
 
 interface PremiumSubPageProps {
   profile: CreatorProofProfile;
   onUpdateProfile: (updated: Partial<CreatorProofProfile>) => void;
 }
 
-export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps) {
-  // Stripe checkout / portal state
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+const BASIC_FEATURES = [
+  'Research the daily HR board',
+  'Build and save slips',
+  'Review local and backend-synced record states',
+] as const;
+
+const BETA_FEATURES = [
+  'Top Player Lab research workflow',
+  'Pitcher matchup intelligence',
+  'Pro Graphs comparisons from current board data',
+] as const;
+
+export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps) {
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
+  const [billingSourceState, setBillingSourceState] = useState<BillingSourceState>('checking');
 
-  // On return from Stripe checkout success, refresh billing status
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('checkout') === 'success') {
-      fetchBillingStatus().then((status) => {
-        if (status) {
-          const subTier = tierToSubscriptionTier(status.tier);
-          ProductEvents.proSubscribed(status.tier);
-          onUpdateProfile({
-            subscriptionTier: subTier,
-          });
-        }
-      });
-      // Clean up URL safely
-      try {
-        const url = new URL(window.location.href || '/', window.location.origin || 'http://localhost:3000');
-        url.searchParams.delete('checkout');
-        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-      } catch (error) {
-        console.warn('[premium] checkout URL cleanup skipped:', error);
-      }
-    }
-  }, [onUpdateProfile]);
+  const refreshBilling = useCallback(async (trackCheckoutSuccess = false) => {
+    setBillingSourceState('checking');
+    const status = await fetchBillingStatus();
 
-  const handleSubscribePlan = async (tier: 'BASIC' | 'GOLD') => {
-    setBillingError(null);
-
-    if (tier === 'BASIC') {
-      // Downgrade to basic — open portal to manage/cancel
-      await handleManageBilling();
+    if (!status) {
+      setBillingStatus(null);
+      setBillingSourceState('unavailable');
       return;
     }
 
-    setCheckoutLoading(tier);
+    setBillingStatus(status);
+    setBillingSourceState('confirmed');
+    onUpdateProfile({ subscriptionTier: tierToSubscriptionTier(status.tier) });
+    if (trackCheckoutSuccess) ProductEvents.proSubscribed(status.tier);
+  }, [onUpdateProfile]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutSucceeded = params.get('checkout') === 'success';
+    void refreshBilling(checkoutSucceeded);
+
+    if (!checkoutSucceeded) return;
+
+    try {
+      const url = new URL(window.location.href || '/', window.location.origin || 'http://localhost:3000');
+      url.searchParams.delete('checkout');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    } catch (error) {
+      console.warn('[premium] checkout URL cleanup skipped:', error);
+    }
+  }, [refreshBilling]);
+
+  const model = buildPremiumAuroraModel({
+    profileTier: profile.subscriptionTier,
+    billingStatus,
+    billingSourceState,
+  });
+
+  const handleSubscribe = async () => {
+    setBillingError(null);
+    setCheckoutLoading(true);
     ProductEvents.checkoutStarted('pro');
-
     const result = await startStripeCheckout();
-    setCheckoutLoading(null);
+    setCheckoutLoading(false);
 
     if (result.ok) {
       window.location.href = result.url;
-    } else {
-      const errMsg = (result as { ok: false; error: string }).error;
-      setBillingError(`Unable to start checkout: ${errMsg}. Please try again or contact support.`);
+      return;
     }
+
+    const checkoutError = 'error' in result ? result.error : 'Unknown checkout error';
+    setBillingError(`Unable to start checkout: ${checkoutError}. Please try again or contact support.`);
   };
 
   const handleManageBilling = async () => {
@@ -81,216 +116,177 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
 
     if (result.ok) {
       window.location.href = result.url;
-    } else {
-      const errMsg = (result as { ok: false; error: string }).error;
-      setBillingError(`Portal not active yet: ${errMsg}`);
+      return;
     }
+
+    const portalError = 'error' in result ? result.error : 'Unknown billing portal error';
+    setBillingError(`Unable to open the billing portal: ${portalError}`);
   };
 
-  const activeTier = profile.subscriptionTier || 'BASIC';
-  const hasPaidAccess = activeTier === 'GOLD' || activeTier === 'SELLER_PRO';
-
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[820px] mx-auto min-h-screen bg-transparent font-z8" id="premium-hub-panel">
-
-      {/* Title Segment */}
-      <div className="flex flex-col">
-        <h2 className="text-xl font-black text-white flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-vouch-emerald" />
-          Upgrade
-        </h2>
-        <p className="text-xs text-white/40 mt-1">
-          Unlock every Pro research lab with one simple Beta plan.
-        </p>
-      </div>
-
-      {/* Beta support banner */}
-      <div className="glass-panel glass-border rounded-2xl p-4 flex items-start gap-3 border-amber-400/20" id="upgrade-beta-banner">
-        <div className="w-9 h-9 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
-          <FlaskConical className="w-4 h-4 text-amber-400" />
+    <main className="mx-auto min-h-screen max-w-[900px] space-y-4 p-3 font-z8 sm:p-5" id="premium-hub-panel">
+      <section className={`${AURORA_PANEL_PREMIUM} space-y-5 p-5 sm:p-6`} aria-labelledby="aurora-account-access-title">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-xl space-y-2">
+            <p className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Aurora account
+            </p>
+            <h1 id="aurora-account-access-title" className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Account access
+            </h1>
+            <p className="text-sm leading-relaxed text-white/55">
+              See what your account can open now and whether that access was confirmed by the billing source.
+            </p>
+          </div>
+          <div className={`${AURORA_SURFACE} min-w-[180px] p-3`}>
+            <div className={`${AURORA_LABEL} text-white/40`}>Current access</div>
+            <div className="mt-1 text-lg font-black text-white">{model.accessLabel}</div>
+            <div className="mt-1 font-mono text-[11px] text-vouch-cyan">Tier {model.activeTier}</div>
+          </div>
         </div>
+
+        <div className={`${AURORA_SURFACE} flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between`}>
+          <div className="min-w-0">
+            <div className={`${AURORA_LABEL} text-white/40`}>Billing source</div>
+            <div className="mt-1 flex items-center gap-2 text-sm font-bold text-white">
+              {billingSourceState === 'checking' ? <Loader className="h-4 w-4 animate-spin text-vouch-cyan" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4 text-vouch-cyan" aria-hidden="true" />}
+              {model.billingLabel}
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-white/45">{model.billingDetail}</p>
+          </div>
+          {billingSourceState === 'unavailable' && (
+            <button
+              type="button"
+              onClick={() => void refreshBilling()}
+              className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 text-xs font-bold text-white transition-colors hover:border-vouch-cyan/40 hover:text-vouch-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              Retry status
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3" aria-labelledby="aurora-plan-choice-title">
         <div>
-          <span className="terminal-text bg-amber-400/10 text-amber-400 px-2 py-0.5 rounded-full">
-            Beta
-          </span>
-          <p className="text-sm font-bold text-white mt-1.5">VouchEdge Beta is one simple plan.</p>
-          <p className="text-xs text-white/40 leading-normal mt-0.5">
-            Start with 7 days free. Then it is $7.99/month, and you can cancel anytime from the Stripe billing portal.
-          </p>
-        </div>
-      </div>
-
-      {/* Subscription cards segment */}
-      <div className="space-y-4">
-        <div className="flex flex-col">
-          <h3 className="terminal-text text-white/50 flex items-center gap-1.5">
-            <Trophy className="w-4 h-4 text-vouch-emerald" />
-            Plans
-          </h3>
-          <p className="text-[11px] text-white/40 mt-1">
-            <span className="text-vouch-emerald font-bold">VouchEdge Beta ($7.99/month)</span> unlocks every research lab after a 7-day free trial.
-          </p>
+          <p className={`${AURORA_LABEL} text-vouch-cyan`}>Choose by need</p>
+          <h2 id="aurora-plan-choice-title" className="mt-1 text-xl font-black text-white">Plans</h2>
+          <p className="mt-1 text-xs text-white/45">Basic stays free. Beta adds the deeper research workflow.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="upgrade-tiers-grid">
+        <div className="grid gap-3 md:grid-cols-2" id="upgrade-tiers-grid">
+          <PlanSurface
+            title="Basic"
+            price="$0"
+            cadence="No subscription"
+            description="Use the core research, slip-building, and record workflow."
+            features={BASIC_FEATURES}
+            active={model.activeTier === 'BASIC'}
+          />
 
-          {/* Tier 1: Basic */}
-          <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
-            activeTier === 'BASIC' ? 'border-white/25' : ''
-          }`} id="plan-tier-basic">
-
-            <div className="space-y-4">
-              {/* Badge & Price */}
-              <div className="space-y-1">
-                <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                  Basic
-                </h4>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-white font-sans">$0</span>
-                  <span className="text-white/30 text-[10px]">/ Forever Free</span>
-                </div>
-                <p className="text-[11px] text-white/40 leading-relaxed pt-1">
-                  Track picks and build slips, no cost.
-                </p>
-              </div>
-
-              {/* Benefits list */}
-              <div className="border-t border-white/10 pt-3.5 space-y-2.5">
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
-                  <span>Build up to 20 slips inside Parlay Lab</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
-                  <span>Interactive local board bookmarks</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
-                  <span>Transparent unit settlement ledger</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sub/Claim Button */}
-            <div className="pt-6">
-              <button
-                onClick={() => handleSubscribePlan('BASIC')}
-                disabled={activeTier === 'BASIC'}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeTier === 'BASIC'
-                    ? 'bg-white/[0.06] text-white/40 cursor-default'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-white'
-                }`}
-              >
-                {activeTier === 'BASIC' ? 'Active Plan' : 'Select Plan'}
-              </button>
-            </div>
-          </div>
-
-          {/* Tier 2: Pro */}
-          <div className={`glass-panel glass-border rounded-2xl p-5 flex flex-col justify-between relative transition-all duration-200 ${
-            hasPaidAccess ? 'border-vouch-emerald/50' : ''
-          }`} id="plan-tier-gold">
-            <div className="absolute -top-3 left-4 flex items-center gap-1.5">
-              <span className="terminal-text bg-amber-400/15 text-amber-400 px-2.5 py-0.5 rounded-full">
-                Beta
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {/* Badge & Price */}
-              <div className="space-y-1">
-                <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                  VouchEdge Beta
-                  <ShieldCheck className="w-4 h-4 text-vouch-emerald" />
-                </h4>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-vouch-emerald font-sans">$7.99</span>
-                  <span className="text-white/40 text-xs">/ Month</span>
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed pt-1">
-                  First 7 days free, then $7.99/month. Unlock Vouch AI intelligence, Featured Edge analysis, all Pro Labs, advanced graphs, and matchup research. Cancel anytime.
-                </p>
-              </div>
-
-              {/* Benefits list */}
-              <div className="border-t border-white/10 pt-3.5 space-y-2.5">
-                <div className="flex items-start gap-2 text-[11px] text-white/80 font-medium">
-                  <ShieldCheck className="w-4 h-4 text-vouch-emerald shrink-0" />
-                  <span>Beta Member access to the complete MLB research workflow</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>All Pro Intelligence Labs: Player Edge, Team Matchup, Pro Graphs, and Live Game research</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>Real-time signal graphs, confidence meters, and Vouch AI explanations</span>
-                </div>
-                <div className="flex items-start gap-2 text-[11px] text-white/60">
-                  <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>Featured Edge insights, matchup intelligence, and player tracking alerts</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sub/Claim Button */}
-            <div className="pt-6">
-              <button
-                onClick={() => handleSubscribePlan('GOLD')}
-                disabled={hasPaidAccess || checkoutLoading === 'GOLD'}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  hasPaidAccess
-                    ? 'bg-vouch-emerald/10 text-vouch-emerald cursor-default'
-                    : 'bg-vouch-emerald hover:-translate-y-0.5 text-black shadow disabled:opacity-60'
-                }`}
-              >
-                {checkoutLoading === 'GOLD' && <Loader className="h-3.5 w-3.5 animate-spin" />}
-                {hasPaidAccess ? 'Active Beta Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Start 7-Day Free Trial'}
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Stripe billing error / info banner */}
-      {billingError && (
-        <div className="glass-panel glass-border rounded-xl p-3.5 flex items-start gap-2 text-[11px] text-amber-300 leading-relaxed border-amber-400/25">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div>{billingError}</div>
-        </div>
-      )}
-
-      {/* Manage Billing — visible when subscribed */}
-      {(activeTier === 'GOLD' || activeTier === 'SELLER_PRO') && (
-        <div className="glass-panel glass-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-black text-white">Manage Your Subscription</p>
-            <p className="text-xs text-white/40 mt-0.5">Update payment, view invoices, or cancel anytime via the Stripe billing portal.</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleManageBilling}
-            disabled={portalLoading}
-            className="flex items-center gap-2 rounded-xl bg-vouch-cyan/10 px-4 py-2.5 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/20 transition-colors disabled:opacity-50"
+          <PlanSurface
+            title="VouchEdge Beta"
+            price="$7.99"
+            cadence="per month after 7 free days"
+            description="Open the current MLB research labs. Cancel from Stripe billing."
+            features={BETA_FEATURES}
+            active={model.hasPaidAccess}
+            premium
           >
-            {portalLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-            <span>Billing Portal</span>
-            <ExternalLink className="h-3 w-3" />
-          </button>
+            {model.shouldManageBilling ? (
+              <button
+                type="button"
+                onClick={() => void handleManageBilling()}
+                disabled={portalLoading}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 text-xs font-black text-vouch-cyan transition-colors hover:bg-vouch-cyan/15 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+              >
+                {portalLoading ? <Loader className="h-4 w-4 animate-spin" aria-hidden="true" /> : <CreditCard className="h-4 w-4" aria-hidden="true" />}
+                Manage billing
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleSubscribe()}
+                disabled={checkoutLoading}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-vouch-emerald px-4 text-xs font-black text-black transition-colors hover:bg-vouch-emerald/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+              >
+                {checkoutLoading && <Loader className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                {checkoutLoading ? 'Opening secure checkout…' : 'Start 7-day free trial'}
+              </button>
+            )}
+          </PlanSurface>
         </div>
+      </section>
+
+      {billingError && (
+        <section className={`${AURORA_PANEL} flex items-start gap-3 p-4 text-sm text-amber-200`} role="alert">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+          <div>{billingError}</div>
+        </section>
       )}
 
-      {/* Disclaimers warning safety first */}
-      <div className="glass-panel glass-border rounded-xl p-3.5 flex items-start gap-2 text-[11px] text-white/40 leading-relaxed">
-        <AlertCircle className="w-4 h-4 text-white/30 shrink-0 mt-0.5" />
+      <section className={`${AURORA_PANEL} flex items-start gap-3 p-4`} aria-labelledby="aurora-secure-billing-title">
+        <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" aria-hidden="true" />
         <div>
-          <span className="terminal-text text-white/50 block mb-0.5">Secure billing notice</span>
-          Subscriptions are processed securely via Stripe Checkout. Your subscription tier syncs back to VouchEdge after payment completes. Beta Member and Pro Lab access activate automatically; payment never creates a verification badge.
+          <h2 id="aurora-secure-billing-title" className={`${AURORA_LABEL} text-white/55`}>Secure billing notice</h2>
+          <p className="mt-1 text-xs leading-relaxed text-white/45">
+            Stripe processes checkout and subscription management. Payment changes account access only; it does not verify identity, research quality, or prediction accuracy.
+          </p>
         </div>
-      </div>
-
-    </div>
+      </section>
+    </main>
   );
 }
+
+interface PlanSurfaceProps {
+  title: string;
+  price: string;
+  cadence: string;
+  description: string;
+  features: readonly string[];
+  active: boolean;
+  premium?: boolean;
+  children?: React.ReactNode;
+}
+
+function PlanSurface({
+  title,
+  price,
+  cadence,
+  description,
+  features,
+  active,
+  premium = false,
+  children,
+}: PlanSurfaceProps) {
+  return (
+    <article className={`${premium ? AURORA_PANEL_PREMIUM : AURORA_PANEL} flex min-h-full flex-col justify-between gap-6 p-5`}>
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-base font-black text-white">{title}</h3>
+            {active && <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-vouch-emerald">Current access</span>}
+          </div>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-3xl font-black text-white">{price}</span>
+            <span className="text-xs text-white/40">{cadence}</span>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-white/50">{description}</p>
+        </div>
+        <ul className="space-y-2.5 border-t border-white/10 pt-4">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2 text-xs leading-relaxed text-white/65">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-vouch-emerald" aria-hidden="true" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {children}
+    </article>
+  );
+}
+
+export default PremiumSubPage;
