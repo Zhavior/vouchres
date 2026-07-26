@@ -2,7 +2,7 @@ import type {
   IntelligenceAnalysis,
   IntelligenceTier,
 } from "./types";
-import { buildConfidence, buildEvidence, buildMetrics, buildRisks } from "./analysis";
+import { buildConfidence, buildEvidence, buildMetrics, buildRecommendation, buildRisks, buildSummary } from "./analysis";
 
 interface BuildPlayerIntelligenceAnalysisInput {
   score: number | null | undefined;
@@ -46,6 +46,17 @@ export function buildPlayerIntelligenceAnalysis({
 
 const risks = buildRisks(evidence);
 
+const recommendation = buildRecommendation(
+  confidenceBreakdown,
+  risks,
+);
+
+const summary = buildSummary(
+  recommendation,
+  confidenceBreakdown,
+  risks,
+);
+
 return {
     score: isFiniteNumber(score) ? score : null,
     edge: isFiniteNumber(edge) ? edge : null,
@@ -84,5 +95,7 @@ return {
     evidence,
     confidenceBreakdown,
     risks,
+    recommendation,
+    summary,
   };
 }

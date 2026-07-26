@@ -16,3 +16,9 @@ export type {
 
 export { buildRisks } from "./buildRisks";
 export type { IntelligenceRisk, RiskSeverity } from "./buildRisks";
+
+export { buildRecommendation } from "./buildRecommendation";
+export type { RecommendationResult, RecommendationTier } from "./buildRecommendation";
+
+export { buildSummary } from "./buildSummary";
+export type { SummaryResult } from "./buildSummary";
