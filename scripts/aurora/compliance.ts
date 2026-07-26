@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 export const AURORA_MIGRATION_STATUSES = [
   'legacy',
@@ -64,19 +65,10 @@ function extension(path: string): string {
   return match?.[0] ?? '';
 }
 
-function listSourceFiles(root: string, directory = join(root, 'src')): string[] {
-  const files: string[] = [];
-
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...listSourceFiles(root, path));
-      continue;
-    }
-    if (SOURCE_EXTENSIONS.has(extension(entry.name))) files.push(path);
-  }
-
-  return files;
+function listSourceFiles(root: string): string[] {
+  return execFileSync('git', ['-C', root, 'ls-files', '-z', '--', 'src'], { encoding: 'utf8' })
+    .split('\0')
+    .filter((path) => path && SOURCE_EXTENSIONS.has(extension(path)));
 }
 
 function readLines(path: string): string[] {
@@ -88,8 +80,7 @@ function readLines(path: string): string[] {
 
 function findZ8Importers(root: string): string[] {
   return listSourceFiles(root)
-    .filter((path) => Z8_TOKEN_IMPORT.test(readFileSync(path, 'utf8')))
-    .map((path) => relative(root, path).replaceAll('\\', '/'))
+    .filter((path) => Z8_TOKEN_IMPORT.test(readFileSync(join(root, path), 'utf8')))
     .sort();
 }
 
