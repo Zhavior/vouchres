@@ -1,15 +1,23 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "../../lib/motion";
 import {
-  BarChart3, Calendar, CheckCircle2, XCircle, Lock,
-  TrendingUp, Award, Filter, Search, ChevronLeft, ChevronRight,
-  Trophy, Flame, Zap,
+  BarChart3, Calendar, CheckCircle2, XCircle,
+  TrendingUp, Search, ChevronLeft, ChevronRight, Database,
 } from "lucide-react";
 import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
-import ResultsLedgerSummary from "./ResultsLedgerSummary";
+import { ResultsLedgerSummary } from "./ResultsLedgerSummary";
 import ResultsPartition from "./ResultsPartition";
 import SmartParlaySlipCard from "../parlay/smart/SmartParlaySlipCard";
 import { projectSmartParlayFromParlay } from "../../domain/parlay";
+import {
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PANEL,
+  AURORA_SURFACE,
+} from '../../theme/auroraTokens';
+import {
+  buildResultsAuroraSummary,
+  type ResultsAuroraSummary,
+} from './resultsAuroraModel';
 
 /**
  * ResultsStudio — Premium proof dashboard
@@ -29,7 +37,7 @@ interface Props {
 
 type ResultFilter = "all" | "wins" | "losses" | "pushes" | "voids" | "pending";
 
-export default function ResultsStudio({ posts = [], profile, savedParlays = [], onTailParlay }: Props) {
+export function ResultsStudio({ profile, savedParlays = [] }: Props) {
   const [filter, setFilter] = useState<ResultFilter>("all");
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -48,8 +56,6 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
       postedAt: p.createdAt,
       resultDate: p.createdAt.slice(0, 10),
       riskTier: p.riskTier,
-      oddsValue: p.oddsValue,
-      isDemo: false,
     }));
     return slips;
   }, [savedParlays, profile]);
@@ -74,7 +80,7 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
     return result;
   }, [savedParlays, filter, selectedDate, search]);
 
-  // Calendar data — now includes winRate % and net units per day
+  // Calendar placement uses the saved timestamp. It does not imply a grading date.
   const calendarDays = useMemo(() => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -82,7 +88,7 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
     const days: Array<{
       date: string; day: number; slips: number;
       wins: number; losses: number; pending: number;
-      winRate: number; units: number;
+      winRate: number;
     }> = [];
 
     for (let d = 1; d <= lastDay.getDate(); d++) {
@@ -91,12 +97,6 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
       const wins    = daySlips.filter((s) => s.status === "WON");
       const losses  = daySlips.filter((s) => s.status === "LOST");
       const settled = wins.length + losses.length;
-      // Net units: wins return (decimalOdds − 1), losses cost 1 unit each.
-      // Falls back to +1 flat when oddsValue is missing or ≤ 1.
-      const units = wins.reduce((sum, s) => {
-        const dec = Number(s.oddsValue ?? 0);
-        return sum + (dec > 1 ? dec - 1 : 1);
-      }, 0) - losses.length;
       days.push({
         date: dateStr,
         day: d,
@@ -105,66 +105,44 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
         losses: losses.length,
         pending: daySlips.filter((s) => s.status === "PENDING").length,
         winRate: settled > 0 ? Math.round((wins.length / settled) * 100) : -1,
-        units: Math.round(units * 10) / 10,
       });
     }
     return days;
   }, [calendarMonth, allSlips]);
 
-  // Summary stats — includes net units P&L
-  const stats = useMemo(() => {
-    const wonSlips  = allSlips.filter((s) => s.status === "WON");
-    const lostSlips = allSlips.filter((s) => s.status === "LOST");
-    const won     = wonSlips.length;
-    const lost    = lostSlips.length;
-    const pending = allSlips.filter((s) => s.status === "PENDING").length;
-    const voids   = allSlips.filter((s) => s.status === "VOID").length;
-    const settled = won + lost;
-    const winRate = settled > 0 ? Math.round((won / settled) * 100) : 0;
-    const units   = Math.round((
-      wonSlips.reduce((sum, s) => {
-        const dec = Number(s.oddsValue ?? 0);
-        return sum + (dec > 1 ? dec - 1 : 1);
-      }, 0) - lost
-    ) * 10) / 10;
-    return { won, lost, pending, voids, settled, winRate, total: allSlips.length, units };
-  }, [allSlips]);
+  const stats = useMemo(() => buildResultsAuroraSummary(savedParlays), [savedParlays]);
 
   const monthName = calendarMonth.toLocaleString("default", { month: "long", year: "numeric" });
 
   return (
-    <div className="min-h-screen pb-12" style={{ background: "#040810", color: "#e2e8f0" }}>
+    <main className={`${AURORA_PAGE} min-h-screen pb-12`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Premium hero header */}
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/30 p-5 shadow-2xl">
-          <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <section className={`${AURORA_PANEL} p-5`} aria-labelledby="track-record-title">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">
-                <BarChart3 className="h-3.5 w-3.5" /> Proof Ledger
-              </span>
-              <h1 className="text-3xl font-black tracking-tight text-white">Results Studio</h1>
-              <p className="mt-1.5 max-w-xl text-sm text-slate-400">
-                Every saved slip, graded after final from the official box score. Unverified until settled — no faked records.
+              <p className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+                <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Aurora track record
+              </p>
+              <h1 id="track-record-title" className="mt-2 text-3xl font-black tracking-tight text-white">Track Record</h1>
+              <p className="mt-1.5 max-w-xl text-sm leading-6 text-white/55">
+                Saved slips and their current recorded states. Backend-synced and local records stay visibly distinct.
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
               {[
                 { label: 'Slips',    value: stats.total,                                                         tone: 'text-white' },
-                { label: 'Graded',   value: stats.settled,                                                        tone: 'text-cyan-300' },
-                { label: 'Win rate', value: stats.settled > 0 ? `${stats.winRate}%` : '—',                       tone: 'text-emerald-300' },
-                { label: 'Net units',value: stats.settled > 0 ? `${stats.units >= 0 ? '+' : ''}${stats.units}u` : '—',
-                                     tone: stats.units > 0 ? 'text-emerald-300' : stats.units < 0 ? 'text-red-400' : 'text-slate-400' },
+                { label: 'Settled',  value: stats.settled,                                                        tone: 'text-vouch-cyan' },
+                { label: 'Win rate', value: stats.winRate === null ? 'Unavailable' : `${stats.winRate}%`,        tone: 'text-vouch-emerald' },
+                { label: 'Synced',   value: stats.synced,                                                         tone: 'text-white/70' },
               ].map((kpi) => (
-                <div key={kpi.label} className="min-w-[72px] rounded-2xl border border-white/[0.06] bg-slate-950/50 px-3 py-2.5 text-center">
-                  <div className={`text-xl font-black ${kpi.tone}`}>{kpi.value}</div>
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{kpi.label}</div>
+                <div key={kpi.label} className={`${AURORA_SURFACE} min-w-[82px] px-3 py-2.5 text-center`}>
+                  <div className={`font-mono text-lg font-black tabular-nums ${kpi.tone}`}>{kpi.value}</div>
+                  <div className={`${AURORA_LABEL} mt-1 text-white/35`}>{kpi.label}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -174,11 +152,10 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
             {/* Summary cards */}
             <ResultsSummaryCards stats={stats} />
 
-            {/* Calendar */}
-            <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <section className={`${AURORA_PANEL} p-4`} aria-labelledby="saved-activity-title">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Calendar</div>
+                  <div id="saved-activity-title" className={`${AURORA_LABEL} text-white/45`}>Saved activity</div>
                   <div className="flex items-center gap-2.5 text-[9px] text-slate-600">
                     <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(52,211,153,0.25)",border:"1px solid rgba(52,211,153,0.4)"}} />Win</span>
                     <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(248,113,113,0.2)",border:"1px solid rgba(248,113,113,0.35)"}} />Loss</span>
@@ -186,12 +163,12 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="text-slate-600 hover:text-white p-1">
-                    <ChevronLeft className="w-4 h-4" />
+                  <button type="button" aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="flex h-11 w-11 items-center justify-center text-white/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80">
+                    <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                   </button>
                   <span className="text-xs font-bold text-white">{monthName}</span>
-                  <button onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="text-slate-600 hover:text-white p-1">
-                    <ChevronRight className="w-4 h-4" />
+                  <button type="button" aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="flex h-11 w-11 items-center justify-center text-white/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80">
+                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -199,8 +176,8 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
               {allSlips.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500">No graded slips yet.</p>
-                  <p className="text-[10px] text-slate-600 mt-1">Post picks before game time to build your proof history.</p>
+                  <p className="text-xs text-white/50">No saved slips yet.</p>
+                  <p className="mt-1 text-[10px] text-white/35">Save a decision to begin a track record.</p>
                 </div>
               ) : (
                 <>
@@ -223,8 +200,6 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                       const isSelected = selectedDate === day.date;
                       const today      = new Date().toISOString().slice(0, 10);
                       const isToday    = day.date === today;
-                      const unitsPos   = day.units > 0;
-                      const unitsNeg   = day.units < 0;
 
                       // Background tint
                       const bg = isAllWins  ? "rgba(52,211,153,0.09)"
@@ -249,7 +224,7 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                             hasSlips ? "cursor-pointer hover:brightness-125" : "cursor-default"
                           } ${isSelected ? "ring-1 ring-cyan-400" : ""}`}
                           style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
-                          title={hasSettled ? `${day.wins}W-${day.losses}L · ${day.winRate}% · ${day.units >= 0 ? "+" : ""}${day.units}u` : undefined}
+                          title={hasSettled ? `${day.wins} won, ${day.losses} lost; saved on ${day.date}` : hasSlips ? `Saved on ${day.date}` : undefined}
                         >
                           {/* Day number */}
                           <span className={`text-[10px] font-mono leading-none ${
@@ -270,19 +245,6 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                                 }}
                               >
                                 {day.winRate}%
-                              </span>
-
-                              {/* Units P&L */}
-                              <span
-                                className="text-[7.5px] font-bold leading-none rounded px-0.5"
-                                style={{
-                                  color: unitsPos ? "#34d399" : unitsNeg ? "#f87171" : "#94a3b8",
-                                  background: unitsPos ? "rgba(52,211,153,0.12)"
-                                            : unitsNeg ? "rgba(248,113,113,0.12)"
-                                            :             "rgba(148,163,184,0.08)",
-                                }}
-                              >
-                                {day.units >= 0 ? "+" : ""}{day.units}u
                               </span>
 
                               {/* Slip count dots */}
@@ -308,12 +270,12 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                   {selectedDate && (
                     <div className="mt-3 flex items-center gap-2">
                       <span className="text-[10px] text-slate-500">Filtered to: {selectedDate}</span>
-                      <button onClick={() => setSelectedDate(null)} className="text-[10px] text-cyan-400 hover:text-cyan-300">Clear</button>
+                      <button type="button" onClick={() => setSelectedDate(null)} className="min-h-11 px-3 text-[10px] text-vouch-cyan hover:text-white">Clear</button>
                     </div>
                   )}
                 </>
               )}
-            </div>
+            </section>
 
             {/* Filter bar */}
             <div className="flex flex-wrap items-center gap-2">
@@ -324,7 +286,7 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                   placeholder="Search slips..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg py-2 pl-9 pr-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none"
+                  className="min-h-11 w-full border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-vouch-cyan/80"
                   style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
                 />
               </div>
@@ -339,7 +301,7 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                   <button
                     key={f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${filter === f.id ? "text-slate-950" : "text-slate-500"}`}
+                    className={`min-h-11 px-3 text-[10px] font-bold uppercase transition-colors ${filter === f.id ? "text-slate-950" : "text-white/45"}`}
                     style={filter === f.id ? { background: f.color || "#22d3ee" } : { background: "rgba(255,255,255,0.03)" }}
                   >
                     {f.label}
@@ -353,16 +315,15 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
               {filteredParlays.length === 0 ? (
                 <EmptyResultsState hasSlips={allSlips.length > 0} />
               ) : (
-                <AnimatePresence>
-                  {filteredParlays.map((parlay, i) => (
+                <>
+                  {filteredParlays.map((parlay) => (
                     <ResultSmartSlipCard
                       key={parlay.id}
                       parlay={parlay}
-                      index={i}
                       ownerName={profile?.displayName || "You"}
                     />
                   ))}
-                </AnimatePresence>
+                </>
               )}
             </div>
           </div>
@@ -370,60 +331,51 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
           {/* RIGHT: Win Rates + Breakdown */}
           <div className="lg:col-span-4 space-y-5">
             {/* Ledger summary */}
-            <ResultsLedgerSummary savedParlays={savedParlays} />
+            <ResultsLedgerSummary summary={stats} />
 
             {/* Parlay breakdown — result x leg-count, real saved-slip data */}
-            <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Parlay Breakdown</div>
+            <section className={`${AURORA_PANEL} p-4`} aria-labelledby="record-breakdown-title">
+              <div id="record-breakdown-title" className={`${AURORA_LABEL} mb-3 text-white/45`}>Record breakdown</div>
               <ResultsPartition slips={allSlips} />
-              <p className="text-[9px] text-slate-700 mt-3">P/L unavailable — odds/stakes not fully tracked yet.</p>
-            </div>
-
-            {/* AI Capper placeholder */}
-            <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">AI Capper Records</div>
-              <div className="text-center py-4">
-                <Trophy className="w-6 h-6 text-slate-700 mx-auto mb-2" />
-                <p className="text-[11px] text-slate-600">AI capper records will appear here once picks are graded.</p>
-                <p className="text-[9px] text-slate-700 mt-1">Sample size: 0 · Record building</p>
-              </div>
-            </div>
+              <p className="mt-3 text-[10px] leading-5 text-white/35">Grouped by current saved status and leg count.</p>
+            </section>
 
             {/* Disclaimer */}
             <p className="text-[9px] text-slate-700 text-center px-4">
-              VouchEdge is for sports research, social proof, and entertainment. Probability-based. No guarantees. Results are tracked from real saved slips — no faked verified records.
+              VouchEdge is for sports research and entertainment. Local records are not presented as verified. No guarantees.
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
 
 function ResultSmartSlipCard({
   parlay,
-  index,
   ownerName,
 }: {
   parlay: Parlay;
-  index: number;
   ownerName: string;
 }) {
   const smartSlip = useMemo(() => projectSmartParlayFromParlay(parlay), [parlay]);
-  const metaLine = `${ownerName} · ${parlay.legs.length}-leg · ${new Date(parlay.createdAt).toLocaleDateString()}`;
+  const savedAt = new Date(parlay.createdAt);
+  const savedDate = Number.isNaN(savedAt.getTime()) ? 'Saved date unavailable' : savedAt.toLocaleDateString();
+  const metaLine = `${ownerName} · ${parlay.legs.length}-leg · ${savedDate}`;
+  const recordState = parlay.status === 'PENDING'
+    ? 'Awaiting recorded outcome'
+    : parlay.backendSyncState === 'synced' && parlay.backendPickId
+      ? 'Backend-synced result'
+      : 'Local result state';
   const footerParts = [
     parlay.oddsValue ? `Odds: ${parlay.oddsValue > 0 ? `+${parlay.oddsValue}` : parlay.oddsValue}` : null,
     parlay.riskTier ? `Risk: ${parlay.riskTier}` : null,
-    "Graded after final",
+    recordState,
   ].filter(Boolean);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-    >
+    <div>
       <SmartParlaySlipCard
         slip={smartSlip}
         variant="results"
@@ -435,19 +387,18 @@ function ResultSmartSlipCard({
         footerNote={footerParts.join(" · ")}
         legOdds={Object.fromEntries(parlay.legs.map((leg) => [leg.id, leg.odds]))}
       />
-    </motion.div>
+    </div>
   );
 }
 
 /* ============ Summary Cards ============ */
-function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number; units: number } }) {
-  const unitsColor = stats.units > 0 ? "#34d399" : stats.units < 0 ? "#f87171" : "#64748b";
+function ResultsSummaryCards({ stats }: { stats: ResultsAuroraSummary }) {
   const cards = [
     { label: "Total Slips", value: stats.total,                                                                              icon: BarChart3,    color: "#22d3ee" },
     { label: "Wins",        value: stats.won,                                                                                icon: CheckCircle2, color: "#34d399" },
     { label: "Losses",      value: stats.lost,                                                                               icon: XCircle,      color: "#f87171" },
-    { label: "Win Rate",    value: stats.settled > 0 ? `${stats.winRate}%` : "—",                                          icon: TrendingUp,   color: "#a78bfa" },
-    { label: "Net Units",   value: stats.settled > 0 ? `${stats.units >= 0 ? "+" : ""}${stats.units}u` : "—",             icon: Zap,          color: unitsColor },
+    { label: "Win Rate",    value: stats.winRate === null ? "Unavailable" : `${stats.winRate}%`,                            icon: TrendingUp,   color: "#a78bfa" },
+    { label: "Backend Synced", value: stats.synced,                                                                           icon: Database,     color: "#4FB8DC" },
   ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -462,6 +413,8 @@ function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pe
   );
 }
 
+export default ResultsStudio;
+
 
 /* ============ Empty State ============ */
 function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {
@@ -475,8 +428,8 @@ function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {
         </>
       ) : (
         <>
-          <p className="text-sm text-slate-400 mb-1">No graded slips yet.</p>
-          <p className="text-[10px] text-slate-600">Post picks before game time to build your proof history.</p>
+          <p className="mb-1 text-sm text-white/55">No saved slips yet.</p>
+          <p className="text-[10px] text-white/35">Save a decision to begin a track record.</p>
         </>
       )}
     </div>

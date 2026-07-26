@@ -1,53 +1,70 @@
-import React from 'react';
-import { BarChart3, Info } from 'lucide-react';
-import type { Parlay } from '../../types';
-import { StatusBadge, ScorePill } from '../ui/primitives';
+import { Database, HardDrive, Info, LockKeyhole } from 'lucide-react';
+import { AURORA_LABEL, AURORA_PANEL, AURORA_SURFACE } from '../../theme/auroraTokens';
+import { ScorePill } from '../ui/primitives';
+import type { ResultsAuroraSummary } from './resultsAuroraModel';
 
-/** Honest results ledger summary computed from the user's REAL saved parlays. */
-export default function ResultsLedgerSummary({ savedParlays = [] }: { savedParlays?: Parlay[] }) {
-  const by = (s: string) => savedParlays.filter((p) => p.status === s);
-  const won = by('WON'), lost = by('LOST'), pending = by('PENDING'), voids = by('VOID');
-  const pushed = savedParlays.filter((p) => (p.status as string) === 'PUSH' || (p.status as string) === 'PUSHED');
-  const settled = won.length + lost.length;
-  const winRate = settled ? Math.round((won.length / settled) * 100) : null;
+interface ResultsLedgerSummaryProps {
+  summary: ResultsAuroraSummary;
+}
 
-  const stake = (p: Parlay) => p.wagerAmount ?? 1;
-  const staked = [...won, ...lost].reduce((s, p) => s + stake(p), 0);
-  const profit = won.reduce((s, p) => s + ((p.payoutAmount ?? stake(p) * (p.oddsValue || 2)) - stake(p)), 0) - lost.reduce((s, p) => s + stake(p), 0);
-  const roi = staked ? Math.round((profit / staked) * 100) : null;
-  const units = staked ? Math.round((profit / (savedParlays.reduce((s, p) => s + stake(p), 0) / Math.max(1, savedParlays.length))) * 10) / 10 : 0;
-
-  const counts: { label: string; n: number }[] = [
-    { label: 'Pending', n: pending.length }, { label: 'Won', n: won.length }, { label: 'Lost', n: lost.length },
-    { label: 'Pushed', n: pushed.length }, { label: 'Void', n: voids.length },
-  ];
-
+export function ResultsLedgerSummary({ summary }: ResultsLedgerSummaryProps) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 mb-5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-black flex items-center gap-2"><BarChart3 className="w-4 h-4 text-emerald-400" /> Your Results Ledger</h3>
-        <StatusBadge status={settled ? 'Pending' : 'Demo'} />
+    <section className={`${AURORA_PANEL} p-4`} aria-labelledby="aurora-record-state-title">
+      <div>
+        <p className={`${AURORA_LABEL} text-vouch-cyan`}>Aurora record state</p>
+        <h2 id="aurora-record-state-title" className="mt-1 text-lg font-black tracking-tight text-white">
+          What is actually recorded
+        </h2>
       </div>
 
-      {savedParlays.length === 0 ? (
-        <p className="text-[11px] text-slate-500 font-mono py-2">No saved slips yet — build and save a parlay to start tracking real results.</p>
+      {summary.total === 0 ? (
+        <p className="py-4 text-sm leading-6 text-white/50">
+          No saved slips yet. Save a decision to begin a track record.
+        </p>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {counts.map((c) => <ScorePill key={c.label} label={c.label} value={c.n} />)}
-            <ScorePill label="Win rate" value={winRate != null ? `${winRate}%` : '—'} color="#34d399" />
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <ScorePill label="Pending" value={summary.pending} />
+            <ScorePill label="Won" value={summary.won} color="#31B583" />
+            <ScorePill label="Lost" value={summary.lost} color="#f87171" />
+            <ScorePill label="Void" value={summary.voids} color="#94a3b8" />
+            <ScorePill
+              label="Win rate"
+              value={summary.winRate === null ? 'Unavailable' : `${summary.winRate}%`}
+              color="#31B583"
+            />
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            <ScorePill label="ROI" value={roi != null ? `${roi > 0 ? '+' : ''}${roi}%` : '—'} color={roi && roi >= 0 ? '#34d399' : '#f87171'} />
-            <ScorePill label="Units" value={`${units > 0 ? '+' : ''}${units}u`} color={units >= 0 ? '#34d399' : '#f87171'} />
-            <ScorePill label="Verified" value="0" color="#94a3b8" />
+
+          <div className="mt-3 grid gap-px bg-white/10">
+            <RecordCoverageRow icon={Database} label="Backend synced" value={summary.synced} />
+            <RecordCoverageRow icon={HardDrive} label="Local only" value={summary.localOnly} />
+            <RecordCoverageRow icon={LockKeyhole} label="Locked before outcome" value={summary.committedBeforeOutcome} />
           </div>
         </>
       )}
 
-      <p className="text-[10px] text-slate-600 mt-3 flex items-center gap-1">
-        <Info className="w-2.5 h-2.5" /> Tracked from your saved slips. Picks are <span className="text-slate-400">Unverified</span> until graded after game finals — no faked verified records.
+      <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-white/40">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        Local status is shown as local status. Aurora does not label a record verified without a durable backend source.
       </p>
+    </section>
+  );
+}
+
+interface RecordCoverageRowProps {
+  icon: typeof Database;
+  label: string;
+  value: number;
+}
+
+function RecordCoverageRow({ icon: Icon, label, value }: RecordCoverageRowProps) {
+  return (
+    <div className={`${AURORA_SURFACE} flex min-h-11 items-center justify-between gap-3 px-3 py-2`}>
+      <span className="flex items-center gap-2 text-xs text-white/55">
+        <Icon className="h-3.5 w-3.5 text-vouch-cyan" aria-hidden="true" />
+        {label}
+      </span>
+      <span className="font-mono text-sm font-black tabular-nums text-white">{value}</span>
     </div>
   );
 }

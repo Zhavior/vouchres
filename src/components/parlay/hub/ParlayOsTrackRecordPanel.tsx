@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useMemo } from 'react';
 import { TrendingUp } from 'lucide-react';
+import type { Leg, Parlay } from '../../../types';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
 import { ParlayOsPanelSkeleton } from './parlayOsUi';
 
@@ -12,19 +13,28 @@ export default function ParlayOsTrackRecordPanel({
   savedSlips: unknown[];
   onSectionChange?: (section: string) => void;
 }) {
-  const mappedParlays = useMemo(() => (
-    savedSlips.map((s) => {
+  const mappedParlays = useMemo<Parlay[]>(() => (
+    savedSlips.map((s, index) => {
       const rec = s as Record<string, unknown>;
+      const status = String(rec.status ?? '').toUpperCase();
+      const normalizedStatus: Parlay['status'] =
+        status === 'WON' || status === 'LOST' || status === 'VOID' ? status : 'PENDING';
+
       return {
-        id: String(rec.publicId ?? rec.sourceId ?? rec.id ?? Math.random()),
+        id: String(rec.publicId ?? rec.sourceId ?? rec.id ?? `local-slip-${index}`),
         title: String(rec.title ?? 'Saved Parlay'),
-        legs: Array.isArray(rec.legs) ? rec.legs : [],
-        status: String(rec.status ?? 'PENDING').toUpperCase(),
-        createdAt: String(rec.createdAt ?? new Date().toISOString()),
+        legs: (Array.isArray(rec.legs) ? rec.legs : []) as Leg[],
+        status: normalizedStatus,
+        createdAt: typeof rec.createdAt === 'string' ? rec.createdAt : '',
         riskTier: String(rec.riskTier ?? 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH',
         oddsValue: Number(rec.oddsValue ?? 0),
         totalOdds: String(rec.totalOdds ?? ''),
-        wagerAmount: Number(rec.wagerAmount ?? 0),
+        wagerAmount: typeof rec.wagerAmount === 'number' ? rec.wagerAmount : undefined,
+        backendPickId: typeof rec.backendPickId === 'string' ? rec.backendPickId : undefined,
+        backendSyncState: typeof rec.backendSyncState === 'string'
+          ? rec.backendSyncState as Parlay['backendSyncState']
+          : undefined,
+        trustCommittedAt: typeof rec.trustCommittedAt === 'string' ? rec.trustCommittedAt : undefined,
       };
     })
   ), [savedSlips]);
@@ -33,7 +43,7 @@ export default function ParlayOsTrackRecordPanel({
     <div className="flex flex-col gap-0">
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-          Every saved slip — graded from the official box score. No cherry-picking.
+          Saved slips and their current recorded states. Backend-synced and local records remain distinct.
         </p>
         {onSectionChange ? (
           <button
@@ -50,10 +60,7 @@ export default function ParlayOsTrackRecordPanel({
 
       <PanelErrorBoundary>
         <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-          <ResultsStudio
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            savedParlays={mappedParlays as any}
-          />
+          <ResultsStudio savedParlays={mappedParlays} />
         </Suspense>
       </PanelErrorBoundary>
     </div>
