@@ -88,7 +88,7 @@ Confidence
 
 Outcome
   Miss
-  
+
 Why?
   Bullpen changed
   Wind shifted
