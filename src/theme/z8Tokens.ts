@@ -1,124 +1,48 @@
 /**
- * Z8 Obsidian design tokens — single source for sidebar-aligned UI.
- * Uses Tailwind @theme colors from src/styles/z8-design-system.css.
+ * @deprecated Z8 compatibility exports.
+ *
+ * Aurora is the canonical product language. Existing screens may keep these
+ * names while they migrate, but new shared code must import auroraTokens.ts.
  */
-
-export const Z8_ACCENT = 'text-vouch-emerald';
-export const Z8_EMERALD = 'text-vouch-emerald';
-export const Z8_WARNING = 'text-vouch-amber';
-
-/** Premium typography — Geist body, display weight, JetBrains labels. */
-export const Z8_FONT = 'font-z8';
-export const Z8_FONT_DISPLAY = 'font-z8 font-extrabold tracking-tight';
-export const Z8_FONT_MONO = 'font-mono';
-
-/** Glass panel shell used across pages (matches FeedSidebar groups). */
-export const Z8_PANEL = 'glass-panel-strong glass-border border-vouch-cyan/20 bg-black/20 font-z8';
-
-/** Premium glass — layered depth, grain, inset highlights. */
-export const Z8_PANEL_PREMIUM =
-  'glass-panel-premium glass-border border-vouch-cyan/25 bg-black/25 font-z8 z8-interactive';
-
-/** Compact inner surface (nav items, inputs). */
-export const Z8_SURFACE = 'border border-white/10 bg-black/35';
-
-/** Full-viewport overlay scrim for modals, sheets, and panels. */
-export const Z8_OVERLAY_SCRIM = 'bg-black/60 backdrop-blur-sm';
-
-/** Icon / chip box. */
-export const Z8_ICON_BOX =
-  'flex items-center justify-center border border-white/10 bg-black/40 text-vouch-cyan/70';
-
-/** Active nav / tab state — cyan left rail + glow (layout-stable via fixed left border width). */
-export const Z8_ACTIVE =
-  'border-l-[3px] border-l-vouch-cyan border-vouch-cyan/50 bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(79,184,220,0.22),0_0_32px_rgba(79,184,220,0.14)]';
-
-/** Idle nav / tab state. */
-export const Z8_IDLE =
-  'border-l-[3px] border-l-transparent border-white/10 bg-black/30 text-white/45 hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white';
-
-/** Sidebar column shell — glass morphism, see-through to unified page base. */
-export const Z8_SIDEBAR_SHELL = 'z8-sidebar-shell backdrop-blur-xl font-z8 text-white';
-
-/** Borderless sidebar panel — depth via shadow, not border lines. */
-export const Z8_SIDEBAR_PANEL = 'z8-sidebar-panel font-z8';
-
-/** Borderless sidebar inner surface. */
-export const Z8_SIDEBAR_SURFACE = 'z8-sidebar-surface';
-
-/** Borderless sidebar icon box. */
-export const Z8_SIDEBAR_ICON_BOX =
-  'z8-sidebar-icon flex items-center justify-center text-vouch-cyan/70';
-
-/** Active sidebar nav — cyan glow rail (absolute in component), no borders. */
-export const Z8_SIDEBAR_ACTIVE =
-  'bg-vouch-cyan/12 text-white shadow-[inset_4px_0_20px_rgba(79,184,220,0.18)]';
-
-/** Idle sidebar nav — background contrast + hover glow, no borders. */
-export const Z8_SIDEBAR_IDLE =
-  'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(79,184,220,0.1)]';
-
-/** Mono label typography — semibold weight for clean hierarchy without visual clutter. */
-export const Z8_LABEL = `${Z8_FONT_MONO} text-[11px] font-semibold uppercase tracking-[0.08em]`;
-
-/** Muted secondary badge — clean depth without visual noise. */
-export const Z8_BADGE_MUTED = 'inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 font-mono text-[10px] font-semibold text-white/70';
-
-/** Primary active neon badge. */
-export const Z8_BADGE_NEON = 'inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-vouch-cyan';
-
-/** Page root background — transparent; unified obsidian base lives on .z8-app-shell. */
-export const Z8_PAGE = 'bg-transparent font-z8 text-white min-h-full';
-
-/** Page shell rhythm — padding scale + vertical gap between sections. */
-export const Z8_PAGE_SHELL = 'z8-page-shell space-y-4 sm:space-y-5';
-
-/** Section header block (eyebrow + title cluster). */
-export const Z8_SECTION_HEADER = 'z8-section-header';
-
-/** Stat metric chip — tabular nums, compact cell. */
-export const Z8_STAT_CHIP = 'z8-stat-chip';
-
-/** Display title scale. */
-export const Z8_DISPLAY = 'z8-display';
-
-/** Tabular numerals utility. */
-export const Z8_TABULAR = 'z8-tabular-nums';
-
-/** Motion-safe interactive lift. */
-export const Z8_INTERACTIVE = 'z8-interactive';
-
-/** Vouch palette hex — SVG rings, inline styles, chart strokes. */
-export const Z8_CYAN_HEX = '#4FB8DC';
-export const Z8_EMERALD_HEX = '#31B583';
-export const Z8_AMBER_HEX = '#D99C4A';
-
-/** RGB tuple for inline rgba() — matches vouch-cyan. */
-export const Z8_CYAN_RGB = '79, 184, 220';
-
-/** Auth / primary CTA gradient + shadow — use instead of hardcoded #00F0FF. */
-export const Z8_AUTH_GRADIENT = `linear-gradient(135deg, ${Z8_CYAN_HEX}, #2563eb)`;
-export const Z8_AUTH_SHADOW = `0 8px 32px rgba(${Z8_CYAN_RGB}, 0.22)`;
-
-/** Discord-style accent for magic-link affordance only. */
-export const Z8_BLURPLE_HEX = '#5865F2';
-
-/** Resolve legacy --ve-accent-* status tokens to Z8 hex; passthrough for semantic ve-* vars. */
-export function z8StatusColor(token: string): string {
-  switch (token) {
-    case '--ve-accent-cyan':
-      return Z8_CYAN_HEX;
-    case '--ve-accent-gold':
-      return Z8_AMBER_HEX;
-    case '--ve-accent-pink':
-    case '--ve-accent-violet':
-      return Z8_EMERALD_HEX;
-    default:
-      return `hsl(var(${token}))`;
-  }
-}
-
-/** Page rhythm spacing (Tailwind arbitrary values from @theme). */
-export const Z8_PAGE_PAD_X = 'px-3 sm:px-4';
-export const Z8_PAGE_PAD_Y = 'py-4 lg:py-5';
-export const Z8_PAGE_GAP = 'space-y-4 sm:space-y-5';
+export {
+  AURORA_ACCENT as Z8_ACCENT,
+  AURORA_EMERALD as Z8_EMERALD,
+  AURORA_WARNING as Z8_WARNING,
+  AURORA_FONT as Z8_FONT,
+  AURORA_FONT_DISPLAY as Z8_FONT_DISPLAY,
+  AURORA_FONT_MONO as Z8_FONT_MONO,
+  AURORA_PANEL as Z8_PANEL,
+  AURORA_PANEL_PREMIUM as Z8_PANEL_PREMIUM,
+  AURORA_SURFACE as Z8_SURFACE,
+  AURORA_OVERLAY_SCRIM as Z8_OVERLAY_SCRIM,
+  AURORA_ICON_BOX as Z8_ICON_BOX,
+  AURORA_ACTIVE as Z8_ACTIVE,
+  AURORA_IDLE as Z8_IDLE,
+  AURORA_SIDEBAR_SHELL as Z8_SIDEBAR_SHELL,
+  AURORA_SIDEBAR_PANEL as Z8_SIDEBAR_PANEL,
+  AURORA_SIDEBAR_SURFACE as Z8_SIDEBAR_SURFACE,
+  AURORA_SIDEBAR_ICON_BOX as Z8_SIDEBAR_ICON_BOX,
+  AURORA_SIDEBAR_ACTIVE as Z8_SIDEBAR_ACTIVE,
+  AURORA_SIDEBAR_IDLE as Z8_SIDEBAR_IDLE,
+  AURORA_LABEL as Z8_LABEL,
+  AURORA_BADGE_MUTED as Z8_BADGE_MUTED,
+  AURORA_BADGE_NEON as Z8_BADGE_NEON,
+  AURORA_PAGE as Z8_PAGE,
+  AURORA_PAGE_SHELL as Z8_PAGE_SHELL,
+  AURORA_SECTION_HEADER as Z8_SECTION_HEADER,
+  AURORA_STAT_CHIP as Z8_STAT_CHIP,
+  AURORA_DISPLAY as Z8_DISPLAY,
+  AURORA_TABULAR as Z8_TABULAR,
+  AURORA_INTERACTIVE as Z8_INTERACTIVE,
+  AURORA_CYAN_HEX as Z8_CYAN_HEX,
+  AURORA_EMERALD_HEX as Z8_EMERALD_HEX,
+  AURORA_AMBER_HEX as Z8_AMBER_HEX,
+  AURORA_CYAN_RGB as Z8_CYAN_RGB,
+  AURORA_AUTH_GRADIENT as Z8_AUTH_GRADIENT,
+  AURORA_AUTH_SHADOW as Z8_AUTH_SHADOW,
+  AURORA_BLURPLE_HEX as Z8_BLURPLE_HEX,
+  AURORA_PAGE_PAD_X as Z8_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y as Z8_PAGE_PAD_Y,
+  AURORA_PAGE_GAP as Z8_PAGE_GAP,
+  auroraStatusColor as z8StatusColor,
+} from './auroraTokens';

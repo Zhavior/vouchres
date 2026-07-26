@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../../theme/themeRegistry';
-import { getFounderPointsLabel } from "../../lib/founderAccess";
 import { canCustomizeProfileHeader } from '../pro/proAccessUtils';
 
 interface ThemeContextType {
@@ -25,7 +24,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-const Z8_THEME = THEME_REGISTRY.find((theme) => theme.id === 'vouchedge-prime') ?? THEME_REGISTRY[0];
+const DEFAULT_AURORA_THEME = THEME_REGISTRY.find((theme) => theme.id === 'vouchedge-prime') ?? THEME_REGISTRY[0];
 
 /**
  * The only CSS custom properties a theme is allowed to write. Structure —
@@ -151,8 +150,8 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
 
   // Resolve Themes — structure (layout, spacing, component anatomy) never
   // varies by theme; only the cosmetic accent layer applied below does.
-  const currentAppTheme = findTheme(profile.appThemeId) ?? Z8_THEME;
-  const currentProfileTheme = findTheme(profile.profileThemeId) ?? Z8_THEME;
+  const currentAppTheme = findTheme(profile.appThemeId) ?? DEFAULT_AURORA_THEME;
+  const currentProfileTheme = findTheme(profile.profileThemeId) ?? DEFAULT_AURORA_THEME;
   const currentBorder = BORDER_REGISTRY.find(b => b.id === profile.profileBorderId) || BORDER_REGISTRY[0];
 
   // Resolve Active Theme — an override (e.g. previewing someone else's
@@ -205,11 +204,13 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
     onUpdateProfile({ reduceMotion: val });
   };
 
-  // The structural design system (z8-premium) is fixed — it never varies by
-  // theme. Only the cosmetic accent layer reacts to the active theme.
+  // Aurora owns the structural product language. The legacy z8-premium theme
+  // identifier remains during migration because stored profile preferences and
+  // CSS selectors still consume it; only the cosmetic accent layer varies.
   useEffect(() => {
     const root = document.documentElement;
     root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
+    root.setAttribute('data-vouchedge-system', 'aurora');
     root.setAttribute('data-theme', 'z8-premium');
     root.setAttribute('data-vouchedge-theme', 'z8-premium');
   }, []);

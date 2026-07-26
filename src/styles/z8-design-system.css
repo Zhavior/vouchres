@@ -1,5 +1,7 @@
 /*
- * Z8 Obsidian design system — ported from vouchedge-terminal (src/app/globals.css).
+ * Legacy Z8 CSS compatibility layer for the Aurora product language.
+ * New TypeScript consumers use src/theme/auroraTokens.ts. Utility names remain
+ * stable while existing screens migrate without a visual rewrite.
  * Purely additive: new @theme tokens + utility classes, on top of the existing
  * Tailwind build. Nothing here overrides existing selectors — components opt in
  * by using these classes/tokens explicitly.

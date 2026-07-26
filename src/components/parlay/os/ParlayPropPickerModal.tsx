@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { X, Layers3, ChevronRight } from "lucide-react";
+import { AnimatePresence, auroraFadeTransition, auroraSurfaceTransition, motion, useReducedMotion } from "../../../lib/motion";
 import type { ParlayMarketFamilyId, ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import {
   PARLAY_MARKET_FAMILIES,
@@ -31,6 +32,8 @@ export default function ParlayPropPickerModal({
   const closePicker = useParlayOsStore((s) => s.closePicker);
   const setPickerLiveOdds = useParlayOsStore((s) => s.setPickerLiveOdds);
   const pickerLiveOdds = useParlayOsStore((s) => s.pickerLiveOdds);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
 
   const player = context?.player;
   const inferredRole = useMemo(
@@ -61,6 +64,12 @@ export default function ParlayPropPickerModal({
       setRoleOverride(null);
     }
   }, [pickerOpen, defaultFamily]);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const frame = window.requestAnimationFrame(() => dialogRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [pickerOpen]);
 
   const activeFamilyData = useMemo(
     () => families.find((f) => f.id === activeFamily) ?? families[0],
@@ -180,19 +189,36 @@ export default function ParlayPropPickerModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="ParlayOS prop picker"
-    >
-      <button
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-[120] flex items-end justify-center p-0 sm:items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="ParlayOS prop picker"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={auroraFadeTransition(reducedMotion)}
+      >
+      <motion.button
         type="button"
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         aria-label="Close"
         onClick={closePicker}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={auroraFadeTransition(reducedMotion)}
       />
-      <div className="relative w-full sm:max-w-2xl max-h-[92vh] overflow-hidden rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[var(--bg-obsidian)]/98 shadow-2xl shadow-cyan-500/10 flex flex-col">
+      <motion.div
+        ref={dialogRef}
+        tabIndex={-1}
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+        transition={auroraSurfaceTransition(reducedMotion)}
+        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[var(--bg-obsidian)]/98 shadow-2xl shadow-cyan-500/10 sm:max-w-2xl sm:rounded-3xl"
+      >
         {/* Header */}
         <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-gradient-to-r from-cyan-950/40 to-transparent">
           <img src={headshot} alt="" className="h-14 w-14 rounded-2xl border border-white/15 object-cover" />
@@ -233,7 +259,7 @@ export default function ParlayPropPickerModal({
           <button
             type="button"
             onClick={closePicker}
-            className="p-2 rounded-xl border border-white/10 text-white/50 hover:text-white hover:bg-white/5"
+            className="aurora-pressable min-h-11 min-w-11 rounded-xl border border-white/10 p-2 text-white/50 hover:bg-white/5 hover:text-white sm:min-h-0 sm:min-w-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -364,7 +390,8 @@ export default function ParlayPropPickerModal({
           <Layers3 className="w-3.5 h-3.5 text-cyan-500/60" />
           Selection adds to your ParlayOS slip — review before locking to ledger.
         </div>
-      </div>
-    </div>
+      </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

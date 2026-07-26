@@ -72,7 +72,8 @@
     "aurora:maps": "tsx scripts/aurora/buildMaps.ts",
     "aurora:agents": "tsx scripts/aurora/buildAgents.ts",
     "aurora:docs": "tsx scripts/aurora/buildDocs.ts",
-    "aurora:validate": "tsx scripts/aurora/validate.ts"
+    "aurora:validate": "tsx scripts/aurora/validate.ts",
+    "verify:aegis": "tsx scripts/verifyAegis.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",

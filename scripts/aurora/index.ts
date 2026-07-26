@@ -26,7 +26,7 @@ switch (command) {
     break;
 
   case "validate":
-    console.log("🚧 Validate coming...");
+    await import("./validate");
     break;
 
   case "stats":

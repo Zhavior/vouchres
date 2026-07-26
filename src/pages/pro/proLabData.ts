@@ -28,6 +28,7 @@ export function useHrBoardProData(): BoardState & {
   groups: ProLabGameGroup[];
   topRow: Record<string, any> | null;
   topGame: ProLabGameGroup | null;
+  generatedAt: Date | null;
 } {
   const [state, setState] = useState<BoardState>({
     board: null,
@@ -47,7 +48,7 @@ export function useHrBoardProData(): BoardState & {
       setState({
         board: result.data,
         loading: false,
-        error: result.ok ? null : result.error || 'Verified HR board feed unavailable',
+        error: result.ok ? null : result.error || 'HR Board feed unavailable',
         source: result.source,
       });
     });
@@ -59,6 +60,7 @@ export function useHrBoardProData(): BoardState & {
 
   const rows = useMemo(() => getBoardRows(state.board), [state.board]);
   const groups = useMemo(() => getGameGroups(state.board, rows), [state.board, rows]);
+  const generatedAt = useMemo(() => getBoardGeneratedAt(state.board), [state.board]);
 
   return {
     ...state,
@@ -66,20 +68,32 @@ export function useHrBoardProData(): BoardState & {
     groups,
     topRow: rows[0] || null,
     topGame: groups[0] || null,
+    generatedAt,
   };
 }
 
-export function buildPlayerPayload(row: Record<string, any> | null, index = 0): NormalizedPlayerPayload | null {
+export function getBoardGeneratedAt(board: ProLabBoardPayload): Date | null {
+  const value = getBoardRoot(board).generatedAt;
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export function buildPlayerPayload(row: Record<string, any> | null): NormalizedPlayerPayload | null {
   if (!row) return null;
   const playerName = safeNullableText(row.playerName ?? row.player_name ?? row.player ?? row.name);
   if (!playerName) return null;
 
   const breakdown = row.scoreBreakdown && typeof row.scoreBreakdown === 'object' ? row.scoreBreakdown : {};
   const recentForm = row.recentForm && typeof row.recentForm === 'object' ? row.recentForm : undefined;
+  const weatherSource = safeNullableText(row.weatherSource ?? row.weather_source);
+  const hasWeatherFeed = weatherSource !== null && weatherSource.toLowerCase() !== 'unavailable';
 
   return {
     player: {
-      playerId: safeText(row.playerId ?? row.player_id ?? row.id, `${playerName}-${index}`),
+      // Keep API identity honest. UI lists may derive a separate local key, but an
+      // invented player ID must never reach headshot or research endpoints.
+      playerId: safeText(row.playerId ?? row.player_id ?? row.mlbId ?? row.mlb_id, ''),
       playerName,
       team: safeNullableText(row.team),
       opponent: safeNullableText(row.opponent ?? row.opposingPitcherTeam ?? row.matchup),
@@ -88,10 +102,10 @@ export function buildPlayerPayload(row: Record<string, any> | null, index = 0): 
       venue: safeNullableText(row.venue),
       lineupStatus: normalizeLineupStatus(row.lineupStatus ?? row.lineup_status),
       grade: safeNullableText(row.grade),
-      hrEdge: safeNumber(row.hrEdge ?? row.hrScore ?? row.score),
+      hrEdge: safeNumber(row.hrEdge ?? row.hr_edge ?? row.hrScore ?? row.hr_score),
       vouchScore: safeNumber(row.vouchScore),
       riskLabel: safeNullableText(row.riskLabel ?? row.riskTier ?? row.risk),
-      dataConfidence: safeNumber(row.dataConfidence),
+      dataConfidence: safeNumber(row.dataConfidence ?? row.data_confidence),
       formTag: safeNullableText(row.formTag),
       opponentPitcherName: safeNullableText(row.opponentPitcherName ?? row.opposingPitcher ?? row.pitcherName ?? row.pitcher),
       opposingPitcherTeam: safeNullableText(row.opposingPitcherTeam),
@@ -115,7 +129,8 @@ export function buildPlayerPayload(row: Record<string, any> | null, index = 0): 
     matchup: {
       pitcherVulnerability: safeNumber(breakdown.pitcherVulnerability ?? row.pitcherVulnerability),
       parkFactor: safeNumber(breakdown.parkFactor ?? row.parkFactor),
-      weatherBoost: safeNumber(row.weatherBoost),
+      weatherBoost: hasWeatherFeed ? safeNumber(row.weatherBoost ?? row.weather_boost) : null,
+      weatherSource,
       hrMultiplier: safeNumber(row.hrMultiplier),
       pitcherHand: safeNullableText(row.pitcherHand),
     },
@@ -134,7 +149,7 @@ export function buildGamePayload(group: ProLabGameGroup | null): NormalizedGameP
       rankedPlayerCount: group.rows.length,
     },
     players: group.rows
-      .map((row, index) => buildPlayerPayload(row, index)?.player)
+      .map((row) => buildPlayerPayload(row)?.player)
       .filter(Boolean) as NormalizedGamePayload['players'],
     isPro: true,
   };
@@ -145,13 +160,23 @@ export function getBoardRows(board: ProLabBoardPayload): Record<string, any>[] {
   const rowsFromGames = Array.isArray(root.games)
     ? root.games.flatMap((game: any) => Array.isArray(game?.rows) ? game.rows : [])
     : [];
+  const effectiveRows = Array.isArray(root.rows) ? root.rows : [];
   const candidates = Array.isArray(root.candidates) ? root.candidates : [];
   const projected = Array.isArray(root.projectedCandidates) ? root.projectedCandidates : [];
+  const sourceRows = effectiveRows.length
+    ? effectiveRows
+    : rowsFromGames.length
+      ? rowsFromGames
+      : candidates.length
+        ? candidates
+        : projected;
 
-  return [...rowsFromGames, ...candidates, ...projected]
+  return sourceRows
     .filter((row) => row && typeof row === 'object')
     .filter((row) => safeText(row.playerName ?? row.player_name ?? row.player ?? row.name, '') !== '')
-    .sort((a, b) => (safeNumber(b.hrEdge ?? b.hrScore ?? b.score) ?? -1) - (safeNumber(a.hrEdge ?? a.hrScore ?? a.score) ?? -1));
+    .sort((a, b) =>
+      (safeNumber(b.hrEdge ?? b.hr_edge ?? b.hrScore ?? b.hr_score) ?? -1)
+      - (safeNumber(a.hrEdge ?? a.hr_edge ?? a.hrScore ?? a.hr_score) ?? -1));
 }
 
 export function getGameGroups(board: ProLabBoardPayload, rows = getBoardRows(board)): ProLabGameGroup[] {

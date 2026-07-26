@@ -31,6 +31,9 @@ jobs:
       - name: Lint (strict)
         run: npm run lint:strict
 
+      - name: Aurora compliance
+        run: npm run aurora:validate
+
       - name: Run tests
         run: npm test
 

@@ -4,7 +4,7 @@
  *
  * This file is the SINGLE SOURCE OF TRUTH for color. Every other token file
  * (z8-premium.css, z8-design-system.css, index.css @theme, index.html critical
- * CSS, tailwind.config.ts, z8Tokens.ts) either derives from these values or
+ * CSS, tailwind.config.ts, auroraTokens.ts, and legacy z8Tokens.ts) either derives from these values or
  * duplicates them verbatim — see the "mirrors" note at each site.
  *
  * Palette (approved 2026-07-19, restrained premium — not neon):

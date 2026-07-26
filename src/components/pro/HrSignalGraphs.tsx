@@ -47,14 +47,14 @@ const EdgeScoreBreakdown: React.FC<{ payload: NormalizedPlayerPayload }> = React
     <ProGraphShell
       icon={BarChart3}
       title="Edge Score Breakdown"
-      subtitle="HR Engine Pro v2 live payload"
+      subtitle="Current HR Engine Pro v2 payload"
       accent={ACCENT.final}
       right={
         <span className="rounded-full border border-vouch-amber/30 bg-vouch-amber/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-amber">
           HR {fmtInt(player.hrEdge)}
         </span>
       }
-      footer="Live values from HR Engine Pro v2. No historical data is shown here — every field reads from the current scoring payload for this candidate."
+      footer="Current values from HR Engine Pro v2. No historical data is shown here — every field reads from the current scoring payload for this candidate."
     >
       <div className="space-y-2.5">
         <ProSignalBar label="Hitter Power" value={b.hitterPower ?? null} color={ACCENT.power} />
@@ -92,7 +92,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
     <ProGraphShell
       icon={Activity}
       title="Recent Power Snapshot"
-      subtitle={`Last ${f.gamesChecked ?? 0} games · live from HR Engine`}
+      subtitle={`Last ${f.gamesChecked ?? 0} games · current HR Engine payload`}
       accent={ACCENT.form}
       right={
         <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-emerald">
@@ -152,7 +152,7 @@ const MatchupSignalMeter: React.FC<{ payload: NormalizedPlayerPayload }> = React
           P.VULN {fmtInt(m.pitcherVulnerability)}
         </span>
       }
-      footer="Pitcher vulnerability comes from the live HR Engine. Park factor reflects the venue. Weather boost is null-safe — shows N/A when no weather feed is connected."
+      footer="Pitcher vulnerability comes from the current HR Engine payload. Park factor reflects the venue. Weather boost is null-safe — shows N/A when no weather feed is connected."
     >
       <div className="space-y-2.5">
         <ProSignalBar label="Pitcher Vulnerability" value={m.pitcherVulnerability ?? null} color={ACCENT.matchup} />

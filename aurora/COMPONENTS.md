@@ -126,6 +126,23 @@ Never mix UI state with business state.
 
 ---
 
+# Decision Presentation
+
+Decision-oriented components compose four layers:
+
+1. Answer — verdict, status, or next action.
+2. Reasons — the strongest real factors.
+3. Evidence — provenance, metrics, freshness, and uncertainty.
+4. Deep Research — complete expert detail on demand.
+
+A component may omit deeper layers when they are unavailable, but it may not
+manufacture them. Missing evidence requires an honest unavailable state.
+
+Aurora presentation components consume typed presentation models. Prediction,
+grading, settlement, entitlement, and verification rules remain outside them.
+
+---
+
 # Naming
 
 Good
@@ -195,3 +212,7 @@ Small files.
 Small responsibilities.
 
 Large systems.
+
+During the Z8 migration, legacy names may wrap or alias Aurora primitives. New
+shared components use Aurora terminology; aliases are removed only after their
+consumers migrate and visual behavior is verified.

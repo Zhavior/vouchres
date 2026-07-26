@@ -706,7 +706,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
                 The Vouch AI Edge Lab
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-white/55">
-                The complete MLB intelligence workspace powered by the working HR Board engine. Research HR projections, pitcher pressure, game environments, player comparisons, verified graphs, and AI judge signals in one place.
+                The complete MLB intelligence workspace powered by the working HR Board engine. Research HR projections, pitcher pressure, game environments, player comparisons, source-backed graphs, and AI judge signals in one place.
               </p>
             </div>
           </div>
@@ -831,7 +831,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
                 {cleanName(selectedCandidate)}
               </h2>
               <p className="mt-1 text-xs text-white/45 sm:text-sm">
-                AI decision, matchup context, verified signals and Pro Graphs — without leaving the Edge Lab.
+                AI decision, matchup context, source-backed signals and Pro Graphs — without leaving the Edge Lab.
               </p>
             </div>
 
@@ -999,7 +999,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
         <section className="min-w-0">
           <div className={`mb-4 rounded-3xl ${Z8_PANEL_PREMIUM} p-5`}>
             <p className={`${Z8_LABEL} text-vouch-cyan`}>
-              Verified visual intelligence
+              Source-backed visual intelligence
             </p>
             <h2 className={Z8_SECTION_HEADER}>Pro Graphs</h2>
             <p className="mt-2 max-w-3xl text-sm text-white/55">

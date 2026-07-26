@@ -30,7 +30,7 @@ function ModuleLoadingState() {
       <div className="h-3 w-32 animate-pulse rounded-full bg-white/10" />
       <div className="mt-4 h-20 animate-pulse rounded-2xl bg-white/[0.04]" />
       <p className="mt-3 text-xs text-white/45">
-        Loading verified research workspace…
+        Loading research workspace…
       </p>
     </div>
   );
