@@ -1,6 +1,5 @@
 import PlayerResearchDecisionCard from '@/components/player/PlayerResearchDecisionCard';
-import IntelligenceConsole from '@/components/intelligence/IntelligenceConsole';
-import { buildPlayerIntelligenceAnalysis } from "../../components/intelligence/IntelligenceConsole/buildPlayerIntelligenceAnalysis";
+import { AuroraDisclosure } from '@/components/aurora/decision/AuroraDisclosure';
 import { useMemo, useState } from 'react';
 import {
   Activity,
@@ -11,9 +10,7 @@ import {
   LockKeyhole,
   Radar,
   ShieldCheck,
-  Sparkles,
   Target,
-  TrendingUp,
   Zap,
 } from 'lucide-react';
 
@@ -45,8 +42,14 @@ import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
 
 const MAX_VISIBLE_PLAYERS = 30;
 
-function getPlayerId(row: any, fallback: number) {
-  return String(row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id ?? row?.id ?? fallback);
+function getPlayerId(row: any): string | null {
+  const value = row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id ?? row?.id;
+  const parsed = safeNumber(value);
+  return parsed !== null && parsed > 0 ? String(Math.trunc(parsed)) : null;
+}
+
+function getPlayerKey(row: any, index: number): string {
+  return getPlayerId(row) ?? `${getPlayerName(row)}-${safeText(row?.team, 'unknown-team')}-${index}`;
 }
 
 function getPlayerName(row: any) {
@@ -78,16 +81,16 @@ function getScore(row: any) {
 }
 
 function getConfidence(row: any) {
-  const value = safeNumber(row?.confidence ?? row?.confidencePct ?? row?.confidence_pct ?? row?.edgePct);
+  const value = safeNumber(row?.dataConfidence ?? row?.confidence ?? row?.confidencePct ?? row?.confidence_pct ?? row?.edgePct);
   if (value === null) return null;
   const normalized = value <= 1 ? value * 100 : value;
   return Math.max(0, Math.min(100, Math.round(normalized)));
 }
 
-function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' {
+function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' | null {
   const value = safeText(
     row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk,
-    'Watch',
+    '',
   )
     .trim()
     .toLowerCase();
@@ -106,9 +109,17 @@ function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' {
     case 'review':
       return 'C';
     case 'watch':
-    default:
       return 'Watch';
+    default:
+      return null;
   }
+}
+
+function getLineupLabel(row: any): string {
+  const value = safeText(row?.lineupStatus ?? row?.lineup_status, '').toLowerCase();
+  if (value === 'confirmed') return 'Confirmed';
+  if (value === 'projected' || value === 'projected_unconfirmed') return 'Projected, unconfirmed';
+  return 'Unavailable';
 }
 
 function Metric({
@@ -140,9 +151,9 @@ export default function PlayerEdgeLabPageZ8() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedRow =
-    rows.find((row) => String(row.playerId ?? row.player_id ?? row.id) === selectedId) || rows[0] || null;
+    rows.find((row, index) => getPlayerKey(row, index) === selectedId) || rows[0] || null;
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
-  const playerId = selectedRow ? getPlayerId(selectedRow, 0) : null;
+  const playerId = selectedRow ? getPlayerId(selectedRow) : null;
   const pitcherId = selectedRow ? getPitcherId(selectedRow) : null;
   const gamePk = selectedRow ? getGamePk(selectedRow) : null;
   const opponent = selectedRow ? safeText(selectedRow.opponent ?? selectedRow.opposingPitcherTeam, '') : '';
@@ -151,13 +162,6 @@ export default function PlayerEdgeLabPageZ8() {
     : '';
   const score = selectedRow ? getScore(selectedRow) : null;
   const confidence = selectedRow ? getConfidence(selectedRow) : null;
-
-const edge =
-  selectedRow?.edge != null
-    ? Number(selectedRow.edge)
-    : selectedRow?.projectedEdge != null
-      ? Number(selectedRow.projectedEdge)
-      : null;
 
   const {
     data: research,
@@ -181,20 +185,20 @@ const edge =
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                     <Brain className="h-3.5 w-3.5" />
-                    Player Brain
+                    Aurora Research
                   </span>
-                  <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
+                  <span className={`inline-flex items-center gap-1.5 border border-white/15 bg-white/5 px-2.5 py-1 ${Z8_LABEL} text-white/65`}>
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    Verified inputs only
+                    Source-aware evidence
                   </span>
                 </div>
 
                 <p className={`mt-5 ${Z8_LABEL} text-white/35`}>VOUCHEDGE PLAYER LAB</p>
                 <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-5xl">
-                  Professional MLB Intelligence Command
+                  Player research, presented with evidence
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base">
-                  Professional-grade research workspace combining matchup intelligence, Statcast, pitch analysis, market context, and AI decision support into a single command center.
+                  Aurora turns the current HR Board payload and available MLB research into a clear answer, its trust state, and the evidence behind it.
                 </p>
               </div>
 
@@ -202,7 +206,12 @@ const edge =
                 <Metric icon={Database} label="Player pool" value={String(rows.length)} detail="current board rows" />
                 <Metric icon={Target} label="Edge score" value={score === null ? '—' : String(score)} detail="selected player" />
                 <Metric icon={Activity} label="Confidence" value={confidence === null ? '—' : `${confidence}%`} detail="signal strength" />
-                <Metric icon={Radar} label="Research feed" value={researchSource === 'network' && research ? 'Live' : 'Standby'} detail="MLB evidence layer" />
+                <Metric
+                  icon={Radar}
+                  label="Research feed"
+                  value={researchLoading ? 'Loading' : researchSource === 'network' && research ? 'Available' : 'Unavailable'}
+                  detail="MLB evidence layer"
+                />
               </div>
             </div>
 
@@ -218,28 +227,45 @@ const edge =
                         {safeText(selectedRow.team, 'MLB')} {opponent ? `vs ${opponent}` : ''}
                       </div>
                     </div>
-                    <span className="border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 text-xs font-black uppercase tracking-widest text-vouch-emerald">
-                      {getTier(selectedRow)}
-                    </span>
+                    {getTier(selectedRow) ? (
+                      <span className="border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-black uppercase tracking-widest text-white/65">
+                        {getTier(selectedRow)} tier
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-1 items-end justify-between gap-5">
                     <div className="space-y-2 text-xs font-medium text-white/60">
-                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Verified board identity</div>
-                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Matchup evidence routed</div>
-                      <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 bg-vouch-cyan" />Trend layer ready</div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 bg-vouch-cyan" />
+                        Board source: {source === 'network' ? 'production feed' : 'unavailable'}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 bg-vouch-cyan" />
+                        Lineup: {getLineupLabel(selectedRow)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 bg-vouch-cyan" />
+                        Pitcher: {pitcherName || 'unavailable'}
+                      </div>
                     </div>
                     <div className="relative h-44 w-40 shrink-0 overflow-hidden">
                       <div className="absolute inset-x-4 bottom-0 h-24 bg-vouch-cyan/15 blur-3xl" />
-                      <img
-                        src={getMlbHeadshotUrl(playerId)}
-                        alt={getPlayerName(selectedRow)}
-                        className="relative h-full w-full object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.6)]"
-                        decoding="async"
-                        onError={(event) => {
-                          event.currentTarget.style.display = 'none';
-                        }}
-                      />
+                      {playerId ? (
+                        <img
+                          src={getMlbHeadshotUrl(playerId)}
+                          alt=""
+                          className="relative h-full w-full object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.6)]"
+                          decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="relative flex h-full items-center justify-center text-4xl font-black text-white/20" aria-hidden="true">
+                          {getPlayerName(selectedRow).slice(0, 1)}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -272,33 +298,17 @@ const edge =
         </section>
 
 
-          {selectedRow && (
-            <div className="mt-6">
-              <IntelligenceConsole
-                player={selectedRow}
-                analysis={buildPlayerIntelligenceAnalysis({
-                  score,
-                  edge,
-                  confidence,
-                  pitcherName,
-                  opponent,
-                  tier: getTier(selectedRow),
-                })}
-              />
-            </div>
-          )}
-
         <VerifiedDataNotice
           variant={source === 'network' ? 'no-data' : 'feed-required'}
-          title={loading ? 'Loading verified player feed' : source === 'network' ? 'Verified HR player feed' : 'Verified data feed required'}
-          detail={error ? `${error}. No fake player data shown.` : 'Every Player Brain panel uses the current production HR Board payload.'}
+          title={loading ? 'Loading player feed' : source === 'network' ? 'HR player feed available' : 'Player data feed required'}
+          detail={error ? `${error}. No substitute player data is shown.` : 'Every Aurora panel uses the current HR Board payload and available research response.'}
         />
 
         <section className={`${Z8_PANEL} overflow-hidden p-0`}>
           <div className={`flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 ${Z8_SECTION_HEADER}`}>
-            <div>
-              <div className={`${Z8_LABEL} text-white/40`}>Neural player queue</div>
-              <div className="mt-1 text-sm font-black text-white">Choose the next player to route through the Brain</div>
+              <div>
+              <div className={`${Z8_LABEL} text-white/40`}>Player queue</div>
+              <div className="mt-1 text-sm font-black text-white">Choose a player to review in Aurora</div>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-white/40">
               <Zap className="h-4 w-4 text-vouch-cyan" />
@@ -322,21 +332,24 @@ const edge =
               </div>
             ) : null}
             {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
-              const id = getPlayerId(row, index);
-              const active = selectedRow ? getPlayerId(selectedRow, -1) === id : false;
+              const id = getPlayerId(row);
+              const key = getPlayerKey(row, index);
+              const selectedIndex = selectedRow ? rows.indexOf(selectedRow) : -1;
+              const active = selectedRow ? getPlayerKey(selectedRow, selectedIndex) === key : false;
               const rowScore = getScore(row);
               const rowConfidence = getConfidence(row);
+              const tier = getTier(row);
 
               return (
                 <button
-                  key={`${id}-${index}`}
+                  key={key}
                   type="button"
-                  className={`group w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 scroll-ml-3 border p-3 text-left transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
+                  className={`group w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 scroll-ml-3 border p-3 text-left transition-[border-color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
                     active
                       ? `${Z8_ACTIVE} border-vouch-cyan/70 bg-vouch-cyan/[0.09]`
-                      : `${Z8_IDLE} hover:-translate-y-1 hover:border-vouch-cyan/40 active:scale-[0.97]`
+                      : `${Z8_IDLE} hover:border-vouch-cyan/40`
                   }`}
-                  onClick={() => setSelectedId(id)}
+                  onClick={() => setSelectedId(key)}
                   aria-label={`Research ${getPlayerName(row)}, ${rowScore ?? 'unknown'} edge score, ${
                     rowConfidence === null ? 'unknown confidence' : `${rowConfidence}% confidence`
                   }`}
@@ -345,23 +358,31 @@ const edge =
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
-                      <img
-                        src={getMlbHeadshotUrl(id)}
-                        alt={getPlayerName(row)}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        onError={(event) => {
-                          event.currentTarget.style.display = 'none';
-                        }}
-                      />
+                      {id ? (
+                        <img
+                          src={getMlbHeadshotUrl(id)}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-2xl font-black text-white/20" aria-hidden="true">
+                          {getPlayerName(row).slice(0, 1)}
+                        </div>
+                      )}
                       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-vouch-cyan/15 to-vouch-emerald/5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="truncate text-sm font-black text-white">{getPlayerName(row)}</div>
-                          <div className="mt-1 truncate text-xs text-white/45">{safeText(row.team, 'MLB')} · {getTier(row)}</div>
+                          <div className="mt-1 truncate text-xs text-white/45">
+                            {safeText(row.team, 'MLB')}{tier ? ` · ${tier}` : ''}
+                          </div>
                         </div>
                         <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${active ? 'text-vouch-cyan' : 'text-white/20 group-hover:translate-x-0.5 group-hover:text-white/50'}`} />
                       </div>
@@ -375,12 +396,6 @@ const edge =
                           <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
                         </div>
                       </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-vouch-cyan/10 px-2 py-1 text-[10px] font-bold text-vouch-cyan">Barrel</span>
-                        <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300">Matchup</span>
-                        <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300">Park</span>
-                      </div>
                     </div>
                   </div>
                 </button>
@@ -389,141 +404,93 @@ const edge =
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <div className="min-w-0 space-y-4">
-            <div className={`${Z8_PANEL} p-4 sm:p-5`}>
-              <div className={`mb-4 flex items-center justify-between gap-3 ${Z8_SECTION_HEADER}`}>
-                <div>
-                  <div className={`${Z8_LABEL} text-vouch-cyan`}>Brain decision layer</div>
-                  <div className="mt-1 text-lg font-black tracking-tight text-white">What the current evidence means</div>
-                </div>
-                <Sparkles className="h-5 w-5 text-vouch-cyan" />
-              </div>
-
-              {playerPayload ? (
-                <PlayerResearchDecisionCard payload={playerPayload} />
-              ) : (
-                <VerifiedGraphEmptyState
-                  variant="feed-required"
-                  title="Verified data feed required"
-                  detail="Player Brain needs HR board player rows before rendering its decision layer."
-                />
-              )}
-            </div>
-
-            {isPro && playerPayload ? (
-              <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
-            ) : playerPayload ? (
-              <div className={`${Z8_PANEL} border border-vouch-cyan/25 bg-vouch-cyan/[0.05] p-5`}>
-                <div className="flex items-start gap-3">
-                  <div className="border border-vouch-cyan/25 bg-vouch-cyan/10 p-2 text-vouch-cyan">
-                    <LockKeyhole className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-lg font-black text-white">Unlock the complete signal stack</div>
-                    <p className="mt-2 text-sm leading-6 text-white/60">
-                      Pro adds matchup graphs, pitcher vulnerability, Statcast quality, and deeper player evidence.
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-4 inline-flex items-center gap-2 bg-vouch-cyan px-4 py-2.5 text-sm font-black text-black transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98]"
-                      onClick={() =>
-                        window.dispatchEvent(
-                          new CustomEvent('vouch:navigate', {
-                            detail: { section: 'premium' },
-                          }),
-                        )
-                      }
-                    >
-                      <Crown className="h-4 w-4" />
-                      Upgrade to Pro
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="min-w-0 space-y-4">
-            {research?.warnings?.length ? (
-              <div className={`${Z8_SURFACE} border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-amber-100/90`}>
-                {research.warnings.slice(0, 4).map((warning) => (
-                  <div key={warning}>{warning}</div>
-                ))}
-              </div>
-            ) : null}
-
-            <div className={`${Z8_PANEL} overflow-hidden p-0`}>
-              <div className={`border-b border-white/10 px-5 py-5 ${Z8_SECTION_HEADER}`}>
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-
-                  <div className="flex-1">
-                    <div className="inline-flex items-center rounded-full border border-vouch-gold/30 bg-vouch-gold/10 px-3 py-1 text-[11px] font-black tracking-[0.25em] uppercase text-vouch-gold">
-                      ★★★★★ VERIFIED PLAY
-                    </div>
-
-                    <div className="mt-3 text-3xl font-black tracking-tight text-white">
-                      {playerPayload?.player?.playerName ?? 'Select Player'}
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-3">
-
-                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-                        <div className={Z8_LABEL}>EDGE</div>
-                        <div className="mt-1 text-3xl font-black text-emerald-300">
-                          {playerPayload?.player?.hrEdge ?? '--'}
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3">
-                        <div className={Z8_LABEL}>CONFIDENCE</div>
-                        <div className="mt-1 text-3xl font-black text-cyan-300">
-                          A+
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl border border-vouch-gold/20 bg-vouch-gold/10 px-4 py-3">
-                        <div className={Z8_LABEL}>DATA</div>
-                        <div className="mt-1 flex items-center gap-2 text-sm font-bold text-vouch-gold">
-                          <TrendingUp className="h-4 w-4" />
-                          {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Awaiting Player'}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <div className={`${Z8_LABEL} text-vouch-cyan`}>
-                      WHY VOUCHEDGE LIKES THIS
-                    </div>
-
-                    <div className="mt-3 space-y-2 text-sm text-white/80">
-                      <div>✓ Elite matchup profile</div>
-                      <div>✓ Strong barrel opportunity</div>
-                      <div>✓ Favorable pitch mix</div>
-                      <div>✓ Positive run environment</div>
-                      <div>✓ AI model consensus</div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              <div className="p-3 sm:p-5">
-                <PlayerEdgeGraphs
-                  research={research}
-                  loading={researchLoading}
-                  error={researchError}
-                  pitcherName={pitcherName || null}
-                  opponent={opponent || null}
-                />
-              </div>
-            </div>
-          </div>
+        <section aria-label="Aurora player decision">
+          {playerPayload ? (
+            <PlayerResearchDecisionCard
+              payload={playerPayload}
+              research={{
+                source: research?.dataSource ?? null,
+                updatedAt: research?.updatedAt ?? null,
+                warnings: research?.warnings ?? [],
+              }}
+              deepResearchId="aurora-deep-research"
+            />
+          ) : (
+            <VerifiedGraphEmptyState
+              variant="feed-required"
+              title="Player data required"
+              detail="Aurora needs an HR Board player row before it can present a decision."
+            />
+          )}
         </section>
+
+        {playerPayload ? (
+          <AuroraDisclosure
+            id="aurora-deep-research"
+            title="Deep research"
+            detail="Open matchup graphs, Statcast evidence, and the underlying research response."
+          >
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+              <div className="min-w-0">
+                {isPro ? (
+                  <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
+                ) : (
+                  <div className={`${Z8_PANEL} border border-vouch-cyan/25 bg-vouch-cyan/[0.05] p-5`}>
+                    <div className="flex items-start gap-3">
+                      <div className="border border-vouch-cyan/25 bg-vouch-cyan/10 p-2 text-vouch-cyan">
+                        <LockKeyhole className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black text-white">Unlock the complete signal stack</div>
+                        <p className="mt-2 text-sm leading-6 text-white/60">
+                          Pro adds matchup graphs, pitcher vulnerability, Statcast quality, and deeper player evidence.
+                        </p>
+                        <button
+                          type="button"
+                          className="mt-4 inline-flex min-h-12 items-center gap-2 bg-vouch-cyan px-4 py-2.5 text-sm font-black text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                          onClick={() =>
+                            window.dispatchEvent(
+                              new CustomEvent('vouch:navigate', {
+                                detail: { section: 'premium' },
+                              }),
+                            )
+                          }
+                        >
+                          <Crown className="h-4 w-4" />
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={`${Z8_PANEL} min-w-0 overflow-hidden p-0`}>
+                <div className="border-b border-white/10 px-4 py-4 sm:px-5">
+                  <div className={`${Z8_LABEL} text-vouch-cyan`}>Research response</div>
+                  <div className="mt-1 text-lg font-black text-white">{playerPayload.player.playerName}</div>
+                  <div className="mt-2 text-xs leading-5 text-white/45">
+                    {researchLoading
+                      ? 'Loading the available MLB evidence.'
+                      : research?.dataSource
+                        ? `Source: ${research.dataSource}${research.updatedAt ? ` · Updated ${new Date(research.updatedAt).toLocaleString()}` : ''}`
+                        : 'No research response is available for this player.'}
+                  </div>
+                </div>
+                <div className="p-3 sm:p-5">
+                  <PlayerEdgeGraphs
+                    research={research}
+                    loading={researchLoading}
+                    error={researchError}
+                    pitcherName={pitcherName || null}
+                    opponent={opponent || null}
+                  />
+                </div>
+              </div>
+            </div>
+          </AuroraDisclosure>
+        ) : null}
       </div>
     </main>
   );
 }
-

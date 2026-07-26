@@ -69,7 +69,7 @@ export function useHrBoardProData(): BoardState & {
   };
 }
 
-export function buildPlayerPayload(row: Record<string, any> | null, index = 0): NormalizedPlayerPayload | null {
+export function buildPlayerPayload(row: Record<string, any> | null): NormalizedPlayerPayload | null {
   if (!row) return null;
   const playerName = safeNullableText(row.playerName ?? row.player_name ?? row.player ?? row.name);
   if (!playerName) return null;
@@ -79,7 +79,9 @@ export function buildPlayerPayload(row: Record<string, any> | null, index = 0): 
 
   return {
     player: {
-      playerId: safeText(row.playerId ?? row.player_id ?? row.id, `${playerName}-${index}`),
+      // Keep API identity honest. UI lists may derive a separate local key, but an
+      // invented player ID must never reach headshot or research endpoints.
+      playerId: safeText(row.playerId ?? row.player_id ?? row.mlbId ?? row.mlb_id ?? row.id, ''),
       playerName,
       team: safeNullableText(row.team),
       opponent: safeNullableText(row.opponent ?? row.opposingPitcherTeam ?? row.matchup),
@@ -134,7 +136,7 @@ export function buildGamePayload(group: ProLabGameGroup | null): NormalizedGameP
       rankedPlayerCount: group.rows.length,
     },
     players: group.rows
-      .map((row, index) => buildPlayerPayload(row, index)?.player)
+      .map((row) => buildPlayerPayload(row)?.player)
       .filter(Boolean) as NormalizedGamePayload['players'],
     isPro: true,
   };

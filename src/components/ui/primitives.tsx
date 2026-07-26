@@ -9,9 +9,14 @@
  */
 
 import React from 'react';
-import { getFounderPointsLabel } from "../../lib/founderAccess";
 import { ACCENT, withAlpha } from '../../theme/colors';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
+import {
+  AURORA_ACTIVE,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PANEL,
+  AURORA_SURFACE,
+} from '../../theme/auroraTokens';
 
 /* ============================================================================
    Format helpers — never throw, always return fallback on bad data
@@ -47,8 +52,8 @@ export const StatChip: React.FC<{
   color?: string;
 }> = React.memo(function StatChip({ label, value, color = 'hsl(var(--ve-text-primary))' }) {
   return (
-    <div className={`${Z8_SURFACE} px-2 py-1.5 text-center font-z8`}>
-      <div className={`${Z8_LABEL} text-white/55`}>{label}</div>
+    <div className={`${AURORA_SURFACE} px-2 py-1.5 text-center font-z8`}>
+      <div className={`${AURORA_LABEL} text-white/55`}>{label}</div>
       <div className="font-mono text-sm font-black" style={{ color }}>
         {value}
       </div>
@@ -76,7 +81,7 @@ export const Card: React.FC<{ className?: string; onClick?: () => void; children
   return (
     <Tag
       onClick={onClick}
-      className={`ve-card ${Z8_PANEL} text-left p-4 transition-all font-z8 ${onClick ? 'hover:border-vouch-cyan/40 hover:bg-vouch-cyan/5 w-full cursor-pointer' : ''} ${className}`}
+      className={`ve-card ${AURORA_PANEL} text-left p-4 transition-all font-z8 ${onClick ? 'hover:border-vouch-cyan/40 hover:bg-vouch-cyan/5 w-full cursor-pointer' : ''} ${className}`}
     >
       {children}
     </Tag>
@@ -85,7 +90,7 @@ export const Card: React.FC<{ className?: string; onClick?: () => void; children
 
 export function Button({ variant = 'primary', size = 'md', onClick, children, className = '' }: { variant?: 'primary' | 'ghost'; size?: 'sm' | 'md'; onClick?: () => void; children: React.ReactNode; className?: string }) {
   const base = size === 'sm' ? 'text-[11px] px-3 py-2' : 'text-xs px-4 py-2.5';
-  const style = variant === 'primary' ? Z8_ACTIVE : Z8_IDLE;
+  const style = variant === 'primary' ? AURORA_ACTIVE : AURORA_IDLE;
   return (
     <button
       onClick={onClick}
@@ -104,7 +109,7 @@ const STATUS: Record<string, string> = {
 export function StatusBadge({ status }: { status: string }) {
   const c = STATUS[status] ?? 'hsl(var(--ve-text-muted))';
   return (
-    <span className={`inline-flex items-center gap-1 border px-2 py-0.5 ${Z8_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>
+    <span className={`inline-flex items-center gap-1 border px-2 py-0.5 ${AURORA_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>
       {status === 'Live' && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
       {status}
     </span>
@@ -118,13 +123,13 @@ const RISK: Record<string, string> = {
 
 export function RiskBadge({ risk }: { risk: string }) {
   const c = RISK[risk] ?? 'hsl(var(--ve-text-muted))';
-  return <span className={`border px-2 py-0.5 ${Z8_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>{risk}</span>;
+  return <span className={`border px-2 py-0.5 ${AURORA_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>{risk}</span>;
 }
 
 export const ScorePill: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color = ACCENT.matchup }) => {
   return (
-    <div className={`${Z8_SURFACE} px-2.5 py-1.5 text-center font-z8`}>
-      <p className={`${Z8_LABEL} text-white/55`}>{label}</p>
+    <div className={`${AURORA_SURFACE} px-2.5 py-1.5 text-center font-z8`}>
+      <p className={`${AURORA_LABEL} text-white/55`}>{label}</p>
       <p className="font-mono text-base font-black" style={{ color }}>{value}</p>
     </div>
   );
