@@ -1,328 +1,336 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Activity, BarChart3, Database, ShieldAlert, Users } from 'lucide-react';
 import {
   HrSignalGraphs,
-  ProGraphShell,
   ProPageHeader,
   VerifiedDataNotice,
   VerifiedGraphEmptyState,
 } from '../../components/pro';
-import { buildPlayerPayload, useHrBoardProData, safeNumber, safeText } from './proLabData';
-import {
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PANEL,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_LABEL,
-  Z8_ICON_BOX,
-  Z8_CYAN_HEX,
-  Z8_EMERALD_HEX,
-  Z8_AMBER_HEX,
-} from '../../theme/z8Tokens';
-import { BarChart3, Flame, ShieldAlert, Sparkles, SlidersHorizontal, Users, Target, Activity } from 'lucide-react';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
+import {
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PANEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SURFACE,
+} from '../../theme/auroraTokens';
+import { AuroraGraphComparisonCard } from './AuroraGraphComparisonCard';
+import { buildPlayerPayload, useHrBoardProData } from './proLabData';
+import {
+  buildAuroraGraphCandidate,
+  formatGraphMetric,
+  lineupStatusLabel,
+  type AuroraGraphCandidate,
+} from './proGraphsPresentation';
 
-type ProGraphsLabPageZ8Props = {
+interface ProGraphsLabPageZ8Props {
   embedded?: boolean;
-};
+}
 
-export default function ProGraphsLabPageZ8({
-  embedded = false,
-}: ProGraphsLabPageZ8Props) {
+const MAX_COMPARISON_CANDIDATES = 75;
+
+function uniqueCandidates(rows: Record<string, any>[]): AuroraGraphCandidate[] {
+  const candidates = rows.map((row) => buildAuroraGraphCandidate(row));
+  return [...new Map(candidates.map((candidate) => [candidate.key, candidate])).values()];
+}
+
+export function ProGraphsLabPageZ8({ embedded = false }: ProGraphsLabPageZ8Props) {
   const { rows, groups, topRow, loading, error, source } = useHrBoardProData();
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
+  const candidates = useMemo(() => uniqueCandidates(rows), [rows]);
+  const topCandidates = useMemo(() => candidates.slice(0, 10), [candidates]);
+  const comparisonCandidates = useMemo(
+    () => candidates.slice(0, MAX_COMPARISON_CANDIDATES),
+    [candidates],
+  );
+  const [playerAKey, setPlayerAKey] = useState<string | null>(null);
+  const [playerBKey, setPlayerBKey] = useState<string | null>(null);
 
-  const top10Rows = useMemo(() => rows.slice(0, 10), [rows]);
-
-  // Head-to-head comparison player selection states
-  const [playerAId, setPlayerAId] = useState<string | null>(null);
-  const [playerBId, setPlayerBId] = useState<string | null>(null);
-
-  const activePlayerA = useMemo(() => {
-    if (!rows.length) return null;
-    return rows.find((r) => String(r.playerId || r.id || r.playerName) === playerAId) || rows[0];
-  }, [rows, playerAId]);
-
-  const activePlayerB = useMemo(() => {
-    if (!rows.length) return null;
-    return rows.find((r) => String(r.playerId || r.id || r.playerName) === playerBId) || (rows[1] || rows[0]);
-  }, [rows, playerBId]);
-
-  const activeMatchupGroup = useMemo(() => groups[0] || null, [groups]);
+  const activePlayerA = comparisonCandidates.find((candidate) => candidate.key === playerAKey)
+    ?? comparisonCandidates[0]
+    ?? null;
+  const activePlayerB = comparisonCandidates.find((candidate) => candidate.key === playerBKey)
+    ?? comparisonCandidates[1]
+    ?? comparisonCandidates[0]
+    ?? null;
+  const activeMatchupGroup = groups[0] ?? null;
+  const pitcherInputs = topCandidates.filter(
+    (candidate) =>
+      candidate.pitcherName !== null && candidate.metrics.pitcherVulnerability !== null,
+  ).slice(0, 3);
 
   return (
     <main
       className={
         embedded
-          ? "min-w-0 text-white font-z8"
-          : `${Z8_PAGE} ${Z8_PAGE_PAD_X} py-6 pb-24 text-white font-z8`
+          ? 'min-w-0 font-z8 text-white'
+          : `${AURORA_PAGE} ${AURORA_PAGE_PAD_X} py-6 pb-24 text-white`
       }
     >
-      <div className={Z8_PAGE_GAP}>
-        {!embedded && (
+      <div className={AURORA_PAGE_GAP}>
+        {!embedded ? (
           <ProPageHeader
-            title="Pro Analytics & Graphs Lab"
-            subtitle="Real-time sabermetric visual analytics for HR Edge, team pressure, pitcher vulnerability, and head-to-head comparisons."
-            badge="Graph Pro Z8"
+            icon={BarChart3}
+            title="Aurora Graph Lab"
+            subtitle="Compare the current HR Board model outputs without filling missing evidence or turning presentation into a prediction engine."
+            badge="Source-backed comparison"
           />
-        )}
+        ) : null}
 
         <VerifiedDataNotice
-          variant={source === 'network' ? 'coming-soon' : 'feed-required'}
-          title={loading ? 'Loading verified HR board feed...' : source === 'network' ? 'Verified HR Graph Feed Active' : 'Official MLB Data Stream Active'}
-          detail={error ? `${error}.` : 'All graph models are strictly driven by verified production MLB Statcast and HR Board feeds.'}
+          variant={source === 'network' ? 'no-data' : 'feed-required'}
+          title={
+            loading
+              ? 'Loading HR Board feed'
+              : source === 'network'
+                ? 'HR Board feed available'
+                : 'HR Board feed unavailable'
+          }
+          detail={
+            error
+              ? `${error}. Missing values remain unavailable.`
+              : source === 'network'
+                ? 'Charts use the current HR Board response. A feed freshness timestamp was not included.'
+                : 'No graph values are generated while the production feed is unavailable.'
+          }
         />
 
-        {/* 1. Interactive Player Signal Graphs */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1 font-mono text-xs font-bold uppercase tracking-wider text-vouch-cyan">
-            <Activity className="h-4 w-4" />
-            <span>Top Candidate Signal Spectrum</span>
+        <section className="space-y-3" aria-labelledby="aurora-current-candidate-title">
+          <div className="flex items-center gap-2 px-1 text-vouch-cyan">
+            <Activity className="h-4 w-4" aria-hidden="true" />
+            <h2 id="aurora-current-candidate-title" className={AURORA_LABEL}>
+              Current board leader inputs
+            </h2>
           </div>
           {playerPayload ? (
-            <HrSignalGraphs payload={playerPayload} />
+            <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
           ) : (
             <VerifiedGraphEmptyState
               variant="feed-required"
-              title="Verified HR graph data required"
-              detail="The Pro Graphs Lab needs a verified HR board row before rendering HrSignalGraphs."
+              title="HR Board row required"
+              detail="Aurora needs a current HR Board row before it can present model inputs."
             />
           )}
-        </div>
+        </section>
 
-        {/* 2. Top 10 HR Power & Edge Trend Chart */}
-        <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5 space-y-4`}>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-vouch-amber" />
-              <h2 className="text-sm font-black uppercase text-white tracking-wider">
-                Slate Power & HR Edge Trend Leaderboard
+        <section className={`${AURORA_PANEL_PREMIUM} space-y-4 p-4 sm:p-5`} aria-labelledby="aurora-board-ranking-title">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+            <div>
+              <div className={`${AURORA_LABEL} text-vouch-cyan`}>Current response</div>
+              <h2 id="aurora-board-ranking-title" className="mt-1 text-base font-black text-white">
+                HR Board ranking
               </h2>
             </div>
-            <span className="font-mono text-[10px] font-bold text-slate-400 uppercase bg-black/40 border border-white/10 px-2.5 py-1 rounded-lg">
-              {top10Rows.length} Top Candidates Ranked
+            <span className="border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-xs text-white/55">
+              {topCandidates.length} shown
             </span>
           </div>
 
-          <div className="space-y-3">
-            {top10Rows.map((row, index) => {
-              const score = safeNumber(row.hrEdge ?? row.hrScore ?? row.score) ?? 50;
-              const power = safeNumber(row.hitterPower ?? row.scoreBreakdown?.hitterPower) ?? 50;
-              const vuln = safeNumber(row.pitcherVulnerability ?? row.scoreBreakdown?.pitcherVulnerability) ?? 50;
-              const name = safeText(row.playerName ?? row.player_name ?? row.name, 'Hitter');
-              const team = safeText(row.team, 'MLB');
-              const opp = safeText(row.opponent ?? row.opposingPitcherTeam, 'OPP');
-              const grade = safeText(row.grade, 'B');
+          {topCandidates.length ? (
+            <ol className="space-y-2">
+              {topCandidates.map((candidate, index) => {
+                const score = candidate.metrics.hrEdge;
+                const matchup = [
+                  candidate.team,
+                  candidate.opponent ? `vs ${candidate.opponent}` : null,
+                ].filter(Boolean).join(' ');
 
-              return (
-                <div key={row.playerId || index} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-3 hover:border-vouch-cyan/40 transition">
-                  <div className="flex items-center gap-3 sm:w-56 shrink-0">
-                    <span className="font-mono text-xs font-black text-slate-500 w-5">#{index + 1}</span>
-                    <PlayerHeadshot name={name} playerId={Number(row.playerId || row.id || 0)} size={36} />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-white truncate">{name}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{team} vs {opp} · Grade <span className="text-vouch-cyan font-bold">{grade}</span></p>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 space-y-1.5 min-w-0">
-                    <div className="flex justify-between text-[10px] font-mono font-bold">
-                      <span className="text-slate-400">HR Edge Score</span>
-                      <span className="text-vouch-emerald">{score} / 100</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-black/60 overflow-hidden border border-white/5">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-vouch-cyan via-vouch-emerald to-amber-400 transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(5, score))}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 shrink-0 font-mono text-[10px] text-slate-300">
-                    <div className="text-center">
-                      <p className="text-slate-500 uppercase">Power</p>
-                      <p className="font-bold text-white">{power}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-slate-500 uppercase">Vuln</p>
-                      <p className="font-bold text-vouch-amber">{vuln}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 3. Interactive Head-to-Head Player Comparison Matrix */}
-        <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5 space-y-5 border-vouch-cyan/30`}>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-vouch-cyan" />
-              <h2 className="text-sm font-black uppercase text-white tracking-wider">
-                Head-to-Head Player Signal Matrix
-              </h2>
-            </div>
-            <span className="font-mono text-[10px] text-vouch-cyan font-bold uppercase bg-vouch-cyan/10 border border-vouch-cyan/30 px-2.5 py-1 rounded-lg">
-              Pro Comparison Engine
-            </span>
-          </div>
-
-          {/* Player Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="font-mono text-[10px] font-bold uppercase text-vouch-cyan">Select Hitter A</label>
-              <select
-                value={activePlayerA?.playerId || activePlayerA?.id || ''}
-                onChange={(e) => setPlayerAId(e.target.value)}
-                className="w-full rounded-xl border border-white/12 bg-black/60 px-3 py-2 text-xs text-white font-bold focus:border-vouch-cyan focus:outline-none"
-              >
-                {rows.map((r) => (
-                  <option key={r.playerId || r.id} value={r.playerId || r.id}>
-                    {r.playerName || r.name} ({r.team}) — Score {safeNumber(r.hrEdge ?? r.hrScore ?? r.score)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="font-mono text-[10px] font-bold uppercase text-vouch-amber">Select Hitter B</label>
-              <select
-                value={activePlayerB?.playerId || activePlayerB?.id || ''}
-                onChange={(e) => setPlayerBId(e.target.value)}
-                className="w-full rounded-xl border border-white/12 bg-black/60 px-3 py-2 text-xs text-white font-bold focus:border-vouch-amber focus:outline-none"
-              >
-                {rows.map((r) => (
-                  <option key={r.playerId || r.id} value={r.playerId || r.id}>
-                    {r.playerName || r.name} ({r.team}) — Score {safeNumber(r.hrEdge ?? r.hrScore ?? r.score)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Comparison Cards Grid */}
-          {activePlayerA && activePlayerB && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <PlayerComparisonCard playerRow={activePlayerA} color="cyan" />
-              <PlayerComparisonCard playerRow={activePlayerB} color="amber" />
-            </div>
-          )}
-        </div>
-
-        {/* 4. Team Game Pressure Radar & Pitcher Vulnerability Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className={`${Z8_PANEL} rounded-2xl p-5 space-y-4`}>
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <Target className="h-5 w-5 text-vouch-emerald" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                Team Game Pressure Radar
-              </h3>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Evaluating today&apos;s slate matchups by total team HR rate, park factors, and projected pitcher vulnerabilities.
-            </p>
-            {activeMatchupGroup ? (
-              <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3 font-mono text-xs">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-slate-400">Matchup</span>
-                  <span className="font-bold text-vouch-cyan">{activeMatchupGroup.matchup}</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-slate-400">Venue</span>
-                  <span className="text-white">{activeMatchupGroup.venue || 'MLB Stadium'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Ranked Players in Game</span>
-                  <span className="font-bold text-vouch-emerald">{activeMatchupGroup.rows.length}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 text-center text-xs text-slate-500">No game groups available.</div>
-            )}
-          </div>
-
-          <div className={`${Z8_PANEL} rounded-2xl p-5 space-y-4`}>
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <ShieldAlert className="h-5 w-5 text-rose-400" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                Pitcher Vulnerability Matrix
-              </h3>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Pitcher HR weakness index mapped against opponent team power ratings on today&apos;s slate.
-            </p>
-            <div className="space-y-2">
-              {top10Rows.slice(0, 3).map((r, i) => {
-                const pitcherName = safeText(r.opponentPitcherName ?? r.pitcherName, 'Starting Pitcher');
-                const vulnScore = safeNumber(r.pitcherVulnerability ?? r.scoreBreakdown?.pitcherVulnerability) ?? 60;
                 return (
-                  <div key={i} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 p-3 text-xs font-mono">
-                    <span className="font-bold text-white">{pitcherName}</span>
-                    <span className="text-rose-400 font-bold bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded">
-                      Vuln Index: {vulnScore}
-                    </span>
-                  </div>
+                  <li key={candidate.key} className={`${AURORA_SURFACE} min-w-0 p-3`}>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="w-6 shrink-0 font-mono text-xs font-bold text-white/35">
+                        {index + 1}
+                      </span>
+                      <PlayerHeadshot
+                        name={candidate.name}
+                        playerId={candidate.playerId}
+                        size={40}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="truncate text-sm font-bold text-white">{candidate.name}</span>
+                          {candidate.grade ? (
+                            <span className="font-mono text-xs text-white/45">Grade {candidate.grade}</span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 truncate text-xs text-white/40">
+                          {matchup || 'Matchup unavailable'} · {lineupStatusLabel(candidate.lineupStatus)}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className={AURORA_LABEL}>HR edge</div>
+                        <div className="mt-1 font-mono text-lg font-black text-white">
+                          {formatGraphMetric(score)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {score !== null ? (
+                      <div className="mt-3 h-1.5 overflow-hidden bg-white/5" aria-hidden="true">
+                        <div
+                          className="h-full bg-vouch-cyan"
+                          style={{ width: `${Math.max(0, Math.min(100, score))}%` }}
+                        />
+                      </div>
+                    ) : null}
+
+                    <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-white/5 pt-3 text-xs sm:grid-cols-3">
+                      <div>
+                        <dt className="text-white/35">Hitter power</dt>
+                        <dd className="mt-1 font-mono font-bold text-white">
+                          {formatGraphMetric(candidate.metrics.hitterPower)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-white/35">Pitcher vulnerability</dt>
+                        <dd className="mt-1 font-mono font-bold text-white">
+                          {formatGraphMetric(candidate.metrics.pitcherVulnerability)}
+                        </dd>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <dt className="text-white/35">Park factor</dt>
+                        <dd className="mt-1 font-mono font-bold text-white">
+                          {formatGraphMetric(candidate.metrics.parkFactor)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
                 );
               })}
+            </ol>
+          ) : (
+            <p className="text-sm text-white/45">No HR Board candidates are available.</p>
+          )}
+        </section>
+
+        <section className={`${AURORA_PANEL_PREMIUM} space-y-5 p-4 sm:p-5`} aria-labelledby="aurora-player-comparison-title">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+            <Users className="h-5 w-5 text-vouch-cyan" aria-hidden="true" />
+            <div>
+              <div className={`${AURORA_LABEL} text-vouch-cyan`}>Inspect side by side</div>
+              <h2 id="aurora-player-comparison-title" className="mt-1 text-base font-black text-white">
+                Player input comparison
+              </h2>
             </div>
           </div>
-        </div>
 
+          {comparisonCandidates.length ? (
+            <>
+              <p className="text-sm leading-6 text-white/50">
+                Comparing the top {comparisonCandidates.length} candidates from the current board response.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="aurora-player-a" className={`${AURORA_LABEL} text-white/50`}>
+                    Player A
+                  </label>
+                  <select
+                    id="aurora-player-a"
+                    value={activePlayerA?.key ?? ''}
+                    onChange={(event) => setPlayerAKey(event.target.value)}
+                    className="mt-2 min-h-12 w-full border border-white/15 bg-black/60 px-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80"
+                  >
+                    {comparisonCandidates.map((candidate) => (
+                      <option key={candidate.key} value={candidate.key}>
+                        {candidate.name} — HR edge {formatGraphMetric(candidate.metrics.hrEdge)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="aurora-player-b" className={`${AURORA_LABEL} text-white/50`}>
+                    Player B
+                  </label>
+                  <select
+                    id="aurora-player-b"
+                    value={activePlayerB?.key ?? ''}
+                    onChange={(event) => setPlayerBKey(event.target.value)}
+                    className="mt-2 min-h-12 w-full border border-white/15 bg-black/60 px-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80"
+                  >
+                    {comparisonCandidates.map((candidate) => (
+                      <option key={candidate.key} value={candidate.key}>
+                        {candidate.name} — HR edge {formatGraphMetric(candidate.metrics.hrEdge)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {activePlayerA && activePlayerB ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <AuroraGraphComparisonCard candidate={activePlayerA} label="Player A" />
+                  <AuroraGraphComparisonCard candidate={activePlayerB} label="Player B" />
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-sm text-white/45">Two current board candidates are required for comparison.</p>
+          )}
+        </section>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className={`${AURORA_PANEL} space-y-4 p-4 sm:p-5`} aria-labelledby="aurora-slate-context-title">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+              <Database className="h-5 w-5 text-vouch-cyan" aria-hidden="true" />
+              <h2 id="aurora-slate-context-title" className="text-sm font-black text-white">
+                First available game group
+              </h2>
+            </div>
+            <p className="text-sm leading-6 text-white/50">
+              This is schedule context from the board response, not a separate pressure score.
+            </p>
+            {activeMatchupGroup ? (
+              <dl className={`${AURORA_SURFACE} space-y-3 p-4 text-sm`}>
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-white/40">Matchup</dt>
+                  <dd className="text-right font-bold text-white">{activeMatchupGroup.matchup}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4 border-t border-white/5 pt-3">
+                  <dt className="text-white/40">Venue</dt>
+                  <dd className="text-right text-white">{activeMatchupGroup.venue ?? 'Unavailable'}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4 border-t border-white/5 pt-3">
+                  <dt className="text-white/40">Ranked players</dt>
+                  <dd className="font-mono font-bold text-white">{activeMatchupGroup.rows.length}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="text-sm text-white/45">No game group is available.</p>
+            )}
+          </section>
+
+          <section className={`${AURORA_PANEL} space-y-4 p-4 sm:p-5`} aria-labelledby="aurora-pitcher-inputs-title">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+              <ShieldAlert className="h-5 w-5 text-vouch-amber" aria-hidden="true" />
+              <h2 id="aurora-pitcher-inputs-title" className="text-sm font-black text-white">
+                Available pitcher vulnerability inputs
+              </h2>
+            </div>
+            <p className="text-sm leading-6 text-white/50">
+              Values below are direct fields from the current candidates; unavailable pitchers are omitted.
+            </p>
+            {pitcherInputs.length ? (
+              <dl className="space-y-2">
+                {pitcherInputs.map((candidate) => (
+                  <div key={candidate.key} className={`${AURORA_SURFACE} flex items-center justify-between gap-4 p-3 text-sm`}>
+                    <dt className="min-w-0 truncate font-bold text-white">{candidate.pitcherName}</dt>
+                    <dd className="shrink-0 font-mono font-bold text-white">
+                      {formatGraphMetric(candidate.metrics.pitcherVulnerability)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-white/45">No pitcher vulnerability values are available.</p>
+            )}
+          </section>
+        </div>
       </div>
     </main>
   );
 }
 
-const PlayerComparisonCard: React.FC<{ playerRow: Record<string, any>; color: 'cyan' | 'amber' }> = ({ playerRow, color }) => {
-  const name = safeText(playerRow.playerName ?? playerRow.player_name ?? playerRow.name, 'Hitter');
-  const team = safeText(playerRow.team, 'MLB');
-  const opp = safeText(playerRow.opponent ?? playerRow.opposingPitcherTeam, 'OPP');
-  const hrEdge = safeNumber(playerRow.hrEdge ?? playerRow.hrScore ?? playerRow.score) ?? 50;
-  const power = safeNumber(playerRow.hitterPower ?? playerRow.scoreBreakdown?.hitterPower) ?? 50;
-  const vuln = safeNumber(playerRow.pitcherVulnerability ?? playerRow.scoreBreakdown?.pitcherVulnerability) ?? 50;
-  const park = safeNumber(playerRow.parkFactor ?? playerRow.scoreBreakdown?.parkFactor) ?? 50;
-  const grade = safeText(playerRow.grade, 'B');
-
-  const borderColor = color === 'cyan' ? 'border-vouch-cyan/40' : 'border-amber-400/40';
-  const textColor = color === 'cyan' ? 'text-vouch-cyan' : 'text-vouch-amber';
-  const bgBadge = color === 'cyan' ? 'bg-vouch-cyan/15 border-vouch-cyan/30' : 'bg-amber-400/15 border-amber-400/30';
-
-  return (
-    <div className={`rounded-2xl border ${borderColor} bg-black/40 p-4 space-y-4 shadow-xl`}>
-      <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-        <PlayerHeadshot name={name} playerId={Number(playerRow.playerId || playerRow.id || 0)} size={42} />
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-black text-white truncate">{name}</h3>
-          <p className="text-xs text-slate-400 font-mono">{team} vs {opp}</p>
-        </div>
-        <span className={`font-mono text-xs font-black uppercase px-2.5 py-1 rounded-lg border ${bgBadge} ${textColor}`}>
-          Grade {grade}
-        </span>
-      </div>
-
-      <div className="space-y-3 font-mono text-xs">
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400">HR Edge Score</span>
-          <span className={`font-black text-sm ${textColor}`}>{hrEdge} / 100</span>
-        </div>
-
-        <div className="flex justify-between items-center border-t border-white/5 pt-2">
-          <span className="text-slate-400">Hitter Power Index</span>
-          <span className="font-bold text-white">{power}</span>
-        </div>
-
-        <div className="flex justify-between items-center border-t border-white/5 pt-2">
-          <span className="text-slate-400">Pitcher Vulnerability</span>
-          <span className="font-bold text-vouch-amber">{vuln}</span>
-        </div>
-
-        <div className="flex justify-between items-center border-t border-white/5 pt-2">
-          <span className="text-slate-400">Park HR Factor</span>
-          <span className="font-bold text-vouch-emerald">{park}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+export default ProGraphsLabPageZ8;

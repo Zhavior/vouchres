@@ -43,7 +43,7 @@ import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
 const MAX_VISIBLE_PLAYERS = 30;
 
 function getPlayerId(row: any): string | null {
-  const value = row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id ?? row?.id;
+  const value = row?.playerId ?? row?.player_id ?? row?.mlbId ?? row?.mlb_id;
   const parsed = safeNumber(value);
   return parsed !== null && parsed > 0 ? String(Math.trunc(parsed)) : null;
 }

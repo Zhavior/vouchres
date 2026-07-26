@@ -81,7 +81,7 @@ export function buildPlayerPayload(row: Record<string, any> | null): NormalizedP
     player: {
       // Keep API identity honest. UI lists may derive a separate local key, but an
       // invented player ID must never reach headshot or research endpoints.
-      playerId: safeText(row.playerId ?? row.player_id ?? row.mlbId ?? row.mlb_id ?? row.id, ''),
+      playerId: safeText(row.playerId ?? row.player_id ?? row.mlbId ?? row.mlb_id, ''),
       playerName,
       team: safeNullableText(row.team),
       opponent: safeNullableText(row.opponent ?? row.opposingPitcherTeam ?? row.matchup),
