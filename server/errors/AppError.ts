@@ -9,6 +9,7 @@ export interface AppErrorOptions {
   details?: unknown;
   expose?: boolean;
   cause?: unknown;
+  executionId?: string;
 }
 
 export class AppError extends Error {
@@ -17,6 +18,7 @@ export class AppError extends Error {
   readonly details?: unknown;
   readonly expose: boolean;
   override readonly cause?: unknown;
+  readonly executionId?: string;
 
   constructor(options: AppErrorOptions) {
     super(options.message);
@@ -26,6 +28,7 @@ export class AppError extends Error {
     this.details = options.details;
     this.expose = options.expose ?? options.status < 500;
     this.cause = options.cause;
+    this.executionId = options.executionId;
   }
 }
 

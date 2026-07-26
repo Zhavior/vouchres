@@ -13,9 +13,9 @@
  *   - Framer Motion slide-up entry + ESC to close
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, auroraFadeTransition, auroraSurfaceTransition, useReducedMotion } from '../../../../lib/motion';
 import {
   X, Minus, Flame, Award, Eye, Moon,
   BarChart2, Users, Activity,
@@ -262,6 +262,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const reducedMotion = useReducedMotion();
   useBodyScrollLock(isOpen);
   const profile = useAppProfile();
   const {
@@ -279,6 +282,18 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
     if (isOpen) document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    previouslyFocusedElement.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const frame = window.requestAnimationFrame(() => panelRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previouslyFocusedElement.current?.focus();
+    };
+  }, [isOpen]);
 
   const canonicalLogs = useMemo(
     () => canonicalGameLogs(research?.charts.signalTimeline ?? []),
@@ -391,7 +406,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
           <motion.div
             key="profile-backdrop"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={auroraFadeTransition(reducedMotion)}
             onClick={onClose}
             className="ve-hr-profile-backdrop fixed inset-0 z-[190]"
             aria-hidden="true"
@@ -399,12 +414,14 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 
           {/* Full-screen profile */}
           <motion.div
+            ref={panelRef}
             key="profile-panel"
-            initial={{ opacity: 0, y: 32, scale: 0.98 }}
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.99 }}
+            transition={auroraSurfaceTransition(reducedMotion)}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
+            tabIndex={-1}
             className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
@@ -412,7 +429,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+                className="aurora-pressable absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 lg:h-9 lg:w-9"
                 style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}
               >
                 <X className="h-4 w-4" />

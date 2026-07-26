@@ -69,6 +69,23 @@ describe("api error handler", () => {
     expect(captureException).not.toHaveBeenCalled();
   });
 
+  it("returns the Aegis execution id without replacing the request id", () => {
+    const { res } = runErrorHandler(
+      new AppError({
+        status: 409,
+        code: "domain_state_error",
+        message: "Parlay is not ready to lock yet.",
+        executionId: "exec_test_1",
+      }),
+    );
+
+    expect(res.statusCode).toBe(409);
+    expect(res.body.meta).toMatchObject({
+      requestId: "req_test_1",
+      executionId: "exec_test_1",
+    });
+  });
+
   it("captures 5xx errors in Sentry and hides internal details", () => {
     isSentryEnabled.mockReturnValue(true);
 
