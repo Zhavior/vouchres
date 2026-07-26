@@ -5,7 +5,11 @@ import {
   formatGraphMetric,
   lineupStatusLabel,
 } from '../src/pages/pro/proGraphsPresentation';
-import { getBoardGeneratedAt } from '../src/pages/pro/proLabData';
+import {
+  buildPlayerPayload,
+  getBoardGeneratedAt,
+  getBoardRows,
+} from '../src/pages/pro/proLabData';
 
 function readProjectFile(path: string): string {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -59,6 +63,15 @@ describe('Aurora Pro Graphs presentation', () => {
     expect(formatGraphMetric(candidate.metrics.hrEdge)).toBe('Unavailable');
   });
 
+  it('does not relabel a generic score field as HR edge', () => {
+    const candidate = buildAuroraGraphCandidate({
+      playerName: 'Generic Score Only',
+      score: 92,
+    });
+
+    expect(candidate.metrics.hrEdge).toBeNull();
+  });
+
   it('uses plain-language lineup labels', () => {
     expect(lineupStatusLabel('confirmed')).toBe('Confirmed lineup');
     expect(lineupStatusLabel('projected')).toBe('Projected lineup');
@@ -73,6 +86,42 @@ describe('Aurora Pro Graphs presentation', () => {
     expect(getBoardGeneratedAt({})).toBeNull();
   });
 
+  it('uses the canonical effective rows without duplicating alternate buckets', () => {
+    const rows = getBoardRows({
+      rows: [{ playerName: 'Effective Row', hrEdge: 80 }],
+      projectedCandidates: [{ playerName: 'Projection Bucket', hrEdge: 90 }],
+    });
+
+    expect(rows.map((row) => row.playerName)).toEqual(['Effective Row']);
+  });
+
+  it('keeps an unavailable weather feed from appearing as a neutral adjustment', () => {
+    const unavailable = buildPlayerPayload({
+      playerName: 'No Weather Feed',
+      weatherBoost: 0,
+      weatherSource: 'unavailable',
+    });
+    const connected = buildPlayerPayload({
+      playerName: 'Connected Weather Feed',
+      weatherBoost: 0,
+      weatherSource: 'official_weather_feed',
+    });
+
+    expect(unavailable?.matchup?.weatherBoost).toBeNull();
+    expect(connected?.matchup?.weatherBoost).toBe(0);
+  });
+
+  it('removes unsupported verification claims around the graph workspace', () => {
+    const hub = readProjectFile('src/components/MlbIntelligenceHubZ8.tsx');
+    const gate = readProjectFile('src/components/pro/ProAccessGate.tsx');
+
+    expect(hub).not.toContain('verified graphs');
+    expect(hub).not.toContain('verified signals');
+    expect(hub).not.toContain('Verified visual intelligence');
+    expect(gate).not.toContain('verified HR edge scores');
+    expect(gate).not.toContain('verified data tools');
+  });
+
   it('removes fabricated graph defaults and migrates to Aurora contracts', () => {
     const page = readProjectFile('src/pages/pro/ProGraphsLabPageZ8.tsx');
 
@@ -84,5 +133,6 @@ describe('Aurora Pro Graphs presentation', () => {
     expect(page).not.toContain('Verified HR Graph Feed Active');
     expect(page).not.toContain('A feed freshness timestamp was not included.');
     expect(page).not.toContain('Graph Pro Z8');
+    expect(page).toContain('comparisonCandidates.length >= 2');
   });
 });

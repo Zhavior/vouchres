@@ -224,7 +224,7 @@ export function ProGraphsLabPageZ8({ embedded = false }: ProGraphsLabPageZ8Props
             </div>
           </div>
 
-          {comparisonCandidates.length ? (
+          {comparisonCandidates.length >= 2 ? (
             <>
               <p className="text-sm leading-6 text-white/50">
                 Comparing the top {comparisonCandidates.length} candidates from the current board response.

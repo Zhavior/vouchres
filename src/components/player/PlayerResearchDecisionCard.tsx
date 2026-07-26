@@ -11,7 +11,7 @@ interface PlayerResearchDecisionCardProps {
 export function PlayerResearchDecisionCard({
   payload,
   research,
-  deepResearchId = 'aurora-deep-research',
+  deepResearchId,
 }: PlayerResearchDecisionCardProps) {
   const decision = buildAuroraPlayerDecision(payload, research);
 

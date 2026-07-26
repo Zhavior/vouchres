@@ -57,7 +57,7 @@ export function buildAuroraGraphCandidate(
       row.lineupStatus ?? row.lineup_status ?? row.projectionType ?? row.projection_type,
     ),
     metrics: {
-      hrEdge: safeNumber(row.hrEdge ?? row.hrScore ?? row.score),
+      hrEdge: safeNumber(row.hrEdge ?? row.hr_edge ?? row.hrScore ?? row.hr_score),
       hitterPower: safeNumber(row.hitterPower ?? row.scoreBreakdown?.hitterPower),
       pitcherVulnerability: safeNumber(
         row.pitcherVulnerability ?? row.scoreBreakdown?.pitcherVulnerability,

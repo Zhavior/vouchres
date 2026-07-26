@@ -100,8 +100,8 @@ export function buildAuroraPlayerDecision(
   const reasons = clean(player.reasons, 3);
   const risks = clean([...(player.warnings ?? []), ...research.warnings], 3);
   const trust = buildTrust(payload, research);
-  const score = finite(scoreBreakdown?.finalScore) ?? finite(player.vouchScore) ?? finite(player.hrEdge);
-  const confidence = finite(player.dataConfidence) ?? finite(scoreBreakdown?.lineupConfidence);
+  const score = finite(scoreBreakdown?.finalScore) ?? finite(player.hrEdge);
+  const confidence = finite(player.dataConfidence);
 
   const title = trust.status === 'blocked'
     ? 'Signal blocked'

@@ -6,7 +6,7 @@ import type { AuroraDecisionPresentation } from './types';
 
 interface AuroraDecisionSurfaceProps {
   decision: AuroraDecisionPresentation;
-  deepResearchId: string;
+  deepResearchId?: string;
 }
 
 export function AuroraDecisionSurface({ decision, deepResearchId }: AuroraDecisionSurfaceProps) {
@@ -78,13 +78,19 @@ export function AuroraDecisionSurface({ decision, deepResearchId }: AuroraDecisi
           ))}
         </div>
 
-        <a
-          href={`#${deepResearchId}`}
-          className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 bg-vouch-cyan px-4 py-3 text-sm font-black text-black transition-colors hover:bg-vouch-cyan/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-auto"
-        >
-          {decision.answer.actionLabel}
-          <ArrowDown className="h-4 w-4" aria-hidden="true" />
-        </a>
+        {deepResearchId ? (
+          <a
+            href={`#${deepResearchId}`}
+            className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 bg-vouch-cyan px-4 py-3 text-sm font-black text-black transition-colors hover:bg-vouch-cyan/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-auto"
+            onClick={() => {
+              const disclosure = document.getElementById(deepResearchId);
+              if (disclosure instanceof HTMLDetailsElement) disclosure.open = true;
+            }}
+          >
+            {decision.answer.actionLabel}
+            <ArrowDown className="h-4 w-4" aria-hidden="true" />
+          </a>
+        ) : null}
 
         {!decision.trust.source ? (
           <p className="mt-3 flex items-center gap-2 text-xs text-white/40">

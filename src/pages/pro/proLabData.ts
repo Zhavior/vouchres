@@ -86,6 +86,8 @@ export function buildPlayerPayload(row: Record<string, any> | null): NormalizedP
 
   const breakdown = row.scoreBreakdown && typeof row.scoreBreakdown === 'object' ? row.scoreBreakdown : {};
   const recentForm = row.recentForm && typeof row.recentForm === 'object' ? row.recentForm : undefined;
+  const weatherSource = safeNullableText(row.weatherSource ?? row.weather_source);
+  const hasWeatherFeed = weatherSource !== null && weatherSource.toLowerCase() !== 'unavailable';
 
   return {
     player: {
@@ -100,10 +102,10 @@ export function buildPlayerPayload(row: Record<string, any> | null): NormalizedP
       venue: safeNullableText(row.venue),
       lineupStatus: normalizeLineupStatus(row.lineupStatus ?? row.lineup_status),
       grade: safeNullableText(row.grade),
-      hrEdge: safeNumber(row.hrEdge ?? row.hrScore ?? row.score),
+      hrEdge: safeNumber(row.hrEdge ?? row.hr_edge ?? row.hrScore ?? row.hr_score),
       vouchScore: safeNumber(row.vouchScore),
       riskLabel: safeNullableText(row.riskLabel ?? row.riskTier ?? row.risk),
-      dataConfidence: safeNumber(row.dataConfidence),
+      dataConfidence: safeNumber(row.dataConfidence ?? row.data_confidence),
       formTag: safeNullableText(row.formTag),
       opponentPitcherName: safeNullableText(row.opponentPitcherName ?? row.opposingPitcher ?? row.pitcherName ?? row.pitcher),
       opposingPitcherTeam: safeNullableText(row.opposingPitcherTeam),
@@ -127,7 +129,8 @@ export function buildPlayerPayload(row: Record<string, any> | null): NormalizedP
     matchup: {
       pitcherVulnerability: safeNumber(breakdown.pitcherVulnerability ?? row.pitcherVulnerability),
       parkFactor: safeNumber(breakdown.parkFactor ?? row.parkFactor),
-      weatherBoost: safeNumber(row.weatherBoost),
+      weatherBoost: hasWeatherFeed ? safeNumber(row.weatherBoost ?? row.weather_boost) : null,
+      weatherSource,
       hrMultiplier: safeNumber(row.hrMultiplier),
       pitcherHand: safeNullableText(row.pitcherHand),
     },
@@ -157,13 +160,23 @@ export function getBoardRows(board: ProLabBoardPayload): Record<string, any>[] {
   const rowsFromGames = Array.isArray(root.games)
     ? root.games.flatMap((game: any) => Array.isArray(game?.rows) ? game.rows : [])
     : [];
+  const effectiveRows = Array.isArray(root.rows) ? root.rows : [];
   const candidates = Array.isArray(root.candidates) ? root.candidates : [];
   const projected = Array.isArray(root.projectedCandidates) ? root.projectedCandidates : [];
+  const sourceRows = effectiveRows.length
+    ? effectiveRows
+    : rowsFromGames.length
+      ? rowsFromGames
+      : candidates.length
+        ? candidates
+        : projected;
 
-  return [...rowsFromGames, ...candidates, ...projected]
+  return sourceRows
     .filter((row) => row && typeof row === 'object')
     .filter((row) => safeText(row.playerName ?? row.player_name ?? row.player ?? row.name, '') !== '')
-    .sort((a, b) => (safeNumber(b.hrEdge ?? b.hrScore ?? b.score) ?? -1) - (safeNumber(a.hrEdge ?? a.hrScore ?? a.score) ?? -1));
+    .sort((a, b) =>
+      (safeNumber(b.hrEdge ?? b.hr_edge ?? b.hrScore ?? b.hr_score) ?? -1)
+      - (safeNumber(a.hrEdge ?? a.hr_edge ?? a.hrScore ?? a.hr_score) ?? -1));
 }
 
 export function getGameGroups(board: ProLabBoardPayload, rows = getBoardRows(board)): ProLabGameGroup[] {

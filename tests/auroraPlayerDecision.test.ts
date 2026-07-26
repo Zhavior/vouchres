@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { NormalizedPlayerPayload } from '../src/adapters/normalized';
+import { PlayerResearchDecisionCard } from '../src/components/player/PlayerResearchDecisionCard';
 import { buildAuroraPlayerDecision } from '../src/components/player/buildAuroraPlayerDecision';
 
 function payload(overrides: Partial<NormalizedPlayerPayload['player']> = {}): NormalizedPlayerPayload {
@@ -69,6 +72,33 @@ describe('Aurora player decision presentation', () => {
     expect(decision.trust.status).toBe('unavailable');
   });
 
+  it('does not relabel lineup confidence or Vouch score as model evidence', () => {
+    const decision = buildAuroraPlayerDecision({
+      player: {
+        playerId: 660271,
+        playerName: 'Separated Metrics',
+        team: 'TOR',
+        opponent: 'NYY',
+        lineupStatus: 'confirmed',
+        dataQuality: 'partial',
+        vouchScore: 99,
+      },
+      scoreBreakdown: { lineupConfidence: 88 },
+    });
+
+    expect(decision.answer.score).toBeNull();
+    expect(decision.answer.confidence).toBeNull();
+  });
+
+  it('omits a deep-research action when the consumer has no disclosure target', () => {
+    const markup = renderToStaticMarkup(createElement(PlayerResearchDecisionCard, {
+      payload: payload(),
+    }));
+
+    expect(markup).not.toContain('href="#aurora-deep-research"');
+    expect(markup).not.toContain('Review deep research');
+  });
+
   it('clearly marks projection previews and blocked signals', () => {
     const preview = buildAuroraPlayerDecision(payload({ lineupStatus: 'projected_unconfirmed' }));
     const blocked = buildAuroraPlayerDecision(payload({ riskLabel: 'Blocked by data check' }));
@@ -92,5 +122,8 @@ describe('Aurora player decision presentation', () => {
     expect(page).not.toContain('WHY VOUCHEDGE LIKES THIS');
     expect(page).not.toContain('AI model consensus');
     expect(page).not.toContain('IntelligenceConsole');
+    expect(page).not.toContain('verified candidates');
+    expect(page).not.toContain('verified player data');
+    expect(page).not.toContain('row?.edgePct');
   });
 });

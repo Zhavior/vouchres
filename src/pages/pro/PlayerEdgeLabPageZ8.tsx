@@ -75,44 +75,29 @@ function getGamePk(row: any): number | null {
 
 function getScore(row: any) {
   const value = safeNumber(
-    row?.hrScore ?? row?.hr_score ?? row?.edgeScore ?? row?.edge_score ?? row?.score ?? row?.powerScore,
+    row?.hrEdge ?? row?.hr_edge ?? row?.hrScore ?? row?.hr_score,
   );
   return value === null ? null : Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function getConfidence(row: any) {
-  const value = safeNumber(row?.dataConfidence ?? row?.confidence ?? row?.confidencePct ?? row?.confidence_pct ?? row?.edgePct);
+  const value = safeNumber(row?.dataConfidence ?? row?.data_confidence);
   if (value === null) return null;
-  const normalized = value <= 1 ? value * 100 : value;
-  return Math.max(0, Math.min(100, Math.round(normalized)));
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-function getTier(row: any): 'S' | 'A' | 'B' | 'C' | 'Watch' | null {
+function getRiskLabel(row: any): string | null {
   const value = safeText(
-    row?.tier ?? row?.riskLabel ?? row?.riskTier ?? row?.risk,
+    row?.riskLabel ?? row?.riskTier ?? row?.risk ?? row?.tier,
     '',
-  )
-    .trim()
-    .toLowerCase();
+  ).trim();
+  return value || null;
+}
 
-  switch (value) {
-    case 's':
-    case 'elite':
-      return 'S';
-    case 'a':
-    case 'strong':
-      return 'A';
-    case 'b':
-    case 'moderate':
-      return 'B';
-    case 'c':
-    case 'review':
-      return 'C';
-    case 'watch':
-      return 'Watch';
-    default:
-      return null;
-  }
+function formatResearchUpdatedAt(value: unknown): string | null {
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toLocaleString();
 }
 
 function getLineupLabel(row: any): string {
@@ -136,7 +121,7 @@ function Metric({
   return (
     <div className="border-l border-white/10 pl-4 first:border-l-0 first:pl-0">
       <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
-        <Icon className="h-3.5 w-3.5 text-vouch-cyan" />
+        <Icon className="h-3.5 w-3.5 text-vouch-cyan" aria-hidden="true" />
         {label}
       </div>
       <div className="mt-2 truncate text-xl font-black tracking-tight text-white">{value}</div>
@@ -173,6 +158,7 @@ export default function PlayerEdgeLabPageZ8() {
     opponent: opponent || null,
     gamePk,
   });
+  const researchUpdatedAt = formatResearchUpdatedAt(research?.updatedAt);
 
   return (
     <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} overflow-x-hidden`}>
@@ -205,7 +191,7 @@ export default function PlayerEdgeLabPageZ8() {
               <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 sm:grid-cols-4">
                 <Metric icon={Database} label="Player pool" value={String(rows.length)} detail="current board rows" />
                 <Metric icon={Target} label="Edge score" value={score === null ? '—' : String(score)} detail="selected player" />
-                <Metric icon={Activity} label="Confidence" value={confidence === null ? '—' : `${confidence}%`} detail="signal strength" />
+                <Metric icon={Activity} label="Data confidence" value={confidence === null ? '—' : `${confidence}%`} detail="payload completeness" />
                 <Metric
                   icon={Radar}
                   label="Research feed"
@@ -227,9 +213,9 @@ export default function PlayerEdgeLabPageZ8() {
                         {safeText(selectedRow.team, 'MLB')} {opponent ? `vs ${opponent}` : ''}
                       </div>
                     </div>
-                    {getTier(selectedRow) ? (
+                    {getRiskLabel(selectedRow) ? (
                       <span className="border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-black uppercase tracking-widest text-white/65">
-                        {getTier(selectedRow)} tier
+                        {getRiskLabel(selectedRow)}
                       </span>
                     ) : null}
                   </div>
@@ -238,7 +224,7 @@ export default function PlayerEdgeLabPageZ8() {
                     <div className="space-y-2 text-xs font-medium text-white/60">
                       <div className="flex items-center gap-2">
                         <span className="h-1.5 w-1.5 bg-vouch-cyan" />
-                        Board source: {source === 'network' ? 'production feed' : 'unavailable'}
+                        Board source: {source === 'network' ? 'HR Board response' : 'unavailable'}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="h-1.5 w-1.5 bg-vouch-cyan" />
@@ -275,7 +261,7 @@ export default function PlayerEdgeLabPageZ8() {
                       <div className="mt-1 text-lg font-black text-white">{score ?? '—'}</div>
                     </div>
                     <div className="bg-black/60 px-3 py-2.5">
-                      <div className={`${Z8_LABEL} text-white/35`}>Confidence</div>
+                      <div className={`${Z8_LABEL} text-white/35`}>Data confidence</div>
                       <div className="mt-1 text-lg font-black text-white">{confidence === null ? '—' : `${confidence}%`}</div>
                     </div>
                     <div className="bg-black/60 px-3 py-2.5">
@@ -287,7 +273,7 @@ export default function PlayerEdgeLabPageZ8() {
               ) : (
                 <div className="relative flex h-full flex-col items-center justify-center text-center">
                   <Brain className="h-10 w-10 text-white/20" />
-                  <div className="mt-4 text-lg font-black text-white">Waiting for verified player data</div>
+                  <div className="mt-4 text-lg font-black text-white">Waiting for player data</div>
                   <div className="mt-2 max-w-xs text-sm text-white/45">
                     The Brain will not create substitute players or simulated evidence.
                   </div>
@@ -318,17 +304,17 @@ export default function PlayerEdgeLabPageZ8() {
 
           <div
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth overscroll-x-contain px-4 py-4 scroll-px-4 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-5 sm:scroll-px-5"
-            role="listbox"
+            role="group"
             aria-label="Select a player to research"
           >
             {loading ? (
               <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
-                Loading verified candidates…
+                Loading current candidates…
               </div>
             ) : null}
             {!loading && !rows.length ? (
               <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
-                No verified player rows available.
+                No current player rows available.
               </div>
             ) : null}
             {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
@@ -338,7 +324,7 @@ export default function PlayerEdgeLabPageZ8() {
               const active = selectedRow ? getPlayerKey(selectedRow, selectedIndex) === key : false;
               const rowScore = getScore(row);
               const rowConfidence = getConfidence(row);
-              const tier = getTier(row);
+              const riskLabel = getRiskLabel(row);
 
               return (
                 <button
@@ -353,8 +339,7 @@ export default function PlayerEdgeLabPageZ8() {
                   aria-label={`Research ${getPlayerName(row)}, ${rowScore ?? 'unknown'} edge score, ${
                     rowConfidence === null ? 'unknown confidence' : `${rowConfidence}% confidence`
                   }`}
-                  role="option"
-                  aria-selected={active}
+                  aria-pressed={active}
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
@@ -381,7 +366,7 @@ export default function PlayerEdgeLabPageZ8() {
                         <div className="min-w-0">
                           <div className="truncate text-sm font-black text-white">{getPlayerName(row)}</div>
                           <div className="mt-1 truncate text-xs text-white/45">
-                            {safeText(row.team, 'MLB')}{tier ? ` · ${tier}` : ''}
+                            {safeText(row.team, 'MLB')}{riskLabel ? ` · ${riskLabel}` : ''}
                           </div>
                         </div>
                         <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${active ? 'text-vouch-cyan' : 'text-white/20 group-hover:translate-x-0.5 group-hover:text-white/50'}`} />
@@ -392,7 +377,7 @@ export default function PlayerEdgeLabPageZ8() {
                           <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowScore ?? '—'}</div>
                         </div>
                         <div className="border-t border-white/10 pt-2">
-                          <div className={`${Z8_LABEL} text-white/30`}>Confidence</div>
+                          <div className={`${Z8_LABEL} text-white/30`}>Data confidence</div>
                           <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
                         </div>
                       </div>
@@ -473,7 +458,7 @@ export default function PlayerEdgeLabPageZ8() {
                     {researchLoading
                       ? 'Loading the available MLB evidence.'
                       : research?.dataSource
-                        ? `Source: ${research.dataSource}${research.updatedAt ? ` · Updated ${new Date(research.updatedAt).toLocaleString()}` : ''}`
+                        ? `Source: ${research.dataSource}${researchUpdatedAt ? ` · Updated ${researchUpdatedAt}` : ''}`
                         : 'No research response is available for this player.'}
                   </div>
                 </div>

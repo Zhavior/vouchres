@@ -42,7 +42,7 @@ const TIER_THEMES: Record<RequiredTier, TierTheme> = {
     price: '7 days free, then $7.99/mo',
     ctaLabel: 'Start 7-Day Free Trial',
     benefits: [
-            { icon: Star, text: 'Top Player Lab — verified HR edge scores and risk tiers' },
+            { icon: Star, text: 'Top Player Lab — current HR edge scores and risk tiers' },
       { icon: Zap, text: 'Pitchers Matchup — runs, hits, and pitcher vulnerability' },
       { icon: Star, text: 'Pro Graphs Lab — signal breakdown and confidence meters' },
     ],
@@ -130,7 +130,7 @@ export function ProAccessGate({
             {requiredTier === 'SELLER_PRO' ? (
               <>This is our top tier — deep research tools, your own paid pick storefront, and subscriber chat/clubs. {isUpgradeFromGold ? 'Upgrade from Gold to unlock it.' : 'Available on Research Seller PRO.'}</>
             ) : (
-              <>Start the <span className="font-bold text-[hsl(var(--ve-accent-gold))]">VouchEdge Beta</span> trial to unlock real-time analytics labs, signal graphs, and verified data tools.</>
+              <>Start the <span className="font-bold text-[hsl(var(--ve-accent-gold))]">VouchEdge Beta</span> trial to unlock current analytics labs, signal graphs, and source-backed data tools.</>
             )}
           </p>
         </div>
