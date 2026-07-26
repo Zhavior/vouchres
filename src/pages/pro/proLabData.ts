@@ -28,6 +28,7 @@ export function useHrBoardProData(): BoardState & {
   groups: ProLabGameGroup[];
   topRow: Record<string, any> | null;
   topGame: ProLabGameGroup | null;
+  generatedAt: Date | null;
 } {
   const [state, setState] = useState<BoardState>({
     board: null,
@@ -47,7 +48,7 @@ export function useHrBoardProData(): BoardState & {
       setState({
         board: result.data,
         loading: false,
-        error: result.ok ? null : result.error || 'Verified HR board feed unavailable',
+        error: result.ok ? null : result.error || 'HR Board feed unavailable',
         source: result.source,
       });
     });
@@ -59,6 +60,7 @@ export function useHrBoardProData(): BoardState & {
 
   const rows = useMemo(() => getBoardRows(state.board), [state.board]);
   const groups = useMemo(() => getGameGroups(state.board, rows), [state.board, rows]);
+  const generatedAt = useMemo(() => getBoardGeneratedAt(state.board), [state.board]);
 
   return {
     ...state,
@@ -66,7 +68,15 @@ export function useHrBoardProData(): BoardState & {
     groups,
     topRow: rows[0] || null,
     topGame: groups[0] || null,
+    generatedAt,
   };
+}
+
+export function getBoardGeneratedAt(board: ProLabBoardPayload): Date | null {
+  const value = getBoardRoot(board).generatedAt;
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 export function buildPlayerPayload(row: Record<string, any> | null): NormalizedPlayerPayload | null {

@@ -31,13 +31,21 @@ interface ProGraphsLabPageZ8Props {
 
 const MAX_COMPARISON_CANDIDATES = 75;
 
+function formatGeneratedAt(value: Date | null): string {
+  if (!value) return 'Feed generation time unavailable.';
+  return `Feed generated ${value.toLocaleString([], {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })}.`;
+}
+
 function uniqueCandidates(rows: Record<string, any>[]): AuroraGraphCandidate[] {
   const candidates = rows.map((row) => buildAuroraGraphCandidate(row));
   return [...new Map(candidates.map((candidate) => [candidate.key, candidate])).values()];
 }
 
 export function ProGraphsLabPageZ8({ embedded = false }: ProGraphsLabPageZ8Props) {
-  const { rows, groups, topRow, loading, error, source } = useHrBoardProData();
+  const { rows, groups, topRow, loading, error, source, generatedAt } = useHrBoardProData();
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
   const candidates = useMemo(() => uniqueCandidates(rows), [rows]);
   const topCandidates = useMemo(() => candidates.slice(0, 10), [candidates]);
@@ -92,7 +100,7 @@ export function ProGraphsLabPageZ8({ embedded = false }: ProGraphsLabPageZ8Props
             error
               ? `${error}. Missing values remain unavailable.`
               : source === 'network'
-                ? 'Charts use the current HR Board response. A feed freshness timestamp was not included.'
+                ? `Charts use the current HR Board response. ${formatGeneratedAt(generatedAt)}`
                 : 'No graph values are generated while the production feed is unavailable.'
           }
         />

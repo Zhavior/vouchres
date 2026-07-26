@@ -5,6 +5,7 @@ import {
   formatGraphMetric,
   lineupStatusLabel,
 } from '../src/pages/pro/proGraphsPresentation';
+import { getBoardGeneratedAt } from '../src/pages/pro/proLabData';
 
 function readProjectFile(path: string): string {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -64,6 +65,14 @@ describe('Aurora Pro Graphs presentation', () => {
     expect(lineupStatusLabel('unavailable')).toBe('Lineup unavailable');
   });
 
+  it('surfaces only a valid HR Board generation time', () => {
+    expect(getBoardGeneratedAt({
+      data: { generatedAt: '2026-07-26T04:30:00.000Z' },
+    })?.toISOString()).toBe('2026-07-26T04:30:00.000Z');
+    expect(getBoardGeneratedAt({ generatedAt: 'not-a-date' })).toBeNull();
+    expect(getBoardGeneratedAt({})).toBeNull();
+  });
+
   it('removes fabricated graph defaults and migrates to Aurora contracts', () => {
     const page = readProjectFile('src/pages/pro/ProGraphsLabPageZ8.tsx');
 
@@ -73,6 +82,7 @@ describe('Aurora Pro Graphs presentation', () => {
     expect(page).not.toContain("safeText(row.grade, 'B')");
     expect(page).not.toContain("'MLB Stadium'");
     expect(page).not.toContain('Verified HR Graph Feed Active');
+    expect(page).not.toContain('A feed freshness timestamp was not included.');
     expect(page).not.toContain('Graph Pro Z8');
   });
 });
