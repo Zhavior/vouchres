@@ -3,9 +3,10 @@ import {
   evaluateMlbHrDecision,
 } from "../../../src/core/aurora/mlb/MlbHrDecision";
 import { AuroraLedgerBridge } from "../../../src/core/aurora/ledger/AuroraLedgerBridge";
-import { TrustLedger } from "../../../src/core/trust-ledger/TrustLedger";
+import { InMemoryTrustLedger } from "../../../src/core/trust-ledger/TrustLedger";
 
-const hrDecisionLedger = new TrustLedger();
+// Prototype-only bridge. Production Layer 1 requires a durable event-store adapter.
+const hrDecisionLedger = new InMemoryTrustLedger();
 const hrDecisionBridge = new AuroraLedgerBridge(hrDecisionLedger);
 const PUBLISHED_MLB_HR_CONTRACT_VERSION = "1.0";
 
@@ -64,6 +65,24 @@ const normalizeProbability = (
   return Math.min(1, Math.max(0, value));
 };
 
+const normalizeSignedProbability = (
+  value: number | undefined,
+): number | undefined => {
+  if (value === undefined) return undefined;
+  const normalized = Math.abs(value) > 1 ? value / 100 : value;
+  return Math.min(1, Math.max(-1, normalized));
+};
+
+const readPositiveInteger = (
+  record: Record<string, unknown>,
+  ...keys: string[]
+): string | undefined => {
+  const value = readNumber(record, ...keys);
+  return value !== undefined && Number.isInteger(value) && value > 0
+    ? String(value)
+    : undefined;
+};
+
 const findCandidates = (board: unknown): readonly unknown[] => {
   const root = asRecord(board);
   if (!root) return [];
@@ -95,9 +114,6 @@ export const materializeValidatedHrBoardAurora = (
     const playerId = readString(
       candidate,
       "playerId",
-      "player_id",
-      "mlbPlayerId",
-      "id",
     );
 
     const playerName = readString(
@@ -107,21 +123,29 @@ export const materializeValidatedHrBoardAurora = (
       "name",
     );
 
-    if (!playerId || !playerName) continue;
+    const stablePlayerId = readPositiveInteger(candidate, "playerId");
+    const gameId = readPositiveInteger(candidate, "gamePk");
+    const lineupStatus = readString(candidate, "lineupStatus");
+    const dataQuality = readString(candidate, "dataQuality");
+
+    if (
+      !playerId ||
+      !stablePlayerId ||
+      !playerName ||
+      !gameId ||
+      lineupStatus !== "confirmed" ||
+      dataQuality === "projection_preview"
+    ) continue;
 
     const gameDate =
       readString(candidate, "gameDate", "date") ??
       requestedDate ??
-      new Date().toISOString().slice(0, 10);
+      readString(asRecord(board) ?? {}, "date");
 
     const projectedProbability = normalizeProbability(
       readNumber(
         candidate,
-        "hrProbability",
-        "homeRunProbability",
-        "probability",
-        "hrPct",
-        "hrPercent",
+        "estimatedHrProbability",
       ),
     );
 
@@ -135,15 +159,25 @@ export const materializeValidatedHrBoardAurora = (
     );
 
     const confidence = normalizeProbability(
-      readNumber(candidate, "confidence", "confidencePct", "confidencePercent"),
+      readNumber(
+        candidate,
+        "dataConfidence",
+        "confidence",
+        "confidencePct",
+        "confidencePercent",
+      ),
     );
 
-    const edge = normalizeProbability(
+    const edge = normalizeSignedProbability(
       readNumber(candidate, "edge", "edgePct", "edgePercent"),
     );
 
+    if (gameDate === undefined || projectedProbability === undefined || confidence === undefined) {
+      continue;
+    }
+
     const decision = createMlbHrDecision({
-      playerId,
+      playerId: stablePlayerId,
       playerName,
       team: readString(candidate, "team", "teamAbbr", "teamCode"),
       opponent: readString(
@@ -154,14 +188,14 @@ export const materializeValidatedHrBoardAurora = (
       ),
       pitcherId: readString(candidate, "pitcherId", "opposingPitcherId"),
       pitcherName: readString(candidate, "pitcherName", "opposingPitcher"),
-      gameId: readString(candidate, "gameId", "gamePk"),
+      gameId,
       gameDate,
     });
 
     const evaluated = evaluateMlbHrDecision({
       decision,
       recommendation: {
-        playerId,
+        playerId: stablePlayerId,
         playerName,
         market: "home-run",
         selection: "yes",
@@ -173,20 +207,20 @@ export const materializeValidatedHrBoardAurora = (
         {
           id: `${decision.id}:board-score`,
           decisionId: decision.id,
-          label: "Validated HR Board score",
-          summary:
-            "The validated HR Board candidate model supports this decision.",
+          label: "Validated HR Board projection",
+          summary: `Estimated HR probability ${(projectedProbability * 100).toFixed(1)}%; data confidence ${(confidence * 100).toFixed(0)}%.`,
           direction: "supports",
-          weight: projectedProbability ?? 0.5,
-          confidence: confidence ?? projectedProbability ?? 0.5,
+          weight: projectedProbability,
+          confidence,
           metadata: {
-            candidateSource: readString(candidate, "candidateSource", "source"),
+            candidateSource: readString(candidate, "dataSource"),
+            hrScore: readNumber(candidate, "hrScore"),
+            lineupStatus,
+            dataQuality,
           },
         },
       ],
-      modelVersion:
-        readString(candidate, "modelVersion", "version") ??
-        "validated-hr-board-v1",
+      modelVersion: readString(candidate, "modelVersion"),
     });
 
     persisted += hrDecisionBridge.persist(evaluated, {

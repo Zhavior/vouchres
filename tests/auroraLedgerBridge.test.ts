@@ -6,7 +6,7 @@ import {
   evaluateAuroraDecision,
 } from "../src/core/aurora/AuroraDecision";
 import { AuroraLedgerBridge } from "../src/core/aurora/ledger/AuroraLedgerBridge";
-import { TrustLedger } from "../src/core/trust-ledger/TrustLedger";
+import { InMemoryTrustLedger } from "../src/core/trust-ledger/TrustLedger";
 
 const context = { marketId: "HR", contractVersion: "1.0" } as const;
 
@@ -39,7 +39,7 @@ const createCompletedDecision = () => {
 
 describe("AuroraLedgerBridge constitutional contract", () => {
   it("records one complete immutable prediction event", () => {
-    const ledger = new TrustLedger();
+    const ledger = new InMemoryTrustLedger();
     const bridge = new AuroraLedgerBridge(ledger);
     const decision = createCompletedDecision();
 
@@ -61,7 +61,7 @@ describe("AuroraLedgerBridge constitutional contract", () => {
   });
 
   it("is idempotent for the same completed decision", () => {
-    const ledger = new TrustLedger();
+    const ledger = new InMemoryTrustLedger();
     const bridge = new AuroraLedgerBridge(ledger);
     const decision = createCompletedDecision();
 
@@ -71,7 +71,7 @@ describe("AuroraLedgerBridge constitutional contract", () => {
   });
 
   it("does not write an incomplete decision", () => {
-    const ledger = new TrustLedger();
+    const ledger = new InMemoryTrustLedger();
     const bridge = new AuroraLedgerBridge(ledger);
     const draft = createAuroraDecision({
       id: "mlb-hr:2026-07-25:game-2:player-2",
@@ -85,7 +85,7 @@ describe("AuroraLedgerBridge constitutional contract", () => {
   });
 
   it("rejects an attempted amendment of the recorded prediction", () => {
-    const ledger = new TrustLedger();
+    const ledger = new InMemoryTrustLedger();
     const bridge = new AuroraLedgerBridge(ledger);
     const decision = createCompletedDecision();
 
@@ -95,5 +95,22 @@ describe("AuroraLedgerBridge constitutional contract", () => {
       bridge.persist(decision, { ...context, contractVersion: "1.1" }),
     ).toThrow("immutable_event_conflict");
     expect(ledger.history(decision.id)).toHaveLength(1);
+  });
+
+  it("stores an immutable copy instead of retaining caller-owned payloads", () => {
+    const ledger = new InMemoryTrustLedger();
+    const bridge = new AuroraLedgerBridge(ledger);
+    const decision = createCompletedDecision();
+
+    bridge.persist(decision, context);
+    const recorded = ledger.history(decision.id)[0];
+
+    expect(Object.isFrozen(recorded)).toBe(true);
+    expect(Object.isFrozen(recorded.payload)).toBe(true);
+    expect(() => {
+      (recorded.payload as { confidence: number }).confidence = 0;
+    }).toThrow();
+    expect((ledger.history(decision.id)[0].payload as { confidence: number }).confidence)
+      .toBe(decision.output?.confidence);
   });
 });

@@ -1,5 +1,19 @@
 import type { DecisionEvent } from "./types";
 
+const deepFreeze = <T>(value: T): T => {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) {
+    return value;
+  }
+
+  for (const child of Object.values(value as Record<string, unknown>)) {
+    deepFreeze(child);
+  }
+
+  return Object.freeze(value);
+};
+
+const immutableCopy = <T>(value: T): T => deepFreeze(structuredClone(value));
+
 export class EventStore {
   private readonly events: DecisionEvent[] = [];
 
@@ -24,7 +38,7 @@ export class EventStore {
       );
     }
 
-    this.events.push(Object.freeze(event));
+    this.events.push(immutableCopy(event));
     return true;
   }
 
@@ -33,6 +47,6 @@ export class EventStore {
   }
 
   all(): readonly DecisionEvent[] {
-    return this.events;
+    return [...this.events];
   }
 }

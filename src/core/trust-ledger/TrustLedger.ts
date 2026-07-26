@@ -2,7 +2,11 @@ import { EventStore } from "./EventStore";
 import { ProjectionStore } from "./ProjectionStore";
 import type { DecisionEvent } from "./types";
 
-export class TrustLedger {
+/**
+ * In-process reference implementation for contract tests and local prototypes.
+ * This is not the durable Layer 1 ledger described by the Constitution.
+ */
+export class InMemoryTrustLedger {
   constructor(
     private readonly events = new EventStore(),
     private readonly projections = new ProjectionStore(),

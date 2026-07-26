@@ -12,13 +12,7 @@ export type AuroraEvidence<TValue = unknown> = {
   metadata?: Readonly<Record<string, unknown>>;
 };
 
-export type AuroraEvidenceInput<TValue = unknown> = Omit<
-  AuroraEvidence<TValue>,
-  "weight" | "confidence"
-> & {
-  weight?: number;
-  confidence?: number;
-};
+export type AuroraEvidenceInput<TValue = unknown> = AuroraEvidence<TValue>;
 
 const clamp01 = (value: number): number =>
   Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
@@ -27,8 +21,8 @@ export const createAuroraEvidence = <TValue>(
   input: AuroraEvidenceInput<TValue>,
 ): AuroraEvidence<TValue> => ({
   ...input,
-  weight: clamp01(input.weight ?? 1),
-  confidence: clamp01(input.confidence ?? 1),
+  weight: clamp01(input.weight),
+  confidence: clamp01(input.confidence),
 });
 
 export const getEvidenceContribution = (evidence: AuroraEvidence): number => {

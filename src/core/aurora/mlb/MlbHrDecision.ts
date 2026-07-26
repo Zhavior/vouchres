@@ -62,13 +62,13 @@ export const evaluateMlbHrDecision = (
     input.decision,
   );
 
-  const projectedProbability = input.recommendation.projectedProbability ?? 0;
+  const projectedProbability = input.recommendation.projectedProbability;
 
-  const impliedProbability = input.recommendation.impliedProbability ?? 0;
+  const impliedProbability = input.recommendation.impliedProbability;
 
   const edge =
     input.recommendation.edge ??
-    (projectedProbability > 0 && impliedProbability > 0
+    (projectedProbability !== undefined && impliedProbability !== undefined
       ? projectedProbability - impliedProbability
       : undefined);
 
