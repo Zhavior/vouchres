@@ -30,6 +30,8 @@ export interface IntelligenceAnalysis {
 
   metrics: IntelligenceMetric[];
   evidence: IntelligenceEvidence[];
+  confidenceBreakdown: import("./analysis").ConfidenceBreakdown;
+  risks: import("./analysis").IntelligenceRisk[];
 }
 
 export interface IntelligenceConsoleProps<TPlayer = unknown> {
