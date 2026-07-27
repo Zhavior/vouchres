@@ -32,3 +32,6 @@ aurora/generated/*.json
 PORT=3000
 npm
 drafts/
+
+# Internal documentation (not for public GitHub)
+docs/internal/
