@@ -70,15 +70,6 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 
 ---
 
-## File Index
-
-### Foundation
-| File | Purpose |
-|------|---------|
-| `supabase/schema.sql` | Full Postgres schema — profiles, picks, trust_scores, subscriptions, follows, posts, RLS policies, triggers |
-| `.env.example` | All required env vars (Supabase, Stripe, Gemini, CORS, etc.) |
-| `render.yaml` | Render deployment config (paid Starter tier — no sleep) |
-| `package.json.diff.txt` | New dependencies to add |
 
 ### Server middleware
 | File | Purpose |
@@ -143,40 +134,6 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 |------|---------|
 | `legal/TERMS_OF_SERVICE.md` | Termly-style ToS draft with `[REVIEW:]` markers for counsel — eligibility, content standards, billing, liability, arbitration |
 | `legal/PRIVACY_POLICY.md` | GDPR/CCPA-compliant privacy policy — data collection, sharing, retention, DSAR workflow, SCC coverage |
-
-### Patches (apply manually)
-| File | What it removes/changes |
-|------|-------------------------|
-| `patches/Leaderboard.tsx.replacement` | Removes fabricated `TOP_10_CAPPERS` with fake 73.7% win rates. Shows honest empty state. |
-| `patches/ProfilePage.tsx.patch.md` | Removes hardcoded follower/subscriber counts (241/156/38/15) |
-| `patches/SubscriberHub.tsx.patch.md` | Removes fake "Alpha Baseball Guru" with 1,840 fake subscribers |
-| `patches/SettingsPage.tsx.tier-toggle.patch.md` | Removes the self-serve SELLER_PRO upgrade button |
-| `patches/PremiumSubPage.tsx.patch.md` | Replaces fake activation with real Stripe Checkout |
-| `patches/App.tsx.fallbackGames.patch.md` | Removes 12 fake "live" MLB games used as fallback |
-| `patches/mockData-and-FeedPostCard.patch.md` | Demo banners + real view counts (replaces `simulatedViews`) |
-| `patches/agentRegistry-migration.patch.md` | Migrates capper picks from in-memory to Postgres |
-| `patches/frontend-feed-integration.patch.md` | Replaces localStorage feed with real `/api/feed` calls + `feedApi.ts` client |
-
-### Cleanup
-| File | Purpose |
-|------|---------|
-| `cleanup.sh` | Deletes `server_BACKUP_BEFORE_MLB_ROUTES.ts`, dedupes `manifest 2.json` etc., fixes `<title>` and `package.json` name |
-
----
-
-## What's still on YOUR plate (things I can't do for you)
-
-| Task | Why me? Why not me? |
-|------|---------------------|
-| Create Supabase project | Requires your account |
-| Create Stripe account + products | Requires your identity/banking |
-| Apply patches to your source files | Requires your repo state — patches are diffs, not auto-applies |
-| Get legal review of ToS + Privacy Policy | The drafts in `legal/` are templates marked with `[REVIEW:]` — counsel must sign off |
-| Set up Sentry / PostHog accounts | Requires your accounts |
-| Decide the actual price points | $8/mo and $40/mo are placeholders from the existing code |
-| Test the full flow end-to-end with real Stripe test cards | Requires your running app |
-| Invite the first 10-20 beta users personally | You know your community |
-| Set up GitHub Actions secrets for CI | SUPABASE_URL_TEST, SUPABASE_SERVICE_ROLE_KEY_TEST, STRIPE_TEST_* |
 
 ---
 
