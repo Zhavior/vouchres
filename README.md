@@ -166,19 +166,3 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 
 ---
 
-## Support
-
-If a patch doesn't apply cleanly or a route returns an unexpected error,
-the most likely causes are:
-
-1. **Import path mismatch** — the patch kit assumes the directory structure
-   in your repo. Adjust import paths if your structure differs.
-2. **Missing `daily_quotas` table** — see the comment at the bottom of
-   `server/middleware/entitlements.ts` for the SQL to add it.
-3. **Stripe webhook signature fails** — ensure the webhook route is
-   registered with `express.raw()` BEFORE `express.json()` (see
-   `server.ts.patch.md`).
-4. **CORS blocks everything in production** — set
-   `CORS_ALLOWED_ORIGINS` env var to your frontend URL(s).
-
-For the full story, read `IMPLEMENTATION.md` end-to-end before starting.
