@@ -430,6 +430,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             <ScrollReveal delayMs={100}>
               <DeferredSection heightClass="h-[28rem]">
                 {/* DEBUG_DISABLED_LandingDeviceShowcase */}
+                <LandingDeviceShowcase />
               </DeferredSection>
             </ScrollReveal>
 

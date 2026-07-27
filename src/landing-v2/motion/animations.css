@@ -1,0 +1,172 @@
+/*
+ * Aurora Motion Utilities
+ * Ken Burns effect and transitions following Aurora motion rules
+ * Maximum duration: 200-350ms, 60 FPS, no bouncing
+ */
+
+/* Ken Burns effect - slow, cinematic drift for hero background */
+@keyframes ken-burns-slow {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    transform: scale(1.06) translateY(-1.5%);
+  }
+}
+
+.aurora-ken-burns {
+  animation: ken-burns-slow 40s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-ken-burns {
+    animation: none;
+  }
+}
+
+/* Aurora fade in - for content entrance */
+@keyframes aurora-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aurora-fade-in {
+  animation: aurora-fade-in var(--duration-slow) var(--ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Staggered children for sequential reveals */
+.aurora-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.aurora-stagger > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.aurora-stagger > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.aurora-stagger > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.aurora-stagger > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+/* Aurora hover - subtle, purposeful */
+.aurora-hover {
+  transition: 
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.aurora-hover:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-hover:hover {
+    transform: none;
+  }
+}
+
+/* Aurora button press feedback */
+.aurora-button-press {
+  transition: transform var(--duration-instant) var(--ease-out);
+}
+
+.aurora-button-press:active {
+  transform: scale(0.97);
+}
+
+/* Aurora glass reveal - for surfaces appearing */
+@keyframes aurora-glass-reveal {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
+}
+
+.aurora-glass-reveal {
+  animation: aurora-glass-reveal var(--duration-slow) var(--ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-glass-reveal {
+    animation: none;
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Aurora slide up - for panels and cards */
+@keyframes aurora-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aurora-slide-up {
+  animation: aurora-slide-up var(--duration-base) var(--ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-slide-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Aurora scale in - for emphasis */
+@keyframes aurora-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aurora-scale-in {
+  animation: aurora-scale-in var(--duration-base) var(--ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-scale-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

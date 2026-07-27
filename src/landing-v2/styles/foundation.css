@@ -1,0 +1,108 @@
+/*
+ * Aurora Landing V2 Foundation
+ * Typography, tokens, and surfaces for the new landing page.
+ *
+ * Color values reference the canonical palette in src/styles/vouchedge-tokens.css
+ * (loaded globally via src/index.css). Everything here is scoped under
+ * .aurora-landing so V2 styles can never leak into the authenticated app.
+ */
+
+.aurora-landing {
+  /* Aurora typography tokens (faces loaded in index.html) */
+  --font-display: "General Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Aurora motion tokens */
+  --duration-instant: 100ms;
+  --duration-fast: 160ms;
+  --duration-base: 220ms;
+  --duration-slow: 300ms;
+  --duration-slower: 350ms;
+
+  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  /* Gold trust indicator — Aurora-only accent, pairs with the ve palette */
+  --aurora-gold: #d9a44a;
+
+  color-scheme: dark;
+  font-family: var(--font-ui);
+  background-color: var(--color-ve-obsidian);
+  color: var(--color-ve-flash);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography scale */
+.aurora-landing .font-display {
+  font-family: var(--font-display);
+}
+
+.aurora-landing .font-ui {
+  font-family: var(--font-ui);
+}
+
+.aurora-landing .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Aurora spacing system */
+.aurora-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .aurora-container {
+    padding: 0 2rem;
+  }
+}
+
+/* Aurora surface elevation */
+.aurora-surface-1 {
+  background: var(--color-ve-graphite);
+  border: 1px solid var(--color-ve-fuse);
+}
+
+.aurora-surface-2 {
+  background: var(--color-ve-storm);
+  border: 1px solid var(--color-ve-fuse);
+}
+
+.aurora-surface-3 {
+  background: var(--color-ve-surface-panel);
+  border: 1px solid var(--color-ve-fuse);
+}
+
+/* Aurora glass effect (restrained, not fake) */
+.aurora-glass {
+  background: rgba(11, 18, 32, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-ve-fuse);
+}
+
+/* Aurora focus states (accessibility) */
+.aurora-focus:focus-visible {
+  outline: 2px solid var(--color-ve-ion);
+  outline-offset: 2px;
+}
+
+/* Aurora touch targets (mobile-first) */
+.aurora-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Reduced motion support — scoped to the landing only */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-landing *,
+  .aurora-landing *::before,
+  .aurora-landing *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
