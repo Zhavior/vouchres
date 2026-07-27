@@ -26,3 +26,9 @@ __MACOSX/
 # Aurora generated artifacts
 aurora/generated/*.json
 *.dmg
+
+# Local temp
+*.bak
+PORT=3000
+npm
+drafts/
