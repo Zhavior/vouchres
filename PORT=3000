@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (38) from .env.local // tip: ⌘ suppress logs { quiet: true }
+[auth] Supabase client env ready for local login.
+[sentry] SENTRY_DSN not set — server error reporting disabled.
+[worker] Starting VouchEdge durable worker runtime...
+[liveHrLoop] scheduled every 30000ms
+[worker] Live HR Notification loop registered.
+[notificationWorker] starting polling loop...
+[worker] Notification worker registered.
+[stripeWebhookWorker] starting polling loop...
+[worker] Stripe webhook entitlement worker registered.
+[socialOutboxWorker] starting polling loop...
+[worker] Social outbox fanout worker registered.
