@@ -1,14 +1,41 @@
-# VouchEdge Beta-Readiness Patch Kit
+# VouchEdge — AI Studio & Freemium Platform
 
-**Goal:** Transform the VouchEdge AI Studio prototype into a defensible
-freemium beta — real auth, real persistence, real payments, honest UI.
+A production-grade, secure full-stack web application featuring robust authentication, real-time data persistence, automated tier gating, and integrated Stripe subscriptions.
 
-**Read first:** [`IMPLEMENTATION.md`](./IMPLEMENTATION.md) — the 3-week
-day-by-day plan.
+[Live Demo Link Here] | [Architecture Overview](#-architecture--tech-stack)
 
 ---
 
-## Quickstart (TL;DR)
+## 🚀 Tech Stack
+
+* **Frontend:** TypeScript, Tailwind CSS
+* **Backend:** Node.js, Express.js
+* **Database & Auth:** Supabase (PostgreSQL, Row Level Security, JWT Auth)
+* **Security & Validation:** Zod, Express Rate Limit, Helmet, Custom Middleware
+* **Payments & AI:** Stripe Billing Webhooks, Google Gemini API
+
+---
+
+## 🛠️ Engineering Highlights & Architecture
+
+* **Secure Tier Gating & Entitlements:** Implemented custom backend middleware (`requireTier`, `requireTierOrQuota`) to manage free-tier daily limits and premium subscription access.
+* **Robust Request Validation:** Leveraged **Zod** schemas across all API endpoints to ensure strict type safety and data integrity for user payloads.
+* **Stripe Integration:** Handled complex subscription lifecycles securely using raw-body webhook verification and automated billing portals.
+* **Database Security:** Designed a complete PostgreSQL schema protected by Supabase **Row Level Security (RLS)** policies and custom triggers.
+
+---
+
+## 💻 Local Development (Quickstart)
+
+```bash
+# 1. Clone the repository and install dependencies
+npm install
+
+# 2. Configure environment variables
+cp .env.example .env.local
+
+# 3. Run the development server
+npm run dev
 
 ```bash
 # 1. Commit current state so you can revert if anything breaks
