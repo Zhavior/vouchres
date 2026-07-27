@@ -295,6 +295,70 @@ create table public.creator_business_events (
 create index creator_business_events_business_idx on public.creator_business_events(business_id, created_at desc);
 
 -- =========================================================
+-- World Chat (durable storage for real-time chat)
+-- =========================================================
+create table public.world_chat_channels (
+  id text primary key,
+  name text not null check (char_length(name) between 1 and 80),
+  description text not null default '' check (char_length(description) <= 200),
+  is_default boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+insert into public.world_chat_channels (id, name, description, is_default)
+values (
+  'world:lounge',
+  'World Lounge',
+  'Global community lounge for honest sports research.',
+  true
+) on conflict (id) do nothing;
+
+create table public.world_chat_profiles (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  status_line text not null default 'Researching edges' check (char_length(status_line) between 1 and 80),
+  accent_color text not null default 'cyan' check (char_length(accent_color) between 1 and 24),
+  tag text null check (tag is null or char_length(tag) between 1 and 32),
+  updated_at timestamptz not null default now()
+);
+
+create table public.world_chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  channel_id text not null default 'world:lounge' references public.world_chat_channels(id) on delete restrict,
+  author_id uuid not null references public.profiles(id) on delete cascade,
+  reply_to_message_id uuid null references public.world_chat_messages(id) on delete set null,
+  body text not null check (char_length(body) between 1 and 500),
+  border_id text null check (border_id is null or char_length(border_id) <= 64),
+  accent_color text not null default 'cyan' check (char_length(accent_color) between 1 and 24),
+  status_line text not null default 'Researching edges' check (char_length(status_line) between 1 and 80),
+  created_at timestamptz not null default now()
+);
+
+create table public.world_chat_custom_emojis (
+  id text primary key,
+  shortcode text not null unique check (char_length(shortcode) between 1 and 32),
+  image_url text not null check (char_length(image_url) between 1 and 500),
+  alt_text text not null check (char_length(alt_text) between 1 and 80),
+  is_active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table public.world_chat_message_reactions (
+  message_id uuid not null references public.world_chat_messages(id) on delete cascade,
+  emoji_id text not null references public.world_chat_custom_emojis(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (message_id, emoji_id, user_id)
+);
+
+create index world_chat_messages_created_idx on public.world_chat_messages(created_at desc);
+create index world_chat_messages_author_idx on public.world_chat_messages(author_id, created_at desc);
+create index world_chat_messages_channel_created_idx on public.world_chat_messages(channel_id, created_at desc);
+create index world_chat_messages_reply_idx on public.world_chat_messages(reply_to_message_id);
+create index world_chat_custom_emojis_sort_idx on public.world_chat_custom_emojis(sort_order asc, shortcode asc);
+create index world_chat_message_reactions_message_idx on public.world_chat_message_reactions(message_id, emoji_id);
+
+-- =========================================================
 -- posts (the social feed — replaces localStorage posts)
 -- =========================================================
 create table public.posts (
@@ -345,6 +409,30 @@ create table public.follows (
 create index follows_follower_idx     on public.follows(follower_id);
 create index follows_following_profile_idx on public.follows(following_profile_id);
 create index follows_following_capper_idx  on public.follows(following_capper_id);
+
+-- =========================================================
+-- trust_ledger_events (Layer 1 — immutable event log per constitution)
+-- =========================================================
+create table public.trust_ledger_events (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references public.profiles(id) on delete cascade,
+  event_type    text not null check (event_type in ('COMMIT', 'LOCK', 'GRADE', 'REPAIR', 'REVOKE')),
+  pick_id       uuid references public.picks(id) on delete set null,
+  parlay_id     uuid references public.picks(id) on delete set null,
+  trust_delta   numeric(8,2) not null default 0.00,
+  metadata      jsonb not null default '{}'::jsonb,
+  created_at    timestamptz not null default now(),
+  -- Constraint: exactly one of pick_id or parlay_id should be set for COMMIT/LOCK/GRADE events
+  check (
+    (event_type in ('COMMIT', 'LOCK', 'GRADE') and (pick_id is not null or parlay_id is not null)) or
+    (event_type IN ('REPAIR', 'REVOKE'))
+  )
+);
+
+create index trust_ledger_events_user_id_idx on public.trust_ledger_events(user_id, created_at desc);
+create index trust_ledger_events_pick_id_idx on public.trust_ledger_events(pick_id) where pick_id is not null;
+create index trust_ledger_events_parlay_id_idx on public.trust_ledger_events(parlay_id) where parlay_id is not null;
+create index trust_ledger_events_event_type_idx on public.trust_ledger_events(event_type, created_at desc);
 
 -- =========================================================
 -- Triggers
@@ -400,6 +488,7 @@ alter table public.cappers         enable row level security;
 alter table public.picks           enable row level security;
 alter table public.pick_legs       enable row level security;
 alter table public.trust_scores    enable row level security;
+alter table public.trust_ledger_events enable row level security;
 alter table public.subscriptions   enable row level security;
 alter table public.creator_businesses enable row level security;
 alter table public.creator_business_products enable row level security;
@@ -407,6 +496,11 @@ alter table public.creator_business_apps enable row level security;
 alter table public.creator_business_memberships enable row level security;
 alter table public.creator_business_team_members enable row level security;
 alter table public.creator_business_events enable row level security;
+alter table public.world_chat_channels enable row level security;
+alter table public.world_chat_profiles enable row level security;
+alter table public.world_chat_messages enable row level security;
+alter table public.world_chat_custom_emojis enable row level security;
+alter table public.world_chat_message_reactions enable row level security;
 alter table public.posts           enable row level security;
 alter table public.post_likes      enable row level security;
 alter table public.post_comments   enable row level security;
@@ -501,6 +595,55 @@ create policy "subscriptions_read_self"
 -- trust_scores: world-readable
 create policy "trust_read_all"
   on public.trust_scores for select using (true);
+
+-- trust_ledger_events: world-readable for transparency. Writes are SERVICE-ROLE
+-- ONLY — no client insert/update policy, because the ledger must be immutable
+-- and only the backend (grading, trust lock, commit operations) should write events.
+create policy "trust_ledger_read_all"
+  on public.trust_ledger_events for select using (true);
+
+-- World Chat: channels are world-readable, service-role writes only
+create policy "world_chat_channels_read_all"
+  on public.world_chat_channels for select using (true);
+
+-- World Chat: profiles are user-owned
+create policy "world_chat_profiles_select_self"
+  on public.world_chat_profiles for select
+  using (auth.uid() = user_id);
+
+create policy "world_chat_profiles_insert_self"
+  on public.world_chat_profiles for insert
+  with check (auth.uid() = user_id);
+
+create policy "world_chat_profiles_update_self"
+  on public.world_chat_profiles for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- World Chat: messages are world-readable, users can only insert their own
+create policy "world_chat_messages_read_all"
+  on public.world_chat_messages for select using (true);
+
+create policy "world_chat_messages_insert_own"
+  on public.world_chat_messages for insert
+  with check (auth.uid() = author_id);
+
+-- World Chat: custom emojis are world-readable (active only), service-role writes
+create policy "world_chat_custom_emojis_read_all"
+  on public.world_chat_custom_emojis for select
+  using (is_active = true);
+
+-- World Chat: reactions are world-readable, users can insert/delete their own
+create policy "world_chat_message_reactions_read_all"
+  on public.world_chat_message_reactions for select using (true);
+
+create policy "world_chat_message_reactions_insert_own"
+  on public.world_chat_message_reactions for insert
+  with check (auth.uid() = user_id);
+
+create policy "world_chat_message_reactions_delete_own"
+  on public.world_chat_message_reactions for delete
+  using (auth.uid() = user_id);
 
 -- beta_signups: only staff (service role bypasses) can read; users insert their own email
 create policy "beta_insert_self"
