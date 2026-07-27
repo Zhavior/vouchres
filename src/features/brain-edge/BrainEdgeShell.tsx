@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { BarChart3, BrainCircuit, Crosshair } from 'lucide-react';
 import {
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-} from '../../theme/z8Tokens';
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+} from '../../theme/auroraTokens';
 import '../brain/brain.css';
 import './brain-edge.css';
 
@@ -27,14 +27,14 @@ export default function BrainEdgeShell({
 }: Props) {
   return (
     <main
-      className={`${Z8_PAGE} brain-workspace brain-edge-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}
+      className={`${AURORA_PAGE} brain-workspace brain-edge-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}
     >
-      <div className={`mx-auto flex max-w-[1480px] flex-col ${Z8_PAGE_GAP}`}>
+      <div className={`mx-auto flex max-w-[1480px] flex-col ${AURORA_PAGE_GAP}`}>
         <header className="brain-hero brain-edge-hero rounded-2xl p-4 sm:p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               <div
-                className={`${Z8_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}
+                className={`${AURORA_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}
               >
                 <BrainCircuit className="h-3.5 w-3.5" />
                 ProjectVABrAIns · MLB Decision Laboratory

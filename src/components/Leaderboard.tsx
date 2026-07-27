@@ -18,7 +18,7 @@ import {
   ShieldAlert,
   Search
 } from 'lucide-react';
-import { Z8_PAGE, Z8_SECTION_HEADER, Z8_SURFACE, Z8_ACTIVE, Z8_LABEL } from '../theme/z8Tokens';
+import { AURORA_PAGE, AURORA_SECTION_HEADER, AURORA_SURFACE, AURORA_ACTIVE, AURORA_LABEL } from '../theme/auroraTokens';
 
 
 interface LeaderboardProps {

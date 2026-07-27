@@ -12,7 +12,7 @@ import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { bootDataStore } from '../lib/boot/bootDataStore';
 import { MLB_HEADSHOT_IMG_CLASS } from '../lib/mlbHeadshot';
 import { logoByTeamId, logoByTeamName, teamIdByName } from '../lib/teamLogos';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
+import { AURORA_ACTIVE, AURORA_IDLE, AURORA_LABEL, AURORA_PAGE, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../theme/auroraTokens';
 
 type Pitcher = {
   id?: number | string;
@@ -222,7 +222,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
   return (
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
-        <div data-page="daily-players" className={`daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${Z8_SURFACE} p-1 shadow-lg `}>
+        <div data-page="daily-players" className={`daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${AURORA_SURFACE} p-1 shadow-lg `}>
           {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" decoding="async" /> : <span className={`text-xs font-black text-black`}>{name.slice(0, 2)}</span>}
         </div>
       )}
@@ -235,7 +235,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
       </div>
 
       {align === 'right' && (
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${Z8_SURFACE} p-1 shadow-lg `}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border  ${AURORA_SURFACE} p-1 shadow-lg `}>
           {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" decoding="async" /> : <span className={`text-xs font-black text-black`}>{name.slice(0, 2)}</span>}
         </div>
       )}
@@ -247,68 +247,68 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
 function DailyPlayersSkeleton() {
   return (
     <div className="space-y-5">
-      <section className={`rounded-3xl border  ${Z8_PANEL_PREMIUM} p-5 shadow-2xl  backdrop-blur-xl`}>
+      <section className={`rounded-3xl border  ${AURORA_PANEL_PREMIUM} p-5 shadow-2xl  backdrop-blur-xl`}>
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="h-4 w-40 animate-pulse rounded-full bg-vouch-cyan/20" />
-            <div className={`mt-4 h-9 w-72 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
-            <div className={`mt-3 h-4 w-96 max-w-full animate-pulse rounded-full ${Z8_SURFACE}`} />
+            <div className={`mt-4 h-9 w-72 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
+            <div className={`mt-3 h-4 w-96 max-w-full animate-pulse rounded-full ${AURORA_SURFACE}`} />
           </div>
           <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-vouch-cyan/10 md:block" />
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((item) => (
-            <div key={item} className={`rounded-2xl border  ${Z8_SURFACE} p-4`}>
-              <div className={`h-3 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
-              <div className={`mt-3 h-7 w-16 animate-pulse rounded-xl ${Z8_SURFACE}`} />
+            <div key={item} className={`rounded-2xl border  ${AURORA_SURFACE} p-4`}>
+              <div className={`h-3 w-24 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+              <div className={`mt-3 h-7 w-16 animate-pulse rounded-xl ${AURORA_SURFACE}`} />
             </div>
           ))}
         </div>
       </section>
 
-      <section className={`rounded-3xl border  ${Z8_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
+      <section className={`rounded-3xl border  ${AURORA_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
         <div className="mb-3 flex items-center justify-between">
           <div>
             <div className="h-4 w-44 animate-pulse rounded-full bg-vouch-cyan/20" />
-            <div className={`mt-2 h-3 w-64 animate-pulse rounded-full ${Z8_SURFACE}`} />
+            <div className={`mt-2 h-3 w-64 animate-pulse rounded-full ${AURORA_SURFACE}`} />
           </div>
-          <div className={`hidden h-7 w-20 animate-pulse rounded-full ${Z8_SURFACE} sm:block`} />
+          <div className={`hidden h-7 w-20 animate-pulse rounded-full ${AURORA_SURFACE} sm:block`} />
         </div>
 
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
           {[0, 1, 2, 3].map((item) => (
             <div
               key={item}
-              className={`min-w-[310px] rounded-3xl border  ${Z8_PANEL_PREMIUM} p-4`}
+              className={`min-w-[310px] rounded-3xl border  ${AURORA_PANEL_PREMIUM} p-4`}
             >
               <div className="mb-4 flex justify-between">
-                <div className={`h-6 w-28 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                <div className={`h-4 w-16 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                <div className={`h-6 w-28 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                <div className={`h-4 w-16 animate-pulse rounded-full ${AURORA_SURFACE}`} />
               </div>
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 <div className="flex items-center gap-2">
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                   <div>
-                    <div className={`h-4 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                    <div className={`mt-2 h-3 w-12 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                    <div className={`h-4 w-24 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                    <div className={`mt-2 h-3 w-12 animate-pulse rounded-full ${AURORA_SURFACE}`} />
                   </div>
                 </div>
-                <div className={`h-7 w-7 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                <div className={`h-7 w-7 animate-pulse rounded-full ${AURORA_SURFACE}`} />
                 <div className="flex items-center justify-end gap-2">
                   <div>
-                    <div className={`h-4 w-24 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                    <div className={`ml-auto mt-2 h-3 w-12 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                    <div className={`h-4 w-24 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                    <div className={`ml-auto mt-2 h-3 w-12 animate-pulse rounded-full ${AURORA_SURFACE}`} />
                   </div>
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                 </div>
               </div>
 
-              <div className={`mt-4 rounded-2xl border  ${Z8_SURFACE} p-3`}>
-                <div className={`h-3 w-full animate-pulse rounded-full ${Z8_SURFACE}`} />
-                <div className={`mt-2 h-3 w-5/6 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                <div className={`mt-2 h-3 w-4/6 animate-pulse rounded-full ${Z8_SURFACE}`} />
+              <div className={`mt-4 rounded-2xl border  ${AURORA_SURFACE} p-3`}>
+                <div className={`h-3 w-full animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                <div className={`mt-2 h-3 w-5/6 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                <div className={`mt-2 h-3 w-4/6 animate-pulse rounded-full ${AURORA_SURFACE}`} />
               </div>
             </div>
           ))}
@@ -318,29 +318,29 @@ function DailyPlayersSkeleton() {
       {[0, 1].map((game) => (
         <section
           key={game}
-          className={`overflow-hidden rounded-3xl border  ${Z8_SURFACE} shadow-2xl  backdrop-blur-xl`}
+          className={`overflow-hidden rounded-3xl border  ${AURORA_SURFACE} shadow-2xl  backdrop-blur-xl`}
         >
-          <div className={`border-b  ${Z8_PANEL_PREMIUM} p-4`}>
-            <div className={`h-5 w-40 animate-pulse rounded-full ${Z8_SURFACE}`} />
+          <div className={`border-b  ${AURORA_PANEL_PREMIUM} p-4`}>
+            <div className={`h-5 w-40 animate-pulse rounded-full ${AURORA_SURFACE}`} />
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <div className={`h-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
-              <div className={`h-12 w-20 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
-              <div className={`h-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+              <div className={`h-16 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
+              <div className={`h-12 w-20 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
+              <div className={`h-16 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
             </div>
           </div>
 
           <div className="grid gap-4 p-4 lg:grid-cols-2">
             {[0, 1].map((side) => (
-              <div key={side} className={`rounded-3xl border  ${Z8_SURFACE} p-3`}>
-                <div className={`mb-3 h-12 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+              <div key={side} className={`rounded-3xl border  ${AURORA_SURFACE} p-3`}>
+                <div className={`mb-3 h-12 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
                 <div className="grid gap-2">
                   {[0, 1, 2, 3].map((player) => (
-                    <div key={player} className={`flex gap-3 rounded-2xl border  ${Z8_SURFACE} p-3`}>
-                      <div className={`h-16 w-16 animate-pulse rounded-2xl ${Z8_SURFACE}`} />
+                    <div key={player} className={`flex gap-3 rounded-2xl border  ${AURORA_SURFACE} p-3`}>
+                      <div className={`h-16 w-16 animate-pulse rounded-2xl ${AURORA_SURFACE}`} />
                       <div className="flex-1">
-                        <div className={`h-4 w-40 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                        <div className={`mt-2 h-3 w-28 animate-pulse rounded-full ${Z8_SURFACE}`} />
-                        <div className={`mt-3 h-5 w-32 animate-pulse rounded-full ${Z8_SURFACE}`} />
+                        <div className={`h-4 w-40 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                        <div className={`mt-2 h-3 w-28 animate-pulse rounded-full ${AURORA_SURFACE}`} />
+                        <div className={`mt-3 h-5 w-32 animate-pulse rounded-full ${AURORA_SURFACE}`} />
                       </div>
                     </div>
                   ))}
@@ -521,7 +521,7 @@ function MatchupRail({ games }: { games: Game[] }) {
   if (!games.length) return null;
 
   return (
-    <section className={`rounded-3xl border  ${Z8_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
+    <section className={`rounded-3xl border  ${AURORA_SURFACE} p-4 shadow-2xl  backdrop-blur-xl`}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-black uppercase tracking-[0.22em] text-vouch-cyan">
@@ -532,7 +532,7 @@ function MatchupRail({ games }: { games: Game[] }) {
           </div>
         </div>
 
-        <div className={`hidden rounded-full border  ${Z8_SURFACE} px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block`}>
+        <div className={`hidden rounded-full border  ${AURORA_SURFACE} px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block`}>
           Scroll →
         </div>
       </div>
@@ -550,7 +550,7 @@ function MatchupRail({ games }: { games: Game[] }) {
               key={`${game.gamePk || game.id || index}-rail`}
               type="button"
               onClick={() => scrollToGame(game.gamePk || game.id)}
-              className={`min-w-[310px] snap-start rounded-3xl border  ${Z8_PANEL_PREMIUM} p-4 text-left shadow-xl  transition hover:-translate-y-0.5 hover:border-vouch-cyan/40 hover:shadow-vouch-cyan/15`}
+              className={`min-w-[310px] snap-start rounded-3xl border  ${AURORA_PANEL_PREMIUM} p-4 text-left shadow-xl  transition hover:-translate-y-0.5 hover:border-vouch-cyan/40 hover:shadow-vouch-cyan/15`}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
@@ -563,13 +563,13 @@ function MatchupRail({ games }: { games: Game[] }) {
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <TeamLogoBadge id={awayId} name={awayTeam} />
-                <div className={`rounded-full border  ${Z8_SURFACE} px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]`}>
+                <div className={`rounded-full border  ${AURORA_SURFACE} px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]`}>
                   @
                 </div>
                 <TeamLogoBadge id={homeId} name={homeTeam} align="right" />
               </div>
 
-              <div className={`mt-4 grid gap-2 rounded-2xl border  ${Z8_SURFACE} p-3 text-[11px]`}>
+              <div className={`mt-4 grid gap-2 rounded-2xl border  ${AURORA_SURFACE} p-3 text-[11px]`}>
                 <div className="flex justify-between gap-3">
                   <span className={`text-[hsl(var(--ve-text-muted))]`}>Away SP</span>
                   <span className="truncate font-bold text-vouch-cyan">{pitcherName(game.awayPitcher)}</span>
@@ -665,8 +665,8 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
   const order = orderNumber(player) === 999 ? index + 1 : orderNumber(player);
 
   return (
-    <div className={`group flex gap-3 rounded-2xl border  ${Z8_SURFACE} p-3 shadow-lg  transition hover:border-vouch-cyan/40 hover:${Z8_SURFACE}`}>
-      <div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border  ${Z8_SURFACE}`}>
+    <div className={`group flex gap-3 rounded-2xl border  ${AURORA_SURFACE} p-3 shadow-lg  transition hover:border-vouch-cyan/40 hover:${AURORA_SURFACE}`}>
+      <div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border  ${AURORA_SURFACE}`}>
         {headshot ? (
           <img
             src={headshot}
@@ -703,7 +703,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             </div>
           </div>
 
-          <span className={`rounded-full ${Z8_SURFACE} px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
+          <span className={`rounded-full ${AURORA_SURFACE} px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
             {player.position || '—'}
           </span>
         </div>
@@ -1259,7 +1259,7 @@ function DailyTeamIcon({ team, gameTeamId, size = 'md' }: { team: any; gameTeamI
 
   return (
     <span
-      className={`relative inline-grid ${sizeClass} shrink-0 place-items-center overflow-hidden rounded-md border border-vouch-cyan/20 ${Z8_SURFACE} p-0.5 shadow-sm shadow-black/20`}
+      className={`relative inline-grid ${sizeClass} shrink-0 place-items-center overflow-hidden rounded-md border border-vouch-cyan/20 ${AURORA_SURFACE} p-0.5 shadow-sm shadow-black/20`}
       aria-hidden="true"
       title={name}
     >
@@ -1307,7 +1307,7 @@ function DailyStarterRow({ player, index, team, teamAbbr, search }: { player: an
       }}
       aria-label={playerUrl ? `Open ${name} MLB profile` : `${name} starter card`}
     >
-      <div className={`${Z8_LABEL} flex h-7 w-7 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
+      <div className={`${AURORA_LABEL} flex h-7 w-7 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
         {order}
       </div>
 
@@ -1336,7 +1336,7 @@ function DailyStarterRow({ player, index, team, teamAbbr, search }: { player: an
             {name}
           </strong>
           <span
-            className={`${Z8_LABEL} shrink-0 border px-1.5 py-0.5 sm:hidden ${isProjected ? 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/80' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`}
+            className={`${AURORA_LABEL} shrink-0 border px-1.5 py-0.5 sm:hidden ${isProjected ? 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/80' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`}
           >
             {isProjected ? 'Proj' : 'Live'}
           </span>
@@ -1351,7 +1351,7 @@ function DailyStarterRow({ player, index, team, teamAbbr, search }: { player: an
       </div>
 
       <div className="hidden flex-col items-end gap-0.5 sm:flex">
-        <span className={`${Z8_LABEL} border px-1.5 py-0.5 ${isProjected ? 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/80' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`}>
+        <span className={`${AURORA_LABEL} border px-1.5 py-0.5 ${isProjected ? 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/80' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`}>
           {isProjected ? 'Proj' : 'Live'}
         </span>
         <small className="font-mono text-[8px] uppercase tracking-widest text-white/30">View</small>
@@ -1369,16 +1369,16 @@ function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "h
   const gameTeamId = game?.[`${side}TeamId`];
 
   return (
-    <section className={`${Z8_SURFACE} min-w-0 overflow-hidden`}>
+    <section className={`${AURORA_SURFACE} min-w-0 overflow-hidden`}>
       <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/30 px-3 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
           <DailyTeamIcon team={team} gameTeamId={gameTeamId} />
           <div className="min-w-0">
             <strong className="block truncate font-mono text-xs font-bold uppercase tracking-wide text-white">{teamName}</strong>
-            <span className={`${Z8_LABEL} text-white/40`}>{sideLabel}</span>
+            <span className={`${AURORA_LABEL} text-white/40`}>{sideLabel}</span>
           </div>
         </div>
-        <div className={`${Z8_LABEL} border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-1 text-vouch-emerald`}>
+        <div className={`${AURORA_LABEL} border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-1 text-vouch-emerald`}>
           {players.length}/9
         </div>
       </div>
@@ -1398,7 +1398,7 @@ function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "h
         </div>
       ) : (
         <div className="border-t border-white/10 px-4 py-8 text-center">
-          <strong className={`${Z8_LABEL} block text-white/70`}>Lineup pending</strong>
+          <strong className={`${AURORA_LABEL} block text-white/70`}>Lineup pending</strong>
           <span className="mt-1 block font-mono text-[10px] text-white/40">
             Starters will appear here once MLB data is available.
           </span>
@@ -1440,7 +1440,7 @@ function DailyMatchupTheater({
 
   return (
     <section
-      className={`${Z8_PANEL_PREMIUM} min-w-0 overflow-hidden p-0`}
+      className={`${AURORA_PANEL_PREMIUM} min-w-0 overflow-hidden p-0`}
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === 'ArrowLeft') goToPreviousGame();
@@ -1452,14 +1452,14 @@ function DailyMatchupTheater({
           <button
             type="button"
             onClick={goToPreviousGame}
-            className={`${Z8_IDLE} flex h-11 w-11 shrink-0 items-center justify-center font-mono text-sm sm:h-9 sm:w-9`}
+            className={`${AURORA_IDLE} flex h-11 w-11 shrink-0 items-center justify-center font-mono text-sm sm:h-9 sm:w-9`}
             aria-label="Previous matchup"
           >
             ←
           </button>
 
-          <div className={`${Z8_SURFACE} flex min-w-0 flex-1 flex-col items-center px-3 py-1.5 text-center sm:flex-none`}>
-            <span className={`${Z8_LABEL} text-white/40`}>Matchup</span>
+          <div className={`${AURORA_SURFACE} flex min-w-0 flex-1 flex-col items-center px-3 py-1.5 text-center sm:flex-none`}>
+            <span className={`${AURORA_LABEL} text-white/40`}>Matchup</span>
             <strong className="font-mono text-sm font-bold text-white">
               {selectedGameIndex + 1} / {games.length}
             </strong>
@@ -1468,7 +1468,7 @@ function DailyMatchupTheater({
           <button
             type="button"
             onClick={goToNextGame}
-            className={`${Z8_IDLE} flex h-11 w-11 shrink-0 items-center justify-center font-mono text-sm sm:h-9 sm:w-9`}
+            className={`${AURORA_IDLE} flex h-11 w-11 shrink-0 items-center justify-center font-mono text-sm sm:h-9 sm:w-9`}
             aria-label="Next matchup"
           >
             →
@@ -1476,11 +1476,11 @@ function DailyMatchupTheater({
         </div>
 
         <label className="grid min-w-0 gap-1">
-          <span className={`${Z8_LABEL} text-white/45`}>Choose matchup</span>
+          <span className={`${AURORA_LABEL} text-white/45`}>Choose matchup</span>
           <select
             value={selectedGameIndex}
             onChange={(event) => setSelectedGameIndex(Number(event.target.value))}
-            className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3 font-mono text-xs font-bold uppercase tracking-wide text-white outline-none focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
+            className={`${AURORA_SURFACE} z8-control min-h-11 w-full px-3 font-mono text-xs font-bold uppercase tracking-wide text-white outline-none focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
             aria-label="Choose matchup"
           >
             {games.map((game, index) => {
@@ -1497,7 +1497,7 @@ function DailyMatchupTheater({
       </div>
 
       {isProjectedSlate && (
-        <div className={`${Z8_LABEL} border-b border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-2 text-vouch-cyan/90`}>
+        <div className={`${AURORA_LABEL} border-b border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-2 text-vouch-cyan/90`}>
           Official lineup not posted yet — projected roster preview only.
         </div>
       )}
@@ -1507,14 +1507,14 @@ function DailyMatchupTheater({
           <div className="flex min-w-0 items-center gap-3">
             <DailyTeamIcon team={away} gameTeamId={selectedGame?.awayTeamId} size="lg" />
             <div className="min-w-0">
-              <span className={`${Z8_LABEL} text-white/40`}>Away</span>
+              <span className={`${AURORA_LABEL} text-white/40`}>Away</span>
               <strong className="block truncate font-mono text-sm font-bold uppercase tracking-wide text-white sm:text-base">{awayName}</strong>
-              <small className={`${Z8_LABEL} text-white/35`}>{awayPlayers.length}/9 starters loaded</small>
+              <small className={`${AURORA_LABEL} text-white/35`}>{awayPlayers.length}/9 starters loaded</small>
             </div>
           </div>
 
-          <div className={`${Z8_SURFACE} self-center px-4 py-2 text-center`}>
-            <span className={`${Z8_LABEL} ${status === 'Confirmed' ? 'text-vouch-emerald' : 'text-vouch-cyan/80'}`}>{status}</span>
+          <div className={`${AURORA_SURFACE} self-center px-4 py-2 text-center`}>
+            <span className={`${AURORA_LABEL} ${status === 'Confirmed' ? 'text-vouch-emerald' : 'text-vouch-cyan/80'}`}>{status}</span>
             <strong className="mt-1 block font-mono text-xs font-bold tracking-widest text-vouch-cyan">
               {awayAbbr} VS {homeAbbr}
             </strong>
@@ -1522,9 +1522,9 @@ function DailyMatchupTheater({
 
           <div className="flex min-w-0 items-center gap-3 md:justify-end md:text-right">
             <div className="min-w-0 md:order-1">
-              <span className={`${Z8_LABEL} text-white/40`}>Home</span>
+              <span className={`${AURORA_LABEL} text-white/40`}>Home</span>
               <strong className="block truncate font-mono text-sm font-bold uppercase tracking-wide text-white sm:text-base">{homeName}</strong>
-              <small className={`${Z8_LABEL} text-white/35`}>{homePlayers.length}/9 starters loaded</small>
+              <small className={`${AURORA_LABEL} text-white/35`}>{homePlayers.length}/9 starters loaded</small>
             </div>
             <DailyTeamIcon team={home} gameTeamId={selectedGame?.homeTeamId} size="lg" />
           </div>
@@ -1583,7 +1583,7 @@ function DailyContextPlayer({
 
   return (
     <div className="relative overflow-hidden border border-white/10 bg-black/20 p-3">
-      <span className={`absolute inset-x-0 top-0 h-px ${Z8_PANEL_PREMIUM}`} />
+      <span className={`absolute inset-x-0 top-0 h-px ${AURORA_PANEL_PREMIUM}`} />
 
       <div className="text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">
         {label}
@@ -1706,8 +1706,8 @@ function DailyPlayerIntelligenceLayer({
   return (
     <section className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-        <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden p-4 sm:p-5`}>
-          <div className={`pointer-events-none absolute inset-x-10 top-0 h-px ${Z8_PANEL_PREMIUM}`} />
+        <article className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden p-4 sm:p-5`}>
+          <div className={`pointer-events-none absolute inset-x-10 top-0 h-px ${AURORA_PANEL_PREMIUM}`} />
           <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-vouch-cyan/10 blur-3xl" />
 
           <div className="relative">
@@ -1823,7 +1823,7 @@ function DailyPlayerIntelligenceLayer({
           </div>
         </article>
 
-        <article className={`${Z8_PANEL_PREMIUM} relative overflow-hidden p-4`}>
+        <article className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden p-4`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.14em] text-white">
@@ -1859,7 +1859,7 @@ function DailyPlayerIntelligenceLayer({
         </article>
       </div>
 
-      <article className={`${Z8_PANEL_PREMIUM} rounded-2xl overflow-hidden p-4`}>
+      <article className={`${AURORA_PANEL_PREMIUM} rounded-2xl overflow-hidden p-4`}>
         <div className="flex items-center justify-between gap-3 px-1">
           <div>
             <div className="text-sm font-black uppercase tracking-[0.14em] text-white flex items-center gap-2">
@@ -2067,16 +2067,16 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
   };
 
   return (
-    <main className={`${Z8_PAGE} daily-players-page min-w-0 px-3 py-4 space-y-4 sm:px-4 lg:py-5`}>
+    <main className={`${AURORA_PAGE} daily-players-page min-w-0 px-3 py-4 space-y-4 sm:px-4 lg:py-5`}>
       {/* Top Header Card */}
-      <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
+      <header className={`${AURORA_PANEL_PREMIUM} p-4 sm:p-5`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
+              <span className={`${AURORA_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
                 Daily Player Board
               </span>
-              <span className={`${Z8_LABEL} border border-white/10 bg-black/25 px-2.5 py-1 text-white/50`}>
+              <span className={`${AURORA_LABEL} border border-white/10 bg-black/25 px-2.5 py-1 text-white/50`}>
                 <Calendar className="mr-1 inline h-3 w-3 text-vouch-cyan/70" />
                 {data?.date || todayISO()}
               </span>
@@ -2096,7 +2096,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
               <button
                 type="button"
                 onClick={() => onSectionChange('hr_board')}
-                className={`${Z8_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+                className={`${AURORA_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
               >
                 <HrBrandIcon size="sm" />
                 Home Run Intelligence
@@ -2105,7 +2105,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
             <button
               type="button"
               onClick={() => fetchBoard()}
-              className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+              className={`${AURORA_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Refresh Board
@@ -2121,8 +2121,8 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
             { label: 'Players Listed', value: totalPlayers },
             { label: 'Last Updated', value: lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet' },
           ].map((stat) => (
-            <div key={stat.label} className={`${Z8_SURFACE} px-3 py-2.5 min-w-0`}>
-              <div className={`${Z8_LABEL} text-white/40 truncate`}>{stat.label}</div>
+            <div key={stat.label} className={`${AURORA_SURFACE} px-3 py-2.5 min-w-0`}>
+              <div className={`${AURORA_LABEL} text-white/40 truncate`}>{stat.label}</div>
               <div className="mt-0.5 font-mono text-xl font-bold text-white truncate">{stat.value}</div>
             </div>
           ))}
@@ -2130,14 +2130,14 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
       </header>
 
       {/* Search and Filter Toolbar */}
-      <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between`}>
+      <section className={`${AURORA_PANEL_PREMIUM} flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between`}>
         <label className="grid w-full gap-1 sm:max-w-xs md:max-w-md">
-          <span className={`${Z8_LABEL} text-white/45`}>Find a player or team</span>
+          <span className={`${AURORA_LABEL} text-white/45`}>Find a player or team</span>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Player, team, or position"
-            className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
+            className={`${AURORA_SURFACE} z8-control min-h-11 w-full px-3.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
           />
         </label>
 
@@ -2148,7 +2148,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
               type="button"
               onClick={() => setFilter(item)}
               className={`border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wide transition sm:py-1.5 ${
-                filter === item ? Z8_ACTIVE : Z8_IDLE
+                filter === item ? AURORA_ACTIVE : AURORA_IDLE
               }`}
             >
               {item === 'pending' ? 'Preview' : item}
@@ -2160,9 +2160,9 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
       {/* Main Content Area */}
       <div className="space-y-4">
         {loading && (
-          <div className={`${Z8_PANEL_PREMIUM} flex items-center justify-center gap-3 p-10 text-center`}>
+          <div className={`${AURORA_PANEL_PREMIUM} flex items-center justify-center gap-3 p-10 text-center`}>
             <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
-            <span className={`${Z8_LABEL} text-white/50`}>Loading Daily Player Board...</span>
+            <span className={`${AURORA_LABEL} text-white/50`}>Loading Daily Player Board...</span>
           </div>
         )}
 
@@ -2173,7 +2173,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
         )}
 
         {!loading && games.length === 0 && (
-          <div className={`${Z8_PANEL_PREMIUM} p-8 text-center`}>
+          <div className={`${AURORA_PANEL_PREMIUM} p-8 text-center`}>
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center border border-white/10 bg-black/30">
               <Users className="h-6 w-6 text-white/35" />
             </div>

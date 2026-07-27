@@ -10,15 +10,15 @@ import {
   Users,
 } from '../components/landing/LandingIcons';
 import {
-  Z8_INTERACTIVE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PANEL_PREMIUM,
-  Z8_CYAN_RGB,
-} from '../theme/z8Tokens';
+  AURORA_INTERACTIVE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PANEL_PREMIUM,
+  AURORA_CYAN_RGB,
+} from '../theme/auroraTokens';
 
-const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
-const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
+const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${AURORA_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
+const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${AURORA_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
 
 import ScrollReveal from '../components/landing/ScrollReveal';
 import '../styles/public-landing.css';
@@ -108,16 +108,16 @@ function AuthModalFallback() {
       role="status"
       aria-live="polite"
     >
-      <div className={`w-full max-w-sm rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}>
+      <div className={`w-full max-w-sm rounded-2xl ${AURORA_PANEL_PREMIUM} p-6 text-center`}>
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" />
-        <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
+        <p className={`${AURORA_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
       </div>
     </div>
   );
 }
 
 function SectionPlaceholder({ heightClass = 'h-72' }: { heightClass?: string }) {
-  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} ${heightClass} animate-pulse`} aria-hidden="true" />;
+  return <div className={`rounded-2xl ${AURORA_PANEL_PREMIUM} ${heightClass} animate-pulse`} aria-hidden="true" />;
 }
 
 function DeferredSection({
@@ -215,10 +215,10 @@ function PricingGrid({
   onPlanIntent: () => void;
 }) {
   return (
-    <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-6`}>
+    <section className={`rounded-2xl ${AURORA_PANEL_PREMIUM} p-5 sm:p-6`}>
       <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
         <div>
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Beta Pricing</p>
+          <p className={`${AURORA_LABEL} text-vouch-cyan`}>Beta Pricing</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Choose your plan</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
@@ -234,7 +234,7 @@ function PricingGrid({
             onClick={() => onSelectPlan(plan.id)}
             onFocus={onPlanIntent}
             onMouseEnter={onPlanIntent}
-            className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${Z8_INTERACTIVE} ${
+            className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${AURORA_INTERACTIVE} ${
               plan.featured
                 ? 'border-vouch-cyan/50 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.12)]'
                 : 'border-white/10 bg-black/30 hover:border-vouch-cyan/40'
@@ -292,7 +292,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen pb-8 lg:pb-12`}>
+      <main className={`ve-terminal-page ${AURORA_PAGE} relative min-h-screen pb-8 lg:pb-12`}>
         <Suspense fallback={null}>
           <LandingDynamicBackground />
         </Suspense>
@@ -301,7 +301,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
           style={{
-            background: `radial-gradient(circle at 30% 20%, rgba(${Z8_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
+            background: `radial-gradient(circle at 30% 20%, rgba(${AURORA_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
         <div className="pointer-events-none absolute right-0 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
@@ -408,7 +408,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                   onClick={() => openSignup('free')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-primary z8-control flex h-14 w-full max-w-[280px] items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
+                  className={`ve-terminal-cta-primary z8-control flex h-14 w-full max-w-[280px] items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${AURORA_INTERACTIVE}`}
                 >
                   <Sparkles size={14} />
                   Start researching free
@@ -462,10 +462,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
             <ScrollReveal>
               <section
-              className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
-              style={{ boxShadow: `0 0 48px rgba(${Z8_CYAN_RGB},0.06)` }}
+              className={`rounded-2xl ${AURORA_PANEL_PREMIUM} p-8 text-center`}
+              style={{ boxShadow: `0 0 48px rgba(${AURORA_CYAN_RGB},0.06)` }}
             >
-              <p className={`${Z8_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
+              <p className={`${AURORA_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
               <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
                 Build a record you can verify later.
               </h2>
@@ -477,7 +477,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 onClick={() => openSignup('free')}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`z8-control mt-6 inline-flex h-14 items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
+                className={`z8-control mt-6 inline-flex h-14 items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${AURORA_INTERACTIVE}`}
               >
                 Create a free account
                 <ChevronRight size={14} />

@@ -17,15 +17,15 @@ import {
   hasProjectedHitters,
 } from '../../lib/matchups/buildOpponentLineupFallback';
 import {
-  Z8_PANEL,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_LABEL,
-  Z8_ICON_BOX,
-  Z8_CYAN_HEX,
-  Z8_EMERALD_HEX,
-  Z8_AMBER_HEX
-} from '../../theme/z8Tokens';
+  AURORA_PANEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_LABEL,
+  AURORA_ICON_BOX,
+  AURORA_CYAN_HEX,
+  AURORA_EMERALD_HEX,
+  AURORA_AMBER_HEX
+} from '../../theme/auroraTokens';
 
 // ─── Types (mirror server payload shapes) ──────────────────────────────────
 
@@ -217,8 +217,8 @@ function scaleColor(value: number | null | undefined, good: number, mid: number,
   }
   const pass = invert ? value <= good : value >= good;
   const midPass = invert ? value <= mid : value >= mid;
-  if (pass) return { background: 'rgba(0,255,148,0.16)', color: Z8_EMERALD_HEX };
-  if (midPass) return { background: 'rgba(251,191,36,0.14)', color: Z8_AMBER_HEX };
+  if (pass) return { background: 'rgba(0,255,148,0.16)', color: AURORA_EMERALD_HEX };
+  if (midPass) return { background: 'rgba(251,191,36,0.14)', color: AURORA_AMBER_HEX };
   return { background: 'rgba(251,113,133,0.14)', color: '#fb7185' };
 }
 
@@ -243,9 +243,9 @@ function sampleTier(ab: number | undefined): SampleTier {
 }
 
 const SAMPLE_COLOR: Record<SampleTier, string> = {
-  high: Z8_EMERALD_HEX,
+  high: AURORA_EMERALD_HEX,
   medium: 'rgba(255,255,255,0.75)',
-  thin: Z8_AMBER_HEX,
+  thin: AURORA_AMBER_HEX,
   none: '#fb7185',
 };
 
@@ -382,14 +382,14 @@ const HitterHeatmapTable: React.FC<{
   }, [hitByPlayerId, gamePk]);
   if (rows.length === 0) {
     return (
-      <div className={`${Z8_PANEL} p-6 text-center text-xs text-white/40`}>
+      <div className={`${AURORA_PANEL} p-6 text-center text-xs text-white/40`}>
         No lineup data yet for {title} vs {pitcherName}. Official batting order or active roster hitters will appear when MLB posts them.
       </div>
     );
   }
 
   return (
-    <div className={`${Z8_PANEL} overflow-hidden rounded-2xl border-white/[0.06] bg-black/20`}>
+    <div className={`${AURORA_PANEL} overflow-hidden rounded-2xl border-white/[0.06] bg-black/20`}>
       <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
         <div className="flex items-center gap-2">
           <Grid3x3 className="h-4 w-4 text-vouch-cyan" />
@@ -411,7 +411,7 @@ const HitterHeatmapTable: React.FC<{
       <div className="overflow-x-auto w-full">
         <table className="min-w-[1240px] border-separate border-spacing-0 text-left text-xs">
           <thead>
-            <tr className={`${Z8_LABEL} bg-black/40 text-white/40`}>
+            <tr className={`${AURORA_LABEL} bg-black/40 text-white/40`}>
               {['Hitter', 'Match Score', 'HR Prob %', 'HR Indicator', 'Rating', 'AVG', 'OBP', 'SLG', 'ISO', 'xwOBA', 'Barrel%', 'HH%', 'Form (L10)', 'vs Pit AB', 'vs Pit OPS'].map((h) => (
                 <th key={h} className="whitespace-nowrap border-b border-white/[0.06] px-3 py-2.5 font-black">{h}</th>
               ))}
@@ -543,8 +543,8 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[]; pitcherHand?: 'L' | 'R'
   if (top.length === 0) return null;
 
   return (
-    <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3`}>
-      <div className={`mb-2 flex items-center gap-2 px-1 ${Z8_LABEL} text-white/50`}>
+    <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-3`}>
+      <div className={`mb-2 flex items-center gap-2 px-1 ${AURORA_LABEL} text-white/50`}>
         <Flame className="h-3.5 w-3.5 text-vouch-amber" />
         Best Matchups — Sabermetric Model Ranked
         <span className="ml-auto normal-case tracking-normal text-white/30">Tile size = Log5 Prob Score (ISO + Statcast + BvP + Platoon)</span>
@@ -559,7 +559,7 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[]; pitcherHand?: 'L' | 'R'
             const math = computeHitterMatchupMath(row, pitcherHand);
             return (
               <g key={row.id ?? i} transform={`translate(${leaf.x0},${leaf.y0})`}>
-                <rect width={w} height={h} rx={4} fill={Z8_CYAN_HEX} fillOpacity={0.14} stroke={Z8_CYAN_HEX} strokeOpacity={0.5} strokeWidth={1}>
+                <rect width={w} height={h} rx={4} fill={AURORA_CYAN_HEX} fillOpacity={0.14} stroke={AURORA_CYAN_HEX} strokeOpacity={0.5} strokeWidth={1}>
                   <title>{row.name} — score {math.totalScore} ({math.hrProbabilityPct}% HR prob)</title>
                 </rect>
                 {w > 50 && h > 20 && (
@@ -720,14 +720,14 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
   return (
     <MatchupPageShell active="hitter" onNavigate={onNavigate}>
       <div className="space-y-6">
-        <header className={`${Z8_PANEL} flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4`}>
+        <header className={`${AURORA_PANEL} flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4`}>
           <div className="flex items-center gap-3">
-            <div className={`${Z8_ICON_BOX} h-11 w-11 rounded-xl`}>
+            <div className={`${AURORA_ICON_BOX} h-11 w-11 rounded-xl`}>
               <Grid3x3 className="h-5 w-5 text-vouch-cyan" />
             </div>
             <div>
-              <h1 className={Z8_SECTION_HEADER}>HITTER MATCHUP ZONES</h1>
-              <p className={`${Z8_LABEL} text-white/40`}>
+              <h1 className={AURORA_SECTION_HEADER}>HITTER MATCHUP ZONES</h1>
+              <p className={`${AURORA_LABEL} text-white/40`}>
                 Sabermetric Log5 Probability Engine · Real ISO + Statcast + Platoon + BvP Bayesian Model
               </p>
             </div>
@@ -761,16 +761,16 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
           </p>
         </div>
 
-        <div className={`${Z8_PANEL} rounded-2xl p-3 border-white/[0.06]`}>
+        <div className={`${AURORA_PANEL} rounded-2xl p-3 border-white/[0.06]`}>
           <MatchupStrip games={games} selected={selectedGame} onSelect={setSelectedGame} liveSet={liveSet} />
         </div>
 
         {loadingGames && (
-          <div className={`${Z8_PANEL} h-40 animate-pulse rounded-2xl bg-white/[0.02]`} />
+          <div className={`${AURORA_PANEL} h-40 animate-pulse rounded-2xl bg-white/[0.02]`} />
         )}
 
         {error && games.length === 0 && (
-          <div className={`${Z8_PANEL} p-6 text-center text-xs text-rose-300`}>
+          <div className={`${AURORA_PANEL} p-6 text-center text-xs text-rose-300`}>
             <AlertOctagon className="mx-auto h-6 w-6 text-rose-400 mb-2" />
             {error}
           </div>
@@ -791,8 +791,8 @@ export default function HitterMatchupZonesPageZ8({ onNavigate }: { onNavigate?: 
 
             {loadingLineups ? (
               <div className="space-y-4">
-                <div className={`${Z8_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
-                <div className={`${Z8_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
+                <div className={`${AURORA_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
+                <div className={`${AURORA_PANEL} h-48 animate-pulse rounded-2xl bg-white/[0.02]`} />
               </div>
             ) : (
               <div className="space-y-6">

@@ -13,21 +13,21 @@
  * Sport-agnostic — same palette works for MLB, NBA, NHL, NFL.
  */
 
-import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from './z8Tokens';
+import { AURORA_AMBER_HEX, AURORA_CYAN_HEX, AURORA_EMERALD_HEX } from './auroraTokens';
 
 export const ACCENT = {
   // Core accents — Z8 vouch palette (no rainbow --ve-accent-*)
-  power: Z8_AMBER_HEX,
-  matchup: Z8_CYAN_HEX,
-  form: Z8_EMERALD_HEX,
-  confidence: Z8_CYAN_HEX,
-  lineup: Z8_AMBER_HEX,
+  power: AURORA_AMBER_HEX,
+  matchup: AURORA_CYAN_HEX,
+  form: AURORA_EMERALD_HEX,
+  confidence: AURORA_CYAN_HEX,
+  lineup: AURORA_AMBER_HEX,
   risk: 'hsl(var(--ve-danger))',
-  final: Z8_AMBER_HEX,
+  final: AURORA_AMBER_HEX,
 
   // Status colors
   emerald: 'hsl(var(--ve-success))',
-  gold: Z8_AMBER_HEX,
+  gold: AURORA_AMBER_HEX,
   danger: 'hsl(var(--ve-danger))',           // errors/blocked
   warning: 'hsl(var(--ve-warning))',         // warnings
 

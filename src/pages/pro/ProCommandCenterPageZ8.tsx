@@ -13,10 +13,10 @@ import {
 } from "../../components/pro";
 
 import {
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_SURFACE,
-} from "../../theme/z8Tokens";
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_SURFACE,
+} from "../../theme/auroraTokens";
 import { useSmartAiCandidates } from "../../components/smart-ai/useSmartAiCandidates";
 import { AskVouchPanel } from "../../features/ai/components/AskVouchPanel";
 import { FeaturedEdgeCard } from "./FeaturedEdgeCard";
@@ -85,10 +85,10 @@ export default function ProCommandCenterPageZ8({
       <AiMarketPulseCard />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
+        <section className={`${AURORA_PANEL_PREMIUM} rounded-3xl p-5`}>
           <div className="flex items-center gap-2 text-white">
             <Flame className="h-5 w-5 text-vouch-cyan" />
-            <h2 className={Z8_SECTION_HEADER}>
+            <h2 className={AURORA_SECTION_HEADER}>
               Today's Top Edges
             </h2>
           </div>
@@ -111,10 +111,10 @@ export default function ProCommandCenterPageZ8({
           </div>
         </section>
 
-        <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
+        <section className={`${AURORA_PANEL_PREMIUM} rounded-3xl p-5`}>
           <div className="flex items-center gap-2 text-white">
             <Brain className="h-5 w-5 text-vouch-cyan" />
-            <h2 className={Z8_SECTION_HEADER}>
+            <h2 className={AURORA_SECTION_HEADER}>
               AI Judge Consensus
             </h2>
           </div>
@@ -127,10 +127,10 @@ export default function ProCommandCenterPageZ8({
           </div>
         </section>
 
-        <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
+        <section className={`${AURORA_PANEL_PREMIUM} rounded-3xl p-5`}>
           <div className="flex items-center gap-2 text-white">
             <Terminal className="h-5 w-5 text-vouch-cyan" />
-            <h2 className={Z8_SECTION_HEADER}>
+            <h2 className={AURORA_SECTION_HEADER}>
               Terminal Access
             </h2>
           </div>
@@ -141,10 +141,10 @@ export default function ProCommandCenterPageZ8({
         </section>
       </div>
 
-      <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
+      <section className={`${AURORA_PANEL_PREMIUM} rounded-3xl p-5`}>
         <div className="flex items-center gap-2 text-white">
           <ChartNoAxesCombined className="h-5 w-5 text-vouch-cyan" />
-          <h2 className={Z8_SECTION_HEADER}>
+          <h2 className={AURORA_SECTION_HEADER}>
             Pro Labs
           </h2>
         </div>
@@ -176,7 +176,7 @@ function EdgeRow({
   };
 }) {
   return (
-    <div className={`${Z8_SURFACE} rounded-2xl p-4`}>
+    <div className={`${AURORA_SURFACE} rounded-2xl p-4`}>
       <div className="flex items-center justify-between">
         <span className="font-black text-white">
           🔥 {player}
@@ -258,7 +258,7 @@ function LabCard({
   title: string;
 }) {
   return (
-    <div className={`${Z8_SURFACE} rounded-xl p-4`}>
+    <div className={`${AURORA_SURFACE} rounded-xl p-4`}>
       <p className="font-bold text-white">
         {title}
       </p>

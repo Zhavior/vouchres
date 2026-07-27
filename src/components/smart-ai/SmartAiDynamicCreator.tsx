@@ -3,17 +3,17 @@ import { Bookmark, Cpu, Loader2 } from 'lucide-react';
 import { SmartAiResearchDecisionPanel } from './SmartAiResearchDecisionPanel';
 import { SmartAiLegCardList } from './SmartAiLegCardList';
 import {
-  Z8_ACTIVE,
-  Z8_DISPLAY,
-  Z8_EMERALD,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-  Z8_TABULAR,
-  Z8_WARNING,
-} from '../../theme/z8Tokens';
+  AURORA_ACTIVE,
+  AURORA_DISPLAY,
+  AURORA_EMERALD,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_STAT_CHIP,
+  AURORA_TABULAR,
+  AURORA_WARNING,
+} from '../../theme/auroraTokens';
 
 interface SmartAiDynamicCreatorProps {
   builderLegs: number;
@@ -41,7 +41,7 @@ const MARKET_OPTIONS: Array<{ id: SmartAiBuilderCategory; label: string; hint: s
 function controlBtn(active: boolean) {
   return [
     'rounded-xl border px-3 py-2.5 text-xs font-bold transition-all z8-interactive',
-    active ? Z8_ACTIVE : Z8_IDLE,
+    active ? AURORA_ACTIVE : AURORA_IDLE,
   ].join(' ');
 }
 
@@ -80,7 +80,7 @@ export function SmartAiDynamicCreator({
 
   return (
     <div
-      className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-5 sm:p-6 space-y-5`}
+      className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-5 sm:p-6 space-y-5`}
       id="dynamic-parlay-builder-deck"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
@@ -90,20 +90,20 @@ export function SmartAiDynamicCreator({
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
             <Cpu className="h-5 w-5" />
           </div>
-          <div className={Z8_SECTION_HEADER}>
-            <p className={`${Z8_LABEL} text-vouch-cyan`}>V.A.I Dynamic Creator</p>
-            <h2 className={`${Z8_DISPLAY} text-xl sm:text-2xl`}>Stats-Verified AI Pilot</h2>
+          <div className={AURORA_SECTION_HEADER}>
+            <p className={`${AURORA_LABEL} text-vouch-cyan`}>V.A.I Dynamic Creator</p>
+            <h2 className={`${AURORA_DISPLAY} text-xl sm:text-2xl`}>Stats-Verified AI Pilot</h2>
             <p className="mt-1 max-w-xl text-xs text-white/45 sm:text-sm">
               Build ledger-ready parlays from verified player trend profiles. Model outputs are estimates.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className={`${Z8_LABEL} rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 text-vouch-cyan`}>
+          <span className={`${AURORA_LABEL} rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 text-vouch-cyan`}>
             Research model
           </span>
           {usingProjectedPreview && (
-            <span className={`${Z8_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/10 px-3 py-1 ${Z8_WARNING}`}>
+            <span className={`${AURORA_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/10 px-3 py-1 ${AURORA_WARNING}`}>
               Roster preview
             </span>
           )}
@@ -111,17 +111,17 @@ export function SmartAiDynamicCreator({
       </div>
 
       {candidatesLoading ? (
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-center gap-2 py-10 text-sm text-white/45`}>
+        <div className={`${AURORA_STAT_CHIP} flex items-center justify-center gap-2 py-10 text-sm text-white/45`}>
           <Loader2 className="h-4 w-4 animate-spin text-vouch-cyan" />
           Loading verified candidate pool…
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className={`${Z8_STAT_CHIP} space-y-3`}>
+            <div className={`${AURORA_STAT_CHIP} space-y-3`}>
               <div className="flex items-center justify-between gap-2">
-                <label className={`${Z8_LABEL} text-vouch-cyan`}>Leg depth</label>
-                <span className={`${Z8_LABEL} text-white/35`}>2–5 legs</span>
+                <label className={`${AURORA_LABEL} text-vouch-cyan`}>Leg depth</label>
+                <span className={`${AURORA_LABEL} text-white/35`}>2–5 legs</span>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {[2, 3, 4, 5].map((cnt) => (
@@ -137,8 +137,8 @@ export function SmartAiDynamicCreator({
               </div>
             </div>
 
-            <div className={`${Z8_STAT_CHIP} space-y-3 lg:col-span-1`}>
-              <label className={`${Z8_LABEL} text-vouch-cyan`}>Market focus</label>
+            <div className={`${AURORA_STAT_CHIP} space-y-3 lg:col-span-1`}>
+              <label className={`${AURORA_LABEL} text-vouch-cyan`}>Market focus</label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 xl:grid-cols-2">
                 {MARKET_OPTIONS.map((cat) => (
                   <button
@@ -156,8 +156,8 @@ export function SmartAiDynamicCreator({
               </div>
             </div>
 
-            <div className={`${Z8_STAT_CHIP} space-y-3`}>
-              <label className={`${Z8_LABEL} ${Z8_EMERALD}`}>Threshold</label>
+            <div className={`${AURORA_STAT_CHIP} space-y-3`}>
+              <label className={`${AURORA_LABEL} ${AURORA_EMERALD}`}>Threshold</label>
               <div className="flex flex-wrap gap-2">
                 {thresholdOptions.map(({ value, label }) => (
                   <button
@@ -175,11 +175,11 @@ export function SmartAiDynamicCreator({
 
           {dynamicParlay ? (
             <div className="space-y-4 border-t border-white/10 pt-4 animate-slide-up">
-              <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4`}>
+              <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4`}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <span className={`${Z8_LABEL} text-white/40`}>Cumulative return</span>
-                    <div className={`mt-1 flex items-end gap-2 ${Z8_TABULAR}`}>
+                    <span className={`${AURORA_LABEL} text-white/40`}>Cumulative return</span>
+                    <div className={`mt-1 flex items-end gap-2 ${AURORA_TABULAR}`}>
                       <span className="text-2xl font-black text-white">
                         {dynamicParlay.totalOdds === 'Odds TBD' ? 'Odds TBD' : dynamicParlay.totalOdds}
                       </span>
@@ -192,9 +192,9 @@ export function SmartAiDynamicCreator({
                     )}
                   </div>
                   <div className="sm:text-right">
-                    <span className={`${Z8_LABEL} text-white/40`}>AI confidence</span>
+                    <span className={`${AURORA_LABEL} text-white/40`}>AI confidence</span>
                     <div className="mt-1 inline-flex items-center rounded-full border border-vouch-emerald/25 bg-vouch-emerald/10 px-3 py-1">
-                      <span className={`text-lg font-black ${Z8_EMERALD} ${Z8_TABULAR}`}>
+                      <span className={`text-lg font-black ${AURORA_EMERALD} ${AURORA_TABULAR}`}>
                         {dynamicParlay.aiConfidenceScore}%
                       </span>
                       <span className="ml-1.5 text-[10px] text-white/40">model est.</span>
@@ -223,8 +223,8 @@ export function SmartAiDynamicCreator({
               </div>
             </div>
           ) : (
-            <div className={`${Z8_STAT_CHIP} py-10 text-center`}>
-              <p className={`${Z8_LABEL} ${Z8_WARNING}`}>No eligible match</p>
+            <div className={`${AURORA_STAT_CHIP} py-10 text-center`}>
+              <p className={`${AURORA_LABEL} ${AURORA_WARNING}`}>No eligible match</p>
               <p className="mt-2 text-xs text-white/45">
                 No verified players met this benchmark today. Try a lower threshold or different market focus.
               </p>

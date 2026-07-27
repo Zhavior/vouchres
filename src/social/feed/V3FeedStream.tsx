@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense, useRef, useCallback, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Z8_PAGE } from '../../theme/z8Tokens';
+import { AURORA_PAGE } from '../../theme/auroraTokens';
 import FeedTabs from './FeedTabs';
 import V3FeedComposer from './V3FeedComposer';
 import FeedPostCard from './FeedPostCard';
@@ -337,7 +337,7 @@ function V3FeedStream({
     .toUpperCase();
 
   return (
-    <div className={`${Z8_PAGE} home-feed-shell flex min-h-full min-w-0 max-w-full flex-col overflow-x-hidden bg-ve-obsidian text-ve-flash font-z8`} id="home-feed-page-wrapper">
+    <div className={`${AURORA_PAGE} home-feed-shell flex min-h-full min-w-0 max-w-full flex-col overflow-x-hidden bg-ve-obsidian text-ve-flash font-z8`} id="home-feed-page-wrapper">
 
       {/* Toast Notification System */}
       {toastMsg && (

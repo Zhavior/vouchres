@@ -4,7 +4,7 @@ import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
 import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_STAT_CHIP } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_STAT_CHIP } from '../../theme/auroraTokens';
 
 interface ProfileShareCardProps {
   profile: CreatorProofProfile;
@@ -37,7 +37,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   };
 
   return (
-    <div className={`${Z8_PANEL_PREMIUM} max-w-lg w-full mx-auto p-6 space-y-6 text-white relative overflow-hidden select-none`}>
+    <div className={`${AURORA_PANEL_PREMIUM} max-w-lg w-full mx-auto p-6 space-y-6 text-white relative overflow-hidden select-none`}>
       <div className="flex justify-between items-center relative z-10 border-b border-white/10 pb-4">
         <div>
           <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
@@ -49,7 +49,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         {onClose && (
           <button
             onClick={onClose}
-            className={`${Z8_LABEL} text-white/45 hover:text-white px-2.5 py-1 rounded-lg border border-white/10 bg-black/30 hover:bg-white/5 transition-all`}
+            className={`${AURORA_LABEL} text-white/45 hover:text-white px-2.5 py-1 rounded-lg border border-white/10 bg-black/30 hover:bg-white/5 transition-all`}
           >
             Close
           </button>
@@ -80,35 +80,35 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
                   )}
                 </div>
                 <p className="text-xs text-white/45 mt-0.5 font-mono">@{profile.username}</p>
-                <span className={`mt-1.5 inline-block ${Z8_LABEL} text-[10px] px-2 py-0.5 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
+                <span className={`mt-1.5 inline-block ${AURORA_LABEL} text-[10px] px-2 py-0.5 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
                   {activeTheme.name}
                 </span>
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className={`${Z8_LABEL} text-[10px] text-vouch-cyan border border-vouch-cyan/30 px-2 py-0.5 rounded-md bg-vouch-cyan/10`}>
+              <span className={`${AURORA_LABEL} text-[10px] text-vouch-cyan border border-vouch-cyan/30 px-2 py-0.5 rounded-md bg-vouch-cyan/10`}>
                 VOUCH<span className="text-white">EDGE</span>
               </span>
-              <p className={`${Z8_LABEL} text-[10px] text-white/35 mt-1`}>Verified proof</p>
+              <p className={`${AURORA_LABEL} text-[10px] text-white/35 mt-1`}>Verified proof</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className={`${Z8_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
+            <div className={`${AURORA_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
               <TrendingUp className="w-3.5 h-3.5 mx-auto mb-1 text-vouch-emerald/70" aria-hidden />
               <span className="text-2xl font-black text-white tracking-tight font-mono z8-tabular-nums">
                 {profileHasGradedPicks(profile) ? `${profile.winRate}%` : '—'}
               </span>
-              <span className={`${Z8_LABEL} text-[10px] text-white/40 mt-1`}>
+              <span className={`${AURORA_LABEL} text-[10px] text-white/40 mt-1`}>
                 {profileHasGradedPicks(profile) ? 'Win rate' : 'No graded picks yet'}
               </span>
             </div>
-            <div className={`${Z8_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
+            <div className={`${AURORA_STAT_CHIP} text-center flex flex-col justify-center py-3`}>
               <BarChart3 className="w-3.5 h-3.5 mx-auto mb-1 text-vouch-amber/70" aria-hidden />
               <span className="text-2xl font-black text-vouch-amber tracking-tight font-mono z8-tabular-nums">
                 {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit}u
               </span>
-              <span className={`${Z8_LABEL} text-[10px] text-white/40 mt-1`}>Net ledger units</span>
+              <span className={`${AURORA_LABEL} text-[10px] text-white/40 mt-1`}>Net ledger units</span>
             </div>
           </div>
 
@@ -118,7 +118,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
             </div>
           )}
 
-          <div className={`flex items-center justify-between ${Z8_LABEL} text-[10px] text-white/35 border-t border-white/8 pt-3`}>
+          <div className={`flex items-center justify-between ${AURORA_LABEL} text-[10px] text-white/35 border-t border-white/8 pt-3`}>
             <span>Graded picks only</span>
             <span>@{profile.username}</span>
           </div>
@@ -128,7 +128,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
         <button
           onClick={handleCopyDraft}
-          className={`${Z8_LABEL} border border-white/10 bg-black/35 hover:bg-white/5 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white/70 hover:text-white`}
+          className={`${AURORA_LABEL} border border-white/10 bg-black/35 hover:bg-white/5 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white/70 hover:text-white`}
         >
           {copiedDraft ? (
             <>
@@ -144,7 +144,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         </button>
         <button
           onClick={handleCopyLink}
-          className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 hover:bg-vouch-cyan/25 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white`}
+          className={`${AURORA_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 hover:bg-vouch-cyan/25 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white`}
         >
           {copied ? (
             <>

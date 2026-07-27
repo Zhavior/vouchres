@@ -34,7 +34,7 @@ import {
   type BillingStatus,
 } from '../lib/billingClient';
 import { buildPremiumAuroraModel, type BillingSourceState } from './premiumAuroraModel';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import { AURORA_ACTIVE, AURORA_IDLE, AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER, AURORA_STAT_CHIP, AURORA_SURFACE } from '../theme/auroraTokens';
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -120,9 +120,9 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div className={`rounded-xl ${Z8_PANEL_PREMIUM} p-4 sm:p-5 mb-6`}>
-      <div className={`${Z8_SECTION_HEADER} mb-5`}>
-        <h2 className={`${Z8_LABEL} text-white`}>{title}</h2>
+    <div className={`rounded-xl ${AURORA_PANEL_PREMIUM} p-4 sm:p-5 mb-6`}>
+      <div className={`${AURORA_SECTION_HEADER} mb-5`}>
+        <h2 className={`${AURORA_LABEL} text-white`}>{title}</h2>
         {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
       </div>
       {children}
@@ -563,7 +563,7 @@ export default function SettingsPageZ8({
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
   return (
-    <div className={`relative min-h-0 min-w-0 overflow-x-hidden ve-safe-bottom pb-24 md:pb-8 ${Z8_PAGE}`}>
+    <div className={`relative min-h-0 min-w-0 overflow-x-hidden ve-safe-bottom pb-24 md:pb-8 ${AURORA_PAGE}`}>
       {/* Toast */}
       {toast && (
         <div className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
@@ -579,9 +579,9 @@ export default function SettingsPageZ8({
       )}
 
       {/* Page header */}
-      <div className={`glass-command border-b border-white/5 bg-black/40 py-4 sm:py-5 ${Z8_PAGE_PAD_X}`}>
+      <div className={`glass-command border-b border-white/5 bg-black/40 py-4 sm:py-5 ${AURORA_PAGE_PAD_X}`}>
         <div className="mx-auto max-w-5xl">
-          <div className={`flex items-center gap-2 text-white/40 ${Z8_LABEL}`}>
+          <div className={`flex items-center gap-2 text-white/40 ${AURORA_LABEL}`}>
             <Settings className="h-3.5 w-3.5" />
             Settings
           </div>
@@ -590,7 +590,7 @@ export default function SettingsPageZ8({
       </div>
 
       {/* Body */}
-      <div className={`mx-auto max-w-5xl ${Z8_PAGE_PAD_Y} ${Z8_PAGE_PAD_X}`}>
+      <div className={`mx-auto max-w-5xl ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_PAD_X}`}>
         {/* Mobile tab bar */}
         <nav className="mb-5 lg:hidden" aria-label="Settings sections">
           <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
@@ -611,9 +611,9 @@ export default function SettingsPageZ8({
             ))}
           </div>
 
-          <div className={`mt-3 flex items-center justify-between gap-3 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
+          <div className={`mt-3 flex items-center justify-between gap-3 rounded-xl ${AURORA_PANEL_PREMIUM} p-3`}>
             <div className="min-w-0">
-              <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
+              <p className={`${AURORA_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-0.5 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
               <p className="text-xs text-white/50">{activePlanPrice}</p>
             </div>
@@ -640,8 +640,8 @@ export default function SettingsPageZ8({
                     onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                       activeTab === id
-                        ? `${Z8_ACTIVE} font-medium`
-                        : `${Z8_IDLE}`
+                        ? `${AURORA_ACTIVE} font-medium`
+                        : `${AURORA_IDLE}`
                     }`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -652,8 +652,8 @@ export default function SettingsPageZ8({
             </ul>
 
             {/* Plan badge */}
-            <div className={`mt-8 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
-              <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
+            <div className={`mt-8 rounded-xl ${AURORA_PANEL_PREMIUM} p-3`}>
+              <p className={`${AURORA_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
               <p className="text-xs text-white/50">{activePlanPrice}</p>
               {activeTier === 'BASIC' && (
@@ -677,7 +677,7 @@ export default function SettingsPageZ8({
                 <form onSubmit={handleProfileSave} className="space-y-6">
                   {/* Avatar + name */}
                   <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
-                    <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
+                    <div className={`${AURORA_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-vouch-cyan to-indigo-600 text-base font-bold text-white">
                         {initials}
                       </div>
@@ -698,13 +698,13 @@ export default function SettingsPageZ8({
                           <input
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
-                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`}
                             placeholder="Your name"
                           />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">Username</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${AURORA_SURFACE}`}>
                             <span className="flex items-center pl-3 text-sm text-white/40">@</span>
                             <input
                               value={username}
@@ -720,7 +720,7 @@ export default function SettingsPageZ8({
                         <input
                           value={customTitle}
                           onChange={(e) => setCustomTitle(e.target.value)}
-                          className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                          className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`}
                           placeholder="e.g. MLB Researcher"
                         />
                       </div>
@@ -731,7 +731,7 @@ export default function SettingsPageZ8({
                           onChange={(e) => setBio(e.target.value)}
                           maxLength={180}
                           rows={3}
-                          className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                          className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`}
                           placeholder="Short bio (max 180 chars)"
                         />
                         <p className="text-right text-[10px] text-white/40">{bio.length}/180</p>
@@ -752,7 +752,7 @@ export default function SettingsPageZ8({
                           <input
                             value={value}
                             onChange={(e) => set(e.target.value)}
-                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`}
                             placeholder={placeholder}
                           />
                         </div>
@@ -784,7 +784,7 @@ export default function SettingsPageZ8({
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">New password</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${AURORA_SURFACE}`}>
                             <input
                               type={showNewPw ? 'text' : 'password'}
                               value={newPassword}
@@ -807,7 +807,7 @@ export default function SettingsPageZ8({
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">Confirm password</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${Z8_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${AURORA_SURFACE}`}>
                             <input
                               type={showConfirmPw ? 'text' : 'password'}
                               value={confirmPassword}
@@ -862,7 +862,7 @@ export default function SettingsPageZ8({
             {activeTab === 'capper' && (
               <form onSubmit={handleCapperSave} className="space-y-6">
                 <Section title="Club identity" subtitle="This powers how your subscriber club looks and reads across SocialOS and the club hub.">
-                  <div className={`${Z8_SURFACE} rounded-xl p-4 sm:p-5 mb-4`}>
+                  <div className={`${AURORA_SURFACE} rounded-xl p-4 sm:p-5 mb-4`}>
                     <div className={`rounded-2xl border p-4 ${
                       heroStyle === 'emerald'
                         ? 'border-emerald-500/30 bg-emerald-500/10'
@@ -872,7 +872,7 @@ export default function SettingsPageZ8({
                     }`}>
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className={`${Z8_LABEL} text-white/45`}>{badgeText || 'CREATOR CLUB'}</p>
+                          <p className={`${AURORA_LABEL} text-white/45`}>{badgeText || 'CREATOR CLUB'}</p>
                           <h3 className="mt-1 text-lg font-semibold text-white">{clubName || displayName || 'Your club'}</h3>
                           <p className="mt-1 text-sm text-white/65">{clubTagline || 'Shared parlays, verified wins, and clean subscriber access.'}</p>
                         </div>
@@ -887,22 +887,22 @@ export default function SettingsPageZ8({
                   <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Club name</label>
-                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Zhavior Club" />
+                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="Zhavior Club" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Badge text</label>
-                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="CREATOR CLUB" />
+                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="CREATOR CLUB" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Club tagline</label>
-                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="What your club is known for" />
+                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="What your club is known for" />
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Welcome message</label>
-                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="What a new follower should feel immediately" />
+                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="What a new follower should feel immediately" />
                   </div>
 
                   <div className="space-y-1.5">
@@ -916,7 +916,7 @@ export default function SettingsPageZ8({
                           className={`rounded-xl px-3 py-3 text-left text-sm transition-colors ${
                             heroStyle === style
                               ? 'border border-vouch-cyan/40 bg-vouch-cyan/10 text-white'
-                              : `${Z8_SURFACE} text-white/60 hover:text-white`
+                              : `${AURORA_SURFACE} text-white/60 hover:text-white`
                           }`}
                         >
                           <div className="font-semibold capitalize">{style}</div>
@@ -931,27 +931,27 @@ export default function SettingsPageZ8({
                   <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Offer headline</label>
-                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Free follow during beta" />
+                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="Free follow during beta" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Primary CTA</label>
-                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Follow club" />
+                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="Follow club" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Offer summary</label>
-                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Explain exactly what a follow unlocks" />
+                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="Explain exactly what a follow unlocks" />
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">CTA subtext</label>
-                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="Unlock shared parlays and club updates" />
+                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="Unlock shared parlays and club updates" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-white/60">Featured tags</label>
-                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${Z8_SURFACE}`} placeholder="MLB, Parlays, Verified" />
+                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${AURORA_SURFACE}`} placeholder="MLB, Parlays, Verified" />
                     <p className="text-[11px] text-white/40">Comma-separated. We use up to 6 tags across your club previews.</p>
                   </div>
                 </Section>
@@ -962,7 +962,7 @@ export default function SettingsPageZ8({
                       const isSaving = productSavingCode === product.code;
                       const accessScope = product.accessScope ?? {};
                       return (
-                        <div key={product.id} className={`rounded-xl p-4 space-y-4 ${Z8_SURFACE}`}>
+                        <div key={product.id} className={`rounded-xl p-4 space-y-4 ${AURORA_SURFACE}`}>
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-white">{product.name}</p>
@@ -1078,7 +1078,7 @@ export default function SettingsPageZ8({
                 </Section>
 
                 <Section title="Trust and content" subtitle="Decide what proof and club surfaces stay visible to followers.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
+                  <div className={`divide-y divide-white/5 rounded-xl ${AURORA_SURFACE}`}>
                     <PrefRow label="Show verified record" detail="Keep your tracked record visible on the club surface.">
                       <Toggle checked={showVerifiedRecord} onChange={setShowVerifiedRecord} />
                     </PrefRow>
@@ -1098,7 +1098,7 @@ export default function SettingsPageZ8({
                 </Section>
 
                 <Section title="Moderation defaults" subtitle="These are the guardrails for how your club should behave as it grows.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
+                  <div className={`divide-y divide-white/5 rounded-xl ${AURORA_SURFACE}`}>
                     <PrefRow label="Profanity filter" detail="Keep basic bad-word blocking turned on for subscriber chat.">
                       <Toggle checked={profanityFilterEnabled} onChange={setProfanityFilterEnabled} />
                     </PrefRow>
@@ -1140,7 +1140,7 @@ export default function SettingsPageZ8({
             {activeTab === 'billing' && (
               <div className="space-y-6">
                 <Section title="Subscription" subtitle="Manage your plan and payment method.">
-                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
+                  <div className={`${AURORA_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vouch-cyan/15 text-vouch-cyan">
                         <Zap className="h-4 w-4" />
@@ -1183,7 +1183,7 @@ export default function SettingsPageZ8({
                           className={`relative rounded-xl p-4 transition-colors ${
                             isActive
                               ? `border border-vouch-cyan/50 bg-vouch-cyan/5`
-                              : `${Z8_SURFACE} hover:border-white/20`
+                              : `${AURORA_SURFACE} hover:border-white/20`
                           }`}
                         >
                           {plan.badge && !isActive && (
@@ -1237,7 +1237,7 @@ export default function SettingsPageZ8({
                         onClick={handleManageBilling}
                         disabled={portalLoading}
                         variant="ghost"
-                        className={`ve-touch-target w-full justify-center ${Z8_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
+                        className={`ve-touch-target w-full justify-center ${AURORA_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
                       >
                         {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                         Manage billing
@@ -1274,7 +1274,7 @@ export default function SettingsPageZ8({
             {activeTab === 'notifications' && (
               <div className="space-y-6">
                 <Section title="Email" subtitle="Control which emails VouchEdge sends to you.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
+                  <div className={`divide-y divide-white/5 rounded-xl ${AURORA_SURFACE}`}>
                     <PrefRow label="Account alerts" detail="Security and billing notifications.">
                       <Toggle checked={emailAlerts} onChange={setEmailAlerts} />
                     </PrefRow>
@@ -1285,7 +1285,7 @@ export default function SettingsPageZ8({
                 </Section>
 
                 <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${Z8_SURFACE}`}>
+                  <div className={`divide-y divide-white/5 rounded-xl ${AURORA_SURFACE}`}>
                     <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
                       <Toggle checked={pushAlerts} onChange={(value) => { void handlePushAlertsToggle(value); }} />
                     </PrefRow>
@@ -1328,7 +1328,7 @@ export default function SettingsPageZ8({
             {activeTab === 'privacy' && (
               <div className="space-y-6">
                 <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
-                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${Z8_SURFACE}`}>
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${AURORA_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Data export</p>
                       <p className="mt-0.5 text-xs leading-relaxed text-white/50">Download your picks, parlays, profile, and activity as JSON.</p>
@@ -1347,7 +1347,7 @@ export default function SettingsPageZ8({
                 </Section>
 
                 <Section title="Local data" subtitle="Reset preview data stored on this device only.">
-                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${Z8_SURFACE}`}>
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${AURORA_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Reset local data</p>
                       <p className="mt-0.5 text-xs leading-relaxed text-white/50">Clears picks, slips, vouches, and profile previews on this browser.</p>

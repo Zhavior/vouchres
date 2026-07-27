@@ -2,7 +2,7 @@ import React from 'react';
 import { Trophy, ShieldCheck } from 'lucide-react';
 import type { Parlay } from '../../types';
 import { ScorePill, RiskBadge, StatusBadge } from '../ui/primitives';
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_TABULAR } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_TABULAR } from '../../theme/auroraTokens';
 
 /** Sports-betting "resume" strip from real saved parlays + profile win rate. */
 export default function ProfileResume({ savedParlays = [], winRate }: { savedParlays?: Parlay[]; winRate?: number }) {
@@ -22,10 +22,10 @@ export default function ProfileResume({ savedParlays = [], winRate }: { savedPar
   const riskStyle = savedParlays.length === 0 ? '—' : high > low ? 'Aggressive' : low > high ? 'Conservative' : 'Balanced';
 
   return (
-    <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5`}>
+    <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5`}>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className={`${Z8_LABEL} text-vouch-cyan/70`}>Performance strip</p>
+          <p className={`${AURORA_LABEL} text-vouch-cyan/70`}>Performance strip</p>
           <h3 className="text-sm font-black flex items-center gap-2 mt-1 text-white">
             <Trophy className="w-4 h-4 text-vouch-amber" />
             Betting Resume
@@ -44,7 +44,7 @@ export default function ProfileResume({ savedParlays = [], winRate }: { savedPar
           <RiskBadge risk={riskStyle === 'Aggressive' ? 'Risky' : riskStyle === 'Conservative' ? 'Safe' : 'Balanced'} />
         </div>
       </div>
-      <p className={`${Z8_TABULAR} text-[10px] text-white/35 mt-3 flex items-center gap-1`}>
+      <p className={`${AURORA_TABULAR} text-[10px] text-white/35 mt-3 flex items-center gap-1`}>
         <ShieldCheck className="w-2.5 h-2.5 text-vouch-emerald/70" /> Built from your saved slips. Picks are <span className="text-white/55">Unverified</span> until graded after finals.
       </p>
     </div>

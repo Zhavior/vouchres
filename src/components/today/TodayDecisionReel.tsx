@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { Parlay } from '../../types';
 import { getPlayerInitials } from '../../lib/mlbHeadshot';
-import { Z8_LABEL } from '../../theme/z8Tokens';
+import { AURORA_LABEL } from '../../theme/auroraTokens';
 import type { TodayReelSlide, TodayReelVisual } from './todayDecisionReelModel';
 
 export type BriefingFilter = 'all' | 'signals' | 'alerts' | 'activity';
@@ -148,7 +148,7 @@ function BriefingCard({
     >
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b ${accent.glow} to-transparent opacity-70`} />
       <div style={{ height: 180 }} className="relative shrink-0 overflow-hidden border-b border-white/[0.07]">
-        <p className={`absolute left-4 top-4 z-20 ${Z8_LABEL} ${accent.text}`}>{slide.kicker}</p>
+        <p className={`absolute left-4 top-4 z-20 ${AURORA_LABEL} ${accent.text}`}>{slide.kicker}</p>
         <CompactVisual visual={slide.visual} tone={slide.tone} />
       </div>
 
@@ -196,7 +196,7 @@ function PlayerSignalCard({
 
       <div style={{ height: 176 }} className="relative shrink-0 overflow-hidden border-b border-white/[0.08] bg-gradient-to-br from-[#071d29] via-[#07131d] to-[#050a10]">
         <div className="absolute inset-x-4 top-3 z-20 flex items-center justify-between gap-3">
-          <p className={`${Z8_LABEL} text-vouch-emerald`}>Top HR signal</p>
+          <p className={`${AURORA_LABEL} text-vouch-emerald`}>Top HR signal</p>
           <span className={`rounded-full border px-2 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] ${
             isOfficial
               ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'
@@ -267,7 +267,7 @@ function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionCh
   return (
     <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
       <div style={{ height: 180 }} className="relative flex shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-vouch-cyan/15 via-[#08182a] to-transparent">
-        <p className={`absolute left-4 top-4 ${Z8_LABEL} text-vouch-cyan`}>My slip update</p>
+        <p className={`absolute left-4 top-4 ${AURORA_LABEL} text-vouch-cyan`}>My slip update</p>
         <ClipboardCheck className="h-20 w-20 text-vouch-cyan/80 drop-shadow-[0_0_28px_rgba(0,240,255,0.24)]" />
       </div>
       <div className="flex min-h-0 flex-1 flex-col p-4">
@@ -338,7 +338,7 @@ function CompactVisual({ visual, tone }: { visual: TodayReelVisual; tone: keyof 
 function Evidence({ icon: Icon, label, text, tone }: { icon: React.ComponentType<{ className?: string }>; label: string; text: string; tone: string }) {
   return (
     <div>
-      <p className={`flex items-center gap-1.5 ${Z8_LABEL} ${tone}`}><Icon className="h-3 w-3" />{label}</p>
+      <p className={`flex items-center gap-1.5 ${AURORA_LABEL} ${tone}`}><Icon className="h-3 w-3" />{label}</p>
       <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/50">{text}</p>
     </div>
   );

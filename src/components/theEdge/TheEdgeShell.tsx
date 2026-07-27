@@ -10,7 +10,7 @@ import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../li
 import type { Parlay, CreatorProofProfile } from '../../types';
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import WelcomeIntro from './WelcomeIntro';
-import { Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import { AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../../theme/auroraTokens';
 
 type TheEdgeMode = 'public' | 'dashboard';
 type TheEdgePresentation = 'page' | 'overlay';
@@ -410,7 +410,7 @@ export default function TheEdgeShell({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,rgba(0,240,255,0.12),transparent_38%),linear-gradient(180deg,#0a0a0f,#111118_60%,#0a0a0f)]" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className={`${Z8_PANEL_PREMIUM} glass-command edge-space-header border-b border-ve-fuse rounded-none border-x-0 border-t-0 px-4 py-4 backdrop-blur-2xl sm:px-6`}>
+        <header className={`${AURORA_PANEL_PREMIUM} glass-command edge-space-header border-b border-ve-fuse rounded-none border-x-0 border-t-0 px-4 py-4 backdrop-blur-2xl sm:px-6`}>
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-vouch-cyan shadow-[0_0_22px_rgba(0,240,255,0.16)]">
@@ -485,7 +485,7 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -32 }}
                 transition={{ duration: 0.4, ease }}
-                className={`${Z8_PANEL_PREMIUM} mx-auto max-w-md rounded-[2rem] p-6`}
+                className={`${AURORA_PANEL_PREMIUM} mx-auto max-w-md rounded-[2rem] p-6`}
               >
                 <form onSubmit={handleLoginSubmit}>
                   <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Login</div>
@@ -555,7 +555,7 @@ export default function TheEdgeShell({
                   })}
                 </div>
 
-                <div className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-6`}>
+                <div className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-6`}>
                   <AnimatePresence mode="wait">
 
                     {/* 1) FEATURES */}
@@ -572,7 +572,7 @@ export default function TheEdgeShell({
                           ].map(([Icon, title, body]) => {
                             const I = Icon as typeof ShieldCheck;
                             return (
-                              <div key={title as string} className={`${Z8_SURFACE} rounded-2xl p-4 transition hover:border-vouch-cyan/30`}>
+                              <div key={title as string} className={`${AURORA_SURFACE} rounded-2xl p-4 transition hover:border-vouch-cyan/30`}>
                                 <I className="h-5 w-5 text-vouch-cyan" />
                                 <div className="mt-3 text-sm font-black text-white">{title as string}</div>
                                 <p className="mt-1 text-[11px] leading-5 text-white/40">{body as string}</p>
@@ -775,7 +775,7 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease }}
-                className={`${Z8_PANEL_PREMIUM} mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8`}
+                className={`${AURORA_PANEL_PREMIUM} mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8`}
               >
                 <motion.div
                   className="flex h-16 w-16 items-center justify-center rounded-3xl bg-vouch-emerald/10 text-vouch-emerald"
@@ -801,7 +801,7 @@ export default function TheEdgeShell({
                 transition={{ duration: 0.45, ease }}
                 className="mx-auto max-w-6xl space-y-4 font-z8"
               >
-                <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
+                <section className={`${AURORA_PANEL_PREMIUM} rounded-3xl p-5`}>
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
                       <div className="terminal-text text-vouch-emerald">Your Dashboard</div>
@@ -839,7 +839,7 @@ export default function TheEdgeShell({
                     <button
                       key={label}
                       onClick={() => enterSite(section)}
-                      className={`${Z8_PANEL_PREMIUM} group rounded-2xl p-4 text-left transition hover:-translate-y-0.5`}
+                      className={`${AURORA_PANEL_PREMIUM} group rounded-2xl p-4 text-left transition hover:-translate-y-0.5`}
                     >
                       <Icon className="h-5 w-5 text-vouch-emerald" />
                       <div className="mt-3 text-sm font-bold text-white">{label}</div>
@@ -851,7 +851,7 @@ export default function TheEdgeShell({
                 </section>
 
                 <section className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
-                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-5`}>
                     <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">Pending picks</h3></div>
                     <div className="mt-4 space-y-2">
                       {savedParlays.filter((p) => p.status === 'PENDING').slice(0, 4).map((p) => (
@@ -868,7 +868,7 @@ export default function TheEdgeShell({
                     </div>
                   </div>
 
-                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-5`}>
                     <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">AI Seat</h3></div>
                     <div className="mt-4 grid gap-2">
                       {['Explain today’s board', 'Compare players', 'Open ParlayOS logic'].map((tool) => (

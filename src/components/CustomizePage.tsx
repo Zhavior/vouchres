@@ -40,17 +40,17 @@ import {
 } from "../lib/featureConfig";
 import type { CreatorProofProfile } from "../types";
 import {
-  Z8_ACTIVE,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_SURFACE,
-} from "../theme/z8Tokens";
+  AURORA_ACTIVE,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_SURFACE,
+} from "../theme/auroraTokens";
 
 type CustomizePageProps = {
   profile?: CreatorProofProfile | null;
@@ -294,12 +294,12 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
   const previewItems = layout.mode === "pro" ? proPreview : beginnerPreview;
 
   return (
-    <main className={`${Z8_PAGE} min-h-screen ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto max-w-5xl ${Z8_PAGE_GAP}`}>
-        <header className={`${Z8_PANEL_PREMIUM} ${Z8_SECTION_HEADER} p-5`}>
+    <main className={`${AURORA_PAGE} min-h-screen ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto max-w-5xl ${AURORA_PAGE_GAP}`}>
+        <header className={`${AURORA_PANEL_PREMIUM} ${AURORA_SECTION_HEADER} p-5`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <span className={`inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+              <span className={`inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 ${AURORA_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3.5 w-3.5" />
                 Native Layout Studio
               </span>
@@ -318,7 +318,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
               <button
                 type="button"
                 onClick={handleReset}
-                className={`${Z8_IDLE} inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
+                className={`${AURORA_IDLE} inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
               >
                 <RefreshCcw className="h-4 w-4" />
                 Reset
@@ -327,7 +327,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
               <button
                 type="button"
                 onClick={() => onSectionChange("settings")}
-                className={`${Z8_IDLE} px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
+                className={`${AURORA_IDLE} px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
               >
                 Back to Settings
               </button>
@@ -336,10 +336,10 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <section className={`${Z8_PANEL_PREMIUM} p-5`}>
+          <section className={`${AURORA_PANEL_PREMIUM} p-5`}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className={`${Z8_LABEL} text-white/40`}>Research mode</span>
+                <span className={`${AURORA_LABEL} text-white/40`}>Research mode</span>
                 <h2 className="mt-3 text-xl font-black text-white">Choose your UI depth</h2>
                 <p className="mt-1 text-sm leading-6 text-white/50">
                   Beginner mode keeps the app clean. Pro mode exposes more model confidence and research context.
@@ -354,8 +354,8 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("beginner")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "beginner"
-                    ? `${Z8_ACTIVE} rounded-2xl`
-                    : `${Z8_IDLE} rounded-2xl`
+                    ? `${AURORA_ACTIVE} rounded-2xl`
+                    : `${AURORA_IDLE} rounded-2xl`
                 }`}
               >
                 <div className="text-sm font-black text-white">Beginner</div>
@@ -367,8 +367,8 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("pro")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "pro"
-                    ? `${Z8_ACTIVE} rounded-2xl`
-                    : `${Z8_IDLE} rounded-2xl`
+                    ? `${AURORA_ACTIVE} rounded-2xl`
+                    : `${AURORA_IDLE} rounded-2xl`
                 }`}
               >
                 <div className="text-sm font-black text-white">Pro</div>
@@ -377,14 +377,14 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
             </div>
 
             <div className="mt-5">
-              <span className={`inline-flex items-center rounded-full ${Z8_SURFACE} px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+              <span className={`inline-flex items-center rounded-full ${AURORA_SURFACE} px-2.5 py-1 ${AURORA_LABEL} text-vouch-cyan`}>
                 Z8 premium visual standard
               </span>
             </div>
           </section>
 
-          <section className={`${Z8_PANEL_PREMIUM} p-5`}>
-            <span className={`${Z8_LABEL} text-vouch-cyan`}>Visible tools</span>
+          <section className={`${AURORA_PANEL_PREMIUM} p-5`}>
+            <span className={`${AURORA_LABEL} text-vouch-cyan`}>Visible tools</span>
             <h2 className="mt-3 text-xl font-black text-white">
               {visibleFeatures.length} tools active
             </h2>
@@ -396,7 +396,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
               {visibleFeatures.map((feature) => {
                 const meta = FEATURE_META[feature.id];
                 return (
-                  <span key={feature.id} className={`${Z8_SURFACE} rounded-full px-2.5 py-1 text-[10px] font-bold text-white/70`}>
+                  <span key={feature.id} className={`${AURORA_SURFACE} rounded-full px-2.5 py-1 text-[10px] font-bold text-white/70`}>
                     {meta?.label ?? feature.id}
                   </span>
                 );
@@ -405,10 +405,10 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
           </section>
         </div>
 
-        <section className={`${Z8_PANEL_PREMIUM} p-5`}>
+        <section className={`${AURORA_PANEL_PREMIUM} p-5`}>
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <span className={`${Z8_LABEL} text-white/40`}>Sidebar order</span>
+              <span className={`${AURORA_LABEL} text-white/40`}>Sidebar order</span>
               <h2 className="mt-3 text-xl font-black text-white">Reorder and toggle features</h2>
               <p className="mt-1 text-sm leading-6 text-white/50">
                 Locked tools stay visible because they protect navigation and customer trust.
@@ -435,7 +435,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                       type="button"
                       onClick={() => handleMove(feature.id, "up")}
                       disabled={isFirst || (feature.locked && prevLocked)}
-                      className={`${Z8_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
+                      className={`${AURORA_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
                       aria-label={`Move ${meta?.label ?? feature.id} up`}
                     >
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -444,14 +444,14 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                       type="button"
                       onClick={() => handleMove(feature.id, "down")}
                       disabled={isLast || (feature.locked && nextLocked)}
-                      className={`${Z8_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
+                      className={`${AURORA_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
                       aria-label={`Move ${meta?.label ?? feature.id} down`}
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${Z8_SURFACE} text-vouch-cyan`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${AURORA_SURFACE} text-vouch-cyan`}>
                     <Icon className="h-4 w-4" />
                   </div>
 
@@ -461,7 +461,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                         {meta?.label ?? feature.id}
                       </span>
                       {feature.locked && (
-                        <span className={`inline-flex items-center gap-1 rounded-full ${Z8_SURFACE} px-2 py-0.5 ${Z8_LABEL} text-white/50`}>
+                        <span className={`inline-flex items-center gap-1 rounded-full ${AURORA_SURFACE} px-2 py-0.5 ${AURORA_LABEL} text-white/50`}>
                           <Lock className="h-2.5 w-2.5" />
                           Always visible
                         </span>
@@ -495,8 +495,8 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
           </div>
         </section>
 
-        <section className={`${Z8_PANEL_PREMIUM} p-5`}>
-          <span className={`${Z8_LABEL} ${layout.mode === "pro" ? 'text-vouch-emerald' : 'text-vouch-cyan'}`}>
+        <section className={`${AURORA_PANEL_PREMIUM} p-5`}>
+          <span className={`${AURORA_LABEL} ${layout.mode === "pro" ? 'text-vouch-emerald' : 'text-vouch-cyan'}`}>
             {layout.mode === "pro" ? "Pro mode preview" : "Beginner mode preview"}
           </span>
 

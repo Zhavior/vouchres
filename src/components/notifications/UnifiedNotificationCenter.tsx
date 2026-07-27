@@ -25,7 +25,7 @@ import { useHrNotificationState } from '../../hooks/useHrNotificationState';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../hooks/queries/queryKeys';
 import type { Parlay } from '../../types';
-import { Z8_LABEL } from '../../theme/z8Tokens';
+import { AURORA_LABEL } from '../../theme/auroraTokens';
 
 const APP_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   ai: Sparkles,
@@ -488,7 +488,7 @@ function ToggleRow({
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className={`flex flex-col items-center justify-center py-10 text-center text-slate-500 ${Z8_LABEL}`}>
+    <div className={`flex flex-col items-center justify-center py-10 text-center text-slate-500 ${AURORA_LABEL}`}>
       <div className="mb-2">{icon}</div>
       <p className="max-w-[240px] text-xs">{text}</p>
     </div>

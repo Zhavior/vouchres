@@ -13,12 +13,12 @@ import {
 import { VerifiedDataNotice } from '../pro';
 import type { RealCandidate } from './smartAiEngine.logic';
 import {
-  Z8_EMERALD,
-  Z8_LABEL,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-} from '../../theme/z8Tokens';
+  AURORA_EMERALD,
+  AURORA_LABEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_STAT_CHIP,
+} from '../../theme/auroraTokens';
 
 interface BoardStats {
   total: number;
@@ -110,36 +110,36 @@ export function SmartAiStatsVerifiedPanel({
 
       {/* Board metrics */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4" id="stats-verified-metrics">
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
+        <div className={`${AURORA_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Validated Candidates</span>
+            <span className={`${AURORA_LABEL} block text-white/40`}>Validated Candidates</span>
             <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
               {loading ? '—' : boardStats.total}
             </span>
           </div>
           <Database className="h-5 w-5 text-vouch-cyan" />
         </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
+        <div className={`${AURORA_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Confirmed Lineups</span>
-            <span className={`z8-tabular-nums mt-1 block text-lg font-mono font-black ${Z8_EMERALD}`}>
+            <span className={`${AURORA_LABEL} block text-white/40`}>Confirmed Lineups</span>
+            <span className={`z8-tabular-nums mt-1 block text-lg font-mono font-black ${AURORA_EMERALD}`}>
               {loading ? '—' : boardStats.confirmed}
             </span>
           </div>
-          <CheckCircle2 className={`h-5 w-5 ${Z8_EMERALD}`} />
+          <CheckCircle2 className={`h-5 w-5 ${AURORA_EMERALD}`} />
         </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
+        <div className={`${AURORA_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Games Covered</span>
+            <span className={`${AURORA_LABEL} block text-white/40`}>Games Covered</span>
             <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
               {loading ? '—' : boardStats.games}
             </span>
           </div>
           <Activity className="h-5 w-5 text-vouch-cyan/80" />
         </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
+        <div className={`${AURORA_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Avg Data Confidence</span>
+            <span className={`${AURORA_LABEL} block text-white/40`}>Avg Data Confidence</span>
             <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-vouch-cyan">
               {loading || boardStats.avgConfidence === null ? '—' : `${boardStats.avgConfidence}%`}
             </span>
@@ -149,9 +149,9 @@ export function SmartAiStatsVerifiedPanel({
       </div>
 
       {/* Data completeness */}
-      <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
-        <div className={Z8_SECTION_HEADER}>
-          <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+      <section className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
+        <div className={AURORA_SECTION_HEADER}>
+          <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
             <Target className="h-3.5 w-3.5" />
             Data completeness
           </div>
@@ -175,7 +175,7 @@ export function SmartAiStatsVerifiedPanel({
             const pct =
               row.total > 0 ? Math.round((row.value / row.total) * 100) : null;
             return (
-              <div key={row.label} className={Z8_STAT_CHIP}>
+              <div key={row.label} className={AURORA_STAT_CHIP}>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold text-white/70">{row.label}</span>
                   <span className="z8-tabular-nums text-sm font-mono font-black text-white">
@@ -198,9 +198,9 @@ export function SmartAiStatsVerifiedPanel({
 
       {/* Confidence tier distribution */}
       {!loading && candidates.length > 0 && (
-        <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
-          <div className={Z8_SECTION_HEADER}>
-            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-emerald`}>
+        <section className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
+          <div className={AURORA_SECTION_HEADER}>
+            <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-emerald`}>
               <TrendingUp className="h-3.5 w-3.5" />
               Confidence tiers
             </div>
@@ -231,9 +231,9 @@ export function SmartAiStatsVerifiedPanel({
       )}
 
       {/* Data source catalog */}
-      <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
-        <div className={Z8_SECTION_HEADER}>
-          <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+      <section className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-5 sm:p-6`}>
+        <div className={AURORA_SECTION_HEADER}>
+          <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
             <ShieldCheck className="h-3.5 w-3.5" />
             Verified feeds
           </div>
@@ -285,7 +285,7 @@ export function SmartAiStatsVerifiedPanel({
       </section>
 
       {/* Research data policy */}
-      <div className={`${Z8_PANEL_PREMIUM} flex items-start gap-3 rounded-2xl p-5`} id="stats-verified-policy">
+      <div className={`${AURORA_PANEL_PREMIUM} flex items-start gap-3 rounded-2xl p-5`} id="stats-verified-policy">
         <Award className="mt-0.5 h-5 w-5 flex-shrink-0 text-vouch-cyan" />
         <div className="space-y-1 text-xs text-white/45">
           <h4 className="font-bold text-white">Research Data Policy</h4>

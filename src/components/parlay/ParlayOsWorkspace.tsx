@@ -77,16 +77,16 @@ import {
   type DfsLegContext,
 } from './types/parlayOsTypes';
 import {
-  Z8_CYAN_HEX,
-  Z8_EMERALD_HEX,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_PAD_X,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-  z8StatusColor,
-} from '../../theme/z8Tokens';
+  AURORA_CYAN_HEX,
+  AURORA_EMERALD_HEX,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_PAD_X,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_STAT_CHIP,
+  auroraStatusColor,
+} from '../../theme/auroraTokens';
 import { withAlpha } from '../../theme/colors';
 import ParlayBuilderRail from './ParlayBuilderRail';
 import { SmartParlayLegList } from './smart/SmartParlayLegCard';
@@ -95,7 +95,7 @@ import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParla
 import { useAutoRepairDraftIdentity } from '../../hooks/useAutoRepairDraftIdentity';
 
 function statusColorStyle(token: string) {
-  const color = z8StatusColor(token);
+  const color = auroraStatusColor(token);
   return {
     color,
     borderColor: withAlpha(color, 0.4),
@@ -204,8 +204,8 @@ function DfsStrip({ ctx }: { ctx: DfsLegContext }) {
               : ctx.salaryTier === 'premium' ? '#00FF94'
               : '#00F0FF',
             background: ctx.salaryTier === 'value' ? 'hsl(var(--ve-success)/0.1)'
-              : ctx.salaryTier === 'premium' ? withAlpha(Z8_EMERALD_HEX, 0.1)
-              : withAlpha(Z8_CYAN_HEX, 0.1),
+              : ctx.salaryTier === 'premium' ? withAlpha(AURORA_EMERALD_HEX, 0.1)
+              : withAlpha(AURORA_CYAN_HEX, 0.1),
           }}
         >
           {ctx.salaryTier}
@@ -362,7 +362,7 @@ function JudgeVerdictDrawer({
     reject:    '--ve-danger',
   };
   const tierToken = tierColors[verdict.tier] ?? '--ve-text-muted';
-  const tierColor = z8StatusColor(tierToken);
+  const tierColor = auroraStatusColor(tierToken);
 
   return (
     <div
@@ -528,7 +528,7 @@ function WatchlistFoundation({ onSectionChange }: { onSectionChange?: (section: 
       <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[#07101a]/95 px-4 pt-4 backdrop-blur-xl">
         <div className="flex items-start justify-between gap-3 pb-3">
           <div>
-            <p className={`${Z8_LABEL} text-vouch-emerald`}>Research queue</p>
+            <p className={`${AURORA_LABEL} text-vouch-emerald`}>Research queue</p>
             <h2 id="parlayos-watchlist-heading" className="mt-1 text-lg font-black text-white">Watchlist</h2>
           </div>
           <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] font-black text-white/45">{totalTargets} waiting</span>
@@ -1077,7 +1077,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
         <section className={`${mobileView === 'slip' ? 'block' : 'hidden'} min-w-0 space-y-4 rounded-2xl border border-vouch-cyan/25 bg-[radial-gradient(circle_at_top_left,rgba(0,240,255,0.08),transparent_34%),linear-gradient(155deg,#07131d_0%,#040a11_68%)] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-4 lg:block`} aria-labelledby="parlayos-slip-builder-heading">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
             <div>
-              <p className={`${Z8_LABEL} text-vouch-cyan`}>Primary workspace</p>
+              <p className={`${AURORA_LABEL} text-vouch-cyan`}>Primary workspace</p>
               <h2 id="parlayos-slip-builder-heading" className="mt-1 text-lg font-black text-white">Slip Builder</h2>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
@@ -1105,7 +1105,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
         {(Object.keys(RISK_MODE_META) as ParlayRiskMode[]).map((m) => {
           const meta = RISK_MODE_META[m];
           const active = riskMode === m;
-          const modeColor = z8StatusColor(meta.token);
+          const modeColor = auroraStatusColor(meta.token);
           return (
             <button
               key={m}
@@ -1172,7 +1172,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
         </div>
 
         <section className={`${mobileView === 'review' ? 'block' : 'hidden'} rounded-2xl border border-amber-300/20 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.08),transparent_42%),#060c13] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.3)] lg:hidden`} aria-labelledby="parlayos-mobile-review-heading">
-          <p className={`${Z8_LABEL} text-amber-200`}>Decision check</p>
+          <p className={`${AURORA_LABEL} text-amber-200`}>Decision check</p>
           <div className="mt-2 flex items-start justify-between gap-4">
             <div>
               <h2 id="parlayos-mobile-review-heading" className="text-lg font-black text-white">Judge Review</h2>
@@ -1420,14 +1420,14 @@ export default function ParlayOsWorkspace({
       `}</style>
 
       <section
-        className={`${Z8_PAGE} flex flex-col`}
+        className={`${AURORA_PAGE} flex flex-col`}
         aria-label="ParlayOS"
       >
         {/* Header */}
-        <div className={`${Z8_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
-          <header className={`${Z8_PANEL_PREMIUM} ${Z8_SECTION_HEADER} mb-4 flex items-start justify-between gap-3 flex-wrap p-4 sm:p-5`}>
+        <div className={`${AURORA_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
+          <header className={`${AURORA_PANEL_PREMIUM} ${AURORA_SECTION_HEADER} mb-4 flex items-start justify-between gap-3 flex-wrap p-4 sm:p-5`}>
             <div>
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${Z8_LABEL} text-vouch-cyan`}>
+              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${AURORA_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
                 ParlayOS
               </div>
@@ -1451,12 +1451,12 @@ export default function ParlayOsWorkspace({
             ].map((stat) => (
               <div
                 key={stat.label}
-                className={`${Z8_STAT_CHIP} rounded-xl p-3`}
+                className={`${AURORA_STAT_CHIP} rounded-xl p-3`}
               >
-                <p className={`${Z8_LABEL} text-white/40`}>{stat.label}</p>
+                <p className={`${AURORA_LABEL} text-white/40`}>{stat.label}</p>
                 <div className="mt-1.5 flex items-end justify-between gap-2">
                   <span className="text-2xl font-extrabold text-white">{stat.value}</span>
-                  <span className={`${Z8_LABEL} text-white/35`}>{stat.note}</span>
+                  <span className={`${AURORA_LABEL} text-white/35`}>{stat.note}</span>
                 </div>
               </div>
             ))}

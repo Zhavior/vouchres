@@ -28,19 +28,19 @@ import { useAuth } from '../lib/useAuth';
 import { useSubscriberHubData, type SubscriberChannel } from '../hooks/useSubscriberHubData';
 import { normalizeCapperSettings } from '../lib/capperSettings';
 import {
-  Z8_ACTIVE,
-  Z8_DISPLAY,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_SURFACE,
-  Z8_WARNING,
-} from '../theme/z8Tokens';
+  AURORA_ACTIVE,
+  AURORA_DISPLAY,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_SURFACE,
+  AURORA_WARNING,
+} from '../theme/auroraTokens';
 
 
 const cleanCustomerText = (value?: string | number | null): string =>
@@ -205,22 +205,22 @@ export default function SubscriberHub({
   };
 
   return (
-    <main className={`${Z8_PAGE} w-full ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="subscriber-hub-root">
+    <main className={`${AURORA_PAGE} w-full ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP}`} id="subscriber-hub-root">
       
       {/* Demo banner */}
       <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
-        <span className={`${Z8_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
+        <span className={`${AURORA_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
         {ownerClubSettings.offerSummary}
       </div>
 
       {/* Page Header */}
-      <header className={`${Z8_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-4 text-left md:flex-row md:items-center`} id="hub-head">
-        <div className={Z8_SECTION_HEADER}>
-          <span className={`${Z8_LABEL} inline-flex w-fit max-w-fit items-center gap-1 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-0.5 text-vouch-cyan`}>
+      <header className={`${AURORA_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-4 text-left md:flex-row md:items-center`} id="hub-head">
+        <div className={AURORA_SECTION_HEADER}>
+          <span className={`${AURORA_LABEL} inline-flex w-fit max-w-fit items-center gap-1 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-0.5 text-vouch-cyan`}>
             <Sparkles className="h-3.5 w-3.5" />
             Premium VouchEdge Clubs
           </span>
-          <h1 className={`${Z8_DISPLAY} mt-2 uppercase tracking-tight`}>
+          <h1 className={`${AURORA_DISPLAY} mt-2 uppercase tracking-tight`}>
             Exclusive Subscriber Space
           </h1>
           <p className="text-xs text-white/45">
@@ -233,7 +233,7 @@ export default function SubscriberHub({
           <button
             onClick={() => setActiveTab('explore')}
             className={`rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all ${
-              activeTab === 'explore' && !selectedCapperId ? Z8_ACTIVE : Z8_IDLE
+              activeTab === 'explore' && !selectedCapperId ? AURORA_ACTIVE : AURORA_IDLE
             }`}
           >
             Explore Channels
@@ -244,7 +244,7 @@ export default function SubscriberHub({
               setSelectedCapperId(null);
             }}
             className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all ${
-              activeTab === 'channel_settings' ? Z8_ACTIVE : Z8_IDLE
+              activeTab === 'channel_settings' ? AURORA_ACTIVE : AURORA_IDLE
             }`}
           >
             <Settings className="h-4 w-4" />
@@ -256,8 +256,8 @@ export default function SubscriberHub({
       {/* Explorer Mode cards screen */}
       {activeTab === 'explore' && !selectedCapperId && (
         <div className="space-y-6">
-          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 text-left`}>
-            <h3 className={`${Z8_LABEL} text-sm text-white/80`}>
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 text-left`}>
+            <h3 className={`${AURORA_LABEL} text-sm text-white/80`}>
               How VouchEdge Subscriptions Work
             </h3>
             <p className="mt-1 text-[11px] leading-relaxed text-white/45">
@@ -276,14 +276,14 @@ export default function SubscriberHub({
               return (
                 <div 
                   key={capper.id}
-                  className={`${Z8_PANEL_PREMIUM} backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-white/10 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20`}
+                  className={`${AURORA_PANEL_PREMIUM} backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-white/10 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20`}
                 >
                   {/* Visual Category badge */}
-                  <div className={`p-4 border-b border-white/10 ${Z8_SURFACE} flex justify-between items-center`}>
+                  <div className={`p-4 border-b border-white/10 ${AURORA_SURFACE} flex justify-between items-center`}>
                     <span className="text-[9px] bg-black/25 px-2.5 py-0.5 border border-white/10 rounded font-black font-mono text-emerald-400 uppercase">
                       {capper.winRate.toFixed(1)}% WINRATE
                     </span>
-                    <span className={`text-[9.5px] ${Z8_SURFACE} text-vouch-cyan px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide`}>
+                    <span className={`text-[9.5px] ${AURORA_SURFACE} text-vouch-cyan px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide`}>
                       {capper.badge}
                     </span>
                   </div>
@@ -291,7 +291,7 @@ export default function SubscriberHub({
                   <div className="p-5 space-y-3 flex-1">
                     {/* Capper primary identity metadata */}
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full ${Z8_SURFACE} border-2 border-indigo-500/20 flex items-center justify-center text-sky-400 text-sm font-black shadow-md`}>
+                      <div className={`w-12 h-12 rounded-full ${AURORA_SURFACE} border-2 border-indigo-500/20 flex items-center justify-center text-sky-400 text-sm font-black shadow-md`}>
                         {capper.name.split(' ').map(n=>n[0]).join('')}
                       </div>
                       <div>
@@ -321,7 +321,7 @@ export default function SubscriberHub({
                   </div>
 
                   {/* Actions Area */}
-                  <div className={`p-4 ${Z8_SURFACE} border-t border-white/10`}>
+                  <div className={`p-4 ${AURORA_SURFACE} border-t border-white/10`}>
                     {isOwner ? (
                       <button
                         onClick={() => setSelectedCapperId(capper.id)}
@@ -363,7 +363,7 @@ export default function SubscriberHub({
         <div className="space-y-5" id="capper-chat-space">
           
           {/* Active room back row banner */}
-          <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-left`}>
+          <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-left`}>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSelectedCapperId(null)}
@@ -372,7 +372,7 @@ export default function SubscriberHub({
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div>
-                <span className={`${Z8_LABEL} text-[8.5px] font-bold font-mono px-2 py-0.5 bg-emerald-905 text-emerald-400 border border-emerald-900/30 rounded uppercase tracking-wider`}>
+                <span className={`${AURORA_LABEL} text-[8.5px] font-bold font-mono px-2 py-0.5 bg-emerald-905 text-emerald-400 border border-emerald-900/30 rounded uppercase tracking-wider`}>
                   ACTIVE_PREMIUM_SPACE
                 </span>
                 <h3 className="text-base font-black text-white/90 uppercase tracking-tight">
@@ -419,7 +419,7 @@ export default function SubscriberHub({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Left Sidebar inside the active space: Capper Information Card */}
-            <div className={`lg:col-span-1 border border-white/10 rounded-2xl ${Z8_PANEL_PREMIUM} p-5 space-y-4 text-left`}>
+            <div className={`lg:col-span-1 border border-white/10 rounded-2xl ${AURORA_PANEL_PREMIUM} p-5 space-y-4 text-left`}>
               <div>
                 <h4 className="text-[10px] font-bold text-vouch-cyan font-mono uppercase tracking-wider mb-2">CLUB IDENTITY CARD</h4>
                 <div className="w-12 h-12 rounded-full bg-indigo-950 flex items-center justify-center border border-indigo-900/50 text-vouch-cyan/80 font-bold mb-3">
@@ -451,7 +451,7 @@ export default function SubscriberHub({
                 </div>
               </div>
 
-              <div className={`${Z8_SURFACE} p-3 rounded-lg border border-white/10 font-mono text-[9px] text-dashed text-white/40 leading-normal`}>
+              <div className={`${AURORA_SURFACE} p-3 rounded-lg border border-white/10 font-mono text-[9px] text-dashed text-white/40 leading-normal`}>
                 🛡️ {selectedClubSettings.welcomeMessage}
               </div>
             </div>
@@ -461,7 +461,7 @@ export default function SubscriberHub({
               
               {/* RENDERING CHATROOM */}
               {chatInnerTab === 'chat' && (
-                <div className={`${Z8_PANEL_PREMIUM} border border-white/10 rounded-2xl flex flex-col h-[520px] overflow-hidden`} id="tab-chatroom">
+                <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 rounded-2xl flex flex-col h-[520px] overflow-hidden`} id="tab-chatroom">
                   <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-vouch-cyan" />
                     <h4 className="text-xs font-black uppercase tracking-wider text-white/70">Subscriber Club Chat</h4>
@@ -498,7 +498,7 @@ export default function SubscriberHub({
                       onChange={(e) => setChatDraft(e.target.value)}
                       placeholder={selectedChannel?.isFollowing || selectedChannel?.kind === 'owner' ? 'Message the club…' : 'Follow to join chat'}
                       disabled={!selectedChannel || (selectedChannel.kind !== 'owner' && !selectedChannel.isFollowing) || chatSending}
-                      className={`flex-1 ${Z8_SURFACE} border border-white/10 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none disabled:opacity-60`}
+                      className={`flex-1 ${AURORA_SURFACE} border border-white/10 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none disabled:opacity-60`}
                     />
                     <button
                       type="submit"
@@ -514,7 +514,7 @@ export default function SubscriberHub({
               {/* RENDERING PREMIUM PARLAYS ONLY */}
               {chatInnerTab === 'parlays' && (
                 <div className="space-y-4" id="tab-premium-parlays">
-                  <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl text-left flex items-start gap-3`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl text-left flex items-start gap-3`}>
                     <Award className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Capper Locked Premium Slips</h4>
@@ -539,7 +539,7 @@ export default function SubscriberHub({
                       {premiumParlays.map((parlay) => {
                         const reactions = parlayReactions[parlay.id] || {};
                         return (
-                          <div key={parlay.id} className={`${Z8_PANEL_PREMIUM} border border-white/10 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all`}>
+                          <div key={parlay.id} className={`${AURORA_PANEL_PREMIUM} border border-white/10 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all`}>
                             {/* Parlay premium badge */}
                             <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
                               <span className="text-[10px] font-bold text-emerald-400 font-mono tracking-wider flex items-center gap-1.5 uppercase">
@@ -554,9 +554,9 @@ export default function SubscriberHub({
                             {/* Legs checklist render */}
                             <div className="space-y-2.5">
                               {parlay.legs.map((leg) => (
-                                <div key={leg.id} className={`p-2.5 ${Z8_SURFACE} rounded-xl border border-white/10 flex justify-between items-center text-xs`}>
+                                <div key={leg.id} className={`p-2.5 ${AURORA_SURFACE} rounded-xl border border-white/10 flex justify-between items-center text-xs`}>
                                   <div className="space-y-0.5">
-                                    <span className={`${Z8_LABEL} text-[8.5px] font-bold font-mono px-1.5 ${Z8_SURFACE} border border-blue-900/30 text-sky-400 rounded uppercase`}>
+                                    <span className={`${AURORA_LABEL} text-[8.5px] font-bold font-mono px-1.5 ${AURORA_SURFACE} border border-blue-900/30 text-sky-400 rounded uppercase`}>
                                       {shouldShowPublicGameLabel(leg.game) ? cleanCustomerText(leg.game) : 'MLB'}
                                     </span>
                                     <p className="font-extrabold text-white/90 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
@@ -569,7 +569,7 @@ export default function SubscriberHub({
                             </div>
 
                             {/* Risk Tier & Payout preview summary indicators block */}
-                            <div className={`mt-4 flex flex-col md:flex-row md:items-center justify-between gap-3 ${Z8_SURFACE} p-3 rounded-xl border border-white/10 font-mono text-[10px]`}>
+                            <div className={`mt-4 flex flex-col md:flex-row md:items-center justify-between gap-3 ${AURORA_SURFACE} p-3 rounded-xl border border-white/10 font-mono text-[10px]`}>
                               <div className="flex gap-4">
                                 <div>
                                   <span className="block text-[8px] text-white/40 uppercase">RISK TIER</span>
@@ -615,7 +615,7 @@ export default function SubscriberHub({
               {/* RENDERING ANNOUNCEMENTS ONLY */}
               {chatInnerTab === 'announcements' && (
                 <div className="space-y-4 text-left" id="tab-announcements">
-                  <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl text-left flex items-start gap-3`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl text-left flex items-start gap-3`}>
                     <Megaphone className="w-5 h-5 text-vouch-cyan shrink-0 mt-0.5 animate-pulse" />
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
@@ -643,7 +643,7 @@ export default function SubscriberHub({
                           value={announcementDraft}
                           onChange={(e) => setAnnouncementDraft(e.target.value)}
                           placeholder="Share an update with your subscribers"
-                          className={`flex-1 ${Z8_SURFACE} border border-white/10 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none`}
+                          className={`flex-1 ${AURORA_SURFACE} border border-white/10 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none`}
                         />
                         <button
                           type="submit"
@@ -700,7 +700,7 @@ export default function SubscriberHub({
       {/* Subscription Settings Screen for the Cappers / channel owner */}
       {activeTab === 'channel_settings' && (
         <div className="space-y-6 text-left" id="hub-channel-settings">
-          <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-5 rounded-2xl space-y-2`}>
+          <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-5 rounded-2xl space-y-2`}>
             <h3 className="text-base font-black uppercase tracking-wide text-white/90 flex items-center gap-2">
               <Sliders className="w-5 h-5 text-vouch-cyan" />
               Customize Subscription Offerings
@@ -718,7 +718,7 @@ export default function SubscriberHub({
               return (
                 <div 
                   key={idx}
-                  className={`${Z8_PANEL_PREMIUM} border border-white/10 rounded-2xl p-5 space-y-4 relative flex flex-col justify-between`}
+                  className={`${AURORA_PANEL_PREMIUM} border border-white/10 rounded-2xl p-5 space-y-4 relative flex flex-col justify-between`}
                 >
                   <div className="space-y-2.5">
                     {/* Visual Segment header */}
@@ -739,7 +739,7 @@ export default function SubscriberHub({
                             min={1}
                             max={5000}
                             onChange={(e) => setEditPrice(Math.max(1, parseInt(e.target.value) || 0))}
-                            className={`w-full ${Z8_SURFACE} border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505`}
+                            className={`w-full ${AURORA_SURFACE} border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505`}
                           />
                         </div>
                         <div>
@@ -748,7 +748,7 @@ export default function SubscriberHub({
                             type="text"
                             value={editPerk}
                             onChange={(e) => setEditPerk(e.target.value)}
-                            className={`w-full ${Z8_SURFACE} border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505`}
+                            className={`w-full ${AURORA_SURFACE} border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505`}
                             placeholder="e.g. Save 10%"
                           />
                         </div>
@@ -799,7 +799,7 @@ export default function SubscriberHub({
                           setEditPrice(plan.price);
                           setEditPerk(plan.savings || plan.perk || '');
                         }}
-                        className={`w-full py-1.5 ${Z8_SURFACE} border border-blue-900/40 hover:bg-indigo-600 text-sky-400 hover:text-white uppercase text-[10px] font-mono font-bold rounded-lg transition-all`}
+                        className={`w-full py-1.5 ${AURORA_SURFACE} border border-blue-900/40 hover:bg-indigo-600 text-sky-400 hover:text-white uppercase text-[10px] font-mono font-bold rounded-lg transition-all`}
                       >
                         Edit Pricing Config
                       </button>
@@ -815,8 +815,8 @@ export default function SubscriberHub({
 
       {/* Choose Subscription Length Modal */}
       {showSubModal && selectedCapperForSub && (
-        <div className={`fixed inset-0 ${Z8_SURFACE} backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fade-in text-left`} id="subscription-length-modal">
-          <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-white/90 relative`}>
+        <div className={`fixed inset-0 ${AURORA_SURFACE} backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fade-in text-left`} id="subscription-length-modal">
+          <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-white/90 relative`}>
             
             {/* Header */}
             <div className="flex justify-between items-start border-b border-white/10 pb-4">
@@ -843,7 +843,7 @@ export default function SubscriberHub({
             </div>
 
             {/* Feature List (above pricing) */}
-            <div className={`${Z8_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl space-y-3`}>
+            <div className={`${AURORA_PANEL_PREMIUM} border border-white/10 p-4 rounded-xl space-y-3`}>
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-205 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-sky-400" />
                 Full club access includes:
@@ -906,7 +906,7 @@ export default function SubscriberHub({
                 return (
                   <div 
                     key={idx}
-                    className={`${Z8_PANEL_PREMIUM} border border-white/10 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group`}
+                    className={`${AURORA_PANEL_PREMIUM} border border-white/10 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group`}
                   >
                     {/* Full access badge */}
                     <div className="absolute -top-2 left-2 right-2 flex justify-center">

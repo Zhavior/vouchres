@@ -1,4 +1,4 @@
-import { Z8_SURFACE } from '../../theme/z8Tokens';
+import { AURORA_SURFACE } from '../../theme/auroraTokens';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { triggerHaptic } from '../../lib/haptics';

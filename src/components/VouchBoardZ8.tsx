@@ -13,17 +13,17 @@ import VouchCard from './vouch-system/VouchCard';
 import VouchPack from './vouchBoard/VouchPack';
 import { apiClient } from '../lib/apiClient';
 import {
-  Z8_ACTIVE,
-  Z8_DISPLAY,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-} from '../theme/z8Tokens';
+  AURORA_ACTIVE,
+  AURORA_DISPLAY,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+} from '../theme/auroraTokens';
 
 interface VouchBoardProps {
   savedVouches: Vouch[];
@@ -332,24 +332,24 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen`} id="vouch-hub-view">
+    <main className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen`} id="vouch-hub-view">
       
       {/* Toast HUD */}
       {visualToast && (
-        <div className={`fixed z-50 ${Z8_PANEL_PREMIUM} px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-mono font-bold animate-bounce text-vouch-cyan left-3 right-3 sm:left-auto sm:right-6 bottom-[calc(var(--ve-mobile-chrome-height)+var(--ve-safe-bottom)+0.75rem)] sm:bottom-6 max-w-md sm:max-w-none mx-auto sm:mx-0`}>
+        <div className={`fixed z-50 ${AURORA_PANEL_PREMIUM} px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-mono font-bold animate-bounce text-vouch-cyan left-3 right-3 sm:left-auto sm:right-6 bottom-[calc(var(--ve-mobile-chrome-height)+var(--ve-safe-bottom)+0.75rem)] sm:bottom-6 max-w-md sm:max-w-none mx-auto sm:mx-0`}>
           <Sparkles className="w-4 h-4 text-vouch-cyan animate-spin" />
           <span>{visualToast}</span>
         </div>
       )}
 
       {/* Main header banner */}
-      <header className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative`}>
+      <header className={`${AURORA_PANEL_PREMIUM} overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative`}>
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-vouch-cyan/10 blur-3xl pointer-events-none" />
-        <div className={`relative ${Z8_SECTION_HEADER}`}>
-          <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
+        <div className={`relative ${AURORA_SECTION_HEADER}`}>
+          <span className={`${AURORA_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
             <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
           </span>
-          <h2 className={`${Z8_DISPLAY} mt-1`}>
+          <h2 className={`${AURORA_DISPLAY} mt-1`}>
             Vouch Board &amp; Graphic Studio
           </h2>
           <p className="max-w-2xl text-sm text-white/45">
@@ -370,7 +370,7 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
                 key={t.id}
                 onClick={() => setActiveBoardTab(t.id as 'studio' | 'saved')}
                 className={`group relative flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
-                  active ? Z8_ACTIVE : Z8_IDLE
+                  active ? AURORA_ACTIVE : AURORA_IDLE
                 }`}
               >
                 <span className="text-xl leading-none">{t.emoji}</span>
@@ -477,7 +477,7 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
       {activeBoardTab === 'saved' && (
         <div className="space-y-4 animate-fade-in" id="vouch-board-saved-ledger">
           
-          <div className={`${Z8_PANEL_PREMIUM} p-4 rounded-2xl flex items-start gap-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} p-4 rounded-2xl flex items-start gap-3`}>
             <Info className="w-4.5 h-4.5 text-vouch-amber shrink-0 mt-0.5" />
             <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
               <span className="text-vouch-amber font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
@@ -488,7 +488,7 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
 
           {savedVouches.length === 0 ? (
             <div 
-              className={`${Z8_PANEL_PREMIUM} p-10 text-center rounded-3xl flex flex-col items-center justify-center gap-4 py-20`}
+              className={`${AURORA_PANEL_PREMIUM} p-10 text-center rounded-3xl flex flex-col items-center justify-center gap-4 py-20`}
               id="empty-vouch-board"
             >
               <ClipboardCheck className="w-12 h-12 text-[hsl(var(--ve-text-muted))] animate-pulse" />
@@ -529,7 +529,7 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
       {/* SIMULATED TWITTER / X POSTING MODAL HUD OVERLAY */}
       {showTweetModal && (
         <div className="fixed inset-0 bg-[hsl(var(--ve-bg-deep)/0.86)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className={`${Z8_PANEL_PREMIUM} max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative`}>
+          <div className={`${AURORA_PANEL_PREMIUM} max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative`}>
             <button 
               onClick={() => setShowTweetModal(false)}
               className="absolute top-4 right-4 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] p-1 rounded-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.28)]"

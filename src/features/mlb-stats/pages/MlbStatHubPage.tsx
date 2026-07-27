@@ -9,7 +9,7 @@ import { StatLeaderboardTable } from '../components/StatLeaderboardTable';
 import { StatResearchDrawer } from '../components/StatResearchDrawer';
 import { useMlbStatHub } from '../hooks/useMlbStatHub';
 import { STAT_CONFIG } from '../engine/statHubConfig';
-import { Z8_PAGE, Z8_PAGE_SHELL, Z8_PANEL_PREMIUM, Z8_PANEL } from '../../../theme/z8Tokens';
+import { AURORA_PAGE, AURORA_PAGE_SHELL, AURORA_PANEL_PREMIUM, AURORA_PANEL } from '../../../theme/auroraTokens';
 
 const TABS = [
   { id: 'today', label: 'Today' },
@@ -24,8 +24,8 @@ export default function MlbStatHubPage() {
   const isPhase2 = config.phase === 2;
 
   return (
-    <div className={`${Z8_PAGE} w-full max-w-full overflow-x-hidden min-w-0 text-white pb-24`}>
-      <div className={`${Z8_PAGE_SHELL} space-y-4 sm:space-y-6`}>
+    <div className={`${AURORA_PAGE} w-full max-w-full overflow-x-hidden min-w-0 text-white pb-24`}>
+      <div className={`${AURORA_PAGE_SHELL} space-y-4 sm:space-y-6`}>
 
         {/* ── Top Header & Command Center Bar ──────────────────────────── */}
         <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl space-y-4">

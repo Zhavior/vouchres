@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useAppProfile } from '../../context/AppShellContext';
-import { Z8_SURFACE, Z8_ACTIVE, Z8_OVERLAY_SCRIM } from '../../theme/z8Tokens';
+import { AURORA_SURFACE, AURORA_ACTIVE, AURORA_OVERLAY_SCRIM } from '../../theme/auroraTokens';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useNavUiStore } from '../../stores/navUiStore';
 
@@ -31,7 +31,7 @@ export default function WorldChatWidget() {
           type="button"
           aria-label="Close World Chat"
           onClick={() => setIsOpen(false)}
-          className={`fixed inset-0 z-[90] ${Z8_OVERLAY_SCRIM}`}
+          className={`fixed inset-0 z-[90] ${AURORA_OVERLAY_SCRIM}`}
         />
       ) : null}
 
@@ -39,7 +39,7 @@ export default function WorldChatWidget() {
         <div
           className={[
             'pointer-events-auto fixed z-[91] overflow-hidden rounded-2xl border border-white/10 shadow-2xl',
-            Z8_SURFACE,
+            AURORA_SURFACE,
             'inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] bottom-36',
             'md:inset-x-auto md:bottom-24 md:right-6 md:top-auto md:left-auto',
             'md:h-[min(85vh,860px)] md:min-h-[480px] md:w-[min(420px,calc(100vw-2rem))]',
@@ -86,7 +86,7 @@ export default function WorldChatWidget() {
           aria-label={isOpen ? 'Close World Chat' : 'Open World Chat'}
           aria-expanded={isOpen}
           className={`flex h-12 w-12 items-center justify-center rounded-full border border-ve-charged shadow-ve-glow-cyan transition-all hover:scale-105 active:scale-95 sm:h-14 sm:w-14 ${
-            isOpen ? 'hidden bg-ve-storm/80 text-white md:flex' : `flex ${Z8_ACTIVE} font-bold text-black`
+            isOpen ? 'hidden bg-ve-storm/80 text-white md:flex' : `flex ${AURORA_ACTIVE} font-bold text-black`
           }`}
         >
           {isOpen ? (

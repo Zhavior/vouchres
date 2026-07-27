@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../../theme/z8Tokens';
+import { AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../../../theme/auroraTokens';
 
 type VECardTone = 'default' | 'soft' | 'elevated' | 'strong';
 
@@ -12,9 +12,9 @@ type VECardProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 const TONE_SHELL: Record<VECardTone, string> = {
-  default: Z8_PANEL_PREMIUM,
-  soft: `${Z8_SURFACE} rounded-2xl`,
-  elevated: Z8_PANEL_PREMIUM,
+  default: AURORA_PANEL_PREMIUM,
+  soft: `${AURORA_SURFACE} rounded-2xl`,
+  elevated: AURORA_PANEL_PREMIUM,
   strong: 've-card-strong',
 };
 

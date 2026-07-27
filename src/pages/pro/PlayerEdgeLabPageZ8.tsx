@@ -22,16 +22,16 @@ import {
 } from '../../components/pro';
 import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
 import {
-  Z8_ACTIVE,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL,
-  Z8_SECTION_HEADER,
-  Z8_SURFACE,
-} from '../../theme/z8Tokens';
+  AURORA_ACTIVE,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL,
+  AURORA_SECTION_HEADER,
+  AURORA_SURFACE,
+} from '../../theme/auroraTokens';
 import {
   buildPlayerPayload,
   safeNumber,
@@ -120,7 +120,7 @@ function Metric({
 }) {
   return (
     <div className="border-l border-white/10 pl-4 first:border-l-0 first:pl-0">
-      <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
+      <div className={`flex items-center gap-2 ${AURORA_LABEL} text-white/40`}>
         <Icon className="h-3.5 w-3.5 text-vouch-cyan" aria-hidden="true" />
         {label}
       </div>
@@ -161,7 +161,7 @@ export default function PlayerEdgeLabPageZ8() {
   const researchUpdatedAt = formatResearchUpdatedAt(research?.updatedAt);
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <main className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className="mx-auto max-w-[1600px] space-y-4">
         <section className="relative overflow-hidden border border-white/10 bg-black/30">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(31,226,255,0.14),transparent_34%),radial-gradient(circle_at_86%_18%,rgba(74,222,128,0.10),transparent_32%)]" />
@@ -169,17 +169,17 @@ export default function PlayerEdgeLabPageZ8() {
             <div className="flex min-w-0 flex-col justify-between gap-6">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+                  <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${AURORA_LABEL} text-vouch-cyan`}>
                     <Brain className="h-3.5 w-3.5" />
                     Aurora Research
                   </span>
-                  <span className={`inline-flex items-center gap-1.5 border border-white/15 bg-white/5 px-2.5 py-1 ${Z8_LABEL} text-white/65`}>
+                  <span className={`inline-flex items-center gap-1.5 border border-white/15 bg-white/5 px-2.5 py-1 ${AURORA_LABEL} text-white/65`}>
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Source-aware evidence
                   </span>
                 </div>
 
-                <p className={`mt-5 ${Z8_LABEL} text-white/35`}>VOUCHEDGE PLAYER LAB</p>
+                <p className={`mt-5 ${AURORA_LABEL} text-white/35`}>VOUCHEDGE PLAYER LAB</p>
                 <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-5xl">
                   Player research, presented with evidence
                 </h1>
@@ -207,7 +207,7 @@ export default function PlayerEdgeLabPageZ8() {
                 <div className="relative flex h-full flex-col justify-between gap-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className={`${Z8_LABEL} text-vouch-cyan`}>Current focus</div>
+                      <div className={`${AURORA_LABEL} text-vouch-cyan`}>Current focus</div>
                       <div className="mt-2 text-2xl font-black tracking-tight text-white">{getPlayerName(selectedRow)}</div>
                       <div className="mt-1 text-sm text-white/50">
                         {safeText(selectedRow.team, 'MLB')} {opponent ? `vs ${opponent}` : ''}
@@ -257,15 +257,15 @@ export default function PlayerEdgeLabPageZ8() {
 
                   <div className="grid grid-cols-3 gap-px bg-white/10">
                     <div className="bg-black/60 px-3 py-2.5">
-                      <div className={`${Z8_LABEL} text-white/35`}>Score</div>
+                      <div className={`${AURORA_LABEL} text-white/35`}>Score</div>
                       <div className="mt-1 text-lg font-black text-white">{score ?? '—'}</div>
                     </div>
                     <div className="bg-black/60 px-3 py-2.5">
-                      <div className={`${Z8_LABEL} text-white/35`}>Data confidence</div>
+                      <div className={`${AURORA_LABEL} text-white/35`}>Data confidence</div>
                       <div className="mt-1 text-lg font-black text-white">{confidence === null ? '—' : `${confidence}%`}</div>
                     </div>
                     <div className="bg-black/60 px-3 py-2.5">
-                      <div className={`${Z8_LABEL} text-white/35`}>Pitcher</div>
+                      <div className={`${AURORA_LABEL} text-white/35`}>Pitcher</div>
                       <div className="mt-1 truncate text-sm font-black text-white">{pitcherName || 'Pending'}</div>
                     </div>
                   </div>
@@ -290,10 +290,10 @@ export default function PlayerEdgeLabPageZ8() {
           detail={error ? `${error}. No substitute player data is shown.` : 'Every Aurora panel uses the current HR Board payload and available research response.'}
         />
 
-        <section className={`${Z8_PANEL} overflow-hidden p-0`}>
-          <div className={`flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 ${Z8_SECTION_HEADER}`}>
+        <section className={`${AURORA_PANEL} overflow-hidden p-0`}>
+          <div className={`flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 ${AURORA_SECTION_HEADER}`}>
               <div>
-              <div className={`${Z8_LABEL} text-white/40`}>Player queue</div>
+              <div className={`${AURORA_LABEL} text-white/40`}>Player queue</div>
               <div className="mt-1 text-sm font-black text-white">Choose a player to review in Aurora</div>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-white/40">
@@ -308,12 +308,12 @@ export default function PlayerEdgeLabPageZ8() {
             aria-label="Select a player to research"
           >
             {loading ? (
-              <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
+              <div className={`${AURORA_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
                 Loading current candidates…
               </div>
             ) : null}
             {!loading && !rows.length ? (
-              <div className={`${Z8_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
+              <div className={`${AURORA_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
                 No current player rows available.
               </div>
             ) : null}
@@ -332,8 +332,8 @@ export default function PlayerEdgeLabPageZ8() {
                   type="button"
                   className={`group w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 scroll-ml-3 border p-3 text-left transition-[border-color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-[270px] sm:scroll-ml-5 ${
                     active
-                      ? `${Z8_ACTIVE} border-vouch-cyan/70 bg-vouch-cyan/[0.09]`
-                      : `${Z8_IDLE} hover:border-vouch-cyan/40`
+                      ? `${AURORA_ACTIVE} border-vouch-cyan/70 bg-vouch-cyan/[0.09]`
+                      : `${AURORA_IDLE} hover:border-vouch-cyan/40`
                   }`}
                   onClick={() => setSelectedId(key)}
                   aria-label={`Research ${getPlayerName(row)}, ${rowScore ?? 'unknown'} edge score, ${
@@ -373,11 +373,11 @@ export default function PlayerEdgeLabPageZ8() {
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <div className="border-t border-white/10 pt-2">
-                          <div className={`${Z8_LABEL} text-white/30`}>Edge</div>
+                          <div className={`${AURORA_LABEL} text-white/30`}>Edge</div>
                           <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowScore ?? '—'}</div>
                         </div>
                         <div className="border-t border-white/10 pt-2">
-                          <div className={`${Z8_LABEL} text-white/30`}>Data confidence</div>
+                          <div className={`${AURORA_LABEL} text-white/30`}>Data confidence</div>
                           <div className="mt-0.5 text-xl font-black tracking-tight text-white">{rowConfidence === null ? '—' : `${rowConfidence}%`}</div>
                         </div>
                       </div>
@@ -420,7 +420,7 @@ export default function PlayerEdgeLabPageZ8() {
                 {isPro ? (
                   <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
                 ) : (
-                  <div className={`${Z8_PANEL} border border-vouch-cyan/25 bg-vouch-cyan/[0.05] p-5`}>
+                  <div className={`${AURORA_PANEL} border border-vouch-cyan/25 bg-vouch-cyan/[0.05] p-5`}>
                     <div className="flex items-start gap-3">
                       <div className="border border-vouch-cyan/25 bg-vouch-cyan/10 p-2 text-vouch-cyan">
                         <LockKeyhole className="h-5 w-5" />
@@ -450,9 +450,9 @@ export default function PlayerEdgeLabPageZ8() {
                 )}
               </div>
 
-              <div className={`${Z8_PANEL} min-w-0 overflow-hidden p-0`}>
+              <div className={`${AURORA_PANEL} min-w-0 overflow-hidden p-0`}>
                 <div className="border-b border-white/10 px-4 py-4 sm:px-5">
-                  <div className={`${Z8_LABEL} text-vouch-cyan`}>Research response</div>
+                  <div className={`${AURORA_LABEL} text-vouch-cyan`}>Research response</div>
                   <div className="mt-1 text-lg font-black text-white">{playerPayload.player.playerName}</div>
                   <div className="mt-2 text-xs leading-5 text-white/45">
                     {researchLoading

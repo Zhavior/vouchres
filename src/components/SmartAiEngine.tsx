@@ -21,20 +21,20 @@ import { useSmartAiCandidates } from './smart-ai/useSmartAiCandidates';
 import type { RealCandidate } from './smart-ai/smartAiEngine.logic';
 
 import {
-  Z8_DISPLAY,
-  Z8_EMERALD,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-  Z8_WARNING,
-  Z8_ACTIVE,
-  Z8_SURFACE,
-} from '../theme/z8Tokens';
+  AURORA_DISPLAY,
+  AURORA_EMERALD,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_STAT_CHIP,
+  AURORA_WARNING,
+  AURORA_ACTIVE,
+  AURORA_SURFACE,
+} from '../theme/auroraTokens';
 
 /**
  * V.A.I Research Command Center.
@@ -142,18 +142,18 @@ export default function SmartAiEngine({
 
   if (!aiAgreementAccepted) {
     return (
-      <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-agreement-gate">
-        <div className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-6 sm:p-8`}>
+      <main className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-agreement-gate">
+        <div className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-6 sm:p-8`}>
           <div className="relative space-y-6">
             <div className="flex items-start gap-4">
               <div className="rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 p-3">
                 <Award className="h-6 w-6 text-vouch-cyan" />
               </div>
-              <div className={`${Z8_SECTION_HEADER} space-y-2`}>
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>
+              <div className={`${AURORA_SECTION_HEADER} space-y-2`}>
+                <p className={`${AURORA_LABEL} text-vouch-cyan`}>
                   V.A.I Locked AI Made Parlays
                 </p>
-                <h1 className={Z8_DISPLAY}>
+                <h1 className={AURORA_DISPLAY}>
                   Research tool only — not betting advice.
                 </h1>
                 <p className="max-w-3xl text-sm leading-relaxed text-white/45">
@@ -165,21 +165,21 @@ export default function SmartAiEngine({
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <div className={Z8_STAT_CHIP}>
-                <CheckCircle2 className={`mb-3 h-5 w-5 ${Z8_EMERALD}`} />
+              <div className={AURORA_STAT_CHIP}>
+                <CheckCircle2 className={`mb-3 h-5 w-5 ${AURORA_EMERALD}`} />
                 <h3 className="text-sm font-black text-white">Locked separation</h3>
                 <p className="mt-1 text-xs leading-relaxed text-white/45">
                   AI Made Parlays stay separate from manual ParlayOS slips.
                 </p>
               </div>
-              <div className={Z8_STAT_CHIP}>
+              <div className={AURORA_STAT_CHIP}>
                 <Database className="mb-3 h-5 w-5 text-vouch-cyan" />
                 <h3 className="text-sm font-black text-white">Research inputs</h3>
                 <p className="mt-1 text-xs leading-relaxed text-white/45">
                   Candidate boards are informational and must be verified before use.
                 </p>
               </div>
-              <div className={Z8_STAT_CHIP}>
+              <div className={AURORA_STAT_CHIP}>
                 <Gauge className="mb-3 h-5 w-5 text-vouch-cyan/80" />
                 <h3 className="text-sm font-black text-white">No guarantees</h3>
                 <p className="mt-1 text-xs leading-relaxed text-white/45">
@@ -207,22 +207,22 @@ export default function SmartAiEngine({
   }
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-ledger-root">
+    <main className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-ledger-root">
 
       {/* HEADER HERO AREA */}
-      <header className={`${Z8_PANEL_PREMIUM} relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-[2rem] p-6 sm:p-8 md:flex-row md:items-center`} id="ai-banner-container">
+      <header className={`${AURORA_PANEL_PREMIUM} relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-[2rem] p-6 sm:p-8 md:flex-row md:items-center`} id="ai-banner-container">
         <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-vouch-cyan/5 blur-[120px] pointer-events-none" />
 
-        <div className={`${Z8_SECTION_HEADER} min-w-0 flex-1`}>
+        <div className={`${AURORA_SECTION_HEADER} min-w-0 flex-1`}>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`${Z8_LABEL} rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 py-0.5 text-vouch-emerald`}>
+            <span className={`${AURORA_LABEL} rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 py-0.5 text-vouch-emerald`}>
               Verified MLB data only
             </span>
-            <span className={`${Z8_LABEL} rounded-full border border-white/10 bg-black/35 px-2.5 py-0.5 text-white/45`}>
+            <span className={`${AURORA_LABEL} rounded-full border border-white/10 bg-black/35 px-2.5 py-0.5 text-white/45`}>
               {candidatesLoading ? 'Loading board...' : `${boardStats.total} candidates today`}
             </span>
           </div>
-          <h1 className={`${Z8_DISPLAY} mt-2 flex items-center gap-3`}>
+          <h1 className={`${AURORA_DISPLAY} mt-2 flex items-center gap-3`}>
             <Cpu className="h-8 w-8 animate-pulse text-vouch-cyan" />
             V.A.I <span className="text-vouch-cyan">Research Command Center</span>
           </h1>
@@ -243,14 +243,14 @@ export default function SmartAiEngine({
 
       <div className="space-y-6">
       {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
-      <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-rooms-command-deck">
+      <section className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-rooms-command-deck">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className={Z8_SECTION_HEADER}>
-            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+          <div className={AURORA_SECTION_HEADER}>
+            <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
               <Crown className="h-3.5 w-3.5" />
               V.A.I Rooms
             </div>
-            <h2 className={`${Z8_DISPLAY} mt-1 text-xl sm:text-2xl`}>
+            <h2 className={`${AURORA_DISPLAY} mt-1 text-xl sm:text-2xl`}>
               Choose today&apos;s AI research room
             </h2>
             <p className="max-w-3xl text-xs text-white/45 sm:text-sm">
@@ -258,8 +258,8 @@ export default function SmartAiEngine({
             </p>
           </div>
 
-          <div className={`${Z8_STAT_CHIP} text-xs text-white/70`}>
-            <span className={`${Z8_LABEL} text-white/45`}>Access</span>
+          <div className={`${AURORA_STAT_CHIP} text-xs text-white/70`}>
+            <span className={`${AURORA_LABEL} text-white/45`}>Access</span>
             <div className="font-bold text-white">{vaiEntitlements.reason}</div>
 
             <div className="mt-3 flex flex-wrap gap-1.5" aria-label="V.A.I access preview">
@@ -275,7 +275,7 @@ export default function SmartAiEngine({
                   onClick={() => handleVaiAccessTierChange(tier)}
                   className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
                     vaiAccessTier === tier
-                      ? Z8_ACTIVE
+                      ? AURORA_ACTIVE
                       : 'border border-white/10 bg-black/30 text-white/45 hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white'
                   }`}
                 >
@@ -296,7 +296,7 @@ export default function SmartAiEngine({
                 key={persona.id}
                 type="button"
                 onClick={() => setSelectedVaiPersonaId(persona.id)}
-                className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-4 text-left transition-all duration-200 ${
+                className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-4 text-left transition-all duration-200 ${
                   selected ? 'ring-2 ring-vouch-cyan shadow-2xl bg-vouch-cyan/10' : 'hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8'
                 }`}
               >
@@ -353,10 +353,10 @@ export default function SmartAiEngine({
         </div>
       </section>
 
-      <div className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-selected-room-panel">
+      <div className={`${AURORA_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-selected-room-panel">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className={`${Z8_LABEL} text-white/45`}>
+            <div className={`${AURORA_LABEL} text-white/45`}>
               Selected room
             </div>
             <h2 className="mt-1 text-2xl font-black text-white">{selectedVaiPersona.name}</h2>
@@ -391,13 +391,13 @@ export default function SmartAiEngine({
             </div>
           </div>
         ) : (
-          <div className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-6 sm:p-8 text-center`} id="vai-locked-room-upgrade-panel">
+          <div className={`${AURORA_PANEL_PREMIUM} relative overflow-hidden rounded-3xl p-6 sm:p-8 text-center`} id="vai-locked-room-upgrade-panel">
             <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-black/60 shadow-2xl shadow-black/40">
               <Lock className="h-7 w-7 text-white/70" />
             </div>
             <div className="mx-auto max-w-xl space-y-2">
-              <div className={`${Z8_LABEL} text-white/45`}>
+              <div className={`${AURORA_LABEL} text-white/45`}>
                 {selectedVaiPersona.roomName} sealed
               </div>
               <h3 className="text-2xl font-black text-white">{selectedVaiPersona.lockedLine}</h3>

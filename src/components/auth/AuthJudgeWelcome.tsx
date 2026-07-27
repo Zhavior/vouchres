@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LANDING_JUDGES } from '../../constants/aiJudges';
 import JudgePixelIcon from '../judges/JudgePixelIcon';
-import { Z8_LABEL, Z8_PANEL_PREMIUM } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM } from '../../theme/auroraTokens';
 
 interface AuthJudgeWelcomeProps {
   /** Compact strip only — for narrow layouts or wizard steps */
@@ -58,14 +58,14 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
 
   return (
     <aside
-      className={`relative flex flex-col justify-between overflow-hidden p-6 ${Z8_PANEL_PREMIUM} border-r border-vouch-cyan/15 ${className}`}
+      className={`relative flex flex-col justify-between overflow-hidden p-6 ${AURORA_PANEL_PREMIUM} border-r border-vouch-cyan/15 ${className}`}
       aria-label="AI Judge Council welcome"
     >
       <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-vouch-cyan/8 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-vouch-emerald/6 blur-3xl" />
 
       <div className="relative">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
+        <p className={`${AURORA_LABEL} text-vouch-cyan`}>AI Judge Council</p>
         <h3 className="mt-2 text-lg font-black tracking-tight text-white sm:text-xl">
           Four judges vet your edge.
         </h3>
@@ -81,7 +81,7 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
           >
             <JudgePixelIcon code={judge.code} />
             <div className="min-w-0">
-              <p className={`${Z8_LABEL} text-vouch-cyan/60`}>{judge.specialty}</p>
+              <p className={`${AURORA_LABEL} text-vouch-cyan/60`}>{judge.specialty}</p>
               <p className="mt-1 text-base font-black text-white">{judge.displayName}</p>
               <p className="mt-0.5 text-xs font-medium text-vouch-cyan/75">{judge.tagline}</p>
               <blockquote className="mt-3 border-l-2 border-vouch-cyan/35 pl-3 text-sm italic leading-relaxed text-white/65">

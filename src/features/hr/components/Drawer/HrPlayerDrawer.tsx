@@ -22,7 +22,7 @@ import {
 import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWatch';
 import { HrStatsTab } from '../Stats/HrStatsTab';
 import { HrOverviewDossier } from '../Profile/HrOverviewDossier';
-import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
+import { AURORA_AMBER_HEX, AURORA_CYAN_HEX, AURORA_EMERALD_HEX } from '../../../../theme/auroraTokens';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { useRealGameLog } from '../../hooks/useRealGameLog';
 import { lastNGames } from '../../utils/realGameLogs';
@@ -41,10 +41,10 @@ type DrawerTab = 'overview' | 'layers' | 'vegas' | 'stats';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTierPalette(score: number): { text: string; bar: string; ring: string; border: string; token: string } {
-  if (score >= 97) return { text: 'text-vouch-amber', bar: 'bg-vouch-amber', ring: Z8_AMBER_HEX, border: 'border-vouch-amber/30', token: 'vouch-amber' };
+  if (score >= 97) return { text: 'text-vouch-amber', bar: 'bg-vouch-amber', ring: AURORA_AMBER_HEX, border: 'border-vouch-amber/30', token: 'vouch-amber' };
   if (score >= 92) return { text: 'text-[hsl(var(--ve-success))]', bar: 'bg-[hsl(var(--ve-success))]', ring: '#10b981', border: 'border-[hsl(var(--ve-success)/0.28)]', token: 've-success' };
-  if (score >= 85) return { text: 'text-vouch-cyan', bar: 'bg-vouch-cyan', ring: Z8_CYAN_HEX, border: 'border-vouch-cyan/30', token: 'vouch-cyan' };
-  if (score >= 75) return { text: 'text-vouch-emerald', bar: 'bg-vouch-emerald', ring: Z8_EMERALD_HEX, border: 'border-vouch-emerald/25', token: 'vouch-emerald' };
+  if (score >= 85) return { text: 'text-vouch-cyan', bar: 'bg-vouch-cyan', ring: AURORA_CYAN_HEX, border: 'border-vouch-cyan/30', token: 'vouch-cyan' };
+  if (score >= 75) return { text: 'text-vouch-emerald', bar: 'bg-vouch-emerald', ring: AURORA_EMERALD_HEX, border: 'border-vouch-emerald/25', token: 'vouch-emerald' };
   return               { text: 'text-[hsl(var(--ve-text-muted))]',     bar: 'bg-[hsl(var(--ve-border))]',      ring: '#64748b', border: 'border-[hsl(var(--ve-border)/0.35)]',      token: 've-text-muted' };
 }
 

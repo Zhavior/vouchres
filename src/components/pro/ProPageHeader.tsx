@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
-import { Z8_ICON_BOX, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
+import { AURORA_ICON_BOX, AURORA_LABEL, AURORA_PANEL } from '../../theme/auroraTokens';
 
 export interface ProKpiTile {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -36,15 +36,15 @@ export const ProPageHeader: React.FC<ProPageHeaderProps> = React.memo(function P
         style={{ background: `linear-gradient(to bottom, ${withAlpha(accent, 0.10)}, transparent)` }}
       />
 
-      <div className={`${Z8_PANEL} ve-premium-panel relative flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between`}>
+      <div className={`${AURORA_PANEL} ve-premium-panel relative flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between`}>
         <div className="min-w-0">
           {badge && (
-            <div className={`mb-3 inline-flex border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+            <div className={`mb-3 inline-flex border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${AURORA_LABEL} text-vouch-cyan`}>
               {badge}
             </div>
           )}
           <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-white sm:text-2xl font-mono uppercase">
-            <span className={`h-8 w-8 ${Z8_ICON_BOX}`}>
+            <span className={`h-8 w-8 ${AURORA_ICON_BOX}`}>
               <Icon className="h-4 w-4 text-vouch-cyan" />
             </span>
             {title}
@@ -62,18 +62,18 @@ export const ProPageHeader: React.FC<ProPageHeaderProps> = React.memo(function P
             return (
               <div
                 key={`${tile.label}-${idx}`}
-                className={`${Z8_PANEL} ve-card-compact relative overflow-hidden px-3 py-2.5`}
+                className={`${AURORA_PANEL} ve-card-compact relative overflow-hidden px-3 py-2.5`}
               >
                 <span
                   className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/45 to-transparent"
                 />
                 <div className="flex items-center gap-2">
                   {TileIcon && (
-                    <span className={`h-6 w-6 ${Z8_ICON_BOX}`}>
+                    <span className={`h-6 w-6 ${AURORA_ICON_BOX}`}>
                       <TileIcon className="h-3 w-3 text-vouch-cyan" />
                     </span>
                   )}
-                  <span className={`${Z8_LABEL} text-white/40`}>
+                  <span className={`${AURORA_LABEL} text-white/40`}>
                     {tile.label}
                   </span>
                 </div>

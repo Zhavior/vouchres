@@ -26,7 +26,7 @@ import {
   useSocialGraph,
   type SocialGraphBucket,
 } from '../hooks/useSocialGraph';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_SURFACE, Z8_ACTIVE, Z8_IDLE } from '../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER, AURORA_SURFACE, AURORA_ACTIVE, AURORA_IDLE } from '../theme/auroraTokens';
 
 type SuggestedProfile = {
   profileId: string;
@@ -305,8 +305,8 @@ export default function FollowingHubPage() {
 
   if (!user) {
     return (
-      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-        <div className={`${Z8_PANEL_PREMIUM} p-8 text-center`}>
+      <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+        <div className={`${AURORA_PANEL_PREMIUM} p-8 text-center`}>
           <Users className="w-8 h-8 text-white/45 mx-auto mb-3" />
           <h1 className="text-lg font-bold text-white">Following</h1>
           <p className="mt-2 text-sm text-white/45">Sign in to see stories, status notes, and messages from people you follow.</p>
@@ -316,14 +316,14 @@ export default function FollowingHubPage() {
   }
 
   return (
-    <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 space-y-4 lg:space-y-0">
         
         {/* Left Sidebar */}
         <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start space-y-4">
           <div className="flex items-end justify-between gap-3 lg:flex-col lg:items-start lg:justify-start lg:gap-4">
             <div>
-              <p className={Z8_LABEL}>Social</p>
+              <p className={AURORA_LABEL}>Social</p>
               <h1 className="text-2xl font-black text-white tracking-tight">Following</h1>
               <p className="mt-1 text-sm text-white/45">Stories, status notes, and DMs from your circle.</p>
             </div>
@@ -334,7 +334,7 @@ export default function FollowingHubPage() {
                   type="button"
                   onClick={() => setActiveTab(tab)}
                   className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold transition-colors lg:rounded-xl lg:px-4 lg:py-2.5 ${
-                    activeTab === tab ? Z8_ACTIVE : Z8_IDLE
+                    activeTab === tab ? AURORA_ACTIVE : AURORA_IDLE
                   }`}
                 >
                   {tab === 'circle' ? 'Circle' : 'Messages'}
@@ -357,10 +357,10 @@ export default function FollowingHubPage() {
                   placeholder="Search network..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full rounded-2xl ${Z8_SURFACE} pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
+                  className={`w-full rounded-2xl ${AURORA_SURFACE} pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
                 />
               </div>
-              <div className={`${Z8_PANEL_PREMIUM} p-4 space-y-2`}>
+              <div className={`${AURORA_PANEL_PREMIUM} p-4 space-y-2`}>
                 <h2 className="text-sm font-bold text-white px-2">Network</h2>
                 {([
                   ['following', 'Following', socialGraph.summary.following],
@@ -374,7 +374,7 @@ export default function FollowingHubPage() {
                     type="button"
                     onClick={() => setGraphBucket(id as any)}
                     className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold transition-colors ${
-                      graphBucket === id ? Z8_ACTIVE : Z8_IDLE
+                      graphBucket === id ? AURORA_ACTIVE : AURORA_IDLE
                     }`}
                   >
                     <span>{label}</span>
@@ -399,7 +399,7 @@ export default function FollowingHubPage() {
                     placeholder="Search network..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full rounded-2xl ${Z8_SURFACE} pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
+                    className={`w-full rounded-2xl ${AURORA_SURFACE} pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
                   />
                 </div>
 
@@ -413,7 +413,7 @@ export default function FollowingHubPage() {
                       ['Subscribers', socialGraph.summary.subscribers],
                       ['Tailing', socialGraph.summary.tailing],
                     ].map(([label, value]) => (
-                      <div key={label as string} className={`${Z8_PANEL_PREMIUM} p-4`}>
+                      <div key={label as string} className={`${AURORA_PANEL_PREMIUM} p-4`}>
                         <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
                         <p className="mt-2 text-xl font-black text-white">{value}</p>
                       </div>
@@ -433,7 +433,7 @@ export default function FollowingHubPage() {
                         type="button"
                         onClick={() => setGraphBucket(id)}
                         className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
-                          graphBucket === id ? Z8_ACTIVE : Z8_IDLE
+                          graphBucket === id ? AURORA_ACTIVE : AURORA_IDLE
                         }`}
                       >
                         {label}
@@ -442,8 +442,8 @@ export default function FollowingHubPage() {
                   </div>
                 </div>
 
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4 xl:hidden`}>
-                  <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4 xl:hidden`}>
+                  <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                     <div>
                       <h2 className="text-sm font-bold text-white">Discover people</h2>
                       <p className="text-xs text-white/45">People you may know, ranked from your actual network graph.</p>
@@ -477,7 +477,7 @@ export default function FollowingHubPage() {
                   ) : (
                     <div className="grid gap-3 lg:grid-cols-2">
                       {suggestions.map((suggestion) => (
-                        <div key={suggestion.profileId} className={`${Z8_PANEL_PREMIUM} p-4`}>
+                        <div key={suggestion.profileId} className={`${AURORA_PANEL_PREMIUM} p-4`}>
                           <div className="flex items-start gap-3">
                             <div className="relative shrink-0">
                               <ProfileAvatarBorder
@@ -539,8 +539,8 @@ export default function FollowingHubPage() {
                   {suggestionsError ? <p className="text-sm text-rose-300">{suggestionsError}</p> : null}
                 </section>
 
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
-                  <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
+                  <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                     <div>
                       <h2 className="text-sm font-bold text-white">Social graph</h2>
                       <p className="text-xs text-white/45">The part X, Instagram, and Facebook all get right: your network needs a clear home.</p>
@@ -566,8 +566,8 @@ export default function FollowingHubPage() {
                   ) : (
                     <div className="grid gap-3 lg:grid-cols-2">
                       {graphEntries.map((entry) => (
-                        <div key={`${entry.profileId ?? entry.username}:${entry.relationshipType}`} className={`${Z8_PANEL_PREMIUM} p-4`}>
-                          <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                        <div key={`${entry.profileId ?? entry.username}:${entry.relationshipType}`} className={`${AURORA_PANEL_PREMIUM} p-4`}>
+                          <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="truncate text-sm font-bold text-white">{entry.displayName}</p>
@@ -615,8 +615,8 @@ export default function FollowingHubPage() {
                   ) : null}
                 </section>
 
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
-                  <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
+                  <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                     <div>
                       <h2 className="text-sm font-bold text-white">Stories</h2>
                       <p className="text-xs text-white/45">24-hour updates from people you follow.</p>
@@ -672,8 +672,8 @@ export default function FollowingHubPage() {
                   </div>
                 </section>
 
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
-                  <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
+                  <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                     <div>
                       <h2 className="text-sm font-bold text-white">Notes</h2>
                       <p className="text-xs text-white/45">MSN / Discord-style status from your circle.</p>
@@ -693,7 +693,7 @@ export default function FollowingHubPage() {
                       {hub.notes.map((note) => (
                         <div
                           key={note.userId}
-                          className={`${Z8_PANEL_PREMIUM} p-4 flex gap-3`}
+                          className={`${AURORA_PANEL_PREMIUM} p-4 flex gap-3`}
                         >
                           <ProfileAvatarBorder
                             avatarUrl={note.avatarUrl ?? undefined}
@@ -719,7 +719,7 @@ export default function FollowingHubPage() {
                   )}
                 </section>
 
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-3`}>
                   <h2 className="text-sm font-bold text-white">Your circle</h2>
                   {hub.loading ? (
                     <div className="flex items-center gap-2 text-sm text-white/45 py-6">
@@ -773,8 +773,8 @@ export default function FollowingHubPage() {
 
               {/* Right Rail */}
               <div className="hidden xl:block xl:w-[320px] xl:shrink-0 space-y-4">
-                <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
-                  <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
+                  <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                     <div>
                       <h2 className="text-sm font-bold text-white">Discover people</h2>
                       <p className="text-xs text-white/45">People you may know.</p>
@@ -808,7 +808,7 @@ export default function FollowingHubPage() {
                   ) : (
                     <div className="grid gap-3">
                       {suggestions.map((suggestion) => (
-                        <div key={suggestion.profileId} className={`${Z8_PANEL_PREMIUM} p-4`}>
+                        <div key={suggestion.profileId} className={`${AURORA_PANEL_PREMIUM} p-4`}>
                           <div className="flex items-start gap-3">
                             <div className="relative shrink-0">
                               <ProfileAvatarBorder
@@ -872,7 +872,7 @@ export default function FollowingHubPage() {
               </div>
             </div>
           ) : (
-            <section className={`${Z8_PANEL_PREMIUM} overflow-hidden`}>
+            <section className={`${AURORA_PANEL_PREMIUM} overflow-hidden`}>
               <div className="grid min-h-[520px] lg:grid-cols-[280px_1fr]">
                 <div className="border-b lg:border-b-0 lg:border-r border-white/10">
                   <div className="p-4 border-b border-white/10">
@@ -918,7 +918,7 @@ export default function FollowingHubPage() {
                   {dm.activeConversationId ? (
                     <>
                       <div className="border-b border-white/10 px-4 py-3">
-                        <div className={`${Z8_SECTION_HEADER} flex items-center justify-between gap-3`}>
+                        <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-3`}>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-white">
                               {dm.activeConversation?.displayName ?? 'Conversation'}
@@ -966,7 +966,7 @@ export default function FollowingHubPage() {
                           value={messageDraft}
                           onChange={(event) => setMessageDraft(event.target.value)}
                           placeholder="Write a message…"
-                          className={`flex-1 rounded-2xl ${Z8_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
+                          className={`flex-1 rounded-2xl ${AURORA_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
                         />
                         <button
                           type="submit"
@@ -999,7 +999,7 @@ export default function FollowingHubPage() {
                 setNoteDraft('');
               });
             }}
-            className={`w-full max-w-md ${Z8_PANEL_PREMIUM} p-5 space-y-4`}
+            className={`w-full max-w-md ${AURORA_PANEL_PREMIUM} p-5 space-y-4`}
           >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Set your note</h3>
@@ -1010,7 +1010,7 @@ export default function FollowingHubPage() {
             <input
               value={noteEmoji}
               onChange={(event) => setNoteEmoji(event.target.value.slice(0, 2))}
-              className={`w-16 rounded-xl ${Z8_SURFACE} px-3 py-2 text-center text-lg`}
+              className={`w-16 rounded-xl ${AURORA_SURFACE} px-3 py-2 text-center text-lg`}
               aria-label="Note emoji"
             />
             <textarea
@@ -1018,7 +1018,7 @@ export default function FollowingHubPage() {
               onChange={(event) => setNoteDraft(event.target.value.slice(0, 120))}
               rows={3}
               placeholder="What's on your mind?"
-              className={`w-full rounded-2xl ${Z8_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
+              className={`w-full rounded-2xl ${AURORA_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
             />
             <div className="flex justify-between gap-2">
               {hub.notes.some((note) => note.isSelf) && (
@@ -1048,7 +1048,7 @@ export default function FollowingHubPage() {
                 setStoryDraft('');
               });
             }}
-            className={`w-full max-w-md ${Z8_PANEL_PREMIUM} p-5 space-y-4`}
+            className={`w-full max-w-md ${AURORA_PANEL_PREMIUM} p-5 space-y-4`}
           >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Add a story</h3>
@@ -1061,7 +1061,7 @@ export default function FollowingHubPage() {
               onChange={(event) => setStoryDraft(event.target.value.slice(0, 280))}
               rows={5}
               placeholder="Share a quick update with your followers…"
-              className={`w-full rounded-2xl ${Z8_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
+              className={`w-full rounded-2xl ${AURORA_SURFACE} px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan/40`}
             />
             <button type="submit" className="rounded-full bg-vouch-cyan px-4 py-2 text-xs font-bold text-obsidian-900">
               Post story

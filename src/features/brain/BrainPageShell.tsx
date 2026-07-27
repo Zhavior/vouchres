@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Brain, ChartNoAxesCombined, Crosshair } from 'lucide-react';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y } from '../../theme/auroraTokens';
 import './brain.css';
 import { AuroraBackground } from '../../components/aurora';
 
@@ -15,12 +15,12 @@ export function BrainPageShell({
 }) {
   return (
     <AuroraBackground variant="brain" className="min-h-screen">
-      <main className={`${Z8_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex max-w-[1380px] flex-col ${Z8_PAGE_GAP}`}>
+      <main className={`${AURORA_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex max-w-[1380px] flex-col ${AURORA_PAGE_GAP}`}>
         <header className="brain-hero rounded-2xl p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <div className={`${Z8_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
+              <div className={`${AURORA_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
                 <Brain className="h-3.5 w-3.5 text-vouch-cyan" /> ProjectVABrAIns · Sports Intelligence Brain
               </div>
               <h1 className="mt-2 max-w-2xl text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">

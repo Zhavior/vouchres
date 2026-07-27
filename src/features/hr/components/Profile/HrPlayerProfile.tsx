@@ -25,7 +25,7 @@ import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecis
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
-import { Z8_LABEL } from '../../../../theme/z8Tokens';
+import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import { useAppProfile } from '../../../../context/AppShellContext';
 import { useBodyScrollLock } from '../../../../lib/scroll/useBodyScrollLock';
 import {
@@ -130,7 +130,7 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
         {value > 0 && <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 ${lge} 1 ${f.x} ${f.y}`} stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />}
         <text x={cx} y={cy + 5} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>{value > 0 ? Math.round(value) : '—'}</text>
       </svg>
-      <span className={Z8_LABEL}>{label}</span>
+      <span className={AURORA_LABEL}>{label}</span>
     </div>
   );
 };

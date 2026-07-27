@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
 import { FeedPost, Parlay } from '../../types';
-import { Z8_SURFACE, Z8_INTERACTIVE } from '../../theme/z8Tokens';
+import { AURORA_SURFACE, AURORA_INTERACTIVE } from '../../theme/auroraTokens';
 import { apiClient } from '../../lib/apiClient';
 
 type ComposerMode = 'VOUCH' | 'PARLAY' | 'RESULT' | 'RESEARCH_NOTE';
@@ -157,7 +157,7 @@ export default function V3FeedComposer({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className={`${Z8_SURFACE} ${Z8_INTERACTIVE} w-full flex items-center gap-3 px-4 py-3 text-left`}
+        className={`${AURORA_SURFACE} ${AURORA_INTERACTIVE} w-full flex items-center gap-3 px-4 py-3 text-left`}
         aria-label="Compose a post"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vouch-emerald/15 text-vouch-emerald font-bold text-sm">
@@ -172,7 +172,7 @@ export default function V3FeedComposer({
   }
 
   return (
-    <div className={`${Z8_SURFACE} px-4 py-3 font-z8 border-b-0`}>
+    <div className={`${AURORA_SURFACE} px-4 py-3 font-z8 border-b-0`}>
       <form onSubmit={handleSubmit} className="flex gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vouch-emerald/15 text-vouch-emerald font-bold text-sm">
           {initials}
