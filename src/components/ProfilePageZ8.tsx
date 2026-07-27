@@ -960,7 +960,7 @@ export default function ProfilePageZ8({
 
                     {/* Rich Floating HTML Tooltip relative to container */}
                     {hoveredDayYmd === ymd && (
-                      <div className="absolute left-[-20px] right-[-20px] lg:left-auto lg:right-0 lg:w-[280px] top-[102%] z-50 border border-slate-800 rounded-2xl shadow-2xl space-y-3 animate-fadeIn">
+                      <div className="absolute left-1/2 -translate-x-1/2 w-[min(280px,calc(100vw-2rem))] lg:left-auto lg:right-0 lg:translate-x-0 lg:w-[280px] top-[102%] z-50 border border-slate-800 rounded-2xl shadow-2xl space-y-3 animate-fadeIn">
                         <div className="flex justify-between items-center border-b border-slate-850">
                           <span className="text-xs font-black text-slate-200 uppercase tracking-wider">{formattedDate} Performance</span>
                           <span className="text-[9px] font-mono text-slate-500">{ymd}</span>

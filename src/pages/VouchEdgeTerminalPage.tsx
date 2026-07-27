@@ -304,7 +304,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             background: `radial-gradient(circle at 30% 20%, rgba(${Z8_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
-        <div className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
+        <div className="pointer-events-none absolute right-0 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
           style={{ background: `radial-gradient(circle, rgba(0,255,148,0.12), transparent 70%)` }}
         />
         <div className="ve-terminal-scanlines pointer-events-none absolute inset-0 z-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
