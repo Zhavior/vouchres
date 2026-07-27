@@ -1,0 +1,219 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react-swc';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { execSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import path from 'path';
+import { join } from 'node:path';
+import type { Plugin } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { LIGHTNINGCSS_TARGETS } from './css/lightningcss-targets.mjs';
+
+const SENTRY_ORG = 'vouch-edge';
+const SENTRY_PROJECT = 'javascript-react';
+
+function resolveBuildId(): string {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 12);
+  }
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    return `dev-${Date.now()}`;
+  }
+}
+
+function buildIdPlugin(buildId: string): Plugin {
+  return {
+    name: 'vouchedge-build-id',
+    transformIndexHtml(html) {
+      return html.replace(
+        '</head>',
+        `    <meta name="vouchedge-build-id" content="${buildId}" />\n  </head>`,
+      );
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/build-id.txt' || req.url?.startsWith('/build-id.txt?')) {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(`${buildId}\n`);
+          return;
+        }
+        next();
+      });
+    },
+    closeBundle() {
+      writeFileSync(join(process.cwd(), 'dist', 'build-id.txt'), `${buildId}\n`, 'utf8');
+    },
+  };
+}
+
+function normalizePublicSiteUrl(value: string | undefined): string {
+  const fallback = 'https://vouchres.vercel.app';
+  const candidate = value?.trim() || fallback;
+
+  try {
+    return new URL(candidate).origin;
+  } catch {
+    console.warn(`[seo] Ignoring invalid VITE_PUBLIC_SITE_URL: ${candidate}`);
+    return fallback;
+  }
+}
+
+function publicSeoPlugin(siteUrl: string): Plugin {
+  const homepageUrl = `${siteUrl}/`;
+  const robots = `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /auth/\nDisallow: /settings/\nDisallow: /account/\nSitemap: ${homepageUrl}sitemap.xml\n`;
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${homepageUrl}</loc>\n  </url>\n</urlset>\n`;
+
+  return {
+    name: 'vouchedge-public-seo',
+    transformIndexHtml(html) {
+      return html.replaceAll('__PUBLIC_SITE_URL__', siteUrl);
+    },
+    closeBundle() {
+      writeFileSync(join(process.cwd(), 'dist', 'robots.txt'), robots, 'utf8');
+      writeFileSync(join(process.cwd(), 'dist', 'sitemap.xml'), sitemap, 'utf8');
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const disableHmr = process.env.DISABLE_HMR === 'true';
+  const analyze = mode === 'analyze';
+  const buildId = resolveBuildId();
+  const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+  const sentryRelease = `vouchedge-frontend@${buildId}`;
+  const publicSiteUrl = normalizePublicSiteUrl(env.VITE_PUBLIC_SITE_URL);
+
+  return {
+    define: {
+      __APP_BUILD_ID__: JSON.stringify(buildId),
+      __SENTRY_RELEASE__: JSON.stringify(sentryRelease),
+    },
+    plugins: [
+      react(),
+      tailwindcss(),
+      buildIdPlugin(buildId),
+      publicSeoPlugin(publicSiteUrl),
+      analyze
+        ? visualizer({
+            filename: 'dist/bundle-report.html',
+            template: 'treemap',
+            gzipSize: true,
+            brotliSize: true,
+          })
+        : null,
+      // Upload source maps during production builds when CI provides SENTRY_AUTH_TOKEN.
+      sentryAuthToken
+        ? sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: SENTRY_ORG,
+            project: SENTRY_PROJECT,
+            release: { name: sentryRelease },
+          })
+        : null,
+    ].filter(Boolean),
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: {
+        targets: LIGHTNINGCSS_TARGETS,
+      },
+    },
+    optimizeDeps: {
+      include: ['@supabase/supabase-js'],
+    },
+    build: {
+      cssMinify: 'lightningcss',
+      // Required for readable stack traces in Sentry when source maps are uploaded.
+      sourcemap: Boolean(sentryAuthToken),
+      // Keep a machine-readable asset graph for production budget checks.
+      manifest: 'vite-manifest.json',
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+
+            const isPkg = (pkg: string) =>
+              id.includes(`/node_modules/${pkg}/`) ||
+              id.includes(`\\node_modules\\${pkg}\\`);
+
+            // State + query cache — before react check (@tanstack/react-query contains "/react/")
+            if (
+              id.includes('@tanstack/react-query') ||
+              isPkg('zustand') ||
+              isPkg('zod')
+            ) {
+              return 'vendor-state';
+            }
+
+            // Core React runtime — exact package paths only
+            if (isPkg('react') || isPkg('react-dom') || isPkg('scheduler')) {
+              return 'vendor-react';
+            }
+
+            if (id.includes('@supabase/')) return 'vendor-supabase';
+
+            if (
+              id.includes('/recharts/') ||
+              id.includes('/d3-') ||
+              id.includes('victory-')
+            ) {
+              return 'vendor-charts';
+            }
+
+            if (isPkg('framer-motion') || isPkg('motion')) {
+              return 'vendor-motion';
+            }
+
+            if (id.includes('stripe')) return 'vendor-stripe';
+
+            if (id.includes('cytoscape') || id.includes('mermaid')) {
+              return 'vendor-graph';
+            }
+
+            if (id.includes('@tanstack/react-virtual')) return 'vendor-virtual';
+          },
+        },
+      },
+    },
+    server: {
+      hmr: !disableHmr,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      },
+      watch: disableHmr
+        ? null
+        : {
+            ignored: [
+              '**/_code_backups/**',
+              '**/_gemini_upload/**',
+              '**/_gemini_clean_upload/**',
+              '**/_vouchres_under_500mb/**',
+              '**/*.before*.ts',
+              '**/*.before*.tsx',
+              '**/tests/**',
+              '**/*.test.ts',
+              '**/*.test.tsx',
+              '**/*.spec.ts',
+              '**/*.spec.tsx',
+              '**/*.backup*.ts',
+              '**/*.backup*.tsx',
+              '**/*.save',
+              '**/*.zip',
+            ],
+          },
+    },
+  };
+});

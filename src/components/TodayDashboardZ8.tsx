@@ -132,7 +132,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
   const statusLabel = isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active';
 
   return (
-    <main className={`${Z8_PAGE} min-h-screen w-full max-w-full overflow-x-hidden min-w-0 pb-24`} id="today-dashboard">
+    <main className={`${Z8_PAGE} min-h-screen w-full max-w-full min-w-0 pb-24`} id="today-dashboard">
 
       {/* ── Sticky top bar with Glassmorphism ─────────────────────────── */}
       <div className="sticky top-0 z-30 border-b border-white/12 bg-[#060c14]/90 backdrop-blur-2xl px-4 py-3 flex items-center justify-between shadow-lg">

@@ -161,7 +161,7 @@ export default function PlayerEdgeLabPageZ8() {
   const researchUpdatedAt = formatResearchUpdatedAt(research?.updatedAt);
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} overflow-x-hidden`}>
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className="mx-auto max-w-[1600px] space-y-4">
         <section className="relative overflow-hidden border border-white/10 bg-black/30">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(31,226,255,0.14),transparent_34%),radial-gradient(circle_at_86%_18%,rgba(74,222,128,0.10),transparent_32%)]" />

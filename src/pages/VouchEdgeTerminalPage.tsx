@@ -292,7 +292,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-8 lg:pb-12`}>
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen pb-8 lg:pb-12`}>
         <Suspense fallback={null}>
           <LandingDynamicBackground />
         </Suspense>
@@ -429,7 +429,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
             <ScrollReveal delayMs={100}>
               <DeferredSection heightClass="h-[28rem]">
-                <LandingDeviceShowcase />
+                {/* DEBUG_DISABLED_LandingDeviceShowcase */}
               </DeferredSection>
             </ScrollReveal>
 

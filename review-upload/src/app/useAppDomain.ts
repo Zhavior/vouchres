@@ -1,0 +1,326 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { INITIAL_PROFILE } from '../data/mockData';
+import { notify } from '../lib/appNotifications';
+import { apiClient } from '../lib/apiClient';
+import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
+import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import { useParlayCommandStore } from '../stores/parlayCommandStore';
+import { useParlayOsStore } from '../stores/parlayOsStore';
+import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
+import type { DraftParlayLeg } from '../stores/parlayCommandStore';
+import { findPlayerLiveGame, validateParlayLegBatch, type PlayerTeamFields } from '../lib/parlays/parlayLegValidator';
+import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
+import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
+import { openParlayAdd } from '../lib/parlays/parlayAddContract';
+import { useFeedStore } from '../stores/feedStore';
+import { useSlipsStore } from '../stores/slipsStore';
+import { useProfileStore } from '../stores/profileStore';
+import { useVouchesStore } from '../stores/vouchesStore';
+import { handleSaveVouch as saveVouchAction } from '../domain/vouchActions';
+import { handleSaveParlaySlip as saveParlaySlipAction, handleCommitParlayTrust as commitParlayTrustAction } from '../domain/parlayActions';
+import { useAppCommandStore } from '../stores/appCommandStore';
+import type { AppShellState } from '../context/AppShellContext';
+import type { CreatorProofProfile, Leg, MLBPlayer, Parlay, Vouch } from '../types';
+
+type UseAppDomainArgs = {
+  navigateSection: (section: string) => void;
+  handleLoginSuccess: () => void;
+  handleLogoutComplete: () => void;
+  handleClearProfileViewUser: () => void;
+  liveGames: any[];
+  savedSlips: Parlay[];
+  savedVouches: Vouch[];
+  posts: AppShellState['posts'];
+  profile: CreatorProofProfile;
+  syncSlips: (slips: Parlay[]) => void;
+  syncProfile: (profile: CreatorProofProfile) => void;
+};
+
+export function useAppDomain({
+  navigateSection,
+  handleLoginSuccess,
+  handleLogoutComplete,
+  handleClearProfileViewUser,
+  liveGames,
+  savedSlips,
+  savedVouches,
+  posts,
+  profile,
+  syncSlips,
+  syncProfile,
+}: UseAppDomainArgs) {
+  const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
+  const activeLegsRef = useRef<Leg[]>([]);
+
+  useEffect(() => {
+    activeLegsRef.current = activeLegs;
+  }, [activeLegs]);
+
+  const handleSaveVouch = useCallback((vouch: Vouch) => {
+    saveVouchAction(vouch);
+  }, []);
+
+  const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
+    return saveParlaySlipAction(newParlay, navigateSection);
+  }, [navigateSection]);
+
+  const handleCommitParlayTrust = useCallback(async (input: {
+    parlay: Parlay;
+    audience: "private" | "public" | "subscriber";
+  }) => {
+    await commitParlayTrustAction({
+      parlay: input.parlay,
+      audience: input.audience,
+      navigateSection,
+    });
+  }, [navigateSection]);
+
+  const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
+    const cur = useProfileStore.getState().profile ?? INITIAL_PROFILE;
+    const optimisticProfile = { ...cur, ...updatedProfile };
+    syncProfile(optimisticProfile);
+
+    const updates: Record<string, unknown> = {};
+    if (updatedProfile.displayName !== undefined) updates.display_name = updatedProfile.displayName;
+    if (updatedProfile.username !== undefined) updates.username = updatedProfile.username;
+    if (updatedProfile.handle !== undefined) updates.handle = updatedProfile.handle;
+    if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
+    if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
+    if (updatedProfile.capperSettings !== undefined) updates.capper_settings = updatedProfile.capperSettings as unknown as string | null;
+    if (updatedProfile.headerUrl !== undefined) updates.header_url = updatedProfile.headerUrl || null;
+    if (Object.keys(updates).length === 0) return;
+
+    void apiClient.patch<Record<string, unknown>>('/api/auth/profile', updates)
+      .then((savedProfile) => {
+        const latest = useProfileStore.getState().profile ?? optimisticProfile;
+        syncProfile(mapAuthMeToCreatorProof(savedProfile, latest));
+      })
+      .catch(() => {
+        const latest = useProfileStore.getState().profile;
+        if (latest === optimisticProfile) syncProfile(cur);
+        notify({
+          kind: 'info',
+          title: 'Profile change was not saved',
+          body: 'Check your connection and try again.',
+        });
+      });
+  }, [syncProfile]);
+
+  const handleResetDatabase = useCallback(() => {
+    useFeedStore.getState().resetPosts();
+    useSlipsStore.getState().resetSlips();
+    useVouchesStore.getState().resetVouches();
+    useProfileStore.getState().resetProfile();
+    useParlayCommandStore.getState().resetDraftSession();
+  }, []);
+
+  const commitBuiltLegsToSlip = useCallback((built: Array<{ leg: Leg; draft: DraftParlayLeg }>) => {
+    if (built.length === 0) return;
+    setActiveLegs((prev) => [...prev, ...built.map((entry) => entry.leg)]);
+    for (const entry of built) {
+      useParlayCommandStore.getState().addDraftLeg({
+        ...entry.draft,
+        tags: entry.draft.tags ?? ['#ParlayOS'],
+      });
+    }
+    useParlayOsStore.getState().openSheet(true);
+  }, []);
+
+  const handleConfirmParlayTier = useCallback((tier: ParlayMarketTier) => {
+    const ctx = useParlayOsStore.getState().pickerContext;
+    if (!ctx?.player) return;
+
+    const editLegId = useParlayOsStore.getState().editLegId;
+    const pickerPlayer = ctx.player as PlayerTeamFields;
+
+    const matchedGame = findPlayerLiveGame(pickerPlayer, liveGames);
+    if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
+      notify({ kind: 'info', title: 'Cannot add legs', body: 'Player\'s game is already final.' });
+      return;
+    }
+
+    const built = buildLegsFromTier(tier, {
+      player: pickerPlayer,
+      propHint: ctx.propHint,
+      liveGames,
+      addSnapshot: ctx.addSnapshot,
+    });
+
+    const validation = validateParlayLegBatch(
+      built.map((entry) => entry.leg),
+      pickerPlayer,
+      liveGames,
+    );
+    if (!validation.valid) {
+      notify({
+        kind: 'info',
+        title: 'Cannot add leg',
+        body: validation.blockedReason ?? 'This leg is missing grading identity.',
+      });
+      return;
+    }
+
+    if (editLegId) {
+      if (built.length !== 1) {
+        notify({
+          kind: 'info',
+          title: 'Combo not supported',
+          body: 'Replace one leg at a time — pick a single prop tier.',
+        });
+        return;
+      }
+
+      const replacement = built[0];
+      useParlayCommandStore.getState().replaceDraftLeg(editLegId, replacement.draft);
+      setActiveLegs((prev) =>
+        prev.map((leg) => (leg.id === editLegId ? replacement.leg : leg)),
+      );
+      useParlayOsStore.getState().closePicker();
+      notify({
+        kind: 'success',
+        title: 'Leg updated',
+        body: replacement.draft.selection ?? tier.label,
+        section: 'build',
+      });
+      useParlayOsStore.getState().openSheet(true);
+      return;
+    }
+
+    const duplicate = built.some((b) =>
+      activeLegsRef.current.some((l) => l.eventKey && l.eventKey === b.leg.eventKey),
+    );
+    if (duplicate) {
+      notify({ kind: 'info', title: 'Already on slip', body: 'This prop is already on your ParlayOS slip.' });
+      return;
+    }
+
+    commitBuiltLegsToSlip(built);
+    notify({
+      kind: 'success',
+      title: built.length > 1 ? `${built.length} legs added` : 'Leg added',
+      body: tier.label,
+      section: 'build',
+    });
+  }, [liveGames, commitBuiltLegsToSlip]);
+
+  const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
+    const matchedGame = findPlayerLiveGame(player, liveGames);
+
+    if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
+      notify({ kind: 'info', title: 'Game final', body: `Cannot add — ${player.name}'s game is already final.` });
+      return;
+    }
+
+    const isPitcher = resolveParlayPlayerRole({
+      position: player.position,
+      marketHint: prop.market,
+      specHint: prop.spec,
+    }) === "pitcher";
+    openParlayAdd({
+      player,
+      propHint: prop,
+      initialFamily: inferFamilyFromText(`${prop.market} ${prop.spec}`),
+      isPitcher,
+      source: isPitcher ? 'pitcher_research' : 'player_research',
+      dataStatus: 'unknown',
+    });
+  }, [liveGames]);
+
+  const handleHideSavedParlay = useCallback(async (parlayId: string) => {
+    const target = useSlipsStore.getState().savedSlips.find((slip) => {
+      const realId = String((slip as any).id ?? (slip as any).sourceId ?? '');
+      const publicId = String((slip as any).publicId ?? '');
+      return realId === String(parlayId) || publicId === String(parlayId);
+    });
+
+    if (!target) {
+      throw new Error('Could not find this saved parlay. Refresh My Parlay Board and try again.');
+    }
+
+    const status = String((target as any).status ?? '').toLowerCase();
+    if (['pending', 'live', 'open', 'active', 'in_progress'].includes(status)) {
+      throw new Error('Pending or live parlays are locked to protect grading truth.');
+    }
+
+    const realId = String((target as any).id ?? (target as any).sourceId ?? parlayId);
+    const isBackendSynced = Boolean((target as any).synced) && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(realId);
+
+    if (isBackendSynced) {
+      await apiClient.delete(`/api/parlays/${encodeURIComponent(realId)}`);
+    }
+
+    const nextSlips = useSlipsStore.getState().savedSlips.filter((slip) => {
+      const slipRealId = String((slip as any).id ?? (slip as any).sourceId ?? '');
+      const slipPublicId = String((slip as any).publicId ?? '');
+      return slipRealId !== realId && slipRealId !== String(parlayId) && slipPublicId !== String(parlayId);
+    });
+
+    syncSlips(nextSlips);
+  }, [syncSlips]);
+
+  useEffect(() => {
+    useAppCommandStore.getState().bind({
+      navigateSection,
+      onLoginSuccess: handleLoginSuccess,
+      onClearProfileViewUser: handleClearProfileViewUser,
+      onSaveParlaySlip: handleSaveParlaySlip,
+      onCommitParlayTrust: handleCommitParlayTrust,
+      onHideSavedParlay: handleHideSavedParlay,
+      onAddLegFromResearch: handleAddLegFromResearch,
+      onConfirmParlayTier: handleConfirmParlayTier,
+      onUpdateProfile: handleUpdateProfile,
+      onResetDatabase: handleResetDatabase,
+      liveGames,
+    });
+  }, [
+    navigateSection,
+    handleLoginSuccess,
+    handleClearProfileViewUser,
+    handleSaveParlaySlip,
+    handleCommitParlayTrust,
+    handleHideSavedParlay,
+    handleAddLegFromResearch,
+    handleConfirmParlayTier,
+    handleUpdateProfile,
+    handleResetDatabase,
+    liveGames,
+  ]);
+
+  const savedVouchIds = useMemo(() => savedVouches.map((v) => v.id), [savedVouches]);
+
+  const appShellState = useMemo(
+    () => ({
+      posts,
+      profile,
+      savedVouchIds,
+      savedVouches,
+      savedSlips,
+      activeLegs,
+      onSaveVouch: handleSaveVouch,
+      onAuthLoginSuccess: handleLoginSuccess,
+      onAuthLogoutComplete: handleLogoutComplete,
+    }),
+    [
+      posts,
+      profile,
+      savedVouchIds,
+      savedVouches,
+      savedSlips,
+      activeLegs,
+      handleSaveVouch,
+      handleLoginSuccess,
+      handleLogoutComplete,
+    ],
+  );
+
+  return {
+    appShellState,
+    activeLegs,
+    handleUpdateProfile,
+    handleSaveVouch,
+    handleSaveParlaySlip,
+    handleConfirmParlayTier,
+    handleLoginSuccess,
+    handleLogoutComplete,
+  };
+}
