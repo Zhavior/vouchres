@@ -753,7 +753,6 @@
     max-height: 100dvh !important;
     min-height: 0 !important;
     overflow-y: scroll !important;
-    overflow-x: hidden !important;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;

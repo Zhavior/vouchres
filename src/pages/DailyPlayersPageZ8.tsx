@@ -2067,7 +2067,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
   };
 
   return (
-    <main className={`${Z8_PAGE} daily-players-page min-w-0 overflow-x-hidden px-3 py-4 space-y-4 sm:px-4 lg:py-5`}>
+    <main className={`${Z8_PAGE} daily-players-page min-w-0 px-3 py-4 space-y-4 sm:px-4 lg:py-5`}>
       {/* Top Header Card */}
       <header className={`${Z8_PANEL_PREMIUM} p-4 sm:p-5`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

@@ -690,7 +690,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
   );
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} min-h-0 min-w-0 overflow-x-hidden text-ve-flash ve-safe-bottom`}>
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} min-h-0 min-w-0 text-ve-flash ve-safe-bottom`}>
       <div className={`mb-5 overflow-hidden relative ${Z8_PANEL_PREMIUM} p-5`}>
         <div className="absolute -top-24 -right-24 h-60 w-60 rounded-full bg-vouch-cyan/15 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-60 w-60 rounded-full bg-vouch-emerald/10 blur-3xl" />

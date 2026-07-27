@@ -97,7 +97,7 @@ export function MostVouchedTodayPageZ8({ onNavigate, onAddPlayerToSlip }: MostVo
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden min-w-0 bg-[#060c14] text-white p-3 sm:p-6 space-y-6">
+    <div className="min-h-screen w-full max-w-full min-w-0 bg-[#060c14] text-white p-3 sm:p-6 space-y-6">
       <div className="mx-auto max-w-[1500px] w-full space-y-6">
 
         {/* ── Top Bar Header ────────────────────────────────────────── */}

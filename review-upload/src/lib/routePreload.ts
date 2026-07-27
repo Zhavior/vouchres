@@ -1,0 +1,141 @@
+const preloaded = new Set<string>();
+
+/** Cheap intent-based preload for likely next lazy routes. Paths must match MainViewRouter lazy() imports. */
+const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
+  feed: () => import('../social/feed/HomeFeedPage'),
+  following: () => import('../pages/FollowingHubPage'),
+  today: () => import('../components/TodayDashboardZ8'),
+  welcome: () => import('../components/TodayDashboardZ8'),
+  island: () => import('../components/TodayDashboardZ8'),
+  vouchedge_intro: () => import('../pages/VouchEdgeTerminalPage'),
+  legacy_studio: () => import('../components/AisLandingPage'),
+  hr_board: () => import('../features/hr/pages/HomeRunIntelligencePageZ8'),
+  brain_picks: () => import('../features/brain/BrainPicksPage'),
+  brain_performance: () => import('../features/brain/BrainPerformancePage'),
+  daily_hr_watch_new: () => import('../features/hr/pages/HomeRunIntelligencePageZ8'),
+  mlb_stats: () => import('../features/mlb-stats/pages/MlbStatHubPage'),
+  daily_players: () => import('../pages/DailyPlayersPageZ8'),
+  live_games: () => import('../components/LiveGamesProZ8'),
+  intel: () => import('../components/MlbIntelligenceHubZ8'),
+  live_parlays: () => import('../components/parlay/ParlayOsWorkspace'),
+  build: () => import('../components/parlay/ParlayOsWorkspace'),
+  board: () => import('../components/VouchBoardZ8'),
+  research: () => import('../components/PlayerResearchHub'),
+  profile: () => import('../components/ProfilePageZ8'),
+  ai_engine: () => import('../components/SmartAiEngine'),
+  ai_pilot: () => import('../features/ai/pages/AiPilotPage'),
+  notifications: () => import('../components/notifications/NotificationsPage'),
+  results: () => import('../components/results/ResultsStudio'),
+  leaderboard: () => import('../components/Leaderboard'),
+  settings: () => import('../components/SettingsPageZ8'),
+  premium: () => import('../components/PremiumSubPage'),
+  customize: () => import('../components/CustomizePage'),
+  subscriber_hub: () => import('../components/SubscriberHub'),
+  nba_nfl: () => import('../components/NbaNflArena'),
+  pro_command_center: () => import('../pages/pro/ProCommandCenterPageZ8'),
+  player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPageZ8'),
+  team_matchup_lab: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
+  pitcher_matchup_intelligence: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
+  pitcher_matchup: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
+  hitter_matchup_zones: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
+  hitter_matchup: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
+  most_vouched_today: () => import('../pages/MostVouchedTodayPageZ8'),
+  most_vouched: () => import('../pages/MostVouchedTodayPageZ8'),
+  pro_graphs_lab: () => import('../components/MlbIntelligenceHubZ8'),
+};
+
+const WARM_NEIGHBORS: Record<string, string[]> = {
+  feed: ['today', 'hr_board'],
+  following: ['feed'],
+  today: ['hr_board'],
+  hr_board: ['daily_players'],
+  brain_picks: ['brain_performance'],
+  brain_performance: ['brain_picks'],
+  mlb_stats: ['hr_board'],
+  daily_players: ['hr_board'],
+  live_parlays: ['build'],
+  build: ['live_parlays'],
+  ai_engine: ['ai_pilot'],
+  pro_command_center: ['player_edge_lab'],
+  profile: ['settings'],
+  settings: ['profile'],
+};
+
+/** Heavy first-paint routes — do not compete with their own chunk/network work. */
+const HEAVY_ROUTES = new Set([
+  'hr_board',
+  'daily_players',
+  'research',
+  'live_games',
+  'mlb_stats',
+  'pitcher_matchup_intelligence',
+  'hitter_matchup_zones',
+  'live_parlays',
+  'build',
+]);
+
+const MAIN_ROUTER_KEY = '__main_router__';
+
+function scheduleIdle(task: () => void, timeout = 2800): void {
+  if (typeof window === 'undefined') return;
+  const ric = window.requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(() => task(), { timeout });
+    return;
+  }
+  window.setTimeout(task, Math.min(timeout, 600));
+}
+
+function canWarmRoutes(): boolean {
+  if (typeof navigator === 'undefined' || document.visibilityState === 'hidden') return false;
+  const connection = (navigator as Navigator & {
+    connection?: { effectiveType?: string; saveData?: boolean };
+  }).connection;
+  if (connection?.saveData) return false;
+  return !['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '');
+}
+
+export function preloadSection(section: string): void {
+  const loader = SECTION_LOADERS[section];
+  if (!loader || preloaded.has(section)) return;
+  preloaded.add(section);
+  void loader().catch(() => {
+    // Allow a later retry if the chunk fetch failed (deploy race / offline).
+    preloaded.delete(section);
+  });
+}
+
+/** Warm the MainViewRouter chunk so route switches don't wait on the router shell. */
+export function preloadMainRouter(): void {
+  if (preloaded.has(MAIN_ROUTER_KEY)) return;
+  preloaded.add(MAIN_ROUTER_KEY);
+  void import('../components/routing/MainViewRouter').catch(() => {
+    preloaded.delete(MAIN_ROUTER_KEY);
+  });
+}
+
+/** Idle-warm likely next routes from the current section (and a small default set). */
+export function warmLikelyRoutes(activeSection?: string): void {
+  const run = () => {
+    scheduleIdle(() => {
+      if (!canWarmRoutes()) return;
+      preloadMainRouter();
+      if (activeSection && HEAVY_ROUTES.has(activeSection)) return;
+
+      const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
+      const defaults = activeSection === 'today' ? ['hr_board'] : activeSection ? [] : ['today'];
+      const candidates = [...new Set([...neighbors, ...defaults])]
+        .filter((section) => section !== activeSection)
+        .slice(0, 2);
+      for (const section of candidates) {
+        preloadSection(section);
+      }
+    }, 3200);
+  };
+
+  if (typeof window !== 'undefined' && document.readyState !== 'complete') {
+    window.addEventListener('load', run, { once: true });
+    return;
+  }
+  run();
+}

@@ -114,7 +114,6 @@
 /** Sidebar nav scroll pane — thin cyan scrollbar, no x-scroll, soft fade at both scroll edges instead of a hard clip line. */
 @utility z8-sidebar-scroll {
   overflow-y: auto;
-  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: rgba(79, 184, 220, 0.28) transparent;
   mask-image: linear-gradient(

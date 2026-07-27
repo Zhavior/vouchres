@@ -49,7 +49,6 @@
   position: relative;
   min-height: 100vh;
   background-color: var(--bg-obsidian);
-  overflow-x: hidden;
   z-index: 0;
   &::before {
     content: "";

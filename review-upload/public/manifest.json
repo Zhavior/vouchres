@@ -1,0 +1,49 @@
+{
+  "id": "/",
+  "name": "VouchEdge MLB Intelligence",
+  "short_name": "VouchEdge",
+  "description": "Trust-first MLB research with verified lineups, transparent projections, and a public proof ledger.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#020617",
+  "theme_color": "#0b0f19",
+  "icons": [
+    {
+      "src": "/icons/vouchedge-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/vouchedge-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vouchedge-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "entertainment", "productivity"],
+  "shortcuts": [
+    {
+      "name": "HR Board",
+      "short_name": "HR Board",
+      "url": "/hr-board",
+      "icons": [{ "src": "/icons/vouchedge-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "url": "/today",
+      "icons": [{ "src": "/icons/vouchedge-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

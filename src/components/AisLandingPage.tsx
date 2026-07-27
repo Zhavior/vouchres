@@ -601,7 +601,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
   ];
 
   return (
-    <div id="landing-page-elite-root" className="bg-transparent text-white/90 min-h-screen relative overflow-y-auto overflow-x-hidden font-sans pb-24">
+    <div id="landing-page-elite-root" className="bg-transparent text-white/90 min-h-screen relative overflow-y-auto font-sans pb-24">
       
       {/* Landing Navigation Header Header */}
       <header className="sticky top-0 w-full z-50 bg-graphite/85 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between select-none max-w-7xl mx-auto rounded-b-2xl" id="vouchedge-main-nav-header">
