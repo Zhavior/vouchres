@@ -6,7 +6,7 @@ import React from 'react';
 import type { StatPlayerRow, StatTier, StatType } from '../types/statHubTypes';
 import { STAT_CONFIG } from '../engine/statHubConfig';
 import { StatPlayerCard } from './StatPlayerCard';
-import { Z8_PANEL_PREMIUM } from '../../../theme/z8Tokens';
+import { AURORA_PANEL_PREMIUM } from '../../../theme/auroraTokens';
 
 interface Props {
   rows: StatPlayerRow[];
@@ -21,7 +21,7 @@ export const StatCategoryGrid: React.FC<Props> = ({ rows, statType, onSelect }) 
 
   if (rows.length === 0) {
     return (
-      <div className={`${Z8_PANEL_PREMIUM} flex flex-col items-center justify-center py-16 gap-3 text-center rounded-2xl`}>
+      <div className={`${AURORA_PANEL_PREMIUM} flex flex-col items-center justify-center py-16 gap-3 text-center rounded-2xl`}>
         <span className="text-3xl" aria-hidden="true">{config.icon}</span>
         <p className="text-sm text-white/50">No players match your current filters.</p>
       </div>

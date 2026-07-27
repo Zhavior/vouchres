@@ -13,9 +13,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_SURFACE,
-  Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
-} from '../../theme/z8Tokens';
+  AURORA_LABEL, AURORA_SIDEBAR_SHELL, AURORA_SIDEBAR_SURFACE,
+  AURORA_SIDEBAR_ICON_BOX, AURORA_SIDEBAR_ACTIVE, AURORA_SIDEBAR_IDLE,
+} from '../../theme/auroraTokens';
 import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
@@ -109,7 +109,7 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       className={[
         'group relative w-full flex items-center gap-3',
         'pl-3 pr-2 py-2.5 text-sm tracking-wide transition-all outline-none font-z8',
-        isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+        isActive ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
       ].join(' ')}
     >
       {isActive && (
@@ -123,7 +123,7 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
           'relative z-10 h-7 w-7 shrink-0 transition-all',
           isActive
             ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
-            : `${Z8_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan`,
+            : `${AURORA_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan`,
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
@@ -169,7 +169,7 @@ const SidebarSection = React.memo(function SidebarSection({
         aria-expanded={!collapsed}
         aria-controls={`${sectionId}-items`}
         onClick={onToggle}
-        className={`flex w-full items-center justify-between gap-2 px-3 pb-1 pt-2 ${Z8_LABEL} text-[11px] tracking-[0.16em] text-white/40 transition hover:text-white/60`}
+        className={`flex w-full items-center justify-between gap-2 px-3 pb-1 pt-2 ${AURORA_LABEL} text-[11px] tracking-[0.16em] text-white/40 transition hover:text-white/60`}
       >
         <span>{group}</span>
         <ChevronDown
@@ -284,7 +284,7 @@ function FeedSidebar({
       className={[
         'relative hidden md:flex h-full min-h-0 flex-col',
         'w-full min-w-0',
-        Z8_SIDEBAR_SHELL,
+        AURORA_SIDEBAR_SHELL,
         'px-3 py-4',
         'justify-between select-none',
         'z-40 flex-shrink-0 overflow-hidden',
@@ -295,18 +295,18 @@ function FeedSidebar({
           <div className="flex items-start gap-1.5">
             <button
               onClick={() => handleNavigate(FOCUSED_BETA_SHELL_ENABLED ? 'today' : 'feed')}
-              className={`group relative min-w-0 flex-1 flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
+              className={`group relative min-w-0 flex-1 flex items-center gap-3 ${AURORA_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
               id="brand-logo-id"
               aria-label={FOCUSED_BETA_SHELL_ENABLED ? 'Go to Today' : 'Go to Home Feed'}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
-                <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
+                <span className={`${AURORA_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
               </div>
               <div className="min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-black uppercase italic tracking-tight text-white">
                   VouchEdge
                 </span>
-                <p className={`mt-0.5 truncate ${Z8_LABEL} text-white/40`}>
+                <p className={`mt-0.5 truncate ${AURORA_LABEL} text-white/40`}>
                   MLB Intelligence Command
                 </p>
               </div>
@@ -318,19 +318,19 @@ function FeedSidebar({
 
         <button
           onClick={onOpenCmdK}
-          className={`flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${Z8_SIDEBAR_SURFACE} ${Z8_LABEL} tracking-widest text-white/40`}
+          className={`flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${AURORA_SIDEBAR_SURFACE} ${AURORA_LABEL} tracking-widest text-white/40`}
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 text-left">Quick search…</span>
-          <span className={`flex items-center gap-0.5 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${Z8_LABEL}`}>
+          <span className={`flex items-center gap-0.5 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${AURORA_LABEL}`}>
             <Command className="h-2.5 w-2.5" />K
           </span>
         </button>
 
         {!FOCUSED_BETA_SHELL_ENABLED && (
           <div
-            className={`flex flex-row gap-1 p-1.5 ${Z8_SIDEBAR_SURFACE}`}
+            className={`flex flex-row gap-1 p-1.5 ${AURORA_SIDEBAR_SURFACE}`}
             id="sidebar-sport-switcher"
             role="group"
             aria-label="Sport selector"
@@ -357,7 +357,7 @@ function FeedSidebar({
                   <span className="text-sm leading-none">{sport.emoji}</span>
                   <span>{sport.label}</span>
                   {!sport.enabled && (
-                    <span className={`inline-flex items-center bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${Z8_LABEL}`}>
+                    <span className={`inline-flex items-center bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${AURORA_LABEL}`}>
                       Soon
                     </span>
                   )}
@@ -369,7 +369,7 @@ function FeedSidebar({
 
         <nav className="space-y-1" id="sidebar-nav-container" aria-label="Main navigation">
           <div className="flex items-center justify-between gap-2 px-3">
-            <span className={`${Z8_LABEL} text-[9px] tracking-[0.2em] text-white/35`}>
+            <span className={`${AURORA_LABEL} text-[9px] tracking-[0.2em] text-white/35`}>
               Your workspace
             </span>
             {!FOCUSED_BETA_SHELL_ENABLED && (
@@ -377,7 +377,7 @@ function FeedSidebar({
                 type="button"
                 onClick={handleOpenAllTools}
                 disabled={!onOpenCmdK}
-                className={`${Z8_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-[9px] tracking-[0.12em] text-vouch-cyan transition-colors hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35`}
+                className={`${AURORA_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-[9px] tracking-[0.12em] text-vouch-cyan transition-colors hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35`}
                 aria-label="Explore all tools"
                 title="Explore all tools"
               >
@@ -420,11 +420,11 @@ function FeedSidebar({
 
       <div className="z8-sidebar-dock relative z-10 -mx-3 -mb-4 mt-2 space-y-2 px-3 pb-3 pt-2.5">
         <div className="flex items-center justify-between gap-2 px-1">
-          <span className={`inline-flex min-w-0 items-center gap-2 ${Z8_LABEL} text-white/40`}>
+          <span className={`inline-flex min-w-0 items-center gap-2 ${AURORA_LABEL} text-white/40`}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vouch-cyan/80" aria-hidden />
             <span className="truncate tracking-[0.18em]">Live data</span>
           </span>
-          <span className={`inline-flex shrink-0 items-center bg-vouch-cyan/10 px-2 py-0.5 text-[11px] tracking-widest text-vouch-cyan ${Z8_LABEL}`}>
+          <span className={`inline-flex shrink-0 items-center bg-vouch-cyan/10 px-2 py-0.5 text-[11px] tracking-widest text-vouch-cyan ${AURORA_LABEL}`}>
             Online
           </span>
         </div>
@@ -435,8 +435,8 @@ function FeedSidebar({
               onClick={() => handleNavigate('customize')}
               className={[
                 'flex items-center justify-center gap-2 px-3 py-2 transition-all',
-                Z8_LABEL, 'tracking-[0.12em]',
-                activeSection === 'customize' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+                AURORA_LABEL, 'tracking-[0.12em]',
+                activeSection === 'customize' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
               ].join(' ')}
               aria-label="Customize layout"
             >
@@ -448,8 +448,8 @@ function FeedSidebar({
             onClick={() => handleNavigate('settings')}
             className={[
               'flex items-center justify-center gap-2 px-3 py-2 transition-all',
-              Z8_LABEL, 'tracking-[0.12em]',
-              activeSection === 'settings' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+              AURORA_LABEL, 'tracking-[0.12em]',
+              activeSection === 'settings' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
             ].join(' ')}
             aria-label="Settings"
           >
@@ -460,7 +460,7 @@ function FeedSidebar({
 
         <button
           onClick={() => handleNavigate('profile')}
-          className={`relative w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${Z8_SIDEBAR_SURFACE}`}
+          className={`relative w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${AURORA_SIDEBAR_SURFACE}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >
@@ -475,14 +475,14 @@ function FeedSidebar({
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <h4 className={`${Z8_LABEL} text-sm text-white truncate leading-none`}>
+              <h4 className={`${AURORA_LABEL} text-sm text-white truncate leading-none`}>
                 {profile.displayName}
               </h4>
               {profile.verified && (
                 <Shield className="h-3 w-3 shrink-0 text-vouch-cyan fill-vouch-cyan/85" />
               )}
             </div>
-            <p className={`mt-0.5 ${Z8_LABEL} text-white/40 truncate`}>
+            <p className={`mt-0.5 ${AURORA_LABEL} text-white/40 truncate`}>
               {formatProfileWinRate(profile, { suffix: 'win rate' })}
             </p>
           </div>
@@ -494,8 +494,8 @@ function FeedSidebar({
           disabled={signingOut}
           className={[
             'w-full flex items-center justify-center gap-2 px-3 py-2.5 transition-all',
-            Z8_SIDEBAR_SURFACE,
-            Z8_LABEL,
+            AURORA_SIDEBAR_SURFACE,
+            AURORA_LABEL,
             'tracking-[0.12em] text-white/45 hover:bg-rose-500/10 hover:text-rose-200 hover:shadow-[0_0_16px_rgba(244,63,94,0.12)] disabled:opacity-50',
           ].join(' ')}
           aria-label="Sign out"

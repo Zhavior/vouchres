@@ -1,7 +1,7 @@
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { MLB_PLAYER_RECORDS } from '../../../data/playerData';
-import { Z8_PANEL_PREMIUM } from '../../../theme/z8Tokens';
+import { AURORA_PANEL_PREMIUM } from '../../../theme/auroraTokens';
 import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 
 export default function ConsoleHeader({ model }: { model: PlayerResearchModel }) {
@@ -45,7 +45,7 @@ export default function ConsoleHeader({ model }: { model: PlayerResearchModel })
   return (
     <>
       {/* Header Profile Dashboard */}
-      <div id="console-welcome-header" className={`${Z8_PANEL_PREMIUM} flex flex-col xl:flex-row xl:items-center justify-between gap-6 p-6 rounded-3xl`}>
+      <div id="console-welcome-header" className={`${AURORA_PANEL_PREMIUM} flex flex-col xl:flex-row xl:items-center justify-between gap-6 p-6 rounded-3xl`}>
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-vouch-emerald/10 text-vouch-emerald border border-vouch-emerald/20 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full uppercase tracking-widest">

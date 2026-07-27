@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Flame, ShieldAlert, Sparkles, Activity } from 'lucide-react';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y } from '../../theme/auroraTokens';
 
 export function MatchupPageShell({
   active,
@@ -20,13 +20,13 @@ export function MatchupPageShell({
   };
 
   return (
-    <main className={`${Z8_PAGE} matchup-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex max-w-[1380px] flex-col ${Z8_PAGE_GAP}`}>
+    <main className={`${AURORA_PAGE} matchup-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex max-w-[1380px] flex-col ${AURORA_PAGE_GAP}`}>
         {/* Unified Matchup Header Hero */}
         <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a121e] via-[#070c14] to-[#04080e] p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-3">
-              <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan font-bold`}>
+              <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan font-bold`}>
                 <Sparkles className="h-4 w-4 text-vouch-cyan" /> Matchup Intelligence Suite · Statcast & Sabermetric Hub
               </div>
               <h1 className="text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl">

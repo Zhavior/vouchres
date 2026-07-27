@@ -1,6 +1,6 @@
 import React from "react";
 import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayOsTypes";
-import { z8StatusColor } from "../../../theme/z8Tokens";
+import { auroraStatusColor } from "../../../theme/auroraTokens";
 import type { SmartParlayLeg } from "../../../domain/parlay";
 import { marketStyle } from "./smartSlipStyles";
 
@@ -20,7 +20,7 @@ export default function SmartParlayLegRow({ leg, legIndex }: { leg: SmartParlayL
         alt=""
         className="h-6 w-6 rounded-md border border-white/10 shrink-0 object-cover bg-black/40"
       />
-      <span aria-hidden="true" style={{ color: z8StatusColor(legMeta.token) }}>
+      <span aria-hidden="true" style={{ color: auroraStatusColor(legMeta.token) }}>
         {legMeta.icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -35,7 +35,7 @@ export default function SmartParlayLegRow({ leg, legIndex }: { leg: SmartParlayL
       <span className="font-mono text-[9px] text-cyan-300/80 shrink-0 tabular-nums">{leg.oddsLabel}</span>
       <span
         className="text-[9px] font-bold shrink-0 uppercase"
-        style={{ color: z8StatusColor(legMeta.token) }}
+        style={{ color: auroraStatusColor(legMeta.token) }}
       >
         {legMeta.label}
       </span>

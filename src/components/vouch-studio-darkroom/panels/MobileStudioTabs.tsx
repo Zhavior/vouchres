@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, SlidersHorizontal } from 'lucide-react';
-import { Z8_ACTIVE, Z8_IDLE } from '../../../theme/z8Tokens';
+import { AURORA_ACTIVE, AURORA_IDLE } from '../../../theme/auroraTokens';
 
 interface Props {
   mobileStudioView: 'preview' | 'edit';
@@ -24,7 +24,7 @@ export default function MobileStudioTabs({ mobileStudioView, setMobileStudioView
               type="button"
               onClick={() => setMobileStudioView(tab.id)}
               className={`ve-studio-touch-btn flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition-all ${
-                active ? Z8_ACTIVE : Z8_IDLE
+                active ? AURORA_ACTIVE : AURORA_IDLE
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />

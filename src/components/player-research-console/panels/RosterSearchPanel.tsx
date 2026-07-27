@@ -1,7 +1,7 @@
 import React from 'react';
 import { Activity, BarChart3, Check, RefreshCw, Search, User } from 'lucide-react';
 import { MLB_PLAYER_RECORDS } from '../../../data/playerData';
-import { Z8_SECTION_HEADER, Z8_SURFACE } from '../../../theme/z8Tokens';
+import { AURORA_SECTION_HEADER, AURORA_SURFACE } from '../../../theme/auroraTokens';
 import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 
 export default function RosterSearchPanel({ model }: { model: PlayerResearchModel }) {

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Activity, Database, RefreshCw, ShieldCheck, Target, CheckCircle2, XCircle, Clock, AlertCircle, Calendar } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { BrainPageShell } from './BrainPageShell';
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_PANEL } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_PANEL } from '../../theme/auroraTokens';
 
 type LedgerPick = {
   decisionKey: string;
@@ -62,7 +62,7 @@ function MarketSummary({ label, target, market }: { label: string; target: strin
     <article className="brain-market-card rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className={`${Z8_LABEL} text-slate-400`}>{label}</div>
+          <div className={`${AURORA_LABEL} text-slate-400`}>{label}</div>
           <h2 className="mt-1 text-base font-bold text-white">{target}</h2>
         </div>
         <div className="text-right">
@@ -110,7 +110,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
             <ShieldCheck className="h-5 w-5" />
           </span>
           <div>
-            <div className={`${Z8_LABEL} text-vouch-emerald font-bold`}>Immutable Win / Loss Accountability Ledger</div>
+            <div className={`${AURORA_LABEL} text-vouch-emerald font-bold`}>Immutable Win / Loss Accountability Ledger</div>
             <h2 className="mt-1 text-xl font-black text-white">Truth-First Database Performance Record</h2>
             <p className="mt-2 max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-300">
               Brain decisions are snapshotted pregame with cryptographic SHA-256 hashes. 
@@ -124,7 +124,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
       {query.isLoading && (
         <section className="brain-panel flex min-h-48 items-center justify-center gap-3 p-6 rounded-2xl border border-white/10 bg-black/40">
           <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
-          <span className={`${Z8_LABEL} text-slate-300`}>Querying database performance ledger...</span>
+          <span className={`${AURORA_LABEL} text-slate-300`}>Querying database performance ledger...</span>
         </section>
       )}
 
@@ -167,14 +167,14 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
           <section className="brain-panel p-5 sm:p-6 rounded-2xl border border-white/10 bg-black/40">
             <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className={`${Z8_LABEL} text-vouch-cyan`}>Verified Home Run Record</div>
+                <div className={`${AURORA_LABEL} text-vouch-cyan`}>Verified Home Run Record</div>
                 <h2 className="mt-1 text-2xl font-black text-white tracking-tight">Model Outcomes & Win Rate</h2>
               </div>
               <div className="text-left sm:text-right">
                 <strong className="font-mono text-4xl font-black text-vouch-emerald">
                   {ledger.performance.hitRate == null ? '—' : `${ledger.performance.hitRate}%`}
                 </strong>
-                <span className={`${Z8_LABEL} block text-slate-400`}>Verified Hit Rate</span>
+                <span className={`${AURORA_LABEL} block text-slate-400`}>Verified Hit Rate</span>
               </div>
             </div>
 
@@ -187,7 +187,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
                 ['Pending Games', ledger.performance.pending],
               ].map(([label, value]) => (
                 <div key={String(label)} className="brain-stat p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <span className={`${Z8_LABEL} text-slate-400`}>{label}</span>
+                  <span className={`${AURORA_LABEL} text-slate-400`}>{label}</span>
                   <strong className="mt-1 block font-mono text-2xl font-black text-white">{value}</strong>
                 </div>
               ))}
@@ -206,7 +206,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
             <article className="brain-panel p-5 sm:p-6 rounded-2xl border border-white/10 bg-black/40">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
                 <div>
-                  <div className={`${Z8_LABEL} text-vouch-cyan`}>Decision History Ledger</div>
+                  <div className={`${AURORA_LABEL} text-vouch-cyan`}>Decision History Ledger</div>
                   <h2 className="mt-1 text-lg font-black text-white uppercase tracking-wider">Frozen Wins & Losses by Date</h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export default function BrainPerformancePage({ onNavigate }: { onNavigate: (sect
             <aside className="brain-panel p-5 sm:p-6 rounded-2xl border border-white/10 bg-black/40 space-y-4">
               <Database className="h-6 w-6 text-vouch-cyan" />
               <div>
-                <div className={`${Z8_LABEL} text-vouch-cyan font-bold`}>Integrity Protocol</div>
+                <div className={`${AURORA_LABEL} text-vouch-cyan font-bold`}>Integrity Protocol</div>
                 <h2 className="mt-1 text-lg font-bold text-white">How Wins & Losses Are Recorded</h2>
               </div>
               <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-mono">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { Z8_INTERACTIVE, Z8_PANEL_PREMIUM, Z8_LABEL } from '../../theme/z8Tokens';
+import { AURORA_INTERACTIVE, AURORA_PANEL_PREMIUM, AURORA_LABEL } from '../../theme/auroraTokens';
 
 const FAQS = [
   {
@@ -36,7 +36,7 @@ export default function LandingFAQ() {
   return (
     <section className="mx-auto w-full max-w-4xl px-4 py-24 sm:px-6">
       <div className="text-center mb-12">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>Answers</p>
+        <p className={`${AURORA_LABEL} text-vouch-cyan`}>Answers</p>
         <h2 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
           Frequently asked questions
         </h2>
@@ -50,12 +50,12 @@ export default function LandingFAQ() {
               key={idx}
               className={`overflow-hidden rounded-2xl border transition-colors ${
                 isOpen ? 'border-vouch-cyan/30 bg-vouch-cyan/5' : 'border-white/10 bg-black/40 hover:border-white/20'
-              } ${Z8_PANEL_PREMIUM}`}
+              } ${AURORA_PANEL_PREMIUM}`}
             >
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : idx)}
-                className={`flex w-full items-center justify-between px-6 py-5 text-left ${Z8_INTERACTIVE}`}
+                className={`flex w-full items-center justify-between px-6 py-5 text-left ${AURORA_INTERACTIVE}`}
               >
                 <span className={`text-base font-bold ${isOpen ? 'text-white' : 'text-white/80'}`}>
                   {faq.question}

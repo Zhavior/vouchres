@@ -20,7 +20,7 @@ import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
 import { buildBoard } from '../features/hr/utils/normalizeHrWatch';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { todayISO } from '../hooks/queries/hrBoardQuery';
-import { Z8_LABEL, Z8_PAGE } from '../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE } from '../theme/auroraTokens';
 import { buildTodayDecision } from './today/todayDecisionModel';
 import TodayDecisionReel, { type BriefingFilter } from './today/TodayDecisionReel';
 import { buildTodayReelSlides } from './today/todayDecisionReelModel';
@@ -132,7 +132,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
   const statusLabel = isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active';
 
   return (
-    <main className={`${Z8_PAGE} min-h-screen w-full max-w-full min-w-0 pb-24`} id="today-dashboard">
+    <main className={`${AURORA_PAGE} min-h-screen w-full max-w-full min-w-0 pb-24`} id="today-dashboard">
 
       {/* ── Sticky top bar with Glassmorphism ─────────────────────────── */}
       <div className="sticky top-0 z-30 border-b border-white/12 bg-[#060c14]/90 backdrop-blur-2xl px-4 py-3 flex items-center justify-between shadow-lg">
@@ -211,7 +211,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
                   <Zap className="h-4 w-4 text-vouch-emerald" />
                   <h2 className="text-xs font-black uppercase tracking-[0.16em] text-white">Daily Intelligence Briefing</h2>
                 </div>
-                <span className={`${Z8_LABEL} text-white/35`}>{reelSlides.length + (activeSlip ? 1 : 0)} decision cards</span>
+                <span className={`${AURORA_LABEL} text-white/35`}>{reelSlides.length + (activeSlip ? 1 : 0)} decision cards</span>
               </div>
               <TodayDecisionReel
                 slides={reelSlides}

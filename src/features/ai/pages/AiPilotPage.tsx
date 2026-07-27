@@ -22,11 +22,11 @@ import {
 import { SmartAiDynamicCreator } from '../../../components/smart-ai/SmartAiDynamicCreator';
 import { useSmartAiCandidates } from '../../../components/smart-ai/useSmartAiCandidates';
 import {
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-} from '../../../theme/z8Tokens';
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+} from '../../../theme/auroraTokens';
 import '../../brain/brain.css';
 
 interface AiPilotPageProps {
@@ -48,7 +48,7 @@ function MetricCard({
   return (
     <div className="brain-panel rounded-2xl border border-white/8 bg-black/25 p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className={`${Z8_LABEL} text-white/40`}>{label}</span>
+        <span className={`${AURORA_LABEL} text-white/40`}>{label}</span>
         <Icon className="h-4 w-4 text-vouch-cyan/75" />
       </div>
       <div className="mt-3 text-2xl font-black tracking-tight text-white">{value}</div>
@@ -183,7 +183,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
 
   return (
     <main
-      className={`${Z8_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}
+      className={`${AURORA_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}
       id="ai-pilot-page"
     >
       <div className="mx-auto flex max-w-[1380px] flex-col gap-4 sm:gap-5">
@@ -191,7 +191,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-vouch-cyan/10 blur-3xl" />
           <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <div className={`${Z8_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
+              <div className={`${AURORA_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
                 <Brain className="h-3.5 w-3.5" /> ProjectVABrAIns · AI Generation Lab
               </div>
               <h1 className="mt-3 max-w-3xl text-3xl font-black leading-[1.05] tracking-tight text-white sm:text-4xl">
@@ -204,13 +204,13 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
 
             <div className="grid min-w-0 grid-cols-2 gap-2 sm:min-w-[360px]">
               <div className="brain-panel rounded-xl border border-vouch-cyan/20 bg-vouch-cyan/5 p-3">
-                <div className={`${Z8_LABEL} text-vouch-cyan/70`}>Generation state</div>
+                <div className={`${AURORA_LABEL} text-vouch-cyan/70`}>Generation state</div>
                 <div className="mt-2 flex items-center gap-2 text-sm font-black text-white">
                   <Radar className="h-4 w-4 text-vouch-cyan" /> {generationStatus}
                 </div>
               </div>
               <div className="brain-panel rounded-xl border border-vouch-emerald/20 bg-vouch-emerald/5 p-3">
-                <div className={`${Z8_LABEL} text-vouch-emerald/70`}>Output policy</div>
+                <div className={`${AURORA_LABEL} text-vouch-emerald/70`}>Output policy</div>
                 <div className="mt-2 flex items-center gap-2 text-sm font-black text-white">
                   <LockKeyhole className="h-4 w-4 text-vouch-emerald" /> Locked ledger
                 </div>
@@ -250,14 +250,14 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
           <div className="brain-panel min-w-0 rounded-2xl border border-white/8 bg-black/20 p-3 sm:p-4">
             <div className="mb-4 flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+                <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
                   <Sparkles className="h-3.5 w-3.5" /> Generation workspace
                 </div>
                 <h2 className="mt-1 text-lg font-black tracking-tight text-white">Configure the Brain&apos;s build</h2>
                 <p className="mt-1 text-xs text-white/40">Set the market, threshold, and leg count. The engine handles candidate selection.</p>
               </div>
               {usingProjectedPreview && (
-                <span className={`${Z8_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/8 px-3 py-1 text-vouch-amber`}>
+                <span className={`${AURORA_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/8 px-3 py-1 text-vouch-amber`}>
                   Projected preview · lineups pending
                 </span>
               )}
@@ -281,7 +281,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
 
           <aside className="flex min-w-0 flex-col gap-3">
             <div className="brain-panel rounded-2xl border border-vouch-cyan/15 bg-vouch-cyan/[0.035] p-4">
-              <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
+              <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
                 <Cpu className="h-3.5 w-3.5" /> Decision protocol
               </div>
               <div className="mt-4 space-y-4">
@@ -303,7 +303,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
             </div>
 
             <div className="brain-panel rounded-2xl border border-vouch-amber/15 bg-vouch-amber/[0.035] p-4">
-              <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-amber`}>
+              <div className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-amber`}>
                 <Shield className="h-3.5 w-3.5" /> Truth guardrails
               </div>
               <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-white/45">

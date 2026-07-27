@@ -18,13 +18,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from '../lib/motion';
 import {
-  Z8_PAGE,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_LABEL,
-  Z8_ACTIVE,
-  Z8_SURFACE,
-} from '../theme/z8Tokens';
+  AURORA_PAGE,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_LABEL,
+  AURORA_ACTIVE,
+  AURORA_SURFACE,
+} from '../theme/auroraTokens';
 
 interface NbaNflArenaProps {
   onSectionChange: (section: string) => void;
@@ -107,7 +107,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
   };
 
   return (
-    <div className={`relative min-h-screen overflow-hidden flex flex-col select-none ${Z8_PAGE}`} id="epic-arena-comingsoon-page">
+    <div className={`relative min-h-screen overflow-hidden flex flex-col select-none ${AURORA_PAGE}`} id="epic-arena-comingsoon-page">
       {/* Cinematic grid lines in the background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0e1526_1px,transparent_1px),linear-gradient(to_bottom,#0e1526_1px,transparent_1px)] bg-[size:40px_40px] opacity-35 z-0 pointer-events-none" />
       
@@ -116,20 +116,20 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
       </div>
 
       {/* Top Header Controls with Home button */}
-      <header className={`relative z-50 px-6 py-4 flex items-center justify-between ${Z8_SECTION_HEADER}`}>
+      <header className={`relative z-50 px-6 py-4 flex items-center justify-between ${AURORA_SECTION_HEADER}`}>
         <button
           onClick={() => onSectionChange('feed')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer active:scale-95 animate-fade-in ${Z8_SURFACE}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer active:scale-95 animate-fade-in ${AURORA_SURFACE}`}
           id="arena-back-btn"
         >
           <ArrowLeft className="w-4 h-4 text-amber-400" />
-          <span className={Z8_LABEL}>Exit Arena</span>
+          <span className={AURORA_LABEL}>Exit Arena</span>
         </button>
 
         <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full animate-pulse ${Z8_SURFACE}`}>
+          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full animate-pulse ${AURORA_SURFACE}`}>
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span className={Z8_LABEL}>
+            <span className={AURORA_LABEL}>
               Coming soon 🏀🏈
             </span>
           </div>
@@ -141,7 +141,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
         
         {/* Sticky Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-[260px] shrink-0 lg:sticky lg:top-4 lg:self-start gap-4">
-          <div className={`p-4 rounded-2xl border border-white/5 shadow-lg ${Z8_SURFACE}`}>
+          <div className={`p-4 rounded-2xl border border-white/5 shadow-lg ${AURORA_SURFACE}`}>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2">
               <Compass className="w-3 h-3" />
               Sport Select
@@ -164,7 +164,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             </div>
           </div>
 
-          <div className={`p-4 rounded-2xl border border-white/5 shadow-lg ${Z8_SURFACE}`}>
+          <div className={`p-4 rounded-2xl border border-white/5 shadow-lg ${AURORA_SURFACE}`}>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2">
               <Activity className="w-3 h-3" />
               Global Filters
@@ -210,7 +210,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             damping: 18,
             mass: 0.8
           }}
-          className={`relative overflow-hidden flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500 ${Z8_PANEL_PREMIUM} ${hoveredSide === 'nba' ? Z8_ACTIVE : ''}`}
+          className={`relative overflow-hidden flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500 ${AURORA_PANEL_PREMIUM} ${hoveredSide === 'nba' ? AURORA_ACTIVE : ''}`}
           id="split-side-nba"
         >
 
@@ -301,7 +301,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 scale: hoveredSide === 'nba' ? 1.02 : 1,
               }}
               transition={{ type: "spring", stiffness: 100, damping: 15 }}
-              className={`relative rounded-2xl transition-all duration-500 ${Z8_PANEL_PREMIUM}`} 
+              className={`relative rounded-2xl transition-all duration-500 ${AURORA_PANEL_PREMIUM}`} 
 
               id="nba-cinematic-video-frame"
             >
@@ -440,7 +440,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nba' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className={`p-3 text-left space-y-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Activity className="w-3 h-3 text-orange-400" />
                   Hardwood Fatigue Map
@@ -449,7 +449,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Weighing stamina drain on back-to-back schedules.</p>
               </div>
 
-              <div className={`p-3 text-left space-y-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Target className="w-3 h-3 text-vouch-cyan" />
                   Prop Shot Grid
@@ -458,7 +458,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Mapping high-precision scoring vectors live.</p>
               </div>
 
-              <div className={`p-3 text-left space-y-1 col-span-2 md:col-span-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 col-span-2 md:col-span-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-emerald-400" />
                   V.A.I Smart Overlay
@@ -498,7 +498,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             damping: 18,
             mass: 0.8
           }}
-          className={`relative overflow-hidden flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500 ${Z8_PANEL_PREMIUM} ${hoveredSide === 'nfl' ? Z8_ACTIVE : ''}`}
+          className={`relative overflow-hidden flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500 ${AURORA_PANEL_PREMIUM} ${hoveredSide === 'nfl' ? AURORA_ACTIVE : ''}`}
           id="split-side-nfl"
         >
 
@@ -588,7 +588,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 scale: hoveredSide === 'nfl' ? 1.02 : 1,
               }}
               transition={{ type: "spring", stiffness: 100, damping: 15 }}
-              className={`relative rounded-2xl transition-all duration-500 ${Z8_PANEL_PREMIUM}`} 
+              className={`relative rounded-2xl transition-all duration-500 ${AURORA_PANEL_PREMIUM}`} 
 
               id="nfl-cinematic-video-frame"
             >
@@ -727,7 +727,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nfl' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className={`p-3 text-left space-y-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Compass className="w-3 h-3 text-emerald-400" />
                   Redzone Target Heat
@@ -736,7 +736,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Predict snaps in the 20yd line using defensive scheme weights.</p>
               </div>
 
-              <div className={`p-3 text-left space-y-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Zap className="w-3 h-3 text-amber-400" />
                   Sprint Acceleration
@@ -745,7 +745,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Matching receiver burst speeds against CB coverage margins.</p>
               </div>
 
-              <div className={`p-3 text-left space-y-1 col-span-2 md:col-span-1 transition-all ${Z8_PANEL_PREMIUM}`}>
+              <div className={`p-3 text-left space-y-1 col-span-2 md:col-span-1 transition-all ${AURORA_PANEL_PREMIUM}`}>
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Eye className="w-3 h-3 text-vouch-cyan" />
                   Endzone Camera

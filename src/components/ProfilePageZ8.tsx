@@ -16,7 +16,7 @@ import { useAuth } from '../lib/useAuth';
 import { useDirectMessages } from '../hooks/useFollowingHub';
 import { useProfileSocialStats, useSocialGraph } from '../hooks/useSocialGraph';
 import { uploadProfileAvatar, uploadProfileHeader } from '../lib/profileAvatarUpload';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM, AURORA_STAT_CHIP, AURORA_TABULAR } from '../theme/auroraTokens';
 import {
   Area,
   AreaChart,
@@ -383,7 +383,7 @@ export default function ProfilePageZ8({
 
   return (
     <ProfileThemeWrapper themeId={displayedProfile.profileThemeId || displayedProfile.activeTheme || 'cyber-blue'}>
-      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_GAP}`} id="profile-details-view">
+      <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_GAP}`} id="profile-details-view">
 
 
         {!isOwnProfile && onClearViewUser ? (
@@ -402,7 +402,7 @@ export default function ProfilePageZ8({
           <div className="lg:col-span-8 space-y-6">
             
             {/* Main card */}
-            <div className={`${Z8_PANEL_PREMIUM} rounded-2xl overflow-hidden relative transition-all duration-300 ${ activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans' }`} id="profile-primary-card">
+            <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl overflow-hidden relative transition-all duration-300 ${ activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans' }`} id="profile-primary-card">
               <div
                 className={`relative h-28 overflow-hidden border-b border-vouch-cyan/15 bg-gradient-to-r ${
                   displayedProfile.headerUrl
@@ -520,7 +520,7 @@ export default function ProfilePageZ8({
                       <ShieldCheck className="w-5 h-5 text-vouch-emerald" />
                     )}
                   </div>
-                  <p className={`${Z8_LABEL} text-white/40 mt-1 normal-case tracking-normal font-medium text-sm`}>@{displayedProfile.handle || displayedProfile.username}</p>
+                  <p className={`${AURORA_LABEL} text-white/40 mt-1 normal-case tracking-normal font-medium text-sm`}>@{displayedProfile.handle || displayedProfile.username}</p>
                 </div>
                 
                 {/* Dynamic Followers and Tailing count belt */}
@@ -585,7 +585,7 @@ export default function ProfilePageZ8({
               <section className="mx-auto mt-5 w-full max-w-2xl rounded-xl border border-vouch-cyan/20 bg-black/25 p-4 text-left" aria-label="Verified profile record">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className={`${Z8_LABEL} text-vouch-cyan`}>Verified record</p>
+                    <p className={`${AURORA_LABEL} text-vouch-cyan`}>Verified record</p>
                     <p className="mt-1 text-xs text-white/45">Settled picks only. Pending picks never improve this record.</p>
                   </div>
                   {proofQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin text-vouch-cyan" /> : null}
@@ -776,7 +776,7 @@ export default function ProfilePageZ8({
         {/* Right Sidebar: "My Outcomes" Private Calendar Win Rate Card */}
         <div className="lg:col-span-4 space-y-6">
 
-          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-performance-graphs-card">
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-performance-graphs-card">
             <div className="flex items-center justify-between border-b border-slate-850">
               <div>
                 <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
@@ -795,7 +795,7 @@ export default function ProfilePageZ8({
               Performance metrics are calculated from settled results available to this profile. Unsettled picks and local-only drafts are excluded. Historical results do not guarantee future outcomes.
             </p>
 
-            <p className={`${Z8_LABEL} text-vouch-cyan`}>
+            <p className={`${AURORA_LABEL} text-vouch-cyan`}>
               {displayedProfile.totalPicks > 0 ? `${displayedProfile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'}
             </p>
 
@@ -823,7 +823,7 @@ export default function ProfilePageZ8({
 
               if (!hasGraphData) {
                 return (
-                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl text-center`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl text-center`}>
                     <p className="text-xs font-black uppercase tracking-widest text-slate-300">
                       Start tracking picks to unlock your performance graph.
                     </p>
@@ -836,7 +836,7 @@ export default function ProfilePageZ8({
 
               return (
                 <div className="space-y-5">
-                  <div className={`${Z8_PANEL_PREMIUM} h-[190px]`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} h-[190px]`}>
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Profit / Loss</span>
                       <span className="text-[10px] font-mono text-slate-500">Units by day</span>
@@ -855,7 +855,7 @@ export default function ProfilePageZ8({
                     </ResponsiveContainer>
                   </div>
 
-                  <div className={`${Z8_PANEL_PREMIUM} h-[190px]`}>
+                  <div className={`${AURORA_PANEL_PREMIUM} h-[190px]`}>
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Win Rate Trend</span>
                       <span className="text-[10px] font-mono text-slate-500">Settled plays</span>
@@ -878,7 +878,7 @@ export default function ProfilePageZ8({
             })()}
           </div>
 
-          <div className={`hidden md:block ${Z8_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
+          <div className={`hidden md:block ${AURORA_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
             <div className="flex items-center justify-between border-b border-slate-850">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />
@@ -960,7 +960,7 @@ export default function ProfilePageZ8({
 
                     {/* Rich Floating HTML Tooltip relative to container */}
                     {hoveredDayYmd === ymd && (
-                      <div className="absolute left-[-20px] right-[-20px] lg:left-auto lg:right-0 lg:w-[280px] top-[102%] z-50 border border-slate-800 rounded-2xl shadow-2xl space-y-3 animate-fadeIn">
+                      <div className="absolute left-1/2 -translate-x-1/2 w-[min(280px,calc(100vw-2rem))] lg:left-auto lg:right-0 lg:translate-x-0 lg:w-[280px] top-[102%] z-50 border border-slate-800 rounded-2xl shadow-2xl space-y-3 animate-fadeIn">
                         <div className="flex justify-between items-center border-b border-slate-850">
                           <span className="text-xs font-black text-slate-200 uppercase tracking-wider">{formattedDate} Performance</span>
                           <span className="text-[9px] font-mono text-slate-500">{ymd}</span>

@@ -19,6 +19,7 @@ const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboardZ8 = lazy(() => import('../TodayDashboardZ8'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
+const VouchEdgeLandingV3 = lazy(() => import('../../pages/VouchEdgeLandingV3'));
 const VouchBoardZ8 = lazy(() => import('../VouchBoardZ8'));
 const ProfilePageZ8 = lazy(() => import('../ProfilePageZ8'));
 const SettingsPageZ8 = lazy(() => import('../SettingsPageZ8'));
@@ -121,7 +122,7 @@ function MainViewRouter({
       }
       return (
         <LazyRoute>
-          <VouchEdgeTerminalPage onAuthed={onLoginSuccess} />
+          <VouchEdgeLandingV3 onAuthed={onLoginSuccess} />
         </LazyRoute>
       );
     case 'welcome': {

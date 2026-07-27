@@ -29,19 +29,19 @@ import { enrichPlayerStats } from "../utils/mlbApi";
 import { openParlayAdd } from "../lib/parlays/parlayAddContract";
 import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
 import {
-  Z8_ACTIVE,
-  Z8_DISPLAY,
-  Z8_IDLE,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_SURFACE,
-  Z8_WARNING,
-} from "../theme/z8Tokens";
+  AURORA_ACTIVE,
+  AURORA_DISPLAY,
+  AURORA_IDLE,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_SURFACE,
+  AURORA_WARNING,
+} from "../theme/auroraTokens";
 
 interface Markets {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
@@ -398,25 +398,25 @@ export default function PlayerResearchHub({
   };
 
   return (
-    <main className={`${Z8_PAGE} min-h-screen`}>
+    <main className={`${AURORA_PAGE} min-h-screen`}>
       {/* ====== Header ====== */}
-      <header className={`sticky top-0 z-40 ${Z8_PANEL_PREMIUM} rounded-none border-x-0 border-t-0`}>
-        <div className={`mx-auto flex h-14 max-w-7xl items-center justify-between ${Z8_PAGE_PAD_X}`}>
+      <header className={`sticky top-0 z-40 ${AURORA_PANEL_PREMIUM} rounded-none border-x-0 border-t-0`}>
+        <div className={`mx-auto flex h-14 max-w-7xl items-center justify-between ${AURORA_PAGE_PAD_X}`}>
           <div className="flex items-center gap-3">
-            <div className={`${Z8_SURFACE} flex h-8 w-8 items-center justify-center rounded-lg border-vouch-cyan/30 bg-vouch-cyan/10`}>
+            <div className={`${AURORA_SURFACE} flex h-8 w-8 items-center justify-center rounded-lg border-vouch-cyan/30 bg-vouch-cyan/10`}>
               <Search className="h-4 w-4 text-vouch-cyan" />
             </div>
             <span className="text-sm font-bold text-white">Player Research</span>
-            <span className={`${Z8_LABEL} text-white/40`}>
+            <span className={`${AURORA_LABEL} text-white/40`}>
               {backendCount ?? players.length} players · {registryStatus === "ready" ? "backend registry" : registryStatus === "loading" ? "loading registry" : "fallback records"}
             </span>
-            {registryError && <span className={`${Z8_LABEL} hidden text-vouch-amber md:inline`}>{registryError}</span>}
-            <span className={`${Z8_LABEL} hidden text-vouch-cyan/80 lg:inline`}>
+            {registryError && <span className={`${AURORA_LABEL} hidden text-vouch-amber md:inline`}>{registryError}</span>}
+            <span className={`${AURORA_LABEL} hidden text-vouch-cyan/80 lg:inline`}>
               Truth Lens · Verified stats · Live pricing feed pending
             </span>
           </div>
           {/* Mode tabs */}
-          <div className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
+          <div className={`${AURORA_SURFACE} flex rounded-lg p-0.5`}>
             {([
               { id: "scout" as Mode, label: "Scout", icon: Crosshair },
               { id: "compare" as Mode, label: "Compare", icon: BarChart3 },
@@ -426,7 +426,7 @@ export default function PlayerResearchHub({
                 key={t.id}
                 onClick={() => setMode(t.id)}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                  mode === t.id ? Z8_ACTIVE : Z8_IDLE
+                  mode === t.id ? AURORA_ACTIVE : AURORA_IDLE
                 }`}
               >
                 <t.icon className="w-3 h-3" />
@@ -437,10 +437,10 @@ export default function PlayerResearchHub({
         </div>
       </header>
 
-      <div className={`mx-auto max-w-7xl ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} lg:flex-row lg:items-start lg:gap-6 flex flex-col`}>
+      <div className={`mx-auto max-w-7xl ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP} lg:flex-row lg:items-start lg:gap-6 flex flex-col`}>
         {/* Left Sidebar */}
         <div className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:w-[280px] w-full shrink-0 flex flex-col gap-4 mb-4 lg:mb-0">
-          <div className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} flex flex-col gap-3 p-3`}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
               <input
@@ -448,7 +448,7 @@ export default function PlayerResearchHub({
                 placeholder="Search players, teams, positions..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className={`${Z8_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
+                className={`${AURORA_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
               />
             </div>
             
@@ -457,14 +457,14 @@ export default function PlayerResearchHub({
                 <select
                   value={teamFilter}
                   onChange={(e) => setTeamFilter(e.target.value)}
-                  className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                  className={`${AURORA_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
                 >
                   {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All Teams" : t}</option>)}
                 </select>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                  className={`${AURORA_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
                 >
                   <option value="batterScore">Sort: Batter Score</option>
                   <option value="hr">Sort: Home Runs</option>
@@ -472,7 +472,7 @@ export default function PlayerResearchHub({
                   <option value="ops">Sort: OPS</option>
                   <option value="name">Sort: Name</option>
                 </select>
-                <div className={`${Z8_SURFACE} flex rounded-lg p-0.5 w-full`}>
+                <div className={`${AURORA_SURFACE} flex rounded-lg p-0.5 w-full`}>
                   <button onClick={() => setListStyle("grid")} className={`flex-1 flex justify-center rounded-md p-1.5 transition-all ${listStyle === "grid" ? "text-vouch-cyan" : "text-white/35"}`}>
                     <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
@@ -511,13 +511,13 @@ export default function PlayerResearchHub({
           </div>
 
           {activeLegs && activeLegs.length > 0 && (
-            <div className={`${Z8_PANEL_PREMIUM} p-3 flex flex-col gap-2`}>
+            <div className={`${AURORA_PANEL_PREMIUM} p-3 flex flex-col gap-2`}>
               <div className="text-xs font-bold text-white/70 uppercase tracking-wider mb-1 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-vouch-cyan" />
                 Active Slip ({activeLegs.length})
               </div>
               {activeLegs.map((leg, i) => (
-                <div key={leg.id || i} className={`p-2 rounded-lg ${Z8_SURFACE} flex justify-between items-center`}>
+                <div key={leg.id || i} className={`p-2 rounded-lg ${AURORA_SURFACE} flex justify-between items-center`}>
                   <div className="flex flex-col truncate pr-2 min-w-0">
                     <span className="text-xs font-bold text-white truncate">{leg.selection}</span>
                     <span className="text-[10px] text-white/45 truncate">{leg.market}</span>
@@ -538,7 +538,7 @@ export default function PlayerResearchHub({
             <>
               {/* Player list */}
             {filtered.length === 0 ? (
-              <div className={`${Z8_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
+              <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
                 <Search className="mx-auto h-6 w-6 text-white/25" />
                 <p className="mt-3 text-sm font-bold text-white/70">No players found</p>
                 <p className="mt-1 text-xs text-white/40">Try another player, team, or position.</p>
@@ -1022,10 +1022,10 @@ function BuildView({ players, onAddLeg, activeLegs }: {
 
   if (!ready) {
     return (
-      <div className={`${Z8_PANEL_PREMIUM} flex min-h-[280px] items-center justify-center rounded-2xl p-6`} role="status" aria-live="polite">
+      <div className={`${AURORA_PANEL_PREMIUM} flex min-h-[280px] items-center justify-center rounded-2xl p-6`} role="status" aria-live="polite">
         <div className="text-center">
           <RefreshCw className="mx-auto h-7 w-7 animate-spin text-vouch-cyan" />
-          <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Preparing market board</p>
+          <p className={`${AURORA_LABEL} mt-4 text-vouch-cyan`}>Preparing market board</p>
           <p className="mt-2 text-xs text-white/40">Loading the first player markets without blocking navigation.</p>
         </div>
       </div>
@@ -1084,7 +1084,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
   return (
     <div>
       <ProTruthLensIntro />
-      <div className={`${Z8_PANEL_PREMIUM} mb-5 space-y-3 rounded-2xl p-3`}>
+      <div className={`${AURORA_PANEL_PREMIUM} mb-5 space-y-3 rounded-2xl p-3`}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="text-sm text-white/45">
             Showing {visibleMarketCount} of {filtered.length} markets
@@ -1097,7 +1097,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
               onChange={(event) => setMarketSearch(event.target.value)}
               placeholder="Find player, team, or market"
               aria-label="Search build markets"
-              className={`${Z8_SURFACE} w-full rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
+              className={`${AURORA_SURFACE} w-full rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
             />
           </div>
         </div>
@@ -1117,7 +1117,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
 
       <div className="space-y-5">
         {groupedMarkets.length === 0 && (
-          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
             <Search className="mx-auto h-6 w-6 text-white/25" />
             <p className="mt-3 text-sm font-bold text-white/70">No markets found</p>
             <p className="mt-1 text-xs text-white/40">Try another player, team, market, or category.</p>

@@ -1,5 +1,5 @@
 import type { CreatorProofProfile } from '../types';
-import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../theme/z8Tokens';
+import { AURORA_AMBER_HEX, AURORA_CYAN_HEX, AURORA_EMERALD_HEX } from '../theme/auroraTokens';
 
 export const CHAT_PROFILE_STORAGE_KEY = 'vouchedge_chat_profile';
 
@@ -22,9 +22,9 @@ export interface ResolvedChatProfile extends VouchEdgeChatProfile {
 }
 
 export const CHAT_ACCENT_PALETTE: { id: ChatAccentColor; hex: string; label: string }[] = [
-  { id: 'cyan', hex: Z8_CYAN_HEX, label: 'Cyan' },
-  { id: 'emerald', hex: Z8_EMERALD_HEX, label: 'Emerald' },
-  { id: 'amber', hex: Z8_AMBER_HEX, label: 'Amber' },
+  { id: 'cyan', hex: AURORA_CYAN_HEX, label: 'Cyan' },
+  { id: 'emerald', hex: AURORA_EMERALD_HEX, label: 'Emerald' },
+  { id: 'amber', hex: AURORA_AMBER_HEX, label: 'Amber' },
   { id: 'rose', hex: '#fb7185', label: 'Rose' },
   { id: 'violet', hex: '#a78bfa', label: 'Violet' },
 ];
@@ -35,7 +35,7 @@ const DEFAULT_CHAT_PROFILE: VouchEdgeChatProfile = {
 };
 
 export function accentHex(color: ChatAccentColor): string {
-  return CHAT_ACCENT_PALETTE.find((c) => c.id === color)?.hex ?? Z8_CYAN_HEX;
+  return CHAT_ACCENT_PALETTE.find((c) => c.id === color)?.hex ?? AURORA_CYAN_HEX;
 }
 
 export function loadChatProfile(): VouchEdgeChatProfile {

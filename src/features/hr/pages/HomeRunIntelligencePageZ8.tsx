@@ -3,14 +3,14 @@ import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, Triangl
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import {
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_GAP,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_STAT_CHIP,
-} from '../../../theme/z8Tokens';
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_GAP,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_STAT_CHIP,
+} from '../../../theme/auroraTokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
@@ -44,7 +44,7 @@ interface MiniStatChipProps {
 }
 
 const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div className={`${Z8_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
+  <div className={`${AURORA_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
     <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
     <div className="flex flex-col leading-tight">
       <span className="text-lg font-extrabold text-ve-flash">{value}</span>
@@ -447,11 +447,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   };
 
   return (
-    <div className={`${Z8_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${Z8_PAGE_PAD_X}`}>
+    <div className={`${AURORA_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
 
         {/* ── Top Header & Command Center Bar ──────────────────────────── */}
-        <header className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
+        <header className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
@@ -509,30 +509,30 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
         {/* Tablet / Desktop: 4-card grid */}
         <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className={`${Z8_PANEL_PREMIUM} rounded-xl p-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
             <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">MLB Slate</p>
             <p className="mt-1 text-sm font-black text-white">
               {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
             </p>
           </div>
-          <div className={`${Z8_PANEL_PREMIUM} rounded-xl p-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
             <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Freshness</p>
             <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}>
               {freshnessTone.icon}{freshnessTone.label}
             </span>
           </div>
-          <div className={`${Z8_PANEL_PREMIUM} rounded-xl p-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
             <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Confirmed Orders</p>
             <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.confirmed ?? 0} official</p>
           </div>
-          <div className={`${Z8_PANEL_PREMIUM} rounded-xl p-3`}>
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
             <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Preview Candidates</p>
             <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.curated ?? 0} projected</p>
           </div>
         </div>
 
         {/* ── Main content area ───────────────────────────────────── */}
-        <div className={`flex flex-col ${Z8_PAGE_GAP}`}>
+        <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
           <HrTopSignalPanel
             player={topPlayer}
             freshness={vm.slate.freshness}

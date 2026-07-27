@@ -18,7 +18,7 @@ import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { LineScoreTable } from './live/LineScoreTable';
 import { TeamLogo } from './live/LiveTeamLogo';
 import StadiumWindVectorWidget from './stadium/StadiumWindVectorWidget';
-import { Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../theme/auroraTokens';
 import './live/live-games-lens.css';
 
 interface Props {
@@ -524,7 +524,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${Z8_PAGE} w-full max-w-full min-w-0 px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
+    <main className={`${AURORA_PAGE} w-full max-w-full min-w-0 px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
 
       {/* ── Sleek 3D Glass Header ────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl mb-4 sm:mb-6">

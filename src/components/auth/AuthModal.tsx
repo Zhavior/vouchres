@@ -33,7 +33,7 @@ import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
-import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_AUTH_GRADIENT, Z8_AUTH_SHADOW, Z8_CYAN_HEX, Z8_BLURPLE_HEX } from '../../theme/z8Tokens';
+import { AURORA_INTERACTIVE, AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE, AURORA_AUTH_GRADIENT, AURORA_AUTH_SHADOW, AURORA_CYAN_HEX, AURORA_BLURPLE_HEX } from '../../theme/auroraTokens';
 import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
@@ -384,7 +384,7 @@ export default function AuthModal({
           aria-modal="true"
           aria-labelledby="ve-auth-title"
           tabIndex={-1}
-          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
+          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${AURORA_PANEL_PREMIUM}`}
         >
           {/* Judge welcome — desktop sidebar */}
           <div className="ve-auth-judge-panel hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
@@ -401,7 +401,7 @@ export default function AuthModal({
               ref={closeButtonRef}
               onClick={onClose}
               aria-label="Close"
-              className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors ${Z8_INTERACTIVE}`}
+              className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors ${AURORA_INTERACTIVE}`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -419,7 +419,7 @@ export default function AuthModal({
                 <span className="font-black tracking-tight text-lg text-white">
                   Vouch<span className="text-vouch-cyan">Edge</span>
                 </span>
-                <p className={`${Z8_LABEL} text-white/30`}>Trust-first research</p>
+                <p className={`${AURORA_LABEL} text-white/30`}>Trust-first research</p>
               </div>
             </div>
 
@@ -465,8 +465,8 @@ export default function AuthModal({
               </p>
               <button
                 onClick={() => { setEmailSent(false); }}
-                className={`mt-5 w-full py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
+                className={`mt-5 w-full py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
+                style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
               >
                 Got it
               </button>
@@ -522,8 +522,8 @@ export default function AuthModal({
                     if (introIndex < INTRO_SLIDES.length - 1) setIntroIndex((i) => i + 1);
                     else setSignupStep('questionnaire');
                   }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
+                  style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
                 >
                   {introIndex < INTRO_SLIDES.length - 1 ? 'Next' : "Let's go"}
                   <ArrowRight className="w-4 h-4" />
@@ -554,7 +554,7 @@ export default function AuthModal({
                     key={opt.id}
                     type="button"
                     onClick={() => setSignupStep('plan')}
-                    className={`w-full text-left rounded-xl border p-4 transition-all ${Z8_INTERACTIVE}`}
+                    className={`w-full text-left rounded-xl border p-4 transition-all ${AURORA_INTERACTIVE}`}
                     style={{
                       background: 'rgba(0,0,0,0.35)',
                       borderColor: 'rgba(255,255,255,0.08)',
@@ -614,12 +614,12 @@ export default function AuthModal({
                           className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                           style={{ background: selected ? 'rgba(34,211,238,0.16)' : 'rgba(255,255,255,0.05)' }}
                         >
-                          <Icon className="w-4 h-4" style={{ color: selected ? Z8_CYAN_HEX : '#94a3b8' }} />
+                          <Icon className="w-4 h-4" style={{ color: selected ? AURORA_CYAN_HEX : '#94a3b8' }} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-black text-white">{opt.label}</span>
-                            <span className="text-xs font-bold" style={{ color: Z8_CYAN_HEX }}>{opt.price}</span>
+                            <span className="text-xs font-bold" style={{ color: AURORA_CYAN_HEX }}>{opt.price}</span>
                             {opt.beta && (
                               <span
                                 className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
@@ -633,7 +633,7 @@ export default function AuthModal({
                           <ul className="mt-1.5 space-y-0.5">
                             {opt.perks.map((perk) => (
                               <li key={perk} className="flex items-start gap-1.5 text-[10px] text-slate-500">
-                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? Z8_CYAN_HEX : '#64748b' }} />
+                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? AURORA_CYAN_HEX : '#64748b' }} />
                                 {perk}
                               </li>
                             ))}
@@ -641,9 +641,9 @@ export default function AuthModal({
                         </div>
                         <div
                           className="w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center"
-                          style={{ borderColor: selected ? Z8_CYAN_HEX : 'rgba(255,255,255,0.2)' }}
+                          style={{ borderColor: selected ? AURORA_CYAN_HEX : 'rgba(255,255,255,0.2)' }}
                         >
-                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: Z8_CYAN_HEX }} />}
+                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: AURORA_CYAN_HEX }} />}
                         </div>
                       </div>
                     </button>
@@ -669,8 +669,8 @@ export default function AuthModal({
                 <button
                   type="button"
                   onClick={() => setSignupStep('policy')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
+                  style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
                 >
                   Continue
                   <ArrowRight className="w-4 h-4" />
@@ -681,11 +681,11 @@ export default function AuthModal({
             /* ── Policy agreement ── */
             <div className="px-6 pb-6">
               <div
-                className={`max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${Z8_SURFACE}`}
+                className={`max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${AURORA_SURFACE}`}
               >
                 {POLICY_SECTIONS.map((section) => (
                   <div key={section.title}>
-                    <p className={`${Z8_LABEL} text-vouch-cyan`}>{section.title}</p>
+                    <p className={`${AURORA_LABEL} text-vouch-cyan`}>{section.title}</p>
                     <p className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#94a3b8' }}>{section.body}</p>
                   </div>
                 ))}
@@ -704,8 +704,8 @@ export default function AuthModal({
                     <span
                       className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
                       style={{
-                        borderColor: agreements[item.id] ? Z8_CYAN_HEX : 'rgba(255,255,255,0.2)',
-                        background: agreements[item.id] ? Z8_CYAN_HEX : 'transparent',
+                        borderColor: agreements[item.id] ? AURORA_CYAN_HEX : 'rgba(255,255,255,0.2)',
+                        background: agreements[item.id] ? AURORA_CYAN_HEX : 'transparent',
                       }}
                     >
                       {agreements[item.id] && <Check className="w-3 h-3" style={{ color: '#0b1322' }} />}
@@ -734,8 +734,8 @@ export default function AuthModal({
                   type="button"
                   disabled={!agreements.age || !agreements.terms || !agreements.research}
                   onClick={() => setSignupStep('form')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${Z8_INTERACTIVE}`}
-                  style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${AURORA_INTERACTIVE}`}
+                  style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
                 >
                   Agree & continue
                   <ArrowRight className="w-4 h-4" />
@@ -764,7 +764,7 @@ export default function AuthModal({
           )}
           {/* Tab switch */}
           <div className="px-6">
-            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${Z8_SURFACE}`}>
+            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${AURORA_SURFACE}`}>
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   key={m}
@@ -796,7 +796,7 @@ export default function AuthModal({
                     ].map((p, i) => {
                       const Icon = p.icon;
                       return (
-                        <div key={i} className={`flex flex-col items-center gap-1 text-center py-2 rounded-lg ${Z8_SURFACE}`}>
+                        <div key={i} className={`flex flex-col items-center gap-1 text-center py-2 rounded-lg ${AURORA_SURFACE}`}>
                           <Icon className="w-3.5 h-3.5 text-vouch-cyan" />
                           <span className="text-[10px] font-semibold text-slate-400 leading-tight">{p.label}</span>
                         </div>
@@ -905,7 +905,7 @@ export default function AuthModal({
                   </Field>
                   <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
                     VouchEdge is in private beta. No code?{' '}
-                    <a href="/premium" className="font-semibold underline" style={{ color: Z8_BLURPLE_HEX }}>
+                    <a href="/premium" className="font-semibold underline" style={{ color: AURORA_BLURPLE_HEX }}>
                       Join the waitlist
                     </a>
                     .
@@ -937,8 +937,8 @@ export default function AuthModal({
             <button
               type="submit"
               disabled={busy || redirectingToCheckout}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${Z8_INTERACTIVE}`}
-              style={{ background: Z8_AUTH_GRADIENT, boxShadow: Z8_AUTH_SHADOW }}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${AURORA_INTERACTIVE}`}
+              style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
             >
               {redirectingToCheckout ? (
                 <>
@@ -962,9 +962,9 @@ export default function AuthModal({
               type="button"
               onClick={handleMagicLink}
               disabled={busy}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-white/10 text-white/80 transition-colors disabled:opacity-60 hover:border-vouch-cyan/30 hover:text-white ${Z8_INTERACTIVE}`}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-white/10 text-white/80 transition-colors disabled:opacity-60 hover:border-vouch-cyan/30 hover:text-white ${AURORA_INTERACTIVE}`}
             >
-              <Wand2 className="w-3.5 h-3.5" style={{ color: Z8_BLURPLE_HEX }} />
+              <Wand2 className="w-3.5 h-3.5" style={{ color: AURORA_BLURPLE_HEX }} />
               Email me a magic link instead
             </button>
           </form>
@@ -990,7 +990,7 @@ export default function AuthModal({
 function Field({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div
-      className={`flex items-center gap-2.5 px-3.5 h-11 rounded-xl transition-colors focus-within:border-vouch-cyan/45 focus-within:ring-1 focus-within:ring-vouch-cyan/20 ${Z8_SURFACE}`}
+      className={`flex items-center gap-2.5 px-3.5 h-11 rounded-xl transition-colors focus-within:border-vouch-cyan/45 focus-within:ring-1 focus-within:ring-vouch-cyan/20 ${AURORA_SURFACE}`}
     >
       <span className="text-white/35 flex-shrink-0">{icon}</span>
       {children}

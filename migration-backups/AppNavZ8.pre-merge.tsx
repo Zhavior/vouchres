@@ -4,7 +4,7 @@ import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { useAppProfile } from '../context/AppShellContext';
-import { Z8_INTERACTIVE } from '../theme/z8Tokens';
+import { AURORA_INTERACTIVE } from '../theme/auroraTokens';
 import { isBetaDestinationActive } from './betaNavigation';
 
 type AppNavProps = {
@@ -99,7 +99,7 @@ export function AppNavZ8({ activeSection, onNavigate }: AppNavProps) {
           aria-label="Open navigation menu and account"
           aria-current={accountActive ? 'page' : undefined}
           title="Account"
-          className={`ve-touch-target flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${Z8_INTERACTIVE} ${collapsed ? 'h-11' : 'h-12'}`}
+          className={`ve-touch-target flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${AURORA_INTERACTIVE} ${collapsed ? 'h-11' : 'h-12'}`}
         >
           <div
             className={`relative flex items-center justify-center rounded-full border-2 shadow-lg transition-all hover:border-vouch-cyan/50 ${
@@ -146,7 +146,7 @@ function DockButton({
       aria-label={`Go to ${label}`}
       aria-current={active ? 'page' : undefined}
       title={label}
-      className={`ve-touch-target group relative flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${Z8_INTERACTIVE} ${
+      className={`ve-touch-target group relative flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${AURORA_INTERACTIVE} ${
         collapsed ? 'h-11' : 'h-12'
       }`}
     >

@@ -8,7 +8,7 @@
 
 import React, { useMemo } from 'react';
 import { Lock, TrendingUp, TrendingDown, Minus, BarChart2, Target, Activity, Users } from 'lucide-react';
-import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
+import { AURORA_AMBER_HEX, AURORA_CYAN_HEX, AURORA_EMERALD_HEX } from '../../../../theme/auroraTokens';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { useRealGameLog } from '../../hooks/useRealGameLog';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
@@ -40,18 +40,18 @@ interface LayerRankRow extends LayerChartRow {
 
 function getLayerRows(p: HrWatchRow): LayerRankRow[] {
   return [
-    { id: 'power', label: 'Hitter Power', icon: '💪', weight: 25, value: p.hitterPower, leagueAvg: 52, accentHex: Z8_AMBER_HEX },
+    { id: 'power', label: 'Hitter Power', icon: '💪', weight: 25, value: p.hitterPower, leagueAvg: 52, accentHex: AURORA_AMBER_HEX },
     { id: 'pitcher', label: 'Pitcher Vulnerability', icon: '⚾', weight: 20, value: p.pitcherVulnerability, leagueAvg: 48, accentHex: '#ef4444' },
-    { id: 'pitch', label: 'Pitch Mix Advantage', icon: '🎯', weight: 15, value: p.pitchMix, leagueAvg: 50, accentHex: Z8_EMERALD_HEX },
-    { id: 'park', label: 'Park Factor', icon: '🏟️', weight: 10, value: p.parkFactor, leagueAvg: 50, accentHex: Z8_CYAN_HEX },
+    { id: 'pitch', label: 'Pitch Mix Advantage', icon: '🎯', weight: 15, value: p.pitchMix, leagueAvg: 50, accentHex: AURORA_EMERALD_HEX },
+    { id: 'park', label: 'Park Factor', icon: '🏟️', weight: 10, value: p.parkFactor, leagueAvg: 50, accentHex: AURORA_CYAN_HEX },
     { id: 'form', label: 'Recent Form', icon: '🔥', weight: 10, value: p.recentForm, leagueAvg: 50, accentHex: '#10b981' },
-    { id: 'weather', label: 'Weather', icon: '🌬️', weight: 5, value: p.weather, leagueAvg: 55, accentHex: Z8_CYAN_HEX },
-    { id: 'platoon', label: 'Platoon Split', icon: '🤜', weight: 5, value: p.platoon, leagueAvg: 50, accentHex: Z8_AMBER_HEX },
+    { id: 'weather', label: 'Weather', icon: '🌬️', weight: 5, value: p.weather, leagueAvg: 55, accentHex: AURORA_CYAN_HEX },
+    { id: 'platoon', label: 'Platoon Split', icon: '🤜', weight: 5, value: p.platoon, leagueAvg: 50, accentHex: AURORA_AMBER_HEX },
     { id: 'bullpen', label: 'Bullpen Risk', icon: '🔄', weight: 3, value: p.bullpen, leagueAvg: 48, accentHex: '#f97316' },
-    { id: 'lineup', label: 'Lineup Context', icon: '📋', weight: 3, value: p.lineupContext, leagueAvg: 52, accentHex: Z8_EMERALD_HEX },
+    { id: 'lineup', label: 'Lineup Context', icon: '📋', weight: 3, value: p.lineupContext, leagueAvg: 52, accentHex: AURORA_EMERALD_HEX },
     { id: 'swing', label: 'Swing Decisions', icon: '🎪', weight: 2, value: p.swingDecisions, leagueAvg: 50, accentHex: '#10b981' },
-    { id: 'bvp', label: 'Batter vs Pitcher', icon: '📊', weight: 2, value: p.bvpScore, leagueAvg: 50, accentHex: Z8_CYAN_HEX },
-    { id: 'vegas', label: 'Vegas Alignment', icon: '💰', weight: 0, value: p.vegasEdgeScore, leagueAvg: 50, accentHex: Z8_AMBER_HEX },
+    { id: 'bvp', label: 'Batter vs Pitcher', icon: '📊', weight: 2, value: p.bvpScore, leagueAvg: 50, accentHex: AURORA_CYAN_HEX },
+    { id: 'vegas', label: 'Vegas Alignment', icon: '💰', weight: 0, value: p.vegasEdgeScore, leagueAvg: 50, accentHex: AURORA_AMBER_HEX },
   ];
 }
 

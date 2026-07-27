@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from './LandingIcons';
 import {
-  Z8_INTERACTIVE,
-  Z8_LABEL,
-  Z8_PANEL,
-  Z8_PANEL_PREMIUM,
-} from '../../theme/z8Tokens';
+  AURORA_INTERACTIVE,
+  AURORA_LABEL,
+  AURORA_PANEL,
+  AURORA_PANEL_PREMIUM,
+} from '../../theme/auroraTokens';
 import { JUDGE_COLOR_RING, LANDING_JUDGES } from '../../constants/aiJudges';
 import JudgePixelIcon from '../judges/JudgePixelIcon';
 
@@ -15,10 +15,10 @@ function JudgeSlide({ judge }: { judge: (typeof LANDING_JUDGES)[number] }) {
   const ring = JUDGE_COLOR_RING[judge.color] ?? JUDGE_COLOR_RING.cyan;
 
   return (
-    <article className={`ve-landing-judge-slide min-w-full ${Z8_PANEL} p-6 sm:p-8`}>
+    <article className={`ve-landing-judge-slide min-w-full ${AURORA_PANEL} p-6 sm:p-8`}>
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
         <JudgePixelIcon code={judge.code} />
-        <p className={`${Z8_LABEL} mt-5 text-vouch-cyan/80`}>{judge.specialty}</p>
+        <p className={`${AURORA_LABEL} mt-5 text-vouch-cyan/80`}>{judge.specialty}</p>
         <h3 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">{judge.displayName}</h3>
         <p className="mt-2 text-sm font-medium text-vouch-cyan/75">{judge.tagline}</p>
         <p className="mt-4 text-sm leading-relaxed text-white/55">{judge.useCase}</p>
@@ -55,7 +55,7 @@ export default function LandingJudgesDeck() {
   return (
     <section aria-labelledby="judges-heading" className="space-y-6">
       <div className="text-center">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
+        <p className={`${AURORA_LABEL} text-vouch-cyan`}>AI Judge Council</p>
         <h2 id="judges-heading" className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
           Four judges. Four real-world edges.
         </h2>
@@ -71,7 +71,7 @@ export default function LandingJudgesDeck() {
         onMouseLeave={() => setPaused(false)}
       >
         <div
-          className={`ve-landing-judge-slideshow relative overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}
+          className={`ve-landing-judge-slideshow relative overflow-hidden rounded-2xl ${AURORA_PANEL_PREMIUM}`}
         >
         <div className="ve-landing-judge-track" style={{ transform: `translateX(-${index * 100}%)` }}>
           {LANDING_JUDGES.map((item) => (
@@ -84,7 +84,7 @@ export default function LandingJudgesDeck() {
             type="button"
             aria-label="Previous judge"
             onClick={() => setIndex((current) => (current - 1 + count) % count)}
-            className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
+            className={`${AURORA_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
           >
             <ChevronLeft size={16} />
           </button>
@@ -110,7 +110,7 @@ export default function LandingJudgesDeck() {
             type="button"
             aria-label="Next judge"
             onClick={() => setIndex((current) => (current + 1) % count)}
-            className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
+            className={`${AURORA_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
           >
             <ChevronRight size={16} />
           </button>
@@ -142,7 +142,7 @@ export default function LandingJudgesDeck() {
                 onClick={() => setIndex(judgeIndex)}
                 className={[
                   've-landing-judge-tab group flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all',
-                  Z8_INTERACTIVE,
+                  AURORA_INTERACTIVE,
                   active
                     ? `${ring} border-vouch-cyan/45 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.1)]`
                     : 'border-white/10 bg-black/25 hover:border-vouch-cyan/25 hover:bg-vouch-cyan/5',

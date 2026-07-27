@@ -3,7 +3,7 @@ import type { StatType, StatViewMode, StatTier, StatScope } from '../types/statH
 import { STAT_CONFIG, STAT_ORDER } from '../engine/statHubConfig';
 import { StatModeToggle } from './StatModeToggle';
 import { BarChart3, Search, Calendar, Filter, Sparkles } from 'lucide-react';
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_ICON_BOX } from '../../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER, AURORA_ICON_BOX } from '../../../theme/auroraTokens';
 
 interface Props {
   activeStatType: StatType;
@@ -65,12 +65,12 @@ export const StatHubHeader: React.FC<Props> = ({
       {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className={`${Z8_ICON_BOX} h-12 w-12 rounded-2xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan shadow-[0_0_15px_rgba(79,184,220,0.25)]`}>
+          <div className={`${AURORA_ICON_BOX} h-12 w-12 rounded-2xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan shadow-[0_0_15px_rgba(79,184,220,0.25)]`}>
             <BarChart3 className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className={`${Z8_SECTION_HEADER} text-lg sm:text-xl font-black uppercase text-white tracking-tight`}>
+              <h1 className={`${AURORA_SECTION_HEADER} text-lg sm:text-xl font-black uppercase text-white tracking-tight`}>
                 MLB Stat Intelligence Hub
               </h1>
               <span className="font-mono text-[9px] uppercase tracking-widest text-vouch-cyan font-bold bg-vouch-cyan/10 border border-vouch-cyan/30 px-2.5 py-0.5 rounded-full">

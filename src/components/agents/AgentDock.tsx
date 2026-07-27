@@ -3,7 +3,7 @@ import { Plug } from 'lucide-react';
 import { JUDGE_COLOR_RING } from '../../constants/aiJudges';
 import JudgePixelIcon from '../judges/JudgePixelIcon';
 import type { AgentPluginMeta } from '../../types/aiAgent';
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../../theme/auroraTokens';
 
 type Props = {
   agents: AgentPluginMeta[];
@@ -20,11 +20,11 @@ export default function AgentDock({
   return (
     <section
       aria-labelledby="agent-dock-heading"
-      className={`rounded-3xl border border-vouch-cyan/15 bg-gradient-to-br from-obsidian-900/90 via-black/40 to-vouch-emerald/5 p-5 ${Z8_PANEL_PREMIUM}`}
+      className={`rounded-3xl border border-vouch-cyan/15 bg-gradient-to-br from-obsidian-900/90 via-black/40 to-vouch-emerald/5 p-5 ${AURORA_PANEL_PREMIUM}`}
     >
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className={`${Z8_LABEL} text-vouch-emerald`}>Agent Dock</p>
+          <p className={`${AURORA_LABEL} text-vouch-emerald`}>Agent Dock</p>
           <h3 id="agent-dock-heading" className="mt-1 text-lg font-black text-white">
             Four AI Judges
           </h3>
@@ -65,7 +65,7 @@ function AgentSlot({ agent }: { agent: AgentPluginMeta }) {
   const ring = JUDGE_COLOR_RING[agent.color] ?? JUDGE_COLOR_RING.cyan;
 
   return (
-    <article className={`rounded-2xl border bg-black/30 p-4 ${ring} ${Z8_SURFACE}`}>
+    <article className={`rounded-2xl border bg-black/30 p-4 ${ring} ${AURORA_SURFACE}`}>
       <div className="flex items-start gap-3">
         <JudgePixelIcon code={agent.code} size="sm" />
         <div className="min-w-0 flex-1">

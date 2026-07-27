@@ -3,16 +3,16 @@ import { ProductEvents } from "../../lib/productEvents";
 import { Bell, Info, Trash2, Trophy, X } from 'lucide-react';
 import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
 import {
-  Z8_DISPLAY,
-  Z8_LABEL,
-  Z8_PAGE,
-  Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_SECTION_HEADER,
-  Z8_STAT_CHIP,
-  Z8_SURFACE,
-} from '../../theme/z8Tokens';
+  AURORA_DISPLAY,
+  AURORA_LABEL,
+  AURORA_PAGE,
+  AURORA_PAGE_PAD_X,
+  AURORA_PAGE_PAD_Y,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+  AURORA_STAT_CHIP,
+  AURORA_SURFACE,
+} from '../../theme/auroraTokens';
 import { VEButton, VECard, VEBadge, VEState } from '../ui/ve';
 
 type NotificationsPageProps = {
@@ -65,7 +65,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
         key={notification.id}
         tone={notification.read ? 'soft' : 'elevated'}
         interactive={Boolean(notification.section)}
-        className={`group w-full p-4 text-left ${Z8_SURFACE}`}
+        className={`group w-full p-4 text-left ${AURORA_SURFACE}`}
         role={notification.section ? 'button' : undefined}
         tabIndex={notification.section ? 0 : undefined}
         onClick={() => {
@@ -123,16 +123,16 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
   };
 
   return (
-    <main className={`${Z8_PAGE} min-h-screen ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <main className={`${AURORA_PAGE} min-h-screen ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className="mx-auto max-w-4xl space-y-6">
-        <header className={`${Z8_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-5 sm:flex-row sm:items-end`}>
-          <div className={Z8_SECTION_HEADER}>
-            <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
+        <header className={`${AURORA_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-5 sm:flex-row sm:items-end`}>
+          <div className={AURORA_SECTION_HEADER}>
+            <span className={`${AURORA_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
               <Bell className="h-3.5 w-3.5" />
               Notification Center
             </span>
 
-            <h1 className={`${Z8_DISPLAY} mt-3`}>
+            <h1 className={`${AURORA_DISPLAY} mt-3`}>
               VouchEdge Alerts
             </h1>
 
@@ -143,8 +143,8 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`${Z8_STAT_CHIP} ${unreadCount > 0 ? 'border-vouch-amber/30 text-vouch-amber' : ''}`}>
-              <span className={`${Z8_LABEL} block text-white/40`}>Unread</span>
+            <span className={`${AURORA_STAT_CHIP} ${unreadCount > 0 ? 'border-vouch-amber/30 text-vouch-amber' : ''}`}>
+              <span className={`${AURORA_LABEL} block text-white/40`}>Unread</span>
               <span className="z8-tabular-nums text-lg font-bold text-white">{unreadCount}</span>
             </span>
 

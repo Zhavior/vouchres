@@ -25,7 +25,7 @@ import {
   useSocialGraph,
   type SocialGraphBucket,
 } from '../hooks/useSocialGraph';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM } from '../theme/z8Tokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM } from '../theme/auroraTokens';
 
 type SuggestedProfile = {
   profileId: string;
@@ -294,8 +294,8 @@ export default function SocialHubZ8() {
 
   if (!user) {
     return (
-      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-        <div className={`${Z8_PANEL_PREMIUM} p-8 text-center`}>
+      <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+        <div className={`${AURORA_PANEL_PREMIUM} p-8 text-center`}>
           <Users className="w-8 h-8 text-white/45 mx-auto mb-3" />
           <h1 className="text-lg font-bold text-white">Following</h1>
           <p className="mt-2 text-sm text-white/45">Sign in to see stories, status notes, and messages from people you follow.</p>
@@ -305,10 +305,10 @@ export default function SocialHubZ8() {
   }
 
   return (
-    <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} space-y-4 lg:space-y-0 lg:flex-row lg:items-start lg:gap-6 lg:flex`}>
+    <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} space-y-4 lg:space-y-0 lg:flex-row lg:items-start lg:gap-6 lg:flex`}>
       {/* Left Sidebar on Desktop */}
       <aside className="hidden lg:flex w-60 shrink-0 flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
-        <div className={`${Z8_PANEL_PREMIUM} p-6 flex flex-col items-center text-center`}>
+        <div className={`${AURORA_PANEL_PREMIUM} p-6 flex flex-col items-center text-center`}>
           <div className="mb-3">
             <ProfileAvatarBorder
               avatarUrl={profile.avatarUrl ?? undefined}
@@ -348,7 +348,7 @@ export default function SocialHubZ8() {
       <div className="flex-1 min-w-0 space-y-4">
         <div className="lg:hidden flex items-end justify-between gap-3">
           <div>
-            <p className={Z8_LABEL}>Social</p>
+            <p className={AURORA_LABEL}>Social</p>
             <h1 className="text-2xl font-black text-white tracking-tight">Following</h1>
             <p className="mt-1 text-sm text-white/45">Stories, status notes, and DMs from your circle.</p>
           </div>
@@ -375,7 +375,7 @@ export default function SocialHubZ8() {
 
         {/* Desktop Header Title */}
         <div className="hidden lg:block mb-6">
-          <p className={Z8_LABEL}>Social</p>
+          <p className={AURORA_LABEL}>Social</p>
           <h1 className="text-2xl font-black text-white tracking-tight">Following</h1>
           <p className="mt-1 text-sm text-white/45">Stories, status notes, and DMs from your circle.</p>
         </div>
@@ -384,7 +384,7 @@ export default function SocialHubZ8() {
         <div className="flex flex-col xl:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 space-y-4 w-full">
             <div className="xl:hidden space-y-4">
-              <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+              <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-sm font-bold text-white">Discover people</h2>
@@ -481,7 +481,7 @@ export default function SocialHubZ8() {
                 {suggestionsError ? <p className="text-sm text-rose-300">{suggestionsError}</p> : null}
               </section>
 
-              <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+              <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-sm font-bold text-white">Social graph</h2>
@@ -596,7 +596,7 @@ export default function SocialHubZ8() {
               </section>
             </div>
 
-            <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+            <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-white">Stories</h2>
@@ -653,7 +653,7 @@ export default function SocialHubZ8() {
               </div>
             </section>
 
-            <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+            <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-white">Notes</h2>
@@ -700,7 +700,7 @@ export default function SocialHubZ8() {
               )}
             </section>
 
-            <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-3`}>
+            <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-3`}>
               <h2 className="text-sm font-bold text-white">Your circle</h2>
               {hub.loading ? (
                 <div className="flex items-center gap-2 text-sm text-white/45 py-6">
@@ -752,7 +752,7 @@ export default function SocialHubZ8() {
             </section>
           </div>
           <div className="hidden xl:flex w-[320px] shrink-0 flex-col gap-4 xl:sticky xl:top-4">
-            <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+            <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-white">Discover people</h2>
@@ -849,7 +849,7 @@ export default function SocialHubZ8() {
               {suggestionsError ? <p className="text-sm text-rose-300">{suggestionsError}</p> : null}
             </section>
 
-            <section className={`${Z8_PANEL_PREMIUM} p-4 space-y-4`}>
+            <section className={`${AURORA_PANEL_PREMIUM} p-4 space-y-4`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-white">Social graph</h2>
@@ -965,7 +965,7 @@ export default function SocialHubZ8() {
           </div>
         </div>
       ) : (
-        <section className={`${Z8_PANEL_PREMIUM} overflow-hidden`}>
+        <section className={`${AURORA_PANEL_PREMIUM} overflow-hidden`}>
           <div className="grid min-h-[520px] lg:grid-cols-[280px_1fr]">
             <div className="border-b lg:border-b-0 lg:border-r border-white/10">
               <div className="p-4 border-b border-white/10">

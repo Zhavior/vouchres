@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Brain, Clock3 } from "lucide-react";
-import { Z8_LABEL } from "../../theme/z8Tokens";
+import { AURORA_LABEL } from "../../theme/auroraTokens";
 
 function formatWait(milliseconds: number | null): string {
   if (milliseconds == null) return "Waiting for the next scheduled slate";
@@ -56,7 +56,7 @@ export function BrainMarketLoadingState({
             <Brain className="h-5 w-5 animate-pulse" />
           </span>
           <div>
-            <div className={`${Z8_LABEL} text-vouch-cyan`}>
+            <div className={`${AURORA_LABEL} text-vouch-cyan`}>
               ProjectVABrAIns is thinking
             </div>
             <h3 className="mt-1 text-base font-bold text-white">
@@ -83,7 +83,7 @@ export function BrainMarketLoadingState({
         </p>
       )}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <span className={`${Z8_LABEL} text-white/35`}>
+        <span className={`${AURORA_LABEL} text-white/35`}>
           Evidence readiness · {STATE_LABELS[state]}
         </span>
         <span className="flex items-center gap-2 font-mono text-[11px] text-white/50">

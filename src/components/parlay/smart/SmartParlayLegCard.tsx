@@ -9,7 +9,7 @@ import {
   type LegLiveProgress,
 } from "../../../domain/parlay/smartParlayProject";
 import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayOsTypes";
-import { z8StatusColor } from "../../../theme/z8Tokens";
+import { auroraStatusColor } from "../../../theme/auroraTokens";
 import { marketStyle } from "./smartSlipStyles";
 
 function resolveOddsLabel(leg: SmartParlayLeg, odds?: number | null): string {
@@ -107,7 +107,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
               <span className="text-sm font-mono font-black text-cyan-300 tabular-nums">{oddsLabel}</span>
               <span
                 className="text-[8px] font-bold uppercase tracking-wide"
-                style={{ color: z8StatusColor(legMeta.token) }}
+                style={{ color: auroraStatusColor(legMeta.token) }}
               >
                 {legMeta.icon} {legMeta.label}
               </span>

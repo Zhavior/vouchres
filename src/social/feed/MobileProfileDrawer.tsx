@@ -15,9 +15,9 @@ import {
 import { CreatorProofProfile } from '../../types';
 import { loadFeatureLayout, getSidebarFeatures, FeatureGroup } from '../../lib/featureConfig';
 import {
-  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
-  Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
-} from '../../theme/z8Tokens';
+  AURORA_LABEL, AURORA_SIDEBAR_SHELL, AURORA_SIDEBAR_PANEL, AURORA_SIDEBAR_SURFACE,
+  AURORA_SIDEBAR_ICON_BOX, AURORA_SIDEBAR_ACTIVE, AURORA_SIDEBAR_IDLE,
+} from '../../theme/auroraTokens';
 import { performAppLogout } from '../../lib/appLogout';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
@@ -181,7 +181,7 @@ function MobileProfileDrawer({
             onClick={onClose}
           />
           <motion.aside
-            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${Z8_SIDEBAR_SHELL} shadow-[4px_0_40px_rgba(0,0,0,0.45)]`}
+            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${AURORA_SIDEBAR_SHELL} shadow-[4px_0_40px_rgba(0,0,0,0.45)]`}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -197,7 +197,7 @@ function MobileProfileDrawer({
                     type="button"
                     onClick={onClose}
                     aria-label="Close menu"
-                    className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
+                    className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${AURORA_SIDEBAR_SURFACE}`}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -252,13 +252,13 @@ function MobileProfileDrawer({
                 const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
                 const collapsed = isCollapsed(group);
                 return (
-                <div key={group} className={`mb-3 overflow-hidden ${Z8_SIDEBAR_PANEL}`}>
+                <div key={group} className={`mb-3 overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
                   <button
                     type="button"
                     aria-expanded={!collapsed}
                     aria-controls={`${sectionId}-items`}
                     onClick={() => toggleGroup(group)}
-                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 ${Z8_LABEL} text-[11px] tracking-[0.16em] text-vouch-cyan`}
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 ${AURORA_LABEL} text-[11px] tracking-[0.16em] text-vouch-cyan`}
                   >
                     <span>{group}</span>
                     <ChevronDown
@@ -282,7 +282,7 @@ function MobileProfileDrawer({
                           aria-current={isActive ? 'page' : undefined}
                           className={[
                             'relative flex min-h-[44px] w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',
-                            isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+                            isActive ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
                           ].join(' ')}
                         >
                           {isActive && (
@@ -296,7 +296,7 @@ function MobileProfileDrawer({
                               'h-7 w-7 shrink-0 transition-all',
                               isActive
                                 ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
-                                : Z8_SIDEBAR_ICON_BOX,
+                                : AURORA_SIDEBAR_ICON_BOX,
                             ].join(' ')}
                           >
                             <Icon className="h-3.5 w-3.5" />
@@ -321,7 +321,7 @@ function MobileProfileDrawer({
               <button
                 type="button"
                 onClick={() => go('settings')}
-                className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL}`}
+                className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${AURORA_SIDEBAR_IDLE} ${AURORA_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings
               </button>
@@ -329,7 +329,7 @@ function MobileProfileDrawer({
                 type="button"
                 onClick={handleLogout}
                 disabled={signingOut}
-                className={`flex w-full min-h-[44px] items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL} text-white/45 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50`}
+                className={`flex w-full min-h-[44px] items-center gap-3 px-3 py-2.5 text-sm transition-all ${AURORA_SIDEBAR_IDLE} ${AURORA_LABEL} text-white/45 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50`}
               >
                 <LogOut className="h-4 w-4" />
                 {signingOut ? 'Leaving…' : 'Log out'}

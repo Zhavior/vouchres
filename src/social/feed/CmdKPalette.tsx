@@ -16,7 +16,7 @@ import {
   BarChart3, Trophy, Sparkles, Settings, LayoutDashboard, ShoppingBag,
   User, X,
 } from 'lucide-react';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
+import { AURORA_ACTIVE, AURORA_IDLE, AURORA_LABEL, AURORA_PANEL } from '../../theme/auroraTokens';
 import { preloadSection } from '../../lib/routePreload';
 import {
   FOCUSED_BETA_SHELL_ENABLED,
@@ -219,7 +219,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
         className={[
           'fixed z-[201] left-1/2 top-[12vh] -translate-x-1/2',
           'w-full max-w-[540px] mx-4',
-          Z8_PANEL,
+          AURORA_PANEL,
           'border-vouch-cyan/25 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.85)]',
           'overflow-hidden font-z8',
           'animate-in fade-in slide-in-from-top-4 duration-200',
@@ -250,7 +250,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <kbd className={`hidden sm:flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${Z8_LABEL} text-white/40`}>
+          <kbd className={`hidden sm:flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${AURORA_LABEL} text-white/40`}>
             ESC
           </kbd>
         </div>
@@ -270,7 +270,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
               const globalOffset = results.indexOf(items[0]);
               return (
                 <div key={group} className="mb-1">
-                  <div className={`px-4 py-1.5 ${Z8_LABEL} text-white/40`}>
+                  <div className={`px-4 py-1.5 ${AURORA_LABEL} text-white/40`}>
                     {group}
                   </div>
                   {items.map((item, i) => {
@@ -290,7 +290,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
                         }}
                         className={[
                           'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all border border-transparent font-mono',
-                          isActive ? Z8_ACTIVE : `${Z8_IDLE} border-transparent`,
+                          isActive ? AURORA_ACTIVE : `${AURORA_IDLE} border-transparent`,
                         ].join(' ')}
                       >
                         <span
@@ -305,7 +305,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
                         </span>
                         <span className="flex-1 text-left font-medium uppercase tracking-wide">{item.label}</span>
                         {isActive && (
-                          <kbd className={`flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${Z8_LABEL} text-white/40`}>
+                          <kbd className={`flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${AURORA_LABEL} text-white/40`}>
                             ↵
                           </kbd>
                         )}

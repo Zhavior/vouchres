@@ -4,11 +4,11 @@ import {
   type LegGradeStatus,
   type SlipGradeStatus,
 } from '../types/parlayOsTypes';
-import { z8StatusColor } from '../../../theme/z8Tokens';
+import { auroraStatusColor } from '../../../theme/auroraTokens';
 import { withAlpha } from '../../../theme/colors';
 
 function statusColorStyle(token: string) {
-  const color = z8StatusColor(token);
+  const color = auroraStatusColor(token);
   return {
     color,
     borderColor: withAlpha(color, 0.4),
