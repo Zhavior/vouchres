@@ -34,7 +34,12 @@ export default function LiveHud() {
         </div>
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-[82%] rounded-full bg-cyan-300" />
+          <motion.div
+            className="h-full rounded-full bg-cyan-300"
+            initial={{ width: 0 }}
+            animate={{ width: "82%" }}
+            transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+          />
         </div>
       </div>
 
