@@ -10,19 +10,20 @@ import {
   Users,
 } from '../components/landing/LandingIcons';
 import {
-  AURORA_INTERACTIVE,
-  AURORA_LABEL,
-  AURORA_PAGE,
-  AURORA_PANEL_PREMIUM,
-  AURORA_CYAN_RGB,
-} from '../theme/auroraTokens';
+  Z8_INTERACTIVE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PANEL_PREMIUM,
+  Z8_CYAN_RGB,
+} from '../theme/z8Tokens';
 
-const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${AURORA_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
-const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${AURORA_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
+const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
+const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
 
 import ScrollReveal from '../components/landing/ScrollReveal';
-import AuroraHero from '../components/landing/aurora/AuroraHero';
 import '../styles/public-landing.css';
+import '../styles/legacy/welcome-layout.css';
+import '../components/landing/LandingMobileShell.css';
 
 type SignupPlan = 'free' | 'pro';
 
@@ -107,16 +108,16 @@ function AuthModalFallback() {
       role="status"
       aria-live="polite"
     >
-      <div className={`w-full max-w-sm rounded-2xl ${AURORA_PANEL_PREMIUM} p-6 text-center`}>
+      <div className={`w-full max-w-sm rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}>
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" />
-        <p className={`${AURORA_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
+        <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
       </div>
     </div>
   );
 }
 
 function SectionPlaceholder({ heightClass = 'h-72' }: { heightClass?: string }) {
-  return <div className={`rounded-2xl ${AURORA_PANEL_PREMIUM} ${heightClass} animate-pulse`} aria-hidden="true" />;
+  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} ${heightClass} animate-pulse`} aria-hidden="true" />;
 }
 
 function DeferredSection({
@@ -214,10 +215,10 @@ function PricingGrid({
   onPlanIntent: () => void;
 }) {
   return (
-    <section className={`rounded-2xl ${AURORA_PANEL_PREMIUM} p-5 sm:p-6`}>
+    <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-6`}>
       <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
         <div>
-          <p className={`${AURORA_LABEL} text-vouch-cyan`}>Beta Pricing</p>
+          <p className={`${Z8_LABEL} text-vouch-cyan`}>Beta Pricing</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Choose your plan</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
@@ -233,7 +234,7 @@ function PricingGrid({
             onClick={() => onSelectPlan(plan.id)}
             onFocus={onPlanIntent}
             onMouseEnter={onPlanIntent}
-            className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${AURORA_INTERACTIVE} ${
+            className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${Z8_INTERACTIVE} ${
               plan.featured
                 ? 'border-vouch-cyan/50 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.12)]'
                 : 'border-white/10 bg-black/30 hover:border-vouch-cyan/40'
@@ -291,7 +292,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page ${AURORA_PAGE} relative min-h-screen pb-8 lg:pb-12`}>
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-8 lg:pb-12`}>
         <Suspense fallback={null}>
           <LandingDynamicBackground />
         </Suspense>
@@ -300,10 +301,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
           style={{
-            background: `radial-gradient(circle at 30% 20%, rgba(${AURORA_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
+            background: `radial-gradient(circle at 30% 20%, rgba(${Z8_CYAN_RGB},0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
-        <div className="pointer-events-none absolute right-0 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
+        <div className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
           style={{ background: `radial-gradient(circle, rgba(0,255,148,0.12), transparent 70%)` }}
         />
         <div className="ve-terminal-scanlines pointer-events-none absolute inset-0 z-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
@@ -350,13 +351,85 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
           <div className="space-y-8 sm:space-y-16 md:space-y-20 overflow-hidden">
             <ScrollReveal animation="scale-up">
-              <AuroraHero />
+              <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
+                  <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
+                    MLB Official Data
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NFL <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NBA <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
+              </div>
+
+              <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
+                Understand today&apos;s home run candidates{' '}
+                <span className="text-vouch-emerald">before you save a pick.</span>
+              </h1>
+
+              <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
+                Compare power, pitcher risk, park context, lineup status, and model confidence in one research workflow.
+              </p>
+
+              <div className="ve-terminal-trust-strip px-0.5">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="ve-terminal-trust-strip-item">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/40">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-1 text-[10px] text-white/35">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => openSignup('free')}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
+                  className={`ve-terminal-cta-primary z8-control flex h-14 w-full max-w-[280px] items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
+                >
+                  <Sparkles size={14} />
+                  Start researching free
+                </button>
+                <p className="-mt-2 text-xs text-white/45">No credit card required</p>
+                <button
+                  type="button"
+                  onClick={openLogin}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
+                  className="z8-control px-3 font-mono text-[11px] font-bold text-white/55 transition hover:text-white"
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+            </section>
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
               <DeferredSection heightClass="h-[28rem]">
                 {/* DEBUG_DISABLED_LandingDeviceShowcase */}
-                <LandingDeviceShowcase />
               </DeferredSection>
             </ScrollReveal>
 
@@ -388,10 +461,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
             <ScrollReveal>
               <section
-              className={`rounded-2xl ${AURORA_PANEL_PREMIUM} p-8 text-center`}
-              style={{ boxShadow: `0 0 48px rgba(${AURORA_CYAN_RGB},0.06)` }}
+              className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
+              style={{ boxShadow: `0 0 48px rgba(${Z8_CYAN_RGB},0.06)` }}
             >
-              <p className={`${AURORA_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
+              <p className={`${Z8_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
               <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
                 Build a record you can verify later.
               </h2>
@@ -403,7 +476,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 onClick={() => openSignup('free')}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`z8-control mt-6 inline-flex h-14 items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${AURORA_INTERACTIVE}`}
+                className={`z8-control mt-6 inline-flex h-14 items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
               >
                 Create a free account
                 <ChevronRight size={14} />

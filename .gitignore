@@ -35,3 +35,4 @@ drafts/
 
 # Internal documentation (not for public GitHub)
 docs/internal/
+.env*

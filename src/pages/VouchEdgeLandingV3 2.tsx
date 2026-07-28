@@ -21,8 +21,9 @@ const Z8_BTN_TERMINAL_HEADER_LOGIN = `z8-control ${AURORA_INTERACTIVE} border bo
 const Z8_BTN_TERMINAL_HEADER_SIGNUP = `z8-control ${AURORA_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;
 
 import ScrollReveal from '../components/landing/ScrollReveal';
-import AuroraHero from '../components/landing/aurora/AuroraHero';
 import '../styles/public-landing.css';
+import '../styles/legacy/welcome-layout.css';
+import '../components/landing/LandingMobileShell.css';
 
 type SignupPlan = 'free' | 'pro';
 
@@ -350,7 +351,80 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
           <div className="space-y-8 sm:space-y-16 md:space-y-20 overflow-hidden">
             <ScrollReveal animation="scale-up">
-              <AuroraHero />
+              <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
+                  <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
+                    MLB Official Data
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NFL <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-md sm:px-4 sm:py-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/50 sm:text-[10px] sm:tracking-widest">
+                    NBA <span className="text-vouch-emerald ml-1">Soon</span>
+                  </span>
+                </div>
+              </div>
+
+              <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
+                Understand today&apos;s home run candidates{' '}
+                <span className="text-vouch-emerald">before you save a pick.</span>
+              </h1>
+
+              <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
+                Compare power, pitcher risk, park context, lineup status, and model confidence in one research workflow.
+              </p>
+
+              <div className="ve-terminal-trust-strip px-0.5">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="ve-terminal-trust-strip-item">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/40">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-1 text-[10px] text-white/35">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => openSignup('free')}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
+                  className={`ve-terminal-cta-primary z8-control flex h-14 w-full max-w-[280px] items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${AURORA_INTERACTIVE}`}
+                >
+                  <Sparkles size={14} />
+                  Start researching free
+                </button>
+                <p className="-mt-2 text-xs text-white/45">No credit card required</p>
+                <button
+                  type="button"
+                  onClick={openLogin}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
+                  className="z8-control px-3 font-mono text-[11px] font-bold text-white/55 transition hover:text-white"
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+            </section>
             </ScrollReveal>
 
             <ScrollReveal delayMs={100}>
