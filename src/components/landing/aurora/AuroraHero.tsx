@@ -60,7 +60,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </div>
       </nav>
 
-      <div id="top" className="relative z-10 mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:px-8 lg:pb-32 lg:pt-28">
+      <div id="top" className="relative z-10 mx-auto mx-auto flex max-w-6xl flex-col items-center px-6 pb-24 pt-20 text-center lg:px-8 lg:pb-32 lg:pt-28">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
