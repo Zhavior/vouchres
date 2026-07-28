@@ -835,10 +835,16 @@
 
 /* Mobile should use natural document scroll */
 @media (max-width: 1180px) {
-  html,
+  html {
+    overflow: auto !important;
+  }
+
+  /* Keep one mobile scroll owner. When both html and body are overflow:auto,
+     touch browsers can select the full-height body as a non-scrollable gesture
+     target and never hand the swipe to the scrolling document element. */
   body,
   #root {
-    overflow: auto !important;
+    overflow: visible !important;
   }
 
   #inner-view-slot {

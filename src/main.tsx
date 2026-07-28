@@ -25,6 +25,18 @@ function ChunkRecoveryBootMarker() {
   return null;
 }
 
+function TodayPerformanceMonitor() {
+  useEffect(() => {
+    void import('./lib/todayWebVitals')
+      .then(({ initTodayWebVitals }) => initTodayWebVitals())
+      .catch(() => {
+        // Optional telemetry must never block application boot.
+      });
+  }, []);
+
+  return null;
+}
+
 function DeferredSpeedInsights() {
   const [enabled, setEnabled] = useState(false);
 
@@ -69,6 +81,7 @@ createRoot(rootEl).render(
   <StrictMode>
     <AppErrorBoundary>
       <ChunkRecoveryBootMarker />
+      <TodayPerformanceMonitor />
       <App />
       <DeferredSpeedInsights />
     </AppErrorBoundary>

@@ -19,7 +19,6 @@ const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboardZ8 = lazy(() => import('../TodayDashboardZ8'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
-const VouchEdgeLandingV3 = lazy(() => import('../../pages/VouchEdgeLandingV3'));
 const VouchBoardZ8 = lazy(() => import('../VouchBoardZ8'));
 const ProfilePageZ8 = lazy(() => import('../ProfilePageZ8'));
 const SettingsPageZ8 = lazy(() => import('../SettingsPageZ8'));
@@ -122,7 +121,7 @@ function MainViewRouter({
       }
       return (
         <LazyRoute>
-          <VouchEdgeLandingV3 onAuthed={onLoginSuccess} />
+          <VouchEdgeTerminalPage onAuthed={onLoginSuccess} />
         </LazyRoute>
       );
     case 'welcome': {
@@ -406,13 +405,15 @@ function TodayDashboardShell({
   navigateSection: (section: string) => void;
   isLoggedIn: boolean;
 }) {
-  const { profile, savedSlips } = useAppShell();
+  const { accountId, liveGames, profile, savedSlips } = useAppShell();
   return (
     <TodayDashboardZ8
       onSectionChange={navigateSection}
       savedSlips={savedSlips}
       profile={profile}
       isLoggedIn={isLoggedIn}
+      accountId={accountId}
+      liveGames={liveGames}
     />
   );
 }

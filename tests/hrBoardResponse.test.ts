@@ -93,4 +93,26 @@ describe('buildHrBoardApiPayload', () => {
     expect(payload.rows.map((row: { playerName: string }) => row.playerName)).toEqual(['Preview Guy']);
     expect(payload.rows[0].warnings?.some((w: string) => w.includes('Official lineup not posted yet'))).toBe(true);
   });
+
+  it('honors the requested limit and requires positive official evidence for confirmed rows', () => {
+    const payload = buildHrBoardApiPayload({
+      candidates: [
+        { playerId: 1, playerName: 'Unknown Status', team: 'NYY', hrScore: 99 },
+        { playerId: 2, playerName: 'Official One', team: 'NYY', hrScore: 98, lineupStatus: 'confirmed' },
+        { playerId: 3, playerName: 'Official Two', team: 'BOS', hrScore: 97, lineupStatus: 'confirmed' },
+      ],
+      projectedCandidates: Array.from({ length: 20 }, (_, index) => ({
+        playerId: 100 + index,
+        playerName: `Preview ${index}`,
+        team: 'SEA',
+        hrScore: 80 - index,
+        lineupStatus: 'projected_unconfirmed',
+      })),
+    }, 10);
+
+    expect(payload.confirmedCandidates.map((row) => row.playerName)).toEqual(['Official One', 'Official Two']);
+    expect(payload.projectedCandidates).toHaveLength(10);
+    expect(payload.allProjectedCandidates).toHaveLength(10);
+    expect(payload.contractVersion).toBe('hr-board.v2');
+  });
 });

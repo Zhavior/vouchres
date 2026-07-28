@@ -20,9 +20,19 @@ export function getHrBoardBootInitialUpdatedAt(date: string): number | undefined
   return bootDataStore.getUpdatedAt("dailyHrBoard");
 }
 
-async function fetchHrBoard(date: string): Promise<HrBoardResponse> {
+async function fetchHrBoard(date: string, signal?: AbortSignal): Promise<HrBoardResponse> {
   const { loadHrBoard } = await import('../../kernel/loaders/hrBoardLoader');
-  return loadHrBoard(date, HR_BOARD_CANONICAL_FETCH_LIMIT) as Promise<HrBoardResponse>;
+  return loadHrBoard(date, HR_BOARD_CANONICAL_FETCH_LIMIT, signal) as Promise<HrBoardResponse>;
+}
+
+function shouldRetryHrBoard(failureCount: number, error: unknown): boolean {
+  if (failureCount >= 2) return false;
+  const candidate = error as { name?: string; code?: string; status?: number };
+  if (candidate?.name === 'AbortError' || candidate?.code === 'hr_board_contract_invalid') return false;
+  if (typeof candidate?.status === 'number' && candidate.status >= 400 && candidate.status < 500 && candidate.status !== 429) {
+    return false;
+  }
+  return true;
 }
 
 export function hrBoardQueryOptions(date: string) {
@@ -33,13 +43,15 @@ export function hrBoardQueryOptions(date: string) {
 
   return queryOptions({
     queryKey: queryKeys.hrBoard(date),
-    queryFn: () => fetchHrBoard(date),
+    queryFn: ({ signal }) => fetchHrBoard(date, signal),
     initialData: bootSeed,
     initialDataUpdatedAt: bootUpdatedAt,
     staleTime,
     gcTime,
     refetchInterval: isToday ? refetchInterval : false,
     refetchOnMount: false,
-    placeholderData: (previousData) => previousData,
+    refetchOnReconnect: true,
+    retry: shouldRetryHrBoard,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
   });
 }

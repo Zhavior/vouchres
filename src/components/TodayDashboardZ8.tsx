@@ -24,14 +24,26 @@ import { AURORA_LABEL, AURORA_PAGE } from '../theme/auroraTokens';
 import { buildTodayDecision } from './today/todayDecisionModel';
 import TodayDecisionReel, { type BriefingFilter } from './today/TodayDecisionReel';
 import { buildTodayReelSlides } from './today/todayDecisionReelModel';
+import TodayAuroraHero, { type TodayHeroState } from './today/TodayAuroraHero';
+import TodayPersonalizationPanel, { type TodayPlayerOption } from './today/TodayPersonalizationPanel';
+import TodayChangeDigest from './today/TodayChangeDigest';
+import TodayAccountabilityCard from './today/TodayAccountabilityCard';
 import { toHrParlayPickerPlayer } from '../features/hr/utils/hrDecisionBrief';
 import { openParlayAdd } from '../lib/parlays/parlayAddContract';
+import { useTodayPreferences } from '../hooks/queries/useTodayPreferences';
+import { MLB_TEAM_OPTIONS } from '../lib/mlbTeamOptions';
+import { teamIdByName } from '../lib/teamLogos';
+import { useTodayChangeDigest } from '../hooks/useTodayChangeDigest';
+import type { LiveGameCard } from '../types/liveGames';
+import '../styles/today-aurora.css';
 
 interface Props {
   onSectionChange: (section: string) => void;
   savedSlips?: Parlay[];
   profile?: CreatorProofProfile;
   isLoggedIn?: boolean;
+  accountId?: string | null;
+  liveGames?: LiveGameCard[];
 }
 
 type QuickRoute = {
@@ -56,10 +68,13 @@ const BRIEFING_FILTERS: Array<{ id: BriefingFilter; label: string }> = [
   { id: 'activity', label: 'Activity' },
 ];
 
-export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: Props) {
+export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], profile, isLoggedIn = false, accountId = null, liveGames = [] }: Props) {
   const [briefingFilter, setBriefingFilter] = useState<BriefingFilter>('all');
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
+  const todayPreferencesQuery = useTodayPreferences(isLoggedIn);
+  const preferences = todayPreferencesQuery.preferences;
   const report = dailyReportQuery.data ?? null;
   const hrBoard = useMemo(
     () => hrBoardQuery.data ? buildBoard(hrBoardQuery.data) : null,
@@ -71,6 +86,22 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
     if (hrBoard.curated.length > 0) return hrBoard.curated;
     return hrBoard.all;
   }, [hrBoard]);
+  const rankedHrRows = useMemo(() => {
+    const followedIds = new Set(preferences.followedPlayers.map((player) => player.id));
+    const followedNames = new Set(preferences.followedPlayers.map((player) => player.name.trim().toLowerCase()));
+    const favoriteTeams = new Set(preferences.favoriteMlbTeamIds);
+
+    return visibleHrRows
+      .map((row, index) => {
+        const numericPlayerId = Number(row.playerId);
+        const followsPlayer = (Number.isInteger(numericPlayerId) && followedIds.has(numericPlayerId))
+          || followedNames.has(row.playerName.trim().toLowerCase());
+        const followsTeam = favoriteTeams.has(teamIdByName(row.team) ?? -1);
+        return { row, index, preferenceRank: followsPlayer ? 2 : followsTeam ? 1 : 0 };
+      })
+      .sort((a, b) => b.preferenceRank - a.preferenceRank || a.index - b.index)
+      .map(({ row }) => row);
+  }, [preferences.favoriteMlbTeamIds, preferences.followedPlayers, visibleHrRows]);
   const pendingSlipList = useMemo(
     () => savedSlips.filter((slip) => String(slip.status || 'PENDING').toUpperCase() === 'PENDING'),
     [savedSlips],
@@ -93,12 +124,31 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
     () => buildTodayReelSlides({
       decision,
       report,
-      topPlayer: visibleHrRows[0] ?? null,
+      topPlayer: rankedHrRows[0] ?? null,
+      preferredTeamIds: preferences.favoriteMlbTeamIds,
     }),
-    [decision, report, visibleHrRows],
+    [decision, preferences.favoriteMlbTeamIds, rankedHrRows, report],
   );
 
-  const featuredPlayer = visibleHrRows[0] ?? null;
+  const featuredPlayer = rankedHrRows[0] ?? null;
+  const heroSlide = preferences.favoriteMlbTeamIds.length > 0
+    ? reelSlides.find((slide) => slide.id === 'decision') ?? reelSlides[0] ?? null
+    : reelSlides[0] ?? null;
+  const personalizationLabel = preferences.favoriteMlbTeamIds.length + preferences.followedPlayers.length > 0
+    ? 'Ranked using your saved teams and players'
+    : undefined;
+  const playerOptions = useMemo<TodayPlayerOption[]>(() => {
+    const fromBoard = rankedHrRows.flatMap((row) => {
+      const id = Number(row.playerId);
+      if (!Number.isInteger(id) || id <= 0) return [];
+      return [{ id, name: row.playerName, team: row.team, headshotUrl: row.headshotUrl }];
+    });
+    const visibleIds = new Set(fromBoard.map((player) => player.id));
+    const savedPlayers = preferences.followedPlayers
+      .filter((player) => !visibleIds.has(player.id))
+      .map((player) => ({ ...player, team: 'Saved player', headshotUrl: null }));
+    return [...fromBoard, ...savedPlayers].slice(0, 50);
+  }, [preferences.followedPlayers, rankedHrRows]);
 
   const addFeaturedPlayerToSlip = useMemo(() => {
     if (!featuredPlayer) return undefined;
@@ -129,43 +179,151 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
   const isDegraded = dailyReportQuery.isError || hrBoardQuery.error || report?.dataQuality === 'limited';
   const statusTone = isLoading ? 'text-vouch-cyan' : isDegraded ? 'text-amber-300' : 'text-vouch-emerald';
   const statusDot = isLoading ? 'bg-vouch-cyan animate-pulse' : isDegraded ? 'bg-amber-300' : 'bg-vouch-emerald';
-  const statusLabel = isLoading ? 'Syncing' : isDegraded ? 'Partial data' : 'Live Sync Active';
+  const statusLabel = isLoading ? 'Syncing sources' : decision.statusLabel;
+  const freshnessLabel = formatFreshness(report?.generatedAt, dailyReportQuery.dataUpdatedAt, hrBoardQuery.lastUpdated);
+  const heroState: TodayHeroState = isLoading
+    ? 'loading'
+    : isDegraded
+      ? 'degraded'
+      : report?.gameCount === 0
+        ? 'no-slate'
+        : decision.liveGames > 0
+          ? 'live'
+          : decision.upcomingGames > 0
+            ? 'pregame'
+            : 'postgame';
+  const changeDigest = useTodayChangeDigest({
+    accountId,
+    report,
+    hrRows: visibleHrRows,
+    liveGames,
+    enabled: isLoggedIn && !isLoading && !isDegraded,
+  });
+  const contextualChanges = useMemo(() => {
+    const enabledAlerts = new Set(preferences.inAppAlertTypes);
+    const followedPlayerIds = new Set(preferences.followedPlayers.map((player) => player.id));
+    const favoriteTeamIds = new Set(preferences.favoriteMlbTeamIds);
+
+    return changeDigest.changes.filter((change) => {
+      if (change.kind === 'lineup') {
+        return enabledAlerts.has('followed_player_lineup')
+          && change.playerId !== null
+          && change.playerId !== undefined
+          && followedPlayerIds.has(change.playerId);
+      }
+      if (change.kind === 'game-final' || change.kind === 'game-status') {
+        return enabledAlerts.has('favorite_team_game_state')
+          && Boolean(change.teamIds?.some((teamId) => favoriteTeamIds.has(teamId)));
+      }
+      return enabledAlerts.has('research_change');
+    });
+  }, [changeDigest.changes, preferences.favoriteMlbTeamIds, preferences.followedPlayers, preferences.inAppAlertTypes]);
+
+  const refreshToday = () => {
+    void Promise.all([dailyReportQuery.refetch(), hrBoardQuery.refresh()]);
+  };
 
   return (
-    <main className={`${AURORA_PAGE} min-h-screen w-full max-w-full min-w-0 pb-24`} id="today-dashboard">
+    <main className={`${AURORA_PAGE} min-h-screen w-full max-w-full min-w-0 pb-24`} id="today-dashboard" data-performance-page="today">
 
-      {/* ── Sticky top bar with Glassmorphism ─────────────────────────── */}
-      <div className="sticky top-0 z-30 border-b border-white/12 bg-[#060c14]/90 backdrop-blur-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-[#040910]/88 px-4 py-3 shadow-lg backdrop-blur-2xl">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-vouch-emerald/20 border border-vouch-emerald/40 font-mono text-[10px] font-black text-vouch-emerald shadow-[0_0_10px_rgba(0,255,148,0.25)]">
-            VE
-          </span>
+          <img src="/vouchedge-mark-aurora.svg" alt="" className="h-8 w-8 object-contain drop-shadow-[0_0_14px_rgba(0,240,255,.35)]" />
           <div>
-            <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-none uppercase">Today&apos;s Intel</h1>
+            <p className="text-sm font-black leading-none tracking-tight text-white sm:text-base">Today</p>
             <p className="text-[10px] text-slate-400 font-bold leading-none mt-1">{formatReportDate(report?.date)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Status Live Pill */}
-          <div className="flex items-center gap-1.5 rounded-xl border border-white/12 bg-black/40 px-3 py-1 font-mono text-[11px]">
+          <div id="today-data-status" className="hidden items-center gap-1.5 rounded-xl border border-white/12 bg-black/40 px-3 py-1.5 font-mono text-[10px] sm:flex">
             <span className={`h-2 w-2 rounded-full ${statusDot}`} />
-            <span className={`font-bold uppercase tracking-wider ${statusTone}`}>{statusLabel}</span>
+            <span className={`font-bold tracking-wide ${statusTone}`}>{statusLabel}</span>
           </div>
+          {isLoggedIn ? (
+            <button
+              type="button"
+              onClick={() => setPreferencesOpen((open) => !open)}
+              aria-expanded={preferencesOpen}
+              aria-controls="today-personalization-panel"
+              className="inline-flex min-h-9 items-center rounded-xl border border-white/12 bg-black/40 px-2.5 text-[10px] font-bold text-white/60 transition hover:border-vouch-cyan/30 hover:text-vouch-cyan sm:px-3"
+            >
+              <Sparkles className="mr-1.5 h-3.5 w-3.5 text-vouch-cyan" aria-hidden="true" />
+              <span className="sm:hidden">Tune</span><span className="hidden sm:inline">Personalize</span>
+            </button>
+          ) : null}
           <button
             type="button"
-            onClick={() => dailyReportQuery.refetch?.()}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-slate-300 hover:text-vouch-cyan transition"
-            title="Refresh Data"
+            onClick={refreshToday}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-slate-300 transition hover:border-vouch-cyan/30 hover:text-vouch-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan"
+            aria-label="Refresh today's report and HR board"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin text-vouch-cyan' : ''}`} />
           </button>
         </div>
       </div>
 
-      <div className="px-3 sm:px-6 lg:px-8 pt-4 pb-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="mx-auto max-w-7xl space-y-4 px-3 pb-8 pt-4 sm:space-y-6 sm:px-6 lg:px-8">
 
-        {/* ── Compact 4-Stat Ticker Strip (SINGLE ROW ON MOBILE) ───────── */}
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-3" id="today-stat-chips">
+        <TodayAuroraHero
+          decision={decision}
+          displayName={profile?.displayName}
+          featuredSlide={heroSlide}
+          freshnessLabel={freshnessLabel}
+          personalizationLabel={personalizationLabel}
+          state={heroState}
+          onSectionChange={onSectionChange}
+        />
+
+        {preferencesOpen ? (
+          todayPreferencesQuery.isLoading ? (
+            <section id="today-personalization-panel" className="rounded-3xl border border-vouch-cyan/20 bg-[#07131f]/95 p-6 text-center" aria-live="polite">
+              <RefreshCw className="mx-auto h-5 w-5 animate-spin text-vouch-cyan" />
+              <p className="mt-3 text-sm font-bold text-white/60">Loading your Aurora preferences…</p>
+            </section>
+          ) : todayPreferencesQuery.isError ? (
+            <section id="today-personalization-panel" className="rounded-3xl border border-amber-300/25 bg-[#16120a]/95 p-6 text-center" role="alert">
+              <p className="text-sm font-bold text-amber-200">Your preferences could not be loaded.</p>
+              <button type="button" onClick={() => void todayPreferencesQuery.refetch()} className="z8-control mt-3 rounded-xl border border-amber-300/30 px-4 text-xs font-black text-amber-200">Try again</button>
+            </section>
+          ) : (
+            <TodayPersonalizationPanel
+              key={preferences.updatedAt ?? 'new-preferences'}
+              preferences={preferences}
+              teams={MLB_TEAM_OPTIONS}
+              players={playerOptions}
+              isSaving={todayPreferencesQuery.isSaving}
+              saveError={todayPreferencesQuery.saveError}
+              onSave={todayPreferencesQuery.savePreferences}
+              onClose={() => setPreferencesOpen(false)}
+            />
+          )
+        ) : null}
+
+        <TodayChangeDigest
+          changes={contextualChanges}
+          baselineCapturedAt={changeDigest.baselineCapturedAt}
+          onMarkAsChecked={changeDigest.markAsChecked}
+          onOpenSubject={(change) => onSectionChange(change.kind === 'game-final' || change.kind === 'game-status' ? 'live_games' : 'hr_board')}
+        />
+
+        <section id="today-resume-card" className="group relative overflow-hidden rounded-2xl border border-vouch-cyan/20 bg-gradient-to-r from-vouch-cyan/[0.08] via-[#07131f] to-vouch-emerald/[0.07] p-4 shadow-[0_24px_70px_-48px_rgba(0,240,255,.75)] sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-5">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-vouch-cyan to-vouch-emerald" />
+          <div className="min-w-0 pl-1">
+            <p className={`${AURORA_LABEL} text-vouch-cyan`}>{decision.resumeLabel}</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-white">{decision.resumeTitle}</h2>
+            <p className="mt-1 text-xs leading-5 text-white/48">{decision.resumeDetail}</p>
+          </div>
+          <button
+            type="button"
+            data-testid="today-resume-action"
+            onClick={() => onSectionChange(decision.resumeSection)}
+            className="mt-4 inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 text-xs font-black text-vouch-cyan transition hover:bg-vouch-cyan/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan sm:mt-0 sm:w-auto"
+          >
+            Continue <ArrowRight className="h-4 w-4" />
+          </button>
+        </section>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3" id="today-stat-chips">
           <StatChip icon={Gamepad2} value={report?.gameCount ?? '—'} label="MLB Games Today" color="text-vouch-emerald" glow="hover:border-vouch-emerald/40 shadow-[0_0_10px_rgba(0,255,148,0.1)]" />
           <StatChip icon={Radio}    value={decision.liveGames}        label="In-Progress"     color="text-rose-400" glow="hover:border-rose-400/40 shadow-[0_0_10px_rgba(244,63,94,0.1)]" />
           <StatChip icon={CheckCircle2} value={decision.finalGames}   label="Completed"       color="text-slate-300" glow="hover:border-white/30" />
@@ -186,13 +344,14 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {QUICK_ROUTES.map((route) => (
               <button
                 key={route.section}
                 type="button"
+                data-testid={`today-quick-route-${route.section}`}
                 onClick={() => onSectionChange(route.section)}
-                 className={`flex min-h-11 flex-col items-center justify-center rounded-xl border p-2.5 gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 ${route.bg}`}
+                 className={`flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan ${route.bg}`}
               >
                 <route.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${route.color}`} />
                 <span className={`text-[10px] font-black text-center leading-tight tracking-tight ${route.color}`}>{route.label}</span>
@@ -243,6 +402,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [] }: P
           </div>
 
           <div className="space-y-6 lg:sticky lg:top-20">
+            <TodayAccountabilityCard savedSlips={savedSlips} finalGames={decision.finalGames} onSectionChange={onSectionChange} />
             {/* ── Active Slip card ───────────────────────────── */}
             <section id="today-active-slip">
               <div className="flex items-center justify-between mb-3">
@@ -334,6 +494,23 @@ function StatChip({ icon: Icon, value, label, color, glow }: { icon: React.Compo
 function formatReportDate(value?: string) {
   const parsed = value ? new Date(`${value}T12:00:00`) : new Date();
   return parsed.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function formatFreshness(reportGeneratedAt?: string, reportUpdatedAt?: number, boardUpdatedAt?: Date | null) {
+  const candidates = [
+    reportGeneratedAt ? new Date(reportGeneratedAt).getTime() : Number.NaN,
+    reportUpdatedAt ?? Number.NaN,
+    boardUpdatedAt?.getTime() ?? Number.NaN,
+  ].filter(Number.isFinite);
+
+  if (candidates.length === 0) return 'Update time unavailable';
+
+  const oldest = Math.min(...candidates);
+  const ageMinutes = Math.max(0, Math.floor((Date.now() - oldest) / 60_000));
+  if (ageMinutes < 1) return 'Updated just now';
+  if (ageMinutes < 60) return `Updated ${ageMinutes}m ago`;
+
+  return `Updated ${new Date(oldest).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
 
 function formatOdds(odds: number | null) {

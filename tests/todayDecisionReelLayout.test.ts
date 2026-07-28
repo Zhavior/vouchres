@@ -10,7 +10,7 @@ describe('Today decision reel layout stability', () => {
   it('uses a horizontally scrollable snap rail instead of one oversized slide', () => {
     expect(source).toContain('snap-x snap-mandatory');
     expect(source).toContain('overflow-x-auto');
-    expect(source).toContain('scrollBy({ left: direction * 328');
+    expect(source).toContain('scrollBy?.({ left: direction * 328');
     expect(source).not.toContain('h-[760px]');
   });
 
@@ -48,5 +48,13 @@ describe('Today decision reel layout stability', () => {
     expect(source).toContain("filter === 'activity'");
     expect(source).toContain('pendingSlip');
     expect(source).toContain('Odds unavailable');
+  });
+
+  it('shows mobile wayfinding tied to the currently snapped card', () => {
+    expect(source).toContain('data-testid="today-reel-progress"');
+    expect(source).toContain("rail.querySelectorAll<HTMLElement>('[data-reel-card]')");
+    expect(source).toContain('setActiveIndex(closest.index)');
+    expect(source).toContain('aria-live="polite"');
+    expect(source).toContain("{Math.min(activeIndex + 1, itemCount)} of {itemCount}");
   });
 });

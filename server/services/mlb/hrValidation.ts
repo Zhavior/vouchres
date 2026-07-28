@@ -93,6 +93,10 @@ export interface ScoredHrCandidate {
   injuryStatus: InjuryStatus;
   hrScore: number;
   estimatedHrProbability?: number;
+  /** Verified MLB recent-game-log summary. */
+  recentHomeRuns?: number;
+  recentHrGames?: number;
+  recentGamesChecked?: number;
   confidenceTier?: "elite" | "strong" | "watchlist" | "thin" | "avoid";
   dataConfidence: number;
   scoreBreakdown?: {

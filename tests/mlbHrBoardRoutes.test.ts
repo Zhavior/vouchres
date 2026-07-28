@@ -113,6 +113,20 @@ describe("mlb hr board routes", () => {
     expect(Array.isArray(body.candidates)).toBe(true);
     expect(body.candidates).toEqual(body.confirmedCandidates);
     expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
+    expect(response.headers.get("x-hr-board-contract")).toBe("hr-board.v2");
+  });
+
+  it("serves a compact wire contract without duplicate board arrays", async () => {
+    const response = await fetch(`${baseUrl}/api/mlb/hr-board/today?previewLimit=50&compact=1`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.transportMode).toBe("compact");
+    expect(body.contractVersion).toBe("hr-board.v2");
+    expect(body.rows).toBeUndefined();
+    expect(body.confirmedCandidates).toBeUndefined();
+    expect(body.candidateBuckets).toBeUndefined();
+    expect(body.candidates).toHaveLength(1);
   });
 
   it("walls off deep board so it cannot claim confirmed candidates", async () => {

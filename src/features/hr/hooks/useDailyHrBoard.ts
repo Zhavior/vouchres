@@ -17,14 +17,35 @@ export function useDailyHrBoard(date: string) {
     };
   }, [date, query.data, query.dataUpdatedAt]);
 
+  const meta = query.data?.meta;
+  const requestId = typeof meta?.requestId === 'string' ? meta.requestId : null;
+  const source = typeof meta?.source === 'string' ? meta.source : null;
+  const sourceUpdatedAt = typeof meta?.updatedAt === 'string' ? new Date(meta.updatedAt) : null;
+  const validSourceUpdatedAt = sourceUpdatedAt && !Number.isNaN(sourceUpdatedAt.getTime()) ? sourceUpdatedAt : null;
+  const lastSuccessfulUpdate = validSourceUpdatedAt
+    ?? (query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : null);
+  const backgroundError = query.isError && Boolean(query.data);
+  const blockingError = query.isError && !query.data;
+
   return {
     data: contract,
     loading: query.isLoading && !query.data,
     syncing: query.isFetching,
-    error: query.isError ? 'Data unavailable right now.' : null,
-    lastUpdated: query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : null,
+    error: blockingError ? 'Home Run Intelligence could not reach its validated data service.' : null,
+    refreshError: backgroundError
+      ? `Refresh failed — showing the last successful board${requestId ? ` (request ${requestId})` : ''}.`
+      : null,
+    lastUpdated: lastSuccessfulUpdate,
+    connection: {
+      requestId,
+      source,
+      transportMode: query.data?.transportMode ?? null,
+      contractVersion: query.data?.contractVersion ?? null,
+      isLastGood: source === 'validated_hr_board_last_good',
+    },
     refresh: async () => {
-      await query.refetch();
+      const result = await query.refetch({ throwOnError: false });
+      return result.isSuccess;
     },
   };
 }

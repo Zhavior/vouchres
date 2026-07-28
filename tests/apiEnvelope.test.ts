@@ -17,6 +17,7 @@ describe("apiEnvelope", () => {
     ).toEqual({
       date: "2026-07-09",
       rows: [],
+      meta: { requestId: "req_1" },
     });
   });
 

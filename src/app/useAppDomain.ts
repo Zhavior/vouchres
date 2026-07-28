@@ -23,6 +23,7 @@ import type { AppShellState } from '../context/AppShellContext';
 import type { CreatorProofProfile, Leg, MLBPlayer, Parlay, Vouch } from '../types';
 
 type UseAppDomainArgs = {
+  accountId: string | null;
   navigateSection: (section: string) => void;
   handleLoginSuccess: () => void;
   handleLogoutComplete: () => void;
@@ -37,6 +38,7 @@ type UseAppDomainArgs = {
 };
 
 export function useAppDomain({
+  accountId,
   navigateSection,
   handleLoginSuccess,
   handleLogoutComplete,
@@ -290,23 +292,27 @@ export function useAppDomain({
 
   const appShellState = useMemo(
     () => ({
+      accountId,
       posts,
       profile,
       savedVouchIds,
       savedVouches,
       savedSlips,
       activeLegs,
+      liveGames,
       onSaveVouch: handleSaveVouch,
       onAuthLoginSuccess: handleLoginSuccess,
       onAuthLogoutComplete: handleLogoutComplete,
     }),
     [
+      accountId,
       posts,
       profile,
       savedVouchIds,
       savedVouches,
       savedSlips,
       activeLegs,
+      liveGames,
       handleSaveVouch,
       handleLoginSuccess,
       handleLogoutComplete,

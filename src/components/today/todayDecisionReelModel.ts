@@ -46,16 +46,20 @@ interface BuildTodayReelInput {
   decision: TodayDecision;
   report: DailyMlbReport | null;
   topPlayer: HrWatchRow | null;
+  preferredTeamIds?: number[];
 }
 
 const LIVE_STATUS = /live|in progress|manager challenge|delayed/i;
 const FINAL_STATUS = /final|game over|completed/i;
 
-function featuredGame(report: DailyMlbReport | null) {
+function featuredGame(report: DailyMlbReport | null, preferredTeamIds: number[] = []) {
   const games = report?.games ?? [];
-  return games.find((game) => LIVE_STATUS.test(game.status))
-    ?? games.find((game) => !FINAL_STATUS.test(game.status))
-    ?? games[0]
+  const preferred = new Set(preferredTeamIds);
+  const favoriteGames = games.filter((game) => preferred.has(game.awayTeam.teamId) || preferred.has(game.homeTeam.teamId));
+  const candidates = favoriteGames.length > 0 ? favoriteGames : games;
+  return candidates.find((game) => LIVE_STATUS.test(game.status))
+    ?? candidates.find((game) => !FINAL_STATUS.test(game.status))
+    ?? candidates[0]
     ?? null;
 }
 
@@ -80,8 +84,8 @@ function matchupVisual(game: DailyMlbReport['games'][number] | null): TodayReelV
   };
 }
 
-export function buildTodayReelSlides({ decision, report, topPlayer }: BuildTodayReelInput): TodayReelSlide[] {
-  const game = featuredGame(report);
+export function buildTodayReelSlides({ decision, report, topPlayer, preferredTeamIds }: BuildTodayReelInput): TodayReelSlide[] {
+  const game = featuredGame(report, preferredTeamIds);
   const decisionSlide: TodayReelSlide = {
     id: 'decision',
     tone: decision.tone,

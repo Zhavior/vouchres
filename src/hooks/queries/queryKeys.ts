@@ -15,4 +15,5 @@ export const queryKeys = {
   feed: () => ['feed'] as const,
   hrFeedToday: () => ['hrFeedToday'] as const,
   appNotifications: () => ['appNotifications'] as const,
+  todayPreferences: () => ['todayPreferences'] as const,
 };

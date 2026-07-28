@@ -6,6 +6,7 @@ import type { HrBuckets } from '../../hooks/useHrBoardViewModel';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief } from '../../utils/hrDecisionBrief';
 import { HrPlayerCard, type HrCardResult } from '../Cards/HrPlayerCard';
+import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
 
 interface HrBoardProps {
   buckets: HrBuckets;
@@ -93,6 +94,10 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTogglePlay
             <p className="mt-0.5 font-mono text-[13px] font-black tabular-nums text-white/90">{metric(value as number | null)}</p>
           </div>
         ))}
+      </div>
+
+      <div className="border-b border-white/[0.08] p-2">
+        <HrOpportunitySummary player={player} compact />
       </div>
 
       <div className="min-h-[88px] space-y-2 px-2.5 py-2.5">

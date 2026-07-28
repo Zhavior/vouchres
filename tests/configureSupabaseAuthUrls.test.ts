@@ -30,9 +30,11 @@ describe("configureSupabaseAuthUrls", () => {
     expect(config.siteUrl).toBe("https://vouchedge.app");
     expect(config.redirectEntries).toContain("https://vouchedge.app/**");
     expect(config.redirectEntries).toContain("https://vouchedge.app/auth/callback");
+    expect(config.redirectEntries).toContain("https://vouchedge.app/auth/reset-password");
     expect(config.redirectEntries).toContain("https://www.vouchedge.app/**");
     expect(config.redirectEntries).toContain("https://staging.vouchedge.app/**");
     expect(config.redirectEntries).toContain("http://localhost:3000/auth/callback");
+    expect(config.redirectEntries).toContain("http://localhost:3000/auth/reset-password");
     expect(config.redirectEntries).toContain("https://*.vercel.app/**");
     expect(config.uriAllowList).toContain("https://vouchedge.app/**");
   });

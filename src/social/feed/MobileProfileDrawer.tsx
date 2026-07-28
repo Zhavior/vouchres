@@ -4,7 +4,7 @@
  * Opened via the Menu FAB in AppNav. Avatar ring is driven by profile.subscriptionTier.
  * Notifications and logout each appear once here (no duplicate top header chrome).
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from '../../lib/motion';
 import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
@@ -25,6 +25,10 @@ import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
+import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
+import { getActiveSport } from '../../sports/registry';
+import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
+import '../../styles/aurora-sidebar.css';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -35,6 +39,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 /** HR nav items use Flame per featureConfig. */
 const HR_NAV_IDS = new Set(['hr_board']);
+
+function isDrawerItemActive(activeSection: string, featureId: string): boolean {
+  if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
+  if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
+  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
+  return activeSection === featureId;
+}
 
 export interface TierMeta {
   label: string;
@@ -120,6 +132,8 @@ function MobileProfileDrawer({
 }: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
   const [signingOut, setSigningOut] = useState(false);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const { data: liveGamesPayload } = useLiveGames({ enabled: open });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
 
@@ -127,21 +141,54 @@ function MobileProfileDrawer({
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
+
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !drawerRef.current) return;
+      const focusable = Array.from(drawerRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      )).filter((element) => element.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const handleResize = () => { if (window.innerWidth >= 768) onClose(); };
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('resize', handleResize);
+      previouslyFocused?.focus({ preventScroll: true });
+    };
   }, [open, onClose]);
 
   const [featureLayout] = useState(() => loadFeatureLayout());
   const groups = useMemo(() => {
     if (!open) return [];
-    const features = getSidebarFeatures(featureLayout);
+    const features = getSidebarFeatures(featureLayout, { activeSport: getActiveSport() }).map((feature) => {
+      if (feature.id !== 'premium') return feature;
+      const managesPlan = profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
+      return { ...feature, label: managesPlan ? 'Plan & Billing' : 'Upgrade' };
+    });
     const SIDEBAR_GROUPS: FeatureGroup[] = ["Daily", "Pro Labs", "AI", "Build & Track", "Social", "Account"];
     return SIDEBAR_GROUPS.map(group => ({
       group,
       items: features.filter(f => f.group === group),
     })).filter(g => g.items.length > 0);
-  }, [open, featureLayout]);
+  }, [open, featureLayout, profile.subscriptionTier]);
 
   const sectionIdsByGroup = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -181,19 +228,23 @@ function MobileProfileDrawer({
             onClick={onClose}
           />
           <motion.aside
-            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${AURORA_SIDEBAR_SHELL} shadow-[4px_0_40px_rgba(0,0,0,0.45)]`}
+            ref={drawerRef}
+            className={`ve-aurora-mobile-drawer absolute inset-y-0 left-0 flex w-[88vw] max-w-[340px] flex-col ${AURORA_SIDEBAR_SHELL} shadow-[4px_0_50px_rgba(0,0,0,0.58)]`}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Profile header — real token-identity data only */}
-            <div className="px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-              <div className="flex items-start justify-between pt-1">
-                <TierAvatar profile={profile} size={52} onClick={() => go('profile')} ariaLabel="Open profile" />
+            {/* Aurora brand and account identity — real profile data only */}
+            <div className="border-b border-white/[0.07] px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <button type="button" onClick={() => go('today')} aria-label="Go to Today" className="min-w-0 rounded-xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
+                  <VouchEdgeLogo markClassName="h-10 w-10" />
+                </button>
                 <div className="flex items-center gap-1.5">
                   <NotificationBellButton size="sm" />
                   <button
+                    ref={closeButtonRef}
                     type="button"
                     onClick={onClose}
                     aria-label="Close menu"
@@ -203,46 +254,47 @@ function MobileProfileDrawer({
                   </button>
                 </div>
               </div>
-              <button type="button" onClick={() => go('profile')} className="mt-2.5 block text-left">
-                <p className="flex items-center gap-1.5 text-base font-black text-white">
-                  {profile.displayName}
-                  {profile.verified && <Shield className="h-3.5 w-3.5 text-vouch-cyan fill-vouch-cyan/85" />}
-                </p>
-                <p className="text-xs text-white/40">@{profile.username}</p>
-              </button>
-              <div className="z8-accent-line mt-3 w-full" aria-hidden />
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${meta.chipBg} ${meta.text}`}>
-                  {meta.label}
-                </span>
-                {profile.subscriptionTier !== 'SELLER_PRO' && (
+
+              <div className="ve-aurora-mobile-account mt-4 rounded-2xl p-3.5">
+                <div className="flex items-center gap-3">
+                  <TierAvatar profile={profile} size={48} onClick={() => go('profile')} ariaLabel="Open profile" />
+                  <button type="button" onClick={() => go('profile')} className="min-w-0 flex-1 text-left">
+                    <p className="flex items-center gap-1.5 truncate text-base font-black text-white">
+                      {profile.displayName}
+                      {profile.verified && <Shield className="h-3.5 w-3.5 shrink-0 fill-vouch-cyan/85 text-vouch-cyan" />}
+                    </p>
+                    <p className="truncate text-xs text-white/40">@{profile.username}</p>
+                  </button>
+                  <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${meta.chipBg} ${meta.text}`}>
+                    {meta.label}
+                  </span>
+                </div>
+
+                <div className="ve-aurora-mobile-proof mt-3 flex items-center gap-4 border-t border-white/[0.07] pt-3 text-xs">
+                  <span><strong className="text-white">{profile.totalPicks}</strong> <span className="text-white/40">picks</span></span>
+                  <span>
+                    {profileHasGradedPicks(profile) ? (
+                      <><strong className="text-white">{profile.winRate.toFixed(1)}%</strong>{' '}<span className="text-white/40">win rate</span></>
+                    ) : (
+                      <span className="text-white/50">No graded picks yet</span>
+                    )}
+                  </span>
+                  <span>
+                    <strong className={profile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}>
+                      {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}u
+                    </strong>
+                  </span>
+                </div>
+
+                {profile.subscriptionTier !== 'GOLD' && profile.subscriptionTier !== 'SELLER_PRO' && (
                   <button
                     type="button"
                     onClick={() => go('premium')}
-                    className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-white/50 transition hover:bg-vouch-emerald/10 hover:text-vouch-emerald hover:shadow-[0_0_10px_rgba(0,255,148,0.12)]"
+                    className="ve-aurora-mobile-upgrade mt-3 w-full rounded-xl border border-vouch-emerald/15 bg-vouch-emerald/[0.06] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-vouch-emerald"
                   >
-                    Upgrade
+                    Explore VouchEdge Beta
                   </button>
                 )}
-              </div>
-              {/* Real proof stats (like X's follower row, but ours are graded numbers) */}
-              <div className="mt-3 flex items-center gap-4 text-xs">
-                <span><strong className="text-white">{profile.totalPicks}</strong> <span className="text-white/40">picks</span></span>
-                <span>
-                  {profileHasGradedPicks(profile) ? (
-                    <>
-                      <strong className="text-white">{profile.winRate.toFixed(1)}%</strong>{' '}
-                      <span className="text-white/40">win rate</span>
-                    </>
-                  ) : (
-                    <span className="text-white/50">No graded picks yet</span>
-                  )}
-                </span>
-                <span>
-                  <strong className={profile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}>
-                    {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}u
-                  </strong>
-                </span>
               </div>
             </div>
 
@@ -252,7 +304,7 @@ function MobileProfileDrawer({
                 const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
                 const collapsed = isCollapsed(group);
                 return (
-                <div key={group} className={`mb-3 overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
+                <div key={group} className={`mb-3 overflow-hidden rounded-2xl border border-white/[0.06] ${AURORA_SIDEBAR_PANEL}`}>
                   <button
                     type="button"
                     aria-expanded={!collapsed}
@@ -271,7 +323,7 @@ function MobileProfileDrawer({
                     {items.map((item) => {
                       const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
                       const Icon = ICON_MAP[resolvedIcon] || Settings;
-                      const isActive = activeSection === item.id;
+                      const isActive = isDrawerItemActive(activeSection, item.id);
                       return (
                         <button
                           key={item.id}
@@ -281,9 +333,10 @@ function MobileProfileDrawer({
                           title={item.label}
                           aria-current={isActive ? 'page' : undefined}
                           className={[
-                            'relative flex min-h-[44px] w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',
+                            've-aurora-nav-item relative flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-all font-z8',
                             isActive ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
                           ].join(' ')}
+                          data-active={isActive ? 'true' : 'false'}
                         >
                           {isActive && (
                             <span
@@ -321,6 +374,7 @@ function MobileProfileDrawer({
               <button
                 type="button"
                 onClick={() => go('settings')}
+                aria-current={activeSection === 'settings' ? 'page' : undefined}
                 className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${AURORA_SIDEBAR_IDLE} ${AURORA_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings

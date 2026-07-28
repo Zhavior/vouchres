@@ -39,6 +39,40 @@ function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 120, 10, 350);
 }
 
+function wantsCompactHrBoard(raw: unknown): boolean {
+  return raw === "1" || raw === "true";
+}
+
+function candidateIdentity(row: unknown): string {
+  if (!row || typeof row !== "object") return "";
+  const candidate = row as Record<string, unknown>;
+  return String(candidate.playerId ?? candidate.id ?? candidate.playerName ?? "");
+}
+
+function sameCandidateSequence(left: unknown, right: unknown): boolean {
+  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+  return left.every((row, index) => candidateIdentity(row) === candidateIdentity(right[index]));
+}
+
+function compactHrBoardPayload(payload: Record<string, any>): Record<string, unknown> {
+  const {
+    rows: _rows,
+    confirmedCandidates: _confirmedCandidates,
+    candidateBuckets: _candidateBuckets,
+    allProjectedCandidates,
+    ...rest
+  } = payload;
+
+  return {
+    ...rest,
+    contractVersion: "hr-board.v2",
+    transportMode: "compact",
+    ...(sameCandidateSequence(payload.projectedCandidates, allProjectedCandidates)
+      ? {}
+      : { allProjectedCandidates }),
+  };
+}
+
 function collectHrBoardWarnings(payload: { rows?: unknown }, result?: { lastGoodWarnings?: string[]; servedFromLastGood?: boolean }): string[] {
   const warnings = new Set<string>();
 
@@ -78,12 +112,14 @@ function buildHrBoardRouteMeta(
     warnings: collectHrBoardWarnings(payloadForWarnings, result),
     cache: {
       strategy: result.servedFromLastGood ? "hr_board_last_good_snapshot" : "hr_board_hub_ttl",
-      ttlMs: result.servedFromLastGood ? LAST_GOOD_TTL_MS : 900_000,
+      ttlMs: result.servedFromLastGood ? LAST_GOOD_TTL_MS : VALIDATED_HR_BOARD_TTL_MS,
+      asOf: payload.generatedAt,
     },
   });
 }
 
 const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000);
+const VALIDATED_HR_BOARD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900) * 1000;
 
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
@@ -142,9 +178,14 @@ res.json(apiOkFlat(req, {
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard();
       const payload = buildHrBoardApiPayload(result, previewLimit);
+      const responsePayload = wantsCompactHrBoard(req.query.compact)
+        ? compactHrBoardPayload(payload)
+        : payload;
       res.setHeader("Cache-Control", "private, max-age=30, stale-while-revalidate=120");
+      res.setHeader("X-HR-Board-Contract", "hr-board.v2");
+      if (payload.generatedAt) res.setHeader("X-HR-Board-Generated-At", payload.generatedAt);
       res.json(apiOkFlat(req, {
-        ...payload,
+        ...responsePayload,
         meta: buildHrBoardRouteMeta(payload, result, payload),
       }));
     } catch (err: any) {
@@ -215,9 +256,14 @@ res.json(apiOkFlat(req, {
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard(date);
       const payload = buildHrBoardApiPayload(result, previewLimit);
+      const responsePayload = wantsCompactHrBoard(req.query.compact)
+        ? compactHrBoardPayload(payload)
+        : payload;
       res.setHeader("Cache-Control", "private, max-age=30, stale-while-revalidate=120");
+      res.setHeader("X-HR-Board-Contract", "hr-board.v2");
+      if (payload.generatedAt) res.setHeader("X-HR-Board-Generated-At", payload.generatedAt);
       res.json(apiOkFlat(req, {
-        ...payload,
+        ...responsePayload,
         meta: buildHrBoardRouteMeta(payload, result, payload),
       }));
     } catch (err: any) {

@@ -76,7 +76,16 @@ export function useHrBoardViewModel() {
     setDateState(next > todayISO() ? todayISO() : next);
   }, []);
 
-  const { data: rawBoard, loading, syncing, error, refresh } = useDailyHrBoard(date);
+  const {
+    data: rawBoard,
+    loading,
+    syncing,
+    error,
+    refreshError,
+    refresh,
+    lastUpdated,
+    connection,
+  } = useDailyHrBoard(date);
   const hrResults = useHrResultsForDate(date);
   const generatedAt = parseDate(rawBoard?.generatedAt);
   const loadedAt = parseDate(rawBoard?.loadedAt);
@@ -195,11 +204,13 @@ export function useHrBoardViewModel() {
   }), [board?.counts.totalVisiblePool, board?.disclaimer, board?.note, board?.truthMessage, freshness, generatedAt, loadedAt, rawBoard?.dataQuality, rawBoard?.gameCount, responseWarnings]);
 
   return {
-    buckets, rows: filteredRows, researchRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
+    buckets, rows: filteredRows, researchRows, stats, selectedPlayer, loading, error, refreshError, mode, viewMode, search, selectedTiers, modeCounts,
     autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
     date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,
     syncing,
+    lastUpdated,
+    connection,
     slate,
   };
 }

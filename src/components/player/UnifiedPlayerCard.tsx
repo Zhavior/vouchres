@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronRight, Heart, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { logoByTeamName } from '../../lib/teamLogos';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
+import { HrOpportunitySummary } from '../../features/hr/components/Opportunity/HrOpportunitySummary';
 import VouchCursorTip from '../vouch-system/VouchCursorTip';
 import '../../styles/unified-player-card.css';
 
@@ -316,6 +317,8 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
             ))}
           </div>
         )}
+
+        <HrOpportunitySummary player={player} />
 
         <div className="ve-unified-player-card__panel rounded-lg border border-white/10 p-2.5">
           <div className="flex items-center justify-between gap-2">

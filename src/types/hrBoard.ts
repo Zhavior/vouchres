@@ -70,7 +70,7 @@ export interface HrBoardRow {
     finalScore?: number;
   };
   judge: HrRowJudge;
-  dataQuality: "full" | "partial" | "limited" | "projection_preview";
+  dataQuality: "confirmed" | "full" | "partial" | "limited" | "projection_preview" | "fallback";
   raw?: Record<string, unknown>;
 }
 
@@ -88,6 +88,8 @@ export interface HrBoardGame {
 }
 
 export interface HrBoardResponse {
+  contractVersion?: string;
+  transportMode?: "compact" | "full";
   date: string;
   gameCount: number;
   generatedAt: string;
@@ -137,6 +139,20 @@ export interface HrBoardResponse {
     missingStarChecks?: Array<Record<string, unknown>>;
   };
   note?: string;
+  meta?: {
+    requestId?: string;
+    timestamp?: string;
+    source?: string;
+    dataQuality?: string;
+    updatedAt?: string;
+    generatedAt?: string;
+    warnings?: string[];
+    cache?: {
+      strategy?: string;
+      ttlMs?: number;
+      asOf?: string;
+    };
+  };
 }
 
 export type SortKey =

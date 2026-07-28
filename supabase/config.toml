@@ -165,10 +165,14 @@ additional_redirect_urls = [
   "https://www.vouchedge.app/**",
   "https://vouchedge.app/auth/callback",
   "https://www.vouchedge.app/auth/callback",
+  "https://vouchedge.app/auth/reset-password",
+  "https://www.vouchedge.app/auth/reset-password",
   "http://localhost:3000/**",
   "http://127.0.0.1:3000/**",
   "http://localhost:3000/auth/callback",
   "http://127.0.0.1:3000/auth/callback",
+  "http://localhost:3000/auth/reset-password",
+  "http://127.0.0.1:3000/auth/reset-password",
   "https://*.vercel.app/**",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).

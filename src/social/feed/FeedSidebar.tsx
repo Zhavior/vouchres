@@ -36,7 +36,9 @@ import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { formatProfileWinRate } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
-import { FOCUSED_BETA_SHELL_ENABLED } from '../../app/betaNavigation';
+import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
+import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
+import '../../styles/aurora-sidebar.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -67,8 +69,17 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
     isStaff: profile.isStaff,
     staff: profile.staff,
     isDeveloper: profile.isDeveloper,
+    subscriptionTier: profile.subscriptionTier,
   };
 };
+
+function isSidebarItemActive(activeSection: string, featureId: string): boolean {
+  if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
+  if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
+  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
+  return activeSection === featureId;
+}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -107,26 +118,27 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       title={label}
       aria-current={isActive ? 'page' : undefined}
       className={[
-        'group relative w-full flex items-center gap-3',
-        'pl-3 pr-2 py-2.5 text-sm tracking-wide transition-all outline-none font-z8',
+        've-aurora-nav-item group relative flex w-full items-center gap-3 rounded-xl',
+        'py-2.5 pl-3 pr-2 text-sm tracking-wide transition-all outline-none font-z8',
         isActive ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
       ].join(' ')}
+      data-active={isActive ? 'true' : 'false'}
     >
       {isActive && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-vouch-cyan"
+          className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-gradient-to-b from-cyan-200 via-vouch-cyan to-vouch-emerald"
         />
       )}
       <span
         className={[
-          'relative z-10 h-7 w-7 shrink-0 transition-all',
+          'relative z-10 h-8 w-8 shrink-0 rounded-lg transition-all',
           isActive
-            ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
+            ? 'flex items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_18px_rgba(79,184,220,0.12)]'
             : `${AURORA_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan`,
         ].join(' ')}
       >
-        <IconComponent className="h-3.5 w-3.5" />
+        <IconComponent className="h-4 w-4" />
       </span>
       <span className="relative z-10 min-w-0 flex-1 truncate text-left text-[12px] font-bold leading-none">
         {label}
@@ -169,7 +181,7 @@ const SidebarSection = React.memo(function SidebarSection({
         aria-expanded={!collapsed}
         aria-controls={`${sectionId}-items`}
         onClick={onToggle}
-        className={`flex w-full items-center justify-between gap-2 px-3 pb-1 pt-2 ${AURORA_LABEL} text-[11px] tracking-[0.16em] text-white/40 transition hover:text-white/60`}
+        className={`ve-aurora-group-label flex w-full items-center justify-between gap-2 px-3 pb-1 pt-2 ${AURORA_LABEL} text-[10px] tracking-[0.18em] text-white/35 transition hover:text-white/65`}
       >
         <span>{group}</span>
         <ChevronDown
@@ -185,7 +197,7 @@ const SidebarSection = React.memo(function SidebarSection({
               id={f.id}
               label={f.label}
               icon={f.icon}
-              isActive={activeSection === f.id}
+              isActive={isSidebarItemActive(activeSection, f.id)}
               onNavigate={onNavigate}
               showLiveOnAir={liveGamesActive && f.id === 'live_games'}
             />
@@ -242,8 +254,12 @@ function FeedSidebar({
 
   const [featureLayout] = useState(() => loadFeatureLayout());
   const sidebarFeatures = useMemo(() => {
-    return getSidebarFeatures(featureLayout, { activeSport });
-  }, [featureLayout, activeSport]);
+    return getSidebarFeatures(featureLayout, { activeSport }).map((feature) => {
+      if (feature.id !== 'premium') return feature;
+      const managesPlan = profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
+      return { ...feature, label: managesPlan ? 'Plan & Billing' : 'Upgrade' };
+    });
+  }, [featureLayout, activeSport, profile.subscriptionTier]);
 
   const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
   const grouped = useMemo(
@@ -273,52 +289,47 @@ function FeedSidebar({
   const needsFastLivePoll =
     SECTIONS_USING_LIVE_GAMES.has(activeSection) || activeSection === 'today';
 
-  const { data: liveGamesPayload } = useLiveGames({
+  const { data: liveGamesPayload, isError: liveGamesError, isLoading: liveGamesLoading } = useLiveGames({
     refetchInterval: needsFastLivePoll ? undefined : 45_000,
   });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
+  const liveDataState = liveGamesError ? 'Unavailable' : liveGamesLoading ? 'Checking' : 'Connected';
 
   return (
     <aside
       id="z8-feed-sidebar"
       className={[
-        'relative hidden md:flex h-full min-h-0 flex-col',
+        've-aurora-sidebar relative hidden md:flex h-full min-h-0 flex-col',
         'w-full min-w-0',
         AURORA_SIDEBAR_SHELL,
-        'px-3 py-4',
+        'px-3 py-3.5',
         'justify-between select-none',
         'z-40 flex-shrink-0 overflow-hidden',
       ].join(' ')}
     >
       <div className="z8-sidebar-scroll relative z-10 flex-1 min-h-0 space-y-3 px-0.5 pb-7">
         <div className="relative">
-          <div className="flex items-start gap-1.5">
+          <div className="flex items-start gap-2">
             <button
               onClick={() => handleNavigate(FOCUSED_BETA_SHELL_ENABLED ? 'today' : 'feed')}
-              className={`group relative min-w-0 flex-1 flex items-center gap-3 ${AURORA_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
+              className={`ve-aurora-sidebar-brand group relative flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition-all ${AURORA_SIDEBAR_SURFACE}`}
               id="brand-logo-id"
               aria-label={FOCUSED_BETA_SHELL_ENABLED ? 'Go to Today' : 'Go to Home Feed'}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
-                <span className={`${AURORA_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-black uppercase italic tracking-tight text-white">
-                  VouchEdge
-                </span>
-                <p className={`mt-0.5 truncate ${AURORA_LABEL} text-white/40`}>
-                  MLB Intelligence Command
-                </p>
+              <VouchEdgeLogo markClassName="h-10 w-10" className="min-w-0" />
+              <div className="ve-aurora-brand-status absolute bottom-2.5 right-3 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.65)]" />
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Open Beta · Aurora</span>
               </div>
             </button>
             <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />
           </div>
-          <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
+          <div className="ve-aurora-accent-line mt-2.5 w-full" aria-hidden />
         </div>
 
         <button
           onClick={onOpenCmdK}
-          className={`flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${AURORA_SIDEBAR_SURFACE} ${AURORA_LABEL} tracking-widest text-white/40`}
+          className={`ve-aurora-sidebar-search flex w-full items-center gap-2 rounded-xl px-3 py-2.5 transition-all hover:text-white ${AURORA_SIDEBAR_SURFACE} ${AURORA_LABEL} tracking-widest text-white/40`}
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
@@ -396,7 +407,7 @@ function FeedSidebar({
                   icon={f.icon}
                   isActive={f.id === 'brain_picks'
                     ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
-                    : activeSection === f.id}
+                    : isSidebarItemActive(activeSection, f.id)}
                   onNavigate={handleNavigate}
                 />
               ))}
@@ -418,14 +429,16 @@ function FeedSidebar({
         </nav>
       </div>
 
-      <div className="z8-sidebar-dock relative z-10 -mx-3 -mb-4 mt-2 space-y-2 px-3 pb-3 pt-2.5">
+      <div className="z8-sidebar-dock ve-aurora-sidebar-dock relative z-10 -mx-3 -mb-4 mt-2 space-y-2 px-3 pb-3 pt-2.5">
         <div className="flex items-center justify-between gap-2 px-1">
           <span className={`inline-flex min-w-0 items-center gap-2 ${AURORA_LABEL} text-white/40`}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vouch-cyan/80" aria-hidden />
-            <span className="truncate tracking-[0.18em]">Live data</span>
+            <span className="truncate tracking-[0.18em]">MLB feed</span>
           </span>
-          <span className={`inline-flex shrink-0 items-center bg-vouch-cyan/10 px-2 py-0.5 text-[11px] tracking-widest text-vouch-cyan ${AURORA_LABEL}`}>
-            Online
+          <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] tracking-widest ${AURORA_LABEL} ${
+            liveGamesError ? 'bg-rose-300/10 text-rose-200' : liveGamesLoading ? 'bg-white/5 text-white/45' : 'bg-emerald-300/10 text-emerald-200'
+          }`}>
+            {liveDataState}
           </span>
         </div>
 
@@ -434,7 +447,7 @@ function FeedSidebar({
             <button
               onClick={() => handleNavigate('customize')}
               className={[
-                'flex items-center justify-center gap-2 px-3 py-2 transition-all',
+                'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all',
                 AURORA_LABEL, 'tracking-[0.12em]',
                 activeSection === 'customize' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
               ].join(' ')}
@@ -447,11 +460,12 @@ function FeedSidebar({
           <button
             onClick={() => handleNavigate('settings')}
             className={[
-              'flex items-center justify-center gap-2 px-3 py-2 transition-all',
+              'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all',
               AURORA_LABEL, 'tracking-[0.12em]',
               activeSection === 'settings' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
             ].join(' ')}
-            aria-label="Settings"
+              aria-label="Settings"
+              aria-current={activeSection === 'settings' ? 'page' : undefined}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
             <span>Settings</span>
@@ -460,9 +474,11 @@ function FeedSidebar({
 
         <button
           onClick={() => handleNavigate('profile')}
-          className={`relative w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${AURORA_SIDEBAR_SURFACE}`}
+          className={`ve-aurora-profile-card relative flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition-all ${AURORA_SIDEBAR_SURFACE}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
+          aria-current={activeSection === 'profile' ? 'page' : undefined}
+          data-active={activeSection === 'profile' ? 'true' : 'false'}
         >
           <ProfileAvatarBorder
             borderId={profile.profileBorderId}
@@ -493,7 +509,7 @@ function FeedSidebar({
           onClick={handleLogout}
           disabled={signingOut}
           className={[
-            'w-full flex items-center justify-center gap-2 px-3 py-2.5 transition-all',
+            'w-full flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 transition-all',
             AURORA_SIDEBAR_SURFACE,
             AURORA_LABEL,
             'tracking-[0.12em] text-white/45 hover:bg-rose-500/10 hover:text-rose-200 hover:shadow-[0_0_16px_rgba(244,63,94,0.12)] disabled:opacity-50',

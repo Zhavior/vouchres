@@ -11,8 +11,19 @@ function isAuthCallbackPath(): boolean {
   return window.location.pathname.toLowerCase() === '/auth/callback';
 }
 
+function isPasswordResetPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.location.pathname.toLowerCase() === '/auth/reset-password';
+}
+
+function isPublicAuthPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  return ['/login', '/signin', '/signup', '/join'].includes(window.location.pathname.toLowerCase());
+}
+
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
@@ -73,9 +84,10 @@ function MainAppRoutes() {
     PUBLIC_SECTIONS.has(navigation.activeSection) && navigation.activeSection !== 'vouchedge_intro';
   const forcePublicLanding = shouldForcePublicLanding();
   const showPublicLanding =
-    (forcePublicLanding || !navigation.isLoggedIn) &&
-    !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
-    !canRenderLoggedOutRoute;
+    isPublicAuthPath() ||
+    ((forcePublicLanding || !navigation.isLoggedIn) &&
+      !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
+      !canRenderLoggedOutRoute);
 
   if (showPublicLanding) {
     return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
@@ -91,7 +103,13 @@ function MainAppRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {isAuthCallbackPath() ? <AuthCallbackPage /> : <MainAppRoutes />}
+      {isAuthCallbackPath() ? (
+        <AuthCallbackPage />
+      ) : isPasswordResetPath() ? (
+        <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
+      ) : (
+        <MainAppRoutes />
+      )}
     </QueryClientProvider>
   );
 }

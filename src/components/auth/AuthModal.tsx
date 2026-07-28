@@ -26,13 +26,16 @@ import {
   signInWithEmail,
   signUpWithEmail,
   signInWithMagicLink,
+  signInWithGoogle,
+  requestPasswordReset,
+  getGoogleAuthAvailability,
   isSupabaseConfigured,
 } from '../../lib/supabaseClient';
 import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
-import AuthJudgeWelcome from './AuthJudgeWelcome';
+import VouchEdgeLogo from '../brand/VouchEdgeLogo';
 import { AURORA_INTERACTIVE, AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE, AURORA_AUTH_GRADIENT, AURORA_AUTH_SHADOW, AURORA_CYAN_HEX, AURORA_BLURPLE_HEX } from '../../theme/auroraTokens';
 import '../../styles/auth-modal.css';
 
@@ -49,7 +52,7 @@ const POLICY_SECTIONS = [
   },
   {
     title: 'Research & entertainment only',
-    body: 'VouchEdge is a research and record-keeping tool, not a sportsbook and not betting advice. Every score, grade, and "edge" shown is a probability estimate built from public stats — never a guarantee. We publish wins and losses both; nothing here predicts outcomes with certainty.',
+    body: 'VouchEdge is a research and record-keeping tool, not a sportsbook and not betting advice. Research signals and confidence estimates are built from public stats — never a guarantee. Wins and losses both remain visible; nothing here predicts outcomes with certainty.',
   },
   {
     title: 'No guaranteed returns',
@@ -67,15 +70,15 @@ const POLICY_SECTIONS = [
 
 const AGREEMENTS: Array<{ id: AgreementKey; label: string }> = [
   { id: 'age', label: 'I am of legal age in my jurisdiction and located somewhere this is legal.' },
-  { id: 'terms', label: 'I’ve read and agree to the Terms of Service, Privacy Policy, and billing terms above.' },
+  { id: 'terms', label: 'I’ve read and agree to the account, privacy, and billing terms shown above.' },
   { id: 'research', label: 'I understand this is probability research for entertainment — not betting advice, with no guaranteed returns.' },
 ];
 
 const INTRO_SLIDES = [
   {
     icon: ClipboardCheck,
-    title: 'Every pick graded, win or lose.',
-    body: 'Your picks lock before first pitch and get checked against the official box score — no hiding a bad night.',
+    title: 'Keep graded results visible.',
+    body: 'When grading data is available, results stay attached to the original research — including the losses.',
   },
   {
     icon: Trophy,
@@ -99,7 +102,7 @@ const PLAN_OPTIONS: Array<{
     price: 'Free',
     icon: ShieldCheck,
     tagline: 'Track picks and build slips.',
-    perks: ['Up to 20 saved slips', 'Public ledger', 'Community feed'],
+    perks: ['Saved research workspace', 'Public research record', 'MLB game context'],
   },
   {
     id: 'pro',
@@ -144,11 +147,14 @@ export default function AuthModal({
   const [showPw, setShowPw] = useState(false);
   const [handleState, setHandleState] = useState<HandleState>('idle');
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -161,12 +167,22 @@ export default function AuthModal({
       setError(null);
       setNotice(null);
       setEmailSent(false);
+      setGoogleBusy(false);
       setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
       setIntroIndex(0);
       setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });
     }
   }, [open, initialMode, initialPlan]);
+
+  useEffect(() => {
+    if (!open || !isSupabaseConfigured) return;
+    let cancelled = false;
+    void getGoogleAuthAvailability().then((available) => {
+      if (!cancelled) setGoogleAvailable(available);
+    });
+    return () => { cancelled = true; };
+  }, [open]);
 
   // Keep keyboard focus inside the modal and restore it to the opener on close.
   useEffect(() => {
@@ -215,6 +231,12 @@ export default function AuthModal({
     };
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => titleRef.current?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [emailSent, mode, open, signupStep]);
+
   // Live @handle availability (signup only)
   const checkHandle = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -261,6 +283,9 @@ export default function AuthModal({
     }
     if (m.includes('email rate limit') || m.includes('email send rate limit')) {
       return 'Confirmation email sending is temporarily at its limit. Please try again later.';
+    }
+    if (m.includes('unsupported provider') || m.includes('provider is not enabled')) {
+      return 'Google sign-in is not enabled yet. Use email or a magic link for now.';
     }
     if (m.includes('rate')) return 'Too many attempts. Please wait a moment and try again.';
     return raw;
@@ -361,6 +386,77 @@ export default function AuthModal({
     }
   }
 
+  async function handleForgotPassword() {
+    setError(null);
+    setNotice(null);
+    if (!isSupabaseConfigured) {
+      setError('Password recovery is not configured in this environment.');
+      return;
+    }
+    if (!email.trim()) { setError('Enter your email first.'); return; }
+    if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
+
+    setBusy(true);
+    try {
+      const { error } = await requestPasswordReset(email.trim());
+      if (error) { setError(friendlyError(error.message)); return; }
+      setNotice(`If an account exists for ${email.trim()}, a password reset link is on its way.`);
+    } catch (err: any) {
+      setError(friendlyError(err?.message ?? 'Could not send the password reset email.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    setNotice(null);
+
+    if (!isSupabaseConfigured) {
+      setError(
+        'Login is not configured locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local (Supabase → Project Settings → API), then restart npm run dev.',
+      );
+      return;
+    }
+
+    const providerAvailable = googleAvailable ?? await getGoogleAuthAvailability();
+    if (providerAvailable === false) {
+      setGoogleAvailable(false);
+      setError('Google sign-in is being configured. Use email or a magic link for now.');
+      return;
+    }
+
+    setGoogleBusy(true);
+    let timeoutId: number | undefined;
+    try {
+      const { data, error } = await Promise.race([
+        signInWithGoogle(),
+        new Promise<never>((_, reject) => {
+          timeoutId = window.setTimeout(
+            () => reject(new Error('Google sign-in took too long. Try again or use email instead.')),
+            10_000,
+          );
+        }),
+      ]);
+      if (error) {
+        setError(friendlyError(error.message));
+        setGoogleBusy(false);
+        return;
+      }
+      if (!data?.url) {
+        setError('Google sign-in could not be started. Try email instead.');
+        setGoogleBusy(false);
+        return;
+      }
+      window.location.assign(data.url);
+    } catch (err: any) {
+      setError(friendlyError(err?.message ?? 'Could not continue with Google.'));
+      setGoogleBusy(false);
+    } finally {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    }
+  }
+
   if (!open) return null;
 
   const handleHint: Record<HandleState, { text: string; color: string } | null> = {
@@ -374,8 +470,7 @@ export default function AuthModal({
   return createPortal(
     (
       <div
-        className="ve-auth-backdrop fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 font-z8"
-        style={{ background: 'rgba(2,4,10,0.82)', backdropFilter: 'blur(12px)' }}
+        className="ve-auth-backdrop fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 font-z8"
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <div
@@ -384,46 +479,80 @@ export default function AuthModal({
           aria-modal="true"
           aria-labelledby="ve-auth-title"
           tabIndex={-1}
-          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${AURORA_PANEL_PREMIUM}`}
+          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-[1.75rem] lg:max-w-5xl lg:flex-row ${AURORA_PANEL_PREMIUM}`}
         >
-          {/* Judge welcome — desktop sidebar */}
-          <div className="ve-auth-judge-panel hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
-            <AuthJudgeWelcome className="h-full w-full rounded-none border-0 shadow-none" />
-          </div>
+          {/* Aurora evidence panel — desktop */}
+          <aside className="ve-auth-aurora-panel hidden lg:flex lg:w-[42%] lg:flex-col">
+            <div className="relative z-10 flex h-full flex-col p-8">
+              <VouchEdgeLogo showBeta markClassName="h-11 w-11" />
+
+              <div className="mt-14">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.26em] text-emerald-200/70">
+                  Aurora account layer
+                </p>
+                <h2 className="mt-4 max-w-sm text-4xl font-black leading-[1.02] tracking-[-0.045em] text-white">
+                  Your research.<br />Your record.<br />Still visible.
+                </h2>
+                <p className="mt-5 max-w-sm text-sm leading-6 text-white/48">
+                  Sign in to keep game context, reasoning, and available grading connected to one account.
+                </p>
+              </div>
+
+              <div className="mt-10 space-y-3">
+                {[
+                  { step: '01', title: 'Official game context', detail: 'Live status and matchup information' },
+                  { step: '02', title: 'Transparent reasoning', detail: 'Evidence stays attached to the decision' },
+                  { step: '03', title: 'Results stay visible', detail: 'Wins and losses remain in the record' },
+                ].map((item) => (
+                  <div key={item.step} className="ve-auth-proof-row">
+                    <span className="font-mono text-[10px] font-bold text-cyan-200/75">{item.step}</span>
+                    <div>
+                      <p className="text-sm font-bold text-white/88">{item.title}</p>
+                      <p className="mt-0.5 text-xs text-white/36">{item.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-auto flex items-center gap-3 border-t border-white/[0.07] pt-6 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/30">
+                <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.7)]" />
+                Open Beta · MLB first · Research only
+              </div>
+            </div>
+          </aside>
 
           <div className="ve-auth-form-panel relative flex min-w-0 flex-1 flex-col">
-          {/* Glow header band */}
+          {/* Aurora form header */}
           <div
-            className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
-            style={{ background: 'radial-gradient(120% 100% at 50% 0%, rgba(79, 184, 220,0.12), transparent 70%)' }}
+            className="ve-auth-form-header relative px-5 pb-4 pt-5 sm:px-8 sm:pb-5 sm:pt-7"
           >
             <button
               ref={closeButtonRef}
               onClick={onClose}
               aria-label="Close"
-              className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors ${AURORA_INTERACTIVE}`}
+              className={`absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-xl text-white/40 transition-colors hover:bg-white/10 hover:text-white sm:right-4 sm:top-4 ${AURORA_INTERACTIVE}`}
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Mobile judge strip */}
-            <div className="mb-4 lg:hidden">
-              <AuthJudgeWelcome compact />
+            <div className="mb-7 flex items-center justify-between pr-10 lg:hidden">
+              <VouchEdgeLogo showBeta markClassName="h-9 w-9" />
+              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">Aurora</span>
             </div>
 
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 font-black text-sm text-vouch-cyan shadow-[0_0_16px_rgba(79, 184, 220,0.15)]">
-                VE
-              </div>
-              <div>
-                <span className="font-black tracking-tight text-lg text-white">
-                  Vouch<span className="text-vouch-cyan">Edge</span>
-                </span>
-                <p className={`${AURORA_LABEL} text-white/30`}>Trust-first research</p>
-              </div>
+            <div className="mb-3 hidden items-center gap-2 lg:flex">
+              <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(125,235,255,0.65)]" />
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-100/45">
+                Secure account access
+              </p>
             </div>
 
-            <h2 id="ve-auth-title" className="text-xl font-black text-white tracking-tight">
+            <h2
+              ref={titleRef}
+              id="ve-auth-title"
+              tabIndex={-1}
+              className="text-2xl font-black tracking-[-0.035em] text-white outline-none sm:text-[1.75rem]"
+            >
               {emailSent
                 ? 'Check your inbox'
                 : mode === 'signup' && signupStep === 'intro'
@@ -436,17 +565,17 @@ export default function AuthModal({
                 ? 'Create your account'
                 : 'Welcome back'}
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="mt-2 max-w-md text-sm leading-6 text-white/45">
               {emailSent
                 ? 'One more step to finish setting up your account.'
                 : mode === 'signup' && signupStep === 'intro'
                 ? INTRO_SLIDES[introIndex].body
                 : mode === 'signup' && signupStep === 'plan'
-                ? 'Pro tools are in beta — signing up now helps support development and locks in early access.'
+                ? 'Choose Basic or the VouchEdge Beta research plan before creating your account.'
                 : mode === 'signup' && signupStep === 'policy'
                 ? 'A quick, honest read before you create an account.'
                 : mode === 'signup'
-                ? 'Track verified picks, build slips, and unlock the full edge board.'
+                ? 'Create one account for your research workspace and visible record.'
                 : 'Log in to pick up where you left off.'}
             </p>
           </div>
@@ -461,7 +590,7 @@ export default function AuthModal({
               <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
                 We sent a secure link to{' '}
                 <span className="font-bold text-white break-all">{email || 'your email'}</span>.
-                Click it to {mode === 'signup' ? 'confirm your account' : 'finish signing in'} — it expires in 1 hour.
+                Click it to {mode === 'signup' ? 'confirm your account' : 'finish signing in'}.
               </p>
               <button
                 onClick={() => { setEmailSent(false); }}
@@ -602,6 +731,7 @@ export default function AuthModal({
                     <button
                       key={opt.id}
                       type="button"
+                      aria-pressed={selected}
                       onClick={() => setPlan(opt.id)}
                       className="w-full text-left rounded-xl border p-3.5 transition-colors"
                       style={{
@@ -660,6 +790,7 @@ export default function AuthModal({
               <div className="flex items-center gap-2 mt-4">
                 <button
                   type="button"
+                  aria-label="Back to introduction"
                   onClick={() => setSignupStep('intro')}
                   className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
                   style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
@@ -668,6 +799,7 @@ export default function AuthModal({
                 </button>
                 <button
                   type="button"
+                  aria-label="Back to plan selection"
                   onClick={() => setSignupStep('policy')}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
                   style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
@@ -712,7 +844,7 @@ export default function AuthModal({
                     </span>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      className="absolute h-px w-px overflow-hidden opacity-0"
                       checked={agreements[item.id]}
                       onChange={() => setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
                     />
@@ -751,7 +883,7 @@ export default function AuthModal({
           <>
           {/* Back to policy agreement (signup only) */}
           {mode === 'signup' && (
-            <div className="px-6 -mt-1 mb-1">
+            <div className="-mt-1 mb-1 px-5 sm:px-8">
               <button
                 type="button"
                 onClick={() => setSignupStep('policy')}
@@ -763,19 +895,27 @@ export default function AuthModal({
             </div>
           )}
           {/* Tab switch */}
-          <div className="px-6">
-            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${AURORA_SURFACE}`}>
+          <div className="px-5 sm:px-8">
+            <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/[0.07] bg-black/25 p-1">
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
+                  type="button"
                   key={m}
-                  onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'policy' : 'form'); setIntroIndex(0); }}
-                  className="relative py-2 text-sm font-bold rounded-lg transition-colors"
-                  style={{ color: mode === m ? '#fff' : '#64748b' }}
+                  onClick={() => {
+                    setMode(m);
+                    setError(null);
+                    setNotice(null);
+                    setSignupStep(m === 'signup' ? 'policy' : 'form');
+                    setIntroIndex(0);
+                    window.history.replaceState(window.history.state, '', m === 'signup' ? '/signup' : '/login');
+                  }}
+                  className="relative rounded-lg py-2.5 text-sm font-bold transition-colors"
+                  style={{ color: mode === m ? '#071117' : '#64748b' }}
                 >
                   {mode === m && (
                     <div
                       className="absolute inset-0 rounded-lg"
-                      style={{ background: 'linear-gradient(135deg, #06b6d4, #2563eb)' }}
+                      style={{ background: 'linear-gradient(110deg, #7de8ff, #55cbed 48%, #64e6b2)' }}
                     />
                   )}
                   <span className="relative">{m === 'signup' ? 'Sign Up' : 'Log In'}</span>
@@ -808,12 +948,43 @@ export default function AuthModal({
             )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-3.5 px-5 py-5 sm:px-8">
+            {/* Google OAuth — available after the signup policy gate and on login. */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={busy || googleBusy || redirectingToCheckout || googleAvailable === false}
+              className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-4 py-3.5 text-sm font-extrabold text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-all hover:border-cyan-100 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 ${AURORA_INTERACTIVE}`}
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-white via-slate-50 to-white opacity-0 transition-opacity group-hover:opacity-100" />
+              <span className="relative flex items-center justify-center gap-3">
+                {googleBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-600" />
+                ) : (
+                  <GoogleMark />
+                )}
+                {googleAvailable === false
+                  ? 'Google sign-in is being configured'
+                  : googleBusy
+                  ? 'Opening Google…'
+                  : mode === 'signup'
+                    ? 'Continue with Google'
+                    : 'Log in with Google'}
+              </span>
+            </button>
+
+            <div className="flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-white/10" />
+              <span className={`${AURORA_LABEL} text-white/35`}>or use email</span>
+              <span className="h-px flex-1 bg-white/10" />
+            </div>
+
             {/* Email */}
             <Field icon={<Mail className="w-4 h-4" />}>
               <input
                 ref={emailInputRef}
                 type="email"
+                aria-label="Email address"
                 autoComplete="email"
                 placeholder="you@email.com"
                 value={email}
@@ -832,6 +1003,7 @@ export default function AuthModal({
                     <span className="text-sm text-slate-500 shrink-0">@</span>
                     <input
                       type="text"
+                      aria-label="Username"
                       autoComplete="username"
                       placeholder="yourhandle"
                       value={handle}
@@ -848,7 +1020,7 @@ export default function AuthModal({
                     {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
                   </Field>
                   {handleHint[handleState] && (
-                    <p className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
+                    <p aria-live="polite" className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
                       {handleHint[handleState]!.text}
                     </p>
                   )}
@@ -860,6 +1032,7 @@ export default function AuthModal({
               <Field icon={<Lock className="w-4 h-4" />}>
                 <input
                   type={showPw ? 'text' : 'password'}
+                  aria-label="Password"
                   autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   placeholder="Password"
                   value={password}
@@ -869,7 +1042,12 @@ export default function AuthModal({
                   }}
                   className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                 />
-                <button type="button" onClick={() => setShowPw((v) => !v)} className="text-slate-500 hover:text-slate-300">
+                <button
+                  type="button"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPw((v) => !v)}
+                  className="text-slate-500 hover:text-slate-300"
+                >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </Field>
@@ -889,6 +1067,18 @@ export default function AuthModal({
                   ))}
                 </div>
               )}
+              {mode === 'login' && (
+                <div className="mt-1.5 flex justify-end px-1">
+                  <button
+                    type="button"
+                    onClick={() => void handleForgotPassword()}
+                    disabled={busy || googleBusy}
+                    className="min-h-9 text-xs font-bold text-vouch-cyan transition hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Invite code (signup) — optional during preview, required at private-beta launch */}
@@ -897,18 +1087,15 @@ export default function AuthModal({
                   <Field icon={<Ticket className="w-4 h-4" />}>
                     <input
                       type="text"
-                      placeholder="Invite code — optional (VE-XXXXXXXX)"
+                      aria-label="Invite code"
+                      placeholder="Invite code — optional"
                       value={inviteCode}
                       onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                       className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none tracking-wide"
                     />
                   </Field>
-                  <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
-                    VouchEdge is in private beta. No code?{' '}
-                    <a href="/premium" className="font-semibold underline" style={{ color: AURORA_BLURPLE_HEX }}>
-                      Join the waitlist
-                    </a>
-                    .
+                  <p className="ml-1 mt-1 text-[11px]" style={{ color: '#7c8aa0' }}>
+                    Optional during Open Beta. Leave this blank if you do not have a code.
                   </p>
                 </div>
               )}
@@ -916,6 +1103,7 @@ export default function AuthModal({
             {/* Error / notice */}
               {error && (
                 <div
+                  role="alert"
                   className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
                   style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
                 >
@@ -925,6 +1113,8 @@ export default function AuthModal({
               )}
               {notice && (
                 <div
+                  role="status"
+                  aria-live="polite"
                   className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
                   style={{ background: 'rgba(52,211,153,0.1)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)' }}
                 >
@@ -936,7 +1126,7 @@ export default function AuthModal({
             {/* Primary */}
             <button
               type="submit"
-              disabled={busy || redirectingToCheckout}
+              disabled={busy || googleBusy || redirectingToCheckout}
               className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${AURORA_INTERACTIVE}`}
               style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
             >
@@ -961,7 +1151,7 @@ export default function AuthModal({
             <button
               type="button"
               onClick={handleMagicLink}
-              disabled={busy}
+              disabled={busy || googleBusy}
               className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-white/10 text-white/80 transition-colors disabled:opacity-60 hover:border-vouch-cyan/30 hover:text-white ${AURORA_INTERACTIVE}`}
             >
               <Wand2 className="w-3.5 h-3.5" style={{ color: AURORA_BLURPLE_HEX }} />
@@ -970,11 +1160,11 @@ export default function AuthModal({
           </form>
 
           {/* Footer — trust */}
-          <div className="px-6 pb-6 pt-1">
+          <div className="px-5 pb-6 pt-1 sm:px-8">
             <p className="text-[10px] text-center leading-relaxed text-slate-600">
-              By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
-              <span className="text-slate-400">Privacy Policy</span>. You must be of legal age in your jurisdiction
-              and located somewhere this is legal. Probability-based research for entertainment — not betting advice.
+              By continuing you agree to the account, privacy, and billing terms reviewed during signup. You must be
+              of legal age in your jurisdiction and located somewhere this is legal. Probability-based research for
+              entertainment — not betting advice.
             </p>
           </div>
           </>
@@ -984,6 +1174,22 @@ export default function AuthModal({
       </div>
     ),
     document.body,
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="block shrink-0"
+      style={{ width: 18, height: 18, minWidth: 18, minHeight: 18 }}
+    >
+      <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.91h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.4Z" />
+      <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.42l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z" />
+      <path fill="#FBBC05" d="M6.39 13.87A6.02 6.02 0 0 1 6.08 12c0-.65.11-1.28.31-1.87V7.51H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.49l3.35-2.62Z" />
+      <path fill="#EA4335" d="M12 6c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.96 5.51l3.35 2.62C7.18 7.76 9.39 6 12 6Z" />
+    </svg>
   );
 }
 

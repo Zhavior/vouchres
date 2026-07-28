@@ -4,6 +4,7 @@ import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { logoByTeamName } from '../../../../lib/teamLogos';
+import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
 
 interface HrTopSignalPanelProps {
   player: HrWatchRow | null;
@@ -166,6 +167,8 @@ export function HrTopSignalPanel({
             <MetricChip label="Weather Context" value={`${Math.round(player.weather)}/100`} colorClass="text-sky-300" />
           )}
         </div>
+
+        <HrOpportunitySummary player={player} />
 
         {/* Primary Rationale Ticker */}
         <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-xs">

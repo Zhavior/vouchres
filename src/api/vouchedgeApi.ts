@@ -23,18 +23,45 @@ import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } fro
 import type { LiveGamesDirectPayload } from "../lib/mlbDirect";
 import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
 import { apiUrl } from "../lib/apiBase";
-import { unwrapApiPayload } from "../lib/apiEnvelope";
+import { parseApiErrorBody, unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../lib/hrBoardSlice";
+import { parseHrBoardApiResponse } from "./hrBoardApiContract";
 
 const CLIENT_FETCH_TIMEOUT_MS = 12_000;
 
-async function getJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T> {
+export class VouchEdgeHttpError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly requestId?: string;
+
+  constructor(input: { status: number; code?: string; message?: string; requestId?: string }) {
+    super(input.message || `VouchEdge API request failed (${input.status}).`);
+    this.name = "VouchEdgeHttpError";
+    this.status = input.status;
+    this.code = input.code ?? "request_failed";
+    this.requestId = input.requestId;
+  }
+}
+
+async function getJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS, signal?: AbortSignal): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const abortFromCaller = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromCaller();
+  else signal?.addEventListener("abort", abortFromCaller, { once: true });
   try {
     const res = await fetch(apiUrl(url), { signal: controller.signal });
-    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => null);
+      const parsed = parseApiErrorBody(errorBody, res.status);
+      throw new VouchEdgeHttpError({
+        status: res.status,
+        code: typeof parsed.code === "string" ? parsed.code : undefined,
+        message: typeof parsed.message === "string" ? parsed.message : `GET ${url} -> ${res.status}`,
+        requestId: typeof parsed.requestId === "string" ? parsed.requestId : undefined,
+      });
+    }
     if (url.includes("/api/mlb/hr-board/")) {
       recordHrBoardCacheControl(res.headers.get("cache-control"));
     }
@@ -45,6 +72,7 @@ async function getJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Pro
     return unwrapApiPayload<T>(await res.json());
   } finally {
     window.clearTimeout(timeout);
+    signal?.removeEventListener("abort", abortFromCaller);
   }
 }
 
@@ -53,6 +81,7 @@ async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promis
   try {
     return await primary();
   } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
     if (!isMlbDirectFallbackAllowed()) throw err;
     return await fallback();
   }
@@ -78,13 +107,17 @@ function normalizeLiveAtBatSnapshot(raw: LiveAtBatSnapshot | { data?: LiveAtBatS
   return (raw as { data?: LiveAtBatSnapshot })?.data ?? (raw as LiveAtBatSnapshot);
 }
 
-async function hrBoardTodayWithFallback(): Promise<HrBoardResponse> {
-  const localPath = `/api/mlb/hr-board/today?previewLimit=${HR_BOARD_CANONICAL_FETCH_LIMIT}`;
+async function hrBoardTodayWithFallback(
+  previewLimit = HR_BOARD_CANONICAL_FETCH_LIMIT,
+  signal?: AbortSignal,
+): Promise<HrBoardResponse> {
+  const localPath = `/api/mlb/hr-board/today?previewLimit=${previewLimit}&compact=1`;
 
-  return withFallback(
-    () => getJson<HrBoardResponse>(localPath),
+  const response = await withFallback<unknown>(
+    () => getJson<unknown>(localPath, CLIENT_FETCH_TIMEOUT_MS, signal),
     () => hrBoardDirect(),
   );
+  return parseHrBoardApiResponse(response);
 }
 
 function normalizeLiveGamesFallback(raw: LiveGamesDirectPayload): LiveGamesPayload {
@@ -171,9 +204,13 @@ export const vouchedgeApi = {
   scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),
 
   // Daily HR Board
-  hrBoardToday: () => hrBoardTodayWithFallback(),
-  hrBoardByDate: (date: string, previewLimit?: number) =>
-    getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
+  hrBoardToday: (previewLimit?: number, signal?: AbortSignal) => hrBoardTodayWithFallback(previewLimit, signal),
+  hrBoardByDate: async (date: string, previewLimit?: number, signal?: AbortSignal) =>
+    parseHrBoardApiResponse(await getJson<unknown>(
+      `/api/mlb/hr-board/date/${date}?compact=1${previewLimit ? `&previewLimit=${previewLimit}` : ""}`,
+      CLIENT_FETCH_TIMEOUT_MS,
+      signal,
+    )),
   hrBoardPlayer: (playerId: number, date?: string) =>
     getJson<{ player: HrBoardRow }>(`/api/mlb/hr-board/player/${playerId}${date ? `?date=${date}` : ""}`),
 

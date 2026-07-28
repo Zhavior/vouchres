@@ -227,7 +227,6 @@ function toBoardTier(tier: ToolbarTier): string {
 const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
   const eliteCount: number = vm.stats?.elite ?? vm.buckets?.Elite?.length ?? 0;
@@ -241,6 +240,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   );
 
   const isAllZero = totalCount === 0 && !vm.loading;
+  const lastUpdated = vm.lastUpdated;
   const lastUpdatedLabel = formatRelativeTime(lastUpdated);
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
@@ -262,11 +262,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   const pendingPlayerVouchId = togglePlayerVouch.variables?.playerId != null
     ? String(togglePlayerVouch.variables.playerId)
     : null;
+  const refreshBoard = vm.refresh;
 
-  const handleRefresh = React.useCallback(() => {
-    vm.refresh?.();
-    setLastUpdated(new Date());
-  }, [vm]);
+  const handleRefresh = React.useCallback(async () => {
+    await refreshBoard();
+  }, [refreshBoard]);
 
   React.useEffect(() => {
     if (!vm.syncing) {
@@ -455,7 +455,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
-            isRefreshing={vm.loading}
+            isRefreshing={vm.syncing}
             lastUpdated={lastUpdated}
             date={vm.date}
             isToday={isToday}
@@ -466,7 +466,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
             onRefresh={handleRefresh}
-            isRefreshing={vm.loading}
+            isRefreshing={vm.syncing}
             lastUpdated={lastUpdated}
             lastUpdatedLabel={lastUpdatedLabel}
             date={vm.date}
@@ -507,6 +507,27 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           <span className="text-vouch-amber">{vm.modeCounts?.curated ?? 0} Preview</span>
         </div>
 
+        {(vm.refreshError || vm.connection?.isLastGood || warningList.length > 0) && (
+          <div
+            className="rounded-xl border border-vouch-amber/30 bg-vouch-amber/10 px-3 py-2 text-xs text-amber-100"
+            role="status"
+            data-testid="hr-api-connection-status"
+          >
+            <p className="font-bold">
+              {vm.refreshError
+                ?? (vm.connection?.isLastGood
+                  ? 'Validated feed is recovering — showing a demoted last-good snapshot.'
+                  : warningList[0])}
+            </p>
+            {lastUpdated && (
+              <p className="mt-1 text-[10px] text-amber-100/70">
+                Source updated {lastUpdatedLabel}
+                {vm.connection?.requestId ? ` · Request ${vm.connection.requestId}` : ''}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Tablet / Desktop: 4-card grid */}
         <div className="hidden sm:grid sm:grid-cols-4 gap-3">
           <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
@@ -533,19 +554,21 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
-          <HrTopSignalPanel
-            player={topPlayer}
-            freshness={vm.slate.freshness}
-            generatedAt={vm.slate.generatedAt}
-            dateLabel={isToday ? 'Today' : vm.date}
-            onResearch={openPlayerProfile}
-            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-            onTogglePlayerVouch={handleTogglePlayerVouch}
-            onOpenBuild={goToBuild}
-            playerVouchCount={getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.totalVouches ?? 0}
-            playerVouchedByViewer={getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.viewerHasVouched ?? false}
-            playerVouchPending={topPlayer?.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId}
-          />
+          {topPlayer ? (
+            <HrTopSignalPanel
+              player={topPlayer}
+              freshness={vm.slate.freshness}
+              generatedAt={vm.slate.generatedAt}
+              dateLabel={isToday ? 'Today' : vm.date}
+              onResearch={openPlayerProfile}
+              onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+              onTogglePlayerVouch={handleTogglePlayerVouch}
+              onOpenBuild={goToBuild}
+              playerVouchCount={getPlayerVouchSummaryFor(topPlayer.playerId)?.totalVouches ?? 0}
+              playerVouchedByViewer={getPlayerVouchSummaryFor(topPlayer.playerId)?.viewerHasVouched ?? false}
+              playerVouchPending={topPlayer.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId}
+            />
+          ) : null}
 
           <MostVouchedPlayersPanel
             players={playerVouchLeaderboard.data ?? []}

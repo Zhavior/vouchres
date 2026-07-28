@@ -97,4 +97,27 @@ describe('HR Player Intelligence decision brief', () => {
 
     expect(board.curated[0]?.truthStatus).toBe('projected');
   });
+
+  it('preserves verified recent-result evidence and the canonical probability field', () => {
+    const board = buildBoard({
+      projectedCandidates: [{
+        playerName: 'Juan Soto',
+        playerId: 665742,
+        team: 'NYM',
+        opponent: 'PHI',
+        hrScore: 81,
+        estimatedHrProbability: 0.087,
+        recentHomeRuns: 0,
+        recentHrGames: 0,
+        recentGamesChecked: 7,
+      }],
+    });
+
+    expect(board.curated[0]).toMatchObject({
+      hrProbability: 0.087,
+      recentHomeRuns: 0,
+      recentHrGames: 0,
+      recentGamesChecked: 7,
+    });
+  });
 });
