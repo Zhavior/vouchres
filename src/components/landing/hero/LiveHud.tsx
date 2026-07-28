@@ -7,7 +7,7 @@ export default function LiveHud() {
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-[float_6s_ease-in-out_infinite]">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
