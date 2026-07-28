@@ -60,7 +60,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </div>
       </nav>
 
-      <div id="top" className="relative z-10 mx-auto mx-auto flex max-w-6xl flex-col items-center px-6 pb-24 pt-20 text-center lg:px-8 lg:pb-32 lg:pt-28">
+      <div id="top" className="relative z-10 mx-auto mx-auto flex max-w-6xl flex-col items-center px-6 pb-32 pt-28 text-center lg:px-8 lg:pb-32 lg:pt-28">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,14 +71,14 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             VouchEdge is entering Open Beta
           </div>
 
-          <h1 className="mt-8 max-w-3xl text-balance text-7xl font-black leading-[0.88] tracking-[-0.08em] text-white sm:text-8xl lg:text-9xl">
+          <h1 className="mt-12 max-w-4xl text-balance text-7xl font-black leading-[0.88] tracking-[-0.08em] text-white sm:text-8xl lg:text-9xl">
             The game begins.
             <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
               Before the first pitch.
             </span>
           </h1>
 
-          <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
+          <p className="mt-10 max-w-3xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
             Live sports intelligence that reveals every signal, every reason, and every result before the game unfolds.
           </p>
 
