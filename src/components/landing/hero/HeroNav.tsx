@@ -1,5 +1,4 @@
-import VouchEdgeLogo from "../../brand/VouchEdgeLogo";
-import { LogIn } from "lucide-react";
+import { motion } from "framer-motion";
 
 type HeroNavProps = {
   onJoinBeta: () => void;
@@ -11,33 +10,47 @@ export default function HeroNav({
   onLogin,
 }: HeroNavProps) {
   return (
-    <nav className="fixed inset-x-0 top-0 z-50">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-        <VouchEdgeLogo showBeta />
-
-        <div className="hidden gap-10 text-sm text-white/60 md:flex">
-          <a href="#experience">Experience</a>
-          <a href="#research">Research</a>
-          <a href="#record">The Record</a>
+    <motion.header
+      initial={{ y: -30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.7 }}
+      className="fixed inset-x-0 top-0 z-50"
+    >
+      <div className="mx-auto mt-5 flex max-w-7xl items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-2xl">
+        <div className="text-xl font-black tracking-tight text-white">
+          VouchEdge
         </div>
 
-        <div className="flex gap-3">
+        <nav className="hidden gap-8 text-sm text-white/60 md:flex">
+          <a href="#experience" className="transition hover:text-white">
+            Experience
+          </a>
+
+          <a href="#research" className="transition hover:text-white">
+            Research
+          </a>
+
+          <a href="#record" className="transition hover:text-white">
+            The Record
+          </a>
+        </nav>
+
+        <div className="flex items-center gap-3">
           <button
             onClick={onLogin}
-            className="rounded-xl border border-white/10 px-4 py-2 text-white"
+            className="rounded-xl px-4 py-2 text-white/70 transition hover:text-white"
           >
-            <LogIn className="mr-2 inline h-4 w-4" />
             Log In
           </button>
 
           <button
             onClick={onJoinBeta}
-            className="rounded-xl bg-cyan-400 px-5 py-2 font-bold text-black"
+            className="rounded-xl bg-cyan-400 px-5 py-2 font-semibold text-black transition hover:scale-[1.03]"
           >
             Explore
           </button>
         </div>
       </div>
-    </nav>
+    </motion.header>
   );
 }
