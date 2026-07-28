@@ -121,10 +121,12 @@ function LiveGameCard({
   game,
   index,
   className,
+  featured,
 }: {
   game: LiveGame;
   index: number;
   className?: string;
+  featured?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const live = isLiveGame(game);
@@ -344,6 +346,7 @@ export default function LiveSportsIntelligence() {
               game={game}
               index={index}
               className={index === 0 ? "md:col-span-2 xl:col-span-2" : undefined}
+              featured={index === 0}
             />
           ))}
           {liveQuery.isLoading ? (
