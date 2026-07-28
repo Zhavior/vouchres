@@ -52,9 +52,15 @@ export default function LiveHud() {
             </div>
 
             <div className="h-2 rounded-full bg-white/10">
-              <div
+              <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-300"
-                style={{ width: `${value}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${value}%` }}
+                transition={{
+                  duration: 1,
+                  delay: value / 200,
+                  ease: "easeOut",
+                }}
               />
             </div>
           </div>
