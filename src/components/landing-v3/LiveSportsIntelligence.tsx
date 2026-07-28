@@ -150,10 +150,17 @@ function LiveGameCard({
         ease: groundingEase,
       }}
       className={clsx(
-        "group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)]",
+        "group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition-all duration-500",
+        featured &&
+          "border-cyan-400/30 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.10),transparent_65%),oklch(18%_0.018_252)] shadow-[0_32px_120px_rgba(34,211,238,0.18)]",
         className
       )}
     >
+      {featured && (
+        <div className="absolute right-5 top-5 z-20 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200 backdrop-blur">
+          Featured Matchup
+        </div>
+      )}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent"
