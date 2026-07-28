@@ -71,14 +71,14 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           </div>
 
           <h1 className="mt-8 max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
-            Research the game.
+            The game begins.
             <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
-              Keep the evidence.
+              Before the first pitch.
             </span>
           </h1>
 
           <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
-            Live sports context, transparent research, and a record that keeps every result visible—built for fans who want evidence before confidence.
+            Live sports intelligence that reveals every signal, every reason, and every result before the game unfolds.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
