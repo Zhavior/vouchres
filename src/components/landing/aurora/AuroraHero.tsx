@@ -1,6 +1,7 @@
 import { ArrowRight, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import VouchEdgeLogo from '../../brand/VouchEdgeLogo';
+import LiveHud from '../hero/LiveHud';
 import AuroraBackground from './AuroraBackground';
 
 type AuroraHeroProps = {
@@ -121,20 +122,8 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
               <VouchEdgeLogo showBeta markClassName="h-12 w-12" />
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.8)] motion-reduce:animate-none" />
             </div>
-            <div className="mt-7 space-y-4">
-              {[
-                ['01', 'Collect verified context', 'Lineups, status, and matchup conditions'],
-                ['02', 'Make the reasoning visible', 'Signals stay attached to their evidence'],
-                ['03', 'Keep the result', 'Wins and losses remain part of the record'],
-              ].map(([step, title, detail]) => (
-                <div key={step} className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-                  <span className="font-mono text-xs font-bold text-cyan-300">{step}</span>
-                  <span>
-                    <span className="block font-semibold text-white">{title}</span>
-                    <span className="mt-1 block text-sm leading-6 text-white/42">{detail}</span>
-                  </span>
-                </div>
-              ))}
+            <div className="mt-7">
+              <LiveHud />
             </div>
           </div>
         </motion.div>
