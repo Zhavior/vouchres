@@ -7,7 +7,7 @@ export default function LiveHud() {
   ] as const;
 
   return (
-    <div className="space-y-6 animate-[float_6s_ease-in-out_infinite]">
+    <div className="space-y-6 animate-[float_6s_ease-in-out_infinite] rounded-[32px] border border-white/10 bg-white/[0.04] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
@@ -23,7 +23,7 @@ export default function LiveHud() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
         <div className="flex items-center justify-between">
           <span className="text-white/60">Confidence</span>
 
@@ -55,7 +55,7 @@ export default function LiveHud() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
+      <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.03] p-4">
         <p className="mb-3 text-xs uppercase tracking-[0.25em] text-cyan-300">
           Evidence
         </p>
