@@ -12,6 +12,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useLiveGames } from "../../hooks/queries/useLiveGames";
 import { TeamLogo } from "../live/LiveTeamLogo";
 import { logoByTeamId, logoByTeamName } from "../../lib/teamLogos";
+import clsx from "clsx";
+
 import {
   liveGameDisplayStatus,
   sortLiveGameCards,
@@ -115,7 +117,15 @@ function TeamRow({
   );
 }
 
-function LiveGameCard({ game, index }: { game: LiveGame; index: number }) {
+function LiveGameCard({
+  game,
+  index,
+  className,
+}: {
+  game: LiveGame;
+  index: number;
+  className?: string;
+}) {
   const reduceMotion = useReducedMotion();
   const live = isLiveGame(game);
   const final = isFinalGame(game);
@@ -137,7 +147,10 @@ function LiveGameCard({ game, index }: { game: LiveGame; index: number }) {
         delay: reduceMotion ? 0 : index * 0.06,
         ease: groundingEase,
       }}
-      className="group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)]"
+      className={clsx(
+        "group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)]",
+        className
+      )}
     >
       <div
         aria-hidden="true"
@@ -326,7 +339,12 @@ export default function LiveSportsIntelligence() {
 
         <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {games.map((game, index) => (
-            <LiveGameCard key={game.id} game={game} index={index} />
+            <LiveGameCard
+              key={game.id}
+              game={game}
+              index={index}
+              className={index === 0 ? "md:col-span-2 xl:col-span-2" : undefined}
+            />
           ))}
           {liveQuery.isLoading ? (
             <SlateStateCard title="Loading today&apos;s MLB slate…" detail="Scores and status will appear only after the official feed responds." />
