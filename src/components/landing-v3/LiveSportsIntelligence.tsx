@@ -12,6 +12,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useLiveGames } from "../../hooks/queries/useLiveGames";
 import { TeamLogo } from "../live/LiveTeamLogo";
 import { logoByTeamId, logoByTeamName } from "../../lib/teamLogos";
+import clsx from "clsx";
+
 import {
   liveGameDisplayStatus,
   sortLiveGameCards,
@@ -115,7 +117,17 @@ function TeamRow({
   );
 }
 
-function LiveGameCard({ game, index }: { game: LiveGame; index: number }) {
+function LiveGameCard({
+  game,
+  index,
+  className,
+  featured,
+}: {
+  game: LiveGame;
+  index: number;
+  className?: string;
+  featured?: boolean;
+}) {
   const reduceMotion = useReducedMotion();
   const live = isLiveGame(game);
   const final = isFinalGame(game);
@@ -137,8 +149,18 @@ function LiveGameCard({ game, index }: { game: LiveGame; index: number }) {
         delay: reduceMotion ? 0 : index * 0.06,
         ease: groundingEase,
       }}
-      className="group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)]"
+      className={clsx(
+        "group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition-all duration-500",
+        featured &&
+          "border-cyan-400/30 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.10),transparent_65%),oklch(18%_0.018_252)] shadow-[0_32px_120px_rgba(34,211,238,0.18)]",
+        className
+      )}
     >
+      {featured && (
+        <div className="absolute right-5 top-5 z-20 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200 backdrop-blur">
+          Featured Matchup
+        </div>
+      )}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent"
@@ -296,11 +318,11 @@ export default function LiveSportsIntelligence() {
               id="live-intelligence-title"
               className="mt-6 max-w-xl text-balance text-4xl font-semibold tracking-[-0.05em] text-[oklch(92%_0.01_255)] sm:text-5xl lg:text-6xl"
             >
-              Follow today&apos;s slate as official MLB data changes.
+              See today&apos;s games. Understand tomorrow&apos;s edge.
             </h2>
 
             <p className="mt-6 max-w-xl text-pretty text-base leading-7 text-white/52 sm:text-lg sm:leading-8">
-              VouchEdge brings official matchups, scores, game status, and venue context into one calm view.
+              Official schedules are only the beginning. VouchEdge combines live MLB data with context, momentum, travel, weather, injuries, and performance trends so every matchup becomes easier to understand before the first pitch.
             </p>
           </div>
 
@@ -326,7 +348,13 @@ export default function LiveSportsIntelligence() {
 
         <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {games.map((game, index) => (
-            <LiveGameCard key={game.id} game={game} index={index} />
+            <LiveGameCard
+              key={game.id}
+              game={game}
+              index={index}
+              className={index === 0 ? "md:col-span-2 xl:col-span-2" : undefined}
+              featured={index === 0}
+            />
           ))}
           {liveQuery.isLoading ? (
             <SlateStateCard title="Loading today&apos;s MLB slate…" detail="Scores and status will appear only after the official feed responds." />
@@ -361,7 +389,7 @@ export default function LiveSportsIntelligence() {
             href="#features"
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 text-sm font-medium text-white transition-[transform,background-color,border-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070a10] motion-reduce:transform-none motion-reduce:transition-none"
           >
-            Explore intelligence
+            Explore today&apos;s matchups
             <ArrowUpRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
           </a>
         </motion.div>

@@ -1,7 +1,6 @@
 import { ArrowRight, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import VouchEdgeLogo from '../../brand/VouchEdgeLogo';
-import LiveHud from '../hero/LiveHud';
 import AuroraBackground from './AuroraBackground';
 
 type AuroraHeroProps = {
@@ -60,7 +59,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </div>
       </nav>
 
-      <div id="top" className="relative z-10 mx-auto mx-auto flex max-w-6xl flex-col items-center px-6 pb-32 pt-28 text-center lg:px-8 lg:pb-32 lg:pt-28">
+      <div id="top" className="relative z-10 mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:px-8 lg:pb-32 lg:pt-28">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,15 +70,15 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             VouchEdge is entering Open Beta
           </div>
 
-          <h1 className="mt-12 max-w-4xl text-balance text-7xl font-black leading-[0.88] tracking-[-0.08em] text-white sm:text-8xl lg:text-9xl">
-            The game begins.
+          <h1 className="mt-8 max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+            Research the game.
             <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
-              Before the first pitch.
+              Keep the evidence.
             </span>
           </h1>
 
-          <p className="mt-10 max-w-3xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
-            Live sports intelligence that reveals every signal, every reason, and every result before the game unfolds.
+          <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
+            Live sports context, transparent research, and a record that keeps every result visible—built for fans who want evidence before confidence.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -122,8 +121,20 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
               <VouchEdgeLogo showBeta markClassName="h-12 w-12" />
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.8)] motion-reduce:animate-none" />
             </div>
-            <div className="mt-7">
-              <LiveHud />
+            <div className="mt-7 space-y-4">
+              {[
+                ['01', 'Collect verified context', 'Lineups, status, and matchup conditions'],
+                ['02', 'Make the reasoning visible', 'Signals stay attached to their evidence'],
+                ['03', 'Keep the result', 'Wins and losses remain part of the record'],
+              ].map(([step, title, detail]) => (
+                <div key={step} className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+                  <span className="font-mono text-xs font-bold text-cyan-300">{step}</span>
+                  <span>
+                    <span className="block font-semibold text-white">{title}</span>
+                    <span className="mt-1 block text-sm leading-6 text-white/42">{detail}</span>
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </motion.div>
