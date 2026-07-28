@@ -71,7 +71,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             VouchEdge is entering Open Beta
           </div>
 
-          <h1 className="mt-8 max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+          <h1 className="mt-8 max-w-3xl text-balance text-7xl font-black leading-[0.88] tracking-[-0.08em] text-white sm:text-8xl lg:text-9xl">
             The game begins.
             <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
               Before the first pitch.
