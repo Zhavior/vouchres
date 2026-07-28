@@ -57,7 +57,7 @@ function num(value: unknown, fallback = 0): number {
 }
 
 function clampLimit(value: unknown, fallback = 20): number {
-  return Math.max(1, Math.min(50, Math.floor(num(value, fallback) || fallback)));
+  return Math.max(10, Math.min(350, Math.floor(num(value, fallback) || fallback)));
 }
 
 function candidateKey(c: HrCandidateLike): string {
@@ -136,7 +136,10 @@ function sanitizeConfirmed(candidates: HrCandidateLike[]): HrCandidateLike[] {
     if (reasonsIncludeTeamMismatch(c)) return false;
     // isConfirmed cannot override projected-like evidence — honesty first.
     if (isProjectedLike(c)) return false;
-    return true;
+    const lineup = text(c.lineupStatus).toLowerCase();
+    const quality = text(c.dataQuality).toLowerCase();
+    const status = text(c.status).toLowerCase();
+    return lineup === "confirmed" || quality === "confirmed" || status === "confirmed";
   });
 }
 
@@ -195,18 +198,18 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
           : input.confirmedCandidates ?? input.candidates
       ),
     ),
-  );
+  ).slice(0, limit);
   const projectedCandidates = dedupeAndSort(
     normalizePool(
       isRecord(input.candidateBuckets)
         ? input.projectedCandidates ?? input.candidateBuckets.projected
         : input.projectedCandidates
     ),
-  ).map(withPreviewWarning);
+  ).map(withPreviewWarning).slice(0, limit);
 
   const allProjectedCandidates = dedupeAndSort(
     normalizePool(input.allProjectedCandidates).concat(projectedCandidates),
-  ).map(withPreviewWarning);
+  ).map(withPreviewWarning).slice(0, limit);
 
   // Display fallback may show projected rows, but candidates[] stays confirmed-only.
   // Never put unsanitized rawRows into the board — mismatch/preview rules still apply.
@@ -226,6 +229,8 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
 
   return {
     ...inputWithoutCandidates,
+    contractVersion: "hr-board.v2",
+    transportMode: "full",
     generatedAt: typeof input.generatedAt === "string" ? input.generatedAt : new Date().toISOString(),
     // Honesty contract: candidates[] === official confirmed batting-order only
     candidates: confirmedCandidates,

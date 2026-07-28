@@ -317,6 +317,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, [activeSection, isLoggedIn]);
 
   return {
+    accountId,
     posts,
     profile,
     savedSlips,

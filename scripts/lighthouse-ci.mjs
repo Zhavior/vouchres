@@ -6,6 +6,7 @@
  *   CSS gzip total ≤ 88 KiB (PERF_CSS_BUDGET_BYTES)
  *   index JS gzip ≤ 130 KiB (BUNDLE_BUDGET_BYTES)
  *   Lighthouse performance score ≥ LIGHTHOUSE_PERF_MIN (default 0.58)
+ *   Today targets: LCP ≤ 2500 ms, INP ≤ 200 ms, CLS ≤ 0.1
  *
  * Env:
  *   LIGHTHOUSE_URL          Target URL (default: http://127.0.0.1:4173)
@@ -29,6 +30,13 @@ import net from "node:net";
 const DEFAULT_URL = "http://127.0.0.1:4173";
 const DEFAULT_PORT = 4173;
 const PERF_MIN = Number(process.env.LIGHTHOUSE_PERF_MIN ?? 0.58);
+// Product acceptance targets. These are goals; only audits present in the
+// generated report are described as measured below.
+const CORE_WEB_VITAL_TARGETS = Object.freeze({
+  LCP: { auditId: "largest-contentful-paint", max: 2500, unit: "ms" },
+  INP: { auditId: "interaction-to-next-paint", max: 200, unit: "ms" },
+  CLS: { auditId: "cumulative-layout-shift", max: 0.1, unit: "" },
+});
 const TARGET_URL = (process.env.LIGHTHOUSE_URL ?? process.env.BASE_URL ?? DEFAULT_URL).replace(/\/$/, "");
 const STRICT = process.env.LIGHTHOUSE_STRICT === "1";
 const SKIP = process.env.LIGHTHOUSE_SKIP === "1";
@@ -131,7 +139,7 @@ async function runLighthouse(url) {
   });
 }
 
-async function readPerfScore(reportPath) {
+async function readPerformanceReport(reportPath) {
   const { readFileSync, mkdirSync } = await import("node:fs");
   const { dirname } = await import("node:path");
   mkdirSync(dirname(reportPath), { recursive: true });
@@ -141,7 +149,13 @@ async function readPerfScore(reportPath) {
   if (typeof score !== "number") {
     throw new Error("Lighthouse report missing performance score");
   }
-  return score;
+  const coreWebVitals = Object.fromEntries(
+    Object.entries(CORE_WEB_VITAL_TARGETS).map(([name, target]) => {
+      const measured = json?.audits?.[target.auditId]?.numericValue;
+      return [name, typeof measured === "number" ? measured : null];
+    }),
+  );
+  return { score, coreWebVitals };
 }
 
 async function main() {
@@ -178,12 +192,29 @@ async function main() {
 
     log(`auditing ${TARGET_URL} (perf min ${PERF_MIN})`);
     const reportPath = await runLighthouse(TARGET_URL);
-    const score = await readPerfScore(reportPath);
+    const { score, coreWebVitals } = await readPerformanceReport(reportPath);
     const pct = (score * 100).toFixed(1);
     log(`performance score: ${pct} (min ${(PERF_MIN * 100).toFixed(1)})`);
 
+    let vitalFailed = false;
+    for (const [name, target] of Object.entries(CORE_WEB_VITAL_TARGETS)) {
+      const measured = coreWebVitals[name];
+      if (measured === null) {
+        log(`${name}: not measured by this run (target ≤ ${target.max}${target.unit})`);
+        continue;
+      }
+
+      const displayValue = name === "CLS" ? measured.toFixed(3) : measured.toFixed(0);
+      log(`${name}: ${displayValue}${target.unit} (target ≤ ${target.max}${target.unit})`);
+      if (measured > target.max) vitalFailed = true;
+    }
+
     if (score < PERF_MIN) {
       fail(`performance ${pct} below minimum ${(PERF_MIN * 100).toFixed(1)} — trim CSS (perf-check) or defer non-critical JS`);
+    }
+
+    if (vitalFailed) {
+      fail("one or more measured Core Web Vitals exceeded the Today acceptance targets");
     }
 
     log(`PASS (perf ${pct}, CSS/JS gates: npm run perf-check)`);

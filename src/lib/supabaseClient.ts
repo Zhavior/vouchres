@@ -107,6 +107,18 @@ export async function signInWithEmail(opts: { email: string; password: string })
   return { data, error };
 }
 
+/** Send a password-recovery email to the dedicated Aurora reset page. */
+export async function requestPasswordReset(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  });
+}
+
+/** Update the password for the authenticated recovery session. */
+export async function updatePassword(password: string) {
+  return supabase.auth.updateUser({ password });
+}
+
 /**
  * Send a magic-link sign-in email (alternative to password).
  */
@@ -118,6 +130,43 @@ export async function signInWithMagicLink(email: string) {
     },
   });
   return { data, error };
+}
+
+/**
+ * Start the browser-based Google OAuth flow.
+ *
+ * Supabase redirects back through the same callback page used by email and
+ * magic-link auth, where the resulting session is persisted before the app
+ * routes the user onward.
+ */
+export async function signInWithGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+      skipBrowserRedirect: true,
+    },
+  });
+}
+
+let googleAvailabilityRequest: Promise<boolean | null> | null = null;
+
+/** Read the public Auth provider settings so a disabled provider never opens a raw error page. */
+export function getGoogleAuthAvailability(): Promise<boolean | null> {
+  if (!isSupabaseConfigured) return Promise.resolve(false);
+  if (googleAvailabilityRequest) return googleAvailabilityRequest;
+
+  googleAvailabilityRequest = fetch(`${supabaseUrl}/auth/v1/settings`, {
+    headers: { apikey: supabaseAnonKey },
+  })
+    .then(async (response) => {
+      if (!response.ok) return null;
+      const settings = await response.json() as { external?: { google?: boolean } };
+      return settings.external?.google === true;
+    })
+    .catch(() => null);
+
+  return googleAvailabilityRequest;
 }
 
 /**

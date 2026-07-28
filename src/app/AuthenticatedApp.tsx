@@ -20,6 +20,7 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
     isLoggedIn: navigation.isLoggedIn,
   });
   const domain = useAppDomain({
+    accountId: bootstrap.accountId,
     navigateSection: navigation.navigateSection,
     handleLoginSuccess: navigation.handleLoginSuccess,
     handleLogoutComplete: navigation.handleLogoutComplete,

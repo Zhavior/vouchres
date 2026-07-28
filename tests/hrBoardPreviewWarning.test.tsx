@@ -37,6 +37,9 @@ function makeProjectedRow(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
     pitcherVulnerability: 75,
     parkFactor: 70,
     recentForm: 72,
+    recentHomeRuns: 0,
+    recentHrGames: 0,
+    recentGamesChecked: 7,
     vouchScore: 84,
     dataConfidence: 65,
     truthStatus: 'projected',
@@ -56,6 +59,9 @@ describe('HR board projected preview warnings', () => {
     expect(screen.getByText('Preview only')).toBeTruthy();
     expect(screen.getByText('Official lineup not posted yet')).toBeTruthy();
     expect(screen.getAllByTitle('Official lineup not posted yet').length).toBeGreaterThan(0);
+    expect(screen.getByText('Due Watch')).toBeTruthy();
+    expect(screen.getByText(/results gap, not a guarantee/i)).toBeTruthy();
+    expect(screen.getByText(/signal alignment, not probability/i)).toBeTruthy();
   });
 
   it('does not show preview warning on official candidate cards', () => {

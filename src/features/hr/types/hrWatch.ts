@@ -63,6 +63,11 @@ export interface HrWatchRow {
   /** Book implied probability 0–1 (after vig) */
   impliedProbability?: number | null;
 
+  /** Verified results from the MLB recent-game-log feed. */
+  recentHomeRuns?: number | null;
+  recentHrGames?: number | null;
+  recentGamesChecked?: number | null;
+
   reasons: string[];
   warnings: string[];
   sourceMode: HrWatchMode;

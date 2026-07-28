@@ -6,6 +6,7 @@ import { useParlayOsStore } from '../stores/parlayOsStore';
 import { useAppProfile } from '../context/AppShellContext';
 import { AURORA_INTERACTIVE } from '../theme/auroraTokens';
 import { isBetaDestinationActive } from './betaNavigation';
+import '../styles/aurora-sidebar.css';
 
 type AppNavProps = {
   activeSection: string;
@@ -63,7 +64,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
   return (
     <nav
-      className={`fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-full border border-white/10 bg-black/35 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden ${
+      className={`ve-aurora-mobile-dock fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-2xl border border-white/10 bg-black/35 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden ${
         hideDock ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'opacity-100'
       } ${collapsed ? 'w-auto px-2.5' : 'w-[92vw] max-w-md px-2'}`}
       aria-label="Mobile app navigation"
@@ -160,12 +161,12 @@ function DockButton({
         <Icon className={collapsed ? 'h-[18px] w-[18px]' : centerAction ? 'h-5 w-5' : 'h-[22px] w-[22px]'} strokeWidth={active ? 2.2 : 1.8} />
       </div>
       {!collapsed ? (
-        <span className={`text-[10px] font-bold tracking-wide transition-colors ${active ? 'text-white' : 'text-transparent'}`}>
-          {active ? label.split(' ')[0] : ''}
+        <span className={`text-[10px] font-bold tracking-wide transition-colors ${active ? 'text-white' : 'text-white/40'}`}>
+          {label.split(' ')[0]}
         </span>
       ) : null}
       {active && !centerAction && !collapsed ? (
-        <span className="absolute -top-1 h-0.5 w-6 rounded-b-sm bg-vouch-cyan shadow-[0_2px_8px_rgba(79,184,220,0.8)]" aria-hidden="true" />
+        <span className="absolute -top-1 h-0.5 w-7 rounded-b-sm bg-gradient-to-r from-vouch-cyan to-vouch-emerald shadow-[0_2px_8px_rgba(79,184,220,0.8)]" aria-hidden="true" />
       ) : null}
     </button>
   );

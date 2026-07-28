@@ -90,6 +90,7 @@ export function buildAuthUrlConfig(opts?: {
   for (const origin of origins) {
     redirectEntries.push(`${origin}/**`);
     redirectEntries.push(`${origin}/auth/callback`);
+    redirectEntries.push(`${origin}/auth/reset-password`);
   }
 
   // Vercel preview deployments (optional — safe wildcard for this repo)

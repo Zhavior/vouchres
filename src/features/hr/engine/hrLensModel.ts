@@ -16,6 +16,10 @@ export type HrLensSignal = {
   alertEligible: boolean;
   statusLabel: string;
   tags: string[];
+  pressureBand: 'Cold' | 'Building' | 'Heating Up' | 'High Pressure' | 'Breakout Zone';
+  playerState: 'hot' | 'due-watch' | 'building' | 'insufficient-data';
+  playerStateLabel: 'Hot' | 'Due Watch' | 'Building' | 'More Data Needed';
+  stateExplanation: string;
 };
 
 const FACTORS = [
@@ -27,6 +31,52 @@ const FACTORS = [
 
 function validScore(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+function pressureBand(score: number): HrLensSignal['pressureBand'] {
+  if (score >= 80) return 'Breakout Zone';
+  if (score >= 60) return 'High Pressure';
+  if (score >= 40) return 'Heating Up';
+  if (score >= 20) return 'Building';
+  return 'Cold';
+}
+
+function playerState(row: HrWatchRow): Pick<HrLensSignal, 'playerState' | 'playerStateLabel' | 'stateExplanation'> {
+  const games = row.recentGamesChecked;
+  const homeRuns = row.recentHomeRuns;
+  const hrGames = row.recentHrGames;
+  const hasResults = games != null && games >= 3 && homeRuns != null && hrGames != null;
+  const hasUnderlyingSignals = validScore(row.hitterPower) && validScore(row.pitcherVulnerability);
+
+  if (!hasResults || !hasUnderlyingSignals) {
+    return {
+      playerState: 'insufficient-data',
+      playerStateLabel: 'More Data Needed',
+      stateExplanation: 'Aurora needs verified recent results plus power and matchup inputs before assigning a player state.',
+    };
+  }
+
+  if (homeRuns >= 2 && hrGames >= 2 && row.hitterPower >= 60 && row.hrScore >= 60) {
+    return {
+      playerState: 'hot',
+      playerStateLabel: 'Hot',
+      stateExplanation: `${homeRuns} HR across ${games} recent games, backed by current power and matchup signals.`,
+    };
+  }
+
+  if (homeRuns === 0 && games >= 5 && row.hitterPower >= 60 && row.pitcherVulnerability >= 55 && row.hrScore >= 60) {
+    return {
+      playerState: 'due-watch',
+      playerStateLabel: 'Due Watch',
+      stateExplanation: `0 HR across ${games} recent games while current power and matchup signals remain aligned. Results gap, not a guarantee.`,
+    };
+  }
+
+  return {
+    playerState: 'building',
+    playerStateLabel: 'Building',
+    stateExplanation: `${homeRuns} HR across ${games} recent games. Current evidence does not support a Hot or Due Watch label yet.`,
+  };
 }
 
 export function buildHrLensSignal(row: HrWatchRow): HrLensSignal {
@@ -54,9 +104,11 @@ export function buildHrLensSignal(row: HrWatchRow): HrLensSignal {
   if (factors.length === FACTORS.length) tags.push('Complete stack');
   if (row.truthStatus === 'official') tags.push('Official alert-ready');
   else if (row.truthStatus === 'projected') tags.push('Lineup pending');
+  const score = Math.max(0, Math.min(100, Math.round(row.hrScore)));
+  const state = playerState(row);
 
   return {
-    score: Math.max(0, Math.min(100, Math.round(row.hrScore))),
+    score,
     confidence,
     truthStatus: row.truthStatus,
     factors,
@@ -65,6 +117,8 @@ export function buildHrLensSignal(row: HrWatchRow): HrLensSignal {
     alertEligible: row.truthStatus === 'official' && row.riskTier !== 'Blocked',
     statusLabel,
     tags: tags.slice(0, 4),
+    pressureBand: pressureBand(score),
+    ...state,
   };
 }
 

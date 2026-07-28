@@ -21,8 +21,9 @@ const query = vi.hoisted(() => ({
   },
   dataUpdatedAt: Date.parse('2026-07-16T12:00:00Z'),
   isLoading: false,
+  isFetching: false,
   isError: false,
-  refetch: vi.fn(),
+  refetch: vi.fn(async () => ({ isSuccess: true })),
 }));
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
@@ -40,5 +41,17 @@ describe('useDailyHrBoard contract stability', () => {
     rerender();
 
     expect(result.current.data).toBe(firstContract);
+  });
+
+  it('keeps successful data visible when a background refresh fails', () => {
+    query.isError = true;
+    const { result } = renderHook(() => useDailyHrBoard('2026-07-16'));
+
+    expect(result.current.data?.date).toBe('2026-07-16');
+    expect(result.current.error).toBeNull();
+    expect(result.current.refreshError).toMatch(/showing the last successful board/i);
+    expect(result.current.lastUpdated?.toISOString()).toBe('2026-07-16T12:00:00.000Z');
+
+    query.isError = false;
   });
 });

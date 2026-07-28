@@ -117,11 +117,38 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.dataQuality).toBe(
       "projection_preview",
     );
+    expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.isConfirmed).toBe(false);
+    expect(second.projectedCandidates.find((row) => row.playerName === "Aaron Judge")?.status).toBe("projected");
     expect(second.projectedCandidates[0]?.dataQuality).toBe("projection_preview");
     expect(second.debug?.staleDataWarnings).toContain(
       "Serving last good snapshot — upstream temporarily unavailable",
     );
     expect(first.candidates).toHaveLength(1);
+  });
+
+  it("does not let a silently incomplete roster build replace last-good data", async () => {
+    vi.mocked(buildValidatedHrBoard)
+      .mockResolvedValueOnce(sampleBoard)
+      .mockResolvedValueOnce({
+        ...sampleBoard,
+        candidates: [],
+        projectedCandidates: [],
+        pool: { ...sampleBoard.pool, totalPlayersChecked: 0 },
+        debug: {
+          ...sampleBoard.debug,
+          teamsLoaded: 16,
+          rostersLoaded: 0,
+          totalPlayersChecked: 0,
+        },
+      } as Awaited<ReturnType<typeof buildValidatedHrBoard>>);
+
+    await getCachedValidatedHrBoard();
+    expireValidatedHrBoardHubCacheForTests();
+
+    const fallback = await getCachedValidatedHrBoard();
+    expect(fallback.servedFromLastGood).toBe(true);
+    expect(fallback.candidates).toEqual([]);
+    expect(fallback.projectedCandidates.some((row) => row.playerName === "Aaron Judge")).toBe(true);
   });
 
   it("throws an honest error when upstream fails and no last-good snapshot exists", async () => {

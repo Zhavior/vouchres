@@ -1,11 +1,22 @@
 .ve-auth-backdrop {
   animation: ve-auth-fade-in 180ms ease-out both;
+  background:
+    radial-gradient(70rem 42rem at 12% 8%, rgba(31, 199, 244, 0.13), transparent 58%),
+    radial-gradient(54rem 34rem at 92% 92%, rgba(46, 219, 145, 0.09), transparent 62%),
+    linear-gradient(145deg, rgba(2, 6, 11, 0.97), rgba(3, 8, 15, 0.98));
+  backdrop-filter: blur(18px);
 }
 
 .ve-auth-dialog {
   animation: ve-auth-dialog-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
   max-height: calc(100dvh - 1.5rem);
   overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, rgba(11, 18, 29, 0.98), rgba(5, 10, 17, 0.99));
+  box-shadow:
+    0 36px 120px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(125, 235, 255, 0.025) inset,
+    0 0 80px rgba(32, 199, 244, 0.06);
 }
 
 /*
@@ -18,16 +29,66 @@
     max-width: 56rem;
   }
 
-  .ve-auth-judge-panel {
-    flex: 0 0 clamp(16.25rem, 38%, 20rem);
-    min-width: 16.25rem;
-    max-width: 20rem;
+  .ve-auth-aurora-panel {
+    flex: 0 0 clamp(21rem, 42%, 25rem);
+    min-width: 21rem;
+    max-width: 25rem;
   }
 
   .ve-auth-form-panel {
     flex: 1 1 0%;
     min-width: 0;
   }
+}
+
+.ve-auth-aurora-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    radial-gradient(30rem 24rem at 12% 5%, rgba(32, 199, 244, 0.17), transparent 62%),
+    radial-gradient(24rem 22rem at 85% 88%, rgba(46, 219, 145, 0.1), transparent 64%),
+    linear-gradient(155deg, rgba(7, 17, 27, 0.98), rgba(4, 9, 15, 0.98));
+}
+
+.ve-auth-aurora-panel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  opacity: 0.34;
+  background-image:
+    linear-gradient(rgba(125, 235, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 235, 255, 0.055) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 80%);
+}
+
+.ve-auth-aurora-panel::after {
+  position: absolute;
+  top: 5rem;
+  right: -7rem;
+  z-index: -1;
+  width: 19rem;
+  height: 19rem;
+  content: "";
+  border: 1px solid rgba(125, 235, 255, 0.12);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 3rem rgba(125, 235, 255, 0.025),
+    0 0 0 6rem rgba(125, 235, 255, 0.015);
+}
+
+.ve-auth-proof-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .ve-auth-reveal,
@@ -70,5 +131,28 @@
   .ve-auth-message,
   .ve-auth-judge-swap {
     animation: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .ve-auth-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .ve-auth-dialog {
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ve-auth-form-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(5, 10, 17, 0.94);
+    backdrop-filter: blur(18px);
   }
 }

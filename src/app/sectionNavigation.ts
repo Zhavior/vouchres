@@ -34,6 +34,7 @@ export function shouldForcePublicLanding() {
 
 /** Only poll live games while a view that consumes them is active. */
 export const SECTIONS_USING_LIVE_GAMES = new Set([
+  'today',
   'build',
   'live_parlays',
   'ai_engine',

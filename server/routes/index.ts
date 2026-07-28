@@ -31,6 +31,7 @@ import { registerCentralBrainRoutes } from "./centralBrainRoutes";
 import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
 import { creatorBusinessRoutes } from "./creatorBusinessRoutes";
+import { todayPreferencesRoutes } from "./todayPreferencesRoutes";
 import { registerV3Routes } from "../v3/routes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
@@ -81,6 +82,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", worldChatRoutes);
   app.use("/api", socialHubRoutes);
   app.use("/api", creatorBusinessRoutes);
+  app.use("/api", todayPreferencesRoutes);
   registerV3Routes(app);
 
   registerMlbRoutes(app);

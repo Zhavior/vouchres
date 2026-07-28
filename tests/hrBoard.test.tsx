@@ -26,6 +26,9 @@ function makeRow(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
     pitcherVulnerability: 72,
     parkFactor: 108,
     recentForm: 90,
+    recentHomeRuns: 2,
+    recentHrGames: 2,
+    recentGamesChecked: 7,
     vouchScore: 8,
     dataConfidence: 88,
     truthStatus: 'projected',
@@ -56,6 +59,10 @@ describe('HR comparison board', () => {
     expect(document.querySelector('[aria-label="Watch signals"]')).toBeTruthy();
     expect(document.querySelector('[aria-label="Sleeper signals"]')).toBeTruthy();
     expect(screen.queryByText(/players found/i)).toBeNull();
+    const eliteColumn = document.querySelector('[aria-label="Elite signals"]');
+    expect(eliteColumn?.textContent).toContain('Hot');
+    expect(eliteColumn?.textContent).toContain('HRPI 98/100');
+    expect(eliteColumn?.textContent).toContain('Breakout Zone');
   });
 
   it('provides explicit research and slip actions for a player', () => {

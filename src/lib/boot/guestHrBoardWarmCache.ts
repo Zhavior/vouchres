@@ -3,6 +3,7 @@ import { queryClient } from '../queryClient';
 import { queryKeys } from '../../hooks/queries/queryKeys';
 import { todayISO } from '../../hooks/queries/hrBoardQuery';
 import type { HrBoardResponse } from '../../types/hrBoard';
+import { parseHrBoardApiResponse } from '../../api/hrBoardApiContract';
 
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from '../hrBoardSlice';
 
@@ -45,10 +46,11 @@ export async function warmGuestHrBoardCache(): Promise<void> {
   warmInFlight = (async () => {
     try {
       const { apiClient } = await import('../apiClient');
-      const board = await apiClient.get<HrBoardResponse>(
+      const wireBoard = await apiClient.get<unknown>(
         '/api/mlb/hr-board/today',
-        { previewLimit: PREVIEW_LIMIT },
+        { previewLimit: PREVIEW_LIMIT, compact: 1 },
       );
+      const board = parseHrBoardApiResponse(wireBoard);
       if (!board) return;
 
       bootDataStore.set('dailyHrBoard', board);

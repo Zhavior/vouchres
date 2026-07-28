@@ -151,4 +151,56 @@ describe('buildTodayDecision', () => {
     expect(decision.ctaSection).toBe('results');
     expect(decision.title).toContain('No MLB games');
   });
+
+  it('resumes unresolved slips before starting new research', () => {
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report(),
+      savedSlips: 3,
+      pendingSlips: 2,
+    });
+
+    expect(decision.resumeLabel).toBe('Continue tracking');
+    expect(decision.resumeTitle).toBe('2 unresolved slips');
+    expect(decision.resumeSection).toBe('live_parlays');
+  });
+
+  it('resumes the verified record when saved work exists without a pending slip', () => {
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report(),
+      savedSlips: 4,
+    });
+
+    expect(decision.resumeLabel).toBe('Continue your record');
+    expect(decision.resumeTitle).toBe('4 saved slips');
+    expect(decision.resumeSection).toBe('results');
+  });
+
+  it('starts a new user in research without fabricating prior activity', () => {
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report(),
+    });
+
+    expect(decision.resumeLabel).toBe('Start the daily loop');
+    expect(decision.resumeTitle).toBe('Research one decision deeply');
+    expect(decision.resumeSection).toBe('hr_board');
+    expect(decision.resumeDetail.toLowerCase()).not.toContain('saved');
+  });
+
+  it('reports limited source quality without claiming a complete or live sync', () => {
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report({ dataQuality: 'limited' }),
+      hrSignalCount: 1,
+    });
+
+    expect(decision.statusLabel).toBe('Limited data');
+    expect(decision.attention[0]).toMatchObject({
+      id: 'data-quality',
+      value: 'Research is incomplete',
+    });
+    expect(decision.attention[0]?.detail.toLowerCase()).toContain('preliminary');
+  });
 });

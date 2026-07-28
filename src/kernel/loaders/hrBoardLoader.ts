@@ -4,13 +4,17 @@ import { localISODate } from '../../features/hr/utils/localDate';
 
 const PREVIEW_LIMIT = 120;
 
-export async function loadHrBoard(date: string, previewLimit = PREVIEW_LIMIT): Promise<HrBoardContract> {
+export async function loadHrBoard(
+  date: string,
+  previewLimit = PREVIEW_LIMIT,
+  signal?: AbortSignal,
+): Promise<HrBoardContract> {
   const today = localISODate();
 
   const response =
     date === today
-      ? await HrBoardRepository.getToday(previewLimit)
-      : await HrBoardRepository.getByDate(date, previewLimit);
+      ? await HrBoardRepository.getToday(previewLimit, signal)
+      : await HrBoardRepository.getByDate(date, previewLimit, signal);
 
   return {
     ...response,

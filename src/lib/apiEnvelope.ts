@@ -44,7 +44,10 @@ export function unwrapApiPayload<T>(body: unknown): T {
     return envelope.data as T;
   }
 
-  const { ok: _ok, meta: _meta, error: _error, ...rest } = envelope;
+  const { ok: _ok, error: _error, ...rest } = envelope;
+  // Flat success envelopes keep response provenance (requestId, source,
+  // freshness, cache strategy, warnings) in `meta`. Dropping it here made a
+  // degraded last-good HR board indistinguishable from a fresh pipeline build.
   return rest as T;
 }
 

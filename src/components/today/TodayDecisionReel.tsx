@@ -59,13 +59,36 @@ export default function TodayDecisionReel({
   onAddFeaturedPlayer,
 }: Props) {
   const railRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const filteredSlides = slides.filter((slide) => slideMatchesFilter(slide, filter));
   const showSlip = Boolean(pendingSlip) && (filter === 'all' || filter === 'activity');
   const itemCount = filteredSlides.length + (showSlip ? 1 : 0);
 
   const scroll = (direction: -1 | 1) => {
-    railRef.current?.scrollBy({ left: direction * 328, behavior: 'smooth' });
+    railRef.current?.scrollBy?.({ left: direction * 328, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    setActiveIndex(0);
+    railRef.current?.scrollTo?.({ left: 0, behavior: 'smooth' });
+  }, [filter]);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const updateActiveIndex = () => {
+      const cards = Array.from(rail.querySelectorAll<HTMLElement>('[data-reel-card]'));
+      if (cards.length === 0) return;
+      const closest = cards.reduce((best, card, index) => {
+        const distance = Math.abs(card.offsetLeft - rail.scrollLeft);
+        return distance < best.distance ? { index, distance } : best;
+      }, { index: 0, distance: Number.POSITIVE_INFINITY });
+      setActiveIndex(closest.index);
+    };
+    updateActiveIndex();
+    rail.addEventListener('scroll', updateActiveIndex, { passive: true });
+    return () => rail.removeEventListener('scroll', updateActiveIndex);
+  }, [itemCount]);
 
   if (itemCount === 0) {
     return (
@@ -99,11 +122,20 @@ export default function TodayDecisionReel({
       </div>
 
       {itemCount > 1 ? (
-        <div className="mt-2 flex items-center justify-end gap-2 sm:absolute sm:-top-14 sm:right-0 sm:mt-0">
+        <div data-testid="today-reel-progress" className="mt-2 flex items-center justify-between gap-3 sm:absolute sm:-top-14 sm:right-0 sm:mt-0 sm:justify-end">
+          <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
+            <span className="font-mono text-[10px] font-bold text-white/45">{Math.min(activeIndex + 1, itemCount)} of {itemCount}</span>
+            <span className="flex items-center gap-1" aria-hidden="true">
+              {Array.from({ length: itemCount }, (_, index) => (
+                <span key={index} className={`h-1.5 rounded-full transition-[width,background-color] ${index === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'}`} />
+              ))}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => scroll(-1)}
-            className="z8-control flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white"
+            className="z8-control flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan"
             aria-label="Previous briefing cards"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -111,11 +143,12 @@ export default function TodayDecisionReel({
           <button
             type="button"
             onClick={() => scroll(1)}
-            className="z8-control flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white"
+            className="z8-control flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.025] text-white/55 hover:border-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan"
             aria-label="Next briefing cards"
           >
             <ArrowRight className="h-4 w-4" />
           </button>
+          </div>
         </div>
       ) : null}
     </div>
@@ -141,6 +174,7 @@ function BriefingCard({
 
   return (
     <article
+      data-reel-card
       style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
       className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#07111b] shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
         priority ? accent.border : 'border-white/[0.09]'
@@ -189,6 +223,7 @@ function PlayerSignalCard({
 
   return (
     <article
+      data-reel-card
       style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
       className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
     >
@@ -265,7 +300,7 @@ function PlayerSignalCard({
 function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionChange: (section: string) => void }) {
   const visibleLegs = slip.legs.slice(0, 2);
   return (
-    <article style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
+    <article data-reel-card style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }} className="relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-cyan/25 bg-[#07111b]">
       <div style={{ height: 180 }} className="relative flex shrink-0 items-center justify-center overflow-hidden border-b border-white/[0.07] bg-gradient-to-br from-vouch-cyan/15 via-[#08182a] to-transparent">
         <p className={`absolute left-4 top-4 ${AURORA_LABEL} text-vouch-cyan`}>My slip update</p>
         <ClipboardCheck className="h-20 w-20 text-vouch-cyan/80 drop-shadow-[0_0_28px_rgba(0,240,255,0.24)]" />

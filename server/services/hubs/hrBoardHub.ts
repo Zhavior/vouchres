@@ -16,9 +16,9 @@ const LAST_GOOD_STALE_CONFIRMED_WARNING =
   "Last-good snapshot may be stale — confirmed lineup rows demoted until a fresh board builds.";
 const STALE_CACHE_CONFIRMED_WARNING =
   "Cached board expired — confirmed lineup rows demoted until a fresh board builds.";
-/** Default 15m (was 60m) so scratched/posted lineups cannot look official for an hour. */
+/** Keep last-good longer than the hot cache; confirmed rows are always demoted on stale serve. */
 const LAST_GOOD_TTL_MS = Number(
-  process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 15 * 60_000,
+  process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000,
 );
 
 type HrBoardSnapshot = Awaited<ReturnType<typeof buildHrBoardResponse>>;
@@ -233,6 +233,24 @@ function rememberLastGoodValidatedBoard(
   void persistLastGoodToRedis(key, entry);
 }
 
+function assertValidatedBoardIsCacheable(board: ValidatedHrBoardSnapshot): void {
+  const gameCount = Number((board as any).gameCount ?? 0);
+  const debug = ((board as any).debug ?? {}) as Record<string, unknown>;
+  const teamsLoaded = Number(debug.teamsLoaded ?? 0);
+  const rostersLoaded = Number(debug.rostersLoaded ?? 0);
+  const totalPlayersChecked = Number(
+    debug.totalPlayersChecked ?? (board as any).pool?.totalPlayersChecked ?? 0,
+  );
+
+  // A real off-day is cacheable. A scheduled slate whose roster layer silently
+  // collapsed to zero is an upstream failure and must not replace last-good.
+  if (gameCount > 0 && teamsLoaded > 0 && (rostersLoaded <= 0 || totalPlayersChecked <= 0)) {
+    throw new Error(
+      `Validated HR board incomplete: games=${gameCount} teams=${teamsLoaded} rosters=${rostersLoaded} players=${totalPlayersChecked}`,
+    );
+  }
+}
+
 /**
  * Honesty helper: never expose stale/uncertain batting-order rows via candidates[].
  * Demote them into projectedCandidates with the official-lineup warning.
@@ -262,6 +280,9 @@ function demoteConfirmedCandidatesForStaleServe(
     : [];
   const demotedConfirmed = priorConfirmed.map((row) => ({
     ...row,
+    status: "projected" as const,
+    isConfirmed: false,
+    dataConfidence: Math.min(Number.isFinite(Number(row.dataConfidence)) ? Number(row.dataConfidence) : 50, 50),
     lineupStatus: "projected_unconfirmed" as const,
     dataQuality: "projection_preview" as const,
     warnings: Array.from(
@@ -526,6 +547,7 @@ async function buildFreshValidatedBoard(
     weatherPrewarm,
   ]);
 
+  assertValidatedBoardIsCacheable(board);
   rememberLastGoodValidatedBoard(key, board);
 
   const entry: ValidatedCacheEntry = {

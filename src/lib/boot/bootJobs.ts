@@ -1,5 +1,6 @@
 import { apiClient } from "../apiClient";
 import { bootDataStore, type VouchEdgeBootKey } from "./bootDataStore";
+import { parseHrBoardApiResponse } from "../../api/hrBoardApiContract";
 
 export type VouchEdgeBootJob = {
   id: VouchEdgeBootKey;
@@ -38,7 +39,7 @@ async function runAndCache(
 }
 
 const LINEUP_TODAY_PATH = "/api/mlb/lineup/today";
-const HR_BOARD_TODAY_PATH = "/api/mlb/hr-board/today?previewLimit=120";
+const HR_BOARD_TODAY_PATH = "/api/mlb/hr-board/today?previewLimit=120&compact=1";
 
 async function lineupTodayShared(signal: AbortSignal): Promise<unknown> {
   if (bootDataStore.has("lineupToday")) {
@@ -51,7 +52,9 @@ async function hrBoardTodayShared(signal: AbortSignal): Promise<unknown> {
   if (bootDataStore.has("dailyHrBoard")) {
     return bootDataStore.get("dailyHrBoard");
   }
-  return runAndCache("dailyHrBoard", HR_BOARD_TODAY_PATH, signal);
+  const board = parseHrBoardApiResponse(await fetchJson(HR_BOARD_TODAY_PATH, signal));
+  bootDataStore.set("dailyHrBoard", board);
+  return board;
 }
 
 /** Required boot jobs only — optional warmups run after first paint via idle. */

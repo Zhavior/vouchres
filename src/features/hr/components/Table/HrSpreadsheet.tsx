@@ -14,6 +14,7 @@ import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import type { HrWatchRow } from '../../types/hrWatch';
+import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
 import {
   buildHrMatchupGroups,
   getHrTableReason,
@@ -222,6 +223,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchIn
           <div className="flex flex-col items-start gap-0.5">
             <Score value={row.hrScore} />
             <TierBadge tier={tier} />
+            <HrOpportunitySummary player={row} compact />
           </div>
         </td>
 
@@ -319,7 +321,7 @@ function DesktopTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchI
             </div>
           </div>
         </td>
-        <td className="px-3 py-3.5 align-top"><div className="flex flex-col items-start gap-2"><Score value={row.hrScore} /><TierBadge tier={tier} /></div></td>
+        <td className="px-3 py-3.5 align-top"><div className="flex min-w-[150px] flex-col items-start gap-2"><Score value={row.hrScore} /><TierBadge tier={tier} /><HrOpportunitySummary player={row} compact /></div></td>
         <td className="px-3 py-3.5 align-top">
           <p className="text-[12px] font-bold leading-5 text-white/80">vs {brief.pitcherLabel}</p>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.06em] text-white/58">Pitcher vulnerability {numberLabel(row.pitcherVulnerability)}</p>
