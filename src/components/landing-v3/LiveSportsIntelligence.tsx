@@ -296,11 +296,11 @@ export default function LiveSportsIntelligence() {
               id="live-intelligence-title"
               className="mt-6 max-w-xl text-balance text-4xl font-semibold tracking-[-0.05em] text-[oklch(92%_0.01_255)] sm:text-5xl lg:text-6xl"
             >
-              Follow today&apos;s slate as official MLB data changes.
+              See today&apos;s games. Understand tomorrow&apos;s edge.
             </h2>
 
             <p className="mt-6 max-w-xl text-pretty text-base leading-7 text-white/52 sm:text-lg sm:leading-8">
-              VouchEdge brings official matchups, scores, game status, and venue context into one calm view.
+              Official schedules are only the beginning. VouchEdge combines live MLB data with context, momentum, travel, weather, injuries, and performance trends so every matchup becomes easier to understand before the first pitch.
             </p>
           </div>
 
@@ -361,7 +361,7 @@ export default function LiveSportsIntelligence() {
             href="#features"
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 text-sm font-medium text-white transition-[transform,background-color,border-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070a10] motion-reduce:transform-none motion-reduce:transition-none"
           >
-            Explore intelligence
+            Explore today&apos;s matchups
             <ArrowUpRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
           </a>
         </motion.div>
