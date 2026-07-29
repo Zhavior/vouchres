@@ -58,7 +58,7 @@ function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTogglePlay
   const canAdd = brief.canAddToSlip;
 
   return (
-    <article className={`z8-hr-compact-card relative overflow-hidden border ${tier.border} bg-gradient-to-br ${tier.surface} to-black/20`}>
+    <article className={`z8-hr-compact-card relative overflow-hidden border-x border-b ${tier.border} bg-black/40 backdrop-blur-xl transition hover:bg-black/60`}>
       <div className="relative flex min-h-[92px] items-end gap-2.5 border-b border-white/[0.08] px-2.5 pt-2.5">
         <div className="absolute left-0 top-0 border-b border-r border-white/10 bg-black/45 px-1.5 py-1 font-mono text-sm font-black tabular-nums text-white">
           {Math.round(player.hrScore)}
@@ -168,8 +168,8 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
   const Icon = tier.icon;
 
   return (
-    <section className="z8-hr-tier-section min-w-0 overflow-hidden" aria-label={`${tier.shortTitle} signals`}>
-      <header className={`flex items-center justify-between gap-2 border-b ${tier.border} bg-black/25 px-2.5 py-2.5`}>
+    <section className="z8-hr-tier-section min-w-0 overflow-hidden rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]" aria-label={`${tier.shortTitle} signals`}>
+      <header className={`flex items-center justify-between gap-2 border ${tier.border} bg-black/40 backdrop-blur-xl px-2.5 py-2.5 shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
         <div className={`flex items-center gap-1.5 ${tier.tone}`}>
           <Icon className="h-3.5 w-3.5" />
           <h3 className="font-mono text-[11px] font-black uppercase tracking-[0.1em]">{tier.shortTitle}</h3>

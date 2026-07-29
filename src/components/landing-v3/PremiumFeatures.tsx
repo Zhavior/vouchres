@@ -43,8 +43,8 @@ const features = [
 
 export default function PremiumFeatures() {
   return (
-    <section id="features" className="relative scroll-mt-20 border-t border-white/6 bg-[#05080f] py-32">
-      <div className="mx-auto max-w-7xl px-6">
+    <section id="features" className="relative scroll-mt-20 border-t border-white/[0.05] bg-black py-40 sm:py-48">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -57,13 +57,13 @@ export default function PremiumFeatures() {
             Platform Features
           </span>
 
-          <h2 className="mt-6 text-5xl font-semibold tracking-tight text-white">
+          <h2 className="mt-8 text-balance text-[9vw] font-black leading-[0.9] tracking-tight text-white sm:text-[6vw] lg:text-[72px]">
             Built for people who
-            <br />
+            <br className="hidden sm:block" />
             take sports seriously.
           </h2>
 
-          <p className="mt-8 text-lg leading-8 text-white/60">
+          <p className="mt-8 text-lg leading-8 text-white/60 sm:text-xl sm:leading-9">
             Every feature exists to improve decision quality, reduce noise,
             and create a premium research experience.
           </p>
@@ -80,20 +80,20 @@ export default function PremiumFeatures() {
                 delay: index * 0.06,
                 duration: .35,
               }}
-              className="group rounded-3xl border border-white/8 bg-white/[0.03] p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-sky-400/30 hover:bg-white/[0.05]"
+              className="group rounded-[2rem] border border-white/[0.04] bg-[#050505]/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-sky-400/30 hover:bg-[#0a0a0a]/90 hover:shadow-2xl hover:shadow-sky-400/10"
             >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-500/10">
+              <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-400/10 transition-transform duration-300 group-hover:scale-110 group-hover:bg-sky-400/20">
                 <Icon
-                  className="h-7 w-7 text-sky-400"
-                  strokeWidth={1.8}
+                  className="h-8 w-8 text-sky-400"
+                  strokeWidth={2}
                 />
               </div>
 
-              <h3 className="mb-4 text-xl font-semibold text-white">
+              <h3 className="mb-4 text-2xl font-semibold tracking-tight text-white">
                 {title}
               </h3>
 
-              <p className="leading-7 text-white/60">
+              <p className="text-base leading-7 text-white/60">
                 {text}
               </p>
             </motion.div>

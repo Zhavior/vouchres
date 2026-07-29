@@ -451,13 +451,46 @@ export async function evaluatePick(
   // Until those graders exist they're left pending (skipped) rather than being
   // mis-graded by MLB boxscore logic. See server/services/grading/sportGraders.ts.
   const sport = (pick.sport ?? "mlb").toLowerCase();
-  if (sport !== "mlb") {
-    return {
-      pick_id: pick.id,
-      status: "graded_error",
-      settled_units: null,
-      error: `sport_not_yet_supported:${sport}`,
-    };
+  if (sport !== "mlb" && pick.leg_type !== "parlay" && !market.includes("parlay")) {
+    const grader = getGrader(sport);
+    const rawGamePk = String(pick.event_id || "").trim();
+    if (!rawGamePk) {
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `missing_event_id:${sport}`,
+      };
+    }
+    const game = await grader.fetchGame(rawGamePk);
+    if (!game) {
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `${sport}_game_data_unavailable:${rawGamePk}`,
+      };
+    }
+    const outcome = grader.evaluateLeg({
+      sport,
+      gamePk: rawGamePk,
+      market,
+      selection,
+      oddsDecimal: Number(pick.odds_decimal ?? 2.0),
+    }, game);
+
+    if (outcome.status === "won" || outcome.status === "lost") {
+      return settlePick(pick, outcome.status === "won");
+    } else if (outcome.status === "push") {
+      return settlePush(pick, outcome.note ?? "Push");
+    } else {
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: outcome.note ?? `${sport}_grading_pending`,
+      };
+    }
   }
 
   const playerName = extractPlayerName(selection, market);

@@ -42,26 +42,24 @@ export default function WhyVouchEdge() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-3xl text-center"
+          className="mx-auto max-w-5xl text-center"
         >
           <div className="mb-5 inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-300">
             Why VouchEdge
           </div>
 
-          <h2 className="text-5xl font-semibold tracking-tight text-white">
-            Sports Intelligence,
+          <h2 className="text-5xl font-semibold tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+            Every prediction
             <br />
-            not sportsbook noise.
+            begins with evidence.
           </h2>
 
-          <p className="mt-8 text-lg leading-8 text-white/65">
-            VouchEdge helps serious sports fans make better decisions using
-            structured research, transparent data and beautifully designed
-            intelligence—not hype.
+          <p className="mx-auto mt-10 max-w-3xl text-xl leading-9 text-white/60">
+            The best sports decisions aren't driven by instinct alone. VouchEdge brings together research, live context, and transparent evidence so every matchup can be understood before the game begins.
           </p>
         </motion.div>
 
-        <div className="mt-20 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-24 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
           {items.map(({ icon: Icon, title, description }, i) => (
             <motion.div
               key={title}

@@ -37,6 +37,8 @@ const MAX_CACHE_ENTRIES = Number(process.env.SPORTS_HTTP_MAX_CACHE_ENTRIES ?? 1_
 const DEFAULT_ALLOWED_SPORTS_HOSTS = [
   "statsapi.mlb.com",
   "baseballsavant.mlb.com",
+  "site.api.espn.com",
+  "sports.core.api.espn.com",
 ] as const;
 
 function getAllowedSportsHosts(): Set<string> {

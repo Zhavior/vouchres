@@ -22,10 +22,17 @@ interface HrLeafDatum extends HierarchyDatum {
 type MapMode = 'players' | 'teams';
 
 const TIER_COLOR: Record<string, string> = {
-  Elite: '#fbbf24',
-  Strong: '#34d399',
-  Watch: '#60a5fa',
-  Sleepers: '#c084fc',
+  Elite: '#fcd34d',
+  Strong: '#67e8f9',
+  Watch: '#cbd5e1',
+  Sleepers: '#c4b5fd',
+};
+
+const TIER_GRADIENT: Record<string, string> = {
+  Elite: 'url(#grad-elite)',
+  Strong: 'url(#grad-strong)',
+  Watch: 'url(#grad-watch)',
+  Sleepers: 'url(#grad-sleepers)',
 };
 
 const TIER_ORDER: Array<keyof HrBuckets> = ['Elite', 'Strong', 'Watch', 'Sleepers'];
@@ -145,12 +152,31 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" className="block min-w-[720px]" textRendering="geometricPrecision" role="img" aria-label={mapMode === 'players' ? 'HR candidates mapped by HR score' : 'Teams mapped by combined HR candidate strength'}>
           <defs>
             <filter id="hr-hit-glow" x="-25%" y="-25%" width="150%" height="150%">
-              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#fb923c" floodOpacity="0.7" />
+              <feDropShadow dx="0" dy="0" stdDeviation="12" floodColor="#f97316" floodOpacity="0.8" />
+            </filter>
+            <filter id="glass-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000000" floodOpacity="0.5" />
             </filter>
             <linearGradient id="hr-hit-fill" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#fdba74" />
-              <stop offset="48%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#9a3412" />
+              <stop offset="0%" stopColor="#fed7aa" />
+              <stop offset="48%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#7c2d12" />
+            </linearGradient>
+            <linearGradient id="grad-elite" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fde68a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="grad-strong" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="grad-watch" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#f1f5f9" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="grad-sleepers" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#ddd6fe" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.1" />
             </linearGradient>
           </defs>
 
@@ -220,6 +246,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
             if (!row) return null;
             const tierName = leaf.data.tier ?? (leaf.parent?.data.name as string) ?? '';
             const color = TIER_COLOR[tierName] ?? '#94a3b8';
+            const gradient = TIER_GRADIENT[tierName] ?? '#1e293b';
             const result = getHrResult?.(row.playerId) ?? null;
             const isHit = result === 'hit';
             const showFull = fitsFullName(row.playerName, width, height);
@@ -230,14 +257,14 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
                 <rect
                   width={width}
                   height={height}
-                  rx={6}
-                  fill={isHit ? 'url(#hr-hit-fill)' : color}
-                  fillOpacity={isHit ? 0.94 : result === 'no-hr' ? 0.09 : 0.16}
+                  rx={8}
+                  fill={isHit ? 'url(#hr-hit-fill)' : gradient}
+                  fillOpacity={isHit ? 0.95 : result === 'no-hr' ? 0.15 : 1}
                   stroke={isHit ? '#ffedd5' : color}
-                  strokeOpacity={isHit ? 1 : result === 'no-hr' ? 0.3 : 0.65}
-                  strokeWidth={isHit ? 4 : 1}
-                  filter={isHit ? 'url(#hr-hit-glow)' : undefined}
-                  className={isHit ? 'z8-hr-map-hit' : undefined}
+                  strokeOpacity={isHit ? 1 : result === 'no-hr' ? 0.2 : 0.4}
+                  strokeWidth={isHit ? 4 : 1.5}
+                  filter={isHit ? 'url(#hr-hit-glow)' : 'url(#glass-glow)'}
+                  className={isHit ? 'z8-hr-map-hit transition-all duration-300 hover:brightness-110' : 'transition-all duration-300 hover:brightness-125'}
                 >
                   <title>{row.playerName} — {tierName} · HR score {Math.round(row.hrScore)}{isHit ? ' · Confirmed home run' : result === 'no-hr' ? ' · Graded: no HR' : ''}</title>
                 </rect>

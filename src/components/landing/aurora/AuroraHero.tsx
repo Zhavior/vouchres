@@ -20,9 +20,9 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative isolate min-h-[760px] overflow-hidden border-b border-white/[0.07] bg-[#04070b]">
+    <section className="relative isolate min-h-[85vh] overflow-hidden border-b border-white/[0.05] bg-black">
       <AuroraBackground />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(32,199,244,0.13),transparent_34%),linear-gradient(to_bottom,transparent_55%,#04070b_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(32,199,244,0.15),transparent_40%),linear-gradient(to_bottom,transparent_40%,#000_100%)]" />
 
       <nav className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
         <motion.a
@@ -60,33 +60,43 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </div>
       </nav>
 
-      <div id="top" className="relative z-10 mx-auto mx-auto flex max-w-6xl flex-col items-center px-6 pb-32 pt-28 text-center lg:px-8 lg:pb-32 lg:pt-28">
+      <div id="top" className="relative z-10 mx-auto flex max-w-[1400px] flex-col items-center px-5 pb-32 pt-28 text-center sm:px-6 lg:px-8 lg:pb-40 lg:pt-36">
+        {/* Main Hero Header Stack - PERFECTLY CENTERED */}
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="flex w-full max-w-4xl flex-col items-center justify-center text-center mx-auto"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/[0.07] px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-200">
-            <Sparkles className="h-4 w-4" />
-            VouchEdge is entering Open Beta
+          {/* High-Tech Status Pill */}
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-black/80 to-emerald-950/60 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.25)] backdrop-blur-md">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
+            </span>
+            <Sparkles className="h-4 w-4 text-cyan-300" />
+            <span>VouchEdge Intel Engine v3.4 • Open Beta</span>
           </div>
 
-          <h1 className="mt-12 max-w-4xl text-balance text-7xl font-black leading-[0.88] tracking-[-0.08em] text-white sm:text-8xl lg:text-9xl">
+          {/* Eye-catching Responsive Headline */}
+          <h1 className="mt-8 text-balance text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-[104px]">
             The game begins.
-            <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
+            <span className="mt-3 block bg-gradient-to-r from-cyan-300 via-sky-400 to-emerald-300 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(34,211,238,0.4)]">
               Before the first pitch.
             </span>
           </h1>
 
-          <p className="mt-10 max-w-3xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
+          {/* Subtitle - Explicitly Centered */}
+          <p className="mt-7 max-w-2xl text-pretty text-base leading-relaxed text-white/70 sm:text-xl sm:leading-8 mx-auto">
             Live sports intelligence that reveals every signal, every reason, and every result before the game unfolds.
           </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          {/* CTA Buttons - Explicitly Centered */}
+          <div className="mt-9 flex w-full max-w-md flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row mx-auto">
             <button
               type="button"
               onClick={onJoinBeta}
-              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-7 text-base font-black text-[#031017] transition hover:bg-cyan-300 hover:shadow-[0_0_48px_rgba(34,211,238,0.22)]"
+              className="group inline-flex min-h-14 w-full sm:w-auto items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-300 px-8 text-base font-black text-[#031017] shadow-[0_0_36px_rgba(34,211,238,0.35)] transition-all hover:scale-[1.02] hover:bg-cyan-300 hover:shadow-[0_0_54px_rgba(34,211,238,0.5)] active:scale-[0.98]"
             >
               Join Open Beta
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -94,37 +104,36 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             <button
               type="button"
               onClick={onViewDemo}
-              className="min-h-14 rounded-2xl border border-white/12 bg-white/[0.04] px-7 text-base font-semibold text-white/80 transition hover:border-white/22 hover:bg-white/[0.07] hover:text-white"
+              className="min-h-14 w-full sm:w-auto rounded-2xl border border-white/15 bg-white/[0.05] px-7 text-base font-semibold text-white transition-all hover:border-cyan-400/40 hover:bg-white/[0.09] hover:shadow-[0_0_24px_rgba(255,255,255,0.08)] active:scale-[0.98]"
             >
-              See the live research preview
+              See live research preview
             </button>
           </div>
 
-          <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
+          {/* Trust points - Explicitly Centered */}
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mx-auto text-center">
             {trustPoints.map((point) => (
-              <span key={point} className="inline-flex items-center gap-2 text-sm text-white/48">
-                <ShieldCheck className="h-4 w-4 text-emerald-300" />
+              <span key={point} className="inline-flex items-center gap-2 text-xs font-medium text-white/60 sm:text-sm">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 {point}
               </span>
             ))}
           </div>
         </motion.div>
 
+        {/* Hero Interactive Terminal Showcase - CENTERED */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 36 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: reduceMotion ? 0 : 0.14, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto w-full max-w-lg"
+          transition={{ delay: reduceMotion ? 0 : 0.15, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mx-auto mt-14 w-full max-w-3xl"
         >
-          <div className="absolute inset-10 rounded-full bg-cyan-400/15 blur-[90px]" />
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#07101b]/90 p-7 shadow-[0_32px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
-              <VouchEdgeLogo showBeta markClassName="h-12 w-12" />
-              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.8)] motion-reduce:animate-none" />
-            </div>
-            <div className="mt-7">
-              <LiveHud />
-            </div>
+          {/* Background Ambient Glow */}
+          <div className="absolute inset-4 rounded-full bg-gradient-to-r from-cyan-500/20 via-sky-500/15 to-emerald-500/20 blur-[80px]" />
+          
+          {/* Console Container */}
+          <div className="relative">
+            <LiveHud />
           </div>
         </motion.div>
       </div>

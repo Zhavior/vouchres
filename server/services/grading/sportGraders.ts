@@ -123,7 +123,7 @@ function extractPlayerName(selection: string): string {
     .trim();
 }
 
-/** Read a batting stat for a named player from an MLB boxscore. */
+/** Read a batting or pitching stat for a named player from an MLB boxscore. */
 function countPlayerStat(raw: any, playerName: string, stat: string): number | null {
   if (!raw?.teams) return null;
   for (const side of ["away", "home"]) {
@@ -134,8 +134,10 @@ function countPlayerStat(raw: any, playerName: string, stat: string): number | n
       const fullName = String(p?.person?.fullName || p?.name || "");
       if (!fullName) continue;
       if (isPlayerNameMatch(fullName, playerName)) {
-        const v = p?.stats?.batting?.[stat];
-        return typeof v === "number" ? v : 0;
+        const battingVal = p?.stats?.batting?.[stat];
+        const pitchingVal = p?.stats?.pitching?.[stat];
+        const v = typeof battingVal === "number" ? battingVal : typeof pitchingVal === "number" ? pitchingVal : null;
+        return v ?? 0;
       }
     }
   }
@@ -145,14 +147,21 @@ function countPlayerStat(raw: any, playerName: string, stat: string): number | n
 /** Map a market code → the MLB boxscore stat field + default threshold. */
 const MLB_MARKETS: Record<string, { stat: string; threshold: number }> = {
   hr: { stat: "homeRuns", threshold: 1 },
+  anytime_hr: { stat: "homeRuns", threshold: 1 },
   hr_multi: { stat: "homeRuns", threshold: 2 },
   rbi: { stat: "rbi", threshold: 1 },
   rbi_over: { stat: "rbi", threshold: 1 }, // threshold overridden by leg.threshold
   run: { stat: "runs", threshold: 1 },
   runs: { stat: "runs", threshold: 1 },
+  hit: { stat: "hits", threshold: 1 },
   hits: { stat: "hits", threshold: 1 },
   hits_over: { stat: "hits", threshold: 1 },
   tb: { stat: "totalBases", threshold: 1 },
+  total_bases: { stat: "totalBases", threshold: 1 },
+  stolen_base: { stat: "stolenBases", threshold: 1 },
+  stolen_bases: { stat: "stolenBases", threshold: 1 },
+  strikeouts: { stat: "strikeOuts", threshold: 5 },
+  ks: { stat: "strikeOuts", threshold: 5 },
 };
 
 const mlbGrader: SportGrader = {
@@ -178,7 +187,6 @@ const mlbGrader: SportGrader = {
 
     const threshold = leg.threshold ?? def.threshold;
 
-    // 1. If player hit target (e.g. 1+ HR), mark WON immediately
     if (actual >= threshold) {
       return {
         status: "won",
@@ -187,7 +195,6 @@ const mlbGrader: SportGrader = {
       };
     }
 
-    // 2. If game is FINAL and player did NOT hit target, mark LOST
     if (game.final) {
       return {
         status: "lost",
@@ -196,7 +203,6 @@ const mlbGrader: SportGrader = {
       };
     }
 
-    // 3. Otherwise (game still live, target not hit yet) -> keep PENDING
     return {
       status: "pending",
       actual,
@@ -206,38 +212,227 @@ const mlbGrader: SportGrader = {
 };
 
 /* ============================================================
-   NBA / NFL — stubs (coming soon). Registering a real grader
-   later is the only change needed to light them up.
+   ESPN Feed Helper (NBA / NFL)
    ============================================================ */
 
-function comingSoonGrader(sport: string): SportGrader {
-  return {
-    sport,
-    supportedMarkets: [],
-    async fetchGame() {
-      return null;
-    },
-    evaluateLeg() {
-      return { status: "pending", note: `${sport}_grading_not_yet_supported` };
-    },
-  };
+async function fetchEspnGameData(sport: "nba" | "nfl", gamePk: string): Promise<GameData | null> {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${sport === 'nba' ? 'basketball/nba' : 'football/nfl'}/summary?event=${gamePk}`;
+  try {
+    const raw = await sportsFetchJson<any>(url, {
+      cacheKey: `grading:espn:${sport}:${gamePk}`,
+      ttlMs: 30_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: `espnGrader:${sport}`,
+    });
+
+    const statusObj = raw?.header?.competitions?.[0]?.status;
+    const isCompleted = Boolean(statusObj?.type?.completed || statusObj?.type?.state === "post");
+
+    return { final: isCompleted, raw };
+  } catch (err) {
+    console.warn(`[sportGraders] ${sport.toUpperCase()} game fetch failed gamePk=${gamePk}:`, err instanceof Error ? err.message : String(err));
+    return null;
+  }
 }
+
+/* ============================================================
+   NBA Grader
+   ============================================================ */
+
+function countNbaPlayerStat(raw: any, playerName: string, targetStat: string): number | null {
+  const playerBlocks = raw?.boxscore?.players ?? [];
+  for (const teamBlock of playerBlocks) {
+    const statsList = teamBlock?.statistics ?? [];
+    for (const statGroup of statsList) {
+      const names: string[] = statGroup?.names ?? statGroup?.labels ?? [];
+      const athletes = statGroup?.athletes ?? [];
+      for (const entry of athletes) {
+        const displayName = String(entry?.athlete?.displayName || entry?.athlete?.shortName || "");
+        if (!displayName) continue;
+        if (isPlayerNameMatch(displayName, playerName)) {
+          const statsArr: string[] = entry?.stats ?? [];
+          const idx = names.findIndex(n => n.toUpperCase() === targetStat.toUpperCase());
+          if (idx !== -1 && statsArr[idx] !== undefined) {
+            const rawVal = statsArr[idx];
+            if (rawVal.includes("-")) {
+              const made = Number(rawVal.split("-")[0]);
+              return Number.isFinite(made) ? made : 0;
+            }
+            const num = Number(rawVal);
+            return Number.isFinite(num) ? num : 0;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+const NBA_MARKETS: Record<string, { stat: string; threshold: number }> = {
+  pts: { stat: "PTS", threshold: 15 },
+  points: { stat: "PTS", threshold: 15 },
+  reb: { stat: "REB", threshold: 5 },
+  rebounds: { stat: "REB", threshold: 5 },
+  ast: { stat: "AST", threshold: 5 },
+  assists: { stat: "AST", threshold: 5 },
+  "3ptm": { stat: "3PM-A", threshold: 2 },
+  threes: { stat: "3PM-A", threshold: 2 },
+};
+
+const nbaGrader: SportGrader = {
+  sport: "nba",
+  supportedMarkets: Object.keys(NBA_MARKETS),
+
+  async fetchGame(gamePk: string): Promise<GameData | null> {
+    return fetchEspnGameData("nba", gamePk);
+  },
+
+  evaluateLeg(leg: GradableLeg, game: GameData): LegOutcome {
+    const marketKey = leg.market.toLowerCase();
+    const def = NBA_MARKETS[marketKey];
+    if (!def) return { status: "error", note: `unknown_market:${leg.market}` };
+
+    const player = extractPlayerName(leg.selection);
+    const actual = countNbaPlayerStat(game.raw, player, def.stat);
+    if (actual === null) {
+      if (game.final) {
+        return { status: "push", actual: null, note: `player_not_found:${player}` };
+      }
+      return { status: "pending", actual: null, note: `game_in_progress:${player}` };
+    }
+
+    const threshold = leg.threshold ?? def.threshold;
+
+    if (actual >= threshold) {
+      return {
+        status: "won",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+)`,
+      };
+    }
+
+    if (game.final) {
+      return {
+        status: "lost",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+, Final)`,
+      };
+    }
+
+    return {
+      status: "pending",
+      actual,
+      note: `${player}: ${actual}/${threshold} ${def.stat} (In Progress)`,
+    };
+  },
+};
+
+/* ============================================================
+   NFL Grader
+   ============================================================ */
+
+function countNflPlayerStat(raw: any, playerName: string, category: string, statName: string): number | null {
+  const playerBlocks = raw?.boxscore?.players ?? [];
+  for (const teamBlock of playerBlocks) {
+    const statsList = teamBlock?.statistics ?? [];
+    for (const statGroup of statsList) {
+      if (category && String(statGroup?.name || "").toLowerCase() !== category.toLowerCase()) {
+        continue;
+      }
+      const labels: string[] = statGroup?.labels ?? statGroup?.names ?? [];
+      const athletes = statGroup?.athletes ?? [];
+      for (const entry of athletes) {
+        const displayName = String(entry?.athlete?.displayName || entry?.athlete?.shortName || "");
+        if (!displayName) continue;
+        if (isPlayerNameMatch(displayName, playerName)) {
+          const statsArr: string[] = entry?.stats ?? [];
+          const idx = labels.findIndex(l => l.toUpperCase() === statName.toUpperCase());
+          if (idx !== -1 && statsArr[idx] !== undefined) {
+            const num = Number(statsArr[idx]);
+            return Number.isFinite(num) ? num : 0;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+const NFL_MARKETS: Record<string, { category: string; stat: string; threshold: number }> = {
+  pass_yds: { category: "passing", stat: "YDS", threshold: 200 },
+  passing_yards: { category: "passing", stat: "YDS", threshold: 200 },
+  rush_yds: { category: "rushing", stat: "YDS", threshold: 50 },
+  rushing_yards: { category: "rushing", stat: "YDS", threshold: 50 },
+  rec_yds: { category: "receiving", stat: "YDS", threshold: 50 },
+  receiving_yards: { category: "receiving", stat: "YDS", threshold: 50 },
+  td: { category: "", stat: "TD", threshold: 1 },
+  touchdowns: { category: "", stat: "TD", threshold: 1 },
+  rec: { category: "receiving", stat: "REC", threshold: 3 },
+  receptions: { category: "receiving", stat: "REC", threshold: 3 },
+};
+
+const nflGrader: SportGrader = {
+  sport: "nfl",
+  supportedMarkets: Object.keys(NFL_MARKETS),
+
+  async fetchGame(gamePk: string): Promise<GameData | null> {
+    return fetchEspnGameData("nfl", gamePk);
+  },
+
+  evaluateLeg(leg: GradableLeg, game: GameData): LegOutcome {
+    const marketKey = leg.market.toLowerCase();
+    const def = NFL_MARKETS[marketKey];
+    if (!def) return { status: "error", note: `unknown_market:${leg.market}` };
+
+    const player = extractPlayerName(leg.selection);
+    const actual = countNflPlayerStat(game.raw, player, def.category, def.stat);
+    if (actual === null) {
+      if (game.final) {
+        return { status: "push", actual: null, note: `player_not_found:${player}` };
+      }
+      return { status: "pending", actual: null, note: `game_in_progress:${player}` };
+    }
+
+    const threshold = leg.threshold ?? def.threshold;
+
+    if (actual >= threshold) {
+      return {
+        status: "won",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+)`,
+      };
+    }
+
+    if (game.final) {
+      return {
+        status: "lost",
+        actual,
+        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+, Final)`,
+      };
+    }
+
+    return {
+      status: "pending",
+      actual,
+      note: `${player}: ${actual}/${threshold} ${def.stat} (In Progress)`,
+    };
+  },
+};
 
 /**
  * Supported sports. Mirror of the client `SportId` (src/sports/registry.ts).
- * Adding an id here forces a matching entry in `sportGraders` (won't compile
- * until you provide one) — the compile-time guarantee for new-sport completeness.
  */
 export type SportId = "mlb" | "nba" | "nfl";
 
 export const sportGraders: Record<SportId, SportGrader> = {
   mlb: mlbGrader,
-  nba: comingSoonGrader("nba"),
-  nfl: comingSoonGrader("nfl"),
+  nba: nbaGrader,
+  nfl: nflGrader,
 };
 
 export function getGrader(sport: string): SportGrader {
-  return sportGraders[(sport?.toLowerCase() as SportId)] ?? comingSoonGrader(sport || "unknown");
+  return sportGraders[(sport?.toLowerCase() as SportId)] ?? mlbGrader;
 }
 
 /* ============================================================
