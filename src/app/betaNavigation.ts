@@ -62,6 +62,7 @@ const ACCOUNT_SECTIONS = new Set([
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
   'hr_board',
+  'live_games',
   'results',
   'premium',
 ]);
@@ -69,6 +70,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
   'hr_board',
+  'live_games',
   'results',
   'premium',
   'profile',

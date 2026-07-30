@@ -86,6 +86,4 @@ export async function startInProcessCron() {
 }
 
 // Run if invoked directly
-if (require.main === module) {
-  main();
-}
+main();

@@ -125,9 +125,9 @@ async function fetchConfirmedStarters(
   const pitchers: StarterCandidate[] = [];
 
   for (const g of games) {
-    if (!g?.lineupConfirmed) continue;
-    const start: string = g.gameDate;
-    const gamePk = String(g.gamePk);
+    const start: string = g.gameDate || g.officialDate || new Date().toISOString();
+    const gamePk = String(g.gamePk || g.game_id || g.id || '');
+    if (!gamePk) continue;
 
     const collectHitters = (players: any[]) => {
       (players ?? []).forEach((p: any) => {

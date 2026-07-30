@@ -315,8 +315,10 @@ function StatusBadge({ m }: { m: GameMatchup }) {
   if (m.isLive) {
     return (
       <span className="inline-flex items-center gap-1.5 text-[10px] font-black font-mono uppercase text-rose-300 px-2.5 py-1 rounded-full border border-rose-500/40 bg-rose-500/15 shadow-[0_0_12px_rgba(244,63,94,0.3)]">
-        <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-400 absolute" />
+        <span className="relative flex items-center justify-center w-2 h-2">
+          <span className="absolute w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          <span className="relative w-1.5 h-1.5 rounded-full bg-rose-400" />
+        </span>
         LIVE
       </span>
     );

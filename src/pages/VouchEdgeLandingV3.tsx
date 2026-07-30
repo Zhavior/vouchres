@@ -30,7 +30,7 @@ export default function VouchEdgeLandingV3({
   onFooterNavigate,
 }: Props) {
   return (
-    <main className="min-h-screen bg-[#04070B] text-white overflow-x-hidden">
+    <main className="min-h-screen bg-black text-white overflow-x-hidden">
       <AuroraHero onLogin={onLogin} onJoinBeta={onJoinBeta} onViewDemo={onViewDemo} />
 
       <LiveSportsIntelligence />

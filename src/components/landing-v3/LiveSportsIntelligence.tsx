@@ -150,9 +150,9 @@ function LiveGameCard({
         ease: groundingEase,
       }}
       className={clsx(
-        "group relative isolate min-w-0 overflow-hidden rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition-all duration-500",
+        "group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.05] bg-[#050505]/60 p-6 shadow-2xl backdrop-blur-2xl transition-all duration-500",
         featured &&
-          "border-cyan-400/30 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.10),transparent_65%),oklch(18%_0.018_252)] shadow-[0_32px_120px_rgba(34,211,238,0.18)]",
+          "border-cyan-400/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_65%),#050505/80] shadow-[0_32px_120px_rgba(34,211,238,0.12)]",
         className
       )}
     >
@@ -244,9 +244,9 @@ function LiveGameCard({
 
 function SlateStateCard({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="md:col-span-2 xl:col-span-3 rounded-[1.75rem] border border-white/[0.09] bg-[oklch(18%_0.018_252)] px-6 py-12 text-center">
-      <p className="text-base font-medium text-white/78">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-white/42">{detail}</p>
+    <div className="md:col-span-2 xl:col-span-3 rounded-[2rem] border border-white/[0.05] bg-[#050505]/60 px-6 py-16 text-center backdrop-blur-xl">
+      <p className="text-lg font-medium text-white/80">{title}</p>
+      <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-white/50">{detail}</p>
     </div>
   );
 }
@@ -286,7 +286,7 @@ export default function LiveSportsIntelligence() {
     <section
       id="live-intelligence"
       aria-labelledby="live-intelligence-title"
-      className="relative isolate px-4 py-24 sm:px-6 sm:py-32 lg:px-8"
+      className="relative isolate px-4 py-32 sm:px-6 sm:py-48 lg:px-8 bg-black"
     >
       <div
         aria-hidden="true"
@@ -316,12 +316,11 @@ export default function LiveSportsIntelligence() {
 
             <h2
               id="live-intelligence-title"
-              className="mt-6 max-w-xl text-balance text-4xl font-semibold tracking-[-0.05em] text-[oklch(92%_0.01_255)] sm:text-5xl lg:text-6xl"
+              className="mt-8 max-w-2xl text-balance text-[9vw] font-black leading-[0.9] tracking-tight text-white sm:text-[6vw] lg:text-[72px]"
             >
               See today&apos;s games. Understand tomorrow&apos;s edge.
             </h2>
-
-            <p className="mt-6 max-w-xl text-pretty text-base leading-7 text-white/52 sm:text-lg sm:leading-8">
+            <p className="mt-8 max-w-xl text-pretty text-lg leading-8 text-white/60 sm:text-xl sm:leading-9">
               Official schedules are only the beginning. VouchEdge combines live MLB data with context, momentum, travel, weather, injuries, and performance trends so every matchup becomes easier to understand before the first pitch.
             </p>
           </div>
@@ -331,15 +330,15 @@ export default function LiveSportsIntelligence() {
               const Icon = signal.icon;
 
               return (
-                <div key={signal.label} className="min-w-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 sm:p-4">
-                  <Icon aria-hidden="true" className="h-4 w-4 text-sky-300/75" strokeWidth={1.8} />
-                  <p className="mt-5 truncate font-mono text-xl font-medium tracking-[-0.04em] text-white sm:text-2xl">
+                <div key={signal.label} className="min-w-0 rounded-3xl border border-white/[0.04] bg-[#050505]/80 p-5 sm:p-6 shadow-xl backdrop-blur-md">
+                  <Icon aria-hidden="true" className="h-5 w-5 text-sky-400" strokeWidth={2} />
+                  <p className="mt-6 truncate font-mono text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                     {signal.value}
                   </p>
-                  <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-white/48 sm:text-[11px]">
+                  <p className="mt-2 truncate text-xs font-bold uppercase tracking-[0.2em] text-white/50">
                     {signal.label}
                   </p>
-                  <p className="mt-1 hidden truncate text-xs text-white/28 sm:block">{signal.detail}</p>
+                  <p className="mt-2 hidden truncate text-sm text-white/30 sm:block">{signal.detail}</p>
                 </div>
               );
             })}
