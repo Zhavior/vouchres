@@ -1,7 +1,7 @@
-import { isUpstashEnabled } from "../../lib/upstashRedis";
+import { isUpstashEnabled } from '../../lib/upstashRedis'
 
 export const RateLimitPolicy = {
   failClosedOnRedisError(): boolean {
-    return process.env.NODE_ENV === "production" && isUpstashEnabled();
+    return process.env.NODE_ENV === 'production' && isUpstashEnabled()
   },
-};
+}

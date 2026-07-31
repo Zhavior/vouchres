@@ -1,26 +1,34 @@
-import {
-  CircuitBreaker,
-  type CircuitBreakerOptions,
-} from "../../lib/sports/circuitBreaker";
+import { CircuitBreaker, type CircuitBreakerOptions } from '../../lib/sports/circuitBreaker'
 
-const circuits = new Map<string, CircuitBreaker>();
+const registry = new Map<string, CircuitBreaker>()
 
 export function getCircuit(
   name: string,
-  options: Omit<CircuitBreakerOptions, "name">
+  options?: Omit<CircuitBreakerOptions, 'name'>,
 ): CircuitBreaker {
-  let circuit = circuits.get(name);
+  const existing = registry.get(name)
+  if (existing) return existing
 
-  if (!circuit) {
-    circuit = new CircuitBreaker({
-      name,
-      failureThreshold: options.failureThreshold ?? 5,
-      windowMs: options.windowMs ?? 60000,
-      cooldownMs: options.cooldownMs ?? 30000,
-    });
+  const created = new CircuitBreaker({
+    name,
+    failureThreshold: options?.failureThreshold,
+    windowMs: options?.windowMs,
+    cooldownMs: options?.cooldownMs,
+  })
 
-    circuits.set(name, circuit);
-  }
+  registry.set(name, created)
+  return created
+}
 
-  return circuit;
+export const getOrCreateCircuitBreaker = getCircuit
+
+export function getCircuitBreaker(name: string): CircuitBreaker | undefined {
+  return registry.get(name)
+}
+
+export function getCircuitRegistrySnapshot() {
+  return Array.from(registry.entries()).map(([name, breaker]) => ({
+    name,
+    state: breaker.getState(),
+  }))
 }
