@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { createApiApp } from "./server/api/bootstrap";
 import { startWorkerRuntime, type WorkerRuntimeHandle } from "./server/worker/bootstrap";
 import { isSentryEnabled, captureException } from "./server/lib/sentry";
-import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
+import { validateProductionEnvAtBoot } from "./server/platform/config";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
 

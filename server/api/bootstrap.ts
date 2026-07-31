@@ -7,10 +7,10 @@ import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
 import { apiErrorHandler } from "../middleware/errorHandler";
 import { apiNotFoundHandler } from "../middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "../middleware/rateLimit";
-import { requestContext } from "../middleware/requestContext";
+import { requestContext } from "../platform/request-context";
 import { routeTiming } from "../middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "../lib/sentry";
-import { validateProductionEnvAtBoot } from "../lib/validateProductionEnv";
+import { validateProductionEnvAtBoot } from "../platform/config";
 
 export async function createApiApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();
