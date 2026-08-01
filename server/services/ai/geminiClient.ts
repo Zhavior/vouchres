@@ -5,18 +5,19 @@
  */
 import { GoogleGenAI } from "@google/genai";
 import { TTLCache, TTL } from "../../lib/cache";
+import appConfig from "../../platform/config/appConfig";
 import { z } from "zod";
 
 const aiCache = new TTLCache<string>(TTL.aiExplanation);
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const MODEL = appConfig.gemini.model;
 const TIMEOUT_MS = 12000;
 const structuredCache = new TTLCache<unknown>(TTL.aiExplanation);
 let budgetDay = "";
 let budgetUsed = 0;
-const DAILY_STRUCTURED_LIMIT = Number(process.env.GEMINI_BRAIN_DAILY_LIMIT ?? 12);
+const DAILY_STRUCTURED_LIMIT = appConfig.gemini.dailyStructuredLimit;
 
 export function hasGeminiKey(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+  return !!appConfig.gemini.apiKey;
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -49,7 +50,7 @@ export async function generateText(opts: {
 
   try {
     const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY as string,
+      apiKey: appConfig.gemini.apiKey as string,
       httpOptions: { headers: { "User-Agent": "vouchedge-backend" } },
     });
     const response = await withTimeout(
@@ -86,9 +87,9 @@ export async function generateStructured<TSchema extends z.ZodTypeAny>(opts: {
   if (budgetUsed >= DAILY_STRUCTURED_LIMIT) return { data: opts.fallback, status: "fallback", model: opts.model ?? MODEL };
   budgetUsed += 1;
 
-  const model = opts.model ?? process.env.GEMINI_BRAIN_MODEL ?? "gemini-3.1-flash-lite";
+  const model = opts.model ?? appConfig.gemini.brainModel;
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string, httpOptions: { headers: { "User-Agent": "vouchedge-brain" } } });
+    const ai = new GoogleGenAI({ apiKey: appConfig.gemini.apiKey as string, httpOptions: { headers: { "User-Agent": "vouchedge-brain" } } });
     const response = await withTimeout(ai.models.generateContent({
       model,
       contents: opts.prompt,
@@ -108,3 +109,55 @@ export async function generateStructured<TSchema extends z.ZodTypeAny>(opts: {
     return { data: opts.fallback, status: "fallback", model };
   }
 }
+
+export interface GeminiImageResult {
+  imageBase64: string;
+  status: "live" | "no-key";
+}
+
+export async function generateImage(opts: {
+  prompt: string;
+  aspectRatio?: string;
+  model?: string;
+}): Promise<GeminiImageResult> {
+  if (!hasGeminiKey()) {
+    return {
+      imageBase64: "",
+      status: "no-key",
+    };
+  }
+
+  const ai = new GoogleGenAI({
+    apiKey: appConfig.gemini.apiKey as string,
+    httpOptions: {
+      headers: {
+        "User-Agent": "vouchedge-backend",
+      },
+    },
+  });
+
+  const response = await withTimeout(
+    ai.models.generateContent({
+      model: opts.model ?? "gemini-2.5-flash-image",
+      contents: {
+        parts: [{ text: opts.prompt }],
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: opts.aspectRatio,
+        },
+      },
+    }),
+    TIMEOUT_MS,
+  );
+
+  const imagePart = response.candidates?.[0]?.content?.parts?.find(
+    (part) => part.inlineData?.data,
+  );
+
+  return {
+    imageBase64: imagePart?.inlineData?.data ?? "",
+    status: "live",
+  };
+}
+
