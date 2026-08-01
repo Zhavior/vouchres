@@ -70,6 +70,11 @@ export const PlayerResearchRequestSchema = z.object({
   playerData: PlayerResearchDataSchema,
 });
 
+export const PlayerResearchResponseSchema = z.object({
+  aiScore: z.number().int().min(10).max(99),
+  report: z.string().trim().min(1),
+});
+
 export const ParlayEdgeLegSchema = z
   .object({
     selection: z.string().trim().min(1).max(280),
@@ -92,3 +97,4 @@ export type AiChatInput = z.infer<typeof AiChatRequestSchema>;
 export type AiImageInput = z.infer<typeof AiImageRequestSchema>;
 export type AiThemeInput = z.infer<typeof AiThemeRequestSchema>;
 export type PlayerResearchInput = z.infer<typeof PlayerResearchRequestSchema>;
+export type PlayerResearchResponse = z.infer<typeof PlayerResearchResponseSchema>;
