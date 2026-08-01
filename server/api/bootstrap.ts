@@ -11,6 +11,7 @@ import { requestContext } from "../platform/request-context";
 import { routeTiming } from "../middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "../lib/sentry";
 import { validateProductionEnvAtBoot } from "../platform/config";
+import appConfig from "../platform/config/appConfig";
 
 export async function createApiApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();
@@ -18,7 +19,7 @@ export async function createApiApp(httpServer?: http.Server) {
   
   initServerSentry(app);
 
-  app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
+  app.set("trust proxy", appConfig.trustProxy);
   app.use(requestContext);
   app.use(routeTiming);
   app.use(helmetMiddleware);
