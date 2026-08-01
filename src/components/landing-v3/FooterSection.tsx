@@ -1,4 +1,4 @@
-import { Github } from "lucide-react";
+import { Github, BookOpen, ShieldCheck, FileText, LifeBuoy } from "lucide-react";
 import VouchEdgeLogo from "../brand/VouchEdgeLogo";
 
 const product = ["Live Games", "Research", "Results", "Pricing"] as const;
@@ -23,8 +23,10 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
             <VouchEdgeLogo showBeta markClassName="h-12 w-12" />
 
             <p className="mt-8 max-w-md leading-8 text-white/55">
-              Built for serious sports fans who value evidence,
-              transparency and better decision making.
+              Decision Intelligence for Sports.
+
+              Premium research, AI-powered insights, transparent analytics,
+              and evidence-first recommendations built for serious sports fans.
             </p>
 
             <div className="mt-10 flex gap-4">
@@ -67,20 +69,73 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
             </h4>
 
             <div className="space-y-4 text-white/55">
-              <p>Open Beta</p>
-              <p>Independent research tools</p>
-              <p>Public grading records</p>
+              <a
+                href="/about"
+                className="flex items-center gap-2 transition hover:text-white"
+              >
+                About VouchEdge
+              </a>
+              <a
+                href="/contact"
+                className="flex items-center gap-2 transition hover:text-white"
+              >
+                Contact
+              </a>
+              <button type="button" className="block transition hover:text-white">
+                Careers
+              </button>
+              <button type="button" className="block transition hover:text-white">
+                Open Beta
+              </button>
             </div>
           </div>
 
           <div>
             <h4 className="mb-5 font-semibold text-white">
-              Account
+              Legal
             </h4>
 
             <div className="space-y-4 text-white/55">
-              <p>Terms and privacy are reviewed during signup.</p>
-              <p>Account controls are available after login.</p>
+              <button type="button" className="flex items-center gap-2 transition hover:text-white">
+                <ShieldCheck className="h-4 w-4" />
+                Privacy Policy
+              </button>
+
+              <button type="button" className="flex items-center gap-2 transition hover:text-white">
+                <FileText className="h-4 w-4" />
+                Terms of Service
+              </button>
+
+              <button type="button" className="flex items-center gap-2 transition hover:text-white">
+                <BookOpen className="h-4 w-4" />
+                Cookie Policy
+              </button>
+
+              <button type="button" className="flex items-center gap-2 transition hover:text-white">
+                <LifeBuoy className="h-4 w-4" />
+                Responsible Gaming
+              </button>
+
+              <a
+                href="/disclaimer"
+                className="flex items-center gap-2 transition hover:text-white"
+              >
+                Disclaimer
+              </a>
+
+              <a
+                href="/security"
+                className="flex items-center gap-2 transition hover:text-white"
+              >
+                Security
+              </a>
+
+              <a
+                href="/dmca"
+                className="flex items-center gap-2 transition hover:text-white"
+              >
+                DMCA
+              </a>
             </div>
           </div>
 
@@ -92,9 +147,17 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
             © 2026 VouchEdge. All rights reserved.
           </p>
 
-          <p>
-            Designed with Aurora.
-          </p>
+          <div className="flex flex-col items-end gap-2 text-right">
+
+            <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-300">
+              Open Beta
+            </span>
+
+            <p>Built in Canada 🇨🇦</p>
+
+            <p>Powered by Aurora Intelligence</p>
+
+          </div>
 
         </div>
 
