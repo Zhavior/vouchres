@@ -18,7 +18,7 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
           key={tab.id}
           type="button"
           disabled={!tab.enabled}
-          onClick={() => value === tab.id && onChange(tab.id)}
+          onClick={() => tab.enabled && value !== tab.id && onChange(tab.id)}
           className={[
             "relative min-h-[44px] rounded-xl px-4 py-2 text-sm font-semibold transition-all",
             value === tab.id
