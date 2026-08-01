@@ -1,5 +1,6 @@
 import express from "express";
 import { registerV3Routes } from "./routes";
+import appConfig from "../platform/config/appConfig";
 import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
 import { apiErrorHandler } from "../middleware/errorHandler";
 import { apiNotFoundHandler } from "../middleware/apiNotFound";
@@ -12,7 +13,7 @@ export function createV3App() {
   const app = express();
 
   initServerSentry(app);
-  app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
+  app.set("trust proxy", appConfig.trustProxy);
   app.use(requestContext);
   app.use(routeTiming);
   app.use(helmetMiddleware);

@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
 import type { AiChatInput } from "../../validators/aiSchemas";
+import { generateText, hasGeminiKey } from "./geminiClient";
 
 export interface AiChatResponse {
   status: "success" | "no-key";
@@ -12,39 +12,33 @@ const DEFAULT_SYSTEM_INSTRUCTION =
 const NO_KEY_TEXT =
   "Welcome to the VouchEdge AI Design Studio.\n\nNo GEMINI_API_KEY was detected in the current server environment, so this endpoint is running in local guidance mode. Add GEMINI_API_KEY to enable live Gemini responses.";
 
-export async function generateAiChatResponse(input: AiChatInput): Promise<AiChatResponse> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+export async function generateAiChatResponse(
+  input: AiChatInput,
+): Promise<AiChatResponse> {
+  if (!hasGeminiKey()) {
     return {
       status: "no-key",
       text: NO_KEY_TEXT,
     };
   }
 
-  const ai = new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        "User-Agent": "vouchedge-backend",
-      },
-    },
-  });
+  const prompt = input.messages
+    .map((message) => {
+      const role = message.role === "assistant" ? "Assistant" : "User";
+      return `${role}: ${message.content}`;
+    })
+    .join("\n\n");
 
-  const contents = input.messages.map((message) => ({
-    role: message.role === "assistant" ? "model" : message.role,
-    parts: [{ text: message.content }],
-  }));
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
-    contents,
-    config: {
-      systemInstruction: input.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION,
-    },
+  const result = await generateText({
+    cacheKey: `chat:${JSON.stringify(input.messages)}`,
+    prompt,
+    systemInstruction:
+      input.systemInstruction ?? DEFAULT_SYSTEM_INSTRUCTION,
+    fallback: "No response received",
   });
 
   return {
     status: "success",
-    text: response.text || "No response received",
+    text: result.text,
   };
 }

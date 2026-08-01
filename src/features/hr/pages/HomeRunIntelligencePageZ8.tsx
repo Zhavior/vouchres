@@ -14,6 +14,9 @@ import {
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
+import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
+import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
+import type { WorkspaceView } from '../components/workspace/types';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
@@ -424,9 +427,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   // Only the finished card and table views are public during the paid beta.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
+
     if (typeof window === 'undefined') return 'cards';
     try {
       const savedMode = window.localStorage.getItem('vouchedge_hr_view_mode');
+
       if (savedMode === 'table' || savedMode === 'cards') return savedMode;
       if (savedMode === 'treemap' && HR_MAP_ENABLED) return savedMode;
       return 'cards';
@@ -434,6 +439,9 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
       return 'cards';
     }
   });
+
+  const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
+
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;
@@ -488,6 +496,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
           />
+          <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
         </header>
 
         {/* ── Slate Status Summary Row ───────────────────────────── */}
@@ -580,6 +589,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             }}
           />
 
+          <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
             {vm.loading && !vm.rows?.length ? (
@@ -634,6 +644,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
               </div>
             )}
           </div>
+          </WorkspaceRenderer>
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
             <p>

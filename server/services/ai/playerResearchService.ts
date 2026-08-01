@@ -1,5 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
-import type { PlayerResearchInput } from "../../validators/aiSchemas";
+import { generateStructured, hasGeminiKey } from "./geminiClient";
+import {
+  PlayerResearchResponseSchema,
+  type PlayerResearchInput,
+} from "../../validators/aiSchemas";
 
 type PlayerResearchData = PlayerResearchInput["playerData"];
 
@@ -90,15 +93,6 @@ export async function generatePlayerResearch(input: PlayerResearchInput): Promis
   if (!apiKey) return local;
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "vouchedge-backend",
-        },
-      },
-    });
-
     const prompt = `Conduct a cautious MLB sabermetric research brief for ${player.name} (#${player.number ?? "N/A"}, ${player.team}, ${player.position}).
 Season BA: ${player.seasonStats.avg}; HR: ${player.seasonStats.hr}; OPS: ${player.seasonStats.ops}.
 Splits: vs RHP ${player.splits.vRHP.ops} OPS; vs LHP ${player.splits.vLHP.ops} OPS; Home ${player.splits.home.ops} OPS; Last 10 ${player.splits.last10.ops} OPS.
@@ -107,23 +101,25 @@ Health: ${player.injuryStatus} (${player.injurySeverity}).
 
 Return strict JSON: {"aiScore": <integer 10 to 99>, "report": "<markdown research brief; no certainty language; not betting advice>"}.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        tools: [{ googleSearch: {} }],
+    const result = await generateStructured({
+      cacheKey: `player-research:${player.name}:${player.team}`,
+      prompt,
+      schema: PlayerResearchResponseSchema,
+      fallback: {
+        aiScore: local.aiScore,
+        report: local.report,
       },
+      model: "gemini-3.5-flash",
     });
 
-    const parsed = JSON.parse(cleanModelJson(response.text || "{}"));
+    const parsed = result.data;
     return {
       status: "success",
       aiScore: boundedScore(parsed.aiScore, local.aiScore),
       riskLevel: local.riskLevel,
       confidenceBand: local.confidenceBand,
       report: typeof parsed.report === "string" && parsed.report.trim() ? parsed.report : local.report,
-      groundingMetadata: response.candidates?.[0]?.groundingMetadata,
+      groundingMetadata: undefined,
     };
   } catch (error) {
     console.error("[ai:player-research] Gemini research failed", error);

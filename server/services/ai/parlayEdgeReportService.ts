@@ -1,19 +1,15 @@
-import { GoogleGenAI } from "@google/genai";
 import { AppError } from "../../errors/AppError";
-import type { ParlayEdgeInput } from "../../validators/aiSchemas";
+import { generateStructured, hasGeminiKey } from "./geminiClient";
+import {
+  ParlayEdgeResponseSchema,
+  type ParlayEdgeInput,
+} from "../../validators/aiSchemas";
 
 export interface ParlayEdgeReport {
   status: "simulated" | "success" | "fallback";
   edgeScore: number;
   riskLevel: "MODERATE" | "ELEVATED" | "HIGH";
   report: string;
-}
-
-function cleanModelJson(value: string): string {
-  let text = value.trim();
-  if (text.startsWith("```json")) text = text.slice(7);
-  if (text.endsWith("```")) text = text.slice(0, -3);
-  return text.trim();
 }
 
 function boundedScore(value: unknown, fallback: number): number {
@@ -69,40 +65,36 @@ ${legs.map((leg, index) => `- **Leg ${index + 1} - \`${leg.selection}\` (${leg.m
 }
 
 export async function generateParlayEdgeReport(input: ParlayEdgeInput): Promise<ParlayEdgeReport> {
-  const apiKey = process.env.GEMINI_API_KEY;
   const local = localParlayEdge(input);
 
-  if (!apiKey) return local;
+  if (!hasGeminiKey()) return local;
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "vouchedge-backend",
-        },
+    const result = await generateStructured({
+      cacheKey: `parlay-edge:${JSON.stringify(input.legs)}`,
+      schema: ParlayEdgeResponseSchema,
+      fallback: {
+        edgeScore: local.edgeScore,
+        report: local.report,
       },
-    });
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: `Analyze this MLB parlay for research purposes only. Return strict JSON.\n${JSON.stringify(input.legs, null, 2)}`,
-      config: {
-        responseMimeType: "application/json",
-        systemInstruction: `You are a cautious MLB research analyst. Never use lock, guaranteed, free money, sure thing, or certainty language. Return only JSON:
+      prompt: `Analyze this MLB parlay for research purposes only. Return strict JSON.\n${JSON.stringify(input.legs, null, 2)}`,
+      systemInstruction: `You are a cautious MLB research analyst. Never use lock, guaranteed, free money, sure thing, or certainty language. Return only JSON:
 {
   "edgeScore": <integer 40 to 95>,
   "report": "<markdown report with correlation warnings and no betting-advice language>"
 }`,
-      },
+      model: "gemini-3.5-flash",
     });
 
-    const parsed = JSON.parse(cleanModelJson(response.text || "{}"));
+    const parsed = result.data;
     return {
-      status: "success",
+      status:
+        result.status === "live" || result.status === "cached"
+          ? "success"
+          : "fallback",
       edgeScore: boundedScore(parsed.edgeScore, local.edgeScore),
       riskLevel: local.riskLevel,
-      report: typeof parsed.report === "string" && parsed.report.trim() ? parsed.report : local.report,
+      report: parsed.report?.trim() || local.report,
     };
   } catch (error) {
     console.error("[ai:parlay-edge] Gemini report failed", error);

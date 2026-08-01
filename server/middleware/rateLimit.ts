@@ -1,249 +1,138 @@
-import type { NextFunction, Request, Response } from "express";
-import { isUpstashEnabled, redisIncr } from "../lib/upstashRedis";
-import { buildApiErrorResponse } from "../lib/apiResponse";
-import type { RequestWithContext } from "./requestContext";
+import type { NextFunction, Response } from 'express'
+import type { RequestWithContext } from './requestContext'
+import { getTitanDependencies } from '../platform/dependency'
+import { RateLimitPolicy } from '../platform/config/rateLimit'
+import { logger } from '../platform/logger'
 
-/**
- * Rate limiters.
- *
- * Uses Upstash Redis when UPSTASH_REDIS_REST_URL/TOKEN are set (multi-instance safe).
- * Falls back to in-memory counters in local dev.
- *
- * Client identity uses Express `req.ip`, which honors `app.set("trust proxy", N)`.
- * Do NOT key off the leftmost X-Forwarded-For hop — clients can spoof infinite buckets.
- */
-
-type RateLimitOptions = {
-  windowMs: number;
-  limit: number;
-  keyGenerator?: (req: Request) => string;
-  handler: (req: Request, res: Response) => Response;
-  skip?: (req: Request) => boolean;
-  name: string;
-};
-
-type HitState = { count: number; resetAt: number };
-
-const memoryHits = new Map<string, HitState>();
-
-/** Resolve client IP from Express (trusted proxy hops only). */
-export function clientIpKey(req: Request): string {
-  return `ip:${req.ip ?? "unknown"}`;
+export interface RateLimitOptions {
+  windowMs: number
+  max: number
+  keyPrefix: string
 }
 
-function keyGenerator(req: Request): string {
-  const uid = (req as Request & { user?: { id?: string } }).user?.id;
-  if (uid) return `u:${uid}`;
-  return clientIpKey(req);
-}
-
-function memoryHit(key: string, windowMs: number): number {
-  const now = Date.now();
-  const current = memoryHits.get(key);
-
-  if (!current || current.resetAt <= now) {
-    memoryHits.set(key, { count: 1, resetAt: now + windowMs });
-    return 1;
-  }
-
-  current.count += 1;
-  return current.count;
-}
-
-function rateLimitUnavailable(req: RequestWithContext, res: Response) {
-  const requestId = req.requestId ?? "unknown";
-  res.setHeader("x-request-id", requestId);
-  res.setHeader("Retry-After", "5");
-  return res.status(503).json(
-    buildApiErrorResponse({
-      code: "upstream_unavailable",
-      message: "Rate limiting temporarily unavailable. Try again shortly.",
-      requestId,
-    }),
-  );
-}
-
-function shouldFailClosedOnRedisError(): boolean {
-  return process.env.NODE_ENV === "production" && isUpstashEnabled();
-}
-
-function setRateLimitHeaders(
-  res: Response,
-  input: { limit: number; remaining: number; retryAfterSeconds?: number },
-) {
-  res.setHeader("X-RateLimit-Limit", String(input.limit));
-  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, input.remaining)));
-  if (input.retryAfterSeconds != null) {
-    res.setHeader("Retry-After", String(input.retryAfterSeconds));
-  }
-}
-
-function handler(req: RequestWithContext, res: Response) {
-  const requestId = req.requestId ?? "unknown";
-  res.setHeader("x-request-id", requestId);
-  if (!res.getHeader("Retry-After")) {
-    res.setHeader("Retry-After", "60");
-  }
-  return res.status(429).json(
-    buildApiErrorResponse({
-      code: "rate_limited",
-      message: "Too many requests. Slow down or upgrade to a paid tier.",
-      requestId,
-      details: { retry_after_seconds: Number(res.getHeader("Retry-After") ?? 60) },
-    }),
-  );
-}
-
-function rateLimit(options: RateLimitOptions) {
-  const ttlSeconds = Math.max(1, Math.ceil(options.windowMs / 1000));
+export function rateLimit(options: RateLimitOptions) {
+  const ttlSeconds = Math.max(1, Math.ceil(options.windowMs / 1000))
+  const { redis } = getTitanDependencies()
 
   return async (req: RequestWithContext, res: Response, next: NextFunction) => {
-    if (options.skip?.(req)) return next();
+    const ip = req.ip || 'unknown'
+    const key = `${options.keyPrefix}:${ip}`
 
-    const keyBase = options.keyGenerator?.(req) ?? keyGenerator(req);
-    const redisKey = `rl:${options.name}:${keyBase}`;
-
-    if (isUpstashEnabled()) {
-      try {
-        const count = await redisIncr(redisKey, ttlSeconds);
-        if (count !== null) {
-          const remaining = Math.max(0, options.limit - count);
-          setRateLimitHeaders(res, {
-            limit: options.limit,
-            remaining,
-            retryAfterSeconds: count > options.limit ? ttlSeconds : undefined,
-          });
-          if (count > options.limit) return options.handler(req, res);
-          return next();
-        }
-      } catch (error) {
-        console.error("[rateLimit] redis error", {
-          limiter: options.name,
-          message: error instanceof Error ? error.message : String(error),
-        });
-        if (shouldFailClosedOnRedisError()) {
-          return rateLimitUnavailable(req, res);
-        }
-        console.warn("[rateLimit] redis fallback to memory", {
-          limiter: options.name,
-        });
-      }
+    if (!redis.isEnabled()) {
+      return next()
     }
 
-    const count = memoryHit(redisKey, options.windowMs);
-    const remaining = Math.max(0, options.limit - count);
-    setRateLimitHeaders(res, {
-      limit: options.limit,
-      remaining,
-      retryAfterSeconds: count > options.limit ? ttlSeconds : undefined,
-    });
-    if (count > options.limit) return options.handler(req, res);
-    return next();
-  };
-}
+    try {
+      const count = await redis.incr(key, ttlSeconds)
+      const hits = count ?? 0
 
-export const globalLimiter = rateLimit({
-  name: "global",
-  windowMs: 60 * 1000,
-  limit: 200,
-  keyGenerator,
-  handler,
-  // Public liveness only — staff ops telemetry stays rate-limited.
-  skip: (req) => req.path === "/health" || req.path === "/health/ready",
-});
+      if (hits > options.max) {
+        logger.info('ratelimit.block', {
+          requestId: req.requestId,
+          route: req.originalUrl,
+          ip,
+          key,
+          hits,
+        })
+
+        return res.status(429).json({
+          code: 'ratelimit_exceeded',
+          message: 'Too many requests.',
+          requestId: req.requestId,
+        })
+      }
+
+      return next()
+    } catch (error) {
+      logger.error('ratelimit.redis.error', {
+        requestId: req.requestId,
+        route: req.originalUrl,
+        ip,
+        key,
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      if (RateLimitPolicy.failClosedOnRedisError()) {
+        return res.status(503).json({
+          code: 'ratelimit_unavailable',
+          message: 'Rate limiting is temporarily unavailable.',
+          requestId: req.requestId,
+        })
+      }
+
+      return next()
+    }
+  }
+}
 
 export const aiLimiter = rateLimit({
-  name: "ai",
-  windowMs: 60 * 1000,
-  limit: 20,
-  keyGenerator,
-  handler,
-});
+  windowMs: 60_000,
+  max: 20,
+  keyPrefix: 'rl:ai',
+})
 
-export const authLimiter = rateLimit({
-  name: "auth",
-  windowMs: 60 * 1000,
-  limit: 30,
-  keyGenerator,
-  handler,
-});
+export const globalLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 300,
+  keyPrefix: 'rl:global',
+})
 
 export const generationLimiter = rateLimit({
-  name: "generation",
-  windowMs: 60 * 1000,
-  limit: 10,
-  keyGenerator,
-  handler,
-});
-
-export const gradingLimiter = rateLimit({
-  name: "grading",
-  windowMs: 60 * 1000,
-  limit: 30,
-  keyGenerator,
-  handler,
-});
-
-export const pickLimiter = rateLimit({
-  name: "pick",
-  windowMs: 60 * 1000,
-  limit: 10,
-  keyGenerator,
-  handler,
-});
-
-/** Authenticated MLB POST helpers (odds/progress) — caps upstream amplification. */
-export const mlbMutationLimiter = rateLimit({
-  name: "mlb_mutation",
-  windowMs: 60 * 1000,
-  limit: 30,
-  keyGenerator,
-  handler,
-});
-
-/** Public MLB read endpoints that fan out to Stats API / Savant / odds. */
-export const mlbReadLimiter = rateLimit({
-  name: "mlb_read",
-  windowMs: 60 * 1000,
-  limit: 60,
-  keyGenerator: clientIpKey,
-  handler,
-});
-
-/** Expensive HR board builds (deep / multi-date) — tighter than mlbReadLimiter. */
-export const mlbExpensiveReadLimiter = rateLimit({
-  name: "mlb_expensive_read",
-  windowMs: 60 * 1000,
-  limit: 12,
-  keyGenerator: clientIpKey,
-  handler,
-});
-
-export const worldChatLimiter = rateLimit({
-  name: "world_chat",
-  windowMs: 60 * 1000,
-  limit: 30,
-  keyGenerator,
-  handler,
-});
-
-export const betaSignupLimiter = rateLimit({
-  name: "beta_signup",
-  windowMs: 60 * 60 * 1000,
-  limit: 3,
-  keyGenerator: clientIpKey,
-  handler,
-});
+  windowMs: 60_000,
+  max: 60,
+  keyPrefix: 'rl:generation',
+})
 
 export const webhookLimiter = rateLimit({
-  name: "webhook",
-  windowMs: 60 * 1000,
-  limit: 100,
-  keyGenerator: (req) => `webhook:${req.ip ?? "unknown"}`,
-  handler,
-});
+  windowMs: 60_000,
+  max: 120,
+  keyPrefix: 'rl:webhook',
+})
 
-/** Test helper — clears in-memory counters only. */
-export function resetRateLimitMemoryForTests(): void {
-  memoryHits.clear();
-}
+export const betaSignupLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  keyPrefix: 'rl:beta-signup',
+})
+
+export const pickLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 60,
+  keyPrefix: 'rl:pick',
+})
+
+export const authLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  keyPrefix: 'rl:auth',
+})
+
+export const gradingLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 60,
+  keyPrefix: 'rl:grading',
+})
+
+export const mlbExpensiveReadLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  keyPrefix: 'rl:mlb-expensive-read',
+})
+
+export const mlbReadLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 120,
+  keyPrefix: 'rl:mlb-read',
+})
+
+export const mlbMutationLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 40,
+  keyPrefix: 'rl:mlb-mutation',
+})
+
+export const worldChatLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 40,
+  keyPrefix: 'rl:world-chat',
+})

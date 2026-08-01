@@ -25,10 +25,17 @@ async function redisCommand<T = any>(command: unknown[]): Promise<T | null> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(command),
+    signal: AbortSignal.timeout(3000),
   });
 
   if (!res.ok) {
-    throw new Error(`Upstash Redis ${res.status}`);
+    const body = await res.text();
+    console.error("\n===== UPSTASH ERROR =====");
+    console.error("Status:", res.status);
+    console.error("URL:", REST_URL);
+    console.error("Body:", body);
+    console.error("=========================\n");
+    throw new Error(`Upstash Redis : `);
   }
 
   const data = await res.json();
