@@ -39,6 +39,7 @@ const DEFAULT_ALLOWED_SPORTS_HOSTS = [
   "baseballsavant.mlb.com",
   "site.api.espn.com",
   "sports.core.api.espn.com",
+  "api.open-meteo.com",
 ] as const;
 
 function getAllowedSportsHosts(): Set<string> {
