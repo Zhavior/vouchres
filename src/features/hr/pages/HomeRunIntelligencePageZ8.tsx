@@ -14,6 +14,7 @@ import {
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
+import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
@@ -488,6 +489,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
           />
+          <WorkspaceSwitcher />
         </header>
 
         {/* ── Slate Status Summary Row ───────────────────────────── */}
