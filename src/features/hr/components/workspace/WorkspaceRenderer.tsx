@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { WorkspaceView } from "./types";
+import type { HrWatchRow } from "../../types/hrWatch";
 
 import OverviewView from "./views/OverviewView";
 import EdgeDeskView from "./views/EdgeDeskView";
@@ -9,11 +10,13 @@ import MatchupExtremesView from "./views/MatchupExtremesView";
 
 export interface WorkspaceRendererProps {
   workspace: WorkspaceView;
-  children: ReactNode;
+  rows: HrWatchRow[];
+  children: React.ReactNode;
 }
 
 export default function WorkspaceRenderer({
   workspace,
+  rows,
   children,
 }: WorkspaceRendererProps) {
   switch (workspace) {
@@ -21,16 +24,16 @@ export default function WorkspaceRenderer({
       return <OverviewView>{children}</OverviewView>;
 
     case "edge":
-      return <EdgeDeskView />;
+      return <EdgeDeskView rows={rows} />;
 
     case "stacks":
-      return <SlateStacksView />;
+      return <SlateStacksView rows={rows} />;
 
     case "matrix":
-      return <ProjectionMatrixView />;
+      return <ProjectionMatrixView rows={rows} />;
 
     case "extremes":
-      return <MatchupExtremesView />;
+      return <MatchupExtremesView rows={rows} />;
 
     default:
       return <OverviewView>{children}</OverviewView>;
