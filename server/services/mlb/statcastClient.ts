@@ -352,7 +352,7 @@ export async function getBattedBallProfileMapResult(
 ): Promise<FeedMapResult<StatcastBattedBallProfile>> {
   return loadFeedMap(`battedBall:v2:${year}`, "batted-ball", async () => {
     const rows = await fetchCsv(
-      `https://baseballsavant.mlb.com/leaderboard/batted-ball?type=batter&seasonStart=${year}&seasonEnd=${year}&gameType=Regular&minSwings=q&minGroupSwings=1&csv=true`,
+      `https://baseballsavant.mlb.com/leaderboard/batted-ball?type=batter&csv=true&season[]=${year}&gameType[]=R&minSplit=1&min=q`,
     );
     const map: Record<number, StatcastBattedBallProfile> = {};
     for (const row of rows) {
