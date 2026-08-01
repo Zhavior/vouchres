@@ -92,7 +92,13 @@ export const ParlayEdgeRequestSchema = z.object({
   legs: z.array(ParlayEdgeLegSchema).min(1, "At least one leg is required.").max(12, "Max 12 legs."),
 });
 
+export const ParlayEdgeResponseSchema = z.object({
+  edgeScore: z.number().int().min(40).max(95),
+  report: z.string().trim().min(1),
+});
+
 export type ParlayEdgeInput = z.infer<typeof ParlayEdgeRequestSchema>;
+export type ParlayEdgeResponse = z.infer<typeof ParlayEdgeResponseSchema>;
 export type AiChatInput = z.infer<typeof AiChatRequestSchema>;
 export type AiImageInput = z.infer<typeof AiImageRequestSchema>;
 export type AiThemeInput = z.infer<typeof AiThemeRequestSchema>;
