@@ -1,0 +1,9 @@
+export { default as AboutPage } from "./AboutPage";
+export { default as ContactPage } from "./ContactPage";
+export { default as CookiePolicyPage } from "./CookiePolicyPage";
+export { default as DMCAPage } from "./DMCAPage";
+export { default as DisclaimerPage } from "./DisclaimerPage";
+export { default as PrivacyPolicyPage } from "./PrivacyPolicyPage";
+export { default as ResponsibleGamingPage } from "./ResponsibleGamingPage";
+export { default as SecurityPage } from "./SecurityPage";
+export { default as TermsPage } from "./TermsPage";
