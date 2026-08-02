@@ -1,4 +1,4 @@
-import { generateStructured, hasProvider } from "./aiRouter";
+import { generateStructured } from "./aiRouter";
 import {
   PlayerResearchResponseSchema,
   type PlayerResearchInput,
@@ -88,10 +88,6 @@ ${downsideFactors.map((factor) => `- ${factor}`).join("\n")}`;
 export async function generatePlayerResearch(input: PlayerResearchInput): Promise<PlayerResearchResponse> {
   const player = input.playerData;
   const local = localPlayerResearch(player);
-  if (!hasProvider()) {
-    return local;
-  }
-
   try {
     const prompt = `Conduct a cautious MLB sabermetric research brief for ${player.name} (#${player.number ?? "N/A"}, ${player.team}, ${player.position}).
 Season BA: ${player.seasonStats.avg}; HR: ${player.seasonStats.hr}; OPS: ${player.seasonStats.ops}.
