@@ -9,25 +9,25 @@ export const WORKSPACE_TABS: WorkspaceTab[] = [
   {
     id: "edge",
     label: "Edge",
-    enabled: false,
+    enabled: true,
     description: "Coming Soon",
   },
   {
     id: "stacks",
     label: "Stacks",
-    enabled: false,
+    enabled: true,
     description: "Coming Soon",
   },
   {
     id: "matrix",
     label: "Matrix",
-    enabled: false,
+    enabled: true,
     description: "Coming Soon",
   },
   {
     id: "extremes",
     label: "Extremes",
-    enabled: false,
+    enabled: true,
     description: "Coming Soon",
   },
 ];

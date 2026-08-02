@@ -442,6 +442,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
+  React.useEffect(() => {
+    console.log("[HR Workspace]", workspace);
+  }, [workspace]);
+
+
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;

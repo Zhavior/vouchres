@@ -18,12 +18,12 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
           key={tab.id}
           type="button"
           disabled={!tab.enabled}
-          onClick={() => value === tab.id && onChange(tab.id)}
+          onClick={() => onChange(tab.id)}
           className={[
             "relative min-h-[44px] rounded-xl px-4 py-2 text-sm font-semibold transition-all",
             value === tab.id
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              : "text-white/40 border border-transparent cursor-not-allowed opacity-60",
+              : "text-white/70 border border-transparent hover:text-white hover:bg-white/5 cursor-pointer",
           ].join(" ")}
         >
           {value === tab.id && (
