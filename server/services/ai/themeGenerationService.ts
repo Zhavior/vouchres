@@ -1,5 +1,5 @@
 import type { AiThemeInput } from "../../validators/aiSchemas";
-import { generateStructured } from "./generateStructured";
+import { generateStructured } from "./aiRouter";
 import { z } from "zod";
 
 export interface GeneratedTheme {
