@@ -1,5 +1,6 @@
 import { registerProvider } from "./index";
 import { geminiProvider } from "./geminiProvider";
+import { openRouterProvider } from "./openRouterProvider";
 
 let initialized = false;
 
@@ -13,6 +14,7 @@ export function bootstrapProviders(): void {
   }
 
   registerProvider(geminiProvider);
+  registerProvider(openRouterProvider);
 
   initialized = true;
 }
