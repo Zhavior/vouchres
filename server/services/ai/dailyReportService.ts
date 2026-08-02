@@ -1,6 +1,6 @@
 /** Daily MLB report narrative — Gemini-backed with deterministic fallback. */
 import { getSharedDailyReport } from "../intelligence/mlbIntelligenceEngine";
-import { generateText } from "./geminiClient";
+import { generateText } from "./aiRouter";
 import { TTL } from "../../lib/cache";
 import { SAFE_SYSTEM_INSTRUCTION, buildDailyReportPrompt } from "./aiPromptBuilder";
 import { dailyReportFallback } from "./aiFallbacks";

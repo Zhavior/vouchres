@@ -23,3 +23,13 @@ export async function generateStructured<TSchema extends import("zod").ZodTypeAn
 ) {
   return getActiveProvider().generateStructured(options);
 }
+
+
+export function hasConfiguredProvider(): boolean {
+  try {
+    getActiveProvider();
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -1,5 +1,5 @@
 /** AI learning-note generator — Gemini-backed with deterministic fallback. */
-import { generateText } from "./geminiClient";
+import { generateText } from "./aiRouter";
 import { SAFE_SYSTEM_INSTRUCTION, buildLearningNotePrompt } from "./aiPromptBuilder";
 import { learningNoteFallback } from "./aiFallbacks";
 

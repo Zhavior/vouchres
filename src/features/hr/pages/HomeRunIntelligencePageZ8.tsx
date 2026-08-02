@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
@@ -19,9 +19,9 @@ import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
-import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
-import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
-import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
+const MostVouchedPlayersPanel = lazy(() => import('../components/Social/MostVouchedPlayersPanel').then(m => ({ default: m.MostVouchedPlayersPanel })));
+const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then(m => ({ default: m.HrSpreadsheet })));
+const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then(m => ({ default: m.HrPlayerProfile })));
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';

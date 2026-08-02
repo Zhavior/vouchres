@@ -110,7 +110,7 @@ function readWarnings(row: UnknownRecord): string[] {
 
 function readBreakdown(row: UnknownRecord) {
   const nested = readRecord(row.scoreBreakdown);
-  return {
+  const result = {
     hitterPower:
       firstNullableNumber(nested, ['hitterPower', 'power', 'batterPower']) ??
       firstNullableNumber(row, ['hitterPower', 'batterPower', 'recentPower']),
@@ -127,6 +127,9 @@ function readBreakdown(row: UnknownRecord) {
       firstNullableNumber(nested, ['vouchScore']) ??
       firstNullableNumber(row, ['vouchScore']),
   };
+
+  console.timeEnd("buildBoard");
+  return result;
 }
 
 function buildMlbHeadshotUrl(playerId: string | number | null): string | null {
@@ -229,6 +232,7 @@ const HrBoardPayloadSchema = z
 type HrBoardPayload = z.infer<typeof HrBoardPayloadSchema>;
 
 export function buildBoard(input: unknown): HrWatchBoard {
+  console.time("buildBoard");
   const parsed = HrBoardPayloadSchema.safeParse(input);
   const board: HrBoardPayload = parsed.success ? parsed.data : {};
   const confirmedRaw = firstArray(board.candidates, board.confirmedCandidates, board.candidateBuckets?.confirmed);
@@ -238,7 +242,7 @@ export function buildBoard(input: unknown): HrWatchBoard {
   const counts = readRecord(board.counts);
   const truthSummary = readRecord(board.truthSummary);
 
-  return {
+  const result = {
     confirmed: normalizeRows(confirmedRaw, 'confirmed'),
     curated: normalizeRows(curatedRaw, 'curated'),
     all: normalizeRows(allRaw, 'all'),
@@ -255,6 +259,9 @@ export function buildBoard(input: unknown): HrWatchBoard {
       totalVisiblePool: firstNumber(counts, ['totalVisiblePool'], confirmedRaw.length + curatedRaw.length),
     },
   };
+
+  console.timeEnd("buildBoard");
+  return result;
 }
 
 export function rowsForMode(board: HrWatchBoard, mode: HrWatchMode): readonly HrWatchRow[] {
@@ -283,7 +290,12 @@ export function groupRowsByTier(rows: readonly HrWatchRow[]) {
   return order
     .map((key) => {
       const bucket = rows.filter((row) => tierDisplayLabel(row.riskTier) === key);
-      return { key, title: meta[key].title, subtitle: meta[key].subtitle, rows: bucket };
+      return {
+        key,
+        title: meta[key].title,
+        subtitle: meta[key].subtitle,
+        rows: bucket,
+      };
     })
     .filter((bucket) => bucket.rows.length > 0);
 }
@@ -298,7 +310,7 @@ export function groupRowsByGame(rows: readonly HrWatchRow[]) {
   }
   return Array.from(buckets.entries()).map(([key, gameRows]) => {
     const first = gameRows[0];
-    return {
+    const result = {
       key,
       title: `${first.team} vs ${first.opponent}`,
       subtitle: `${first.venue} · ${gameRows.length} HR row${gameRows.length === 1 ? '' : 's'}`,

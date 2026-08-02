@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { getSupabaseAdmin } from "../../../middleware/auth";
-import { generateStructured } from "../../ai/geminiClient";
+import { generateStructured } from "../../ai/aiRouter";
 
 const PickReviewSchema = z.object({
   subjectId: z.string().min(1),

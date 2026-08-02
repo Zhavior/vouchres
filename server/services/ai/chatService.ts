@@ -1,5 +1,5 @@
 import type { AiChatInput } from "../../validators/aiSchemas";
-import { generateText, hasGeminiKey } from "./geminiClient";
+import { generateText, hasConfiguredProvider } from "./aiRouter";
 
 export interface AiChatResponse {
   status: "success" | "no-key";
@@ -15,7 +15,7 @@ const NO_KEY_TEXT =
 export async function generateAiChatResponse(
   input: AiChatInput,
 ): Promise<AiChatResponse> {
-  if (!hasGeminiKey()) {
+  if (!hasConfiguredProvider()) {
     return {
       status: "no-key",
       text: NO_KEY_TEXT,

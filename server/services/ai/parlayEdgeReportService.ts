@@ -1,5 +1,5 @@
 import { AppError } from "../../errors/AppError";
-import { generateStructured, hasGeminiKey } from "./geminiClient";
+import { generateStructured, hasConfiguredProvider } from "./aiRouter";
 import {
   ParlayEdgeResponseSchema,
   type ParlayEdgeInput,
@@ -67,7 +67,7 @@ ${legs.map((leg, index) => `- **Leg ${index + 1} - \`${leg.selection}\` (${leg.m
 export async function generateParlayEdgeReport(input: ParlayEdgeInput): Promise<ParlayEdgeReport> {
   const local = localParlayEdge(input);
 
-  if (!hasGeminiKey()) return local;
+  if (!hasConfiguredProvider()) return local;
 
   try {
     const result = await generateStructured({

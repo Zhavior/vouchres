@@ -1,7 +1,7 @@
 /** Pick explanation service — Gemini-backed with deterministic fallback. */
 import { PickCandidate, JudgeVerdict } from "../judging/judgeTypes";
 import { runJudgePanel } from "../judging/trustJudgeService";
-import { generateText } from "./geminiClient";
+import { generateText } from "./aiRouter";
 import { SAFE_SYSTEM_INSTRUCTION, buildPickExplanationPrompt } from "./aiPromptBuilder";
 import { pickExplanationFallback } from "./aiFallbacks";
 
