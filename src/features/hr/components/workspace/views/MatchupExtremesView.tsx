@@ -23,6 +23,8 @@ interface ExtremeDefinition {
   metric: ExtremeMetric;
   direction: "highest" | "lowest";
   format: (value: number) => string;
+  symbol: string;
+  tone: "cyan" | "emerald" | "amber" | "rose";
 }
 
 interface ExtremeResult {
@@ -41,6 +43,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "hrScore",
     direction: "highest",
     format: formatScore,
+    symbol: "🔥",
+    tone: "emerald",
   },
   {
     id: "strongest-power",
@@ -51,6 +55,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "hitterPower",
     direction: "highest",
     format: formatScore,
+    symbol: "⚡",
+    tone: "cyan",
   },
   {
     id: "pitcher-exposure",
@@ -61,6 +67,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "pitcherVulnerability",
     direction: "highest",
     format: formatScore,
+    symbol: "🎯",
+    tone: "rose",
   },
   {
     id: "best-park",
@@ -71,6 +79,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "parkFactor",
     direction: "highest",
     format: formatDecimal,
+    symbol: "🏟",
+    tone: "cyan",
   },
   {
     id: "hottest-form",
@@ -81,6 +91,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "recentForm",
     direction: "highest",
     format: formatScore,
+    symbol: "📈",
+    tone: "emerald",
   },
   {
     id: "highest-confidence",
@@ -91,6 +103,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "dataConfidence",
     direction: "highest",
     format: formatPercent,
+    symbol: "◆",
+    tone: "cyan",
   },
   {
     id: "lowest-confidence",
@@ -101,6 +115,8 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "dataConfidence",
     direction: "lowest",
     format: formatPercent,
+    symbol: "⚠",
+    tone: "amber",
   },
   {
     id: "lowest-hr-score",
@@ -111,8 +127,37 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
     metric: "hrScore",
     direction: "lowest",
     format: formatScore,
+    symbol: "↓",
+    tone: "rose",
   },
 ];
+
+const TONE_CLASSES = {
+  cyan: {
+    border: "border-cyan-400/20 hover:border-cyan-300/45",
+    glow: "bg-cyan-400/10 text-cyan-200 ring-cyan-300/20",
+    label: "text-cyan-300",
+    value: "text-cyan-100",
+  },
+  emerald: {
+    border: "border-emerald-400/20 hover:border-emerald-300/45",
+    glow: "bg-emerald-400/10 text-emerald-200 ring-emerald-300/20",
+    label: "text-emerald-300",
+    value: "text-emerald-100",
+  },
+  amber: {
+    border: "border-amber-400/20 hover:border-amber-300/45",
+    glow: "bg-amber-400/10 text-amber-200 ring-amber-300/20",
+    label: "text-amber-300",
+    value: "text-amber-100",
+  },
+  rose: {
+    border: "border-rose-400/20 hover:border-rose-300/45",
+    glow: "bg-rose-400/10 text-rose-200 ring-rose-300/20",
+    label: "text-rose-300",
+    value: "text-rose-100",
+  },
+} as const;
 
 function isFiniteNumber(value: number | null | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -123,11 +168,7 @@ function clamp(value: number, minimum: number, maximum: number): number {
 }
 
 function normalizePercent(value: number): number {
-  if (Math.abs(value) <= 1) {
-    return value * 100;
-  }
-
-  return value;
+  return Math.abs(value) <= 1 ? value * 100 : value;
 }
 
 function formatScore(value: number): string {
@@ -147,7 +188,6 @@ function metricValue(
   metric: ExtremeMetric,
 ): number | null {
   const value = row[metric];
-
   return isFiniteNumber(value) ? value : null;
 }
 
@@ -199,123 +239,187 @@ function readableLabel(value: string): string {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function SummaryMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+        {label}
+      </p>
+      <p className="mt-2 truncate text-2xl font-black tracking-tight text-white">
+        {value}
+      </p>
+      <p className="mt-1 truncate text-xs text-zinc-400">{detail}</p>
+    </div>
+  );
+}
+
 function ExtremeCard({ result }: { result: ExtremeResult }) {
   const { definition, row, value } = result;
+  const tone = TONE_CLASSES[definition.tone];
 
   const confidence = isFiniteNumber(row.dataConfidence)
     ? clamp(normalizePercent(row.dataConfidence), 0, 100)
     : null;
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-zinc-950/70 p-5 shadow-sm transition-colors hover:border-cyan-500/40">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400">
-            {definition.eyebrow}
-          </p>
+    <article
+      className={[
+        "group relative overflow-hidden rounded-3xl border bg-zinc-950/75 p-5",
+        "shadow-[0_20px_70px_-35px_rgba(0,0,0,0.95)]",
+        "transition duration-300 hover:-translate-y-0.5",
+        tone.border,
+      ].join(" ")}
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-70" />
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/[0.025] blur-3xl transition group-hover:bg-white/[0.05]" />
 
-          <h3 className="mt-2 text-lg font-bold text-white">
+      <div className="relative">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div
+              className={[
+                "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
+                "text-lg ring-1",
+                tone.glow,
+              ].join(" ")}
+              aria-hidden="true"
+            >
+              {definition.symbol}
+            </div>
+
+            <p
+              className={[
+                "mt-4 text-[10px] font-bold uppercase tracking-[0.24em]",
+                tone.label,
+              ].join(" ")}
+            >
+              {definition.eyebrow}
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-600">
+              Signal
+            </p>
+            <p
+              className={[
+                "mt-1 text-3xl font-black tracking-[-0.04em]",
+                tone.value,
+              ].join(" ")}
+            >
+              {definition.format(value)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <h3 className="text-sm font-semibold text-zinc-400">
             {definition.title}
           </h3>
-
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 truncate text-2xl font-black tracking-tight text-white">
+            {row.playerName}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">
             {definition.description}
           </p>
         </div>
 
-        <div className="rounded-xl bg-cyan-500/10 px-3 py-2 text-right">
-          <div className="text-xs uppercase tracking-wider text-cyan-300">
-            Value
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Matchup
+            </p>
+            <p className="mt-1 truncate text-xs font-semibold text-zinc-200">
+              {row.team} vs {row.opponent}
+            </p>
           </div>
 
-          <div className="text-2xl font-black text-cyan-200">
-            {definition.format(value)}
+          <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Pitcher
+            </p>
+            <p className="mt-1 truncate text-xs font-semibold text-zinc-200">
+              {row.pitcherName || "Pending"}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Confidence
+            </p>
+            <p className="mt-1 text-xs font-semibold text-cyan-200">
+              {confidence === null ? "Pending" : `${Math.round(confidence)}%`}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Risk
+            </p>
+            <p className="mt-1 truncate text-xs font-semibold text-amber-200">
+              {readableLabel(String(row.riskTier))}
+            </p>
           </div>
         </div>
-      </div>
 
-      <div className="mt-6 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-zinc-500">Player</span>
-          <span className="font-semibold text-white">
-            {row.playerName}
-          </span>
-        </div>
+        {row.reasons.length > 0 && (
+          <div className="mt-6">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Why it stands out
+            </p>
 
-        <div className="flex items-center justify-between">
-          <span className="text-zinc-500">Matchup</span>
-          <span className="text-zinc-200">
-            {row.team} vs {row.opponent}
-          </span>
-        </div>
-
-        {row.pitcherName && (
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Pitcher</span>
-            <span className="text-zinc-200">
-              {row.pitcherName}
-            </span>
+            <div className="mt-3 space-y-2">
+              {row.reasons.slice(0, 3).map((reason) => (
+                <div
+                  key={reason}
+                  className="flex items-start gap-2 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.055] px-3 py-2"
+                >
+                  <span
+                    className="mt-0.5 text-xs font-black text-emerald-300"
+                    aria-hidden="true"
+                  >
+                    ✓
+                  </span>
+                  <span className="text-xs leading-5 text-emerald-100/85">
+                    {reason}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <span className="text-zinc-500">Truth</span>
-          <span className="font-medium text-emerald-300">
+        {row.warnings.length > 0 && (
+          <div className="mt-4 rounded-xl border border-amber-400/15 bg-amber-400/[0.065] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">
+              Watch signal
+            </p>
+            <p className="mt-2 text-xs leading-5 text-amber-100/85">
+              {row.warnings[0]}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-5 flex items-center justify-between border-t border-white/[0.07] pt-4">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
+            Truth status
+          </span>
+          <span className="text-xs font-semibold text-emerald-300">
             {readableLabel(String(row.truthStatus))}
           </span>
         </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-zinc-500">Risk</span>
-          <span className="font-medium text-amber-300">
-            {readableLabel(String(row.riskTier))}
-          </span>
-        </div>
-
-        {confidence !== null && (
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Confidence</span>
-            <span className="font-semibold text-cyan-300">
-              {Math.round(confidence)}%
-            </span>
-          </div>
-        )}
       </div>
-
-      {row.reasons.length > 0 && (
-        <div className="mt-6">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Top Reasons
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {row.reasons.slice(0, 4).map((reason) => (
-              <span
-                key={reason}
-                className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-200"
-              >
-                {reason}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {row.warnings.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wider text-amber-300">
-            Watch
-          </div>
-
-          <div className="mt-2 text-sm text-amber-100">
-            {row.warnings[0]}
-          </div>
-        </div>
-      )}
     </article>
   );
 }
-
 
 export default function MatchupExtremesView({ rows }: Props) {
   const extremes = useMemo(
@@ -328,63 +432,191 @@ export default function MatchupExtremesView({ rows }: Props) {
     [rows],
   );
 
+  const highConfidenceCount = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (!isFiniteNumber(row.dataConfidence)) {
+          return false;
+        }
+
+        return normalizePercent(row.dataConfidence) >= 80;
+      }).length,
+    [rows],
+  );
+
+  const warningCount = useMemo(
+    () => rows.filter((row) => row.warnings.length > 0).length,
+    [rows],
+  );
+
+  const highestConfidence = useMemo(() => {
+    const values = rows
+      .map((row) =>
+        isFiniteNumber(row.dataConfidence)
+          ? normalizePercent(row.dataConfidence)
+          : null,
+      )
+      .filter((value): value is number => value !== null);
+
+    return values.length > 0 ? Math.max(...values) : null;
+  }, [rows]);
+
+  const strongestOpportunity = extremes.find(
+    (result) => result.definition.id === "highest-hr-score",
+  );
+
+  const strongestPower = extremes.find(
+    (result) => result.definition.id === "strongest-power",
+  );
+
+  const highestRisk = extremes.find(
+    (result) => result.definition.id === "lowest-confidence",
+  );
+
   if (rows.length === 0) {
     return (
-      <section className="rounded-3xl border border-dashed border-white/10 bg-zinc-950/50 p-10 text-center">
-        <h2 className="text-xl font-bold text-white">
-          Matchup Extremes
-        </h2>
-
-        <p className="mt-3 max-w-xl mx-auto text-sm text-zinc-400">
-          No matchup intelligence is available for the current workspace.
-          Once players are loaded, this view highlights the strongest and
-          weakest signals across today's board.
-        </p>
+      <section className="relative overflow-hidden rounded-3xl border border-dashed border-white/10 bg-zinc-950/60 p-10 text-center">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_45%)]" />
+        <div className="relative">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-400">
+            Workspace intelligence
+          </p>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+            Matchup Extremes
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+            No matchup intelligence is available for the current workspace.
+            Once players are loaded, this view highlights the strongest and
+            weakest signals across today&apos;s board.
+          </p>
+        </div>
       </section>
     );
   }
 
   return (
     <section className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
-          Workspace Intelligence
-        </p>
+      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_36%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
 
-        <h1 className="text-3xl font-black tracking-tight text-white">
-          Matchup Extremes
-        </h1>
+        <div className="relative">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
+                Slate intelligence terminal
+              </p>
 
-        <p className="max-w-3xl text-sm text-zinc-400">
-          Scan today's strongest opportunities, highest-confidence plays,
-          environmental advantages, and volatility signals without manually
-          comparing every player.
-        </p>
+              <h1 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+                Today&apos;s matchup extremes
+              </h1>
+
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400">
+                Surface the slate&apos;s strongest opportunities, highest
+                confidence signals, environmental advantages, and most
+                important volatility warnings without comparing every player
+                manually.
+              </p>
+            </div>
+
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-2 text-xs font-semibold text-emerald-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.8)]" />
+              Live slate intelligence
+            </div>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <SummaryMetric
+              label="Players scanned"
+              value={rows.length.toString()}
+              detail="Active candidates"
+            />
+            <SummaryMetric
+              label="Extreme signals"
+              value={extremes.length.toString()}
+              detail="Slate-defining reads"
+            />
+            <SummaryMetric
+              label="High confidence"
+              value={highConfidenceCount.toString()}
+              detail={
+                highestConfidence === null
+                  ? "Confidence pending"
+                  : `Peak ${Math.round(highestConfidence)}%`
+              }
+            />
+            <SummaryMetric
+              label="Watch alerts"
+              value={warningCount.toString()}
+              detail="Rows carrying warnings"
+            />
+          </div>
+        </div>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
         {extremes.map((result) => (
-          <ExtremeCard
-            key={result.definition.id}
-            result={result}
-          />
+          <ExtremeCard key={result.definition.id} result={result} />
         ))}
       </div>
+
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.08),transparent_45%)]" />
+
+        <div className="relative">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400">
+            Today&apos;s read
+          </p>
+
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+            The slate in one decision brief
+          </h2>
+
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-zinc-300">
+            {strongestOpportunity
+              ? `${strongestOpportunity.row.playerName} owns the strongest overall home-run profile at ${strongestOpportunity.definition.format(strongestOpportunity.value)}.`
+              : "The current slate does not contain a complete top HR-score signal."}{" "}
+            {strongestPower
+              ? `${strongestPower.row.playerName} carries the highest raw power ceiling among available candidates.`
+              : "Raw power comparisons remain incomplete."}{" "}
+            {highestRisk
+              ? `${highestRisk.row.playerName} requires the most caution because the supporting confidence signal is the weakest on the board.`
+              : "No material low-confidence outlier is currently available."}
+          </p>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <SummaryMetric
+              label="Best opportunity"
+              value={strongestOpportunity?.row.playerName ?? "Pending"}
+              detail={
+                strongestOpportunity
+                  ? `HR score ${strongestOpportunity.definition.format(strongestOpportunity.value)}`
+                  : "Awaiting complete data"
+              }
+            />
+
+            <SummaryMetric
+              label="Power leader"
+              value={strongestPower?.row.playerName ?? "Pending"}
+              detail={
+                strongestPower
+                  ? `Power ${strongestPower.definition.format(strongestPower.value)}`
+                  : "Awaiting complete data"
+              }
+            />
+
+            <SummaryMetric
+              label="Highest caution"
+              value={highestRisk?.row.playerName ?? "None"}
+              detail={
+                highestRisk
+                  ? `Confidence ${highestRisk.definition.format(highestRisk.value)}`
+                  : "No low-confidence outlier"
+              }
+            />
+          </div>
+        </div>
+      </section>
     </section>
   );
 }
-
-
-/*
- * MATCHUP EXTREMES VIEW COMPLETE
- *
- * Next:
- *
- * mv /tmp/MatchupExtremesView.tsx \
- * src/features/hr/components/workspace/views/MatchupExtremesView.tsx
- *
- * npm run typecheck
- * npm run build
- * ./scripts/titan health
- */
-
