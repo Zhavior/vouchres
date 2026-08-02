@@ -88,9 +88,9 @@ ${downsideFactors.map((factor) => `- ${factor}`).join("\n")}`;
 export async function generatePlayerResearch(input: PlayerResearchInput): Promise<PlayerResearchResponse> {
   const player = input.playerData;
   const local = localPlayerResearch(player);
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) return local;
+  if (!hasGeminiKey()) {
+    return local;
+  }
 
   try {
     const prompt = `Conduct a cautious MLB sabermetric research brief for ${player.name} (#${player.number ?? "N/A"}, ${player.team}, ${player.position}).
