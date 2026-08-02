@@ -4,6 +4,7 @@ import { createV3App } from "./app";
 import { captureException, isSentryEnabled } from "../lib/sentry";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "../lib/syncDevSupabaseEnv";
 import { validateProductionEnvAtBoot } from "../lib/validateProductionEnv";
+import { bootstrapProviders } from "../services/ai/providers/bootstrap";
 
 if (process.env.VERCEL !== "1") {
   dotenv.config();
@@ -13,6 +14,7 @@ if (process.env.VERCEL !== "1") {
 syncDevSupabaseEnv();
 logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
+bootstrapProviders();
 
 let shuttingDown = false;
 
