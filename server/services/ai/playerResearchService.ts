@@ -1,4 +1,4 @@
-import { generateStructured, hasGeminiKey } from "./geminiClient";
+import { generateStructured, hasProvider } from "./aiRouter";
 import {
   PlayerResearchResponseSchema,
   type PlayerResearchInput,
@@ -88,7 +88,7 @@ ${downsideFactors.map((factor) => `- ${factor}`).join("\n")}`;
 export async function generatePlayerResearch(input: PlayerResearchInput): Promise<PlayerResearchResponse> {
   const player = input.playerData;
   const local = localPlayerResearch(player);
-  if (!hasGeminiKey()) {
+  if (!hasProvider()) {
     return local;
   }
 
@@ -109,7 +109,7 @@ Return strict JSON: {"aiScore": <integer 10 to 99>, "report": "<markdown researc
         aiScore: local.aiScore,
         report: local.report,
       },
-      model: "gemini-3.5-flash",
+      
     });
 
     const parsed = result.data;
@@ -122,7 +122,7 @@ Return strict JSON: {"aiScore": <integer 10 to 99>, "report": "<markdown researc
       groundingMetadata: undefined,
     };
   } catch (error) {
-    console.error("[ai:player-research] Gemini research failed", error);
+    console.error("[ai:player-research] AI research failed", error);
     return {
       ...local,
       status: "fallback",
