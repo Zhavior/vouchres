@@ -16,7 +16,9 @@ export const geminiProvider: AIProvider = {
     return generateText(options);
   },
 
-  async generateStructured(options: GenerateStructuredOptions<any>) {
+  async generateStructured<TSchema extends import("zod").ZodTypeAny>(
+    options: GenerateStructuredOptions<TSchema>,
+  ) {
     return generateStructured(options);
   },
 };
