@@ -1,4 +1,4 @@
-import { appConfig } from "../../config/appConfig";
+import { appConfig } from "../../platform/config/appConfig";
 import type { AIProviderName } from "./provider";
 
 export interface AIProviderConfig {
