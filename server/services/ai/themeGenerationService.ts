@@ -1,5 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import type { AiThemeInput } from "../../validators/aiSchemas";
+import { generateStructured } from "./generateStructured";
+import { z } from "zod";
 
 export interface GeneratedTheme {
   id: string;
@@ -133,33 +134,36 @@ function localTheme(prompt: string): GeneratedTheme {
 }
 
 export async function generateAiTheme(input: AiThemeInput): Promise<AiThemeResponse> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  
   const fallback = localTheme(input.prompt);
 
-  if (!apiKey) {
-    return { status: "simulated", theme: fallback };
-  }
+
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "vouchedge-backend",
-        },
-      },
+    const ThemeSchema = z.object({
+      name: z.string(),
+      category: z.string(),
+      description: z.string(),
+      badge: z.string(),
+      avatarAnimationClass: z.string(),
+      cardStyle: z.string(),
+      glowColor: z.string(),
+      particleDemo: z.array(z.string()),
+      fontFamily: z.string(),
+      coverBg: z.string(),
+      customAIPhrase: z.string(),
     });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: `Theme request: ${input.prompt}`,
-      config: {
-        responseMimeType: "application/json",
-        systemInstruction: `Return only JSON for a dark glassmorphism profile theme. Fields: name, category, description, badge, avatarAnimationClass, cardStyle, glowColor, particleDemo, fontFamily, coverBg, customAIPhrase. Keep copy concise and avoid betting certainty language.`,
-      },
+    const result = await generateStructured({
+      cacheKey: `theme:${input.prompt}`,
+      prompt: `Theme request: ${input.prompt}`,
+      systemInstruction:
+        "Return only JSON for a dark glassmorphism profile theme. Fields: name, category, description, badge, avatarAnimationClass, cardStyle, glowColor, particleDemo, fontFamily, coverBg, customAIPhrase. Keep copy concise and avoid betting certainty language.",
+      schema: ThemeSchema,
+      fallback,
     });
 
-    const parsed = JSON.parse(cleanModelJson(response.text || "{}"));
+    const parsed = result.data;
     return {
       status: "success",
       theme: finalizeTheme(parsed, fallback.name),
