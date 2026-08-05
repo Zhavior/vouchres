@@ -20,6 +20,8 @@ export interface PlayerIdentityHeaderProps {
   meta?: string | null;
   tierLabel?: string;
   tierColor?: string;
+  hasHitHr?: boolean;
+  hrCount?: number;
   chips?: PlayerIdentityChip[];
   size?: 'compact' | 'full';
   className?: string;
@@ -55,6 +57,8 @@ export function PlayerIdentityHeader({
   meta,
   tierLabel,
   tierColor = 'hsl(var(--ve-accent))',
+  hasHitHr = false,
+  hrCount = 1,
   chips = [],
   size = 'full',
   className = '',
@@ -99,9 +103,16 @@ export function PlayerIdentityHeader({
       </div>
 
       <div className="min-w-0 flex-1">
-        <h2 className={size === 'compact' ? 'truncate text-lg font-black text-white' : 'truncate text-xl font-black leading-tight tracking-tight text-white lg:text-2xl'}>
-          {name}
-        </h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 className={size === 'compact' ? 'truncate text-lg font-black text-white' : 'truncate text-xl font-black leading-tight tracking-tight text-white lg:text-2xl'}>
+            {name}
+          </h2>
+          {hasHitHr && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded border border-amber-400/50 bg-gradient-to-r from-amber-500/25 to-yellow-500/25 px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+              <span>⚾</span> HR {hrCount > 1 ? `x${hrCount}` : ''}
+            </span>
+          )}
+        </div>
 
         <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-white/70">
           {teamLogoUrl && <img src={teamLogoUrl} alt="" loading="lazy" decoding="async" className="h-4 w-4 shrink-0 object-contain" />}

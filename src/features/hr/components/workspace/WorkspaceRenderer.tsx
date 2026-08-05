@@ -19,21 +19,23 @@ export default function WorkspaceRenderer({
   rows,
   children,
 }: WorkspaceRendererProps) {
+  const safeRows = rows || [];
+
   switch (workspace) {
     case "overview":
       return <OverviewView>{children}</OverviewView>;
 
     case "edge":
-      return <EdgeDeskView rows={rows} />;
+      return <EdgeDeskView rows={safeRows} />;
 
     case "stacks":
-      return <SlateStacksView rows={rows} />;
+      return <SlateStacksView rows={safeRows} />;
 
     case "matrix":
-      return <ProjectionMatrixView rows={rows} />;
+      return <ProjectionMatrixView rows={safeRows} />;
 
     case "extremes":
-      return <MatchupExtremesView rows={rows} />;
+      return <MatchupExtremesView rows={safeRows} />;
 
     default:
       return <OverviewView>{children}</OverviewView>;

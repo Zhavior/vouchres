@@ -5,6 +5,7 @@ import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
+import { PlayerHrTag } from '../HrHitBadge';
 
 interface HrTopSignalPanelProps {
   player: HrWatchRow | null;
@@ -98,9 +99,12 @@ export function HrTopSignalPanel({
                 </span>
               </div>
 
-              <h2 className="truncate text-base sm:text-2xl font-black uppercase tracking-tight text-white mt-0.5">
-                {player.playerName}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                <h2 className="truncate text-base sm:text-2xl font-black uppercase tracking-tight text-white">
+                  {player.playerName}
+                </h2>
+                <PlayerHrTag player={player} />
+              </div>
 
               <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium truncate mt-0.5">
                 {teamLogo && <img src={teamLogo} alt="" className="h-3.5 w-3.5 object-contain inline" />}

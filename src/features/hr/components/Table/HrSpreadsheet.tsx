@@ -14,6 +14,7 @@ import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import type { HrWatchRow } from '../../types/hrWatch';
+import { PlayerHrTag } from '../HrHitBadge';
 import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
 import {
   buildHrMatchupGroups,
@@ -209,7 +210,10 @@ function MobileTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchIn
           <div className="flex items-center gap-2 min-w-0">
             <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={34} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-black text-white">{row.playerName}</p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <p className="truncate text-xs font-black text-white">{row.playerName}</p>
+                <PlayerHrTag player={row} compact />
+              </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="font-mono text-[9px] font-bold text-slate-400">{row.team}</span>
                 <TruthLabel row={row} />
@@ -316,7 +320,10 @@ function DesktopTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchI
           <div className="flex items-center gap-2.5">
             <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={42} />
             <div className="min-w-0">
-              <p className="whitespace-normal text-[13px] font-black leading-5 text-white">{row.playerName}</p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <p className="whitespace-normal text-[13px] font-black leading-5 text-white">{row.playerName}</p>
+                <PlayerHrTag player={row} compact />
+              </div>
               <p className="mt-0.5 font-mono text-[10px] font-black text-white/65">{row.team}</p>
             </div>
           </div>

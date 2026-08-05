@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronRight, Heart, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { logoByTeamName } from '../../lib/teamLogos';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
+import { PlayerHrTag } from '../../features/hr/components/HrHitBadge';
 import { HrOpportunitySummary } from '../../features/hr/components/Opportunity/HrOpportunitySummary';
 import VouchCursorTip from '../vouch-system/VouchCursorTip';
 import '../../styles/unified-player-card.css';
@@ -237,7 +238,10 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
 
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 px-3 pb-2.5">
           <div className="min-w-0 pl-11">
-            <p className="truncate text-sm font-bold text-white">{player.playerName}</p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="truncate text-sm font-bold text-white">{player.playerName}</p>
+              <PlayerHrTag player={player} />
+            </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/55">
               <TeamMark name={player.team} />
               <span className="font-mono text-[9px] uppercase tracking-wider text-white/30">vs</span>

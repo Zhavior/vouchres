@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "PORT=3000 node --max-old-space-size=12000 --import tsx server.ts",
+    "dev": "PORT=${PORT:-3000} node --max-old-space-size=12000 --import tsx server.ts",
     "dev:v3": "V3_PORT=3100 node --max-old-space-size=12000 --import tsx server/v3/bootstrap.ts",
     "dev:stop": "sh -c 'PORT=${PORT:-3000}; PIDS=$(lsof -ti :$PORT 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"[dev:stop] Killing PID(s) on port $PORT: $PIDS\"; echo \"$PIDS\" | xargs kill -9 2>/dev/null || true; sleep 1; else echo \"[dev:stop] Port $PORT is free\"; fi'",
     "dev:port": "sh -c 'PORT=${PORT:-3000}; lsof -nP -iTCP:$PORT -sTCP:LISTEN || echo \"Port $PORT is free\"'",

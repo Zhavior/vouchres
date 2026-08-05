@@ -261,13 +261,41 @@ function SummaryMetric({
   );
 }
 
+import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
+import { logoByTeamName } from "../../../../../lib/teamLogos";
+import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
+import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
+import { PlayerHrTag } from "../../HrHitBadge";
+import { Plus } from "lucide-react";
+
 function ExtremeCard({ result }: { result: ExtremeResult }) {
   const { definition, row, value } = result;
   const tone = TONE_CLASSES[definition.tone];
+  const teamLogoUrl = row.teamLogoUrl || logoByTeamName(row.team);
 
   const confidence = isFiniteNumber(row.dataConfidence)
     ? clamp(normalizePercent(row.dataConfidence), 0, 100)
     : null;
+
+  const handleAddLeg = () => {
+    openParlayAdd({
+      player: toHrParlayPickerPlayer(row),
+      propHint: {
+        id: `hr-extreme-${row.stableId}`,
+        market: "Home Runs",
+        odds: row.bookOdds ?? null,
+        spec: `${row.playerName} 1+ Home Run`,
+        gamePk: row.gamePk ?? undefined,
+        playerId: row.playerId ?? undefined,
+      },
+      initialFamily: "home_runs",
+      isPitcher: false,
+      source: "hr_intelligence",
+      dataStatus: row.truthStatus === "official" ? "official" : "projected",
+      reasoningSnapshot: row.reasons[0] ?? null,
+      riskSnapshot: row.warnings[0] ?? null,
+    });
+  };
 
   return (
     <article
@@ -320,17 +348,28 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
           </div>
         </div>
 
-        <div className="mt-5">
-          <h3 className="text-sm font-semibold text-zinc-400">
-            {definition.title}
-          </h3>
-          <p className="mt-2 truncate text-2xl font-black tracking-tight text-white">
-            {row.playerName}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-zinc-400">
-            {definition.description}
-          </p>
+        <div className="mt-5 flex items-center gap-3.5">
+          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={40} />
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-400">
+              {definition.title}
+            </h3>
+            <div className="flex items-center gap-2">
+              <h4 className="text-xl font-black tracking-tight text-white group-hover:text-vouch-cyan transition-colors">
+                {row.playerName}
+              </h4>
+              <PlayerHrTag player={row} />
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {teamLogoUrl && <img src={teamLogoUrl} alt="" className="h-3.5 w-3.5 object-contain" />}
+              <span className="font-mono text-xs text-white/60">{row.team} vs {row.opponent}</span>
+            </div>
+          </div>
         </div>
+
+        <p className="mt-3 text-xs leading-5 text-zinc-400">
+          {definition.description}
+        </p>
 
         <div className="mt-6 grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
@@ -410,11 +449,16 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
 
         <div className="mt-5 flex items-center justify-between border-t border-white/[0.07] pt-4">
           <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
-            Truth status
+            Truth status: <strong className="text-emerald-300">{readableLabel(String(row.truthStatus))}</strong>
           </span>
-          <span className="text-xs font-semibold text-emerald-300">
-            {readableLabel(String(row.truthStatus))}
-          </span>
+          <button
+            type="button"
+            onClick={handleAddLeg}
+            className="flex items-center gap-1.5 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-3 py-1 font-mono text-xs font-bold text-vouch-cyan transition hover:bg-vouch-cyan hover:text-black"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Leg
+          </button>
         </div>
       </div>
     </article>
