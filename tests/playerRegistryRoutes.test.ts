@@ -6,12 +6,42 @@ import { requestContext } from "../server/middleware/requestContext";
 import { playerRegistryRoutes } from "../server/routes/playerRegistryRoutes";
 
 vi.mock("../server/services/mlb/playerRegistryService", () => ({
-  getPlayerCount: vi.fn(async () => ({ total: 1200, active: 900 })),
+  getPlayerCount: vi.fn(async () => ({
+    ready: true,
+    stale: false,
+    warming: false,
+    source: "live_cache",
+    count: 1248,
+    updatedAt: "2026-08-05T00:00:00.000Z",
+    attemptedAt: "2026-08-05T00:00:00.000Z",
+    warning: null,
+  })),
+  getPlayerRegistryPayload: vi.fn(async () => ({
+    ready: true,
+    stale: false,
+    warming: false,
+    source: "live_cache",
+    count: 1248,
+    updatedAt: "2026-08-05T00:00:00.000Z",
+    attemptedAt: "2026-08-05T00:00:00.000Z",
+    warning: null,
+    players: [],
+  })),
   getPlayerRegistry: vi.fn(async () => []),
   getActivePlayers: vi.fn(async () => []),
   searchPlayers: vi.fn(async () => []),
   getPlayerById: vi.fn(async () => null),
-  refreshPlayerRegistry: vi.fn(async () => ({ count: 0, players: [] })),
+  refreshPlayerRegistry: vi.fn(async () => ({
+    ready: true,
+    stale: false,
+    warming: false,
+    source: "live_cache",
+    count: 0,
+    updatedAt: "2026-08-05T00:00:00.000Z",
+    attemptedAt: "2026-08-05T00:00:00.000Z",
+    warning: null,
+    players: [],
+  })),
 }));
 
 vi.mock("../server/services/mlb/playerEdgeResearchService", () => ({
@@ -47,15 +77,44 @@ afterAll(async () => {
 });
 
 describe("player registry routes", () => {
-  it("returns ok envelope with request metadata for player count", async () => {
+  it("returns ok envelope with self-describing metadata for player count", async () => {
     const response = await fetch(`${baseUrl}/api/mlb/players/count`);
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       ok: true,
-      total: 1200,
-      active: 900,
+      ready: true,
+      stale: false,
+      warming: false,
+      source: "live_cache",
+      count: 1248,
+      updatedAt: "2026-08-05T00:00:00.000Z",
+      attemptedAt: "2026-08-05T00:00:00.000Z",
+      warning: null,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
+
+  it("returns ok envelope with self-describing metadata and players array for registry", async () => {
+    const response = await fetch(`${baseUrl}/api/mlb/players/registry`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      ready: true,
+      stale: false,
+      warming: false,
+      source: "live_cache",
+      count: 1248,
+      updatedAt: "2026-08-05T00:00:00.000Z",
+      attemptedAt: "2026-08-05T00:00:00.000Z",
+      warning: null,
+      players: [],
       meta: {
         requestId: expect.any(String),
         timestamp: expect.any(String),

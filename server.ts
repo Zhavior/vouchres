@@ -6,6 +6,7 @@ import { isSentryEnabled, captureException } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/platform/config";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
+import { warmPlayerRegistryInBackground } from "./server/services/mlb/playerRegistryService";
 
 // Local/dev: load .env then .env.local (local wins).
 if (process.env.VERCEL !== "1") {
@@ -16,6 +17,12 @@ syncDevSupabaseEnv();
 logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
 logWorldChatEphemeralBootNotice();
+
+// Boot warmup for MLB Player Registry
+warmPlayerRegistryInBackground();
+setInterval(() => {
+  warmPlayerRegistryInBackground();
+}, 15 * 60_000).unref();
 
 export async function createApp(httpServer?: http.Server) {
   return createApiApp(httpServer);

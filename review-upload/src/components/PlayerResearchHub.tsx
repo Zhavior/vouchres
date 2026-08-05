@@ -256,6 +256,12 @@ export default function PlayerResearchHub({
   const [backendCount, setBackendCount] = useState<number | null>(null);
   const [registryStatus, setRegistryStatus] = useState<"loading" | "ready" | "fallback" | "error">("loading");
   const [registryError, setRegistryError] = useState("");
+  const [registryMeta, setRegistryMeta] = useState<{
+    stale?: boolean;
+    warming?: boolean;
+    source?: "live_cache" | "snapshot";
+    updatedAt?: string;
+  }>({});
 
   // Compare mode
   const [compareA, setCompareA] = useState<MLBPlayer | null>(null);
@@ -270,22 +276,59 @@ export default function PlayerResearchHub({
     async function loadRegistry() {
       try {
         setRegistryStatus("loading");
-        const [countPayload, registryPayload] = await Promise.all([
-          fetchJson<{ count: number }>("/api/mlb/players/count", controller.signal),
-          fetchJson<{ players: BackendRegistryPlayer[] }>("/api/mlb/players/registry", controller.signal),
-        ]);
-        setBackendCount(countPayload.count);
+
+        // Primary fetch: /api/mlb/players/registry
+        const registryPayload = await fetchJson<{
+          players?: BackendRegistryPlayer[];
+          count?: number;
+          stale?: boolean;
+          warming?: boolean;
+          source?: "live_cache" | "snapshot";
+          updatedAt?: string;
+        }>("/api/mlb/players/registry", controller.signal);
+
         const mapped = (registryPayload.players || []).map(mapBackendPlayer);
-        setAllRegistryPlayers(mapped);
-        setRegistryPlayers(mapped);
-        setRegistryStatus("ready");
-        setRegistryError("");
+        if (mapped.length > 0) {
+          setAllRegistryPlayers(mapped);
+          setRegistryPlayers(mapped);
+          setBackendCount(registryPayload.count ?? mapped.length);
+          setRegistryMeta({
+            stale: registryPayload.stale,
+            warming: registryPayload.warming,
+            source: registryPayload.source,
+            updatedAt: registryPayload.updatedAt,
+          });
+          setRegistryStatus("ready");
+          setRegistryError("");
+        } else {
+          throw new Error("Backend registry returned zero players.");
+        }
+
+        // Secondary/opportunistic fetch: /api/mlb/players/count
+        fetchJson<{ count: number }>("/api/mlb/players/count", controller.signal)
+          .then((countPayload) => {
+            if (typeof countPayload?.count === "number" && countPayload.count > 0) {
+              setBackendCount(countPayload.count);
+            }
+          })
+          .catch(() => {
+            // Keep count from registry payload
+          });
       } catch (error) {
         if (controller.signal.aborted) return;
-        setRegistryPlayers(MLB_PLAYER_RECORDS);
-        setBackendCount(null);
-        setRegistryStatus("fallback");
-        setRegistryError(error instanceof Error ? error.message : "Backend player registry unavailable.");
+        setAllRegistryPlayers((prev) => {
+          if (prev.length > 0) {
+            setRegistryPlayers(prev);
+            setRegistryStatus("ready");
+            setRegistryError("Using cached session registry.");
+            return prev;
+          }
+          setRegistryPlayers(MLB_PLAYER_RECORDS);
+          setBackendCount(null);
+          setRegistryStatus("fallback");
+          setRegistryError(error instanceof Error ? error.message : "Backend player registry unavailable.");
+          return prev;
+        });
       }
     }
     loadRegistry();

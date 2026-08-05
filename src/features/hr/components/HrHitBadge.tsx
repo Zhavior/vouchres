@@ -1,6 +1,6 @@
 import React from 'react';
 import { Flame } from 'lucide-react';
-import type { HrEvent } from '../../types/notifications';
+import type { HrEvent } from '../../../types/notifications';
 
 export interface HrHitBadgeProps {
   event?: HrEvent;

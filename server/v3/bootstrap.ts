@@ -5,6 +5,7 @@ import { captureException, isSentryEnabled } from "../lib/sentry";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "../lib/syncDevSupabaseEnv";
 import { validateProductionEnvAtBoot } from "../lib/validateProductionEnv";
 import { bootstrapProviders } from "../services/ai/providers/bootstrap";
+import { warmPlayerRegistryInBackground } from "../services/mlb/playerRegistryService";
 
 if (process.env.VERCEL !== "1") {
   dotenv.config();
@@ -15,6 +16,7 @@ syncDevSupabaseEnv();
 logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
 bootstrapProviders();
+warmPlayerRegistryInBackground();
 
 let shuttingDown = false;
 

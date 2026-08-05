@@ -12,6 +12,7 @@ import {
   getPlayerById,
   getPlayerCount,
   getPlayerRegistry,
+  getPlayerRegistryPayload,
   refreshPlayerRegistry,
   searchPlayers,
 } from "../services/mlb/playerRegistryService";
@@ -33,8 +34,8 @@ function queryString(value: unknown, maxLength: number): string {
 
 playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
-    const count = await getPlayerCount();
-    return res.json(apiOkFlat(req, count as unknown as Record<string, unknown>));
+    const status = await getPlayerCount();
+    return res.json(apiOkFlat(req, status as unknown as Record<string, unknown>));
   } catch (error) {
     throw registryUnavailable(error);
   }
@@ -42,13 +43,8 @@ playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (req: RequestW
 
 playerRegistryRoutes.get("/mlb/players/registry", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
-    const players = await getPlayerRegistry();
-    return res.json(apiOkFlat(req, {
-      count: players.length,
-      players,
-      dataSource: "official_mlb",
-      updatedAt: new Date().toISOString(),
-    }));
+    const payload = await getPlayerRegistryPayload();
+    return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
   } catch (error) {
     throw registryUnavailable(error);
   }
