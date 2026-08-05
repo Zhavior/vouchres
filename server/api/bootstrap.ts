@@ -13,9 +13,12 @@ import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "../lib/se
 import { validateProductionEnvAtBoot } from "../platform/config";
 import appConfig from "../platform/config/appConfig";
 import { bootstrapProviders } from "../services/ai/providers/bootstrap";
+import { probeRedisWriteCapabilityInBackground } from "../lib/redisCapability";
 
 export async function createApiApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();
+  // Presence of Redis env vars is verified above; this checks they actually work.
+  probeRedisWriteCapabilityInBackground();
   bootstrapProviders();
   const app = express();
   

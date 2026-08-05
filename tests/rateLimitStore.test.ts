@@ -54,7 +54,8 @@ describe("rate limit envelope", () => {
     let lastStatus = 0;
     let lastBody: any = null;
 
-    for (let i = 0; i < 205; i += 1) {
+    // globalLimiter allows 300/min — loop past that so the limiter actually trips.
+    for (let i = 0; i < 305; i += 1) {
       const response = await fetch(`${baseUrl}/api/ping`);
       lastStatus = response.status;
       lastBody = await response.json();
