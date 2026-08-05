@@ -584,6 +584,10 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             />
           ) : null}
 
+          {/* Lazy chunks need their own boundary. Without one they suspend the
+              whole page, so the board's loading skeleton and error state never
+              paint — the user gets a blank panel instead. */}
+          <Suspense fallback={null}>
           <MostVouchedPlayersPanel
             players={playerVouchLeaderboard.data ?? []}
             subtitle="The hottest community-backed bats on this slate."
@@ -593,6 +597,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
               if (match) openPlayerProfile(match);
             }}
           />
+          </Suspense>
 
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
@@ -609,6 +614,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
+              <Suspense fallback={<LoadingSkeleton />}>
               <HrSpreadsheet
                 rows={(vm.rows ?? []) as any}
                 freshness={vm.slate.freshness}
@@ -621,6 +627,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                   openPlayerProfile(player);
                 }}
               />
+              </Suspense>
             ) : viewMode === 'treemap' ? (
               <HrSignalField
                 buckets={vm.buckets}
@@ -682,6 +689,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         </div>
       ) : null}
 
+      <Suspense fallback={null}>
       <HrPlayerProfile
         player={vm.selectedPlayer}
         isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
@@ -692,6 +700,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         boardDate={vm.date}
         slipActionAvailable={Boolean(onSectionChange)}
       />
+      </Suspense>
     </div>
   );
 };
