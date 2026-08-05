@@ -39,10 +39,12 @@ describe('customer-facing product navigation', () => {
   it('drives desktop and mobile navigation from the workspace model without false active states', () => {
     for (const source of shellSources) {
       expect(source).toContain('getSidebarFeatures');
-      expect(
-        source.includes('activeSection === item.id') ||
-          source.includes('activeSection === f.id'),
-      ).toBe(true);
+      // Active state is resolved through the workspace model rather than a raw
+      // `activeSection === item.id` comparison, so a specialist route under a
+      // workspace lights up its parent tab instead of nothing.
+      expect(source).toContain('isBetaDestinationActive');
+      // Exact-id match remains the fallback for non-workspace features.
+      expect(source).toContain('activeSection === featureId');
     }
   });
 });

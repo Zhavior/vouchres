@@ -12,7 +12,9 @@ describe('Aurora compliance enforcement', () => {
     expect(result.ok).toBe(true);
     expect(result.metrics.trackedFlows).toBeGreaterThan(0);
     expect(result.metrics.compliantFlows).toBeGreaterThan(0);
-    expect(result.metrics.z8Importers).toBeGreaterThan(0);
+    // Zero, not "greater than zero": the Z8 -> Aurora migration is finished, so
+    // any importer reappearing is new debt, not remaining progress.
+    expect(result.metrics.z8Importers).toBe(0);
   });
 
   it('detects both new importers and stale baseline entries', () => {

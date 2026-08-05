@@ -54,10 +54,12 @@ const REQUIRED_DOCUMENTS = [
   'aurora/QUALITY.md',
   'aurora/MIGRATION.md',
 ] as const;
+// src/theme/z8Tokens.ts was the Z8 -> Aurora compatibility layer. The migration
+// is complete (zero importers remain), so the file is gone and is no longer a
+// required foundation source.
 const REQUIRED_TOKEN_SOURCES = [
   'src/styles/vouchedge-tokens.css',
   'src/theme/auroraTokens.ts',
-  'src/theme/z8Tokens.ts',
 ] as const;
 
 function extension(path: string): string {

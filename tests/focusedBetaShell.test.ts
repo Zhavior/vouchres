@@ -7,6 +7,7 @@ describe('focused beta shell', () => {
     expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toEqual([
       'today',
       'hr_board',
+      'live_games',
       'results',
       'premium',
     ]);

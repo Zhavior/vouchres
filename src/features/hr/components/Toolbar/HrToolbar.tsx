@@ -128,7 +128,7 @@ function TierFilterButtons({
   className?: string;
 }) {
   return (
-    <div className={`flex overflow-x-auto gap-1 py-0.5 scrollbar-none snap-x sm:grid sm:grid-cols-2 sm:h-10 sm:flex-nowrap sm:items-stretch w-full min-w-0 max-w-full rounded-xl border border-white/15 bg-[#0a121d] p-1 ${className}`}>
+    <div className={`flex overflow-x-auto gap-1 py-0.5 scrollbar-none snap-x sm:grid sm:grid-cols-2 sm:h-10 sm:flex-nowrap sm:items-stretch w-full min-w-0 max-w-full rounded-xl border border-white/15 bg-ve-graphite p-1 ${className}`}>
       {TIER_OPTIONS.map((tier) => {
         const active = activeTiers.includes(tier.key);
         const activeClasses =
@@ -204,7 +204,7 @@ function SourceModeButtons({
   ];
 
   return (
-    <div className={`grid grid-cols-3 w-full min-w-0 max-w-full overflow-hidden items-stretch rounded-xl border border-white/15 bg-[#0a121d] p-1 gap-1 ${className}`}>
+    <div className={`grid grid-cols-3 w-full min-w-0 max-w-full overflow-hidden items-stretch rounded-xl border border-white/15 bg-ve-graphite p-1 gap-1 ${className}`}>
       {modes.map((opt) => {
         const active = sourceMode === opt.key;
         return (
@@ -477,7 +477,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[90vh] flex-col rounded-t-3xl border-t border-vouch-cyan/35 bg-[#070e17] shadow-[0_-10px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[90vh] flex-col rounded-t-3xl border-t border-vouch-cyan/35 bg-ve-obsidian shadow-[0_-10px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
             {/* Drawer Handle */}
             <div className="flex items-center justify-center pt-2.5 pb-1">
               <div className="h-1.5 w-12 rounded-full bg-white/20" />

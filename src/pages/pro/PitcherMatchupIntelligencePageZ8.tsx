@@ -892,7 +892,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                     className={`min-w-[240px] shrink-0 snap-center rounded-xl border p-3.5 text-left transition-all duration-200 cursor-pointer active:scale-[0.97] ${
                       active
                         ? 'border-vouch-cyan/80 bg-gradient-to-br from-[#0c2235] via-[#091a29] to-[#06101c] shadow-[0_0_24px_rgba(0,240,255,0.25)] ring-1 ring-vouch-cyan/50'
-                        : 'border-white/20 bg-[#0a121d] hover:border-vouch-cyan/40 hover:bg-[#0f1c2c]'
+                        : 'border-white/20 bg-ve-graphite hover:border-vouch-cyan/40 hover:bg-[#0f1c2c]'
                     }`}
                   >
                     <div className="flex items-center gap-3">

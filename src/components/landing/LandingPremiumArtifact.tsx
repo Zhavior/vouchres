@@ -73,7 +73,7 @@ function PreviewToggle({
 function MiniBarChart({ accent }: { accent: string }) {
   const bars = [0.42, 0.76, 0.43, 0.44, 0.8, 0.45, 0.72, 0.45, 0.44, 0.86];
   return (
-    <div className="flex h-24 items-end gap-2 rounded-2xl border border-white/6 bg-[#0B1323] px-3 py-4">
+    <div className="flex h-24 items-end gap-2 rounded-2xl border border-white/6 bg-ve-graphite px-3 py-4">
       {bars.map((height, index) => {
         const active = index === 1 || index === 4 || index === 6 || index === 9;
         return (
@@ -242,7 +242,7 @@ export default function LandingPremiumArtifact() {
                     ['Surface 2', '#101A2C'],
                     ['Surface 3', '#16233A'],
                   ].map(([label, hex]) => (
-                    <div key={label} className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                    <div key={label} className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">{label}</p>
                       <p className="mt-6 text-sm font-bold text-white/88">{hex}</p>
                     </div>
@@ -256,7 +256,7 @@ export default function LandingPremiumArtifact() {
                     ['Caution', '#D99C4A'],
                     ['Negative', '#D96459'],
                   ].map(([label, color]) => (
-                    <div key={label} className="overflow-hidden rounded-2xl border border-white/8 bg-[#0B1323]">
+                    <div key={label} className="overflow-hidden rounded-2xl border border-white/8 bg-ve-graphite">
                       <div className="h-12" style={{ background: color }} />
                       <div className="p-3">
                         <p className="text-sm font-bold text-white/88">{label}</p>
@@ -302,7 +302,7 @@ export default function LandingPremiumArtifact() {
               {!isMobileSpec && (
               <ArtifactSection title="Controls" subtitle="buttons · navigation · filter chips">
                 <div className={`grid gap-3 ${isMobileSpec ? 'grid-cols-1' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Buttons</p>
                     <div className={`mt-4 gap-2 ${isMobileSpec ? 'grid grid-cols-1' : 'flex flex-wrap'}`}>
                       <button
@@ -317,7 +317,7 @@ export default function LandingPremiumArtifact() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Navigation</p>
                     <div className="mt-4 space-y-2">
                       {[
@@ -340,7 +340,7 @@ export default function LandingPremiumArtifact() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Filter chips</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {['Confirmed', 'Preview', 'Elite', 'Strong', 'Watch'].map((chip, index) => (
@@ -409,7 +409,7 @@ export default function LandingPremiumArtifact() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Structured evidence — not a paragraph</p>
                   <div className="mt-4 divide-y divide-white/8">
                     {EVIDENCE.map((line, index) => (
@@ -427,7 +427,7 @@ export default function LandingPremiumArtifact() {
               {!isMobileSpec && (
               <ArtifactSection title="Chart as decision instrument" subtitle="threshold line · hit / miss · emphasized endpoint">
                 <div className={`grid gap-3 ${isMobileSpec ? 'grid-cols-1' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-lg font-black text-white">Last 10 · HR</p>
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Line 0.5</p>
@@ -438,7 +438,7 @@ export default function LandingPremiumArtifact() {
                     <p className="mt-3 text-sm text-white/48"><span className="font-bold text-[#31B583]">4 of 10</span> cleared 0.5 · most recent game a hit.</p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-lg font-black text-white">Last 10 · HR</p>
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Loading</p>
@@ -453,7 +453,7 @@ export default function LandingPremiumArtifact() {
                     <p className="mt-3 text-sm text-white/32">Fetching game log…</p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-lg font-black text-white">Last 10 · HR</p>
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Empty</p>
@@ -501,7 +501,7 @@ export default function LandingPremiumArtifact() {
                       <p className="mt-3 max-w-[18rem] text-sm leading-relaxed text-white/38">The slate is live, but the player pool did not pass verification. Retry in a moment.</p>
                       <button type="button" className="mt-4 rounded-full border border-white/12 px-4 py-2 text-sm font-bold text-white/80 transition-[transform,border-color,color] duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08111D]">Retry</button>
                     </div>
-                    <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0B1323] px-4 py-4">
+                    <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-ve-graphite px-4 py-4">
                       <span className="rounded-full border border-[#F0536B44] bg-[#F0536B1A] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#F0536B]">Live</span>
                       <div>
                         <p className="text-sm font-bold text-white">Brighter live color</p>
@@ -515,7 +515,7 @@ export default function LandingPremiumArtifact() {
               {!isMobileSpec && (
               <ArtifactSection title="Loading · empty · Pro-locked" subtitle="every surface defines its honest states">
                 <div className={`grid gap-3 ${isMobileSpec ? 'grid-cols-1' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
-                  <div className="rounded-2xl border border-white/8 bg-[#0B1323] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Skeleton</p>
                     <div className="mt-4 space-y-3">
                       <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/8" />
@@ -525,13 +525,13 @@ export default function LandingPremiumArtifact() {
                     </div>
                   </div>
 
-                  <div className="flex min-h-[170px] flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0B1323] p-4 text-center">
+                  <div className="flex min-h-[170px] flex-col items-center justify-center rounded-2xl border border-white/8 bg-ve-graphite p-4 text-center">
                     <Sparkles size={18} className="text-white/50" />
                     <p className="mt-4 text-xl font-black text-white">No active slip yet</p>
                     <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-white/35">Add a researched signal when you&apos;re ready. Saved context stays visible here.</p>
                   </div>
 
-                  <div className="flex min-h-[170px] flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0B1323] p-4 text-center">
+                  <div className="flex min-h-[170px] flex-col items-center justify-center rounded-2xl border border-white/8 bg-ve-graphite p-4 text-center">
                     <Lock size={18} className="text-[#D9C57A]" />
                     <p className="mt-4 text-xl font-black text-white">Pro research</p>
                     <p className="mt-2 text-sm text-white/35">Signal graphs & matchup zones</p>
@@ -551,7 +551,7 @@ export default function LandingPremiumArtifact() {
                 <div className={`grid gap-4 ${isMobileSpec ? 'grid-cols-1' : 'lg:grid-cols-[0.9fr_1.1fr]'}`}>
                   <div className="rounded-[28px] border border-white/8 bg-[#09111D] p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Mobile — sticky action bar + bottom nav</p>
-                    <div className="mx-auto mt-4 max-w-[300px] rounded-[28px] border border-white/8 bg-[#050B16] shadow-[0_18px_46px_rgba(0,0,0,0.45)]">
+                    <div className="mx-auto mt-4 max-w-[300px] rounded-[28px] border border-white/8 bg-ve-obsidian shadow-[0_18px_46px_rgba(0,0,0,0.45)]">
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex gap-3">
@@ -602,7 +602,7 @@ export default function LandingPremiumArtifact() {
                   {!isMobileSpec && (
                   <div className="rounded-2xl border border-white/8 bg-[#09111D] p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">Desktop — sidebar shell</p>
-                    <div className="mt-4 grid min-h-[290px] grid-cols-[0.82fr_1fr] overflow-hidden rounded-[24px] border border-white/8 bg-[#050B16]">
+                    <div className="mt-4 grid min-h-[290px] grid-cols-[0.82fr_1fr] overflow-hidden rounded-[24px] border border-white/8 bg-ve-obsidian">
                       <div className="border-r border-white/8 p-4">
                         <p className="text-xl font-black text-white">VouchEdge</p>
                         <div className="mt-5 space-y-2">

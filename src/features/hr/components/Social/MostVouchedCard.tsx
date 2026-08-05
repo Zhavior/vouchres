@@ -29,7 +29,7 @@ export const MostVouchedCard: React.FC<MostVouchedCardProps> = ({
   const logo = logoByTeamName(player.team);
 
   return (
-    <div className="group relative flex flex-col justify-between rounded-xl border border-white/15 bg-[#0a121d] p-3.5 transition-all duration-200 hover:border-vouch-cyan/50 hover:bg-[#0f1c2b] shadow-md">
+    <div className="group relative flex flex-col justify-between rounded-xl border border-white/15 bg-ve-graphite p-3.5 transition-all duration-200 hover:border-vouch-cyan/50 hover:bg-[#0f1c2b] shadow-md">
       <div>
         {/* Header: rank and matchup identity only. Never infer consensus without a real denominator. */}
         <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">

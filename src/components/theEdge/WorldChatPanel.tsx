@@ -102,7 +102,7 @@ function legPreviewLabel(leg: Record<string, unknown>, index: number): string {
 function ParlayProofHoverCard({ proof }: { proof: ClientParlayProof | null }) {
   if (!proof) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#07131f] p-3 text-xs text-white/60 shadow-2xl">
+      <div className="rounded-2xl border border-white/10 bg-ve-graphite p-3 text-xs text-white/60 shadow-2xl">
         Could not load that parlay proof preview.
       </div>
     );
@@ -112,7 +112,7 @@ function ParlayProofHoverCard({ proof }: { proof: ClientParlayProof | null }) {
   const previewLegs = proof.legs.slice(0, 3);
 
   return (
-    <div className="w-[320px] rounded-2xl border border-cyan-400/20 bg-[#07131f] p-3 text-left shadow-2xl backdrop-blur-xl">
+    <div className="w-[320px] rounded-2xl border border-cyan-400/20 bg-ve-graphite p-3 text-left shadow-2xl backdrop-blur-xl">
       <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300/80">Parlay proof</p>
       <p className="mt-2 line-clamp-2 text-sm font-black text-white">{proof.selection}</p>
       <p className="mt-1 text-[11px] text-white/45">

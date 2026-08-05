@@ -276,7 +276,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
 
         {preferencesOpen ? (
           todayPreferencesQuery.isLoading ? (
-            <section id="today-personalization-panel" className="rounded-3xl border border-vouch-cyan/20 bg-[#07131f]/95 p-6 text-center" aria-live="polite">
+            <section id="today-personalization-panel" className="rounded-3xl border border-vouch-cyan/20 bg-ve-graphite/95 p-6 text-center" aria-live="polite">
               <RefreshCw className="mx-auto h-5 w-5 animate-spin text-vouch-cyan" />
               <p className="mt-3 text-sm font-bold text-white/60">Loading your Aurora preferences…</p>
             </section>

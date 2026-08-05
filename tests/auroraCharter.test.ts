@@ -5,11 +5,6 @@ import {
   AURORA_LABEL,
   AURORA_SURFACE,
 } from '../src/theme/auroraTokens';
-import {
-  Z8_ACCENT,
-  Z8_LABEL,
-  Z8_SURFACE,
-} from '../src/theme/z8Tokens';
 
 const canonicalDocuments = [
   'CONSTITUTION.md',
@@ -52,10 +47,12 @@ describe('Aurora Master Charter', () => {
     expect(design).toContain('Layer 4 — Deep Research');
   });
 
-  it('makes Aurora tokens canonical while preserving Z8 compatibility', () => {
-    expect(Z8_ACCENT).toBe(AURORA_ACCENT);
-    expect(Z8_LABEL).toBe(AURORA_LABEL);
-    expect(Z8_SURFACE).toBe(AURORA_SURFACE);
+  it('makes Aurora tokens canonical with the Z8 compatibility layer retired', () => {
+    // The Z8 aliases existed only to keep both systems in sync during the
+    // migration. That module is gone now, so assert the Aurora tokens directly.
+    expect(AURORA_ACCENT).toBe('text-vouch-emerald');
+    expect(AURORA_LABEL).toContain('text-[11px]');
+    expect(AURORA_SURFACE).toContain('bg-black/35');
 
     const primitives = readProjectFile('src/components/ui/primitives.tsx');
     expect(primitives).toContain("from '../../theme/auroraTokens'");

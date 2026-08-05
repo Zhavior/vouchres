@@ -22,8 +22,12 @@ describe('AppNav Instagram-style mobile dock', () => {
     const dock = container.querySelector<HTMLElement>('nav[aria-label="Mobile app navigation"]');
     const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
 
-    expect(dock?.className).toContain('fixed inset-x-0 bottom-0');
-    expect(dock?.className).toContain('ve-safe-bottom');
+    // The dock is a centered floating pill now, not a full-width bottom bar.
+    // Safe-area spacing moved from the ve-safe-bottom utility into the inline
+    // bottom calc — still asserted, so the notch clearance can't be dropped.
+    expect(dock?.className).toContain('fixed');
+    expect(dock?.className).toContain('-translate-x-1/2');
+    expect(dock?.className).toContain('env(safe-area-inset-bottom)');
     expect(dock?.className).toContain('md:hidden');
     expect(container.querySelector('.grid-cols-4')).not.toBeNull();
     expect(buttons).toHaveLength(4);

@@ -77,6 +77,11 @@ export const helmetMiddleware = helmet({
         "https://statsapi.mlb.com",
         "https://*.supabase.co",
         "https://api.stripe.com",
+        // Sentry ingest. Without these the browser SDK is initialised, collects
+        // events, and has every upload blocked by CSP — client-side error
+        // reporting silently reports nothing at all.
+        "https://*.ingest.sentry.io",
+        "https://*.ingest.us.sentry.io",
         // Vite HMR websocket (dev only)
         ...(isProd ? [] : ["ws://localhost:*", "ws://127.0.0.1:*", "wss://localhost:*", "wss://127.0.0.1:*"]),
       ],

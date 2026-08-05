@@ -344,11 +344,11 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity" />
       <div
-        className="relative w-full max-w-lg h-full bg-[#070e17] border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
+        className="relative w-full max-w-lg h-full bg-ve-obsidian border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#070e17]/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-ve-obsidian/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TeamLogo src={m.away.logo} alt={m.away.name} size={28} />
             <span className="text-sm font-black text-white">{m.away.abbreviation} @ {m.home.abbreviation}</span>

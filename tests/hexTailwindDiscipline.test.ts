@@ -4,8 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 const SRC_ROOT = join(process.cwd(), 'src');
 
-/** Current baseline after the Z8 surface migration (Jul 2026). */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 74;
+/**
+ * Current baseline (Aug 2026). Ratcheted 74 -> 70 after folding 30 near-identical
+ * dark surface hexes onto bg-ve-graphite / bg-ve-obsidian. The remaining usages
+ * are mostly the landing page's neon accents (#00f0ff, #00ff94), which have no
+ * token equivalent — collapsing them onto ve-ion/ve-voltage would be a visible
+ * design change, not a refactor. Only ever lower this number.
+ */
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 70;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

@@ -188,7 +188,7 @@ export function MostVouchedTodayPageZ8({ onNavigate, onAddPlayerToSlip }: MostVo
         )}
 
         {/* ── Search & Filter Controls ──────────────────────────────── */}
-        <section className="flex flex-col gap-3 rounded-xl border border-white/12 bg-[#0a121d] p-3.5 shadow-lg sm:flex-row sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-3 rounded-xl border border-white/12 bg-ve-graphite p-3.5 shadow-lg sm:flex-row sm:items-center sm:justify-between">
           {/* Search Input */}
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-vouch-cyan" />
