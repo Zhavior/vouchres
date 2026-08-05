@@ -86,14 +86,33 @@ export function getBackendHealthReport(): BackendHealthStatus {
 }
 
 export function getMissingProductionConfig(): string[] {
-  const required = [
-    'SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY',
-    'JWT_SECRET',
-  ]
+  const missing: string[] = []
 
-  return required.filter((key) => {
-    const value = process.env[key]
-    return !value || value.trim().length === 0
-  })
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  if (!supabaseUrl || supabaseUrl.trim().length === 0) {
+    missing.push('SUPABASE_URL')
+  }
+
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseKey || supabaseKey.trim().length === 0) {
+    missing.push('SUPABASE_SERVICE_ROLE_KEY')
+  }
+
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || cronSecret.trim().length === 0) {
+    missing.push('CRON_SECRET')
+  }
+
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!upstashUrl || upstashUrl.trim().length === 0 || !upstashToken || upstashToken.trim().length === 0) {
+    missing.push('UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN')
+  }
+
+  const sentryDsn = process.env.SENTRY_DSN
+  if (!sentryDsn || sentryDsn.trim().length === 0) {
+    missing.push('SENTRY_DSN')
+  }
+
+  return missing
 }

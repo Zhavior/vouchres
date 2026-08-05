@@ -18,7 +18,7 @@ const routerSource = readFileSync(
   'utf8',
 );
 const landingSource = readFileSync(
-  new URL('../src/pages/VouchEdgeTerminalPage.tsx', import.meta.url),
+  new URL('../src/components/landing/features.ts', import.meta.url),
   'utf8',
 );
 const landingFaqSource = readFileSync(
@@ -37,15 +37,15 @@ describe('signup and first-session activation', () => {
     expect(authSource).toContain("setSignupStep('questionnaire')");
     expect(authSource).toContain("setSignupStep('plan')");
     expect(authSource).toContain("setSignupStep(m === 'signup' ? 'policy' : 'form')");
-    expect(authSource).toContain('AuthJudgeWelcome');
+    expect(authSource).toContain('ve-auth-aurora-panel');
   });
 
   it('keeps the desktop signup form from collapsing beside the judge panel', () => {
-    expect(authSource).toContain('ve-auth-judge-panel');
+    expect(authSource).toContain('ve-auth-aurora-panel');
     expect(authSource).toContain('ve-auth-form-panel');
     expect(authStyles).toContain('.ve-auth-dialog');
     expect(authStyles).toContain('max-width: 56rem');
-    expect(authStyles).toContain('flex: 0 0 clamp(16.25rem, 38%, 20rem)');
+    expect(authStyles).toContain('flex: 0 0 clamp(21rem, 42%, 25rem)');
     expect(authStyles).toContain('flex: 1 1 0%');
   });
 

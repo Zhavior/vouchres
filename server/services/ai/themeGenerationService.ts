@@ -165,7 +165,7 @@ export async function generateAiTheme(input: AiThemeInput): Promise<AiThemeRespo
 
     const parsed = result.data;
     return {
-      status: "success",
+      status: result.status === "live" || result.status === "cached" ? "success" : "simulated",
       theme: finalizeTheme(parsed, fallback.name),
     };
   } catch (error) {

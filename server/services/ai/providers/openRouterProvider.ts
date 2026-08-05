@@ -8,10 +8,12 @@ import type {
   TextResult,
 } from "../provider";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+function getClient(): OpenAI {
+  return new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY || "missing-key",
+    baseURL: "https://openrouter.ai/api/v1",
+  });
+}
 
 const DEFAULT_MODEL =
   process.env.OPENROUTER_MODEL ??
@@ -31,7 +33,7 @@ export const openRouterProvider: AIProvider = {
     }
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await getClient().chat.completions.create({
         model: DEFAULT_MODEL,
         temperature: 0.2,
         messages: [

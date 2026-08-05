@@ -16,8 +16,13 @@ let budgetDay = "";
 let budgetUsed = 0;
 const DAILY_STRUCTURED_LIMIT = appConfig.gemini.dailyStructuredLimit;
 
+export function getGeminiApiKey(): string | undefined {
+  return process.env.GEMINI_API_KEY !== undefined ? process.env.GEMINI_API_KEY : appConfig.gemini.apiKey;
+}
+
 export function hasGeminiKey(): boolean {
-  return !!appConfig.gemini.apiKey;
+  const key = getGeminiApiKey();
+  return !!key && key.trim().length > 0;
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -50,7 +55,7 @@ export async function generateText(opts: {
 
   try {
     const ai = new GoogleGenAI({
-      apiKey: appConfig.gemini.apiKey as string,
+      apiKey: (getGeminiApiKey() || ""),
       httpOptions: { headers: { "User-Agent": "vouchedge-backend" } },
     });
     const response = await withTimeout(
@@ -89,7 +94,7 @@ export async function generateStructured<TSchema extends z.ZodTypeAny>(opts: {
 
   const model = opts.model ?? appConfig.gemini.brainModel;
   try {
-    const ai = new GoogleGenAI({ apiKey: appConfig.gemini.apiKey as string, httpOptions: { headers: { "User-Agent": "vouchedge-brain" } } });
+    const ai = new GoogleGenAI({ apiKey: (getGeminiApiKey() || ""), httpOptions: { headers: { "User-Agent": "vouchedge-brain" } } });
     const response = await withTimeout(ai.models.generateContent({
       model,
       contents: opts.prompt,
@@ -128,7 +133,7 @@ export async function generateImage(opts: {
   }
 
   const ai = new GoogleGenAI({
-    apiKey: appConfig.gemini.apiKey as string,
+    apiKey: (getGeminiApiKey() || ""),
     httpOptions: {
       headers: {
         "User-Agent": "vouchedge-backend",

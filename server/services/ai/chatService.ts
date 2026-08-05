@@ -37,6 +37,13 @@ export async function generateAiChatResponse(
     fallback: "No response received",
   });
 
+  if (result.status === "no-key") {
+    return {
+      status: "no-key",
+      text: NO_KEY_TEXT,
+    };
+  }
+
   return {
     status: "success",
     text: result.text,

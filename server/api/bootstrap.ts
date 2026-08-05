@@ -12,9 +12,11 @@ import { routeTiming } from "../middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "../lib/sentry";
 import { validateProductionEnvAtBoot } from "../platform/config";
 import appConfig from "../platform/config/appConfig";
+import { bootstrapProviders } from "../services/ai/providers/bootstrap";
 
 export async function createApiApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();
+  bootstrapProviders();
   const app = express();
   
   initServerSentry(app);

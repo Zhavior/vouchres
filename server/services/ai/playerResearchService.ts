@@ -110,7 +110,7 @@ Return strict JSON: {"aiScore": <integer 10 to 99>, "report": "<markdown researc
 
     const parsed = result.data;
     return {
-      status: "success",
+      status: result.status === "live" || result.status === "cached" ? "success" : "simulated",
       aiScore: boundedScore(parsed.aiScore, local.aiScore),
       riskLevel: local.riskLevel,
       confidenceBand: local.confidenceBand,

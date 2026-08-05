@@ -83,7 +83,7 @@ export async function generateParlayEdgeReport(input: ParlayEdgeInput): Promise<
   "edgeScore": <integer 40 to 95>,
   "report": "<markdown report with correlation warnings and no betting-advice language>"
 }`,
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
     });
 
     const parsed = result.data;
@@ -91,7 +91,7 @@ export async function generateParlayEdgeReport(input: ParlayEdgeInput): Promise<
       status:
         result.status === "live" || result.status === "cached"
           ? "success"
-          : "fallback",
+          : "simulated",
       edgeScore: boundedScore(parsed.edgeScore, local.edgeScore),
       riskLevel: local.riskLevel,
       report: parsed.report?.trim() || local.report,
@@ -100,7 +100,7 @@ export async function generateParlayEdgeReport(input: ParlayEdgeInput): Promise<
     console.error("[ai:parlay-edge] Gemini report failed", error);
     return {
       ...local,
-      status: "fallback",
+      status: "simulated",
     };
   }
 }

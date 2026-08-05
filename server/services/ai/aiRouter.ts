@@ -5,10 +5,12 @@ import type {
 } from "./provider";
 
 import { getProvider } from "./providers";
+import { bootstrapProviders } from "./providers/bootstrap";
 
 const DEFAULT_PROVIDER = process.env.AI_PROVIDER ?? "gemini";
 
 export function getActiveProvider(): AIProvider {
+  bootstrapProviders();
   return getProvider(DEFAULT_PROVIDER);
 }
 
