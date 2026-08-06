@@ -137,7 +137,7 @@ export default function TodayPersonalizationPanel({
                 <img src={logoByTeamId(team.id) ?? ''} alt="" className="h-7 w-7 shrink-0 object-contain" loading="lazy" />
                 <span className="min-w-0">
                   <span className="block text-xs font-black">{team.abbreviation}</span>
-                  <span className="block truncate text-[10px] text-white/42">{team.name}</span>
+                  <span className="block truncate text-[10px] text-white/65">{team.name}</span>
                 </span>
               </button>
             );
@@ -157,7 +157,7 @@ export default function TodayPersonalizationPanel({
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-xs font-black text-white">{player.name}</span>
-                    <span className="block text-[10px] uppercase tracking-wider text-white/40">{player.team}</span>
+                    <span className="block text-[10px] uppercase tracking-wider text-white/65">{player.team}</span>
                   </span>
                 </button>
               );
@@ -175,7 +175,7 @@ export default function TodayPersonalizationPanel({
                 <span className="flex items-center justify-between gap-2 text-xs font-black text-white">
                   {interest.label}{selected ? <Check className="h-3.5 w-3.5 text-vouch-emerald" /> : null}
                 </span>
-                <span className="mt-1 block text-[10px] leading-4 text-white/42">{interest.detail}</span>
+                <span className="mt-1 block text-[10px] leading-4 text-white/65">{interest.detail}</span>
               </button>
             );
           })}
@@ -183,7 +183,7 @@ export default function TodayPersonalizationPanel({
       </PreferenceGroup>
 
       <PreferenceGroup title="In-app change alerts" helper={`${inAppAlertTypes.length} selected`}>
-        <p className="mb-2 text-[10px] leading-4 text-white/42">
+        <p className="mb-2 text-[10px] leading-4 text-white/65">
           These appear inside Today when you return or refresh. Background push delivery is not enabled.
         </p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -196,7 +196,7 @@ export default function TodayPersonalizationPanel({
                 <span className="flex items-center justify-between gap-2 text-xs font-black text-white">
                   {alert.label}{selected ? <Check className="h-3.5 w-3.5 text-vouch-emerald" /> : null}
                 </span>
-                <span className="mt-1 block text-[10px] leading-4 text-white/42">{alert.detail}</span>
+                <span className="mt-1 block text-[10px] leading-4 text-white/65">{alert.detail}</span>
               </button>
             );
           })}
@@ -224,7 +224,7 @@ function PreferenceGroup({ title, helper, children }: { title: string; helper: s
     <div className="mt-6">
       <div className="mb-2 flex items-end justify-between gap-3">
         <h3 className="text-xs font-black uppercase tracking-[0.14em] text-white/88">{title}</h3>
-        <p className="text-[10px] text-white/38">{helper}</p>
+        <p className="text-[10px] text-white/62">{helper}</p>
       </div>
       {children}
     </div>

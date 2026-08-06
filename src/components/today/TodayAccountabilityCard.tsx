@@ -33,7 +33,7 @@ export default function TodayAccountabilityCard({ savedSlips, finalGames, onSect
           <h2 className="mt-2 text-lg font-black tracking-tight text-white">
             {hasRecord ? `${record.settled} tracked result${record.settled === 1 ? '' : 's'} on your record` : 'Build an evidence record over time'}
           </h2>
-          <p className="mt-1 text-xs leading-5 text-white/48">
+          <p className="mt-1 text-xs leading-5 text-white/65">
             {hasRecord
               ? 'Review what you tracked against what actually happened. Wins, losses and voids remain visible.'
               : 'Save a researched decision before the game so the outcome can be reviewed honestly later.'}
@@ -66,7 +66,7 @@ function RecordStat({ label, value, tone }: { label: string; value: number; tone
   return (
     <div className="rounded-xl border border-white/8 bg-black/25 px-2 py-2.5 text-center">
       <p className={`font-mono text-sm font-black ${tone}`}>{value}</p>
-      <p className="mt-0.5 truncate text-[8px] font-bold uppercase tracking-wider text-white/35">{label}</p>
+      <p className="mt-0.5 truncate text-[8px] font-bold uppercase tracking-wider text-white/60">{label}</p>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import type { Parlay } from '../../types';
 import { getPlayerInitials } from '../../lib/mlbHeadshot';
 import { AURORA_LABEL } from '../../theme/auroraTokens';
 import type { TodayReelSlide, TodayReelVisual } from './todayDecisionReelModel';
+import { SIGNAL_TIER_STYLES, signalTierFor } from './todaySignalTier';
 
 export type BriefingFilter = 'all' | 'signals' | 'alerts' | 'activity';
 
@@ -95,7 +96,7 @@ export default function TodayDecisionReel({
       <div className="flex min-h-44 items-center justify-center border border-white/[0.08] bg-white/[0.02] px-6 text-center">
         <div>
           <p className="text-sm font-bold text-white/70">Nothing in this briefing category yet.</p>
-          <p className="mt-1 text-xs text-white/42">VouchEdge will show it when verified slate data is available.</p>
+          <p className="mt-1 text-xs text-white/65">VouchEdge will show it when verified slate data is available.</p>
         </div>
       </div>
     );
@@ -124,7 +125,7 @@ export default function TodayDecisionReel({
       {itemCount > 1 ? (
         <div data-testid="today-reel-progress" className="mt-2 flex items-center justify-between gap-3 sm:absolute sm:-top-14 sm:right-0 sm:mt-0 sm:justify-end">
           <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
-            <span className="font-mono text-[10px] font-bold text-white/45">{Math.min(activeIndex + 1, itemCount)} of {itemCount}</span>
+            <span className="font-mono text-[10px] font-bold text-white/65">{Math.min(activeIndex + 1, itemCount)} of {itemCount}</span>
             <span className="flex items-center gap-1" aria-hidden="true">
               {Array.from({ length: itemCount }, (_, index) => (
                 <span key={index} className={`h-1.5 rounded-full transition-[width,background-color] ${index === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'}`} />
@@ -220,18 +221,20 @@ function PlayerSignalCard({
   onAddToSlip?: () => void;
 }) {
   const isOfficial = /official|confirmed/i.test(slide.kicker);
+  const tier = signalTierFor(visual.score);
+  const tierStyle = SIGNAL_TIER_STYLES[tier.id];
 
   return (
     <article
       data-reel-card
       style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
-      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
+      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,0,0,0.9)] ${tierStyle.cardBorder}`}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,148,0.13),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0" style={{ background: tierStyle.wash }} />
 
       <div style={{ height: 176 }} className="relative shrink-0 overflow-hidden border-b border-white/[0.08] bg-gradient-to-br from-[#071d29] via-[#07131d] to-[#050a10]">
         <div className="absolute inset-x-4 top-3 z-20 flex items-center justify-between gap-3">
-          <p className={`${AURORA_LABEL} text-vouch-emerald`}>Top HR signal</p>
+          <p className={`${AURORA_LABEL} ${tierStyle.text}`}>Top HR signal</p>
           <span className={`rounded-full border px-2 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] ${
             isOfficial
               ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'
@@ -249,9 +252,14 @@ function PlayerSignalCard({
           <Portrait src={visual.headshotUrl} name={visual.name} />
         </div>
 
-        <div style={{ height: 92, width: 92 }} className="absolute bottom-5 right-4 z-10 flex flex-col items-center justify-center rounded-full border border-vouch-emerald/40 bg-[#05141a]/95 shadow-[0_0_36px_-12px_rgba(0,255,148,0.9)]">
-          <strong className="font-mono text-4xl font-black leading-none text-vouch-emerald">{visual.score}</strong>
-          <span className="mt-1 font-mono text-[8px] font-black uppercase tracking-[0.12em] text-vouch-emerald/70">Signal /100</span>
+        <div
+          style={{ height: 92, width: 92, boxShadow: tierStyle.halo }}
+          className={`absolute bottom-5 right-4 z-10 flex flex-col items-center justify-center rounded-full border bg-[#05141a]/95 ${tierStyle.border}`}
+        >
+          <strong className={`font-mono text-4xl font-black leading-none ${tierStyle.text}`}>{visual.score}</strong>
+          <span className={`mt-1 font-mono text-[8px] font-black uppercase tracking-[0.12em] ${tierStyle.caption}`}>
+            {tier.label}
+          </span>
         </div>
       </div>
 
@@ -267,7 +275,7 @@ function PlayerSignalCard({
           }`}>
             {isOfficial ? 'Official lineup' : 'Lineup unconfirmed'}
           </span>
-          <span className="text-[9px] font-medium text-white/35">Score updated with current board</span>
+          <span className="text-[9px] font-medium text-white/60">Score updated with current board</span>
         </div>
 
         <div className="mt-3 grid gap-2 border-y border-white/[0.08] py-3">
@@ -307,7 +315,7 @@ function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionCh
       </div>
       <div className="flex min-h-0 flex-1 flex-col p-4">
         <h3 className="text-xl font-black text-white">{slip.legs.length}-leg slip in progress</h3>
-        <p className="mt-1 text-xs text-white/50">Saved at {formatTime(slip.createdAt)} · {slip.totalOdds || 'Odds unavailable'}</p>
+        <p className="mt-1 text-xs text-white/65">Saved at {formatTime(slip.createdAt)} · {slip.totalOdds || 'Odds unavailable'}</p>
         <div className="mt-4 space-y-2 border-y border-white/[0.07] py-3">
           {visibleLegs.map((leg) => (
             <div key={leg.id} className="flex items-start justify-between gap-3 text-xs">
@@ -316,10 +324,10 @@ function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionCh
             </div>
           ))}
           {slip.legs.length > visibleLegs.length ? (
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">+{slip.legs.length - visibleLegs.length} more leg</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">+{slip.legs.length - visibleLegs.length} more leg</p>
           ) : null}
         </div>
-        <p className="mt-3 text-xs leading-5 text-white/45">Track status, review concentration, and see verified results after grading.</p>
+        <p className="mt-3 text-xs leading-5 text-white/65">Track status, review concentration, and see verified results after grading.</p>
         <button
           type="button"
           onClick={() => onSectionChange('live_parlays')}
@@ -335,13 +343,18 @@ function SlipBriefingCard({ slip, onSectionChange }: { slip: Parlay; onSectionCh
 
 function CompactVisual({ visual, tone }: { visual: TodayReelVisual; tone: keyof typeof ACCENTS }) {
   if (visual.type === 'portrait') {
+    const tier = signalTierFor(visual.score);
+    const tierStyle = SIGNAL_TIER_STYLES[tier.id];
     return (
       <div className="absolute inset-0 flex items-end justify-center">
         {visual.teamLogo ? <img src={visual.teamLogo} alt="" className="absolute right-3 top-8 h-28 w-28 object-contain opacity-[0.08]" /> : null}
         <Portrait src={visual.headshotUrl} name={visual.name} />
-        <div className="absolute bottom-3 right-3 z-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-vouch-emerald/35 bg-[#06141a]/90 shadow-[0_0_30px_-12px_rgba(0,255,148,0.75)]">
-          <strong className="font-mono text-3xl font-black text-vouch-emerald">{visual.score}</strong>
-          <span className="text-[8px] font-black uppercase tracking-wider text-vouch-emerald/75">/100</span>
+        <div
+          style={{ boxShadow: tierStyle.halo }}
+          className={`absolute bottom-3 right-3 z-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border bg-[#06141a]/90 ${tierStyle.border}`}
+        >
+          <strong className={`font-mono text-3xl font-black ${tierStyle.text}`}>{visual.score}</strong>
+          <span className={`text-[8px] font-black uppercase tracking-wider ${tierStyle.caption}`}>{tier.label}</span>
         </div>
       </div>
     );
@@ -351,19 +364,22 @@ function CompactVisual({ visual, tone }: { visual: TodayReelVisual; tone: keyof 
     return (
       <div className="absolute inset-x-0 bottom-0 top-9 flex items-center justify-center gap-4">
         <TeamMark logo={visual.awayLogo} name={visual.awayName} />
-        <span className="font-mono text-xl font-black text-white/35">@</span>
+        <span className="font-mono text-xl font-black text-white/55">@</span>
         <TeamMark logo={visual.homeLogo} name={visual.homeName} />
       </div>
     );
   }
+
+  const tier = signalTierFor(visual.value);
+  const tierStyle = SIGNAL_TIER_STYLES[tier.id];
 
   return (
     <div className="absolute inset-x-0 bottom-0 top-9 flex items-center justify-center">
       {visual.awayLogo ? <img src={visual.awayLogo} alt="" className="absolute left-7 h-16 w-16 object-contain opacity-35" /> : null}
       <div className="relative z-10 flex h-28 w-28 flex-col items-center justify-center rounded-full border border-white/10 bg-black/45 shadow-[0_0_40px_-18px_rgba(0,240,255,0.8)]">
         <Gauge className={`mb-1 h-4 w-4 ${ACCENTS[tone].text}`} />
-        <strong className={`font-mono text-4xl font-black ${ACCENTS[tone].text}`}>{visual.value || '—'}</strong>
-        <span className="text-[8px] font-black uppercase tracking-wider text-white/40">{visual.label}</span>
+        <strong className={`font-mono text-4xl font-black ${tierStyle.text}`}>{visual.value || '—'}</strong>
+        <span className="text-[8px] font-black uppercase tracking-wider text-white/60">{visual.label}</span>
       </div>
       {visual.homeLogo ? <img src={visual.homeLogo} alt="" className="absolute right-7 h-16 w-16 object-contain opacity-35" /> : null}
     </div>
@@ -374,7 +390,7 @@ function Evidence({ icon: Icon, label, text, tone }: { icon: React.ComponentType
   return (
     <div>
       <p className={`flex items-center gap-1.5 ${AURORA_LABEL} ${tone}`}><Icon className="h-3 w-3" />{label}</p>
-      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/50">{text}</p>
+      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/65">{text}</p>
     </div>
   );
 }
@@ -395,7 +411,7 @@ function Portrait({ src, name }: { src: string | null; name: string }) {
   useEffect(() => setFailed(false), [src]);
 
   if (!src || failed) {
-    return <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-3xl font-black text-white/30">{getPlayerInitials(name)}</div>;
+    return <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-3xl font-black text-white/55">{getPlayerInitials(name)}</div>;
   }
 
   return <img src={src} alt={name} onError={() => setFailed(true)} style={{ height: 150, width: 190 }} className="object-contain object-bottom" />;

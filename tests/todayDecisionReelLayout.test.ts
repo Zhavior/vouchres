@@ -28,7 +28,10 @@ describe('Today decision reel layout stability', () => {
 
   it('centers player headshots inside their reserved frame', () => {
     expect(source).toContain('style={{ height: 140, width: 168 }}');
-    expect(source).toContain('style={{ height: 92, width: 92 }}');
+    // The score medallion also carries a tier-dependent boxShadow, so assert the
+    // reserved dimensions rather than the whole style literal. The size is what
+    // guards against layout shift; the halo is paint-only.
+    expect(source).toContain('height: 92, width: 92');
     expect(source).toContain('style={{ height: 150, width: 190 }}');
     expect(source).toContain('className="object-contain object-bottom"');
     expect(source).not.toContain('object-[center_18%]');

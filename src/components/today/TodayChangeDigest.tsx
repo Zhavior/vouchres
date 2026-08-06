@@ -25,7 +25,7 @@ export default function TodayChangeDigest({ changes, baselineCapturedAt, onMarkA
         <div>
           <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Since your last check</p>
           <h2 id="today-change-digest-title" className="mt-1 text-lg font-black tracking-tight text-white">What changed</h2>
-          {baselineCapturedAt ? <p className="mt-1 text-[10px] text-white/35">Compared with {formatCheckedTime(baselineCapturedAt)}</p> : null}
+          {baselineCapturedAt ? <p className="mt-1 text-[10px] text-white/60">Compared with {formatCheckedTime(baselineCapturedAt)}</p> : null}
         </div>
         <button type="button" onClick={onMarkAsChecked} className="inline-flex min-h-10 shrink-0 items-center rounded-xl border border-white/12 bg-white/[0.04] px-3 text-[10px] font-black text-white/65 transition hover:border-vouch-cyan/30 hover:text-vouch-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan">
           Mark checked
@@ -44,7 +44,7 @@ export default function TodayChangeDigest({ changes, baselineCapturedAt, onMarkA
               <div className="min-w-0 flex-1">
                 <p className={`font-mono text-[9px] font-black uppercase tracking-[0.14em] ${meta.tone}`}>{meta.label}</p>
                 <h3 className="mt-1 text-sm font-black text-white">{change.title}</h3>
-                <p className="mt-1 text-xs leading-5 text-white/50">{change.detail}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">{change.detail}</p>
               </div>
               {onOpenSubject ? (
                 <button type="button" onClick={() => onOpenSubject(change)} aria-label={`Open ${change.title}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/[0.05] hover:text-vouch-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vouch-cyan">

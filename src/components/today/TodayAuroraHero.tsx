@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Clock3, Radio, ShieldAlert, Sparkles } from '
 import { getPlayerInitials } from '../../lib/mlbHeadshot';
 import type { TodayDecision } from './todayDecisionModel';
 import type { TodayReelSlide, TodayReelVisual } from './todayDecisionReelModel';
+import { SIGNAL_TIER_STYLES, signalTierFor } from './todaySignalTier';
 
 export type TodayHeroState = 'loading' | 'live' | 'pregame' | 'postgame' | 'no-slate' | 'degraded';
 
@@ -47,7 +48,7 @@ export default function TodayAuroraHero({
               <StateIcon className="h-3.5 w-3.5" aria-hidden="true" />
               {meta.label}
             </span>
-            <span className="inline-flex min-h-8 items-center rounded-full border border-white/10 bg-black/25 px-3 font-mono text-[10px] font-bold text-white/52">
+            <span className="inline-flex min-h-8 items-center rounded-full border border-white/10 bg-black/25 px-3 font-mono text-[10px] font-bold text-white/70">
               {freshnessLabel}
             </span>
           </div>
@@ -78,7 +79,7 @@ export default function TodayAuroraHero({
               {decision.ctaLabel}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
-            <span className="inline-flex items-center justify-center gap-2 text-center text-[11px] font-medium text-white/40 sm:justify-start sm:text-left">
+            <span className="inline-flex items-center justify-center gap-2 text-center text-[11px] font-medium text-white/70 sm:justify-start sm:text-left">
               <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald" />
               Probability-based research. Outcomes are not guaranteed.
             </span>
@@ -97,13 +98,19 @@ function HeroVisual({ visual, state }: { visual: TodayReelVisual | null; state: 
   if (!visual) return <HeroPlaceholder state={state} />;
 
   if (visual.type === 'portrait') {
+    const tier = signalTierFor(visual.score);
+    const tierStyle = SIGNAL_TIER_STYLES[tier.id];
     return (
       <div className="absolute inset-0 flex items-end justify-center">
         {visual.teamLogo ? <img src={visual.teamLogo} alt="" className="absolute right-4 top-4 h-40 w-40 object-contain opacity-[0.09] sm:h-52 sm:w-52" loading="lazy" decoding="async" /> : null}
         <HeroPortrait src={visual.headshotUrl} name={visual.name} />
-        <div className="absolute bottom-5 right-5 flex h-24 w-24 flex-col items-center justify-center rounded-full border border-vouch-emerald/35 bg-[#041419]/90 shadow-[0_0_55px_-15px_rgba(0,255,148,.8)] sm:bottom-8 sm:right-8 sm:h-28 sm:w-28">
-          <strong className="font-mono text-4xl font-black leading-none text-vouch-emerald sm:text-5xl">{visual.score}</strong>
-          <span className="mt-1 font-mono text-[9px] font-black uppercase tracking-[0.14em] text-vouch-emerald/70">{visual.scoreLabel}</span>
+        <div
+          style={{ boxShadow: tierStyle.halo }}
+          className={`absolute bottom-5 right-5 flex h-24 w-24 flex-col items-center justify-center rounded-full border bg-[#041419]/90 sm:bottom-8 sm:right-8 sm:h-28 sm:w-28 ${tierStyle.border}`}
+        >
+          <strong className={`font-mono text-4xl font-black leading-none sm:text-5xl ${tierStyle.text}`}>{visual.score}</strong>
+          <span className={`mt-1 font-mono text-[9px] font-black uppercase tracking-[0.1em] ${tierStyle.caption}`}>{tier.label}</span>
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-white/60">{visual.scoreLabel}</span>
         </div>
         <p className="absolute bottom-5 left-5 max-w-[180px] text-xl font-black leading-tight text-white sm:bottom-8 sm:left-8 sm:text-2xl">{visual.name}</p>
       </div>
@@ -115,20 +122,29 @@ function HeroVisual({ visual, state }: { visual: TodayReelVisual | null; state: 
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
         <div className="flex w-full max-w-md items-center justify-center gap-5 sm:gap-8">
           <HeroTeam logo={visual.awayLogo} name={visual.awayName} />
-          <span className="font-mono text-lg font-black text-white/30">@</span>
+          <span className="font-mono text-lg font-black text-white/55">@</span>
           <HeroTeam logo={visual.homeLogo} name={visual.homeName} />
         </div>
-        <span className="mt-5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white/50">{visual.status}</span>
+        <span className="mt-5 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white/70">{visual.status}</span>
       </div>
     );
   }
 
+  const tier = signalTierFor(visual.value);
+  const tierStyle = SIGNAL_TIER_STYLES[tier.id];
+
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       {visual.awayLogo ? <img src={visual.awayLogo} alt="" className="absolute left-5 h-24 w-24 object-contain opacity-25 sm:left-8 sm:h-32 sm:w-32" loading="lazy" decoding="async" /> : null}
-      <div className="relative flex h-36 w-36 flex-col items-center justify-center rounded-full border border-vouch-cyan/30 bg-[#03141d]/80 shadow-[0_0_70px_-18px_rgba(0,240,255,.85)]">
-        <strong className="font-mono text-5xl font-black text-vouch-cyan">{visual.value || '—'}</strong>
-        <span className="mt-1 max-w-28 text-center font-mono text-[9px] font-black uppercase tracking-wider text-white/45">{visual.label}</span>
+      <div
+        style={{ boxShadow: tierStyle.halo }}
+        className={`relative flex h-36 w-36 flex-col items-center justify-center rounded-full border bg-[#03141d]/80 ${tierStyle.border}`}
+      >
+        <strong className={`font-mono text-5xl font-black ${tierStyle.text}`}>{visual.value || '—'}</strong>
+        {tier.id === 'unknown' ? null : (
+          <span className={`mt-0.5 font-mono text-[9px] font-black uppercase tracking-[0.1em] ${tierStyle.caption}`}>{tier.label}</span>
+        )}
+        <span className="mt-1 max-w-28 text-center font-mono text-[9px] font-black uppercase tracking-wider text-white/65">{visual.label}</span>
       </div>
       {visual.homeLogo ? <img src={visual.homeLogo} alt="" className="absolute right-5 h-24 w-24 object-contain opacity-25 sm:right-8 sm:h-32 sm:w-32" loading="lazy" decoding="async" /> : null}
     </div>
@@ -151,7 +167,7 @@ function HeroPortrait({ src, name }: { src: string | null; name: string }) {
   useEffect(() => setFailed(false), [src]);
 
   if (!src || failed) {
-    return <div className="mb-12 flex h-36 w-36 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-4xl font-black text-white/30">{getPlayerInitials(name)}</div>;
+    return <div className="mb-12 flex h-36 w-36 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] font-mono text-4xl font-black text-white/55">{getPlayerInitials(name)}</div>;
   }
 
   return <img src={src} alt={name} onError={() => setFailed(true)} className="h-[92%] w-[88%] object-contain object-bottom drop-shadow-[0_24px_45px_rgba(0,0,0,.5)]" loading="eager" decoding="async" fetchPriority="high" />;

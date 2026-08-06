@@ -145,7 +145,7 @@ export function MostVouchedTodayPageZ8({ onNavigate, onAddPlayerToSlip }: MostVo
               <label className="relative flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-black/40 px-3 text-xs font-bold text-white">
                 <Calendar className="h-4 w-4 text-vouch-cyan" />
                 <span>{isToday ? 'Today' : selectedDate}</span>
-                <ChevronDown className="h-4 w-4 text-white/40" />
+                <ChevronDown className="h-4 w-4 text-white/65" />
                 <input
                   type="date"
                   value={selectedDate}
