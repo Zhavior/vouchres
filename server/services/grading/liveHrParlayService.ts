@@ -1,6 +1,21 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { getTodayHomeRuns, type HrEvent } from "../mlb/hrFeedService";
 
+export interface LiveHrScanOptions {
+  /**
+   * Pre-fetched HR feed events. When supplied the upstream feed is NOT re-fetched —
+   * the caller already holds it (the 30s live loop fetches once and settles + notifies
+   * from the same payload).
+   *
+   * Coverage note: injected events only cover the dates the caller fetched. Legs whose
+   * game_date falls outside that set are simply not matched here; the unscheduled-feed
+   * path (`applyLiveHrParlayMatches()` with no options) and the nightly grader cover them.
+   * Cross-date false positives are impossible — matching is keyed on gamePk, which is
+   * unique per game.
+   */
+  events?: HrEvent[];
+}
+
 export interface LiveHrLegMatch {
   event: HrEvent;
   leg: {
@@ -60,7 +75,10 @@ function ymdFromValue(value: unknown): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrLegMatch[]> {
+export async function previewLiveHrParlayMatches(
+  date?: string,
+  options: LiveHrScanOptions = {},
+): Promise<LiveHrLegMatch[]> {
   const admin = await getSupabaseAdmin();
 
   const { data: pendingLegs, error: legsError } = await admin
@@ -83,22 +101,26 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
     return [];
   }
 
-  const dates = [
-    ...new Set(
-      candidateLegs.map((leg: any) =>
-        date ||
-        ymdFromValue(
-          leg?.game_date ||
-          leg?.picks?.game_date ||
-          leg?.picks?.created_at
-        )
-      )
-    ),
-  ];
-
   const events: HrEvent[] = [];
-  for (const scanDate of dates) {
-    events.push(...(await getTodayHomeRuns(scanDate)).events);
+  if (options.events) {
+    events.push(...options.events);
+  } else {
+    const dates = [
+      ...new Set(
+        candidateLegs.map((leg: any) =>
+          date ||
+          ymdFromValue(
+            leg?.game_date ||
+            leg?.picks?.game_date ||
+            leg?.picks?.created_at
+          )
+        )
+      ),
+    ];
+
+    for (const scanDate of dates) {
+      events.push(...(await getTodayHomeRuns(scanDate)).events);
+    }
   }
 
   if (events.length === 0) {

@@ -29,6 +29,11 @@ import { finalizeDueTrustLocks } from "../../services/parlays/userParlayService"
  * (`vercel.json` → `"crons": []`) while Render owns scheduling — see
  * docs/PRODUCTION_HOSTING.md.
  *
+ * live-hr-sync specifically: the fast path is the in-process loop in
+ * server/cron/liveHrNotificationLoop.ts (~30s), with `vouchedge-live-hr-sync`
+ * (dist/liveHrSyncJob.cjs) as the Render-cron backstop. All three share the
+ * `parlays:live-hr-sync` lock, so this route can never race them.
+ *
  * Multi-instance safety:
  *   - gradePendingPicks() uses process-local coalescing + Upstash distributed lock
  *     (`grading:pending-picks` in server/lib/distributedLock.ts) when Redis is configured

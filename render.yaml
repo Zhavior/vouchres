@@ -99,6 +99,37 @@ services:
         sync: false
 
   - type: cron
+    name: vouchedge-live-hr-sync
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    # Backstop only. The in-process loop in the web service settles home runs within
+    # ~30s; this catches the two cases it can't — web service down, and legs whose
+    # game_date isn't today. Windowed to MLB hours (roughly 16:00–06:00 UTC) so we
+    # aren't paying for container spin-ups all morning. Widen if you add other sports.
+    schedule: "*/20 0-6,16-23 * * *"
+    startCommand: node dist/liveHrSyncJob.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: MLB_API_BASE_URL
+        value: https://statsapi.mlb.com/api
+      # Shares the parlays:live-hr-sync lock with the web service's HTTP cron route
+      # and the in-process loop. Without Redis this degrades to a process-local mutex,
+      # which does NOT protect against the web dyno settling concurrently.
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+
+  - type: cron
     name: vouchedge-deleter
     runtime: node
     plan: starter
@@ -116,6 +147,6 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
 
-# NOTE: Single cron host — Render owns grade/delete cron jobs below.
+# NOTE: Single cron host — Render owns the grade/live-hr-sync/delete cron jobs above.
 # Keep vercel.json → "crons": [] while these Render crons are enabled.
 # See docs/PRODUCTION_HOSTING.md. Do not enable Vercel Cron + Render Cron together.

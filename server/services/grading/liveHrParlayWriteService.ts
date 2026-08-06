@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
-import { previewLiveHrParlayMatches } from "./liveHrParlayService";
+import { previewLiveHrParlayMatches, type LiveHrScanOptions } from "./liveHrParlayService";
 import { persistGradingRunLogs } from "./gradingLogService";
 
 export interface LiveHrSyncResult {
@@ -112,9 +112,12 @@ async function refreshParentPickStatusFromLegs(admin: any, pickId: string): Prom
 }
 
 
-export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyncResult> {
+export async function applyLiveHrParlayMatches(
+  date?: string,
+  options: LiveHrScanOptions = {},
+): Promise<LiveHrSyncResult> {
   const admin = await getSupabaseAdmin();
-  const matches = await previewLiveHrParlayMatches(date);
+  const matches = await previewLiveHrParlayMatches(date, options);
 
   const result: LiveHrSyncResult = {
     checked: matches.length,
@@ -129,7 +132,7 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
     const leg = match.leg;
     const eventKey = buildEventKey(match);
 
-    const { error: eventError } = await admin
+    const { data: insertedEventRows, error: eventError } = await admin
       .from("parlay_events")
       .upsert(
         {
@@ -145,7 +148,8 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
           processed_at: new Date().toISOString(),
         },
         { onConflict: "event_key", ignoreDuplicates: true }
-      );
+      )
+      .select("event_key");
 
     if (eventError) {
       console.error("[liveHrParlayWrite] event insert failed", eventError.message);
@@ -153,7 +157,17 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
       continue;
     }
 
-    result.insertedEvents += 1;
+    // ON CONFLICT DO NOTHING returns only rows it actually inserted, so an empty
+    // result means this HR was already recorded on a previous scan.
+    if ((insertedEventRows?.length ?? 0) > 0) {
+      result.insertedEvents += 1;
+    } else {
+      result.duplicateEvents += 1;
+    }
+
+    // Fall through on duplicates on purpose — the event row may have landed on an
+    // earlier pass whose leg update then failed. The leg update is guarded by
+    // status='pending', so re-running settles nothing twice.
 
     const update: Record<string, any> = {
       status: "won",
