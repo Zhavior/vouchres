@@ -60,6 +60,18 @@ describe('Today decision-first layout', () => {
     expect(source).toContain("return 'Updated just now'");
   });
 
+  it('matches the hero visual to wherever the decision is sending the user', () => {
+    // A saved favourite team used to force the generic decision slide, hiding
+    // the ranked player behind "N MLB games are live".
+    expect(source).toContain("decision.ctaSection === 'hr_board'");
+    expect(source).toContain("reelSlides.find((slide) => slide.id === 'hr-player')");
+    expect(source).not.toContain('preferences.favoriteMlbTeamIds.length > 0');
+  });
+
+  it('feeds the fresh live board into the decision so the count is not stale', () => {
+    expect(source).toContain('liveGameCards: liveGames');
+  });
+
   it('renders the computed resume flow and routes it to the model destination', () => {
     expect(source).toContain('id="today-resume-card"');
     expect(source).toContain('data-testid="today-resume-action"');

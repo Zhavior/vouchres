@@ -1,4 +1,5 @@
 import type { DailyMlbReport } from '../../types/mlb';
+import type { LiveGameCard } from '../../types/liveGames';
 
 export type TodayDecisionTone = 'cyan' | 'emerald' | 'amber';
 export type TodayAttentionKind = 'data' | 'slate' | 'action';
@@ -37,14 +38,41 @@ interface TodayDecisionInput {
   pendingSlips: number;
   hrSignalCount: number | null;
   hrSignalsLoading: boolean;
+  /** Fresh live board, when the shell has it. Preferred over the report's
+   *  snapshot statuses — see `gameStateCounts`. */
+  liveGameCards?: LiveGameCard[];
 }
 
 const LIVE_STATUS = /live|in progress|manager challenge|delayed/i;
 const FINAL_STATUS = /final|game over|completed/i;
 
-function gameStateCounts(report: DailyMlbReport | null) {
+/**
+ * The daily report is a materialised snapshot and lags the live feed: a game
+ * that has moved Warmup → In Progress still reads as pregame there, so the hero
+ * announced "1 MLB game is live" while Live Games showed two. When the fresher
+ * live board is available it wins, falling back to the report's statuses.
+ *
+ * `isLive` / `isFinal` are optional on the card contract, so each card falls
+ * back to its status string rather than being silently counted as pregame.
+ */
+function gameStateCounts(report: DailyMlbReport | null, liveGameCards?: LiveGameCard[]) {
   let liveGames = 0;
   let finalGames = 0;
+
+  if (liveGameCards && liveGameCards.length > 0) {
+    for (const card of liveGameCards) {
+      const status = card.status ?? '';
+      if (card.isLive ?? LIVE_STATUS.test(status)) liveGames += 1;
+      else if (card.isFinal ?? FINAL_STATUS.test(status)) finalGames += 1;
+    }
+
+    const total = Math.max(report?.gameCount ?? 0, liveGameCards.length);
+    return {
+      liveGames,
+      finalGames,
+      upcomingGames: Math.max(0, total - liveGames - finalGames),
+    };
+  }
 
   for (const game of report?.games ?? []) {
     if (LIVE_STATUS.test(game.status)) liveGames += 1;
@@ -107,8 +135,9 @@ export function buildTodayDecision({
   pendingSlips,
   hrSignalCount,
   hrSignalsLoading,
+  liveGameCards,
 }: TodayDecisionInput): TodayDecision {
-  const { liveGames, upcomingGames, finalGames } = gameStateCounts(report);
+  const { liveGames, upcomingGames, finalGames } = gameStateCounts(report, liveGameCards);
   const quality = qualityCopy(report, loading, hasError);
   const availableHrSignals = hrSignalCount ?? 0;
 
@@ -132,7 +161,10 @@ export function buildTodayDecision({
       ctaLabel: pendingSlips === 1 ? 'Monitor saved slip' : 'Monitor saved slips',
       ctaSection: 'live_parlays',
     };
-  } else if (liveGames > 0) {
+    // First pitch somewhere only ends research when there is nothing left to
+    // research. Treating any live game as "stop" replaced the top player with
+    // slate status while most of the slate was still upcoming.
+  } else if (liveGames > 0 && (upcomingGames === 0 || availableHrSignals === 0)) {
     primary = {
       tone: 'emerald',
       title: `${liveGames} MLB game${liveGames === 1 ? ' is' : 's are'} live`,
@@ -152,7 +184,9 @@ export function buildTodayDecision({
     primary = {
       tone: report?.dataQuality === 'full' ? 'emerald' : 'cyan',
       title: 'Today\'s HR research board is available',
-      description: `${availableHrSignals} research signal${availableHrSignals === 1 ? '' : 's'} available on the HR board. Compare the evidence and risks before choosing a player.`,
+      description: liveGames > 0
+        ? `${liveGames} game${liveGames === 1 ? ' is' : 's are'} already underway, but ${upcomingGames} still ${upcomingGames === 1 ? 'has' : 'have'} not started. ${availableHrSignals} research signal${availableHrSignals === 1 ? '' : 's'} remain on the HR board — compare the evidence and risks before choosing a player.`
+        : `${availableHrSignals} research signal${availableHrSignals === 1 ? '' : 's'} available on the HR board. Compare the evidence and risks before choosing a player.`,
       ctaLabel: 'Review HR Intelligence',
       ctaSection: 'hr_board',
     };

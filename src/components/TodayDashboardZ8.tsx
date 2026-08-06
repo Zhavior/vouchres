@@ -116,8 +116,9 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
       pendingSlips: pendingSlipList.length,
       hrSignalCount: hrBoard ? visibleHrRows.length : null,
       hrSignalsLoading: hrBoardQuery.loading,
+      liveGameCards: liveGames,
     }),
-    [dailyReportQuery.isError, dailyReportQuery.isLoading, hrBoard, hrBoardQuery.loading, pendingSlipList.length, report, savedSlips.length, visibleHrRows.length],
+    [dailyReportQuery.isError, dailyReportQuery.isLoading, hrBoard, hrBoardQuery.loading, liveGames, pendingSlipList.length, report, savedSlips.length, visibleHrRows.length],
   );
 
   const reelSlides = useMemo(
@@ -131,9 +132,15 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
   );
 
   const featuredPlayer = rankedHrRows[0] ?? null;
-  const heroSlide = preferences.favoriteMlbTeamIds.length > 0
-    ? reelSlides.find((slide) => slide.id === 'decision') ?? reelSlides[0] ?? null
-    : reelSlides[0] ?? null;
+  // The hero visual follows wherever the decision is sending the user, so the
+  // picture and the headline always agree. Research → the ranked top player
+  // (the reel is already sorted by saved teams and followed players); anything
+  // else → the slate matchup. Previously a saved favourite team forced the
+  // decision slide regardless, so personalisation hid the top player behind
+  // slate status copy.
+  const heroSlide = decision.ctaSection === 'hr_board'
+    ? reelSlides.find((slide) => slide.id === 'hr-player') ?? reelSlides[0] ?? null
+    : reelSlides.find((slide) => slide.id === 'decision') ?? reelSlides[0] ?? null;
   const personalizationLabel = preferences.favoriteMlbTeamIds.length + preferences.followedPlayers.length > 0
     ? 'Ranked using your saved teams and players'
     : undefined;
@@ -311,7 +318,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
           <div className="min-w-0 pl-1">
             <p className={`${AURORA_LABEL} text-vouch-cyan`}>{decision.resumeLabel}</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-white">{decision.resumeTitle}</h2>
-            <p className="mt-1 text-xs leading-5 text-white/48">{decision.resumeDetail}</p>
+            <p className="mt-1 text-xs leading-5 text-white/65">{decision.resumeDetail}</p>
           </div>
           <button
             type="button"
@@ -370,7 +377,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
                   <Zap className="h-4 w-4 text-vouch-emerald" />
                   <h2 className="text-xs font-black uppercase tracking-[0.16em] text-white">Daily Intelligence Briefing</h2>
                 </div>
-                <span className={`${AURORA_LABEL} text-white/35`}>{reelSlides.length + (activeSlip ? 1 : 0)} decision cards</span>
+                <span className={`${AURORA_LABEL} text-white/60`}>{reelSlides.length + (activeSlip ? 1 : 0)} decision cards</span>
               </div>
               <TodayDecisionReel
                 slides={reelSlides}
@@ -390,7 +397,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
                     className={`inline-flex min-h-8 shrink-0 items-center rounded-full border px-4 text-[11px] font-bold tracking-wide transition ${
                       briefingFilter === f.id
                         ? 'border-vouch-emerald/45 bg-vouch-emerald/15 text-vouch-emerald shadow-[0_0_12px_rgba(49,181,131,0.15)]'
-                        : 'border-white/10 bg-white/[0.03] text-white/45 hover:text-white/80'
+                        : 'border-white/10 bg-white/[0.03] text-white/65 hover:text-white'
                     }`}
                   >
                     {f.label}
@@ -423,7 +430,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
                   <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-white/[0.07]">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-black text-white">{activeSlip.title || 'Active Slip'}</p>
-                      <p className="mt-0.5 text-[11px] text-white/40">{activeSlip.legs.length} legs · {activeSlip.mode === 'REAL' ? 'Tracked' : 'Practice'}</p>
+                      <p className="mt-0.5 text-[11px] text-white/65">{activeSlip.legs.length} legs · {activeSlip.mode === 'REAL' ? 'Tracked' : 'Practice'}</p>
                     </div>
                     <span className="shrink-0 font-mono text-sm font-black text-vouch-emerald">{activeSlip.totalOdds || 'TBD'}</span>
                   </div>
@@ -432,7 +439,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
                       <div key={leg.id} className="flex items-center justify-between gap-4 px-4 py-2.5">
                         <div className="min-w-0">
                           <p className="truncate text-xs font-bold text-white/80">{leg.selection}</p>
-                          <p className="mt-0.5 truncate text-[10px] text-white/40">{leg.market}</p>
+                          <p className="mt-0.5 truncate text-[10px] text-white/65">{leg.market}</p>
                         </div>
                         <span className="shrink-0 font-mono text-xs font-bold text-vouch-cyan">{formatOdds(leg.odds)}</span>
                       </div>
@@ -452,7 +459,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
                 <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625] to-[#050a12] flex flex-col items-center justify-center py-10 px-6 text-center">
                   <ClipboardList className="h-8 w-8 text-white/20" />
                   <p className="mt-3 text-sm font-bold text-white/60">No active slip</p>
-                  <p className="mt-1 text-xs text-white/35 leading-relaxed max-w-[220px]">Research a signal and add it to start building.</p>
+                  <p className="mt-1 text-xs text-white/65 leading-relaxed max-w-[220px]">Research a signal and add it to start building.</p>
                   <button
                     type="button"
                     onClick={() => onSectionChange('hr_board')}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiGame, DailyMlbReport } from '../src/types/mlb';
+import type { LiveGameCard } from '../src/types/liveGames';
 import { buildTodayDecision } from '../src/components/today/todayDecisionModel';
 
 function game(status: string): ApiGame {
@@ -42,7 +43,122 @@ const baseInput = {
   hrSignalsLoading: false,
 };
 
+
+function liveCard(overrides: Partial<LiveGameCard> & { id: string }): LiveGameCard {
+  return {
+    homeTeam: 'Home', awayTeam: 'Away', homeAbbr: 'HOM', awayAbbr: 'AWY',
+    homeTeamId: 1, awayTeamId: 2, homeScore: 0, awayScore: 0,
+    status: 'Scheduled', venue: null, gameDate: null, inning: null,
+    halfInning: null, outs: null, liveStateLabel: null, feedAsOf: null,
+    ...overrides,
+  };
+}
+
 describe('buildTodayDecision', () => {
+  it('counts live games from the fresh board when the daily report snapshot lags', () => {
+    // Reproduces the real slate: the report still had WSH @ PHI as "Warmup"
+    // while the live feed had already flipped it to In Progress, so the hero
+    // announced one live game next to a Live Games page showing two.
+    const staleReport = report();
+    staleReport.gameCount = 11;
+    staleReport.games = [
+      { ...game('In Progress'), gamePk: 1 },
+      { ...game('Warmup'), gamePk: 2 },
+    ];
+
+    const decision = buildTodayDecision({
+      report: staleReport,
+      loading: false,
+      hasError: false,
+      savedSlips: 0,
+      pendingSlips: 0,
+      hrSignalCount: 3,
+      hrSignalsLoading: false,
+      liveGameCards: [
+        liveCard({ id: '1', status: 'In Progress', isLive: true }),
+        liveCard({ id: '2', status: 'In Progress', isLive: true }),
+        liveCard({ id: '3', status: 'Final', isFinal: true }),
+        liveCard({ id: '4', status: 'Pre-Game' }),
+      ],
+    });
+
+    expect(decision.liveGames).toBe(2);
+    expect(decision.finalGames).toBe(1);
+    // The report alone would have said 1. The slate line is what the user sees.
+    expect(decision.attention.find((item) => item.id === 'slate-status')?.detail).toContain('2 live');
+  });
+
+  it('falls back to card status strings when the live flags are absent', () => {
+    const decision = buildTodayDecision({
+      report: report(),
+      loading: false,
+      hasError: false,
+      savedSlips: 0,
+      pendingSlips: 0,
+      hrSignalCount: 3,
+      hrSignalsLoading: false,
+      liveGameCards: [
+        liveCard({ id: '1', status: 'In Progress' }),
+        liveCard({ id: '2', status: 'Final' }),
+      ],
+    });
+
+    expect(decision.liveGames).toBe(1);
+    expect(decision.finalGames).toBe(1);
+  });
+
+  it('still reads the report when no live board is supplied', () => {
+    const decision = buildTodayDecision({
+      report: report(),
+      loading: false,
+      hasError: false,
+      savedSlips: 0,
+      pendingSlips: 0,
+      hrSignalCount: 3,
+      hrSignalsLoading: false,
+    });
+
+    expect(decision.liveGames).toBe(0);
+  });
+
+  it('keeps recommending research while part of the slate is still upcoming', () => {
+    // 2 live, 4 upcoming, board full of signals: first pitch somewhere must not
+    // turn the whole page into slate status.
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report({ gameCount: 6, games: [game('In Progress'), game('In Progress')] }),
+      hrSignalCount: 120,
+      liveGameCards: [
+        liveCard({ id: '1', status: 'In Progress', isLive: true }),
+        liveCard({ id: '2', status: 'In Progress', isLive: true }),
+        liveCard({ id: '3', status: 'Pre-Game' }),
+        liveCard({ id: '4', status: 'Pre-Game' }),
+        liveCard({ id: '5', status: 'Pre-Game' }),
+        liveCard({ id: '6', status: 'Pre-Game' }),
+      ],
+    });
+
+    expect(decision.ctaSection).toBe('hr_board');
+    expect(decision.title).toBe("Today's HR research board is available");
+    expect(decision.description).toContain('2 games are already underway');
+    expect(decision.description).toContain('4 still have not started');
+  });
+
+  it('switches to live tracking once nothing is left to research', () => {
+    const decision = buildTodayDecision({
+      ...baseInput,
+      report: report({ gameCount: 2, games: [game('In Progress'), game('Final')] }),
+      hrSignalCount: 120,
+      liveGameCards: [
+        liveCard({ id: '1', status: 'In Progress', isLive: true }),
+        liveCard({ id: '2', status: 'Final', isFinal: true }),
+      ],
+    });
+
+    expect(decision.ctaSection).toBe('live_games');
+    expect(decision.title).toBe('1 MLB game is live');
+  });
+
   it('prioritizes unresolved saved slips over live games', () => {
     const decision = buildTodayDecision({
       ...baseInput,
