@@ -1,168 +1,254 @@
-# VouchEdge — AI Studio & Freemium Platform
+<div align="center">
 
-A production-grade, secure full-stack web application featuring robust authentication, real-time data persistence, automated tier gating, and integrated Stripe subscriptions.
+# VouchEdge
 
-[Live Demo Link Here] | [Architecture Overview](#-architecture--tech-stack)
+**Know the next home run. Before everyone else.**
 
----
+Sports research, home-run intelligence, and verified parlay tracking for MLB.
+Research before the first pitch — with the evidence behind every score.
 
-## 🚀 Tech Stack
+[**Live site → vouchedge.xyz**](https://www.vouchedge.xyz)
 
-* **Frontend:** TypeScript, Tailwind CSS
-* **Backend:** Node.js, Express.js
-* **Database & Auth:** Supabase (PostgreSQL, Row Level Security, JWT Auth)
-* **Security & Validation:** Zod, Express Rate Limit, Helmet, Custom Middleware
-* **Payments & AI:** Stripe Billing Webhooks, Google Gemini API
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![Node](https://img.shields.io/badge/Node-22-5FA04E?logo=nodedotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-Billing-635BFF?logo=stripe&logoColor=white)
+![Status](https://img.shields.io/badge/status-open%20beta-orange)
 
----
-
-## 🛠️ Engineering Highlights & Architecture
-
-* **Secure Tier Gating & Entitlements:** Implemented custom backend middleware (`requireTier`, `requireTierOrQuota`) to manage free-tier daily limits and premium subscription access.
-* **Robust Request Validation:** Leveraged **Zod** schemas across all API endpoints to ensure strict type safety and data integrity for user payloads.
-* **Stripe Integration:** Handled complex subscription lifecycles securely using raw-body webhook verification and automated billing portals.
-* **Database Security:** Designed a complete PostgreSQL schema protected by Supabase **Row Level Security (RLS)** policies and custom triggers.
+</div>
 
 ---
 
-## 💻 Local Development (Quickstart)
+## What this is
 
-```bash
-# 1. Clone the repository and install dependencies
-npm install
+VouchEdge is a sports research platform built around one uncomfortable question:
+**can you actually trust the pick you're looking at?**
 
-# 2. Configure environment variables
-cp .env.example .env.local
+Most betting content is confident and unaccountable. VouchEdge is built the other
+way around — every number on the screen is traceable back to official MLB data, every
+posted pick is graded automatically after the game ends, and a user's track record is
+computed from what actually happened rather than what they claimed.
 
-# 3. Run the development server
-npm run dev
+Three things the site does:
 
-```bash
-# 1. Commit current state so you can revert if anything breaks
-git add -A && git commit -m "before beta patches"
+| | |
+|---|---|
+| **🏟️ Home-run intelligence** | A daily HR Board ranks hitters by a composite score built from matchup, pitcher, park, form, and situational data pulled from the official MLB Stats API. Every score opens into the evidence behind it. |
+| **🧾 Parlay tracking & proof** | Build and save parlays, then let the system grade them. Results are written to an append-only trust ledger, so a track record can't be quietly edited after the fact. |
+| **👥 Social & track records** | Follow other researchers, browse the feed and leaderboard, and see verified win/loss history instead of screenshots. |
 
-# 2. Run cleanup — delete backup file, dedupe assets, fix branding
-bash download/vouchedge-beta-patches/cleanup.sh
+> **Not a prediction service.** VouchEdge organizes public data into evidence.
+> It doesn't promise outcomes, and it isn't betting advice. The app enforces a 21+
+> age gate and blocks restricted jurisdictions.
 
-# 3. Create a Supabase project, then push the schema
-npm install -g supabase
-supabase login
-supabase link --project-ref YOUR_REF
-cp download/vouchedge-beta-patches/supabase/schema.sql supabase/migrations/0001_init.sql
-supabase db push
+---
 
-# 4. Install new dependencies
-npm install @supabase/supabase-js stripe express-rate-limit cors helmet zod cookie-parser
-npm install -D @types/cors @types/cookie-parser
+## How it's built
 
-# 5. Copy the middleware + routes + services from the patch kit
-#    into your project (preserving the same paths).
+A single TypeScript codebase: a React SPA served by an Express API, with Postgres
+(via Supabase) as the source of truth.
 
-# 6. Apply the patches in patches/ (read each .patch.md, apply the diff)
+```mermaid
+flowchart TB
+    subgraph client["Browser — React 19 SPA"]
+        UI["Aurora UI<br/>HR Board · Research · Parlays · Social"]
+    end
 
-# 7. Configure .env.local from .env.example
+    subgraph edge["Express API — Node 22"]
+        MW["Middleware<br/>auth · entitlements · rate limit · Zod validation · Helmet/CORS"]
+        V3["V3 modules<br/>parlays · trust · grading · billing · system"]
+        AEGIS["Aegis<br/>command execution boundary"]
+        LEGACY["Domain services<br/>MLB intel · research · feed · notifications"]
+    end
 
-# 8. Run the dev server and smoke-test
-npm run dev
+    subgraph data["Data & platform"]
+        PG[("Supabase Postgres<br/>Row Level Security")]
+        REDIS[("Upstash Redis<br/>cache + rate limits")]
+    end
+
+    subgraph ext["External"]
+        MLB["MLB Stats API"]
+        GEMINI["Google Gemini"]
+        STRIPE["Stripe Billing"]
+        SENTRY["Sentry"]
+    end
+
+    CRON["Cron jobs<br/>nightly grading · retention deletes"]
+
+    UI -->|"JWT-authenticated fetch"| MW
+    MW --> V3 --> AEGIS
+    MW --> LEGACY
+    AEGIS --> PG
+    LEGACY --> PG
+    LEGACY --> REDIS
+    LEGACY --> MLB
+    LEGACY --> GEMINI
+    V3 --> STRIPE
+    CRON --> PG
+    CRON --> MLB
+    MW -.->|"errors + traces"| SENTRY
 ```
 
-See `IMPLEMENTATION.md` for the full 3-week sequencing.
+### The stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| **Frontend** | React 19, TypeScript, Vite 6, Tailwind CSS 4 | Fast SPA with a strongly-typed component layer; Vite keeps HMR instant on a large codebase. |
+| **Backend** | Node 22, Express 4, TypeScript (`tsx` in dev, esbuild bundle in prod) | One language across the whole stack; the server bundles to a single `dist/server.cjs` for portable deploys. |
+| **Database & auth** | Supabase (Postgres, Row Level Security, JWT) | Auth, Postgres, and row-level authorization in one place. 46 versioned SQL migrations live in `supabase/migrations/`. |
+| **Validation** | Zod 4 | Every request body, query, and param is schema-validated at the boundary; the same schemas feed the OpenAPI spec. |
+| **Payments** | Stripe (Checkout, Billing Portal, webhooks) | Raw-body signature verification, with subscription state synced back into Postgres as the entitlement source of truth. |
+| **AI** | Google Gemini | Natural-language research summaries and matchup reasoning — always attached to the underlying data, never freestanding. |
+| **Cache / limits** | Upstash Redis | Shared rate-limit and cache state so multiple instances behave consistently. |
+| **Observability** | Sentry, Lighthouse CI, bundle budgets | Errors, performance regressions, and bundle growth all fail loudly in CI. |
+| **Testing** | Vitest (unit/integration), Playwright (e2e) | Plus a large suite of `verify:*` static audits — see below. |
+
+### Ideas the codebase is organized around
+
+Four internal systems carry most of the architectural weight. Each has its own docs.
+
+- **Aurora** (`aurora/`) — the product's design and UX constitution. It defines the
+  visual language, motion, accessibility, error states, and how evidence is presented, and
+  `npm run aurora:validate` enforces compliance in CI. The rule it exists to protect:
+  a user should never wonder what happened or why a number moved.
+- **Aegis** (`server/aegis/`, [docs](docs/aegis/README.md)) — a contract-driven execution
+  boundary for important commands (parlay save, trust commit, trust lock). It owns
+  identification, validation, authorization, correlation, and measurement — while business
+  rules stay in their domain services. Aegis never grades a pick or decides an entitlement.
+- **TrustOS / trust ledger** — an append-only event log plus projections. Results are
+  recorded as events and rolled up into scores, so a track record has an audit trail rather
+  than a mutable number.
+- **V3 backend modules** (`server/v3/`) — the modular successor to the original flat route
+  layer, migrated domain by domain (parlays, trust, grading, billing) behind cutover checks
+  and kill switches instead of a big-bang rewrite.
+
+### Repo map
+
+```
+src/            React SPA — features/, components/, pages/, hooks/, stores/
+server/         Express API — routes/, services/, middleware/, v3/, aegis/, cron/
+supabase/       Schema, 46 migrations, seed data, email templates
+aurora/         Design-system constitution (architecture, motion, a11y, errors)
+scripts/        Verification, migration, audit, and perf tooling
+docs/           Architecture, engineering, ADRs, product notes
+e2e/ tests/     Playwright specs and Vitest suites
+legal/          Terms of Service and Privacy Policy drafts
+```
 
 ---
 
+## Running it locally
 
-### Server middleware
-| File | Purpose |
-|------|---------|
-| `server/middleware/auth.ts` | Supabase JWT verification, `requireAuth`, `optionalAuth`, `requireStaff`, `requireLegalConfirmed` (age + jurisdiction gate) |
-| `server/middleware/entitlements.ts` | `requireTier()` (hard tier gate) + `requireTierOrQuota()` (free-tier daily quota) |
-| `server/middleware/rateLimit.ts` | Global / AI / pick / beta-signup / webhook rate limiters |
-| `server/middleware/cors.ts` | Whitelist-based CORS + Helmet security headers |
-| `server/middleware/validation.ts` | Zod schema validation for request body/query/params |
-| `server/middleware/webhookRaw.ts` | Raw-body handler for Stripe webhooks |
+**Prerequisites:** Node 22+, npm, and a Supabase project (free tier is fine).
 
-### Server routes
-| File | Purpose |
-|------|---------|
-| `server/routes/authRoutes.ts` | `/api/auth/me`, `/api/auth/profile` PATCH, `/api/auth/username-check` |
-| `server/routes/publicRoutes.ts` | `/api/leaderboard`, `/api/cappers`, `/api/cappers/:id`, `/api/profile/:id`, `/api/profile/:id/stats`, `/api/follow`, `/api/following` |
-| `server/routes/postRoutes.ts` | `/api/feed`, `/api/feed/discover`, `/api/posts` CRUD, `/api/posts/:id/like`, `/api/posts/:id/comments`, view counter |
-| `server/routes/coreRoutes.ts` | `/api/beta/signup`, `/api/legal/confirm`, `/api/picks` (POST + GET), `/api/admin/grade` |
-| `server/routes/billingRoutes.ts` | `/api/billing/checkout`, `/api/billing/portal`, `/api/billing/status`, `/api/billing/webhook` |
-| `server/routes/adminRoutes.ts` | Staff-only: beta waitlist mgmt, user mgmt, capper CRUD, manual grading trigger, dashboard stats |
-| `server/routes/index.ts.replacement` | Updated route registration (drops in over your existing file) |
-| `server.ts.patch.md` | Wire middleware + raw-body webhook into the main server file |
+```bash
+git clone https://github.com/Zhavior/vouchres.git
+cd vouchres
+npm install
+cp .env.example .env.local   # fill in your own keys
+npm run dev                  # http://localhost:3000
+```
 
-### Server services
-| File | Purpose |
-|------|---------|
-| `server/services/billing/stripeService.ts` | Customer sync, Checkout session creation, Billing Portal, subscription sync to Postgres |
-| `server/services/persistence/pickService.ts` | DB-backed pick CRUD — replaces in-memory `resultLedgerService.ts`. Includes trust-score rollup on grade. |
-| `server/services/persistence/betaService.ts` | Waitlist signup + invite code issuance + activation tracking |
-| `server/services/grading/gradingService.ts` | Resolves pending picks by fetching MLB boxscores. THE ONLY code path that grades picks. |
+The dev server runs the API and serves the Vite frontend on the same origin, so no
+CORS setup is needed for local work.
 
-### Server cron
-| File | Purpose |
-|------|---------|
-| `server/cron/dailyGradeJob.ts` | Nightly cron — grades picks from concluded games. Run via Render Cron or node-cron. |
+To provision the database, point the Supabase CLI at your project and push
+`supabase/migrations/`:
 
-### Frontend
-| File | Purpose |
-|------|---------|
-| `src/lib/supabaseClient.ts` | Browser Supabase client + auth helpers (signUp, signIn, magic link, signOut) |
-| `src/lib/apiClient.ts` | Authenticated fetch wrapper — auto-attaches JWT, handles 401/402/429 |
-| `src/lib/useAuth.ts` | `useAuth()` hook (profile loading + auth state subscription) + `useEntitlements()` (UI feature gating) |
-| `src/components/auth/AuthGate.tsx` | Login/signup screen with invite-code support for private beta |
-| `src/components/legal/LegalGate.tsx` | 21+ age + jurisdiction confirmation gate |
-| `src/components/admin/AdminDashboard.tsx` | Staff UI: beta waitlist mgmt, user mgmt, capper CRUD, manual grading, stats |
+```bash
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+```
 
-### Tests
-| File | Purpose |
-|------|---------|
-| `tests/setup.ts` | Test DB reset + helpers (`createTestUser`, `signInTestUser`, `resetTestDb`) |
-| `tests/auth.test.ts` | Signup → profile creation → token validation → username check → security (tier-update rejected) |
-| `tests/pickLifecycle.test.ts` | Create → grade → trust rollup (with 20-pick sample damp-factor verification) |
-| `tests/billing.test.ts` | Stripe sync → tier upgrade → tier downgrade on cancel → signature verification |
-| `tests/grading.test.ts` | Mock boxscores → HR/RBI grading → idempotency → dry-run mode → unknown markets |
-| `tests/betaSignup.test.ts` | Waitlist join → invite issue → validate code → activation |
-| `vitest.config.ts` | Vitest config with V8 coverage |
-| `.env.test.example` | Test env vars (separate test Supabase project required) |
-| `.github/workflows/test.yml` | CI: type-check + test on every push/PR |
+### Configuration
 
-### Legal
-| File | Purpose |
-|------|---------|
-| `legal/TERMS_OF_SERVICE.md` | Termly-style ToS draft with `[REVIEW:]` markers for counsel — eligibility, content standards, billing, liability, arbitration |
-| `legal/PRIVACY_POLICY.md` | GDPR/CCPA-compliant privacy policy — data collection, sharing, retention, DSAR workflow, SCC coverage |
+All configuration is environment variables — **no credentials are committed to this
+repo.** `.env.example` documents every variable with placeholder values. The short
+version:
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Database and auth. The service-role key is server-only and must never reach the client. |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | ✅ | Browser Supabase client (public values only). |
+| `GEMINI_API_KEY` | ✅ | AI research summaries. |
+| `MLB_API_BASE_URL` | — | Official MLB Stats API. Free, no key; override only to proxy. |
+| `STRIPE_BETA_MONTHLY_PRICE_ID` | for billing | Recurring price used by Checkout. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | for multi-instance | Shared cache and rate limiting. |
+| `SENTRY_DSN`, `VITE_SENTRY_DSN`, `SENTRY_ENVIRONMENT` | — | Error monitoring. |
+| `CRON_SECRET` | for cron | Authenticates scheduled grading and retention jobs. |
+| `BLOCKED_JURISDICTIONS`, `TRUST_PROXY` | — | Compliance gating and proxy handling. |
+
+Anything prefixed `VITE_` is inlined into the client bundle and is therefore public
+by definition. Everything else stays server-side.
+
+### Common commands
+
+```bash
+npm run dev          # dev server on :3000 (dev:stop / dev:restart also available)
+npm run typecheck    # tsc --noEmit
+npm run lint:strict  # eslint on src, server, tests
+npm test             # Vitest
+npm run test:e2e     # Playwright
+npm run build        # Vite client build + esbuild server & cron bundles
+npm run quality      # typecheck + lint + build
+```
 
 ---
 
-## Patch kit status
+## Quality gates
 
-- [x] Foundation: auth, persistence, rate limiting, CORS
-- [x] Monetization: Stripe Checkout + Portal + webhook
-- [x] Entitlements: server-side tier + quota gates
-- [x] Public API: leaderboard, cappers, profiles, follows
-- [x] Posts + feed + likes + comments (full social graph)
-- [x] Grading: MLB boxscore fetcher + grade service + cron
-- [x] Frontend: auth gate, legal gate, useAuth hook, admin dashboard
-- [x] Admin: beta waitlist, user mgmt, capper CRUD, manual grading
-- [x] Anti-fraud: removes all fabricated social proof
-- [x] Cleanup: dead files, branding, deployment config
-- [x] Tests: Vitest smoke suite (5 test files) + CI workflow
-- [x] Legal: ToS + Privacy Policy drafts (need counsel review)
+Every push runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which is
+deliberately more paranoid than a typical test job:
 
-## Known gaps (intentionally not addressed)
+1. Typecheck and strict lint
+2. **Aurora compliance** — design-system rules enforced as code
+3. Vitest suite
+4. **ParlayOS trust gates** — invariants on the trust ledger and grading path
+5. **Auth and billing static audits** — scans that fail the build if an auth or billing
+   route loses its guard
+6. Production build
+7. **Staging soak + production smoke** against the real built server, health-checked
+   before assertions run
 
-| Gap | Reason | Recommended action |
-|-----|--------|--------------------|
-| Tests | Out of scope for a 3-week beta push | Add Vitest + Playwright smoke tests in week 4 |
-| Real-time pick grading | Beta can tolerate nightly batch grading | Add Supabase Realtime subscription post-beta |
-| Terms of Service / Privacy Policy text | Legal document — needs counsel | Use Termly template, have lawyer review |
-| Redis-backed rate limiting | Single-instance is fine for beta | Add Upstash Redis when you scale beyond 1 instance |
-| Sentry / PostHog integration | Monitoring, not beta-blocking | Add in week 4 before public launch |
-| Parlay grading | Complex — needs multi-leg resolution logic | Marked `parlay_grading_not_implemented` in gradingService.ts. Manual review for now. |
-| Mobile app | Different timeline | Use Capacitor to wrap the PWA for v1 mobile |
+The `verify:*` scripts in `package.json` are the same audits, runnable individually
+during development. They exist because the risky parts of this app — who can see what,
+who gets charged, and whether a result can be rewritten — are exactly the parts that
+unit tests tend to miss.
 
 ---
 
+## Deployment
+
+The build produces a static client plus a self-contained server bundle, so it can run
+in a few places:
+
+- **Vercel** — [`vercel.json`](vercel.json) routes traffic to `api/index.ts`, which wraps
+  the bundled server; static assets get immutable long-lived caching.
+- **Render** — [`render.yaml`](render.yaml) defines an always-on Node web service with a
+  `/api/health` health check.
+- **Container / anywhere Node runs** — `npm run build && npm start`.
+
+Cron jobs (nightly grading, data-retention deletes) build to separate bundles and are
+scheduled by the host platform.
+
+---
+
+## Security & compliance
+
+- Row Level Security on Postgres, JWT verification on every authenticated route, and
+  tier/quota entitlement checks enforced server-side — never in the UI alone.
+- Helmet security headers, whitelist-based CORS, and layered rate limiting (global, AI,
+  pick submission, signup, webhooks).
+- Stripe webhooks verified against the raw request body.
+- A 21+ age gate and jurisdiction blocking on gated actions.
+- Vulnerability reports: see [SECURITY.md](SECURITY.md).
+
+---
+
+<div align="center">
+
+**Built by [@Zhavior](https://github.com/Zhavior)** · Open beta · Not betting advice
+
+</div>
