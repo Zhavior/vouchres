@@ -1,9 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
-import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
-import {
-  Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio, Zap, Clock, CheckCircle2, Trophy, ShieldAlert, Heart
-} from 'lucide-react';
+import React, { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Flame, X, Plus, Zap } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
 import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
@@ -13,28 +9,72 @@ import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
-import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { LineScoreTable } from './live/LineScoreTable';
 import { TeamLogo } from './live/LiveTeamLogo';
-import StadiumWindVectorWidget from './stadium/StadiumWindVectorWidget';
-import { AURORA_LABEL, AURORA_PAGE, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../theme/auroraTokens';
+import { LiveGamesHeader, type FeedState, type FilterTab } from './live/LiveGamesHeader';
+import { useBodyScrollLock } from '../lib/scroll/useBodyScrollLock';
+import { AURORA_PAGE } from '../theme/auroraTokens';
 import './live/live-games-lens.css';
+import '../styles/command-deck.css';
+import './live/live-command.css';
+
+// Named loaders so these chunks can be warmed on idle — a game going live, or the
+// user opening a matchup, should never be the first request for the code.
+const loadAtBatView = () => import('./live/LiveAtBatView');
+const loadWindWidget = () => import('./stadium/StadiumWindVectorWidget');
+const loadPregamePanel = () => import('./live/command/PregameAiReadPanel');
+const loadFinalRecapPanel = () => import('./live/command/FinalGameRecapPanel');
+
+const LiveAtBatView = lazy(loadAtBatView);
+const StadiumWindVectorWidget = lazy(loadWindWidget);
+const PregameAiReadPanel = lazy(() => loadPregamePanel().then(m => ({ default: m.PregameAiReadPanel })));
+const FinalGameRecapPanel = lazy(() => loadFinalRecapPanel().then(m => ({ default: m.FinalGameRecapPanel })));
+
+/** Warm a lazy chunk without blocking; React retries on render if it fails. */
+function warmChunk(load: () => Promise<unknown>): void {
+  void load().catch(() => {});
+}
+
+/**
+ * Run once the main thread is free. Idle callbacks never fire in a backgrounded
+ * tab, so a timer races alongside — the warm-up always happens, it just prefers
+ * a quiet frame.
+ */
+function whenIdle(run: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const win = window as unknown as {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+
+  let done = false;
+  const fire = () => {
+    if (done) return;
+    done = true;
+    run();
+  };
+
+  const timer = window.setTimeout(fire, 1200);
+  const idleHandle = typeof win.requestIdleCallback === 'function'
+    ? win.requestIdleCallback(fire, { timeout: 2000 })
+    : null;
+
+  return () => {
+    done = true;
+    window.clearTimeout(timer);
+    if (idleHandle !== null) win.cancelIdleCallback?.(idleHandle);
+  };
+}
+
+/** Sized Suspense fallback — a null fallback collapses the slot and the page jumps. */
+const PanelHold: React.FC<{ height: string; label: string }> = ({ height, label }) => (
+  <div className="deck-hold rounded-2xl" style={{ minHeight: height }} role="status" aria-label={label} />
+);
 
 interface Props {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
-}
-
-type FilterTab = 'all' | 'live' | 'upcoming' | 'final';
-
-function vulnColor(v: number): string {
-  if (v >= 70) return '#f87171';
-  if (v >= 55) return '#fbbf24';
-  return '#34d399';
-}
-
-function gradeColor(g: string): string {
-  return g === 'A+' || g === 'A' ? '#34d399' : g === 'B' ? '#22d3ee' : g === 'C' ? '#fbbf24' : '#f87171';
 }
 
 type LiveGameApiCard = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>['games'][number];
@@ -63,19 +103,6 @@ function isLiveStatus(status: unknown): boolean {
 
 function isFinalStatus(status: unknown): boolean {
   return /final|game over|completed/i.test(String(status ?? ''));
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const id = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
-    promise.then((value) => {
-      window.clearTimeout(id);
-      resolve(value);
-    }).catch((error) => {
-      window.clearTimeout(id);
-      reject(error);
-    });
-  });
 }
 
 function teamAbbr(name: string): string {
@@ -340,23 +367,43 @@ function StatusBadge({ m }: { m: GameMatchup }) {
 
 function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () => void; onAddLeg: (w: HrWatch) => void }) {
   const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
+
+  // The page used to keep scrolling behind the open drawer, which on mobile
+  // reads as the drawer itself refusing to scroll.
+  useBodyScrollLock(true);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity" />
       <div
-        className="relative w-full max-w-lg h-full bg-ve-obsidian border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${m.away.abbreviation} at ${m.home.abbreviation} matchup`}
+        className="deck-reveal relative h-full w-full max-w-lg space-y-4 overflow-y-auto border-l border-white/12 bg-ve-obsidian p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-ve-obsidian/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-white/12 bg-ve-obsidian/95 pb-3 backdrop-blur-xl">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <TeamLogo src={m.away.logo} alt={m.away.name} size={28} />
-            <span className="text-sm font-black text-white">{m.away.abbreviation} @ {m.home.abbreviation}</span>
+            <span className="truncate text-sm font-black text-white">{m.away.abbreviation} @ {m.home.abbreviation}</span>
             <TeamLogo src={m.home.logo} alt={m.home.name} size={28} />
             <StatusBadge m={m} />
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white transition">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            aria-label="Close matchup"
+            className="deck-control flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -381,15 +428,19 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           </div>
         </div>
 
-        {/* Stadium Wind Vector & Ballpark Physics */}
-        <StadiumWindVectorWidget
-          venue={m.venue ?? "Stadium Venue"}
-          tempF={78}
-          windMph={12}
-          windCompass="NNE"
-          status="forecast"
-          parkFactor={m.runEnvironment?.score ? Math.round(m.runEnvironment.score * 10) : 105}
-        />
+        {/* Stadium Wind Vector & Ballpark Physics.
+            No weather feed is wired to this drawer yet, so the widget renders in
+            its unavailable state rather than showing invented conditions. */}
+        <Suspense fallback={<PanelHold height="260px" label="Loading ballpark conditions" />}>
+          <StadiumWindVectorWidget
+            venue={m.venue ?? 'Stadium Venue'}
+            tempF={null}
+            windMph={null}
+            windCompass={null}
+            status="unavailable"
+            parkFactor={m.runEnvironment?.score ? Math.round(m.runEnvironment.score * 10) : 100}
+          />
+        </Suspense>
 
         {/* Top HR Watch Targets */}
         <div className="space-y-3">
@@ -437,7 +488,6 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [error, setError] = useState<string | null>(null);
   const [sourceNote, setSourceNote] = useState<string>('Connecting to live stream...');
-  const [enriching, setEnriching] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
 
   const hrBoardQuery = useDailyHrBoard(todayISO());
@@ -448,8 +498,6 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
 
   const matchupsCountRef = useRef(matchups.length);
   matchupsCountRef.current = matchups.length;
-
-  const enrichRequestRef = useRef(0);
 
   const buildOfficialBase = useCallback((): GameMatchup[] => {
     const raw = liveGamesQuery.data?.games;
@@ -469,7 +517,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
     if (liveGamesQuery.data?.games) {
       if (officialBase.length > 0) {
         setSourceNote('Official MLB live stream active (10s sync).');
-        setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }));
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
       }
     }
 
@@ -486,12 +534,27 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const handleManualRefresh = useCallback(() => {
     void liveGamesQuery.refetch();
     void hrBoardQuery.refresh();
-    setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }));
+    setLastSyncTime(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
   }, [liveGamesQuery, hrBoardQuery]);
+
+  // Warm the panels a game transition will need, so going live or opening a
+  // matchup never waits on a network round-trip.
+  useEffect(() => whenIdle(() => {
+    warmChunk(loadWindWidget);
+    warmChunk(loadPregamePanel);
+    warmChunk(loadFinalRecapPanel);
+    warmChunk(loadAtBatView);
+  }), []);
 
   const liveGamesList = matchups.filter((m) => m.isLive);
   const upcomingGamesList = matchups.filter((m) => !m.isLive && !m.isFinal);
   const finalGamesList = matchups.filter((m) => m.isFinal);
+
+  const feedState: FeedState = useMemo(() => {
+    if (error) return 'down';
+    if (liveGamesQuery.isError) return 'reconnecting';
+    return 'live';
+  }, [error, liveGamesQuery.isError]);
 
   const filteredGames = filterTab === 'live'
     ? liveGamesList
@@ -526,86 +589,22 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${AURORA_PAGE} w-full max-w-full min-w-0 px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
+    <main className={`${AURORA_PAGE} live-deck w-full max-w-full min-w-0 overflow-x-hidden px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
 
-      {/* ── Sleek 3D Glass Header ────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
-              <Radio className="h-5 w-5 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-black uppercase text-white tracking-tight">Live Games Telemetry</h1>
-                <span className="font-mono text-[9px] uppercase tracking-widest text-rose-400 font-bold bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded-full">
-                  Real-time Stream
-                </span>
-              </div>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
-              <div className="flex items-center gap-2 mt-2 font-mono text-[10px] text-vouch-emerald font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-ping" />
-                <span>{sourceNote}</span>
-                <span className="text-slate-500">· Sync: {lastSyncTime}</span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleManualRefresh}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/12 bg-black/40 px-4 py-2.5 font-mono text-xs font-bold text-white transition hover:border-vouch-cyan hover:text-vouch-cyan active:scale-95"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${liveGamesQuery.isFetching ? 'animate-spin text-vouch-cyan' : ''}`} /> Fast Sync
-          </button>
-        </div>
-
-        {/* Filter Navigation Tabs */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setFilterTab('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'all'
-                ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            All Games ({matchups.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('live')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'live'
-                ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-            Live Now ({liveGamesList.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('upcoming')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'upcoming'
-                ? 'bg-sky-500/20 border border-sky-500/50 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            Upcoming ({upcomingGamesList.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('final')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'final'
-                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(49,181,131,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            Final ({finalGamesList.length})
-          </button>
-        </div>
+      <div className="deck-reveal mb-4 sm:mb-6">
+        <LiveGamesHeader
+          onRefresh={handleManualRefresh}
+          isSyncing={liveGamesQuery.isFetching}
+          feedState={feedState}
+          feedNote={sourceNote}
+          lastSyncLabel={lastSyncTime}
+          totalCount={matchups.length}
+          liveCount={liveGamesList.length}
+          upcomingCount={upcomingGamesList.length}
+          finalCount={finalGamesList.length}
+          filterTab={filterTab}
+          onFilterChange={setFilterTab}
+        />
       </div>
 
       {error && (
@@ -617,11 +616,19 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
         </div>
       )}
 
+      {/* Skeleton mirrors the real layout — spotlight hero, then the slate grid —
+          so nothing shifts when the first payload lands. */}
       {liveGamesQuery.isLoading && matchups.length === 0 && (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-56 rounded-2xl border border-white/10 bg-white/[0.02] animate-pulse" />
-          ))}
+        <div className="space-y-6" role="status" aria-label="Loading today's games">
+          <div className="deck-hold rounded-2xl" style={{ minHeight: '340px' }} />
+          <div className="space-y-3">
+            <div className="h-3 w-48 rounded bg-white/[0.08]" />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="deck-hold rounded-2xl" style={{ minHeight: '104px' }} />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -667,38 +674,51 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                   </div>
                 </div>
 
-                {/* Scoreboard display */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4 bg-black/40 rounded-2xl p-4 sm:p-6 border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={44} />
-                    <div>
-                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">Away</span>
-                      <p className="text-base sm:text-xl font-black text-white">{activeGame.away.name}</p>
+                {/* Scoreboard. Mobile reads as one row — logo, score, logo — because
+                    the three-column desktop layout stacked into a ~500px column. */}
+                <div className="rounded-2xl border border-white/10 bg-black/40 p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-3 sm:grid sm:grid-cols-3 sm:items-center sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:gap-3">
+                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={36} />
+                      <div className="min-w-0">
+                        <span className="font-mono text-[10px] font-bold uppercase text-slate-400">Away</span>
+                        <p className="truncate text-sm font-black text-white sm:text-xl">
+                          <span className="sm:hidden">{activeGame.away.abbreviation}</span>
+                          <span className="hidden sm:inline">{activeGame.away.name}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 px-1 text-center sm:border-x sm:border-white/10 sm:py-2">
+                      <div className="flex items-center justify-center gap-2.5 sm:gap-4">
+                        <span className="font-mono text-3xl font-black tabular-nums text-white sm:text-5xl">
+                          {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
+                        </span>
+                        <span className="text-xl font-black text-slate-600 sm:text-2xl">–</span>
+                        <span className="font-mono text-3xl font-black tabular-nums text-white sm:text-5xl">
+                          {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 hidden font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:block">
+                        {activeGame.isFinal ? 'Final Score' : activeGame.isLive ? 'Live In-Game Score' : 'Pregame Matchup'}
+                      </p>
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right sm:flex-none sm:gap-3">
+                      <div className="min-w-0">
+                        <span className="font-mono text-[10px] font-bold uppercase text-slate-400">Home</span>
+                        <p className="truncate text-sm font-black text-white sm:text-xl">
+                          <span className="sm:hidden">{activeGame.home.abbreviation}</span>
+                          <span className="hidden sm:inline">{activeGame.home.name}</span>
+                        </p>
+                      </div>
+                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={36} />
                     </div>
                   </div>
 
-                  <div className="text-center py-2 border-y sm:border-y-0 sm:border-x border-white/10">
-                    <div className="flex items-center justify-center gap-4">
-                      <span className="font-mono text-4xl sm:text-5xl font-black text-white tabular-nums">
-                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
-                      </span>
-                      <span className="text-slate-600 text-2xl font-black">–</span>
-                      <span className="font-mono text-4xl sm:text-5xl font-black text-white tabular-nums">
-                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider mt-2">
-                      {activeGame.isFinal ? 'Final Score' : activeGame.isLive ? 'Live In-Game Score' : 'Pregame Matchup'}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 text-right">
-                    <div>
-                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">Home</span>
-                      <p className="text-base sm:text-xl font-black text-white">{activeGame.home.name}</p>
-                    </div>
-                    <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={44} />
-                  </div>
+                  <p className="mt-3 border-t border-white/10 pt-2 text-center font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:hidden">
+                    {activeGame.isFinal ? 'Final Score' : activeGame.isLive ? 'Live In-Game Score' : 'Pregame Matchup'}
+                  </p>
                 </div>
 
                 {/* Inning-by-Inning Line Score Table */}
@@ -750,14 +770,13 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                   <button
                     key={m.gamePk}
                     onClick={() => setActiveGamePk(m.gamePk)}
-                    className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
-                      String(activeGame?.gamePk) === String(m.gamePk)
-                        ? 'border-vouch-cyan bg-vouch-cyan/10 shadow-[0_0_15px_rgba(79,184,220,0.15)]'
-                        : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-black/60'
-                    }`}
+                    data-active={String(activeGame?.gamePk) === String(m.gamePk)}
+                    data-live={m.isLive}
+                    aria-pressed={String(activeGame?.gamePk) === String(m.gamePk)}
+                    className="live-slate-card min-h-[44px] rounded-2xl p-3 text-left sm:p-3.5"
                   >
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <span className="font-mono text-[9px] font-bold text-slate-400 uppercase truncate">
+                    <div className="mb-2 flex items-center justify-between gap-1">
+                      <span className="min-w-0 truncate font-mono text-[9px] font-bold uppercase text-slate-400">
                         {m.venue ? m.venue.split(' ')[0] : 'MLB'}
                       </span>
                       <StatusBadge m={m} />
@@ -799,7 +818,9 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                 </div>
 
                 <div className="min-w-0 max-w-4xl mx-auto w-full">
-                  <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+                  <Suspense fallback={<PanelHold height="420px" label="Loading pitch-by-pitch stream" />}>
+                    <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+                  </Suspense>
                 </div>
               </section>
             )}
@@ -807,14 +828,18 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
             {/* Pregame AI Read */}
             {activeGame && !activeGame.isLive && !activeGame.isFinal && (
               <div className="mt-6">
-                <PregameAiReadPanel game={activeGame} />
+                <Suspense fallback={<PanelHold height="280px" label="Loading pregame read" />}>
+                  <PregameAiReadPanel game={activeGame} />
+                </Suspense>
               </div>
             )}
 
             {/* Final Game Recap */}
             {activeGame?.isFinal && (
               <div className="mt-6">
-                <FinalGameRecapPanel game={activeGame} />
+                <Suspense fallback={<PanelHold height="280px" label="Loading game recap" />}>
+                  <FinalGameRecapPanel game={activeGame} />
+                </Suspense>
               </div>
             )}
 

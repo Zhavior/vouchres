@@ -1,0 +1,56 @@
+/**
+ * Live Games deck.
+ *
+ * Shares the grammar in src/styles/command-deck.css and swaps the accents:
+ * rose is the in-play signal across this app, cyan carries the telemetry.
+ */
+
+.live-deck {
+  --deck-accent: #ff4d6d;
+  --deck-accent-2: #00f0ff;
+  --deck-accent-rgb: 255, 77, 109;
+  --deck-accent-2-rgb: 0, 240, 255;
+}
+
+/* Feed pill — emerald while the official stream is syncing, amber while it recovers. */
+.live-feed-pill {
+  border: 1px solid rgba(0, 255, 148, 0.3);
+  background: rgba(0, 255, 148, 0.1);
+  color: #00ff94;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 148, 0.05);
+}
+.live-feed-pill[data-state="reconnecting"] {
+  border-color: rgba(255, 183, 0, 0.32);
+  background: rgba(255, 183, 0, 0.1);
+  color: #ffb700;
+}
+.live-feed-pill[data-state="down"] {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fda4af;
+}
+
+/* Slate card — the selector grid. Contain paint so polling can't thrash layout. */
+.live-slate-card {
+  contain: layout paint;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.live-slate-card:hover:not([data-active="true"]) {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.6);
+}
+.live-slate-card[data-active="true"] {
+  border-color: rgba(var(--deck-accent-2-rgb), 0.6);
+  background: rgba(var(--deck-accent-2-rgb), 0.08);
+  box-shadow: inset 0 0 0 1px rgba(var(--deck-accent-2-rgb), 0.12);
+}
+/* A live game keeps its rose edge even when another card is selected. */
+.live-slate-card[data-live="true"] {
+  border-left: 2px solid rgba(244, 63, 94, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-slate-card { transition: none; }
+}

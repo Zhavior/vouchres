@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, ChevronDown, RefreshCw, Radio, Crosshair, CheckCircle2, Clock3, TriangleAlert } from 'lucide-react';
 import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import { localISODate } from '../../utils/localDate';
+import '../../../../styles/command-deck.css';
 import '../../hr-command.css';
 
 export type HrViewMode = 'cards' | 'table' | 'treemap';
@@ -36,7 +37,7 @@ const FRESHNESS: Record<HrFreshness, { label: string; tone: 'emerald' | 'amber' 
 };
 
 const DatePicker: React.FC<{ date: string; isToday: boolean; onChange: (date: string) => void }> = ({ date, isToday, onChange }) => (
-  <label className="hr-control relative flex h-10 min-w-[120px] cursor-pointer items-center gap-2 rounded-xl px-3 sm:min-w-[150px]">
+  <label className="deck-control relative flex h-10 min-w-[120px] cursor-pointer items-center gap-2 rounded-xl px-3 sm:min-w-[150px]">
     <Calendar className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
     <span className="flex-1 truncate font-mono text-[11px] font-bold sm:text-xs">{isToday ? 'Today' : date}</span>
     <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
@@ -61,9 +62,9 @@ function RailCell({
   tone?: 'cyan' | 'emerald' | 'amber' | 'danger';
 }) {
   return (
-    <div className="hr-rail-cell" data-tone={tone}>
-      <span className="hr-rail-label font-mono">{label}</span>
-      <span className="hr-rail-value">{value}</span>
+    <div className="deck-rail-cell" data-tone={tone}>
+      <span className="deck-rail-label font-mono">{label}</span>
+      <span className="deck-rail-value">{value}</span>
     </div>
   );
 }
@@ -85,10 +86,10 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   const freshnessTone = FRESHNESS[freshness] ?? FRESHNESS.fresh;
 
   return (
-    <header className="hr-hero rounded-2xl p-3.5 sm:p-5">
+    <header className="deck-hero rounded-2xl p-3.5 sm:p-5">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
-          <div className={`${AURORA_LABEL} hr-product-mark !text-[9.5px] font-bold sm:!text-xs`}>
+          <div className={`${AURORA_LABEL} deck-product-mark !text-[9.5px] font-bold sm:!text-xs`}>
             <Crosshair className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
             <span className="min-w-0 truncate">
               Home Run Intelligence<span className="hidden sm:inline"> · MLB Signal Deck</span>
@@ -120,7 +121,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
               onClick={onRefresh}
               disabled={isRefreshing}
               aria-label="Refresh slate data"
-              className="hr-control flex h-10 w-10 items-center justify-center rounded-xl text-vouch-cyan"
+              className="deck-control flex h-10 w-10 items-center justify-center rounded-xl text-vouch-cyan"
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
@@ -131,7 +132,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
       </div>
 
       {/* Slate vitals — one rail replaces the old mobile ticker + desktop stat grid. */}
-      <div className="hr-rail mt-4 rounded-xl">
+      <div className="deck-rail mt-4 rounded-xl">
         <RailCell label="MLB slate" value={noGames ? 'No games' : `${gameCount} game${gameCount === 1 ? '' : 's'}`} />
         <RailCell
           label="Freshness"

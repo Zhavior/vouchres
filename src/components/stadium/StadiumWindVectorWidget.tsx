@@ -43,6 +43,8 @@ export default function StadiumWindVectorWidget({
 }: StadiumWindVectorWidgetProps) {
   const isIndoor = status === "indoor";
   const isRetractable = status === "retractable";
+  // No feed wired in: say so rather than rendering zeros as if they were readings.
+  const isUnavailable = status === "unavailable";
 
   const deg = useMemo(() => {
     if (!windCompass) return 0;
@@ -124,14 +126,14 @@ export default function StadiumWindVectorWidget({
         {/* Roof status pill */}
         <span
           className={`text-[9.5px] font-black font-mono px-2 py-0.5 rounded-full border ${
-            isIndoor
+            isUnavailable || isIndoor
               ? "bg-slate-800 text-slate-400 border-slate-700"
               : isRetractable
               ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
               : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
           }`}
         >
-          {isIndoor ? "Fixed Dome" : isRetractable ? "Retractable Roof" : "Open Air"}
+          {isUnavailable ? "Feed Offline" : isIndoor ? "Fixed Dome" : isRetractable ? "Retractable Roof" : "Open Air"}
         </span>
       </div>
 
@@ -204,7 +206,7 @@ export default function StadiumWindVectorWidget({
               <div>
                 <p className="text-[10px] font-mono uppercase text-slate-400">Wind Vector</p>
                 <p className={`text-xs font-black font-mono ${windImpact.color}`}>
-                  {isIndoor ? "None (Dome)" : `${windMph ?? 0} mph ${windCompass ?? "N/A"}`}
+                  {isUnavailable ? "No reading" : isIndoor ? "None (Dome)" : `${windMph ?? 0} mph ${windCompass ?? "N/A"}`}
                 </p>
               </div>
             </div>
@@ -220,7 +222,7 @@ export default function StadiumWindVectorWidget({
               <div>
                 <p className="text-[10px] font-mono uppercase text-slate-400">Air Temp & Density</p>
                 <p className="text-xs font-black font-mono text-white">
-                  {tempF ? `${tempF}°F` : "Indoor Temp Controlled"}
+                  {tempF ? `${tempF}°F` : isUnavailable ? "No reading" : "Indoor Temp Controlled"}
                 </p>
               </div>
             </div>

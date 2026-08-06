@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { LayoutGrid, TrendingUp, Layers, Grid, Flame } from "lucide-react";
 import { WORKSPACE_TABS } from "./constants";
 import type { WorkspaceView } from "./types";
+import "../../../../styles/command-deck.css";
 import "../../hr-command.css";
 
 interface Props {
@@ -36,7 +37,7 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
             aria-current={isActive ? "page" : undefined}
             onClick={() => onChange(tab.id)}
             title={tab.description}
-            className="hr-tab group relative flex min-h-[44px] shrink-0 snap-start items-center gap-2.5 rounded-xl px-3 py-2 text-left sm:px-4"
+            className="deck-tab group relative flex min-h-[44px] shrink-0 snap-start items-center gap-2.5 rounded-xl px-3 py-2 text-left sm:px-4"
           >
             {isActive && (
               <motion.span

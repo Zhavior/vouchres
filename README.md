@@ -2,7 +2,7 @@
 
 A production-grade, secure full-stack web application featuring robust authentication, real-time data persistence, automated tier gating, and integrated Stripe subscriptions.
 
-[Live Demo Link Here] | [Home Run Intelligence](#-home-run-intelligence) | [Architecture Overview](#-architecture--tech-stack)
+[Live Demo Link Here] | [Home Run Intelligence](#-home-run-intelligence) | [Live Games](#-live-games) | [Design System](#-shared-design-system) | [Architecture Overview](#-architecture--tech-stack)
 
 ---
 
@@ -128,6 +128,92 @@ snapshot attached.
 |------|---------|----------|
 | `HR_MAP_ENABLED` | `true` | Treemap signal-field view mode |
 | `HR_EXPORT_ENABLED` | `false` | CSV export of the visible board |
+
+---
+
+## 📡 Live Games
+
+Real-time telemetry for the MLB slate. Official game state first — scores,
+innings and line scores straight from the feed — with research layered on only
+where a verified source backs it.
+
+**Route:** `/live_games` (also `/live-projections`)
+**Entry point:** [`src/components/LiveGamesProZ8.tsx`](src/components/LiveGamesProZ8.tsx)
+**Access:** public.
+
+### The command deck
+
+Same grammar as Home Run Intelligence, different accent — rose reads as in-play
+across the app, cyan carries the telemetry.
+
+| Element | What it does |
+|---------|--------------|
+| Vitals rail | Live now / Upcoming / Final counts, plus feed state and last sync time |
+| Feed pill | `STREAMING`, `RECONNECTING` or `OFFLINE` — the poll's real state, not a decoration |
+| Fast sync | Forces a refetch of both the live feed and the HR board |
+| Filter tabs | All games · Live now · Upcoming · Final, each with a live count |
+
+Polling is adaptive: roughly **12s while games are live, 60s when idle**, and it
+pauses entirely when the tab is hidden. Schedule order is preserved across polls,
+so a refresh never reshuffles the slate under your cursor.
+
+### Game spotlight
+
+The selected game gets a full scoreboard: team logos, big tabular score,
+inning-by-inning line score with runs/hits/errors, venue and status. On mobile
+it collapses to a single compact row rather than a ~500px stack.
+
+Below it, the page swaps in the panel that fits the game's state:
+
+* **Live** — pitch-by-pitch sweat stream (~6s cadence): current pitcher, batter, count, outs, runners, win probability and the live play description
+* **Pregame** — AI read panel for a game that hasn't started
+* **Final** — game recap panel
+
+### Slate grid
+
+Every game on the slate as a compact score card — venue, status badge, both
+teams with logos and scores. Live games carry a rose left edge so they stay
+findable even when another card is selected. Cards are `contain: layout paint`,
+so a poll tick can't thrash the grid's layout.
+
+### Matchup drawer
+
+Opening a matchup slides in a side panel with the live scoreboard, the full line
+score, ballpark physics, and that game's active HR signals — each one addable
+straight to the parlay slip. The drawer locks body scroll, closes on **Escape**
+or backdrop click, and is a proper `role="dialog"` with `aria-modal`.
+
+Ballpark conditions render in an explicit **Feed Offline / No reading** state
+until a weather source is wired in, rather than displaying placeholder numbers
+as if they were live readings.
+
+### Performance and mobile
+
+* **No loading chunks.** The at-bat stream, ballpark widget, pregame read and final recap are lazy chunks warmed on idle — a game going live never triggers a visible fallback.
+* **No layout jump.** The initial skeleton mirrors the real layout (spotlight hero, then the slate grid) instead of four generic boxes, and every Suspense boundary is sized.
+* **Mobile-first.** Compact single-row scoreboard, 2-up slate grid at 172×111, 44px filter tabs with snap-scroll, full-width drawer with safe-area padding, no horizontal page scroll at 375px.
+
+---
+
+## 🎛 Shared design system
+
+Both intelligence surfaces run on one stylesheet:
+[`src/styles/command-deck.css`](src/styles/command-deck.css).
+
+It carries the grammar — dotted evidence field, orbit ring, hairline vitals rail,
+pulsing product mark, sized loading holds, reveal motion — and each page supplies
+its own accents:
+
+```css
+.hr-deck   { --deck-accent: #00f0ff; --deck-accent-2: #00ff94; }  /* signal cyan / confirmed emerald */
+.live-deck { --deck-accent: #ff4d6d; --deck-accent-2: #00f0ff; }  /* in-play rose / telemetry cyan */
+```
+
+The look originated on the Sports Intelligence Brain page
+(`src/features/brain/brain.css`), which is currently hidden. Keeping the grammar
+shared means it returns into a family that already matches it.
+
+All motion in the system is disabled under `prefers-reduced-motion`.
 
 ---
 

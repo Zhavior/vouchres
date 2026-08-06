@@ -39,6 +39,7 @@ import {
 import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
+import '../../../styles/command-deck.css';
 import '../hr-command.css';
 
 /** Warm a lazy chunk without blocking; failures are retried by React on render. */
@@ -138,13 +139,13 @@ const LoadingSkeleton: React.FC = () => (
  * that jump is the "loading chunk" the board is judged on.
  */
 const PanelHold: React.FC<{ height: string; label?: string }> = ({ height, label }) => (
-  <div className="hr-hold rounded-2xl" style={{ minHeight: height }} aria-hidden={!label} role={label ? 'status' : undefined}>
+  <div className="deck-hold rounded-2xl" style={{ minHeight: height }} aria-hidden={!label} role={label ? 'status' : undefined}>
     {label ? <span className="sr-only">{label}</span> : null}
   </div>
 );
 
 const TableSkeleton: React.FC = () => (
-  <div className="hr-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
+  <div className="deck-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
     <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className={`h-2.5 rounded bg-white/[0.08] ${i === 0 ? 'w-32' : 'w-14'}`} />
@@ -485,7 +486,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
       <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_X}`}>
 
         {/* ── Command deck: hero, filters and workspace tabs in one surface ─ */}
-        <div className="hr-reveal space-y-3">
+        <div className="deck-reveal space-y-3">
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
@@ -589,7 +590,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           </Suspense>
 
           {/* Keyed so switching workspaces animates in rather than swapping hard. */}
-          <div key={workspace} className="hr-reveal flex min-w-0 flex-col">
+          <div key={workspace} className="deck-reveal flex min-w-0 flex-col">
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">

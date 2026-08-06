@@ -1,0 +1,224 @@
+/**
+ * Command deck — the shared page grammar.
+ *
+ * Originally the Brain page's look (src/features/brain/brain.css): a dotted
+ * evidence field, an orbit ring bleeding past the corner, hairline rails and a
+ * pulsing product mark. Lifted here so every intelligence surface wears it and
+ * they read as one product.
+ *
+ * A deck sets its own accents and everything else follows:
+ *
+ *   .my-deck { --deck-accent: #00f0ff; --deck-accent-2: #00ff94; }
+ *
+ * Home Run Intelligence runs cyan/emerald; Live Games runs rose/cyan.
+ */
+
+/* Defaults so a deck component is never unstyled outside a themed page root. */
+:root {
+  --deck-accent: #00f0ff;
+  --deck-accent-2: #00ff94;
+  --deck-accent-rgb: 0, 240, 255;
+  --deck-accent-2-rgb: 0, 255, 148;
+  --deck-line: rgba(190, 221, 238, 0.12);
+  --deck-amber: #ffb700;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+
+.deck-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--deck-line);
+  background:
+    linear-gradient(100deg, rgba(var(--deck-accent-rgb), 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(7, 11, 17, 0.94) 48%, rgba(3, 8, 13, 0.98));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.07);
+}
+
+/* Evidence field — dotted grid, masked off toward the right. */
+.deck-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.22;
+  background-image: radial-gradient(rgba(var(--deck-accent-rgb), 0.7) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+  mask-image: linear-gradient(105deg, black, transparent 66%);
+}
+
+/* Orbit ring — the signature, bleeding past the top-right corner. */
+.deck-hero::after {
+  content: "";
+  position: absolute;
+  top: -7rem;
+  right: -5rem;
+  width: 20rem;
+  aspect-ratio: 1;
+  border: 1px solid rgba(var(--deck-accent-2-rgb), 0.24);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2.1rem rgba(var(--deck-accent-2-rgb), 0.025),
+    0 0 0 4.3rem rgba(var(--deck-accent-rgb), 0.018);
+  pointer-events: none;
+}
+
+.deck-product-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--deck-accent);
+}
+.deck-product-mark::before {
+  content: "";
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--deck-accent-2);
+  box-shadow: 0 0 16px var(--deck-accent-2);
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────── */
+
+.deck-control {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.72);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+.deck-control:hover:not(:disabled) {
+  border-color: rgba(var(--deck-accent-rgb), 0.5);
+  background: rgba(var(--deck-accent-rgb), 0.08);
+  color: var(--deck-accent);
+}
+.deck-control:disabled { opacity: 0.45; }
+
+/* ── Vitals rail — the page's status in one row ───────────────────────── */
+
+.deck-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+}
+.deck-rail-cell {
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  background: rgba(4, 9, 15, 0.86);
+  border-left: 2px solid rgba(var(--deck-accent-rgb), 0.35);
+}
+.deck-rail-cell[data-tone="emerald"] { border-left-color: rgba(0, 255, 148, 0.45); }
+.deck-rail-cell[data-tone="amber"] { border-left-color: rgba(255, 183, 0, 0.45); }
+.deck-rail-cell[data-tone="rose"] { border-left-color: rgba(244, 63, 94, 0.55); }
+.deck-rail-cell[data-tone="danger"] { border-left-color: rgba(248, 113, 113, 0.5); }
+.deck-rail-label {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deck-rail-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+
+.deck-tab {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.56);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+.deck-tab:hover:not([data-active="true"]) {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.88);
+}
+.deck-tab[data-active="true"] {
+  border-color: rgba(var(--deck-accent-rgb), 0.52);
+  color: var(--deck-accent);
+}
+/* A tab can override its own accent, so rose can stay reserved for in-play. */
+.deck-tab[data-active="true"][data-tone="cyan"] {
+  border-color: rgba(0, 240, 255, 0.52);
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.1);
+}
+.deck-tab[data-active="true"][data-tone="rose"] {
+  border-color: rgba(244, 63, 94, 0.55);
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.12);
+}
+.deck-tab[data-active="true"][data-tone="sky"] {
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.1);
+}
+.deck-tab[data-active="true"][data-tone="emerald"] {
+  border-color: rgba(49, 181, 131, 0.55);
+  color: #6ee7b7;
+  background: rgba(49, 181, 131, 0.1);
+}
+
+/* ── Reserved-space skeletons — never collapse, never jump ────────────── */
+
+.deck-hold {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(4, 9, 15, 0.55);
+}
+.deck-hold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(var(--deck-accent-rgb), 0.055), transparent);
+  animation: deck-sweep 1.5s ease-in-out infinite;
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────── */
+
+.deck-reveal {
+  animation: deck-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes deck-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes deck-sweep {
+  to { transform: translateX(100%); }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .deck-hero::after { top: -9rem; right: -11rem; }
+  .deck-hero::before { mask-image: linear-gradient(125deg, black, transparent 78%); }
+  .deck-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .deck-rail-cell { padding: 0.5rem 0.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-reveal { animation: none; }
+  .deck-hold::after { animation: none; }
+  .deck-control, .deck-tab { transition: none; }
+}
