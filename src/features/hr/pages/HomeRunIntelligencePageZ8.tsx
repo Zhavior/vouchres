@@ -1,15 +1,11 @@
 import React, { lazy, Suspense, useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
-import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
-import { logoByTeamName } from '../../../lib/teamLogos';
+import { RefreshCw, AlertOctagon, Inbox } from 'lucide-react';
 import {
-  AURORA_LABEL,
   AURORA_PAGE,
   AURORA_PAGE_GAP,
   AURORA_PAGE_PAD_X,
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL_PREMIUM,
-  AURORA_STAT_CHIP,
 } from '../../../theme/auroraTokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
@@ -19,9 +15,15 @@ import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
-const MostVouchedPlayersPanel = lazy(() => import('../components/Social/MostVouchedPlayersPanel').then(m => ({ default: m.MostVouchedPlayersPanel })));
-const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then(m => ({ default: m.HrSpreadsheet })));
-const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then(m => ({ default: m.HrPlayerProfile })));
+// Loaders are named so intent handlers can warm the chunk before it is rendered —
+// a view switch should never be the first time the browser asks for the code.
+const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel');
+const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
+const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile');
+
+const MostVouchedPlayersPanel = lazy(() => loadMostVouchedPanel().then(m => ({ default: m.MostVouchedPlayersPanel })));
+const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
+const HrPlayerProfile = lazy(() => loadHrPlayerProfile().then(m => ({ default: m.HrPlayerProfile })));
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -37,57 +39,44 @@ import {
 import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
+import '../hr-command.css';
 
-interface MiniStatChipProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClasses: string;
-  glowClasses: string;
+/** Warm a lazy chunk without blocking; failures are retried by React on render. */
+function warmChunk(load: () => Promise<unknown>): void {
+  void load().catch(() => {});
 }
 
-const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div className={`${AURORA_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
-    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
-    <div className="flex flex-col leading-tight">
-      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
-    </div>
-  </div>
-);
+/**
+ * Run once the main thread is free. Idle callbacks are the right primitive but
+ * they never fire in a backgrounded tab, so a timer races alongside and whichever
+ * lands first wins — the warm-up always happens, it just prefers a quiet frame.
+ */
+function whenIdle(run: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
 
-function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const resolvedLogo = logoUrl || logoByTeamName(team);
+  const win = window as unknown as {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
 
-  return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/45">
-      {resolvedLogo && !imageFailed ? (
-        <img src={resolvedLogo} alt="" className="h-5 w-5 object-contain" loading="lazy" decoding="async" onError={() => setImageFailed(true)} />
-      ) : (
-        <span className="font-mono text-[7px] font-black text-white/55">{team.slice(0, 3).toUpperCase()}</span>
-      )}
-    </span>
-  );
+  let done = false;
+  const fire = () => {
+    if (done) return;
+    done = true;
+    run();
+  };
+
+  const timer = window.setTimeout(fire, 1200);
+  const idleHandle = typeof win.requestIdleCallback === 'function'
+    ? win.requestIdleCallback(fire, { timeout: 2000 })
+    : null;
+
+  return () => {
+    done = true;
+    window.clearTimeout(timer);
+    if (idleHandle !== null) win.cancelIdleCallback?.(idleHandle);
+  };
 }
-
-const statusTone = {
-  fresh: {
-    label: 'Fresh',
-    className: 'border-[hsl(var(--ve-success)/0.22)] bg-[hsl(var(--ve-success)/0.08)] text-[#7dffc5]',
-    icon: <CheckCircle2 className="h-2.5 w-2.5" />,
-  },
-  delayed: {
-    label: 'Delayed',
-    className: 'border-vouch-amber/25 bg-vouch-amber/10 text-vouch-amber',
-    icon: <Clock3 className="h-2.5 w-2.5" />,
-  },
-  stale: {
-    label: 'Stale',
-    className: 'border-red-500/25 bg-red-500/10 text-red-300',
-    icon: <TriangleAlert className="h-2.5 w-2.5" />,
-  },
-} as const;
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -137,6 +126,35 @@ const LoadingSkeleton: React.FC = () => (
             </div>
             <div className="h-6 w-full animate-pulse bg-white/[0.05]" />
           </div>
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
+/**
+ * Suspense fallbacks that occupy the same box as the component they stand in for.
+ * A `null` fallback collapses the slot and the page jumps when the chunk lands —
+ * that jump is the "loading chunk" the board is judged on.
+ */
+const PanelHold: React.FC<{ height: string; label?: string }> = ({ height, label }) => (
+  <div className="hr-hold rounded-2xl" style={{ minHeight: height }} aria-hidden={!label} role={label ? 'status' : undefined}>
+    {label ? <span className="sr-only">{label}</span> : null}
+  </div>
+);
+
+const TableSkeleton: React.FC = () => (
+  <div className="hr-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
+    <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className={`h-2.5 rounded bg-white/[0.08] ${i === 0 ? 'w-32' : 'w-14'}`} />
+      ))}
+    </div>
+    {Array.from({ length: 10 }).map((_, rowIdx) => (
+      <div key={rowIdx} className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-3">
+        <div className="h-3 w-32 rounded bg-white/[0.06]" />
+        {Array.from({ length: 5 }).map((__, cellIdx) => (
+          <div key={cellIdx} className="h-3 w-14 rounded bg-white/[0.04]" />
         ))}
       </div>
     ))}
@@ -248,7 +266,6 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
   const topPlayer = vm.rows?.[0] ?? null;
-  const freshnessTone = statusTone[vm.slate.freshness];
   const warningList = vm.slate.warnings.slice(0, 3);
   const noGamesToday = !vm.loading && !vm.slate.hasGames && (vm.slate.gameCount === 0 || totalCount === 0);
   const visiblePlayerIds = useMemo(
@@ -442,9 +459,13 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
-  React.useEffect(() => {
-    console.log("[HR Workspace]", workspace);
-  }, [workspace]);
+  // Warm the side chunks once the board is interactive so opening research, the
+  // table or the vouch panel never waits on a network round-trip.
+  React.useEffect(() => whenIdle(() => {
+    warmChunk(loadMostVouchedPanel);
+    warmChunk(loadHrPlayerProfile);
+    warmChunk(loadHrSpreadsheet);
+  }), []);
 
 
   const viewMode = localViewMode;
@@ -460,20 +481,28 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   };
 
   return (
-    <div className={`${AURORA_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
+    <div className={`${AURORA_PAGE} hr-deck min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_X}`}>
 
-        {/* ── Top Header & Command Center Bar ──────────────────────────── */}
-        <header className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
+        {/* ── Command deck: hero, filters and workspace tabs in one surface ─ */}
+        <div className="hr-reveal space-y-3">
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
             isRefreshing={vm.syncing}
             lastUpdated={lastUpdated}
+            lastUpdatedLabel={lastUpdatedLabel}
             date={vm.date}
             isToday={isToday}
             onDateChange={vm.setDate}
+            gameCount={vm.slate.gameCount}
+            hasGames={vm.slate.hasGames && !noGamesToday}
+            freshness={vm.slate.freshness}
+            confirmedCount={vm.modeCounts?.confirmed ?? 0}
+            previewCount={vm.modeCounts?.curated ?? 0}
           />
+
+          <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-2.5 sm:p-4 space-y-3`}>
           <HrCommandCenter
             mode={vm.mode}
             viewMode={viewMode}
@@ -502,23 +531,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             previewCount={vm.modeCounts?.curated ?? 0}
           />
           <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
-        </header>
-
-        {/* ── Slate Status Summary Row ───────────────────────────── */}
-        {/* Mobile: Sleek 1-line compact ticker bar */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 font-mono text-[10px] font-bold text-slate-200 sm:hidden">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-vouch-cyan shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
-            <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
           </div>
-          <span className="text-white/20">•</span>
-          <span className={`inline-flex items-center gap-1 ${freshnessTone.className}`}>
-            {freshnessTone.label}
-          </span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-emerald">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-amber">{vm.modeCounts?.curated ?? 0} Preview</span>
         </div>
 
         {(vm.refreshError || vm.connection?.isLastGood || warningList.length > 0) && (
@@ -542,30 +555,6 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           </div>
         )}
 
-        {/* Tablet / Desktop: 4-card grid */}
-        <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">MLB Slate</p>
-            <p className="mt-1 text-sm font-black text-white">
-              {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
-            </p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Freshness</p>
-            <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}>
-              {freshnessTone.icon}{freshnessTone.label}
-            </span>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Confirmed Orders</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.confirmed ?? 0} official</p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Preview Candidates</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.curated ?? 0} projected</p>
-          </div>
-        </div>
-
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
           {topPlayer ? (
@@ -587,7 +576,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           {/* Lazy chunks need their own boundary. Without one they suspend the
               whole page, so the board's loading skeleton and error state never
               paint — the user gets a blank panel instead. */}
-          <Suspense fallback={null}>
+          <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
           <MostVouchedPlayersPanel
             players={playerVouchLeaderboard.data ?? []}
             subtitle="The hottest community-backed bats on this slate."
@@ -599,6 +588,8 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           />
           </Suspense>
 
+          {/* Keyed so switching workspaces animates in rather than swapping hard. */}
+          <div key={workspace} className="hr-reveal flex min-w-0 flex-col">
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
@@ -614,7 +605,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
-              <Suspense fallback={<LoadingSkeleton />}>
+              <Suspense fallback={<TableSkeleton />}>
               <HrSpreadsheet
                 rows={(vm.rows ?? []) as any}
                 freshness={vm.slate.freshness}
@@ -657,6 +648,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             )}
           </div>
           </WorkspaceRenderer>
+          </div>
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
             <p>

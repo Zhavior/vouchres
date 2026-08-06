@@ -1,28 +1,45 @@
 import React from 'react';
-import { Calendar, ChevronDown, RefreshCw, Flame, Sparkles, Radio } from 'lucide-react';
+import { Calendar, ChevronDown, RefreshCw, Radio, Crosshair, CheckCircle2, Clock3, TriangleAlert } from 'lucide-react';
+import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import { localISODate } from '../../utils/localDate';
+import '../../hr-command.css';
 
 export type HrViewMode = 'cards' | 'table' | 'treemap';
+
+export type HrFreshness = 'fresh' | 'delayed' | 'stale';
 
 export interface HrHeaderProps {
   mode: string;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   lastUpdated?: Date | null;
+  lastUpdatedLabel?: string;
   date?: string;
   isToday?: boolean;
   onDateChange?: (date: string) => void;
+  /** Slate vitals live in the hero rail so the page carries one status surface, not three. */
+  gameCount?: number;
+  hasGames?: boolean;
+  freshness?: HrFreshness;
+  confirmedCount?: number;
+  previewCount?: number;
 }
 
 function todayISO(): string {
   return localISODate();
 }
 
+const FRESHNESS: Record<HrFreshness, { label: string; tone: 'emerald' | 'amber' | 'danger'; icon: React.ReactNode }> = {
+  fresh: { label: 'Fresh', tone: 'emerald', icon: <CheckCircle2 className="h-2.5 w-2.5" /> },
+  delayed: { label: 'Delayed', tone: 'amber', icon: <Clock3 className="h-2.5 w-2.5" /> },
+  stale: { label: 'Stale', tone: 'danger', icon: <TriangleAlert className="h-2.5 w-2.5" /> },
+};
+
 const DatePicker: React.FC<{ date: string; isToday: boolean; onChange: (date: string) => void }> = ({ date, isToday, onChange }) => (
-  <label className="relative flex h-9 min-w-[150px] cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-black/40 px-3 text-white transition hover:border-vouch-cyan hover:bg-black/60 shadow-inner">
-    <Calendar className="h-3.5 w-3.5 text-vouch-cyan" />
-    <span className="flex-1 font-mono text-xs font-bold">{isToday ? 'Today' : date}</span>
-    <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+  <label className="hr-control relative flex h-10 min-w-[120px] cursor-pointer items-center gap-2 rounded-xl px-3 sm:min-w-[150px]">
+    <Calendar className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
+    <span className="flex-1 truncate font-mono text-[11px] font-bold sm:text-xs">{isToday ? 'Today' : date}</span>
+    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
     <input
       type="date"
       value={date}
@@ -34,68 +51,104 @@ const DatePicker: React.FC<{ date: string; isToday: boolean; onChange: (date: st
   </label>
 );
 
+function RailCell({
+  label,
+  value,
+  tone = 'cyan',
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: 'cyan' | 'emerald' | 'amber' | 'danger';
+}) {
+  return (
+    <div className="hr-rail-cell" data-tone={tone}>
+      <span className="hr-rail-label font-mono">{label}</span>
+      <span className="hr-rail-value">{value}</span>
+    </div>
+  );
+}
+
 export const HrHeader: React.FC<HrHeaderProps> = ({
   onRefresh,
   isRefreshing = false,
+  lastUpdatedLabel,
   date,
   isToday = true,
   onDateChange,
-}) => (
-  <header className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#0d1c30] via-[#091525] to-[#060c14] p-3.5 sm:p-5 shadow-[0_0_50px_rgba(0,0,0,0.4)] backdrop-blur-2xl">
-    {/* Subtle Background Glow Orbs */}
-    <div className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-vouch-cyan/10 blur-3xl" />
-    <div className="pointer-events-none absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-vouch-emerald/10 blur-3xl" />
+  gameCount = 0,
+  hasGames = true,
+  freshness = 'fresh',
+  confirmedCount = 0,
+  previewCount = 0,
+}) => {
+  const noGames = !hasGames || gameCount === 0;
+  const freshnessTone = FRESHNESS[freshness] ?? FRESHNESS.fresh;
 
-    <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      {/* Title & Subtitle Badge */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_15px_rgba(0,240,255,0.25)]">
-          <Flame className="h-6 w-6 fill-current text-vouch-cyan" />
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="truncate text-lg sm:text-2xl font-black uppercase tracking-tight text-white">
-              Home Run Intelligence
-            </h1>
-            <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-[9px] font-black text-vouch-cyan uppercase tracking-wider">
-              <Sparkles className="h-2.5 w-2.5" /> Model v3.6
+  return (
+    <header className="hr-hero rounded-2xl p-3.5 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 max-w-3xl">
+          <div className={`${AURORA_LABEL} hr-product-mark !text-[9.5px] font-bold sm:!text-xs`}>
+            <Crosshair className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
+            <span className="min-w-0 truncate">
+              Home Run Intelligence<span className="hidden sm:inline"> · MLB Signal Deck</span>
             </span>
           </div>
-          <p className="truncate text-xs text-slate-300 font-medium mt-0.5">
-            Power. Matchup Vulnerability. Park Factors. Official Batting Orders.
+          <h1 className="mt-2 max-w-2xl text-xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+            Every bat that can leave the yard,{' '}
+            <span className="text-vouch-emerald">ranked and receipted.</span>
+          </h1>
+          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-white/60 sm:text-sm">
+            Power, matchup vulnerability, park factors and official batting orders — scored on one slate, labelled
+            confirmed or projected, never dressed up as more certain than it is.
           </p>
         </div>
-      </div>
 
-      {/* Control Actions & Indicators */}
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-        {/* Live Slate Status Pill */}
-        <div className="hidden sm:flex h-9 items-center gap-2 rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 font-mono text-xs font-bold text-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.15)]">
-          <Radio className="h-3.5 w-3.5 animate-pulse text-vouch-emerald" />
-          <span>{isToday ? 'LIVE SLATE' : 'HISTORICAL'}</span>
-        </div>
-
-        {/* Refresh Button */}
-        {onRefresh ? (
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            aria-label="Refresh slate data"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/40 text-vouch-cyan hover:border-vouch-cyan transition disabled:opacity-40"
+        {/* Controls: wrap on mobile, hold the right edge on desktop. */}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div
+            className="hr-live-pill inline-flex h-10 items-center gap-2 rounded-xl px-3 font-mono text-[10px] font-bold uppercase tracking-wider sm:text-xs"
+            data-live={isToday}
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-        ) : null}
+            <Radio className={`h-3.5 w-3.5 ${isToday && !isRefreshing ? 'animate-pulse' : ''}`} />
+            <span>{isToday ? 'Live slate' : 'Historical'}</span>
+          </div>
 
-        {/* Date Selector */}
-        {date && onDateChange ? (
-          <DatePicker date={date} isToday={isToday} onChange={onDateChange} />
-        ) : null}
+          {onRefresh ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh slate data"
+              className="hr-control flex h-10 w-10 items-center justify-center rounded-xl text-vouch-cyan"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          ) : null}
+
+          {date && onDateChange ? <DatePicker date={date} isToday={isToday} onChange={onDateChange} /> : null}
+        </div>
       </div>
-    </div>
-  </header>
-);
+
+      {/* Slate vitals — one rail replaces the old mobile ticker + desktop stat grid. */}
+      <div className="hr-rail mt-4 rounded-xl">
+        <RailCell label="MLB slate" value={noGames ? 'No games' : `${gameCount} game${gameCount === 1 ? '' : 's'}`} />
+        <RailCell
+          label="Freshness"
+          tone={freshnessTone.tone}
+          value={
+            <span className="inline-flex items-center gap-1">
+              {freshnessTone.icon}
+              {freshnessTone.label}
+              {lastUpdatedLabel ? <span className="font-normal text-white/35">· {lastUpdatedLabel}</span> : null}
+            </span>
+          }
+        />
+        <RailCell label="Confirmed" tone="emerald" value={`${confirmedCount} official`} />
+        <RailCell label="Preview" tone="amber" value={`${previewCount} projected`} />
+      </div>
+    </header>
+  );
+};
 
 export default HrHeader;

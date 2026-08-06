@@ -127,8 +127,10 @@ function TierFilterButtons({
   onToggleTier: (tier: HrRiskTier) => void;
   className?: string;
 }) {
+  // Four tiers, one row from sm up — a 2-col grid inside a fixed h-10 clipped
+  // Watch and Sleeper out of reach entirely.
   return (
-    <div className={`flex overflow-x-auto gap-1 py-0.5 scrollbar-none snap-x sm:grid sm:grid-cols-2 sm:h-10 sm:flex-nowrap sm:items-stretch w-full min-w-0 max-w-full rounded-xl border border-white/15 bg-ve-graphite p-1 ${className}`}>
+    <div className={`flex overflow-x-auto gap-1 py-0.5 scrollbar-none snap-x sm:grid sm:grid-cols-4 sm:h-10 sm:flex-nowrap sm:items-stretch w-full min-w-0 max-w-full rounded-xl border border-white/15 bg-ve-graphite p-1 ${className}`}>
       {TIER_OPTIONS.map((tier) => {
         const active = activeTiers.includes(tier.key);
         const activeClasses =

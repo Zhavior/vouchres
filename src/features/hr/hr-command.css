@@ -1,0 +1,205 @@
+/**
+ * Home Run Intelligence command deck.
+ *
+ * Speaks the same visual language as the Brain page (src/features/brain/brain.css):
+ * dotted evidence field, orbit ring, hairline rails, cyan/emerald signal accents.
+ * The Brain page itself stays hidden — this is the HR deck wearing that grammar so
+ * the two read as one product when Brain comes back.
+ */
+
+.hr-deck {
+  --hr-ink: #070b11;
+  --hr-line: rgba(190, 221, 238, 0.12);
+  --hr-green: #00ff94;
+  --hr-cyan: #00f0ff;
+  --hr-gold: #f7c948;
+  --hr-amber: #ffb700;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+
+.hr-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--hr-line);
+  background:
+    linear-gradient(100deg, rgba(0, 240, 255, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(7, 11, 17, 0.94) 48%, rgba(3, 8, 13, 0.98));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.07);
+}
+
+/* Evidence field — the dotted grid the Brain hero uses, masked off to the right. */
+.hr-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.22;
+  background-image: radial-gradient(rgba(0, 240, 255, 0.7) 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+  mask-image: linear-gradient(105deg, black, transparent 66%);
+}
+
+/* Orbit ring — Brain's signature, tuned to emerald for the HR slate. */
+.hr-hero::after {
+  content: "";
+  position: absolute;
+  top: -7rem;
+  right: -5rem;
+  width: 20rem;
+  aspect-ratio: 1;
+  border: 1px solid rgba(0, 255, 148, 0.24);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.1rem rgba(0, 255, 148, 0.025), 0 0 0 4.3rem rgba(0, 240, 255, 0.018);
+  pointer-events: none;
+}
+
+.hr-product-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--hr-cyan);
+}
+.hr-product-mark::before {
+  content: "";
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--hr-green);
+  box-shadow: 0 0 16px var(--hr-green);
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────── */
+
+.hr-control {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.72);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+.hr-control:hover:not(:disabled) {
+  border-color: rgba(0, 240, 255, 0.5);
+  background: rgba(0, 240, 255, 0.08);
+  color: var(--hr-cyan);
+}
+.hr-control:disabled { opacity: 0.45; }
+
+.hr-live-pill {
+  border: 1px solid rgba(0, 255, 148, 0.3);
+  background: rgba(0, 255, 148, 0.1);
+  color: var(--hr-green);
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 148, 0.05);
+}
+.hr-live-pill[data-live="false"] {
+  border-color: rgba(255, 183, 0, 0.32);
+  background: rgba(255, 183, 0, 0.1);
+  color: var(--hr-amber);
+}
+
+/* ── Slate rail — the four vitals, one row, no separate status blocks ── */
+
+.hr-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+}
+.hr-rail-cell {
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  background: rgba(4, 9, 15, 0.86);
+  border-left: 2px solid rgba(0, 240, 255, 0.35);
+}
+.hr-rail-cell[data-tone="emerald"] { border-left-color: rgba(0, 255, 148, 0.45); }
+.hr-rail-cell[data-tone="amber"] { border-left-color: rgba(255, 183, 0, 0.45); }
+.hr-rail-cell[data-tone="danger"] { border-left-color: rgba(248, 113, 113, 0.5); }
+.hr-rail-label {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hr-rail-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Workspace tabs — Brain's tab grammar ─────────────────────────────── */
+
+.hr-tab {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.56);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+.hr-tab:hover:not([data-active="true"]) {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.88);
+}
+.hr-tab[data-active="true"] {
+  border-color: rgba(0, 240, 255, 0.52);
+  color: var(--hr-cyan);
+}
+
+/* ── Reserved-space skeletons — never collapse, never jump ────────────── */
+
+.hr-hold {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(4, 9, 15, 0.55);
+}
+.hr-hold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.055), transparent);
+  animation: hr-sweep 1.5s ease-in-out infinite;
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────── */
+
+.hr-reveal {
+  animation: hr-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes hr-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hr-sweep {
+  to { transform: translateX(100%); }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .hr-hero::after { top: -9rem; right: -11rem; }
+  .hr-hero::before { mask-image: linear-gradient(125deg, black, transparent 78%); }
+  .hr-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hr-rail-cell { padding: 0.5rem 0.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-reveal { animation: none; }
+  .hr-hold::after { animation: none; }
+  .hr-control, .hr-tab { transition: none; }
+}

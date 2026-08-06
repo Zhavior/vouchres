@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { LayoutGrid, TrendingUp, Layers, Grid, Flame } from "lucide-react";
 import { WORKSPACE_TABS } from "./constants";
 import type { WorkspaceView } from "./types";
+import "../../hr-command.css";
 
 interface Props {
   value: WorkspaceView;
@@ -20,47 +21,54 @@ const TAB_ICONS: Record<WorkspaceView, React.ReactNode> = {
 export default function WorkspaceSwitcher({ value, onChange }: Props) {
   return (
     <nav
-      aria-label="HR Intelligence Workspace View"
-      className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-1.5 backdrop-blur-xl no-scrollbar"
+      aria-label="HR Intelligence workspace"
+      className="scrollbar-none -mx-1 flex snap-x snap-mandatory items-stretch gap-1.5 overflow-x-auto px-1 py-0.5 xl:flex-wrap xl:overflow-x-visible"
     >
       {WORKSPACE_TABS.map((tab) => {
         const isActive = value === tab.id;
-        const icon = TAB_ICONS[tab.id];
 
         return (
           <button
             key={tab.id}
             type="button"
             disabled={!tab.enabled}
+            data-active={isActive}
+            aria-current={isActive ? "page" : undefined}
             onClick={() => onChange(tab.id)}
             title={tab.description}
-            className={[
-              "group relative flex min-h-[42px] shrink-0 items-center gap-2.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-200 select-none",
-              isActive
-                ? "text-vouch-cyan shadow-[0_0_20px_rgba(79,184,220,0.18)]"
-                : "text-white/60 hover:bg-white/[0.06] hover:text-white cursor-pointer",
-            ].join(" ")}
+            className="hr-tab group relative flex min-h-[44px] shrink-0 snap-start items-center gap-2.5 rounded-xl px-3 py-2 text-left sm:px-4"
           >
             {isActive && (
-              <motion.div
-                layoutId="workspace-active-pill"
-                className="absolute inset-0 rounded-xl border border-vouch-cyan/40 bg-gradient-to-r from-vouch-cyan/15 to-emerald-500/10"
+              <motion.span
+                layoutId="hr-workspace-pill"
+                aria-hidden
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-vouch-cyan/15 to-emerald-500/10"
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
 
-            <span className={`relative z-10 transition-transform duration-200 ${isActive ? "text-vouch-cyan scale-110" : "text-white/50 group-hover:text-white"}`}>
-              {icon}
+            <span
+              className={`relative z-10 shrink-0 transition-transform duration-200 ${
+                isActive ? "scale-110 text-vouch-cyan" : "text-white/45 group-hover:text-white"
+              }`}
+            >
+              {TAB_ICONS[tab.id]}
             </span>
 
-            <div className="relative z-10 flex flex-col text-left leading-tight">
-              <span className="font-extrabold tracking-wide">{tab.label}</span>
+            <span className="relative z-10 flex flex-col leading-tight">
+              <span className="whitespace-nowrap text-[11px] font-extrabold tracking-wide sm:text-xs">
+                {tab.label}
+              </span>
               {tab.description && (
-                <span className={`text-[9px] font-normal tracking-normal transition-colors ${isActive ? "text-vouch-cyan/70" : "text-white/35"}`}>
+                <span
+                  className={`hidden whitespace-nowrap text-[9px] font-normal tracking-normal lg:block ${
+                    isActive ? "text-vouch-cyan/70" : "text-white/35"
+                  }`}
+                >
                   {tab.description}
                 </span>
               )}
-            </div>
+            </span>
 
             {!tab.enabled && (
               <span className="relative z-10 rounded bg-white/10 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-widest text-white/40">
@@ -73,4 +81,3 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
     </nav>
   );
 }
-
