@@ -67,6 +67,11 @@ let baseUrl: string;
 
 beforeAll(async () => {
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+  // This suite covers the paid Stripe path, which is switched off by default
+  // during the free open beta. Free-beta behavior is covered in
+  // tests/freeBetaAccess.test.ts.
+  vi.stubEnv("FREE_BETA_ALL_ACCESS", "false");
+  vi.stubEnv("PAYMENTS_ENABLED", "true");
 
   const app = express();
   app.use(requestContext);

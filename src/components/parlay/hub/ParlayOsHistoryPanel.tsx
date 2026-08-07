@@ -10,10 +10,12 @@ import { projectSmartParlayFromPublic } from '../../../domain/parlay';
 import { classifyParlayHistoryTab } from '../../../lib/trustLockSchedule';
 import type { TrustAudience } from '../../../lib/trustLockSchedule';
 import { repairAllSavedParlays } from '../../../lib/parlays/repairSavedParlay';
+import { deriveSlipProgress } from '../../../lib/parlayLegProgress';
 import { useAppCommandStore } from '../../../stores/appCommandStore';
 import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import { useSlipsStore } from '../../../stores/slipsStore';
 import { ParlayOsLivePulse } from './parlayOsUi';
+import { useParlaySlipLiveProgress, liveProgressMap } from '../../../hooks/useParlaySlipLiveProgress';
 
 
 function EmptyLiveParlays() {
@@ -43,13 +45,62 @@ export default function ParlayOsHistoryPanel() {
     [savedSlips, liveGames],
   );
 
-  const liveSlips = useMemo(
+  const rawLiveSlips = useMemo(
     () => smartSlips.filter((s) =>
       ['pending', 'live', 'open', 'active', 'in_progress', 'upcoming'].includes(String(s.status).toLowerCase())
       && !s.trustCommittedAt && !s.feedLockedAt,
     ),
     [smartSlips],
   );
+
+  const progressLegs = useMemo(() => {
+    return rawLiveSlips.flatMap((s) => s.legs.map((leg) => ({
+      id: leg.id,
+      sport: leg.sport,
+      gamePk: leg.gamePk,
+      playerId: leg.playerId,
+      marketCode: leg.marketCode,
+      statTarget: leg.statTarget,
+    })));
+  }, [rawLiveSlips]);
+
+  const { data: progressData } = useParlaySlipLiveProgress(progressLegs, { enabled: rawLiveSlips.length > 0 });
+  const progressMap = useMemo(() => liveProgressMap(progressData), [progressData]);
+
+  const liveSlips = useMemo(() => {
+    return rawLiveSlips.map((slip) => {
+      let updated = false;
+      let hasLive = false;
+      let allFinal = slip.legs.length > 0;
+      const legs = slip.legs.map((leg) => {
+        const p = progressMap.get(leg.id);
+        if (p) {
+          updated = true;
+          const s = String(p.gameStatus ?? "").toUpperCase();
+          if (s === "LIVE" || s === "IN PROGRESS") hasLive = true;
+          if (s !== "FINAL" && s !== "GAME OVER") allFinal = false;
+          return {
+            ...leg,
+            actual: p.current ?? leg.actual,
+            status: leg.status === 'pending' && (s === "LIVE" || s === "IN PROGRESS") ? "in_progress" : leg.status,
+            progress: { label: p.label, current: p.current ?? leg.actual ?? 0, target: p.target },
+          };
+        }
+        allFinal = false;
+        return leg;
+      });
+      if (!updated) return slip;
+      
+      let newStatus = slip.status;
+      if (slip.status === 'pending') {
+        if (hasLive) newStatus = 'live';
+        else if (allFinal) newStatus = 'ready_to_grade';
+      }
+      
+      const slipProgress = deriveSlipProgress(legs as any);
+      return { ...slip, legs, status: newStatus, slipProgress };
+    });
+  }, [rawLiveSlips, progressMap]);
   const gradedSlips = useMemo(
     () => smartSlips.filter((s) =>
       ['won', 'lost', 'push', 'void', 'cancelled'].includes(String(s.status).toLowerCase()),

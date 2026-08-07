@@ -15,6 +15,7 @@ import {
   FOCUSED_BETA_SHELL_ENABLED,
   isFocusedBetaSidebarFeature,
 } from "../app/betaNavigation";
+import { FREE_BETA_ALL_ACCESS } from "./betaAccess";
 
 export type ViewMode = "beginner" | "pro";
 
@@ -86,7 +87,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
-  { id: "premium", label: "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "premium", label: FREE_BETA_ALL_ACCESS ? "Beta Access" : "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },

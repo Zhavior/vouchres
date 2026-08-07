@@ -29,6 +29,12 @@ import {
   buildPremiumAuroraModel,
   type BillingSourceState,
 } from './premiumAuroraModel';
+import {
+  FREE_BETA_ALL_ACCESS,
+  FREE_BETA_BLURB,
+  FREE_BETA_HEADLINE,
+  PAYMENTS_ENABLED,
+} from '../lib/betaAccess';
 
 interface PremiumSubPageProps {
   profile: CreatorProofProfile;
@@ -45,6 +51,13 @@ const BETA_FEATURES = [
   'Top Player Lab research workflow',
   'Pitcher matchup intelligence',
   'Pro Graphs comparisons from current board data',
+] as const;
+
+const FREE_BETA_FEATURES = [
+  'Every research surface — Top Player Lab, pitcher matchups, Pro Graphs',
+  'All V.A.I rooms, AI Edge Lab, and Brain picks',
+  'ParlayOS building, saving, and tracking',
+  'Profile theming, notifications, and an ad-free feed',
 ] as const;
 
 export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps) {
@@ -168,6 +181,27 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
         </div>
       </section>
 
+      {FREE_BETA_ALL_ACCESS ? (
+        <section className="space-y-3" aria-labelledby="aurora-plan-choice-title">
+          <div>
+            <p className={`${AURORA_LABEL} text-vouch-cyan`}>{FREE_BETA_HEADLINE}</p>
+            <h2 id="aurora-plan-choice-title" className="mt-1 text-xl font-black text-white">Everything is unlocked</h2>
+            <p className="mt-1 text-xs text-white/45">{FREE_BETA_BLURB}</p>
+          </div>
+
+          <div className="grid gap-3" id="upgrade-tiers-grid">
+            <PlanSurface
+              title="Free open beta"
+              price="$0"
+              cadence="No subscription, no card"
+              description="Every research lab, AI surface, and building tool on the account you already have."
+              features={FREE_BETA_FEATURES}
+              active
+              premium
+            />
+          </div>
+        </section>
+      ) : (
       <section className="space-y-3" aria-labelledby="aurora-plan-choice-title">
         <div>
           <p className={`${AURORA_LABEL} text-vouch-cyan`}>Choose by need</p>
@@ -219,6 +253,7 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
           </PlanSurface>
         </div>
       </section>
+      )}
 
       {billingError && (
         <section className={`${AURORA_PANEL} flex items-start gap-3 p-4 text-sm text-amber-200`} role="alert">
@@ -230,9 +265,13 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
       <section className={`${AURORA_PANEL} flex items-start gap-3 p-4`} aria-labelledby="aurora-secure-billing-title">
         <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" aria-hidden="true" />
         <div>
-          <h2 id="aurora-secure-billing-title" className={`${AURORA_LABEL} text-white/55`}>Secure billing notice</h2>
+          <h2 id="aurora-secure-billing-title" className={`${AURORA_LABEL} text-white/55`}>
+            {PAYMENTS_ENABLED ? 'Secure billing notice' : 'Beta access notice'}
+          </h2>
           <p className="mt-1 text-xs leading-relaxed text-white/45">
-            Stripe processes checkout and subscription management. Payment changes account access only; it does not verify identity, research quality, or prediction accuracy.
+            {PAYMENTS_ENABLED
+              ? 'Stripe processes checkout and subscription management. Payment changes account access only; it does not verify identity, research quality, or prediction accuracy.'
+              : 'No payment is collected during the beta and no card is stored. Access is granted to every signed-in account; it does not verify identity, research quality, or prediction accuracy.'}
           </p>
         </div>
       </section>

@@ -135,9 +135,14 @@ export function useAppNotifications() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        () => {
+        (payload) => {
           if (disposed) return;
           void queryClient.invalidateQueries({ queryKey: queryKeys.appNotifications() });
+          const record = payload.new as ServerNotificationRecord | null;
+          if (record && record.type === 'PARLAY_LEG_SETTLED') {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.myParlays() });
+            void queryClient.invalidateQueries({ queryKey: ['parlay-slip-live-progress'] });
+          }
         },
       )
       .subscribe();

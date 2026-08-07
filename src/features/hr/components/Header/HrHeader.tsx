@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, ChevronDown, RefreshCw, Radio, Crosshair, CheckCircle2, Clock3, TriangleAlert } from 'lucide-react';
 import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import { localISODate } from '../../utils/localDate';
+import { HrProModeToggle } from './HrProModeToggle';
 import '../../../../styles/command-deck.css';
 import '../../hr-command.css';
 
@@ -24,6 +25,9 @@ export interface HrHeaderProps {
   freshness?: HrFreshness;
   confirmedCount?: number;
   previewCount?: number;
+  isProMode?: boolean;
+  onToggleProMode?: () => void;
+  onProModeIntent?: () => void;
 }
 
 function todayISO(): string {
@@ -81,6 +85,9 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   freshness = 'fresh',
   confirmedCount = 0,
   previewCount = 0,
+  isProMode = false,
+  onToggleProMode,
+  onProModeIntent,
 }) => {
   const noGames = !hasGames || gameCount === 0;
   const freshnessTone = FRESHNESS[freshness] ?? FRESHNESS.fresh;
@@ -107,6 +114,10 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
 
         {/* Controls: wrap on mobile, hold the right edge on desktop. */}
         <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {onToggleProMode ? (
+            <HrProModeToggle isProMode={isProMode} onToggle={onToggleProMode} onIntent={onProModeIntent} />
+          ) : null}
+
           <div
             className="hr-live-pill inline-flex h-10 items-center gap-2 rounded-xl px-3 font-mono text-[10px] font-bold uppercase tracking-wider sm:text-xs"
             data-live={isToday}

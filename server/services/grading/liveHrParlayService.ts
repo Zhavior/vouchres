@@ -83,7 +83,7 @@ export async function previewLiveHrParlayMatches(
 
   const { data: pendingLegs, error: legsError } = await admin
     .from("pick_legs")
-    .select("id,pick_id,leg_index,game_id,event_id,player_id,market_code,market,selection,stat_target,comparator,event_key,status,game_date,picks(game_date,created_at)")
+    .select("id,pick_id,leg_index,game_id,event_id,player_id,market_code,market,selection,stat_target,comparator,event_key,status,game_date,picks(game_date,created_at,user_id)")
     .eq("status", "pending");
 
   if (legsError) {

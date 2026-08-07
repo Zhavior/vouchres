@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getGrader, type LegOutcome } from "./sportGraders";
 import { gradePick } from "../persistence/pickService";
-import { createParlayGradedNotification } from "../notifications/notificationService";
+import { createParlayGradedNotification, createParlayLegSettledNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
 import { trustLedgerRepository } from "../../repositories/trustLedgerRepository";
 
@@ -433,6 +433,7 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
 export async function evaluatePick(
   pick: {
     id: string;
+    user_id?: string | null;
     market: string;
     selection: string;
     odds_decimal: number | null;
@@ -564,6 +565,7 @@ export async function evaluatePick(
 async function gradeParlayPick(
   pick: {
     id: string;
+    user_id?: string | null;
     market: string;
     selection: string;
     odds_decimal: number | null;
@@ -680,7 +682,7 @@ async function gradeParlayPick(
       }
     }
 
-    const gradedLeg = await gradeParlayLegWithCache(supabaseAdmin, leg, legBoxscore);
+    const gradedLeg = await gradeParlayLegWithCache(supabaseAdmin, leg, legBoxscore, pick);
 
     legResults.push({
       leg_index: Number(leg.leg_index),
@@ -742,7 +744,8 @@ async function gradeParlayPick(
 async function gradeParlayLegWithCache(
   supabaseAdmin: any,
   leg: any,
-  boxscore: any
+  boxscore: any,
+  pick: { id: string; user_id?: string | null }
 ): Promise<{ status: "won" | "lost" | "push"; note: string }> {
   const eventKey = String(leg.event_key || "").trim();
 
@@ -792,6 +795,18 @@ async function gradeParlayLegWithCache(
 
     if (cacheWriteError) {
       console.warn("[grading] graded_leg_results upsert failed", cacheWriteError.code, cacheWriteError.message);
+    } else if (pick.user_id) {
+      // Successfully graded a new leg - notify the user if they're subscribed to leg updates
+      void createParlayLegSettledNotification({
+        userId: pick.user_id,
+        parlayId: pick.id,
+        legIndex: Number(leg.leg_index),
+        status: graded.status,
+        selection: String(leg.selection ?? ""),
+        marketCode: marketCode || undefined,
+      }).catch(err => {
+        console.warn("[grading] leg settled notification failed", err.message);
+      });
     }
   }
 

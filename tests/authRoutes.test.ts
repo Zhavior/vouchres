@@ -28,6 +28,10 @@ let server: Server;
 let baseUrl: string;
 
 beforeAll(async () => {
+  // Assert the stored-tier mapping, which the free open beta overrides.
+  // Beta behavior is covered in tests/freeBetaAccess.test.ts.
+  vi.stubEnv("FREE_BETA_ALL_ACCESS", "false");
+
   const app = express();
   app.use(express.json());
   app.use("/api/auth", authRoutes);
@@ -44,6 +48,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  vi.unstubAllEnvs();
   if (server) {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

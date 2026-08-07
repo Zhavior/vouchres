@@ -72,6 +72,30 @@ services:
         value: legacy.parlay.detail,legacy.parlay.list,legacy.parlay.commit_trust,legacy.parlay.finalize_trust_lock,legacy.parlay.save
 
   - type: cron
+    name: vouchedge-grade-due
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    schedule: "*/10 * * * *"  # Every 10 minutes to grade final games promptly
+    startCommand: node dist/gradeDueJob.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: MLB_API_BASE_URL
+        value: https://statsapi.mlb.com/api
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+
+  - type: cron
     name: vouchedge-grader
     runtime: node
     plan: starter

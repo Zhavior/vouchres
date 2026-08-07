@@ -371,6 +371,16 @@ function MobileProfileDrawer({
 
             {/* Footer */}
             <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)] space-y-1">
+              {profile.isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => go('admin')}
+                  aria-current={activeSection === 'admin' ? 'page' : undefined}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${AURORA_SIDEBAR_IDLE} ${AURORA_LABEL}`}
+                >
+                  <Cpu className="h-4 w-4" /> Aurora HQ
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => go('settings')}

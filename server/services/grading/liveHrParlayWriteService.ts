@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { previewLiveHrParlayMatches, type LiveHrScanOptions } from "./liveHrParlayService";
 import { persistGradingRunLogs } from "./gradingLogService";
+import { createParlayLegSettledNotification } from "../notifications/notificationService";
 
 export interface LiveHrSyncResult {
   checked: number;
@@ -214,6 +215,20 @@ export async function applyLiveHrParlayMatches(
       }]).catch((err) => {
         console.warn("[liveHrParlayWrite] grading log failed", (err as Error)?.message);
       });
+
+      const userId = leg.picks?.user_id;
+      if (userId) {
+        void createParlayLegSettledNotification({
+          userId: String(userId),
+          parlayId: String(leg.pick_id),
+          legIndex: Number(leg.leg_index),
+          status: "won",
+          selection: String(leg.selection ?? ""),
+          marketCode: String(leg.market_code || leg.market || ""),
+        }).catch((err) => {
+          console.warn("[liveHrParlayWrite] leg settled notification failed", err.message);
+        });
+      }
     }
   }
 

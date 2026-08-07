@@ -443,6 +443,20 @@ function FeedSidebar({
         </div>
 
         <div className={`grid gap-1.5 ${FOCUSED_BETA_SHELL_ENABLED ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {profile.isAdmin && (
+            <button
+              onClick={() => handleNavigate('admin')}
+              className={[
+                'col-span-full flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all',
+                AURORA_LABEL, 'tracking-[0.12em]',
+                activeSection === 'admin' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
+              ].join(' ')}
+              aria-label="Aurora HQ"
+            >
+              <Cpu className="h-3.5 w-3.5 shrink-0" />
+              <span>Aurora HQ</span>
+            </button>
+          )}
           {!FOCUSED_BETA_SHELL_ENABLED && (
             <button
               onClick={() => handleNavigate('customize')}

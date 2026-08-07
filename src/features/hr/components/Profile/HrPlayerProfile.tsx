@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
+import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
@@ -262,6 +263,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
+  const isDesktopProfile = useMediaQuery('(min-width: 1024px)');
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
   const reducedMotion = useReducedMotion();
@@ -536,15 +538,18 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
             </aside>
 
             {/* ── RIGHT CONTENT AREA ──────────────────────────────────────────── */}
+            {/* One dossier, not two. Rendering both breakpoints and hiding one
+                with `lg:hidden` mounted the entire research tree twice —
+                including a second set of recharts ResponsiveContainers, each
+                with its own ResizeObserver measuring a zero-width box. */}
             <div className="ve-hr-profile-content flex-1 overflow-y-auto">
-              <div className="hidden h-full border-l border-white/10 lg:block">
-                <div className="p-6 xl:p-8">
-                  {renderContent()}
+              {isDesktopProfile ? (
+                <div className="h-full border-l border-white/10">
+                  <div className="p-6 xl:p-8">{renderContent()}</div>
                 </div>
-              </div>
-              <div className="lg:hidden p-4">
-                {renderContent()}
-              </div>
+              ) : (
+                <div className="p-4">{renderContent()}</div>
+              )}
             </div>
           </motion.div>
         </>

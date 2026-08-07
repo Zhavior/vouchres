@@ -34,6 +34,7 @@ import {
 import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
+import { FREE_BETA_ALL_ACCESS, FREE_BETA_BLURB, PAYMENTS_ENABLED } from '../../lib/betaAccess';
 import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
 import VouchEdgeLogo from '../brand/VouchEdgeLogo';
 import { AURORA_INTERACTIVE, AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE, AURORA_AUTH_GRADIENT, AURORA_AUTH_SHADOW, AURORA_CYAN_HEX, AURORA_BLURPLE_HEX } from '../../theme/auroraTokens';
@@ -44,6 +45,16 @@ type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro';
 type SignupStep = 'intro' | 'questionnaire' | 'plan' | 'policy' | 'form';
 type AgreementKey = 'age' | 'terms' | 'research';
+
+const BILLING_POLICY_SECTION = FREE_BETA_ALL_ACCESS
+  ? {
+      title: 'Billing (free open beta)',
+      body: 'VouchEdge is in free open beta. Every feature is unlocked on every account, no payment is collected, and no card is stored. There is no subscription and nothing to cancel. If paid plans return after the beta, you will be told before anything is ever charged.',
+    }
+  : {
+      title: 'Billing (Beta plan)',
+      body: 'The Beta plan is free for 7 days, then renews at $7.99/month via Stripe until you cancel. You can cancel or manage billing anytime from the Upgrade page — no phone call or email required.',
+    };
 
 const POLICY_SECTIONS = [
   {
@@ -56,16 +67,13 @@ const POLICY_SECTIONS = [
   },
   {
     title: 'No guaranteed returns',
-    body: 'The Beta plan unlocks research tools and publishing features, not winning picks. Past grading history (yours or anyone else’s) is not a promise of future results. Never research or wager more than you can afford to lose.',
+    body: 'VouchEdge unlocks research tools and publishing features, not winning picks. Past grading history (yours or anyone else’s) is not a promise of future results. Never research or wager more than you can afford to lose.',
   },
   {
     title: 'Your data',
     body: 'We store your email, username, saved picks, and grading history to run your account. We don’t sell your data to third parties. You can request deletion of your account and data at any time from Settings.',
   },
-  {
-    title: 'Billing (Beta plan)',
-    body: 'The Beta plan is free for 7 days, then renews at $7.99/month via Stripe until you cancel. You can cancel or manage billing anytime from the Upgrade page — no phone call or email required.',
-  },
+  BILLING_POLICY_SECTION,
 ] as const;
 
 const AGREEMENTS: Array<{ id: AgreementKey; label: string }> = [
@@ -87,7 +95,7 @@ const INTRO_SLIDES = [
   },
 ] as const;
 
-const PLAN_OPTIONS: Array<{
+const PAID_PLAN_OPTIONS: Array<{
   id: SignupPlan;
   label: string;
   price: string;
@@ -115,6 +123,21 @@ const PLAN_OPTIONS: Array<{
   },
 ];
 
+/** During the free open beta there is only one plan and it costs nothing. */
+const FREE_BETA_PLAN_OPTIONS: typeof PAID_PLAN_OPTIONS = [
+  {
+    id: 'free',
+    label: 'Free open beta',
+    price: 'Free — no card required',
+    icon: FlaskConical,
+    tagline: 'Every feature is unlocked during the beta.',
+    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'All V.A.I rooms and AI Edge Lab', 'ParlayOS building and tracking', 'No subscription, nothing to cancel'],
+    beta: true,
+  },
+];
+
+const PLAN_OPTIONS = FREE_BETA_ALL_ACCESS ? FREE_BETA_PLAN_OPTIONS : PAID_PLAN_OPTIONS;
+
 interface AuthModalProps {
   open: boolean;
   initialMode?: Mode;
@@ -128,10 +151,14 @@ interface AuthModalProps {
 export default function AuthModal({
   open,
   initialMode = 'signup',
-  initialPlan = 'free',
+  initialPlan: requestedPlan = 'free',
   onClose,
   onAuthed,
 }: AuthModalProps) {
+  // During the free open beta 'pro' is not an offered plan — callers that ask
+  // for it (e.g. the landing "Join Beta" CTA) collapse onto the single free one.
+  const initialPlan: SignupPlan = FREE_BETA_ALL_ACCESS ? 'free' : requestedPlan;
+
   const [mode, setMode] = useState<Mode>(initialMode);
   const [signupStep, setSignupStep] = useState<SignupStep>(() =>
     initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
@@ -333,7 +360,9 @@ export default function AuthModal({
           // already returned a live session, so the user is logged in right
           // now. Route them straight in instead of showing a false
           // "check your inbox" step for an email that isn't coming.
-          if (plan === 'pro') {
+          // No checkout during the free open beta — the account is already
+          // fully entitled the moment it exists.
+          if (plan === 'pro' && PAYMENTS_ENABLED) {
             setRedirectingToCheckout(true);
             const result = await startStripeCheckout();
             if (result.ok) {
@@ -558,7 +587,7 @@ export default function AuthModal({
                 : mode === 'signup' && signupStep === 'intro'
                 ? INTRO_SLIDES[introIndex].title
                 : mode === 'signup' && signupStep === 'plan'
-                ? 'Choose your plan'
+                ? (FREE_BETA_ALL_ACCESS ? 'Your beta access' : 'Choose your plan')
                 : mode === 'signup' && signupStep === 'policy'
                 ? 'Review & agree'
                 : mode === 'signup'
@@ -571,7 +600,9 @@ export default function AuthModal({
                 : mode === 'signup' && signupStep === 'intro'
                 ? INTRO_SLIDES[introIndex].body
                 : mode === 'signup' && signupStep === 'plan'
-                ? 'Choose Basic or the VouchEdge Beta research plan before creating your account.'
+                ? (FREE_BETA_ALL_ACCESS
+                    ? 'There is nothing to choose — every feature is unlocked on every account during the beta.'
+                    : 'Choose Basic or the VouchEdge Beta research plan before creating your account.')
                 : mode === 'signup' && signupStep === 'policy'
                 ? 'A quick, honest read before you create an account.'
                 : mode === 'signup'
@@ -781,11 +812,15 @@ export default function AuthModal({
                 })}
               </div>
 
-              {plan === 'pro' && (
+              {FREE_BETA_ALL_ACCESS ? (
+                <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#34d399' }}>
+                  {FREE_BETA_BLURB}
+                </p>
+              ) : plan === 'pro' ? (
                 <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#fbbf24' }}>
                   Your first 7 days are free. After that, it is $7.99/month until you cancel.
                 </p>
-              )}
+              ) : null}
 
               <div className="flex items-center gap-2 mt-4">
                 <button

@@ -17,6 +17,12 @@ import {
 } from "../../../services/billing/stripeService";
 import { processStripeWebhookEvent } from "../../../services/billing/stripeWebhookProcessor";
 import {
+  arePaymentsEnabled,
+  getFreeBetaEndsAt,
+  isFreeBetaActive,
+  resolveEffectiveTier,
+} from "../../../lib/betaAccess";
+import {
   getStripePriceId,
   getStripePriceMatrix,
   getTierEntitlements,
@@ -57,6 +63,22 @@ function getSafeFrontendOrigin(): string {
   return stripped;
 }
 
+/**
+ * Payments are switched off for the free open beta. Fail with a specific,
+ * client-readable code so the UI can render the beta state instead of a
+ * generic "checkout is broken" error.
+ */
+function assertPaymentsEnabled() {
+  if (arePaymentsEnabled()) return;
+  throw new AppError({
+    status: 503,
+    code: "payments_disabled",
+    message: "VouchEdge is in free open beta — every feature is unlocked and there is nothing to pay for.",
+    details: { reason: "payments_disabled", freeBeta: isFreeBetaActive(), freeBetaEndsAt: getFreeBetaEndsAt() },
+    expose: true,
+  });
+}
+
 function assertStripeConfigured() {
   if (!isStripeConfigured()) {
     throw new AppError({
@@ -69,8 +91,8 @@ function assertStripeConfigured() {
   }
 }
 
-async function buildBillingStatusPayload(profileId: string, profileTier: string) {
-  const { data: sub, error } = await supabaseAdmin
+async function readLatestSubscriptionRow(profileId: string) {
+  const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .select(
       "tier, status, current_period_start, current_period_end, cancel_at_period_end, stripe_price_id"
@@ -91,6 +113,17 @@ async function buildBillingStatusPayload(profileId: string, profileTier: string)
     });
   }
 
+  return data;
+}
+
+async function buildBillingStatusPayload(profileId: string, storedTier: string) {
+  const freeBeta = isFreeBetaActive();
+  const profileTier = resolveEffectiveTier(storedTier) as string;
+
+  // No subscription lookup during the free beta — nothing bills, and the row
+  // (if any legacy one exists) must not drive access or the displayed status.
+  const sub = freeBeta ? null : await readLatestSubscriptionRow(profileId);
+
   const entitlements = getTierEntitlements(profileTier);
   const normalized = normalizeSubscriptionTier(profileTier);
 
@@ -102,12 +135,16 @@ async function buildBillingStatusPayload(profileId: string, profileTier: string)
     canUseTeamMatchupLab: entitlements.canUseTeamMatchupLab,
     canUsePlayerEdgeLab: entitlements.canUsePlayerEdgeLab,
     canAccessNotifications: entitlements.canAccessNotifications,
-    status: sub?.status ?? (profileTier === "free" ? "free" : "active"),
-    currentPeriodStart: sub?.current_period_start ?? null,
-    currentPeriodEnd: sub?.current_period_end ?? null,
-    cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
-    subscription: sub ?? null,
-    prices: getStripePriceMatrix(),
+    status: freeBeta ? "free_beta" : (sub?.status ?? (profileTier === "free" ? "free" : "active")),
+    currentPeriodStart: freeBeta ? null : (sub?.current_period_start ?? null),
+    currentPeriodEnd: freeBeta ? null : (sub?.current_period_end ?? null),
+    cancelAtPeriodEnd: freeBeta ? false : (sub?.cancel_at_period_end ?? false),
+    subscription: freeBeta ? null : (sub ?? null),
+    prices: freeBeta ? { pro: { monthly: null, yearly: null }, creator: { monthly: null, yearly: null } } : getStripePriceMatrix(),
+    freeBeta,
+    freeBetaEndsAt: freeBeta ? getFreeBetaEndsAt() : null,
+    paymentsEnabled: arePaymentsEnabled(),
+    storedTier: normalizeSubscriptionTier(storedTier).tier,
     warnings: entitlements.warnings,
   };
 }
@@ -117,6 +154,8 @@ export async function sendV3BillingCheckoutResponse(
   res: Response,
   options: { includeVersion?: boolean } = {},
 ) {
+  assertPaymentsEnabled();
+
   const { tier, interval } = req.body as z.infer<typeof BillingCheckoutSchema>;
   const normalized = normalizeSubscriptionTier(tier);
   const checkoutTier = normalized.tier as PaidCanonicalTier;
@@ -177,6 +216,7 @@ export async function sendV3BillingPortalResponse(
   res: Response,
   options: { includeVersion?: boolean } = {},
 ) {
+  assertPaymentsEnabled();
   assertStripeConfigured();
 
   const safeOrigin = getSafeFrontendOrigin();
@@ -230,6 +270,23 @@ export async function sendV3BillingWebhookResponse(
   res: Response,
   options: { includeVersion?: boolean } = {},
 ) {
+  // Payments off (free open beta): acknowledge and drop. A 2xx stops Stripe
+  // from retrying against an endpoint that will never process the event, and
+  // no tier is derived from Stripe while every account is on the beta grant.
+  if (!arePaymentsEnabled()) {
+    structuredLog({
+      level: "info",
+      event: "billing.webhook_ignored",
+      message: "payments_disabled",
+    });
+    return res.json(apiOkFlat(req as BillingRequest, {
+      ...(options.includeVersion ? { version: "v3" } : {}),
+      received: true,
+      processed: false,
+      reason: "payments_disabled",
+    }));
+  }
+
   if (!isStripeConfigured()) {
     throw new AppError({
       status: 503,

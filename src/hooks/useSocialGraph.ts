@@ -126,8 +126,9 @@ export function useSocialGraph(userId: string | null) {
       await ensureRealtimeAuth();
       if (disposed) return;
 
+      const uniqueId = Math.random().toString(36).substring(7);
       channel = supabase
-        .channel(`social-graph-live:${userId}`)
+        .channel(`social-graph-live:${userId}:${uniqueId}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'follows' },

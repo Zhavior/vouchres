@@ -1,4 +1,5 @@
 import type { VaiPersonaId } from './vaiPersonas';
+import { FREE_BETA_ALL_ACCESS } from '../betaAccess';
 
 export type VaiAccessTier =
   | 'free'
@@ -35,6 +36,16 @@ export function getVaiEntitlements({
   dateKey?: string;
 }): VaiEntitlementResult {
   const normalizedTier = normalizeVaiTier(tier);
+
+  // Free open beta: every V.A.I room is open to everyone, no daily rotation.
+  if (FREE_BETA_ALL_ACCESS) {
+    return {
+      tier: 'research_seller_pro',
+      allowedPersonaIds: [...ROTATION],
+      canSeeAllPersonas: true,
+      reason: 'Free open beta — every V.A.I room is unlocked.',
+    };
+  }
 
   if (normalizedTier === 'admin' || normalizedTier === 'research_seller_pro') {
     return {

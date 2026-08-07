@@ -1,5 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { buildPremiumAuroraModel } from '../src/components/premiumAuroraModel';
+import { describe, expect, it, vi } from 'vitest';
+
+// This suite covers the paid presentation, which the free open beta replaces.
+// Free-beta behavior is covered in tests/freeBetaAccess.test.ts.
+vi.mock('../src/lib/betaAccess', () => ({
+  FREE_BETA_ALL_ACCESS: false,
+  PAYMENTS_ENABLED: true,
+  FREE_BETA_ENDS_AT: null,
+  FREE_BETA_HEADLINE: 'Free open beta',
+  FREE_BETA_BLURB: 'Every feature is unlocked for every account during the beta.',
+}));
+
+const { buildPremiumAuroraModel } = await import('../src/components/premiumAuroraModel');
 
 describe('Aurora premium presentation model', () => {
   it('uses the billing API tier when the billing source responds', () => {

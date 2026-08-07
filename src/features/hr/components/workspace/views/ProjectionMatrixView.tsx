@@ -16,6 +16,7 @@ import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
+import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
@@ -383,9 +384,11 @@ export default function ProjectionMatrixView({ rows }: Props) {
                   </div>
                 </div>
 
-                <span className="rounded-lg border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-xs font-bold text-vouch-cyan">
-                  {row.oddsLabel || "+280"}
-                </span>
+                {oddsDisplay(row) ? (
+                  <span className="rounded-lg border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-xs font-bold text-vouch-cyan">
+                    {oddsDisplay(row)}
+                  </span>
+                ) : null}
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2 text-center font-mono text-xs">

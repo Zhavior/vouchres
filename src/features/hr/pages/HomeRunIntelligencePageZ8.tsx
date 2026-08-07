@@ -9,25 +9,49 @@ import {
 } from '../../../theme/auroraTokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
-import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
-import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
-import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
-import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
-import { HrBoard } from '../components/Columns/HrBoard';
+import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
+import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
+import { useProMode } from '../hooks/useProMode';
+import { useRevealOnce } from '../hooks/useRevealOnce';
 // Loaders are named so intent handlers can warm the chunk before it is rendered —
 // a view switch should never be the first time the browser asks for the code.
 const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel');
-const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
 const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile');
 
+// Pro-only surfaces, split out of the page chunk. Standard mode never renders
+// any of them, and cold traffic that only ever sees four spotlight cards should
+// not pay to download the tier board, the treemap and five workspace views.
+const loadHrCommandCenter = () => import('../components/CommandCenter/HrCommandCenter');
+const loadWorkspaceSwitcher = () => import('../components/workspace/WorkspaceSwitcher');
+const loadWorkspaceRenderer = () => import('../components/workspace/WorkspaceRenderer');
+const loadHrTopSignalPanel = () => import('../components/Hero/HrTopSignalPanel');
+const loadHrBoard = () => import('../components/Columns/HrBoard');
+const loadHrSignalField = () => import('../components/SignalField/HrSignalField');
+const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
+
+/** Everything Pro mode paints on arrival — warmed together the moment it's wanted. */
+const PRO_CHUNKS: Array<() => Promise<unknown>> = [
+  loadHrCommandCenter,
+  loadWorkspaceSwitcher,
+  loadWorkspaceRenderer,
+  loadHrTopSignalPanel,
+  loadHrBoard,
+  loadHrSpreadsheet,
+];
+
 const MostVouchedPlayersPanel = lazy(() => loadMostVouchedPanel().then(m => ({ default: m.MostVouchedPlayersPanel })));
-const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
 const HrPlayerProfile = lazy(() => loadHrPlayerProfile().then(m => ({ default: m.HrPlayerProfile })));
+const HrCommandCenter = lazy(() => loadHrCommandCenter().then(m => ({ default: m.HrCommandCenter })));
+const WorkspaceSwitcher = lazy(loadWorkspaceSwitcher);
+const WorkspaceRenderer = lazy(loadWorkspaceRenderer);
+const HrTopSignalPanel = lazy(() => loadHrTopSignalPanel().then(m => ({ default: m.HrTopSignalPanel })));
+const HrBoard = lazy(() => loadHrBoard().then(m => ({ default: m.HrBoard })));
+const HrSignalField = lazy(() => loadHrSignalField().then(m => ({ default: m.HrSignalField })));
+const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
-import { HrSignalField } from '../components/SignalField/HrSignalField';
 import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
 import {
@@ -248,6 +272,9 @@ function toBoardTier(tier: ToolbarTier): string {
 
 const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
+  const [isProMode, toggleProMode] = useProMode();
+  const revealDeck = useRevealOnce('hr-deck');
+  const revealBoard = useRevealOnce('hr-board');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
@@ -273,7 +300,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     () => (vm.rows ?? []).map((row) => row.playerId),
     [vm.rows],
   );
-  const playerVouchSummary = usePlayerVouchSummary(vm.date, visiblePlayerIds);
+  // Every consumer of this summary is Pro-gated — the top signal panel, the
+  // tier board and the spreadsheet. Standard mode renders no vouch UI at all,
+  // so asking for it there sent a 350-id query string racing first paint for
+  // data nothing would display. An empty list disables the query outright.
+  const playerVouchSummary = usePlayerVouchSummary(vm.date, isProMode ? visiblePlayerIds : []);
   const playerVouchLeaderboard = usePlayerVouchLeaderboard(vm.date, 5);
   const togglePlayerVouch = useTogglePlayerVouch();
   const playerVouchMap = useMemo(
@@ -460,16 +491,41 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
-  // Warm the side chunks once the board is interactive so opening research, the
-  // table or the vouch panel never waits on a network round-trip.
+  // Warm the chunks both modes reach for — research and the vouch panel — once
+  // the board is interactive, so opening either never waits on a round-trip.
   React.useEffect(() => whenIdle(() => {
     warmChunk(loadMostVouchedPanel);
     warmChunk(loadHrPlayerProfile);
-    warmChunk(loadHrSpreadsheet);
   }), []);
+
+  const warmProChunks = React.useCallback(() => {
+    for (const load of PRO_CHUNKS) warmChunk(load);
+  }, []);
+
+  // A Pro user's chunks are fetched on idle; a Standard user's are fetched the
+  // moment they reach for the toggle, so the switch never lands on a spinner.
+  React.useEffect(() => {
+    if (!isProMode) return;
+    return whenIdle(warmProChunks);
+  }, [isProMode, warmProChunks]);
 
 
   const viewMode = localViewMode;
+
+  // Same panel either way — Pro shows it above the workspace, Standard tucks it
+  // under the grid so the spotlight owns the fold.
+  const mostVouchedPanel = (
+    <MostVouchedPlayersPanel
+      players={playerVouchLeaderboard.data ?? []}
+      subtitle="The hottest community-backed bats on this slate."
+      onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
+      onSelectPlayer={(playerId) => {
+        const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+        if (match) openPlayerProfile(match);
+      }}
+    />
+  );
+
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;
     setLocalViewMode(mode);
@@ -486,7 +542,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
       <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_X}`}>
 
         {/* ── Command deck: hero, filters and workspace tabs in one surface ─ */}
-        <div className="deck-reveal space-y-3">
+        <div className={`${revealDeck} space-y-3`}>
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
@@ -501,8 +557,16 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             freshness={vm.slate.freshness}
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
+            isProMode={isProMode}
+            onToggleProMode={toggleProMode}
+            onProModeIntent={warmProChunks}
           />
 
+          {/* Filters, view switchers and workspace tabs are the analytics suite —
+              Standard mode never renders them. The hold matches the panel's own
+              height so a cold Pro chunk doesn't shove the board down the page. */}
+          {isProMode ? (
+          <Suspense fallback={<PanelHold height="156px" label="Loading Pro controls" />}>
           <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-2.5 sm:p-4 space-y-3`}>
           <HrCommandCenter
             mode={vm.mode}
@@ -533,6 +597,8 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           />
           <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
           </div>
+          </Suspense>
+          ) : null}
         </div>
 
         {(vm.refreshError || vm.connection?.isLastGood || warningList.length > 0) && (
@@ -558,7 +624,10 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
-          {topPlayer ? (
+          {/* The full #1 dossier is a Pro surface. Standard mode leads with the
+              four-card spotlight instead — same top signal, a quarter of the read. */}
+          {isProMode && topPlayer ? (
+            <Suspense fallback={<PanelHold height="248px" label="Loading top signal" />}>
             <HrTopSignalPanel
               player={topPlayer}
               freshness={vm.slate.freshness}
@@ -572,25 +641,58 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
               playerVouchedByViewer={getPlayerVouchSummaryFor(topPlayer.playerId)?.viewerHasVouched ?? false}
               playerVouchPending={topPlayer.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId}
             />
+            </Suspense>
           ) : null}
 
-          {/* Lazy chunks need their own boundary. Without one they suspend the
-              whole page, so the board's loading skeleton and error state never
-              paint — the user gets a blank panel instead. */}
-          <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
-          <MostVouchedPlayersPanel
-            players={playerVouchLeaderboard.data ?? []}
-            subtitle="The hottest community-backed bats on this slate."
-            onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
-            onSelectPlayer={(playerId) => {
-              const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
-              if (match) openPlayerProfile(match);
-            }}
-          />
-          </Suspense>
+          {isProMode ? (
+            /* Lazy chunks need their own boundary. Without one they suspend the
+               whole page, so the board's loading skeleton and error state never
+               paint — the user gets a blank panel instead. */
+            <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
+              {mostVouchedPanel}
+            </Suspense>
+          ) : null}
 
-          {/* Keyed so switching workspaces animates in rather than swapping hard. */}
-          <div key={workspace} className="deck-reveal flex min-w-0 flex-col">
+          {!isProMode ? (
+            <div className={`${revealBoard} flex min-w-0 flex-col gap-3 sm:gap-4`}>
+              {vm.loading && !vm.rows?.length ? (
+                <LoadingSkeleton />
+              ) : vm.error ? (
+                <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
+              ) : isAllZero ? (
+                <EmptyState
+                  onRetry={handleRefresh}
+                  mode={vm.mode}
+                  previewCount={vm.modeCounts?.curated ?? 0}
+                  onShowPreview={() => vm.setMode('curated')}
+                />
+              ) : (
+                <>
+                  <HrSpotlightDeck
+                    rows={vm.rows ?? []}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                    onResearch={openPlayerProfile}
+                  />
+                  <HrSignalGrid
+                    rows={vm.rows ?? []}
+                    onResearch={openPlayerProfile}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  />
+                </>
+              )}
+
+              <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
+                {mostVouchedPanel}
+              </Suspense>
+            </div>
+          ) : (
+          /* No `key` on the wrapper: re-keying tore the whole board down and
+             replayed the reveal animation on every workspace switch, which read
+             as the page re-loading. The views are distinct component types, so
+             React swaps them on its own. The board skeleton doubles as the chunk
+             fallback — a cold Pro board looks like a loading board, not a hole. */
+          <Suspense fallback={<LoadingSkeleton />}>
+          <div className={`${revealBoard} flex min-w-0 flex-col`}>
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
@@ -650,6 +752,8 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           </div>
           </WorkspaceRenderer>
           </div>
+          </Suspense>
+          )}
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
             <p>
