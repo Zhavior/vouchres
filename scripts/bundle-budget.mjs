@@ -4,8 +4,8 @@
  * Default JS: 130 KiB — ~108 KiB baseline + headroom per Phase 3 audit.
  * Default CSS: 90 KiB total gzip (current build ~87 KiB + headroom)
  */
-import { readdirSync, readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { basename, join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
@@ -32,33 +32,27 @@ if (!existsSync(VITE_MANIFEST)) {
   process.exit(1);
 }
 
-const assetNames = readdirSync(DIST_ASSETS);
+const manifest = JSON.parse(readFileSync(VITE_MANIFEST, "utf8"));
+const entry = Object.values(manifest).find((chunk) => chunk.isEntry && chunk.src === "index.html");
 
-const indexChunks = assetNames
-  .filter((name) => /^index-.*\.js$/.test(name))
-  .map((name) => {
-    const sizes = gzipSize(join(DIST_ASSETS, name));
-    return { name, ...sizes };
-  })
-  .sort((a, b) => b.gzipBytes - a.gzipBytes);
+const indexChunks = entry?.file
+  ? [{ name: basename(entry.file), ...gzipSize(join(process.cwd(), "dist", entry.file)) }]
+  : [];
 
 if (indexChunks.length === 0) {
   console.error("[bundle-budget] no index-*.js chunks found in dist/assets");
   process.exit(1);
 }
 
-const cssChunks = assetNames
-  .filter((name) => name.endsWith(".css"))
-  .map((name) => {
-    const sizes = gzipSize(join(DIST_ASSETS, name));
-    return { name, ...sizes };
-  })
+const cssChunks = [...new Set(Object.values(manifest).flatMap((chunk) => chunk.css ?? []))]
+  .map((file) => ({
+    name: basename(file),
+    ...gzipSize(join(process.cwd(), "dist", file)),
+  }))
   .sort((a, b) => b.gzipBytes - a.gzipBytes);
 
 const totalCssGzip = cssChunks.reduce((sum, chunk) => sum + chunk.gzipBytes, 0);
 const largestIndex = indexChunks[0];
-const manifest = JSON.parse(readFileSync(VITE_MANIFEST, "utf8"));
-const entry = Object.values(manifest).find((chunk) => chunk.isEntry && chunk.src === "index.html");
 
 if (!entry) {
   console.error("[bundle-budget] index.html entry not found in Vite manifest");

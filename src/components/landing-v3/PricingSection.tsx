@@ -15,7 +15,7 @@ export interface PricingSectionProps {
 
 export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
   return (
-    <section id="pricing" className="relative scroll-mt-20 border-t border-white/6 bg-[#050912] py-32">
+    <section id="pricing" className="relative scroll-mt-20 border-t border-white/6 bg-ve-obsidian py-32">
       <div className="mx-auto max-w-7xl px-6">
 
         <motion.div

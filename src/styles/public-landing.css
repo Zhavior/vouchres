@@ -1,17 +1,11 @@
 @import "tailwindcss" source(none);
 @config "../../tailwind.public.config.ts";
-@source "../App.tsx";
-@source "../pages/VouchEdgeLanding.tsx";
 @source "../pages/VouchEdgeLandingV3.tsx";
-@source "../components/landing/**/*.{ts,tsx}";
 @source "../components/landing-v3/**/*.{ts,tsx}";
 @source "../components/brand/VouchEdgeLogo.tsx";
-/* Vouch Card System spotlight renders the real studio cards on the landing. */
-@source "../components/vouch-studio-darkroom/panels/preview/*.{ts,tsx}";
-/* Device showcase renders the real HR Board and Today dashboard inside frames. */
-@source "../features/hr/**/*.{ts,tsx}";
-@source "../components/TodayDashboard.tsx";
-@source "../theme/z8Tokens.ts";
+@source "../components/landing/aurora/AuroraHero.tsx";
+@source "../components/landing/aurora/AuroraBackground.tsx";
+@source "../components/landing/hero/LiveHud.tsx";
 
 @import "./vouchedge-tokens.css";
 @import "./vouchedge-utilities.css";

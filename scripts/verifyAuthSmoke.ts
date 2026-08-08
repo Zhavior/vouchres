@@ -54,12 +54,22 @@ for (const table of ["profiles", "picks", "pick_legs", "subscriptions", "posts",
   assert(rlsBase.includes(`alter table public.${table}`) && rlsBase.includes("enable row level security"), `${table} RLS must be enabled in base schema`);
 }
 
-// SECURITY REGRESSION GUARD — these owner-write policies were removed because
-// they let a browser client self-escalate tier/is_staff/trust_score or forge a
-// won pick. profiles/picks/pick_legs are service-role-write-only. If anyone
-// re-adds one of these to the base schema, this test fails on purpose.
-// (See migration 20260710000100_rls_lockdown_profiles_picks.sql.)
-for (const forbidden of ["profiles_update_self", "picks_update_self", "picks_insert_self", "pick_legs_write_self"]) {
+// SECURITY REGRESSION GUARD — profile writes are service-role-only because an
+// unrestricted browser policy permits self-escalation of tier, staff access,
+// or trust score. Scope this check to public.profiles so similarly named
+// policies on other tables, such as world_chat_profiles, remain valid.
+const profileWritePolicyNames = Array.from(
+  rlsBase.matchAll(
+    /create\s+policy\s+"([^"]+)"\s+on\s+public\.profiles\s+for\s+(insert|update|delete|all)\b/gi,
+  ),
+  (match) => match[1],
+);
+assert(
+  profileWritePolicyNames.length === 0,
+  `RLS lockdown regressed: public.profiles must not define browser write policies (${profileWritePolicyNames.join(", ")})`,
+);
+
+for (const forbidden of ["picks_update_self", "picks_insert_self", "pick_legs_write_self"]) {
   assert(!rlsBase.includes(forbidden), `RLS lockdown regressed: base schema must NOT define owner-write policy "${forbidden}" (writes are service-role only)`);
 }
 for (const table of ["notifications", "notification_preferences", "push_subscriptions"]) {

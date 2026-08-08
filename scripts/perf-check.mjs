@@ -11,8 +11,8 @@
  *   npx lighthouse http://localhost:4173 --only-categories=performance --quiet
  */
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { basename, join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
@@ -37,22 +37,23 @@ if (!existsSync(DIST_ASSETS)) {
   process.exit(1);
 }
 
-const assetNames = readdirSync(DIST_ASSETS);
+if (!existsSync(VITE_MANIFEST)) {
+  console.error("[perf-check] dist/vite-manifest.json not found — run npm run build first");
+  process.exit(1);
+}
 
-const indexChunks = assetNames
-  .filter((name) => /^index-.*\.js$/.test(name))
-  .map((name) => {
-    const sizes = gzipSize(join(DIST_ASSETS, name));
-    return { name, ...sizes };
-  })
-  .sort((a, b) => b.gzipBytes - a.gzipBytes);
+const manifest = JSON.parse(readFileSync(VITE_MANIFEST, "utf8"));
+const entry = Object.values(manifest).find((chunk) => chunk.isEntry && chunk.src === "index.html");
 
-const cssChunks = assetNames
-  .filter((name) => name.endsWith(".css"))
-  .map((name) => {
-    const sizes = gzipSize(join(DIST_ASSETS, name));
-    return { name, ...sizes };
-  })
+const indexChunks = entry?.file
+  ? [{ name: basename(entry.file), ...gzipSize(join(process.cwd(), "dist", entry.file)) }]
+  : [];
+
+const cssChunks = [...new Set(Object.values(manifest).flatMap((chunk) => chunk.css ?? []))]
+  .map((file) => ({
+    name: basename(file),
+    ...gzipSize(join(process.cwd(), "dist", file)),
+  }))
   .sort((a, b) => b.gzipBytes - a.gzipBytes);
 
 if (indexChunks.length === 0) {
@@ -93,8 +94,7 @@ function bootCssGzipBytes(manifest, entryNames) {
 }
 
 let publicCss = cssChunks.find((chunk) => chunk.name.startsWith("VouchEdgeTerminalPage-"));
-if (!publicCss && existsSync(VITE_MANIFEST)) {
-  const manifest = JSON.parse(readFileSync(VITE_MANIFEST, "utf8"));
+if (!publicCss) {
   const publicGzip = bootCssGzipBytes(manifest, ["VouchEdgeTerminalPage"]);
   if (publicGzip > 0) {
     publicCss = { name: "index boot (eager landing)", gzipBytes: publicGzip };

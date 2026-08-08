@@ -80,7 +80,7 @@ export default function PremiumFeatures() {
                 delay: index * 0.06,
                 duration: .35,
               }}
-              className="group rounded-[2rem] border border-white/[0.04] bg-[#050505]/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-sky-400/30 hover:bg-[#0a0a0a]/90 hover:shadow-2xl hover:shadow-sky-400/10"
+              className="group rounded-[2rem] border border-white/[0.04] bg-ve-obsidian/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-sky-400/30 hover:bg-ve-obsidian/90 hover:shadow-2xl hover:shadow-sky-400/10"
             >
               <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-400/10 transition-transform duration-300 group-hover:scale-110 group-hover:bg-sky-400/20">
                 <Icon

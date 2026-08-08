@@ -1,15 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   AURORA_ACCENT,
   AURORA_LABEL,
   AURORA_SURFACE,
 } from '../src/theme/auroraTokens';
-import {
-  Z8_ACCENT,
-  Z8_LABEL,
-  Z8_SURFACE,
-} from '../src/theme/z8Tokens';
 
 const canonicalDocuments = [
   'CONSTITUTION.md',
@@ -52,14 +47,15 @@ describe('Aurora Master Charter', () => {
     expect(design).toContain('Layer 4 — Deep Research');
   });
 
-  it('makes Aurora tokens canonical while preserving Z8 compatibility', () => {
-    expect(Z8_ACCENT).toBe(AURORA_ACCENT);
-    expect(Z8_LABEL).toBe(AURORA_LABEL);
-    expect(Z8_SURFACE).toBe(AURORA_SURFACE);
+  it('makes Aurora tokens canonical and removes the legacy Z8 token shim', () => {
+    expect(AURORA_ACCENT).toBe('text-vouch-emerald');
+    expect(AURORA_LABEL).toContain('text-[11px]');
+    expect(AURORA_SURFACE).toContain('border');
 
     const primitives = readProjectFile('src/components/ui/primitives.tsx');
     expect(primitives).toContain("from '../../theme/auroraTokens'");
     expect(primitives).not.toContain("from '../../theme/z8Tokens'");
+    expect(existsSync(new URL('../src/theme/z8Tokens.ts', import.meta.url))).toBe(false);
   });
 
   it('identifies Aurora as the runtime product system without breaking legacy themes', () => {
