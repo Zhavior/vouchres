@@ -2,17 +2,17 @@ import { gradePendingPicks } from "../services/grading/gradingService";
 import { captureGradingFailure } from "../lib/sentry";
 
 /**
- * Daily grade job — runs nightly to grade picks from the previous day's games.
+ * Grade-due job — runs every 10 minutes and only settles picks whose games are final.
  *
  * SCHEDULING OPTIONS — pick one:
  *
- * 1. Render Cron Job (recommended — free for hourly, $7/mo plan for sub-hourly)
+ * 1. Render Cron Job (recommended)
  *    In render.yaml, add:
  *      - type: cron
  *        name: vouchedge-grader
  *        runtime: node
  *        plan: starter
- *        schedule: "0 6 * * *"  # 2 AM ET = 6 AM UTC
+ *        schedule: every ten minutes (see render.yaml for the cron expression)
  *        command: node dist/gradeJob.cjs
  *        envVars: [same as web service]
  *
@@ -72,9 +72,8 @@ async function main() {
  */
 export async function startInProcessCron() {
   const cron = await import("node-cron");
-  // 2 AM ET = 6 AM UTC (during DST; 7 UTC during standard time — use 6 for simplicity)
-  cron.schedule("0 6 * * *", async () => {
-    console.log("[cron] daily grade job triggered");
+  cron.schedule("*/10 * * * *", async () => {
+    console.log("[cron] grade-due job triggered");
     try {
       await gradePendingPicks({ days: 3 });
     } catch (err) {
@@ -82,7 +81,7 @@ export async function startInProcessCron() {
       captureGradingFailure(err, { source: "cron", cron: true });
     }
   });
-  console.log("[cron] daily grade job scheduled for 06:00 UTC");
+  console.log("[cron] grade-due job scheduled every 10 minutes");
 }
 
 // Run if invoked directly

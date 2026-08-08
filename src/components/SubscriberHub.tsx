@@ -878,10 +878,6 @@ export default function SubscriberHub({
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
-                  <span>Discord alerts if creator enabled</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
                   <span>VouchEdge proof tracking</span>
                 </div>
                 <div className="flex items-center gap-2">

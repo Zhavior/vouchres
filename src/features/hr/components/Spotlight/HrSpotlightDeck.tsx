@@ -82,7 +82,7 @@ function SpotlightCard({
           disabled={blocked}
           className="mt-auto flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/12 px-2 font-mono text-[10px] font-black uppercase tracking-wider text-vouch-emerald transition hover:bg-vouch-emerald/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Plus className="h-3.5 w-3.5" /> Add to slip
+          <Plus className="h-3.5 w-3.5" /> Add to My List
         </button>
       ) : null}
     </article>
@@ -169,7 +169,7 @@ export function HrSpotlightDeck({ rows, onAddToSlip, onResearch }: HrSpotlightDe
             className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-vouch-emerald/45 bg-gradient-to-r from-vouch-emerald/20 to-vouch-cyan/15 px-3 font-mono text-[10px] font-black uppercase tracking-wider text-vouch-emerald transition hover:brightness-125"
           >
             {queueActive ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-            {queueActive ? `Adding ${queuePosition} of ${queueTotal} — stop` : `Add all ${picks.length} to ParlayOS slip`}
+            {queueActive ? `Adding ${queuePosition} of ${queueTotal} — stop` : `Add all ${picks.length} to My List`}
           </button>
         ) : null}
       </div>

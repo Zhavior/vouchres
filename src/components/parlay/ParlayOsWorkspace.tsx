@@ -67,6 +67,7 @@ import {
 } from '../../stores/parlayCommandStore';
 import {
   LEG_STATUS_META,
+  SLIP_STATUS_META,
   RISK_MODE_META,
   computeJudgeVerdict,
   computeCombinedOdds,
@@ -149,7 +150,7 @@ function useAnnounce() {
 // ─── Status badge (Judge 7: icon+text, not color-only) ───────────────────────
 
 function StatusBadge({ status, size = 'sm' }: { status: LegGradeStatus | SlipGradeStatus; size?: 'xs' | 'sm' }) {
-  const meta = (LEG_STATUS_META as Record<string, typeof LEG_STATUS_META[LegGradeStatus]>)[status]
+  const meta = ({ ...SLIP_STATUS_META, ...LEG_STATUS_META } as Record<string, typeof LEG_STATUS_META[LegGradeStatus]>)[status]
     ?? LEG_STATUS_META.pending;
   const sz = size === 'xs' ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5';
   return (
@@ -1054,7 +1055,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
 
       {templateProgress ? <ParlayOsTemplateGuide progress={templateProgress} /> : null}
 
-      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="ParlayOS mobile workspace">
+      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="My List mobile workspace">
         {(['slip', 'watchlist', 'review'] as const).map((view) => (
           <button
             key={view}
@@ -1421,7 +1422,7 @@ export default function ParlayOsWorkspace({
 
       <section
         className={`${AURORA_PAGE} flex flex-col`}
-        aria-label="ParlayOS"
+        aria-label="My List"
       >
         {/* Header */}
         <div className={`${AURORA_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
@@ -1429,13 +1430,13 @@ export default function ParlayOsWorkspace({
             <div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${AURORA_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                ParlayOS
+                My List
               </div>
               <h1 className="mt-2 text-xl font-extrabold text-white sm:text-3xl font-z8">
                 Build. Select. Track.
               </h1>
               <p className="mt-1 text-xs text-white/50 max-w-xl font-z8 hidden sm:block">
-                One place to build slips manually, let V.A.I surface picks, and monitor every parlay you save.
+                One place to collect picks, review every leg, and monitor each saved list through grading.
               </p>
             </div>
             <LivePulseBars active={liveCount > 0} />
@@ -1466,7 +1467,7 @@ export default function ParlayOsWorkspace({
           <div
             id={tablistId}
             role="tablist"
-            aria-label="ParlayOS sections"
+            aria-label="My List sections"
             className="flex gap-0.5 sm:gap-1 overflow-x-auto pb-0 border-b border-[hsl(var(--ve-border)/0.4)] snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
           >

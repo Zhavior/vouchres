@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   AlertTriangle,
+  CreditCard,
   FileText,
   RefreshCw,
   Search,
@@ -18,7 +19,7 @@ import {
   AURORA_SECTION_HEADER,
 } from '../../theme/auroraTokens';
 
-type AdminTab = 'overview' | 'waitlist' | 'users' | 'cappers' | 'grading' | 'system';
+type AdminTab = 'overview' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'system';
 
 interface DashboardStats {
   users: number;
@@ -86,7 +87,8 @@ interface GradingResult {
 const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: LucideIcon }> = [
   { id: 'overview', label: 'Overview', icon: Activity },
   { id: 'waitlist', label: 'Beta Waitlist', icon: Users },
-  { id: 'users', label: 'Users', icon: UserCog },
+  { id: 'users', label: 'Users & Roles', icon: UserCog },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'cappers', label: 'Cappers', icon: Shield },
   { id: 'grading', label: 'Grading', icon: FileText },
   { id: 'system', label: 'System Health', icon: Server },
@@ -197,6 +199,7 @@ export function AdminDashboard() {
       ) : null}
       {activeTab === 'waitlist' ? <Waitlist /> : null}
       {activeTab === 'users' ? <UsersPanel /> : null}
+      {activeTab === 'billing' ? <BillingPanel stats={stats} error={statsError} loading={loadingStats} onRefresh={refreshStats} /> : null}
       {activeTab === 'cappers' ? <CappersPanel /> : null}
       {activeTab === 'grading' ? <GradingPanel /> : null}
       {activeTab === 'system' ? <SystemHealth /> : null}
@@ -278,6 +281,50 @@ function MetricCell({ label, value }: { label: string; value: string | number })
     <div className="p-4 sm:p-5">
       <p className={`${AURORA_LABEL} text-white/45`}>{label}</p>
       <p className="mt-2 text-xl font-semibold text-white">{typeof value === 'number' ? formatNumber(value) : value}</p>
+    </div>
+  );
+}
+
+function BillingPanel({
+  stats,
+  error,
+  loading,
+  onRefresh,
+}: {
+  stats: DashboardStats | null;
+  error: string | null;
+  loading: boolean;
+  onRefresh: () => Promise<void>;
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Subscription snapshot</h2>
+          <p className="mt-1 text-sm text-white/50">Backend-derived subscription counts and estimated monthly recurring revenue.</p>
+        </div>
+        <button type="button" className={BUTTON} onClick={() => void onRefresh()} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+        </button>
+      </div>
+
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
+      {loading && !stats ? <div className={`${PANEL} p-5 text-sm text-white/55`}>Loading billing totals...</div> : null}
+      {stats ? (
+        <>
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Active subscriptions" value={formatNumber(stats.subscriptions.active)} />
+            <MetricCard label="Gold" value={formatNumber(stats.subscriptions.gold)} />
+            <MetricCard label="Seller Pro" value={formatNumber(stats.subscriptions.seller_pro)} />
+            <MetricCard label="Estimated MRR" value={formatCurrency(stats.estimated_mrr)} detail="Estimated by the admin stats API from active tiers." />
+          </section>
+          <section className={`${PANEL} p-4 sm:p-5`}>
+            <p className="text-sm text-white/60">
+              This view reports subscription records stored by VouchEdge. It does not claim to be a Stripe transaction ledger or payout report.
+            </p>
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

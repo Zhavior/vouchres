@@ -12,6 +12,9 @@ describe('admin dashboard truthfulness', () => {
 
     expect(shell).toContain('Aurora HQ');
     expect(shell).toContain('VouchEdge Admin Command Center');
+    expect(dashboard).toContain("label: 'Billing'");
+    expect(dashboard).toContain("label: 'Users & Roles'");
+    expect(dashboard).toContain('Backend-derived subscription counts');
 
     for (const endpoint of [
       '/api/admin/stats',

@@ -4,6 +4,7 @@ export type SmartParlayStatus =
   | "pending"
   | "live"
   | "upcoming"
+  | "ready_to_grade"
   | "won"
   | "lost"
   | "push"

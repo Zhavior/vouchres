@@ -9,7 +9,7 @@ import SmartParlayLegCard from "./SmartParlayLegCard";
 import { trustLockCountdownLabel } from "../../../lib/trustLockSchedule";
 import type { SmartParlaySlip } from "../../../domain/parlay";
 import { ParlayOsStatusBadge } from "../hub/parlayOsUi";
-import type { LegGradeStatus } from "../types/parlayOsTypes";
+import type { SlipGradeStatus } from "../types/parlayOsTypes";
 import {
   deriveSlipDisplayTitle,
   deriveSlipMarketChips,
@@ -74,7 +74,7 @@ export default function SmartParlaySlipCard({
   legOdds?: Record<string, number | null | undefined>;
   className?: string;
 }) {
-  const status = String(slip.status ?? "pending").toLowerCase() as LegGradeStatus;
+  const status = String(slip.status ?? "pending").toLowerCase() as SlipGradeStatus;
   const theme = deriveSlipVisualTheme(slip);
   const displayTitle = deriveSlipDisplayTitle(slip);
   const marketChips = deriveSlipMarketChips(slip.legs);

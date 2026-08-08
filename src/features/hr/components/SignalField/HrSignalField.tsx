@@ -332,7 +332,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
           <div className="mt-4 grid gap-2">
             <button type="button" onClick={() => onSelectPlayer(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-cyan-300/40 bg-cyan-400/10 text-[10px] font-black text-cyan-100 transition-colors hover:bg-cyan-400/15">Research player <ArrowRight className="h-3.5 w-3.5" /></button>
             {onAddToSlip ? (
-              <button type="button" disabled={!selectedBrief?.canAddToSlip} onClick={() => onAddToSlip(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-emerald-300/30 bg-emerald-400/[0.07] text-[10px] font-black text-emerald-100 transition-colors hover:bg-emerald-400/12 disabled:cursor-not-allowed disabled:opacity-40"><Plus className="h-3.5 w-3.5" />Add to slip</button>
+              <button type="button" disabled={!selectedBrief?.canAddToSlip} onClick={() => onAddToSlip(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-emerald-300/30 bg-emerald-400/[0.07] text-[10px] font-black text-emerald-100 transition-colors hover:bg-emerald-400/12 disabled:cursor-not-allowed disabled:opacity-40"><Plus className="h-3.5 w-3.5" />Add to My List</button>
             ) : null}
           </div>
         </aside>

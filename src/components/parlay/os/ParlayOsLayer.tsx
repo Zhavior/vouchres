@@ -81,7 +81,7 @@ export default function ParlayOsLayer({
           {sheetOpen ? (
             <button
               type="button"
-              aria-label="Close ParlayOS dock"
+              aria-label="Close My List"
               onClick={closeSheet}
               className="fixed inset-0 z-[88] bg-black/35 backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-none"
             />
@@ -91,7 +91,7 @@ export default function ParlayOsLayer({
             <section
               role="dialog"
               aria-modal="false"
-              aria-label="ParlayOS dock"
+              aria-label="My List"
               className="fixed inset-x-2.5 bottom-[5.25rem] z-[90] flex h-[min(78dvh,720px)] flex-col overflow-hidden rounded-lg border border-cyan-300/30 bg-[radial-gradient(circle_at_85%_0%,rgba(0,240,255,0.1),transparent_30%),linear-gradient(155deg,#07131c_0%,#02070c_72%)] shadow-[0_32px_100px_rgba(0,0,0,0.74),0_0_32px_rgba(0,240,255,0.09),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl lg:inset-x-auto lg:bottom-5 lg:right-5 lg:h-[min(86vh,780px)] lg:w-[410px]"
             >
               <header className="flex shrink-0 items-center gap-2.5 border-b border-white/10 bg-black/10 px-3.5 py-2.5">
@@ -100,7 +100,7 @@ export default function ParlayOsLayer({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-[12px] font-black uppercase tracking-[0.14em] text-white">ParlayOS</h2>
+                    <h2 className="text-[12px] font-black uppercase tracking-[0.14em] text-white">My List</h2>
                     <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[9px] font-bold text-white/55">
                       {legCount} {legCount === 1 ? "leg" : "legs"}
                     </span>
@@ -114,7 +114,7 @@ export default function ParlayOsLayer({
                   type="button"
                   onClick={closeSheet}
                   className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/45 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[0.98] hover:border-white/20 hover:text-white"
-                  aria-label="Close ParlayOS dock"
+                  aria-label="Close My List"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -243,7 +243,7 @@ export default function ParlayOsLayer({
               type="button"
               onClick={toggleSheet}
               className="fixed bottom-20 right-4 z-[90] flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/35 bg-[#050b12]/95 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 sm:h-auto sm:w-auto sm:min-h-12 sm:justify-start sm:gap-2.5 sm:rounded-2xl sm:px-3.5 sm:py-2.5 lg:bottom-6 lg:right-6"
-              aria-label={`Open ParlayOS dock${legCount ? `, ${legCount} legs` : ""}`}
+              aria-label={`Open My List${legCount ? `, ${legCount} legs` : ""}`}
             >
               <span className="relative flex items-center justify-center sm:h-8 sm:w-8 sm:rounded-xl sm:border sm:border-cyan-300/20 sm:bg-cyan-300/10">
                 <Layers3 className="h-5 w-5 text-cyan-200 sm:h-4.5 sm:w-4.5" />
@@ -252,8 +252,8 @@ export default function ParlayOsLayer({
                 ) : null}
               </span>
               <span className="hidden text-left sm:block">
-                <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-white">ParlayOS</span>
-                <span className="mt-0.5 hidden text-[9px] text-white/45 sm:block">Open slip dock</span>
+                <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-white">My List</span>
+                <span className="mt-0.5 hidden text-[9px] text-white/45 sm:block">Open picks</span>
               </span>
             </button>
           )}

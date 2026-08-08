@@ -261,7 +261,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchIn
               type="button"
               onClick={() => onAddToSlip?.(row)}
               disabled={!brief.canAddToSlip}
-              title="Add to slip"
+              title="Add to My List"
               className="flex h-7 w-7 items-center justify-center rounded-md border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald disabled:opacity-30"
             >
               <Plus className="h-3.5 w-3.5" />

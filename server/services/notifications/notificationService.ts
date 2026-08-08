@@ -5,6 +5,7 @@ import { getTodayHomeRuns } from "../mlb/hrFeedService";
 export type NotificationType =
   | "HOME_RUN"
   | "PARLAY_GRADED"
+  | "PARLAY_LEG_SETTLED"
   | "NEW_FOLLOWER"
   | "FOLLOWED_POST"
   | "PARLAY_TAILED";
@@ -118,7 +119,7 @@ function notificationUrl(type: NotificationType, metadata: Record<string, unknow
   if (type === "HOME_RUN" && metadata.playerId) {
     return `/hr-board?hrPlayer=${encodeURIComponent(String(metadata.playerId))}`;
   }
-  if (type === "PARLAY_GRADED" || type === "PARLAY_TAILED") {
+  if (type === "PARLAY_GRADED" || type === "PARLAY_TAILED" || type === "PARLAY_LEG_SETTLED") {
     return "/notifications";
   }
   if (type === "NEW_FOLLOWER" || type === "FOLLOWED_POST") {
@@ -130,7 +131,7 @@ function notificationUrl(type: NotificationType, metadata: Record<string, unknow
 export function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean {
   if (!prefs.in_app_enabled) return false;
   if (type === "HOME_RUN") return prefs.hr_alerts_enabled;
-  if (type === "PARLAY_GRADED") return prefs.parlay_alerts_enabled;
+  if (type === "PARLAY_GRADED" || type === "PARLAY_LEG_SETTLED") return prefs.parlay_alerts_enabled;
   if (type === "NEW_FOLLOWER" || type === "FOLLOWED_POST") return prefs.follow_alerts_enabled;
   if (type === "PARLAY_TAILED") return prefs.tail_alerts_enabled;
   return true;
@@ -587,6 +588,44 @@ export async function createParlayGradedNotification(args: {
     ...payload,
   });
   console.log(`[notifications] parlay graded parlay=${args.parlayId} status=${args.status} created=${result.created} duplicates=${result.duplicates}`);
+  return result;
+}
+
+export function buildParlayLegSettledNotification(args: {
+  parlayId: string;
+  legIndex: number;
+  status: string;
+  selection: string;
+  marketCode?: string;
+}) {
+  return {
+    type: "PARLAY_LEG_SETTLED" as const,
+    title: "Pick graded",
+    message: `Pick ${args.legIndex} (${args.selection}) was graded: ${args.status}.`,
+    metadata: {
+      parlayId: args.parlayId,
+      legIndex: args.legIndex,
+      status: args.status,
+      selection: args.selection,
+      marketCode: args.marketCode ?? null,
+    },
+    dedupeKey: `PARLAY_LEG_SETTLED:${args.parlayId}:${args.legIndex}:${args.status}`,
+  };
+}
+
+export async function createParlayLegSettledNotification(args: {
+  userId: string;
+  parlayId: string;
+  legIndex: number;
+  status: string;
+  selection: string;
+  marketCode?: string;
+}): Promise<NotificationCreateResult> {
+  const result = await createNotification({
+    userId: args.userId,
+    ...buildParlayLegSettledNotification(args),
+  });
+  console.log(`[notifications] pick graded list=${args.parlayId} leg=${args.legIndex} status=${args.status} created=${result.created}`);
   return result;
 }
 

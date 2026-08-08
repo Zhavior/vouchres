@@ -52,7 +52,7 @@ export default function ParlayOsMobileSlipDock({
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white">ParlayOS Slip</p>
+            <p className="text-xs font-bold text-white">My List</p>
             <p className="text-[10px] font-mono text-cyan-200/80">
               {totalOdds} combined · tap to edit legs
             </p>

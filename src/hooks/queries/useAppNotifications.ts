@@ -16,6 +16,7 @@ import { visibilityAwareInterval } from '../../lib/queryVisibility';
 type ServerNotificationType =
   | 'HOME_RUN'
   | 'PARLAY_GRADED'
+  | 'PARLAY_LEG_SETTLED'
   | 'NEW_FOLLOWER'
   | 'FOLLOWED_POST'
   | 'PARLAY_TAILED'
@@ -48,13 +49,13 @@ export interface ActivityNotification {
 }
 
 function mapServerNotificationKind(type: ServerNotificationType): ActivityNotificationKind {
-  if (type === 'PARLAY_GRADED') return 'result';
+  if (type === 'PARLAY_GRADED' || type === 'PARLAY_LEG_SETTLED') return 'result';
   if (type === 'PARLAY_TAILED' || type === 'NEW_FOLLOWER' || type === 'FOLLOWED_POST') return 'success';
   return 'info';
 }
 
 function mapServerNotificationSection(type: ServerNotificationType, metadata?: Record<string, unknown>): string | undefined {
-  if (type === 'PARLAY_GRADED' || type === 'PARLAY_TAILED') return 'parlayos';
+  if (type === 'PARLAY_GRADED' || type === 'PARLAY_LEG_SETTLED' || type === 'PARLAY_TAILED') return 'parlayos';
   if (type === 'NEW_FOLLOWER' || type === 'FOLLOWED_POST') return 'following';
   if (type === 'HOME_RUN' && metadata?.playerId) return 'hr';
   return 'notifications';
@@ -62,6 +63,7 @@ function mapServerNotificationSection(type: ServerNotificationType, metadata?: R
 
 function mapServerNotificationLabel(type: ServerNotificationType): string {
   if (type === 'PARLAY_GRADED') return 'Parlay graded';
+  if (type === 'PARLAY_LEG_SETTLED') return 'Pick graded';
   if (type === 'PARLAY_TAILED') return 'Parlay tailed';
   if (type === 'NEW_FOLLOWER') return 'New follower';
   if (type === 'FOLLOWED_POST') return 'Following activity';

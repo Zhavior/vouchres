@@ -10,6 +10,8 @@ import { projectSmartParlayFromPublic } from '../../../domain/parlay';
 import { classifyParlayHistoryTab } from '../../../lib/trustLockSchedule';
 import type { TrustAudience } from '../../../lib/trustLockSchedule';
 import { repairAllSavedParlays } from '../../../lib/parlays/repairSavedParlay';
+import { useParlaySlipLiveProgress, liveProgressMap } from '../../../hooks/useParlaySlipLiveProgress';
+import { mergeLiveProgressIntoSlips } from '../../../domain/parlay/mergeLiveProgress';
 import { useAppCommandStore } from '../../../stores/appCommandStore';
 import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import { useSlipsStore } from '../../../stores/slipsStore';
@@ -20,9 +22,9 @@ function EmptyLiveParlays() {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
       <div className="text-5xl" aria-hidden="true">📋</div>
-      <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">No parlays saved yet</h3>
+      <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">Your list is empty</h3>
       <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-xs">
-        Build a slip in ParlayOS and save it — it will appear here for live tracking and grading.
+        Add picks to My List and save them here for live tracking and grading.
       </p>
     </div>
   );
@@ -43,12 +45,32 @@ export default function ParlayOsHistoryPanel() {
     [savedSlips, liveGames],
   );
 
-  const liveSlips = useMemo(
+  const rawLiveSlips = useMemo(
     () => smartSlips.filter((s) =>
       ['pending', 'live', 'open', 'active', 'in_progress', 'upcoming'].includes(String(s.status).toLowerCase())
       && !s.trustCommittedAt && !s.feedLockedAt,
     ),
     [smartSlips],
+  );
+  const progressLegs = useMemo(
+    () => rawLiveSlips.flatMap((slip) => slip.legs.map((leg) => ({
+      id: leg.id,
+      sport: leg.sport,
+      gamePk: leg.gamePk,
+      playerId: leg.playerId,
+      marketCode: leg.marketCode,
+      statTarget: leg.statTarget == null ? null : Number(leg.statTarget),
+    }))),
+    [rawLiveSlips],
+  );
+  const { data: progressData } = useParlaySlipLiveProgress(progressLegs, {
+    enabled: rawLiveSlips.length > 0,
+  });
+  const progressMap = useMemo(() => liveProgressMap(progressData), [progressData]);
+
+  const liveSlips = useMemo(
+    () => mergeLiveProgressIntoSlips(rawLiveSlips, progressMap),
+    [rawLiveSlips, progressMap],
   );
   const gradedSlips = useMemo(
     () => smartSlips.filter((s) =>
@@ -126,7 +148,7 @@ export default function ParlayOsHistoryPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div role="tablist" aria-label="Parlay history" className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
+      <div role="tablist" aria-label="My List history" className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
         {HISTORY_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -155,21 +177,21 @@ export default function ParlayOsHistoryPanel() {
       />
       {historySlips.length === 0 ? (
         <p className="text-center text-xs text-white/45 py-6">
-          No {historyTab} parlays yet. Use <strong className="text-white/70">Lock to Ledger</strong> in ParlayOS to start your trust record.
+          No {historyTab} picks yet. Use <strong className="text-white/70">Lock to Ledger</strong> in My List to start your trust record.
         </p>
       ) : null}
 
       {pendingRepairCount > 0 ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
           <p className="text-xs text-amber-100/90 flex-1">
-            {pendingRepairCount} saved parlay{pendingRepairCount === 1 ? '' : 's'} need grading identity linked to today&apos;s slate.
+            {pendingRepairCount} saved list{pendingRepairCount === 1 ? '' : 's'} need grading identity linked to today&apos;s slate.
           </p>
           <button
             type="button"
             onClick={handleRepairAllSaved}
             className="shrink-0 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20 min-h-[2.75rem]"
           >
-            Repair saved parlays
+            Repair saved lists
           </button>
         </div>
       ) : null}

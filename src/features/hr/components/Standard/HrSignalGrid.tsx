@@ -109,7 +109,7 @@ const SimpleSignalCard = React.memo(function SimpleSignalCard({
             disabled={row.truthStatus === 'blocked'}
             className="flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/12 px-2 font-mono text-[10px] font-black uppercase tracking-wider text-vouch-emerald transition hover:bg-vouch-emerald/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Plus className="h-3.5 w-3.5" /> Add to slip
+            <Plus className="h-3.5 w-3.5" /> Add to My List
           </button>
         ) : (
           <span />
