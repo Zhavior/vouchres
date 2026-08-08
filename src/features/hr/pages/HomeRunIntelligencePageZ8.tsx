@@ -1,15 +1,13 @@
 import React, { lazy, Suspense, useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import {
-  AURORA_LABEL,
   AURORA_PAGE,
   AURORA_PAGE_GAP,
   AURORA_PAGE_PAD_X,
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL_PREMIUM,
-  AURORA_STAT_CHIP,
 } from '../../../theme/auroraTokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
@@ -41,24 +39,6 @@ import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
 
-interface MiniStatChipProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClasses: string;
-  glowClasses: string;
-}
-
-const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div className={`${AURORA_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
-    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
-    <div className="flex flex-col leading-tight">
-      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
-    </div>
-  </div>
-);
-
 function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
   const [imageFailed, setImageFailed] = useState(false);
   const resolvedLogo = logoUrl || logoByTeamName(team);
@@ -73,24 +53,6 @@ function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null 
     </span>
   );
 }
-
-const statusTone = {
-  fresh: {
-    label: 'Fresh',
-    className: 'border-[hsl(var(--ve-success)/0.22)] bg-[hsl(var(--ve-success)/0.08)] text-[#7dffc5]',
-    icon: <CheckCircle2 className="h-2.5 w-2.5" />,
-  },
-  delayed: {
-    label: 'Delayed',
-    className: 'border-vouch-amber/25 bg-vouch-amber/10 text-vouch-amber',
-    icon: <Clock3 className="h-2.5 w-2.5" />,
-  },
-  stale: {
-    label: 'Stale',
-    className: 'border-red-500/25 bg-red-500/10 text-red-300',
-    icon: <TriangleAlert className="h-2.5 w-2.5" />,
-  },
-} as const;
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -252,7 +214,6 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
   const topPlayer = vm.rows?.[0] ?? null;
-  const freshnessTone = statusTone[vm.slate.freshness];
   const warningList = vm.slate.warnings.slice(0, 3);
   const noGamesToday = !vm.loading && !vm.slate.hasGames && (vm.slate.gameCount === 0 || totalCount === 0);
   const visiblePlayerIds = useMemo(
@@ -464,28 +425,13 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   };
 
   return (
-    <div className={`${AURORA_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
+    <div className={`${AURORA_PAGE} hr-deck min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_X}`}>
 
-        {/* ── Top Header & Command Center Bar ──────────────────────────── */}
-        <header className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
+        {/* ── Aurora command deck ─────────────────────────────────────── */}
+        <div className="deck-reveal space-y-3">
           <HrHeader
             mode={vm.mode}
-            onRefresh={handleRefresh}
-            isRefreshing={vm.syncing}
-            lastUpdated={lastUpdated}
-            date={vm.date}
-            isToday={isToday}
-            onDateChange={vm.setDate}
-            isProMode={isProMode}
-            onToggleProMode={toggleProMode}
-          />
-          {isProMode ? (
-            <>
-              <HrCommandCenter
-            mode={vm.mode}
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
             onRefresh={handleRefresh}
             isRefreshing={vm.syncing}
             lastUpdated={lastUpdated}
@@ -493,42 +439,46 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             date={vm.date}
             isToday={isToday}
             onDateChange={vm.setDate}
-            autoSwitchedToPreview={autoSwitchedToPreview}
-            eliteCount={eliteCount}
-            strongCount={strongCount}
-            watchCount={watchCount}
-            sleeperCount={sleeperCount}
-            totalCount={totalCount}
-            searchValue={vm.search}
-            onSearchChange={vm.setSearch}
-            onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
-            activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
-            onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
-            visibleCount={vm.rows?.length ?? totalCount}
-            rows={(vm.rows ?? []) as unknown[]}
+            gameCount={vm.slate.gameCount}
+            hasGames={vm.slate.hasGames && !noGamesToday}
+            freshness={vm.slate.freshness}
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
+            isProMode={isProMode}
+            onToggleProMode={toggleProMode}
+          />
+          {isProMode ? (
+            <div className={`${AURORA_PANEL_PREMIUM} space-y-3 rounded-2xl p-2.5 sm:p-4`}>
+              <HrCommandCenter
+                mode={vm.mode}
+                viewMode={viewMode}
+                onViewModeChange={handleViewModeChange}
+                onRefresh={handleRefresh}
+                isRefreshing={vm.syncing}
+                lastUpdated={lastUpdated}
+                lastUpdatedLabel={lastUpdatedLabel}
+                date={vm.date}
+                isToday={isToday}
+                onDateChange={vm.setDate}
+                autoSwitchedToPreview={autoSwitchedToPreview}
+                eliteCount={eliteCount}
+                strongCount={strongCount}
+                watchCount={watchCount}
+                sleeperCount={sleeperCount}
+                totalCount={totalCount}
+                searchValue={vm.search}
+                onSearchChange={vm.setSearch}
+                onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
+                activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+                onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
+                visibleCount={vm.rows?.length ?? totalCount}
+                rows={(vm.rows ?? []) as unknown[]}
+                confirmedCount={vm.modeCounts?.confirmed ?? 0}
+                previewCount={vm.modeCounts?.curated ?? 0}
               />
               <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
-            </>
+            </div>
           ) : null}
-        </header>
-
-        {/* ── Slate Status Summary Row ───────────────────────────── */}
-        {/* Mobile: Sleek 1-line compact ticker bar */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 font-mono text-[10px] font-bold text-slate-200 sm:hidden">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-vouch-cyan shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
-            <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
-          </div>
-          <span className="text-white/20">•</span>
-          <span className={`inline-flex items-center gap-1 ${freshnessTone.className}`}>
-            {freshnessTone.label}
-          </span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-emerald">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-amber">{vm.modeCounts?.curated ?? 0} Preview</span>
         </div>
 
         {(vm.refreshError || vm.connection?.isLastGood || warningList.length > 0) && (
@@ -551,30 +501,6 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             )}
           </div>
         )}
-
-        {/* Tablet / Desktop: 4-card grid */}
-        <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">MLB Slate</p>
-            <p className="mt-1 text-sm font-black text-white">
-              {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
-            </p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Freshness</p>
-            <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}>
-              {freshnessTone.icon}{freshnessTone.label}
-            </span>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Confirmed Orders</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.confirmed ?? 0} official</p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Preview Candidates</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.curated ?? 0} projected</p>
-          </div>
-        </div>
 
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
 import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
 import {
-  Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio, Zap, Clock, CheckCircle2, Trophy, ShieldAlert, Heart
+  Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Zap, Clock, CheckCircle2, Trophy, ShieldAlert, Heart
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
@@ -17,6 +17,11 @@ import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { LineScoreTable } from './live/LineScoreTable';
 import { TeamLogo } from './live/LiveTeamLogo';
+import {
+  LiveGamesHeader,
+  type LiveGamesFeedState,
+  type LiveGamesFilterTab,
+} from './live/LiveGamesHeader';
 import StadiumWindVectorWidget from './stadium/StadiumWindVectorWidget';
 import { AURORA_LABEL, AURORA_PAGE, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../theme/auroraTokens';
 import './live/live-games-lens.css';
@@ -24,8 +29,6 @@ import './live/live-games-lens.css';
 interface Props {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
-
-type FilterTab = 'all' | 'live' | 'upcoming' | 'final';
 
 function vulnColor(v: number): string {
   if (v >= 70) return '#f87171';
@@ -434,7 +437,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [selectedGamePk, setSelectedGamePk] = useState<number | string | null>(null);
-  const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [filterTab, setFilterTab] = useState<LiveGamesFilterTab>('all');
   const [error, setError] = useState<string | null>(null);
   const [sourceNote, setSourceNote] = useState<string>('Connecting to live stream...');
   const [enriching, setEnriching] = useState<boolean>(false);
@@ -492,6 +495,11 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   const liveGamesList = matchups.filter((m) => m.isLive);
   const upcomingGamesList = matchups.filter((m) => !m.isLive && !m.isFinal);
   const finalGamesList = matchups.filter((m) => m.isFinal);
+  const feedState: LiveGamesFeedState = error
+    ? 'down'
+    : liveGamesQuery.isError || (liveGamesQuery.isLoading && matchups.length === 0)
+      ? 'reconnecting'
+      : 'live';
 
   const filteredGames = filterTab === 'live'
     ? liveGamesList
@@ -526,86 +534,21 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${AURORA_PAGE} w-full max-w-full min-w-0 px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
-
-      {/* ── Sleek 3D Glass Header ────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-white/12 bg-gradient-to-r from-[#0b1625]/90 via-[#07111e]/90 to-[#040810]/90 p-4 sm:p-5 shadow-2xl backdrop-blur-xl mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
-              <Radio className="h-5 w-5 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-black uppercase text-white tracking-tight">Live Games Telemetry</h1>
-                <span className="font-mono text-[9px] uppercase tracking-widest text-rose-400 font-bold bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded-full">
-                  Real-time Stream
-                </span>
-              </div>
-              <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
-              <div className="flex items-center gap-2 mt-2 font-mono text-[10px] text-vouch-emerald font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-ping" />
-                <span>{sourceNote}</span>
-                <span className="text-slate-500">· Sync: {lastSyncTime}</span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleManualRefresh}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/12 bg-black/40 px-4 py-2.5 font-mono text-xs font-bold text-white transition hover:border-vouch-cyan hover:text-vouch-cyan active:scale-95"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${liveGamesQuery.isFetching ? 'animate-spin text-vouch-cyan' : ''}`} /> Fast Sync
-          </button>
-        </div>
-
-        {/* Filter Navigation Tabs */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setFilterTab('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'all'
-                ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            All Games ({matchups.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('live')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'live'
-                ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-            Live Now ({liveGamesList.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('upcoming')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'upcoming'
-                ? 'bg-sky-500/20 border border-sky-500/50 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            Upcoming ({upcomingGamesList.length})
-          </button>
-
-          <button
-            onClick={() => setFilterTab('final')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
-              filterTab === 'final'
-                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(49,181,131,0.2)]'
-                : 'border border-white/10 bg-black/40 text-slate-400 hover:text-white'
-            }`}
-          >
-            Final ({finalGamesList.length})
-          </button>
-        </div>
+    <main className={`${AURORA_PAGE} live-deck w-full max-w-full min-w-0 overflow-x-hidden px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
+      <div className="deck-reveal mb-4 sm:mb-6">
+        <LiveGamesHeader
+          onRefresh={handleManualRefresh}
+          isSyncing={liveGamesQuery.isFetching}
+          feedState={feedState}
+          feedNote={sourceNote}
+          lastSyncLabel={lastSyncTime}
+          totalCount={matchups.length}
+          liveCount={liveGamesList.length}
+          upcomingCount={upcomingGamesList.length}
+          finalCount={finalGamesList.length}
+          filterTab={filterTab}
+          onFilterChange={setFilterTab}
+        />
       </div>
 
       {error && (
