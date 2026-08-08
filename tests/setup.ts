@@ -2,10 +2,12 @@
  * Test setup — runs before every test file.
  *
  * Requirements:
- *   - A dedicated TEST Supabase project (NEVER your production project).
- *     Set SUPABASE_URL_TEST + SUPABASE_SERVICE_ROLE_KEY_TEST in .env.test.local
+ *   - An isolated Supabase database (NEVER your production project).
+ *     CI starts a local Supabase stack and exports SUPABASE_URL_TEST +
+ *     SUPABASE_SERVICE_ROLE_KEY_TEST from `supabase status --output env`.
+ *     Local developers may set the same variables in .env.test.local.
  *   - Stripe in TEST MODE (use sk_test_... keys)
- *   - The test Supabase project must have schema.sql applied
+ *   - The test database must have the current Supabase migrations applied
  *
  * Test isolation:
  *   - Each test file calls `resetTestDb()` in beforeEach to TRUNCATE all tables.
@@ -19,10 +21,33 @@ const SUPABASE_URL = process.env.SUPABASE_URL_TEST ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY_TEST ?? "";
 const TEST_DB_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
 
+function isLoopbackUrl(value: string): boolean {
+  try {
+    const { hostname } = new URL(value);
+    return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
+if (process.env.CI) {
+  if (!TEST_DB_CONFIGURED) {
+    throw new Error(
+      "[test-setup] CI requires local SUPABASE_URL_TEST and SUPABASE_SERVICE_ROLE_KEY_TEST."
+    );
+  }
+  if (!isLoopbackUrl(SUPABASE_URL)) {
+    throw new Error(
+      "[test-setup] CI refuses a non-local SUPABASE_URL_TEST. " +
+        "Start Supabase locally and use its generated status credentials."
+    );
+  }
+}
+
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.warn(
     "[test-setup] SUPABASE_URL_TEST or SUPABASE_SERVICE_ROLE_KEY_TEST not set. " +
-      "Tests that hit the DB will fail. Copy .env.test.example to .env.test.local."
+      "Tests that hit the DB will be skipped. Start a local Supabase stack and export its credentials."
   );
 }
 

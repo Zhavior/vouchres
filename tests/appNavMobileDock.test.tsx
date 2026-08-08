@@ -22,8 +22,10 @@ describe('AppNav Instagram-style mobile dock', () => {
     const dock = container.querySelector<HTMLElement>('nav[aria-label="Mobile app navigation"]');
     const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
 
-    expect(dock?.className).toContain('fixed inset-x-0 bottom-0');
-    expect(dock?.className).toContain('ve-safe-bottom');
+    expect(dock?.className).toContain('fixed left-1/2');
+    expect(dock?.className).toContain('bottom-[calc(0.9rem+env(safe-area-inset-bottom))]');
+    expect(dock?.className).toContain('w-[92vw]');
+    expect(dock?.className).toContain('rounded-2xl');
     expect(dock?.className).toContain('md:hidden');
     expect(container.querySelector('.grid-cols-4')).not.toBeNull();
     expect(buttons).toHaveLength(4);

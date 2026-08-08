@@ -584,15 +584,17 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             />
           ) : null}
 
-          <MostVouchedPlayersPanel
-            players={playerVouchLeaderboard.data ?? []}
-            subtitle="The hottest community-backed bats on this slate."
-            onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
-            onSelectPlayer={(playerId) => {
-              const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
-              if (match) openPlayerProfile(match);
-            }}
-          />
+          <Suspense fallback={null}>
+            <MostVouchedPlayersPanel
+              players={playerVouchLeaderboard.data ?? []}
+              subtitle="The hottest community-backed bats on this slate."
+              onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
+              onSelectPlayer={(playerId) => {
+                const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+                if (match) openPlayerProfile(match);
+              }}
+            />
+          </Suspense>
 
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
@@ -609,18 +611,20 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
-              <HrSpreadsheet
-                rows={(vm.rows ?? []) as any}
-                freshness={vm.slate.freshness}
-                generatedAt={vm.slate.generatedAt}
-                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-                onTogglePlayerVouch={handleTogglePlayerVouch}
-                playerVouchMap={playerVouchMap}
-                pendingPlayerVouchId={pendingPlayerVouchId}
-                onSelectPlayer={(player) => {
-                  openPlayerProfile(player);
-                }}
-              />
+              <Suspense fallback={<LoadingSkeleton />}>
+                <HrSpreadsheet
+                  rows={(vm.rows ?? []) as any}
+                  freshness={vm.slate.freshness}
+                  generatedAt={vm.slate.generatedAt}
+                  onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  onTogglePlayerVouch={handleTogglePlayerVouch}
+                  playerVouchMap={playerVouchMap}
+                  pendingPlayerVouchId={pendingPlayerVouchId}
+                  onSelectPlayer={(player) => {
+                    openPlayerProfile(player);
+                  }}
+                />
+              </Suspense>
             ) : viewMode === 'treemap' ? (
               <HrSignalField
                 buckets={vm.buckets}
@@ -682,16 +686,18 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         </div>
       ) : null}
 
-      <HrPlayerProfile
-        player={vm.selectedPlayer}
-        isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-        onClose={closePlayerProfile}
-        onAddToSlip={addPlayerToSlip}
-        boardFreshness={vm.slate.freshness}
-        boardGeneratedAt={vm.slate.generatedAt}
-        boardDate={vm.date}
-        slipActionAvailable={Boolean(onSectionChange)}
-      />
+      <Suspense fallback={null}>
+        <HrPlayerProfile
+          player={vm.selectedPlayer}
+          isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
+          onClose={closePlayerProfile}
+          onAddToSlip={addPlayerToSlip}
+          boardFreshness={vm.slate.freshness}
+          boardGeneratedAt={vm.slate.generatedAt}
+          boardDate={vm.date}
+          slipActionAvailable={Boolean(onSectionChange)}
+        />
+      </Suspense>
     </div>
   );
 };

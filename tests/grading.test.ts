@@ -14,11 +14,12 @@
  * Uses a mock fetch to return deterministic boxscore data.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestUser, resetTestDb } from "./setup";
 
 const SKIP = !process.env.SUPABASE_URL_TEST;
 const describeOrSkip = SKIP ? describe.skip : describe;
+const nativeFetch = globalThis.fetch.bind(globalThis);
 
 // Mock boxscore — Aaron Judge hits 2 HR, 3 RBI, 2 runs
 const MOCK_BOXSCORE = {
@@ -53,7 +54,29 @@ describeOrSkip("Grading service", () => {
   beforeEach(async () => {
     await resetTestDb();
     // Mock global fetch to return our boxscore
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((...args: Parameters<typeof fetch>) => {
+      const url = String(args[0]);
+      if (url.includes("/v1/schedule?sportId=1&date=")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            dates: [{
+              games: [
+                {
+                  gamePk: 99999,
+                  officialDate: "2026-08-08",
+                  status: { abstractGameState: "Final", detailedState: "Final" },
+                },
+                {
+                  gamePk: 88888,
+                  officialDate: "2026-08-08",
+                  status: { abstractGameState: "Live", detailedState: "In Progress" },
+                },
+              ],
+            }],
+          }),
+        } as Response);
+      }
       if (url.includes("/v1/game/99999/boxscore")) {
         return Promise.resolve({
           ok: true,
@@ -71,8 +94,12 @@ describeOrSkip("Grading service", () => {
           }),
         } as Response);
       }
-      return Promise.reject(new Error(`unexpected fetch: ${url}`));
+      return nativeFetch(...args);
     }) as any;
+  });
+
+  afterEach(() => {
+    global.fetch = nativeFetch;
   });
 
   it("grades a winning HR pick (Aaron Judge 1+ HR)", async () => {

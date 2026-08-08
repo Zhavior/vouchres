@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Z8_ACCENT, Z8_LABEL } from '../src/theme/z8Tokens';
+import { AURORA_ACCENT, AURORA_LABEL } from '../src/theme/auroraTokens';
 
 const css = readFileSync(
   new URL('../src/styles/z8-design-system.css', import.meta.url),
@@ -11,14 +11,14 @@ const primitives = readFileSync(
   'utf8',
 );
 
-describe('Z8 production design contract', () => {
+describe('Aurora production design contract', () => {
   it('uses verified emerald as the primary semantic accent', () => {
-    expect(Z8_ACCENT).toBe('text-vouch-emerald');
+    expect(AURORA_ACCENT).toBe('text-vouch-emerald');
   });
 
   it('does not use sub-11px text for the shared label token', () => {
-    expect(Z8_LABEL).toContain('text-[11px]');
-    expect(Z8_LABEL).not.toMatch(/text-\[(?:8|9|10)px\]/);
+    expect(AURORA_LABEL).toContain('text-[11px]');
+    expect(AURORA_LABEL).not.toMatch(/text-\[(?:8|9|10)px\]/);
   });
 
   it('provides touch-safe controls and visible keyboard focus', () => {

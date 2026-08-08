@@ -15,7 +15,7 @@
  *   STRIPE_API_BASE=http://localhost:12111 npm test -- billing
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestUser, resetTestDb } from "./setup";
 
 const SKIP = !process.env.SUPABASE_URL_TEST || !process.env.STRIPE_SECRET_KEY?.startsWith("sk_test");
@@ -30,7 +30,7 @@ function mockSubscriptionEvent(opts: {
   status: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
 }): any {
   return {
-    id: `sub_test_${Math.random().toString(36).slice(2, 10)}`,
+    id: opts.subscriptionId,
     object: "subscription",
     customer: opts.customerId,
     status: opts.status,
@@ -51,9 +51,12 @@ function mockSubscriptionEvent(opts: {
 describeOrSkip("Stripe billing sync", () => {
   beforeEach(async () => {
     await resetTestDb();
-    // Set test price IDs
-    process.env.STRIPE_PRICE_GOLD = "price_test_gold";
-    process.env.STRIPE_PRICE_SELLER_PRO = "price_test_seller_pro";
+    vi.stubEnv("STRIPE_BETA_MONTHLY_PRICE_ID", "price_test_gold");
+    vi.stubEnv("STRIPE_CREATOR_MONTHLY_PRICE_ID", "price_test_seller_pro");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("upgrades profile tier to 'gold' on subscription.created (active)", async () => {
@@ -205,9 +208,9 @@ describeOrSkip("Stripe billing sync", () => {
       status: "active",
     });
 
-    // syncSubscription should log an error and return without crashing
-    // The profile tier should remain 'free'
-    await syncSubscription(sub);
+    // The webhook worker must receive an error for an unrecognized price so it
+    // can record and retry the event instead of silently applying entitlements.
+    await expect(syncSubscription(sub)).rejects.toThrow("could not resolve tier");
 
     const { supabaseAdmin } = await import("../server/middleware/auth");
     const { data: profile } = await supabaseAdmin

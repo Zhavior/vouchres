@@ -1,30 +1,40 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const source = readFileSync(
+const terminalSource = readFileSync(
   new URL('../src/pages/VouchEdgeTerminalPage.tsx', import.meta.url),
   'utf8',
 );
-const tokens = readFileSync(
-  new URL('../src/components/landing/LandingTokens.ts', import.meta.url),
+const heroSource = readFileSync(
+  new URL('../src/components/landing/aurora/AuroraHero.tsx', import.meta.url),
+  'utf8',
+);
+const pricingSource = readFileSync(
+  new URL('../src/components/landing-v3/PricingSection.tsx', import.meta.url),
   'utf8',
 );
 
 describe('public landing conversion contract', () => {
-  it('states the customer outcome before product jargon', () => {
-    expect(source).toContain("Understand today&apos;s home run candidates");
-    expect(source).toContain('power, pitcher risk, park context, lineup status, and model confidence');
-    expect(source).not.toContain('pristine');
+  it('states the customer outcome and trust boundaries on the mounted landing', () => {
+    expect(terminalSource).toContain('<VouchEdgeLandingV3');
+    expect(heroSource).toContain('The game begins.');
+    expect(heroSource).toContain('Before the first pitch.');
+    expect(heroSource).toContain('Official game context');
+    expect(heroSource).toContain('Transparent reasoning');
+    expect(heroSource).toContain('Results stay visible');
+    expect(heroSource).not.toContain('pristine');
   });
 
-  it('offers one honest free-account action with a clear sign-in path', () => {
-    expect(source).toContain('Start researching free');
-    expect(source).toContain('No credit card required');
-    expect(source).toContain('Already have an account? Sign in');
+  it('offers the real beta action and discloses its trial and price', () => {
+    expect(heroSource).toContain('Join Beta');
+    expect(heroSource).toContain('onJoinBeta');
+    expect(heroSource).toContain('Login');
+    expect(pricingSource).toContain('Try every Beta research tool free for 7 days.');
+    expect(pricingSource).toContain('continue for $7.99 per month until you cancel.');
   });
 
-  it('uses touch-safe emerald conversion controls', () => {
-    expect(tokens).toContain('z8-control');
-    expect(tokens).toContain('border-vouch-emerald/55 bg-vouch-emerald');
+  it('uses touch-safe conversion controls', () => {
+    expect(heroSource).toContain('min-h-11');
+    expect(heroSource).toContain('min-h-14');
   });
 });

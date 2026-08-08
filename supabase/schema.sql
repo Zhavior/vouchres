@@ -396,6 +396,7 @@ create index post_comments_post_id_idx on public.post_comments(post_id, created_
 -- follows (user-to-user and user-to-capper)
 -- =========================================================
 create table public.follows (
+  id            uuid primary key default gen_random_uuid(),
   follower_id   uuid not null references public.profiles(id) on delete cascade,
   -- Follows a profile OR a capper
   following_profile_id uuid references public.profiles(id) on delete cascade,
@@ -403,7 +404,7 @@ create table public.follows (
   check ( (following_profile_id is not null and following_capper_id is null)
        or (following_profile_id is null and following_capper_id is not null) ),
   created_at    timestamptz not null default now(),
-  primary key (follower_id, following_profile_id, following_capper_id)
+  unique nulls not distinct (follower_id, following_profile_id, following_capper_id)
 );
 
 create index follows_follower_idx     on public.follows(follower_id);
@@ -482,6 +483,13 @@ create trigger subscriptions_touch
 -- =========================================================
 -- Row-Level Security
 -- =========================================================
+-- Backend mutations and trusted maintenance always use the service-role key.
+-- Supabase no longer auto-exposes new tables to API roles, so make the server
+-- privilege explicit instead of depending on an environment-specific default.
+grant usage on schema public to service_role;
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
+
 alter table public.profiles        enable row level security;
 alter table public.beta_signups    enable row level security;
 alter table public.cappers         enable row level security;

@@ -17,7 +17,10 @@ export default defineConfig({
       include: ["server/**/*.ts", "src/lib/**/*.ts"],
       exclude: ["**/*.test.ts", "**/node_modules/**"],
     },
-    // Smoke tests run against a real Supabase test project + Stripe mock.
+    // The Supabase smoke suites reset one shared database before each case.
+    // Keep files serial only when an explicit test database is configured.
+    fileParallelism: !process.env.SUPABASE_URL_TEST,
+    // Smoke tests use an isolated Supabase stack plus a Stripe mock.
     // Slower than unit tests — give them room.
     testTimeout: 30000,
     hookTimeout: 30000,
