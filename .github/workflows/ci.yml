@@ -43,21 +43,20 @@ jobs:
         run: |
           supabase start
           supabase db reset --local
+          source <(supabase status --output env)
+          {
+            echo "SUPABASE_URL_TEST=http://127.0.0.1:54321"
+            printf 'SUPABASE_SERVICE_ROLE_KEY_TEST=%s\n' "$SERVICE_ROLE_KEY"
+            echo "SUPABASE_URL=http://127.0.0.1:54321"
+            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$SERVICE_ROLE_KEY"
+            printf 'SUPABASE_ANON_KEY=%s\n' "$ANON_KEY"
+            echo "VITE_SUPABASE_URL=http://127.0.0.1:54321"
+            printf 'VITE_SUPABASE_ANON_KEY=%s\n' "$ANON_KEY"
+          } >> "$GITHUB_ENV"
 
       - name: Run tests against local Supabase
         run: |
-          source <(supabase status --output env)
-          LOCAL_SUPABASE_URL="http://127.0.0.1:54321"
-          export SUPABASE_URL_TEST="$LOCAL_SUPABASE_URL"
-          export SUPABASE_SERVICE_ROLE_KEY_TEST="$SERVICE_ROLE_KEY"
-          export SUPABASE_URL="$LOCAL_SUPABASE_URL"
-          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
-          export SUPABASE_ANON_KEY="$ANON_KEY"
-          export VITE_SUPABASE_URL="$LOCAL_SUPABASE_URL"
-          export VITE_SUPABASE_ANON_KEY="$ANON_KEY"
           export STRIPE_SECRET_KEY="sk_test_local_ci"
-          cleanup() { supabase stop --no-backup || true; }
-          trap cleanup EXIT
           npm test
 
       - name: ParlayOS trust gates
@@ -97,6 +96,10 @@ jobs:
       - name: Lighthouse CI (graceful)
         run: LIGHTHOUSE_START_PREVIEW=1 LIGHTHOUSE_SKIP=0 npm run lighthouse-ci
         continue-on-error: true
+
+      - name: Stop local Supabase test stack
+        if: always()
+        run: supabase stop --no-backup || true
 
   parlayos-e2e:
     runs-on: ubuntu-latest
