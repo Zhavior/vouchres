@@ -51,7 +51,7 @@ function buildIdPlugin(buildId: string): Plugin {
 }
 
 function normalizePublicSiteUrl(value: string | undefined): string {
-  const fallback = 'https://vouchres.vercel.app';
+  const fallback = 'https://vouchedge.xyz';
   const candidate = value?.trim() || fallback;
 
   try {

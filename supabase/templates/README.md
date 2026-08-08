@@ -33,9 +33,9 @@ Supabase Auth sends transactional emails for:
 
 5. Configure the site URL:
    - Supabase > Authentication > URL Configuration
-   - Site URL: `https://vouchedge.app` (your production URL)
+   - Site URL: `https://vouchedge.xyz` (your production URL)
    - Redirect URLs: add `http://localhost:3000/auth/callback` for dev,
-     `https://vouchedge.app/auth/callback` for prod
+     `https://vouchedge.xyz/auth/callback` for prod
 
 ## Testing
 

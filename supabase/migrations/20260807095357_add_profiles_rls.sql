@@ -1,0 +1,3 @@
+-- Historical no-op: the linked project recorded this migration, but its
+-- original committed source was empty. RLS is established in 0001_init.sql
+-- and hardened by later tracked migrations.

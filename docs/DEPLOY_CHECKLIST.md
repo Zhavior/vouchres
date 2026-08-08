@@ -16,21 +16,21 @@ Canonical hosting model: **Render API + Render cron**, Vercel frontend-only (`ve
 - [x] `SENTRY_DSN` on Vercel Production (non-sensitive) + API boot healthy
 - [x] CORS preflight smoke Origin fix (#93)
 
-### Live API (current: `https://vouchres.vercel.app`)
+### Live API (current: `https://vouchedge.xyz`)
 
 Verified:
 
 - [x] `GET /api/health` → 200
 - [x] Parlay grade / live-progress → 401 without auth
 - [x] Cron / staff backend → 401 without secrets
-- [x] `production-smoke` with `FRONTEND_URL=https://vouchres.vercel.app`
+- [x] `production-smoke` with `FRONTEND_URL=https://vouchedge.xyz`
 - [x] `CRON_SECRET` authenticated cron probe (`cron-grade-due-authenticated`)
 - [x] `FRONTEND_URL` + `VITE_SENTRY_DSN` + `SENTRY_DSN` on Vercel Production
 
 Still optional / operator:
 
 - [ ] Staff JWT → `productionProof.envReady` (`STAFF_ACCESS_TOKEN`)
-- [ ] Custom domain `vouchedge.app` + `CORS_ALLOWED_ORIGINS` when ready
+- [x] Custom domain `vouchedge.xyz` + `CORS_ALLOWED_ORIGINS`
 - [ ] Render cutover (canonical) vs stay on Vercel API
 - [ ] Manual soak: Stats API kill-switch + multi-instance Redis
 
@@ -46,7 +46,7 @@ Boot **fails closed** without these (use if/when moving off Vercel API):
 - [ ] `CRON_SECRET` (long random; `openssl rand -hex 32`)
 - [ ] `SENTRY_DSN`
 - [ ] `TRUST_PROXY=1` (already in `render.yaml`)
-- [ ] `FRONTEND_URL` (e.g. `https://vouchedge.app` or `https://vouchres.vercel.app`)
+- [ ] `FRONTEND_URL` (e.g. `https://vouchedge.xyz`)
 - [ ] `CORS_ALLOWED_ORIGINS` (match SPA origin(s))
 
 Optional product / billing:
@@ -80,7 +80,7 @@ Optional product / billing:
 - [x] Dry-run: `npm run configure:supabase-auth-urls` (ships in repo; CI-independent)
 - [ ] Apply: `SUPABASE_ACCESS_TOKEN=… npm run configure:supabase-auth-urls -- --apply`
 - [ ] Verify: `… -- --verify`
-- [ ] Dashboard confirm: Site URL = `https://vouchedge.app`
+- [ ] Dashboard confirm: Site URL = `https://vouchedge.xyz`
 
 ### Post-deploy smoke
 
@@ -120,14 +120,11 @@ environment (no dashboard tokens available).
 
 ### Live finding (2026-07-14)
 
-`https://vouchres.vercel.app` (repo homepage) serves the API today and returns:
+`https://vouchedge.xyz` is the public site and API host. Keep every Auth URL,
+browser-client origin, and production smoke command pointed there.
 
-```json
-{"error":"vercel_api_boot_failed","message":"Missing required production config: SENTRY_DSN."}
-```
-
-Fail-closed boot is working. Until `SENTRY_DSN` (and any other required secrets)
-are set on the API host, post-deploy smoke cannot pass against that URL.
+The legacy `https://vouchres.vercel.app` hostname is not assigned to this Vercel
+project and must not be used for production traffic or Auth redirects.
 
 **Preferred fix (canonical):** stand up Render `vouchedge-api` with
 `docs/RENDER_ENV_TEMPLATE.env`, point `VITE_API_BASE_URL` / homepage at Render,
@@ -137,7 +134,7 @@ keep Vercel frontend-only (`vercel.json` crons already `[]`).
 then run:
 
 ```bash
-BASE_URL=https://vouchres.vercel.app npm run production-smoke
+BASE_URL=https://vouchedge.xyz npm run production-smoke
 ```
 
 Paste the env table into the hosting dashboard, redeploy, then re-run smoke.

@@ -14,7 +14,7 @@
  *   SUPABASE_PROJECT_REF  — optional when SUPABASE_URL is set (extracts subdomain)
  *
  * Optional:
- *   FRONTEND_URL          — production SPA origin (default https://vouchedge.app)
+ *   FRONTEND_URL          — production SPA origin (default https://vouchedge.xyz)
  *   SUPABASE_STAGING_URL  — extra origin for staging previews
  *   --site-url=<origin>   — force Site URL (wins over FRONTEND_URL / .env.local)
  */
@@ -67,7 +67,7 @@ export function buildAuthUrlConfig(opts?: {
   extraOrigins?: string[];
 }): AuthUrlConfig {
   const productionOrigin = normalizeOrigin(
-    opts?.frontendUrl ?? process.env.FRONTEND_URL ?? "https://vouchedge.app",
+    opts?.frontendUrl ?? process.env.FRONTEND_URL ?? "https://vouchedge.xyz",
   );
   const stagingOrigin = normalizeOrigin(opts?.stagingUrl ?? process.env.SUPABASE_STAGING_URL ?? "");
   const devOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
@@ -98,7 +98,7 @@ export function buildAuthUrlConfig(opts?: {
 
   const uniqueEntries = [...new Set(redirectEntries)];
   return {
-    siteUrl: productionOrigin || "https://vouchedge.app",
+    siteUrl: productionOrigin || "https://vouchedge.xyz",
     uriAllowList: uniqueEntries.join(","),
     redirectEntries: uniqueEntries,
   };
@@ -228,7 +228,7 @@ function printDryRun(config: AuthUrlConfig, projectRef: string | null) {
           redirectUrls: config.redirectEntries,
         },
         applyCommand:
-          "SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply --site-url=https://vouchedge.app",
+          "SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply --site-url=https://vouchedge.xyz",
       },
       null,
       2,
@@ -248,7 +248,7 @@ async function main() {
   if ((apply || verifyOnly) && /localhost|127\.0\.0\.1/i.test(config.siteUrl) && !allowLocalhost) {
     throw new Error(
       `Refusing to ${apply ? "apply" : "verify"} with localhost Site URL (${config.siteUrl}). ` +
-        "Pass --site-url=https://vouchedge.app (recommended) or --allow-localhost for intentional local-only config.",
+        "Pass --site-url=https://vouchedge.xyz (recommended) or --allow-localhost for intentional local-only config.",
     );
   }
 

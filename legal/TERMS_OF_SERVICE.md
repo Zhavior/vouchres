@@ -302,7 +302,7 @@ These Terms, together with our Privacy Policy, constitute the entire agreement b
 
 - Email: legal@vouchedge.app
 - Mailing address: [YOUR COMPANY ADDRESS]
-- Privacy Policy: https://vouchedge.app/privacy
+- Privacy Policy: https://vouchedge.xyz/privacy
 
 ---
 
