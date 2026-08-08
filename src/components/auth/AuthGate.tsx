@@ -59,15 +59,20 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
           throw new Error("Handle must be at least 3 characters");
         }
         const handle = username.trim().toLowerCase();
-        const { error } = await signUpWithEmail({
+        const { data, error } = await signUpWithEmail({
           email,
           password,
           handle,
           inviteCode: inviteCode.trim() || undefined,
         });
         if (error) throw error;
-        // After signup, Supabase sends a confirmation email (depending on project settings).
-        setMagicLinkSent(true);
+        if (data.session) {
+          await identifyAuthenticatedUser();
+          onAuthed?.();
+        } else {
+          // Keep this fallback for projects that require email confirmation.
+          setMagicLinkSent(true);
+        }
       }
     } catch (err: any) {
       setError(err?.message ?? "Authentication failed");
@@ -115,11 +120,11 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
           {mode === "signup" && (
             <input
               type="text"
-              placeholder="Username (3-24 chars)"
+              placeholder="Username (3-30 chars)"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               minLength={3}
-              maxLength={24}
+              maxLength={30}
               required
             />
           )}
