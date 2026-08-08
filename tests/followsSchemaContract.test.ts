@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL("../supabase/migrations/20260808074500_fix_follows_nullable_targets.sql", import.meta.url),
   "utf8",
 ).toLowerCase();
+const nullableTargetsMigration = readFileSync(
+  new URL("../supabase/migrations/20260808075500_allow_nullable_follow_targets.sql", import.meta.url),
+  "utf8",
+).toLowerCase();
 const seed = readFileSync(new URL("../supabase/seed.sql", import.meta.url), "utf8").toLowerCase();
 
 describe("follow target persistence", () => {
@@ -15,6 +19,8 @@ describe("follow target persistence", () => {
     expect(migration).toContain("drop constraint if exists follows_pkey");
     expect(migration).toContain("add constraint follows_target_unique");
     expect(migration).toContain("unique nulls not distinct (follower_id, following_profile_id, following_capper_id)");
+    expect(nullableTargetsMigration).toContain("alter column following_profile_id drop not null");
+    expect(nullableTargetsMigration).toContain("alter column following_capper_id drop not null");
   });
 
   it("seeds demo profile parents through local auth users", () => {
