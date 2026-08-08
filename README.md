@@ -220,45 +220,27 @@ All motion in the system is disabled under `prefers-reduced-motion`.
 ## 💻 Local Development (Quickstart)
 
 ```bash
-# 1. Clone the repository and install dependencies
+# Install dependencies
 npm install
 
-# 2. Configure environment variables
+# Configure local environment variables
 cp .env.example .env.local
 
-# 3. Run the development server
-npm run dev
-
-```bash
-# 1. Commit current state so you can revert if anything breaks
-git add -A && git commit -m "before beta patches"
-
-# 2. Run cleanup — delete backup file, dedupe assets, fix branding
-bash download/vouchedge-beta-patches/cleanup.sh
-
-# 3. Create a Supabase project, then push the schema
-npm install -g supabase
-supabase login
-supabase link --project-ref YOUR_REF
-cp download/vouchedge-beta-patches/supabase/schema.sql supabase/migrations/0001_init.sql
-supabase db push
-
-# 4. Install new dependencies
-npm install @supabase/supabase-js stripe express-rate-limit cors helmet zod cookie-parser
-npm install -D @types/cors @types/cookie-parser
-
-# 5. Copy the middleware + routes + services from the patch kit
-#    into your project (preserving the same paths).
-
-# 6. Apply the patches in patches/ (read each .patch.md, apply the diff)
-
-# 7. Configure .env.local from .env.example
-
-# 8. Run the dev server and smoke-test
+# Start the development server
 npm run dev
 ```
 
-See `IMPLEMENTATION.md` for the full 3-week sequencing.
+For production-style verification, run `npm run typecheck`, `npm run lint:strict`,
+and `npm test`.
+
+### Rate limiting
+
+- With `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` configured, rate-limit counters are shared through Upstash Redis.
+- The Redis token must be allowed to run `INCR`. A read-only token can look configured but will fail when the limiter writes a counter.
+- Without Redis, the app uses bounded per-process counters. That is suitable for local development, but it is not a shared limit across multiple production instances.
+- In production, Redis failures return `503` for state-changing requests and the protected `/api/ai` and `/api/auth` reads. Ordinary reads use the bounded local fallback; `/api/health`, `/api/health/live`, and `/api/health/ready` bypass rate limiting.
+- Rate-limited responses include `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+- After loading the target deployment environment, verify Redis write access with `npm run verify:redis-write`.
 
 ---
 
@@ -268,7 +250,7 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 |------|---------|
 | `server/middleware/auth.ts` | Supabase JWT verification, `requireAuth`, `optionalAuth`, `requireStaff`, `requireLegalConfirmed` (age + jurisdiction gate) |
 | `server/middleware/entitlements.ts` | `requireTier()` (hard tier gate) + `requireTierOrQuota()` (free-tier daily quota) |
-| `server/middleware/rateLimit.ts` | Global / AI / pick / beta-signup / webhook rate limiters |
+| `server/middleware/rateLimit.ts` | Shared Redis or bounded local rate limiters with route-specific limits and standard 429 headers |
 | `server/middleware/cors.ts` | Whitelist-based CORS + Helmet security headers |
 | `server/middleware/validation.ts` | Zod schema validation for request body/query/params |
 | `server/middleware/webhookRaw.ts` | Raw-body handler for Stripe webhooks |
@@ -282,8 +264,6 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 | `server/routes/coreRoutes.ts` | `/api/beta/signup`, `/api/legal/confirm`, `/api/picks` (POST + GET), `/api/admin/grade` |
 | `server/routes/billingRoutes.ts` | `/api/billing/checkout`, `/api/billing/portal`, `/api/billing/status`, `/api/billing/webhook` |
 | `server/routes/adminRoutes.ts` | Staff-only: beta waitlist mgmt, user mgmt, capper CRUD, manual grading trigger, dashboard stats |
-| `server/routes/index.ts.replacement` | Updated route registration (drops in over your existing file) |
-| `server.ts.patch.md` | Wire middleware + raw-body webhook into the main server file |
 
 ### Server services
 | File | Purpose |
@@ -341,20 +321,17 @@ See `IMPLEMENTATION.md` for the full 3-week sequencing.
 - [x] Admin: beta waitlist, user mgmt, capper CRUD, manual grading
 - [x] Anti-fraud: removes all fabricated social proof
 - [x] Cleanup: dead files, branding, deployment config
-- [x] Tests: Vitest smoke suite (5 test files) + CI workflow
+- [x] Tests: Vitest suite + CI workflow
 - [x] Legal: ToS + Privacy Policy drafts (need counsel review)
 
 ## Known gaps (intentionally not addressed)
 
 | Gap | Reason | Recommended action |
 |-----|--------|--------------------|
-| Tests | Out of scope for a 3-week beta push | Add Vitest + Playwright smoke tests in week 4 |
 | Real-time pick grading | Beta can tolerate nightly batch grading | Add Supabase Realtime subscription post-beta |
 | Terms of Service / Privacy Policy text | Legal document — needs counsel | Use Termly template, have lawyer review |
-| Redis-backed rate limiting | Single-instance is fine for beta | Add Upstash Redis when you scale beyond 1 instance |
+| Shared rate limiting without Upstash | Local fallback counters are per-process, so limits multiply across instances | Configure a write-capable Upstash Redis token before running multiple production instances |
 | Sentry / PostHog integration | Monitoring, not beta-blocking | Add in week 4 before public launch |
-| Parlay grading | Complex — needs multi-leg resolution logic | Marked `parlay_grading_not_implemented` in gradingService.ts. Manual review for now. |
 | Mobile app | Different timeline | Use Capacitor to wrap the PWA for v1 mobile |
 
 ---
-

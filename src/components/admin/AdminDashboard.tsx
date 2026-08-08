@@ -103,7 +103,8 @@ function errorMessage(error: unknown) {
   return apiError?.message || apiError?.error || 'The request could not be completed.';
 }
 
-function formatNumber(value: number | null | undefined) {
+function formatNumber(value: number | string | null | undefined) {
+  if (typeof value === 'string') return value;
   return new Intl.NumberFormat('en-US').format(value ?? 0);
 }
 
