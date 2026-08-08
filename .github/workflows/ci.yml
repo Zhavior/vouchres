@@ -43,10 +43,10 @@ jobs:
         run: |
           supabase start
           supabase db reset --local
-          supabase status --output env >> "$GITHUB_ENV"
 
       - name: Run tests against local Supabase
         run: |
+          source <(supabase status --output env)
           LOCAL_SUPABASE_URL="http://127.0.0.1:54321"
           export SUPABASE_URL_TEST="$LOCAL_SUPABASE_URL"
           export SUPABASE_SERVICE_ROLE_KEY_TEST="$SERVICE_ROLE_KEY"
