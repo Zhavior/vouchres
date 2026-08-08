@@ -1,5 +1,4 @@
 import type { MLBPlayer } from '../../../types';
-import { analyzeHrPlayer } from "./aurora/hrAuroraAdapter";
 import type { HrWatchRow, TruthStatus } from '../types/hrWatch';
 
 export type HrBoardFreshness = 'fresh' | 'delayed' | 'stale';
@@ -44,9 +43,14 @@ export function buildHrDecisionBrief(
   generatedAt: Date | null,
   slipActionAvailable = true,
 ): HrDecisionBrief {
-  const aurora = analyzeHrPlayer(player);
-  const primaryEvidence = aurora.evidence[0]?.description.trim();
-  const primaryRisk = aurora.risks[0]?.description.trim();
+  // Read the top reason and warning straight off the row. This used to run the
+  // full Aurora analysis — which mints a crypto.randomUUID() per reason and per
+  // warning, stamps a date, and computes a score, verdict and recommendation —
+  // only to throw all of it away and keep two strings that Aurora passes
+  // through verbatim. On a 350-row table that was thousands of UUIDs per
+  // render. Identical output, none of the work.
+  const primaryEvidence = player.reasons[0]?.trim();
+  const primaryRisk = player.warnings[0]?.trim();
 
   const hasPlayerId = player.playerId != null && String(player.playerId).trim().length > 0;
   const isBlocked = player.truthStatus === 'blocked';

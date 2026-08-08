@@ -13,6 +13,13 @@ describe('focused beta shell', () => {
     ]);
   });
 
+  it('shows Aurora HQ only when the current profile is an admin', () => {
+    const layout = getDefaultLayout();
+
+    expect(getSidebarFeatures(layout).map((feature) => feature.id)).not.toContain('admin');
+    expect(getSidebarFeatures(layout, { canAccessAdmin: true }).map((feature) => feature.id)).toContain('admin');
+  });
+
   it('removes fabricated consensus and payment-based verification claims', () => {
     const social = readFileSync('src/features/hr/components/Social/MostVouchedCard.tsx', 'utf8');
     const premium = readFileSync('src/components/PremiumSubPage.tsx', 'utf8');

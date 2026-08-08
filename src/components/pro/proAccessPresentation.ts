@@ -1,4 +1,5 @@
 import type { RequiredTier } from './proAccessUtils';
+import { FREE_BETA_ALL_ACCESS } from '../../lib/betaAccess';
 
 export interface ProAccessPresentation {
   badge: string;
@@ -44,5 +45,6 @@ export function hasServerAccessForTier(
   requiredTier: RequiredTier,
   entitlements: { isPro: boolean; isCreator: boolean },
 ): boolean {
+  if (FREE_BETA_ALL_ACCESS) return true;
   return requiredTier === 'SELLER_PRO' ? entitlements.isCreator : entitlements.isPro;
 }

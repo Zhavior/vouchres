@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, ChevronDown, RefreshCw, Flame, Sparkles, Radio } from 'lucide-react';
 import { localISODate } from '../../utils/localDate';
+import { HrProModeToggle } from './HrProModeToggle';
 
 export type HrViewMode = 'cards' | 'table' | 'treemap';
 
@@ -12,6 +13,9 @@ export interface HrHeaderProps {
   date?: string;
   isToday?: boolean;
   onDateChange?: (date: string) => void;
+  isProMode?: boolean;
+  onToggleProMode?: () => void;
+  onProModeIntent?: () => void;
 }
 
 function todayISO(): string {
@@ -40,6 +44,9 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   date,
   isToday = true,
   onDateChange,
+  isProMode = false,
+  onToggleProMode,
+  onProModeIntent,
 }) => (
   <header className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#0d1c30] via-[#091525] to-[#060c14] p-3.5 sm:p-5 shadow-[0_0_50px_rgba(0,0,0,0.4)] backdrop-blur-2xl">
     {/* Subtle Background Glow Orbs */}
@@ -69,7 +76,16 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
       </div>
 
       {/* Control Actions & Indicators */}
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+      <div className="flex max-w-full flex-wrap items-center justify-end gap-2 self-end sm:self-auto shrink-0">
+        {onToggleProMode ? (
+          <HrProModeToggle
+            isProMode={isProMode}
+            onToggle={onToggleProMode}
+            onIntent={onProModeIntent}
+            className="w-[190px] sm:w-[210px]"
+          />
+        ) : null}
+
         {/* Live Slate Status Pill */}
         <div className="hidden sm:flex h-9 items-center gap-2 rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 font-mono text-xs font-bold text-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.15)]">
           <Radio className="h-3.5 w-3.5 animate-pulse text-vouch-emerald" />

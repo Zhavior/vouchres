@@ -15,6 +15,7 @@ import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
+import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
@@ -256,7 +257,8 @@ export default function SlateStacksView({ rows }: Props) {
                             <PlayerHrTag player={player} compact />
                           </div>
                           <span className="font-mono text-[10px] text-white/50">
-                            Power: {player.hitterPower ?? player.hrScore} • Odds: {player.oddsLabel || "+280"}
+                            Power: {player.hitterPower ?? player.hrScore}
+                            {oddsDisplay(player) ? ` • Odds: ${oddsDisplay(player)}` : ''}
                           </span>
                         </div>
                       </div>

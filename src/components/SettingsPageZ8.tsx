@@ -34,6 +34,12 @@ import {
   type BillingStatus,
 } from '../lib/billingClient';
 import { buildPremiumAuroraModel, type BillingSourceState } from './premiumAuroraModel';
+import {
+  FREE_BETA_ALL_ACCESS,
+  FREE_BETA_BLURB,
+  FREE_BETA_HEADLINE,
+  PAYMENTS_ENABLED,
+} from '../lib/betaAccess';
 import { AURORA_ACTIVE, AURORA_IDLE, AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER, AURORA_STAT_CHIP, AURORA_SURFACE } from '../theme/auroraTokens';
 
 interface SettingsPageProps {
@@ -1139,7 +1145,10 @@ export default function SettingsPageZ8({
             {/* ── BILLING ── */}
             {activeTab === 'billing' && (
               <div className="space-y-6">
-                <Section title="Subscription" subtitle="Manage your plan and payment method.">
+                <Section
+                  title="Subscription"
+                  subtitle={FREE_BETA_ALL_ACCESS ? 'Your access during the free open beta.' : 'Manage your plan and payment method.'}
+                >
                   <div className={`${AURORA_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vouch-cyan/15 text-vouch-cyan">
@@ -1147,31 +1156,45 @@ export default function SettingsPageZ8({
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-white">{billingModel.accessLabel}</p>
-                        <p className="text-xs text-white/50">Profile tier {billingModel.activeTier}</p>
+                        {!FREE_BETA_ALL_ACCESS && (
+                          <p className="text-xs text-white/50">Profile tier {billingModel.activeTier}</p>
+                        )}
                         <p className="mt-1 text-xs text-white/40">{billingModel.billingDetail}</p>
-                        {billingStatus?.currentPeriodEnd && (
+                        {!FREE_BETA_ALL_ACCESS && billingStatus?.currentPeriodEnd && (
                           <p className="mt-1 text-xs text-white/40">Current billing period ends {formatDate(billingStatus.currentPeriodEnd)}</p>
                         )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        activeTier === 'BASIC' ? 'bg-white/10 text-white/40' : 'bg-vouch-emerald/15 text-vouch-emerald'
+                        !FREE_BETA_ALL_ACCESS && activeTier === 'BASIC' ? 'bg-white/10 text-white/40' : 'bg-vouch-emerald/15 text-vouch-emerald'
                       }`}>
                         {billingModel.billingLabel}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => refreshBilling()}
-                        disabled={billingLoading}
-                        className="flex min-h-11 items-center gap-1 rounded-lg border border-white/10 px-3 text-xs text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
-                      >
-                        {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                        Refresh
-                      </button>
+                      {!FREE_BETA_ALL_ACCESS && (
+                        <button
+                          type="button"
+                          onClick={() => refreshBilling()}
+                          disabled={billingLoading}
+                          className="flex min-h-11 items-center gap-1 rounded-lg border border-white/10 px-3 text-xs text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+                        >
+                          {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          Refresh
+                        </button>
+                      )}
                     </div>
                   </div>
 
+                  {FREE_BETA_ALL_ACCESS ? (
+                    <div className={`${AURORA_SURFACE} rounded-xl p-4`}>
+                      <p className="text-sm font-semibold text-white">{FREE_BETA_HEADLINE}</p>
+                      <p className="mt-1 text-2xl font-bold text-white">$0</p>
+                      <p className="mt-2 text-xs leading-5 text-white/50">{FREE_BETA_BLURB}</p>
+                      <p className="mt-3 text-xs leading-5 text-white/40">
+                        There is no plan to choose, no card on file, and nothing to cancel. We will announce pricing here well before the beta ends.
+                      </p>
+                    </div>
+                  ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {(['BASIC', 'GOLD'] as AppTier[]).map((tier) => {
                       const plan = PLAN_COPY[tier];
@@ -1227,8 +1250,10 @@ export default function SettingsPageZ8({
                       );
                     })}
                   </div>
+                  )}
                 </Section>
 
+                {PAYMENTS_ENABLED && (
                 <Section title="Payment method" subtitle="Stripe manages payment methods, invoices, and cancellation for paid accounts.">
                   <div className="space-y-3">
                     {billingModel.shouldManageBilling ? (
@@ -1267,6 +1292,7 @@ export default function SettingsPageZ8({
                     )}
                   </div>
                 </Section>
+                )}
               </div>
             )}
 

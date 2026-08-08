@@ -19,6 +19,9 @@ import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
+import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
+import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
+import { useProMode } from '../hooks/useProMode';
 const MostVouchedPlayersPanel = lazy(() => import('../components/Social/MostVouchedPlayersPanel').then(m => ({ default: m.MostVouchedPlayersPanel })));
 const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then(m => ({ default: m.HrSpreadsheet })));
 const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then(m => ({ default: m.HrPlayerProfile })));
@@ -229,6 +232,7 @@ function toBoardTier(tier: ToolbarTier): string {
 
 const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
+  const [isProMode, toggleProMode] = useProMode();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
@@ -255,7 +259,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     () => (vm.rows ?? []).map((row) => row.playerId),
     [vm.rows],
   );
-  const playerVouchSummary = usePlayerVouchSummary(vm.date, visiblePlayerIds);
+  const playerVouchSummary = usePlayerVouchSummary(vm.date, isProMode ? visiblePlayerIds : []);
   const playerVouchLeaderboard = usePlayerVouchLeaderboard(vm.date, 5);
   const togglePlayerVouch = useTogglePlayerVouch();
   const playerVouchMap = useMemo(
@@ -425,7 +429,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     });
   }, [togglePlayerVouch, vm.date]);
 
-  // Only the finished card and table views are public during the paid beta.
+  // Pro Mode remembers the user's preferred analytics view.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
 
     if (typeof window === 'undefined') return 'cards';
@@ -473,8 +477,12 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             date={vm.date}
             isToday={isToday}
             onDateChange={vm.setDate}
+            isProMode={isProMode}
+            onToggleProMode={toggleProMode}
           />
-          <HrCommandCenter
+          {isProMode ? (
+            <>
+              <HrCommandCenter
             mode={vm.mode}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
@@ -500,8 +508,10 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             rows={(vm.rows ?? []) as unknown[]}
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
-          />
-          <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
+              />
+              <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
+            </>
+          ) : null}
         </header>
 
         {/* ── Slate Status Summary Row ───────────────────────────── */}
@@ -568,7 +578,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
-          {topPlayer ? (
+          {isProMode && topPlayer ? (
             <HrTopSignalPanel
               player={topPlayer}
               freshness={vm.slate.freshness}
@@ -584,18 +594,49 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             />
           ) : null}
 
-          <Suspense fallback={null}>
-            <MostVouchedPlayersPanel
-              players={playerVouchLeaderboard.data ?? []}
-              subtitle="The hottest community-backed bats on this slate."
-              onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
-              onSelectPlayer={(playerId) => {
-                const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
-                if (match) openPlayerProfile(match);
-              }}
-            />
-          </Suspense>
+          {isProMode ? (
+            <Suspense fallback={null}>
+              <MostVouchedPlayersPanel
+                players={playerVouchLeaderboard.data ?? []}
+                subtitle="The hottest community-backed bats on this slate."
+                onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
+                onSelectPlayer={(playerId) => {
+                  const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+                  if (match) openPlayerProfile(match);
+                }}
+              />
+            </Suspense>
+          ) : null}
 
+          {!isProMode ? (
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4">
+              {vm.loading && !vm.rows?.length ? (
+                <LoadingSkeleton />
+              ) : vm.error ? (
+                <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
+              ) : isAllZero ? (
+                <EmptyState
+                  onRetry={handleRefresh}
+                  mode={vm.mode}
+                  previewCount={vm.modeCounts?.curated ?? 0}
+                  onShowPreview={() => vm.setMode('curated')}
+                />
+              ) : (
+                <>
+                  <HrSpotlightDeck
+                    rows={vm.rows ?? []}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                    onResearch={openPlayerProfile}
+                  />
+                  <HrSignalGrid
+                    rows={vm.rows ?? []}
+                    onResearch={openPlayerProfile}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  />
+                </>
+              )}
+            </div>
+          ) : (
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
@@ -654,6 +695,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             )}
           </div>
           </WorkspaceRenderer>
+          )}
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
             <p>

@@ -1,6 +1,7 @@
 import type { BillingStatus } from '../lib/billingClient';
 import { tierToSubscriptionTier } from '../lib/subscriptionTier';
 import type { CreatorProofProfile } from '../types';
+import { FREE_BETA_ALL_ACCESS, FREE_BETA_BLURB, FREE_BETA_HEADLINE } from '../lib/betaAccess';
 
 export type BillingSourceState = 'checking' | 'confirmed' | 'unavailable';
 
@@ -32,6 +33,19 @@ export function buildPremiumAuroraModel({
   const profileFallback = profileTier ?? 'BASIC';
   const activeTier = billingStatus ? tierToSubscriptionTier(billingStatus.tier) : profileFallback;
   const hasPaidAccess = activeTier === 'GOLD' || activeTier === 'SELLER_PRO';
+
+  // Free open beta: full access with no subscription and no billing source to
+  // reconcile against, so never surface "unavailable" or "manage billing".
+  if (FREE_BETA_ALL_ACCESS) {
+    return {
+      activeTier: 'SELLER_PRO',
+      accessLabel: 'Full access',
+      billingLabel: FREE_BETA_HEADLINE,
+      billingDetail: FREE_BETA_BLURB,
+      hasPaidAccess: true,
+      shouldManageBilling: false,
+    };
+  }
 
   if (billingSourceState === 'checking') {
     return {

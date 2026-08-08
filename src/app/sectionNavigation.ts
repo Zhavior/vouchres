@@ -282,7 +282,7 @@ export function resolveDevSectionFromLocation() {
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',
     'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
-    'premium', 'themestore', 'subscriber_hub', 'settings', 'customize',
+    'premium', 'themestore', 'subscriber_hub', 'settings', 'customize', 'admin',
   ]);
   if (validSections.has(clean)) {
     return clean;

@@ -48,7 +48,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair,
+  CalendarDays, Grid3x3, Crown, Crosshair, Shield,
 };
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
@@ -254,12 +254,15 @@ function FeedSidebar({
 
   const [featureLayout] = useState(() => loadFeatureLayout());
   const sidebarFeatures = useMemo(() => {
-    return getSidebarFeatures(featureLayout, { activeSport }).map((feature) => {
+    return getSidebarFeatures(featureLayout, {
+      activeSport,
+      canAccessAdmin: Boolean(profile.isAdmin || profile.admin),
+    }).map((feature) => {
       if (feature.id !== 'premium') return feature;
       const managesPlan = profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
       return { ...feature, label: managesPlan ? 'Plan & Billing' : 'Upgrade' };
     });
-  }, [featureLayout, activeSport, profile.subscriptionTier]);
+  }, [featureLayout, activeSport, profile.admin, profile.isAdmin, profile.subscriptionTier]);
 
   const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
   const grouped = useMemo(
