@@ -1,6 +1,6 @@
 import { buildHrBoardResponse } from "../server/services/mlb/hr-engine";
 
-const PRODUCTION_URL = "https://vouchres.vercel.app/api/mlb/hr-board/today?previewLimit=50";
+const PRODUCTION_URL = "https://vouchedge.xyz/api/mlb/hr-board/today?previewLimit=50";
 const BAD_PAIRINGS = new Set([
   "Pete Alonso|BAL",
   "Willson Contreras|BOS",

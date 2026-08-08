@@ -87,7 +87,7 @@ describeOrSkip("Auth flow", () => {
     // The validation schema should strip 'tier' from the body.
     const { z } = await import("zod");
     const ProfileUpdateSchema = z.object({
-      username: z.string().min(3).max(24).optional(),
+      username: z.string().min(3).max(30).optional(),
       display_name: z.string().max(64).optional(),
       bio: z.string().max(500).optional(),
       avatar_url: (await import("../server/lib/httpsUrlSchema")).HttpsUrlSchema.max(500).optional().nullable(),

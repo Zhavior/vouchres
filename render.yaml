@@ -49,9 +49,9 @@ services:
       - key: MLB_API_BASE_URL
         value: https://statsapi.mlb.com/api
       - key: FRONTEND_URL
-        sync: false  # e.g. https://vouchedge.app
+        sync: false  # e.g. https://vouchedge.xyz
       - key: CORS_ALLOWED_ORIGINS
-        sync: false  # e.g. https://vouchedge.app,https://www.vouchedge.app
+        sync: false  # e.g. https://vouchedge.xyz,https://www.vouchedge.xyz
       - key: TRUST_PROXY
         value: "1"
       - key: SENTRY_DSN

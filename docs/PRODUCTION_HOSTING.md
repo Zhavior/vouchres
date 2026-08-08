@@ -16,11 +16,9 @@ operational noise.
 `vercel.json` ships with `"crons": []` so Vercel cannot schedule grade/live-HR
 jobs while Render crons are enabled.
 
-> **Ops note:** Repo homepage `https://vouchres.vercel.app` currently still
-> boots the Express API via the Vercel function. Production fail-closed will
-> refuse requests until `SENTRY_DSN` (and other required secrets) are set on
-> that project — or until traffic moves to Render `vouchedge-api`. See
-> `docs/DEPLOY_CHECKLIST.md`.
+> **Ops note:** The public site is `https://vouchedge.xyz`. Vercel has no cron
+> jobs, but its API function still needs the same fail-closed production
+> environment when it serves API traffic. See `docs/DEPLOY_CHECKLIST.md`.
 
 ## Ship checklist
 
@@ -62,8 +60,8 @@ Supabase → **Authentication** → **URL Configuration**:
 
 | Field | Value |
 | --- | --- |
-| Site URL | `https://vouchedge.app` (or your `FRONTEND_URL`) |
-| Redirect URLs | `https://vouchedge.app/**`, `https://www.vouchedge.app/**`, `http://localhost:3000/**`, `https://*.vercel.app/**` |
+| Site URL | `https://vouchedge.xyz` (or your `FRONTEND_URL`) |
+| Redirect URLs | `https://vouchedge.xyz/**`, `https://www.vouchedge.xyz/**`, `http://localhost:3000/**`, `https://*.vercel.app/**` |
 
 ### CLI (recommended)
 
@@ -73,11 +71,11 @@ npm run configure:supabase-auth-urls
 
 # Apply production Site URL (force --site-url so .env.local localhost cannot win)
 SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- \
-  --apply --site-url=https://vouchedge.app
+  --apply --site-url=https://vouchedge.xyz
 
 # Verify without writing
 SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- \
-  --verify --site-url=https://vouchedge.app
+  --verify --site-url=https://vouchedge.xyz
 ```
 
 Resolves `SUPABASE_PROJECT_REF` from `SUPABASE_URL` when unset.

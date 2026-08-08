@@ -37,7 +37,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
   }\n\nJoin my tailing circle to lock in the edge! #VouchEdge #SportsModel`;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://vouchedge.app/pick/${post.id}`);
+    navigator.clipboard.writeText(`https://vouchedge.xyz/pick/${post.id}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

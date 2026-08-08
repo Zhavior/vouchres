@@ -25,7 +25,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   const shareText = `Check out my verified sport outcomes on VouchEdge.\n\nWin Rate: ${winRateLabel}\nNet Profit: +${profile.unitsNetProfit} Units\nHandle: @${profile.username}\n\n#VouchEdge #SportsBetting`;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://vouchedge.app/capper/${profile.username}`);
+    navigator.clipboard.writeText(`https://vouchedge.xyz/capper/${profile.username}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

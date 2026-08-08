@@ -13,6 +13,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3005",
   "http://localhost:5173",
+  "https://vouchedge.xyz",
+  "https://www.vouchedge.xyz",
   "https://vouchres.vercel.app",
 ];
 

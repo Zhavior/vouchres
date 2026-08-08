@@ -23,7 +23,7 @@ const FRONTEND_URL = (
     try {
       return new URL(BASE_URL).origin;
     } catch {
-      return "https://vouchres.vercel.app";
+      return "https://vouchedge.xyz";
     }
   })()
 ).replace(/\/$/, "");
