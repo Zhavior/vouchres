@@ -1,6 +1,6 @@
 import express from "express";
 import type { Server } from "node:http";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { requestContext } from "../server/middleware/requestContext";
 import { worldChatRoutes } from "../server/routes/worldChatRoutes";
@@ -45,7 +45,16 @@ afterAll(async () => {
 });
 
 beforeEach(() => {
+  // These cases exercise the honest in-memory fallback. Durable behavior has
+  // its own contract suite and CI supplies a real Supabase admin client.
+  vi.stubEnv("SUPABASE_URL", "");
+  vi.stubEnv("VITE_SUPABASE_URL", "");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
   resetWorldChatStore();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("worldChatService", () => {

@@ -15,7 +15,7 @@
  *   STRIPE_API_BASE=http://localhost:12111 npm test -- billing
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestUser, resetTestDb } from "./setup";
 
 const SKIP = !process.env.SUPABASE_URL_TEST || !process.env.STRIPE_SECRET_KEY?.startsWith("sk_test");
@@ -51,9 +51,12 @@ function mockSubscriptionEvent(opts: {
 describeOrSkip("Stripe billing sync", () => {
   beforeEach(async () => {
     await resetTestDb();
-    // Set test price IDs
-    process.env.STRIPE_PRICE_GOLD = "price_test_gold";
-    process.env.STRIPE_PRICE_SELLER_PRO = "price_test_seller_pro";
+    vi.stubEnv("STRIPE_BETA_MONTHLY_PRICE_ID", "price_test_gold");
+    vi.stubEnv("STRIPE_CREATOR_MONTHLY_PRICE_ID", "price_test_seller_pro");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("upgrades profile tier to 'gold' on subscription.created (active)", async () => {
