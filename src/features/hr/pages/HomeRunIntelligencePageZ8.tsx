@@ -20,9 +20,14 @@ import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
 import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
 import { useProMode } from '../hooks/useProMode';
-const MostVouchedPlayersPanel = lazy(() => import('../components/Social/MostVouchedPlayersPanel').then(m => ({ default: m.MostVouchedPlayersPanel })));
-const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then(m => ({ default: m.HrSpreadsheet })));
-const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then(m => ({ default: m.HrPlayerProfile })));
+
+const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel');
+const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
+const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile');
+
+const MostVouchedPlayersPanel = lazy(() => loadMostVouchedPanel().then(m => ({ default: m.MostVouchedPlayersPanel })));
+const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
+const HrPlayerProfile = lazy(() => loadHrPlayerProfile().then(m => ({ default: m.HrPlayerProfile })));
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -38,6 +43,35 @@ import {
 import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
+
+function warmChunk(load: () => Promise<unknown>): void {
+  void load().catch(() => {
+    // React retries on render, while the global chunk recovery handles deploy races.
+  });
+}
+
+function whenIdle(run: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const win = window as unknown as {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  let completed = false;
+  const fire = () => {
+    if (completed) return;
+    completed = true;
+    run();
+  };
+  const timer = window.setTimeout(fire, 1200);
+  const idleHandle = win.requestIdleCallback?.(fire, { timeout: 2000 }) ?? null;
+
+  return () => {
+    completed = true;
+    window.clearTimeout(timer);
+    if (idleHandle !== null) win.cancelIdleCallback?.(idleHandle);
+  };
+}
 
 function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -105,6 +139,40 @@ const LoadingSkeleton: React.FC = () => (
         ))}
       </div>
     ))}
+  </div>
+);
+
+const PanelHold: React.FC<{ height: string; label: string }> = ({ height, label }) => (
+  <div className="deck-hold rounded-2xl" style={{ minHeight: height }} role="status" aria-label={label}>
+    <span className="sr-only">{label}</span>
+  </div>
+);
+
+const TableSkeleton: React.FC = () => (
+  <div className="deck-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
+    <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className={`h-2.5 rounded bg-white/[0.08] ${index === 0 ? 'w-32' : 'w-14'}`} />
+      ))}
+    </div>
+    {Array.from({ length: 10 }).map((_, rowIndex) => (
+      <div key={rowIndex} className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-3">
+        <div className="h-3 w-32 rounded bg-white/[0.06]" />
+        {Array.from({ length: 5 }).map((__, cellIndex) => (
+          <div key={cellIndex} className="h-3 w-14 rounded bg-white/[0.04]" />
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
+const ProfileLoadingFallback: React.FC = () => (
+  <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#02060b]/80 p-4 backdrop-blur-sm" role="status">
+    <div className="deck-hold flex min-h-40 w-full max-w-md items-center justify-center rounded-2xl border border-white/10">
+      <span className="font-mono text-xs font-bold uppercase tracking-wider text-vouch-cyan">
+        Loading player research...
+      </span>
+    </div>
   </div>
 );
 
@@ -276,6 +344,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
     if (!player) return;
+    warmChunk(loadHrPlayerProfile);
 
     if (vm.syncing) {
       setResearchNotice(
@@ -407,14 +476,17 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
-  React.useEffect(() => {
-    console.log("[HR Workspace]", workspace);
-  }, [workspace]);
+  React.useEffect(() => whenIdle(() => {
+    warmChunk(loadMostVouchedPanel);
+    warmChunk(loadHrPlayerProfile);
+    warmChunk(loadHrSpreadsheet);
+  }), []);
 
 
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;
+    if (mode === 'table') warmChunk(loadHrSpreadsheet);
     setLocalViewMode(mode);
     try {
       window.localStorage.setItem('vouchedge_hr_view_mode', mode);
@@ -423,6 +495,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     }
     vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
+
+  const handleProModeIntent = React.useCallback(() => {
+    warmChunk(loadMostVouchedPanel);
+    warmChunk(loadHrSpreadsheet);
+  }, []);
 
   return (
     <div className={`${AURORA_PAGE} hr-deck min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_Y}`}>
@@ -446,6 +523,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             previewCount={vm.modeCounts?.curated ?? 0}
             isProMode={isProMode}
             onToggleProMode={toggleProMode}
+            onProModeIntent={handleProModeIntent}
           />
           {isProMode ? (
             <div className={`${AURORA_PANEL_PREMIUM} space-y-3 rounded-2xl p-2.5 sm:p-4`}>
@@ -521,7 +599,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           ) : null}
 
           {isProMode ? (
-            <Suspense fallback={null}>
+            <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
               <MostVouchedPlayersPanel
                 players={playerVouchLeaderboard.data ?? []}
                 subtitle="The hottest community-backed bats on this slate."
@@ -578,7 +656,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
-              <Suspense fallback={<LoadingSkeleton />}>
+              <Suspense fallback={<TableSkeleton />}>
                 <HrSpreadsheet
                   rows={(vm.rows ?? []) as any}
                   freshness={vm.slate.freshness}
@@ -654,18 +732,20 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         </div>
       ) : null}
 
-      <Suspense fallback={null}>
-        <HrPlayerProfile
-          player={vm.selectedPlayer}
-          isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-          onClose={closePlayerProfile}
-          onAddToSlip={addPlayerToSlip}
-          boardFreshness={vm.slate.freshness}
-          boardGeneratedAt={vm.slate.generatedAt}
-          boardDate={vm.date}
-          slipActionAvailable={Boolean(onSectionChange)}
-        />
-      </Suspense>
+      {isProfileOpen && vm.selectedPlayer ? (
+        <Suspense fallback={<ProfileLoadingFallback />}>
+          <HrPlayerProfile
+            player={vm.selectedPlayer}
+            isOpen
+            onClose={closePlayerProfile}
+            onAddToSlip={addPlayerToSlip}
+            boardFreshness={vm.slate.freshness}
+            boardGeneratedAt={vm.slate.generatedAt}
+            boardDate={vm.date}
+            slipActionAvailable={Boolean(onSectionChange)}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 };

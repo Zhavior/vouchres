@@ -161,6 +161,22 @@
   color: #6ee7b7;
 }
 
+.deck-hold {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(4, 9, 15, 0.55);
+}
+
+.deck-hold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(var(--deck-accent-rgb), 0.055), transparent);
+  animation: deck-sweep 1.5s ease-in-out infinite;
+}
+
 .deck-reveal {
   animation: deck-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -168,6 +184,10 @@
 @keyframes deck-reveal {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes deck-sweep {
+  to { transform: translateX(100%); }
 }
 
 @media (max-width: 640px) {
@@ -179,5 +199,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .deck-reveal { animation: none; }
+  .deck-hold::after { animation: none; }
   .deck-control, .deck-tab { transition: none; }
 }
