@@ -56,6 +56,27 @@ describeOrSkip("Grading service", () => {
     // Mock global fetch to return our boxscore
     global.fetch = vi.fn().mockImplementation((...args: Parameters<typeof fetch>) => {
       const url = String(args[0]);
+      if (url.includes("/v1/schedule?sportId=1&date=")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            dates: [{
+              games: [
+                {
+                  gamePk: 99999,
+                  officialDate: "2026-08-08",
+                  status: { abstractGameState: "Final", detailedState: "Final" },
+                },
+                {
+                  gamePk: 88888,
+                  officialDate: "2026-08-08",
+                  status: { abstractGameState: "Live", detailedState: "In Progress" },
+                },
+              ],
+            }],
+          }),
+        } as Response);
+      }
       if (url.includes("/v1/game/99999/boxscore")) {
         return Promise.resolve({
           ok: true,

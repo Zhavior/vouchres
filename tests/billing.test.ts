@@ -30,7 +30,7 @@ function mockSubscriptionEvent(opts: {
   status: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
 }): any {
   return {
-    id: `sub_test_${Math.random().toString(36).slice(2, 10)}`,
+    id: opts.subscriptionId,
     object: "subscription",
     customer: opts.customerId,
     status: opts.status,
@@ -208,9 +208,9 @@ describeOrSkip("Stripe billing sync", () => {
       status: "active",
     });
 
-    // syncSubscription should log an error and return without crashing
-    // The profile tier should remain 'free'
-    await syncSubscription(sub);
+    // The webhook worker must receive an error for an unrecognized price so it
+    // can record and retry the event instead of silently applying entitlements.
+    await expect(syncSubscription(sub)).rejects.toThrow("could not resolve tier");
 
     const { supabaseAdmin } = await import("../server/middleware/auth");
     const { data: profile } = await supabaseAdmin
