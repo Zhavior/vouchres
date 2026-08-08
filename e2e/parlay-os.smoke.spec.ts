@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("ParlayOS smoke", () => {
-  test("Parlay Hub build tab loads", async ({ page }) => {
+test.describe("My List smoke", () => {
+  test("My List build tab loads", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
@@ -12,15 +12,15 @@ test.describe("ParlayOS smoke", () => {
       await page.goto("/#build");
     }
 
-    await expect(page.getByRole("region", { name: /parlayos/i })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("region", { name: "My List" })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("tab", { name: /build/i })).toBeVisible();
   });
 
-  test("ParlayOS empty build state guides user", async ({ page }) => {
+  test("My List empty build state guides user", async ({ page }) => {
     await page.goto("/#build");
     await page.waitForLoadState("domcontentloaded");
 
-    const hub = page.getByRole("region", { name: /parlayos/i });
+    const hub = page.getByRole("region", { name: "My List" });
     await expect(hub).toBeVisible({ timeout: 30_000 });
 
     const emptyBuildState = page.getByRole("heading", { name: /build from your research/i });
