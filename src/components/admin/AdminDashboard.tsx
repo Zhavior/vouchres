@@ -1,26 +1,24 @@
-import { useEffect, useState, useCallback } from "react";
-import { apiClient } from "../../lib/apiClient";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  FileText,
+  RefreshCw,
+  Search,
+  Server,
+  Shield,
+  UserCog,
+  Users,
+} from 'lucide-react';
+import { apiClient, type ApiError } from '../../lib/apiClient';
+import {
+  AURORA_LABEL,
+  AURORA_PANEL_PREMIUM,
+  AURORA_SECTION_HEADER,
+} from '../../theme/auroraTokens';
 
-/**
- * AdminDashboard — staff-only UI for managing the beta waitlist,
- * triggering grading jobs, viewing user stats, and managing cappers.
- *
- * Access control: the backend enforces requireStaff on every endpoint.
- * This UI just hides the page from non-staff users — if a non-staff
- * user navigates here directly, every API call will return 403.
- *
- * Mount at /admin in your router.
- */
-
-interface BetaSignup {
-  id: string;
-  email: string;
-  state: "waitlist" | "invited" | "active" | "churned";
-  invite_code: string | null;
-  invited_at: string | null;
-  activated_user_id: string | null;
-  created_at: string;
-}
+type AdminTab = 'overview' | 'waitlist' | 'users' | 'cappers' | 'grading' | 'system';
 
 interface DashboardStats {
   users: number;
@@ -30,537 +28,696 @@ interface DashboardStats {
   estimated_mrr: number;
 }
 
-type Tab = "stats" | "beta" | "users" | "cappers" | "grading";
+interface BetaSignup {
+  id: string;
+  email: string;
+  state: 'waitlist' | 'invited' | 'active' | 'churned';
+  invite_code: string | null;
+  invited_at: string | null;
+  created_at: string;
+}
+
+interface UserProfile {
+  id: string;
+  display_name: string | null;
+  username: string | null;
+  email?: string | null;
+  tier?: string | null;
+  is_staff?: boolean;
+  is_banned?: boolean;
+  created_at?: string | null;
+}
+
+interface Capper {
+  id: string;
+  display_name: string;
+  is_demo?: boolean;
+  trust_score?: number | null;
+  total_picks?: number | null;
+  won_picks?: number | null;
+  lost_picks?: number | null;
+}
+
+interface BackendHealth {
+  status: 'ok' | 'degraded';
+  environment: string;
+  uptimeMs: number;
+  memory: { rssMb: number; heapUsedMb: number };
+  dependencies: {
+    redis: { enabled: boolean; mode: string; writeCapable: boolean | null };
+    sentry: { enabled: boolean; configured: boolean };
+  };
+  api: {
+    totals: { requests: number; errors: number; slowRequests: number };
+    latencyMs: { avg: number; p95: number; max: number };
+  };
+  config: Array<{ name: string; present: boolean; requiredInProduction: boolean; detail?: string }>;
+  warnings: string[];
+  updatedAt: string;
+}
+
+interface GradingResult {
+  graded: number;
+  skipped: number;
+  warnings?: string[];
+  details?: { skipped?: Array<{ pick_id?: string; error?: string }> };
+}
+
+const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: LucideIcon }> = [
+  { id: 'overview', label: 'Overview', icon: Activity },
+  { id: 'waitlist', label: 'Beta Waitlist', icon: Users },
+  { id: 'users', label: 'Users', icon: UserCog },
+  { id: 'cappers', label: 'Cappers', icon: Shield },
+  { id: 'grading', label: 'Grading', icon: FileText },
+  { id: 'system', label: 'System Health', icon: Server },
+];
+
+const PANEL = `rounded-lg ${AURORA_PANEL_PREMIUM}`;
+const INPUT = 'w-full rounded-md border border-white/10 bg-black/35 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
+const BUTTON = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45';
+const PRIMARY_BUTTON = `${BUTTON} border-indigo-400/40 bg-indigo-500/20 text-indigo-100 hover:bg-indigo-500/30`;
+const DANGER_BUTTON = `${BUTTON} border-rose-400/35 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20`;
+
+function errorMessage(error: unknown) {
+  const apiError = error as ApiError | undefined;
+  return apiError?.message || apiError?.error || 'The request could not be completed.';
+}
+
+function formatNumber(value: number | null | undefined) {
+  return new Intl.NumberFormat('en-US').format(value ?? 0);
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return 'Unknown';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString();
+}
+
+function formatUptime(value: number) {
+  const seconds = Math.floor(value / 1000);
+  const days = Math.floor(seconds / 86_400);
+  const hours = Math.floor((seconds % 86_400) / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function PanelTitle({ children, action }: { children: string; action?: ReactNode }) {
+  return (
+    <div className={`${AURORA_SECTION_HEADER} flex items-center justify-between gap-4 border-b border-white/5 px-4 py-4 sm:px-5`}>
+      <h2 className={`${AURORA_LABEL} text-white`}>{children}</h2>
+      {action}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, detail }: { label: string; value: string | number; detail?: string }) {
+  return (
+    <div className={`${PANEL} p-4`}>
+      <p className={`${AURORA_LABEL} text-white/50`}>{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      {detail ? <p className="mt-1 text-xs text-white/45">{detail}</p> : null}
+    </div>
+  );
+}
 
 export function AdminDashboard() {
-  const [tab, setTab] = useState<Tab>("stats");
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const refreshStats = useCallback(async () => {
+    setLoadingStats(true);
     try {
-      const data = await apiClient.get<DashboardStats>("/api/admin/stats");
-      setStats(data);
-    } catch (err) {
-      console.error("[admin] stats fetch failed", err);
+      const nextStats = await apiClient.get<DashboardStats>('/api/admin/stats');
+      setStats(nextStats);
+      setStatsError(null);
+    } catch (error) {
+      setStatsError(errorMessage(error));
+    } finally {
+      setLoadingStats(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshStats();
+    void refreshStats();
   }, [refreshStats]);
 
   return (
-    <div className="admin-dashboard">
-      <header className="admin-header">
-        <h1>VouchEdge Admin</h1>
-        {stats && (
-          <div className="admin-header__stats">
-            <span>👥 {stats.users} users</span>
-            <span>🎫 {stats.beta.waitlist} waitlist</span>
-            <span>✅ {stats.beta.active} active</span>
-            <span>⭐ {stats.subscriptions.active} subs</span>
-            <span>💰 ${stats.estimated_mrr}/mo MRR</span>
-          </div>
-        )}
-        <button onClick={refreshStats}>Refresh</button>
-      </header>
-
-      <nav className="admin-nav">
-        <button
-          onClick={() => setTab("stats")}
-          className={tab === "stats" ? "active" : ""}
-        >Stats</button>
-        <button
-          onClick={() => setTab("beta")}
-          className={tab === "beta" ? "active" : ""}
-        >Beta Waitlist</button>
-        <button
-          onClick={() => setTab("users")}
-          className={tab === "users" ? "active" : ""}
-        >Users</button>
-        <button
-          onClick={() => setTab("cappers")}
-          className={tab === "cappers" ? "active" : ""}
-        >Cappers</button>
-        <button
-          onClick={() => setTab("grading")}
-          className={tab === "grading" ? "active" : ""}
-        >Grading</button>
+    <div className="space-y-5">
+      <nav className="overflow-x-auto" aria-label="Administrative sections">
+        <div className="flex min-w-max gap-2 pb-1">
+          {TAB_ITEMS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveTab(id)}
+              aria-current={activeTab === id ? 'page' : undefined}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors ${
+                activeTab === id
+                  ? 'border-indigo-400/40 bg-indigo-500/15 text-indigo-100'
+                  : 'border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      <main className="admin-main">
-        {tab === "stats" && <StatsTab stats={stats} onRefresh={refreshStats} />}
-        {tab === "beta" && <BetaTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "cappers" && <CappersTab />}
-        {tab === "grading" && <GradingTab />}
-      </main>
+      {activeTab === 'overview' ? (
+        <Overview stats={stats} error={statsError} loading={loadingStats} onRefresh={refreshStats} />
+      ) : null}
+      {activeTab === 'waitlist' ? <Waitlist /> : null}
+      {activeTab === 'users' ? <UsersPanel /> : null}
+      {activeTab === 'cappers' ? <CappersPanel /> : null}
+      {activeTab === 'grading' ? <GradingPanel /> : null}
+      {activeTab === 'system' ? <SystemHealth /> : null}
     </div>
   );
 }
 
-// =========================================================
-// Stats tab
-// =========================================================
+function Overview({
+  stats,
+  error,
+  loading,
+  onRefresh,
+}: {
+  stats: DashboardStats | null;
+  error: string | null;
+  loading: boolean;
+  onRefresh: () => Promise<void>;
+}) {
+  if (loading && !stats) {
+    return <div className={`${PANEL} p-5 text-sm text-white/55`}>Loading live admin statistics...</div>;
+  }
 
-function StatsTab({ stats, onRefresh }: { stats: DashboardStats | null; onRefresh: () => void }) {
-  if (!stats) return <p>Loading…</p>;
+  if (error && !stats) {
+    return (
+      <div className={`${PANEL} p-5`}>
+        <p className="text-sm text-rose-200">{error}</p>
+        <button type="button" className={`${PRIMARY_BUTTON} mt-4`} onClick={() => void onRefresh()}>
+          <RefreshCw className="h-4 w-4" /> Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   return (
-    <div className="admin-stats">
-      <div className="admin-stats__grid">
-        <StatCard label="Total Users" value={stats.users} />
-        <StatCard label="Active Subscriptions" value={stats.subscriptions.active} />
-        <StatCard label="Gold Subscribers" value={stats.subscriptions.gold} />
-        <StatCard label="Seller PRO Subscribers" value={stats.subscriptions.seller_pro} />
-        <StatCard label="Estimated MRR" value={`$${stats.estimated_mrr}/mo`} />
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Operations overview</h2>
+          <p className="mt-1 text-sm text-white/50">Counts are loaded from the staff API when this page opens or refreshes.</p>
+        </div>
+        <button type="button" className={BUTTON} onClick={() => void onRefresh()} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+        </button>
       </div>
+      {error ? <p className="text-sm text-amber-200">Last refresh failed: {error}</p> : null}
 
-      <h3>Beta Funnel</h3>
-      <div className="admin-stats__grid">
-        <StatCard label="On Waitlist" value={stats.beta.waitlist} />
-        <StatCard label="Invited" value={stats.beta.invited} />
-        <StatCard label="Activated" value={stats.beta.active} />
-      </div>
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Non-demo users" value={formatNumber(stats.users)} />
+        <MetricCard label="Active subscriptions" value={formatNumber(stats.subscriptions.active)} />
+        <MetricCard label="Estimated MRR" value={formatCurrency(stats.estimated_mrr)} detail="Calculated by the backend from active subscription tiers." />
+        <MetricCard label="Picks awaiting grading" value={formatNumber(stats.picks.pending)} />
+      </section>
 
-      <h3>Picks</h3>
-      <div className="admin-stats__grid">
-        <StatCard label="Total Picks" value={stats.picks.total} />
-        <StatCard label="Pending Grading" value={stats.picks.pending} />
-        <StatCard label="Graded" value={stats.picks.graded} />
-      </div>
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Beta funnel</PanelTitle>
+        <div className="grid grid-cols-1 divide-y divide-white/5 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <MetricCell label="Waitlist" value={stats.beta.waitlist} />
+          <MetricCell label="Invited" value={stats.beta.invited} />
+          <MetricCell label="Activated" value={stats.beta.active} />
+        </div>
+      </section>
 
-      <button onClick={onRefresh}>Refresh stats</button>
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Pick inventory</PanelTitle>
+        <div className="grid grid-cols-1 divide-y divide-white/5 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <MetricCell label="All picks" value={stats.picks.total} />
+          <MetricCell label="Pending" value={stats.picks.pending} />
+          <MetricCell label="Graded" value={stats.picks.graded} />
+        </div>
+      </section>
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function MetricCell({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="stat-card">
-      <div className="stat-card__value">{value}</div>
-      <div className="stat-card__label">{label}</div>
+    <div className="p-4 sm:p-5">
+      <p className={`${AURORA_LABEL} text-white/45`}>{label}</p>
+      <p className="mt-2 text-xl font-semibold text-white">{formatNumber(value)}</p>
     </div>
   );
 }
 
-// =========================================================
-// Beta waitlist tab
-// =========================================================
-
-function BetaTab() {
+function Waitlist() {
+  const [filter, setFilter] = useState<'all' | BetaSignup['state']>('waitlist');
   const [signups, setSignups] = useState<BetaSignup[]>([]);
-  const [filter, setFilter] = useState<"all" | "waitlist" | "invited" | "active">("waitlist");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [batchEmails, setBatchEmails] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [batchEmails, setBatchEmails] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const fetchSignups = useCallback(async () => {
+  const loadSignups = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get<{ signups: BetaSignup[]; total: number }>(
-        "/api/admin/beta",
-        filter === "all" ? {} : { state: filter }
-      );
-      setSignups(data.signups);
+      const payload = await apiClient.get<{ signups: BetaSignup[] }>('/api/admin/beta', filter === 'all' ? undefined : { state: filter });
+      setSignups(payload.signups ?? []);
       setError(null);
-    } catch (err: any) {
-      setError(err?.error ?? "fetch_failed");
+    } catch (loadError) {
+      setError(errorMessage(loadError));
     } finally {
       setLoading(false);
     }
   }, [filter]);
 
   useEffect(() => {
-    fetchSignups();
-  }, [fetchSignups]);
+    void loadSignups();
+  }, [loadSignups]);
 
-  async function handleInvite(email: string) {
+  async function issueInvite(email: string) {
+    setBusy(true);
     try {
-      await apiClient.post("/api/admin/beta/invite", { email });
-      await fetchSignups();
-    } catch (err: any) {
-      alert(`Failed to invite ${email}: ${err?.error ?? "unknown"}`);
+      await apiClient.post('/api/admin/beta/invite', { email });
+      setNotice(`Invite issued for ${email}.`);
+      setInviteEmail('');
+      await loadSignups();
+    } catch (inviteError) {
+      setError(errorMessage(inviteError));
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function handleBatchInvite() {
-    const emails = batchEmails
-      .split(/[\n,]/)
-      .map((e) => e.trim())
-      .filter(Boolean);
-    if (emails.length === 0) return;
+  async function issueBatchInvites() {
+    const emails = batchEmails.split(/[\n,]/).map((email) => email.trim()).filter(Boolean);
+    if (emails.length === 0 || emails.length > 100) {
+      setError('Enter between 1 and 100 email addresses.');
+      return;
+    }
 
+    setBusy(true);
     try {
-      const result = await apiClient.post<{ results: any[] }>(
-        "/api/admin/beta/invite-batch",
-        { emails }
-      );
-      const ok = result.results.filter((r) => r.ok).length;
-      const failed = result.results.filter((r) => !r.ok).length;
-      alert(`Invited ${ok}, failed ${failed}`);
-      setBatchEmails("");
-      await fetchSignups();
-    } catch (err: any) {
-      alert(`Batch invite failed: ${err?.error ?? "unknown"}`);
+      const result = await apiClient.post<{ results: Array<{ ok: boolean }> }>('/api/admin/beta/invite-batch', { emails });
+      const sent = result.results.filter((item) => item.ok).length;
+      setNotice(`Batch invite completed: ${sent} issued, ${result.results.length - sent} not issued.`);
+      setBatchEmails('');
+      await loadSignups();
+    } catch (inviteError) {
+      setError(errorMessage(inviteError));
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function handleDelete(email: string) {
-    if (!confirm(`Remove ${email} from waitlist?`)) return;
+  async function removeSignup(email: string) {
+    if (!window.confirm(`Remove ${email} from the beta waitlist?`)) return;
+    setBusy(true);
     try {
       await apiClient.delete(`/api/admin/beta/${encodeURIComponent(email)}`);
-      await fetchSignups();
-    } catch (err: any) {
-      alert(`Failed to delete: ${err?.error ?? "unknown"}`);
+      setNotice(`Removed ${email} from the waitlist.`);
+      await loadSignups();
+    } catch (deleteError) {
+      setError(errorMessage(deleteError));
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <div className="admin-beta">
-      <div className="admin-beta__filters">
-        {(["waitlist", "invited", "active", "all"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={filter === f ? "active" : ""}
+    <div className="space-y-5">
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Beta waitlist</PanelTitle>
+        <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2">
+          <form
+            className="space-y-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (inviteEmail.trim()) void issueInvite(inviteEmail.trim());
+            }}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            <label className="block text-sm font-medium text-white" htmlFor="admin-invite-email">Issue one invite</label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input id="admin-invite-email" className={INPUT} type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="person@example.com" required />
+              <button type="submit" className={PRIMARY_BUTTON} disabled={busy}>Issue invite</button>
+            </div>
+          </form>
+
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-white" htmlFor="admin-batch-invites">Issue a batch</label>
+            <textarea id="admin-batch-invites" className={`${INPUT} min-h-24`} value={batchEmails} onChange={(event) => setBatchEmails(event.target.value)} placeholder="One email per line or comma separated. Maximum 100." />
+            <button type="button" className={BUTTON} onClick={() => void issueBatchInvites()} disabled={busy || !batchEmails.trim()}>Issue batch invites</button>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-center gap-2" aria-label="Waitlist state filter">
+        {(['waitlist', 'invited', 'active', 'churned', 'all'] as const).map((value) => (
+          <button key={value} type="button" onClick={() => setFilter(value)} className={filter === value ? PRIMARY_BUTTON : BUTTON}>
+            {value === 'all' ? 'All' : value.charAt(0).toUpperCase() + value.slice(1)}
           </button>
         ))}
-      </div>
-
-      <div className="admin-beta__invite">
-        <h3>Invite single user</h3>
-        <input
-          type="email"
-          placeholder="user@example.com"
-          value={inviteEmail}
-          onChange={(e) => setInviteEmail(e.target.value)}
-        />
-        <button
-          onClick={() => {
-            if (inviteEmail) handleInvite(inviteEmail);
-            setInviteEmail("");
-          }}
-          disabled={!inviteEmail}
-        >
-          Issue invite
+        <button type="button" className={`${BUTTON} ml-auto`} onClick={() => void loadSignups()} disabled={loading || busy}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
 
-      <div className="admin-beta__batch">
-        <h3>Batch invite (one email per line, or comma-separated)</h3>
-        <textarea
-          rows={4}
-          placeholder={"user1@example.com\nuser2@example.com"}
-          value={batchEmails}
-          onChange={(e) => setBatchEmails(e.target.value)}
-        />
-        <button onClick={handleBatchInvite} disabled={!batchEmails.trim()}>
-          Issue batch invites
-        </button>
-      </div>
+      {notice ? <p className="text-sm text-emerald-200">{notice}</p> : null}
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
 
-      {loading && <p>Loading…</p>}
-      {error && <p className="admin-beta__error">{error}</p>}
-
-      <table className="admin-beta__table">
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>State</th>
-            <th>Invite Code</th>
-            <th>Invited</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {signups.map((s) => (
-            <tr key={s.id}>
-              <td>{s.email}</td>
-              <td><span className={`state state--${s.state}`}>{s.state}</span></td>
-              <td className="admin-beta__code">
-                {s.invite_code ? (
-                  <code>{s.invite_code}</code>
-                ) : "—"}
-              </td>
-              <td>{s.invited_at ? new Date(s.invited_at).toLocaleString() : "—"}</td>
-              <td>{new Date(s.created_at).toLocaleDateString()}</td>
-              <td>
-                {s.state === "waitlist" && (
-                  <button onClick={() => handleInvite(s.email)}>Invite</button>
-                )}
-                <button onClick={() => handleDelete(s.email)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Signups</PanelTitle>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm text-white/70">
+            <thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45">
+              <tr>
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">State</th>
+                <th className="px-4 py-3 font-medium">Invite code</th>
+                <th className="px-4 py-3 font-medium">Created</th>
+                <th className="px-4 py-3 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? <EmptyRow columns={5}>Loading waitlist...</EmptyRow> : null}
+              {!loading && signups.length === 0 ? <EmptyRow columns={5}>No signups match this filter.</EmptyRow> : null}
+              {!loading ? signups.map((signup) => (
+                <tr key={signup.id}>
+                  <td className="px-4 py-3 text-white">{signup.email}</td>
+                  <td className="px-4 py-3 capitalize">{signup.state}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-white/55">{signup.invite_code ?? 'Not issued'}</td>
+                  <td className="px-4 py-3 text-xs text-white/50">{formatDate(signup.created_at)}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      {signup.state === 'waitlist' ? <button type="button" className={BUTTON} onClick={() => void issueInvite(signup.email)} disabled={busy}>Invite</button> : null}
+                      <button type="button" className={DANGER_BUTTON} onClick={() => void removeSignup(signup.email)} disabled={busy}>Remove</button>
+                    </div>
+                  </td>
+                </tr>
+              )) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
 
-// =========================================================
-// Users tab
-// =========================================================
-
-function UsersTab() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
+function UsersPanel() {
+  const [query, setQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get<{ users: any[] }>("/api/admin/users", search ? { search } : {});
-      setUsers(data.users);
-    } catch (err) {
-      console.error("[admin] users fetch failed", err);
+      const payload = await apiClient.get<{ users: UserProfile[] }>('/api/admin/users', submittedQuery ? { search: submittedQuery, limit: 100 } : { limit: 100 });
+      setUsers(payload.users ?? []);
+      setError(null);
+    } catch (loadError) {
+      setError(errorMessage(loadError));
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [submittedQuery]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    void loadUsers();
+  }, [loadUsers]);
 
-  async function handleAction(id: string, action: "ban" | "unban" | "promote" | "demote") {
-    const updates: any = {};
-    if (action === "ban") updates.is_banned = true;
-    if (action === "unban") updates.is_banned = false;
-    if (action === "promote") updates.is_staff = true;
-    if (action === "demote") updates.is_staff = false;
+  async function updateUser(user: UserProfile, changes: Record<string, boolean>, action: string) {
+    const name = user.display_name || user.username || user.id;
+    if (!window.confirm(`${action} ${name}?`)) return;
 
-    const reason = prompt(`Reason for ${action}? (optional)`) ?? "";
-    if (reason) updates.reason = reason;
-
+    setPendingAction(user.id);
     try {
-      await apiClient.patch(`/api/admin/users/${id}`, updates);
-      await fetchUsers();
-    } catch (err: any) {
-      alert(`Failed: ${err?.error ?? "unknown"}`);
+      await apiClient.patch(`/api/admin/users/${user.id}`, changes);
+      await loadUsers();
+    } catch (updateError) {
+      setError(errorMessage(updateError));
+    } finally {
+      setPendingAction(null);
     }
   }
 
-  if (loading) return <p>Loading…</p>;
-
   return (
-    <div className="admin-users">
-      <input
-        type="text"
-        placeholder="Search by username or display name…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <table>
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Tier</th>
-            <th>Staff</th>
-            <th>Banned</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td>
-                <div>{u.display_name}</div>
-                <div className="admin-users__username">@{u.username}</div>
-              </td>
-              <td>{u.tier}</td>
-              <td>{u.is_staff ? "✓" : ""}</td>
-              <td>{u.is_banned ? "BANNED" : ""}</td>
-              <td>{new Date(u.created_at).toLocaleDateString()}</td>
-              <td>
-                {u.is_banned ? (
-                  <button onClick={() => handleAction(u.id, "unban")}>Unban</button>
-                ) : (
-                  <button onClick={() => handleAction(u.id, "ban")}>Ban</button>
-                )}
-                {u.is_staff ? (
-                  <button onClick={() => handleAction(u.id, "demote")}>Demote</button>
-                ) : (
-                  <button onClick={() => handleAction(u.id, "promote")}>Promote</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-5">
+      <section className={`${PANEL} p-4 sm:p-5`}>
+        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={(event) => { event.preventDefault(); setSubmittedQuery(query.trim()); }}>
+          <label className="sr-only" htmlFor="admin-user-search">Search users</label>
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <input id="admin-user-search" className={`${INPUT} pl-9`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search username or display name" />
+          </div>
+          <button type="submit" className={PRIMARY_BUTTON}>Search</button>
+          <button type="button" className={BUTTON} onClick={() => void loadUsers()} disabled={loading || pendingAction !== null}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </form>
+      </section>
+
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
+
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Users</PanelTitle>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-left text-sm text-white/70">
+            <thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45">
+              <tr>
+                <th className="px-4 py-3 font-medium">User</th>
+                <th className="px-4 py-3 font-medium">Tier</th>
+                <th className="px-4 py-3 font-medium">Staff</th>
+                <th className="px-4 py-3 font-medium">Account status</th>
+                <th className="px-4 py-3 font-medium">Joined</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? <EmptyRow columns={6}>Loading users...</EmptyRow> : null}
+              {!loading && users.length === 0 ? <EmptyRow columns={6}>No users match this search.</EmptyRow> : null}
+              {!loading ? users.map((user) => {
+                const busy = pendingAction === user.id;
+                return (
+                  <tr key={user.id}>
+                    <td className="px-4 py-3 text-white">
+                      <p className="font-medium">{user.display_name || user.username || 'Unnamed user'}</p>
+                      <p className="mt-0.5 text-xs text-white/45">@{user.username || user.id.slice(0, 8)}</p>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs uppercase">{user.tier || 'free'}</td>
+                    <td className="px-4 py-3">{user.is_staff ? 'Staff' : 'User'}</td>
+                    <td className="px-4 py-3">{user.is_banned ? 'Banned' : 'Active'}</td>
+                    <td className="px-4 py-3 text-xs text-white/50">{formatDate(user.created_at)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button type="button" className={user.is_banned ? BUTTON : DANGER_BUTTON} onClick={() => void updateUser(user, { is_banned: !user.is_banned }, user.is_banned ? 'Restore access for' : 'Ban')} disabled={busy}>
+                          {user.is_banned ? 'Restore' : 'Ban'}
+                        </button>
+                        <button type="button" className={user.is_staff ? DANGER_BUTTON : BUTTON} onClick={() => void updateUser(user, { is_staff: !user.is_staff }, user.is_staff ? 'Remove staff access from' : 'Grant staff access to')} disabled={busy}>
+                          {user.is_staff ? 'Remove staff' : 'Grant staff'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
 
-// =========================================================
-// Cappers tab
-// =========================================================
+function CappersPanel() {
+  const [cappers, setCappers] = useState<Capper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newCapper, setNewCapper] = useState({ id: '', display_name: '', tagline: '', persona: '', is_demo: false });
 
-function CappersTab() {
-  const [cappers, setCappers] = useState<any[]>([]);
-  const [newCapper, setNewCapper] = useState({
-    id: "",
-    display_name: "",
-    tagline: "",
-    is_demo: true,
-  });
-
-  const fetchCappers = useCallback(async () => {
+  const loadCappers = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await apiClient.get<{ cappers: any[] }>("/api/cappers");
-      setCappers(data.cappers);
-    } catch (err) {
-      console.error("[admin] cappers fetch failed", err);
+      const payload = await apiClient.get<{ cappers: Capper[] }>('/api/cappers');
+      setCappers(payload.cappers ?? []);
+      setError(null);
+    } catch (loadError) {
+      setError(errorMessage(loadError));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCappers();
-  }, [fetchCappers]);
+    void loadCappers();
+  }, [loadCappers]);
 
-  async function handleCreate() {
-    if (!newCapper.id || !newCapper.display_name) return;
+  async function createCapper(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCreating(true);
     try {
-      await apiClient.post("/api/admin/cappers", newCapper);
-      setNewCapper({ id: "", display_name: "", tagline: "", is_demo: true });
-      await fetchCappers();
-    } catch (err: any) {
-      alert(`Failed: ${err?.error ?? "unknown"}`);
+      const payload = { ...newCapper, id: newCapper.id.trim().toLowerCase(), display_name: newCapper.display_name.trim() };
+      await apiClient.post('/api/admin/cappers', payload);
+      setNotice(`Created ${payload.display_name}.`);
+      setNewCapper({ id: '', display_name: '', tagline: '', persona: '', is_demo: false });
+      await loadCappers();
+    } catch (createError) {
+      setError(errorMessage(createError));
+    } finally {
+      setCreating(false);
     }
   }
 
   return (
-    <div className="admin-cappers">
-      <h3>Existing Cappers</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Demo?</th>
-            <th>Trust</th>
-            <th>Picks</th>
-            <th>Record</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cappers.map((c) => (
-            <tr key={c.id}>
-              <td><code>{c.id}</code></td>
-              <td>{c.display_name}</td>
-              <td>{c.is_demo ? "DEMO" : ""}</td>
-              <td>{c.trust_score?.toFixed(1)}</td>
-              <td>{c.total_picks}</td>
-              <td>{c.won_picks}-{c.lost_picks}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-5">
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle
+          action={
+            <button type="button" className={BUTTON} onClick={() => void loadCappers()} disabled={loading || creating}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+          }
+        >
+          Existing cappers
+        </PanelTitle>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] text-left text-sm text-white/70">
+            <thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45">
+              <tr><th className="px-4 py-3 font-medium">ID</th><th className="px-4 py-3 font-medium">Name</th><th className="px-4 py-3 font-medium">Type</th><th className="px-4 py-3 font-medium">Trust</th><th className="px-4 py-3 font-medium">Record</th></tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? <EmptyRow columns={5}>Loading cappers...</EmptyRow> : null}
+              {!loading && cappers.length === 0 ? <EmptyRow columns={5}>No cappers returned by the API.</EmptyRow> : null}
+              {!loading ? cappers.map((capper) => <tr key={capper.id}><td className="px-4 py-3 font-mono text-xs text-white">{capper.id}</td><td className="px-4 py-3 text-white">{capper.display_name}</td><td className="px-4 py-3">{capper.is_demo === true ? 'Demo' : capper.is_demo === false ? 'Live' : 'Unknown'}</td><td className="px-4 py-3">{capper.trust_score == null ? 'Unavailable' : capper.trust_score.toFixed(1)}</td><td className="px-4 py-3">{formatNumber(capper.won_picks)}-{formatNumber(capper.lost_picks)} ({formatNumber(capper.total_picks)} picks)</td></tr>) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <h3>Create New Capper</h3>
-      <div className="admin-cappers__form">
-        <input
-          placeholder="id (lowercase, hyphens)"
-          value={newCapper.id}
-          onChange={(e) => setNewCapper({ ...newCapper, id: e.target.value })}
-        />
-        <input
-          placeholder="Display name"
-          value={newCapper.display_name}
-          onChange={(e) => setNewCapper({ ...newCapper, display_name: e.target.value })}
-        />
-        <input
-          placeholder="Tagline (optional)"
-          value={newCapper.tagline}
-          onChange={(e) => setNewCapper({ ...newCapper, tagline: e.target.value })}
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={newCapper.is_demo}
-            onChange={(e) => setNewCapper({ ...newCapper, is_demo: e.target.checked })}
-          />
-          Demo capper (not a real person)
-        </label>
-        <button onClick={handleCreate} disabled={!newCapper.id || !newCapper.display_name}>
-          Create capper
-        </button>
-      </div>
+      <section className={`${PANEL} overflow-hidden`}>
+        <PanelTitle>Create capper</PanelTitle>
+        <form className="grid gap-4 p-4 sm:p-5 md:grid-cols-2" onSubmit={(event) => void createCapper(event)}>
+          <label className="text-sm text-white/75">ID<input className={`${INPUT} mt-1`} value={newCapper.id} onChange={(event) => setNewCapper({ ...newCapper, id: event.target.value })} pattern="[a-z0-9-]{2,32}" placeholder="lowercase-hyphens" required /></label>
+          <label className="text-sm text-white/75">Display name<input className={`${INPUT} mt-1`} value={newCapper.display_name} onChange={(event) => setNewCapper({ ...newCapper, display_name: event.target.value })} required /></label>
+          <label className="text-sm text-white/75">Tagline<input className={`${INPUT} mt-1`} value={newCapper.tagline} onChange={(event) => setNewCapper({ ...newCapper, tagline: event.target.value })} maxLength={140} /></label>
+          <label className="text-sm text-white/75">Persona<textarea className={`${INPUT} mt-1 min-h-20`} value={newCapper.persona} onChange={(event) => setNewCapper({ ...newCapper, persona: event.target.value })} maxLength={1000} /></label>
+          <label className="flex min-h-10 items-center gap-2 text-sm text-white/75"><input type="checkbox" checked={newCapper.is_demo} onChange={(event) => setNewCapper({ ...newCapper, is_demo: event.target.checked })} /> Demo capper</label>
+          <div className="flex items-end"><button type="submit" className={PRIMARY_BUTTON} disabled={creating}>Create capper</button></div>
+        </form>
+      </section>
+      {notice ? <p className="text-sm text-emerald-200">{notice}</p> : null}
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
     </div>
   );
 }
 
-// =========================================================
-// Grading tab
-// =========================================================
-
-function GradingTab() {
-  const [result, setResult] = useState<any>(null);
+function GradingPanel() {
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<GradingResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function runGrade(dryRun: boolean) {
+  async function runGrading(dryRun: boolean) {
+    if (!dryRun && !window.confirm('Run live grading for pending picks from the past three days?')) return;
     setLoading(true);
     setResult(null);
+    setError(null);
     try {
-      const data = await apiClient.post("/api/admin/grade-pending", { days: 3, dryRun });
-      setResult(data);
-    } catch (err: any) {
-      setResult({ error: err?.error ?? "grade_failed" });
+      const response = await apiClient.post<GradingResult>('/api/admin/grade-pending', { days: 3, dryRun });
+      setResult(response);
+    } catch (gradingError) {
+      setError(errorMessage(gradingError));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="admin-grading">
-      <h3>Manual Pick Grading</h3>
-      <p>
-        This triggers the grading job immediately. The cron job runs this
-        automatically at 2 AM ET, but you can run it manually to catch
-        picks from games that ended recently.
-      </p>
-
-      <div className="admin-grading__buttons">
-        <button onClick={() => runGrade(true)} disabled={loading}>
-          Dry run (no writes)
-        </button>
-        <button onClick={() => runGrade(false)} disabled={loading}>
-          Run for real
-        </button>
-      </div>
-
-      {loading && <p>Grading… (this may take 30+ seconds for many picks)</p>}
-
-      {result && (
-        <div className="admin-grading__result">
-          {result.error ? (
-            <p className="admin-grading__error">Error: {result.error}</p>
-          ) : (
-            <>
-              <p>✅ Graded: {result.graded}</p>
-              <p>⏭️ Skipped: {result.skipped}</p>
-              {result.details?.skipped?.length > 0 && (
-                <details>
-                  <summary>Skip reasons ({result.details.skipped.length})</summary>
-                  <ul>
-                    {result.details.skipped.slice(0, 50).map((s: any, i: number) => (
-                      <li key={i}>
-                        <code>{s.pick_id}</code>: {s.error}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-            </>
-          )}
+    <div className="space-y-5">
+      <section className={`${PANEL} p-4 sm:p-5`}>
+        <div className="flex items-start gap-3">
+          <FileText className="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
+          <div>
+            <h2 className="text-base font-semibold text-white">Manual pick grading</h2>
+            <p className="mt-1 max-w-2xl text-sm text-white/55">Checks pending picks from the past three days. A dry run performs the same checks without writing results.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" className={BUTTON} onClick={() => void runGrading(true)} disabled={loading}>Dry run</button>
+              <button type="button" className={DANGER_BUTTON} onClick={() => void runGrading(false)} disabled={loading}>Run live grading</button>
+            </div>
+          </div>
         </div>
-      )}
+      </section>
+      {loading ? <p className="text-sm text-white/55">Grading is running. This can take a while for a large queue.</p> : null}
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
+      {result ? <section className={`${PANEL} overflow-hidden`}><PanelTitle>Latest grading result</PanelTitle><div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5"><MetricCard label="Graded" value={formatNumber(result.graded)} /><MetricCard label="Skipped" value={formatNumber(result.skipped)} /></div>{result.warnings?.length ? <ul className="border-t border-white/5 px-5 py-4 text-sm text-amber-200">{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}{result.details?.skipped?.length ? <details className="border-t border-white/5 px-5 py-4 text-sm text-white/60"><summary className="cursor-pointer text-white">Skipped pick details</summary><ul className="mt-3 space-y-2">{result.details.skipped.slice(0, 50).map((item, index) => <li key={`${item.pick_id ?? 'pick'}-${index}`}><code className="text-xs text-white/80">{item.pick_id ?? 'Unknown pick'}</code>: {item.error ?? 'No reason returned'}</li>)}</ul></details> : null}</section> : null}
     </div>
   );
+}
+
+function SystemHealth() {
+  const [health, setHealth] = useState<BackendHealth | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadHealth = useCallback(async () => {
+    setLoading(true);
+    try {
+      const payload = await apiClient.get<BackendHealth>('/api/health/backend');
+      setHealth(payload);
+      setError(null);
+    } catch (healthError) {
+      setError(errorMessage(healthError));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadHealth();
+  }, [loadHealth]);
+
+  const configChecks = useMemo(() => health?.config ?? [], [health]);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="text-lg font-semibold text-white">Backend health</h2><p className="mt-1 text-sm text-white/50">The service reports its own dependency, configuration, and route telemetry state.</p></div>
+        <button type="button" className={BUTTON} onClick={() => void loadHealth()} disabled={loading}><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh</button>
+      </div>
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
+      {loading && !health ? <div className={`${PANEL} p-5 text-sm text-white/55`}>Loading backend health...</div> : null}
+      {health ? <>
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Service status" value={health.status === 'ok' ? 'Operational' : 'Degraded'} detail={`Updated ${formatDate(health.updatedAt)}`} />
+          <MetricCard label="Environment" value={health.environment} detail={`Uptime ${formatUptime(health.uptimeMs)}`} />
+          <MetricCard label="API errors" value={formatNumber(health.api.totals.errors)} detail={`${formatNumber(health.api.totals.requests)} requests since process start`} />
+          <MetricCard label="P95 latency" value={`${formatNumber(health.api.latencyMs.p95)} ms`} detail={`${formatNumber(health.api.totals.slowRequests)} slow requests`} />
+        </section>
+        <section className={`${PANEL} overflow-hidden`}><PanelTitle>Dependencies</PanelTitle><div className="grid grid-cols-1 divide-y divide-white/5 sm:grid-cols-3 sm:divide-x sm:divide-y-0"><MetricCell label={`Redis (${health.dependencies.redis.mode})`} value={health.dependencies.redis.enabled ? 'Enabled' : 'Disabled'} /><MetricCell label="Redis writes" value={health.dependencies.redis.writeCapable === null ? 'Not checked' : health.dependencies.redis.writeCapable ? 'Available' : 'Unavailable'} /><MetricCell label="Sentry" value={health.dependencies.sentry.configured ? 'Configured' : 'Not configured'} /></div><div className="grid grid-cols-1 border-t border-white/5 text-xs text-white/45 sm:grid-cols-2"><p className="p-3">Heap used: {health.memory.heapUsedMb} MB</p><p className="p-3">RSS memory: {health.memory.rssMb} MB</p></div></section>
+        <section className={`${PANEL} overflow-hidden`}><PanelTitle>Warnings</PanelTitle><div className="p-4 sm:p-5">{health.warnings.length ? <ul className="space-y-2 text-sm text-amber-200">{health.warnings.map((warning) => <li key={warning} className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{warning}</li>)}</ul> : <p className="text-sm text-emerald-200">No backend warnings reported.</p>}</div></section>
+        <section className={`${PANEL} overflow-hidden`}><PanelTitle>Configuration checks</PanelTitle><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm text-white/70"><thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45"><tr><th className="px-4 py-3 font-medium">Setting</th><th className="px-4 py-3 font-medium">Present</th><th className="px-4 py-3 font-medium">Required in production</th><th className="px-4 py-3 font-medium">Detail</th></tr></thead><tbody className="divide-y divide-white/5">{configChecks.map((check) => <tr key={check.name}><td className="px-4 py-3 font-mono text-xs text-white">{check.name}</td><td className="px-4 py-3">{check.present ? 'Yes' : 'No'}</td><td className="px-4 py-3">{check.requiredInProduction ? 'Yes' : 'No'}</td><td className="px-4 py-3 text-xs text-white/50">{check.detail ?? 'None'}</td></tr>)}</tbody></table></div></section>
+      </> : null}
+    </div>
+  );
+}
+
+function EmptyRow({ columns, children }: { columns: number; children: ReactNode }) {
+  return <tr><td colSpan={columns} className="px-4 py-9 text-center text-sm text-white/45">{children}</td></tr>;
 }
