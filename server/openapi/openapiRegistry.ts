@@ -838,7 +838,7 @@ openapiRegistry.registerPath({
   tags: ["Auth"],
   request: {
     query: z.object({
-      username: z.string().min(3).max(24),
+      username: z.string().min(3).max(30),
     }),
   },
   responses: {
@@ -856,7 +856,7 @@ openapiRegistry.registerPath({
   tags: ["Auth"],
   request: {
     query: z.object({
-      handle: z.string().min(3).max(24),
+      handle: z.string().min(3).max(30),
     }),
   },
   responses: {
@@ -874,7 +874,7 @@ openapiRegistry.registerPath({
   tags: ["Users"],
   request: {
     params: z.object({
-      handle: z.string().min(3).max(24),
+      handle: z.string().min(3).max(30),
     }),
   },
   responses: {
@@ -1165,7 +1165,7 @@ openapiRegistry.registerPath({
       content: {
         "application/json": {
           schema: z.object({
-            username: z.string().min(3).max(24).optional(),
+            username: z.string().min(3).max(30).optional(),
             display_name: z.string().max(64).optional(),
             bio: z.string().max(500).optional(),
             avatar_url: HttpsUrlSchema.max(500).nullable().optional(),

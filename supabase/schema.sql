@@ -32,7 +32,7 @@ create type business_membership_status as enum ('active', 'trialing', 'past_due'
 -- =========================================================
 create table public.profiles (
   id              uuid primary key references auth.users(id) on delete cascade,
-  username        text unique not null check (char_length(username) between 3 and 24),
+  username        text unique not null check (char_length(username) between 3 and 30),
   display_name    text not null default '',
   avatar_url      text,
   bio             text default '' not null,

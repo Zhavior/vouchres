@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   HANDLE_MAX,
@@ -5,6 +6,15 @@ import {
   RESERVED_HANDLES,
   validateHandle,
 } from "../server/lib/handleSchema";
+
+const profileSchema = readFileSync(
+  new URL("../supabase/schema.sql", import.meta.url),
+  "utf8",
+);
+const usernameLengthMigration = readFileSync(
+  new URL("../supabase/migrations/20260808053918_extend_profile_username_length.sql", import.meta.url),
+  "utf8",
+);
 
 describe("handleSchema", () => {
   it("accepts twitter-style handles", () => {
@@ -45,5 +55,10 @@ describe("handleSchema", () => {
       ok: true,
       handle: "a".repeat(HANDLE_MAX),
     });
+  });
+
+  it("keeps the profile username constraint aligned with handles", () => {
+    expect(profileSchema).toContain("char_length(username) between 3 and 30");
+    expect(usernameLengthMigration).toContain("char_length(username) between 3 and 30");
   });
 });
