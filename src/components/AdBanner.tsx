@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, ShieldCheck, Heart, TrendingUp, X, Award, Percent } from 'lucide-react';
+import { ADS_ENABLED, FREE_BETA_ALL_ACCESS } from '../lib/betaAccess';
 
 interface AdBannerProps {
   bannerType: 'feed-top' | 'feed-sidebar' | 'inline-slip' | 'live-stream';
@@ -14,6 +15,19 @@ export default function AdBanner({
   activeSponsor = 'DraftKings',
   onUpgrade 
 }: AdBannerProps) {
+  // No ad inventory is configured yet, so nothing may render in a slot labelled
+  // "SPONSORED AD". Independent of the beta flag on purpose — ending the beta
+  // must not switch placeholder ads on by itself.
+  if (!ADS_ENABLED) {
+    return null;
+  }
+
+  // Free open beta: everyone has the ad-free entitlement, and every ad here is
+  // an upsell for a plan that isn't on sale. Render nothing.
+  if (FREE_BETA_ALL_ACCESS) {
+    return null;
+  }
+
   // SELLER_PRO users get absolutely 0 ads!
   if (subscriptionTier === 'SELLER_PRO') {
     return null;

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { FREE_BETA_ALL_ACCESS, FREE_BETA_ENDS_AT } from "../../lib/betaAccess";
 
 const features = [
   "All Pro research labs",
@@ -9,13 +10,17 @@ const features = [
   "Verified badge",
 ];
 
+const betaEndsCopy = FREE_BETA_ENDS_AT
+  ? `Free through ${new Date(FREE_BETA_ENDS_AT).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}.`
+  : "Free for the duration of the open beta.";
+
 export interface PricingSectionProps {
   onJoinBeta?: () => void;
 }
 
 export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
   return (
-    <section id="pricing" className="relative scroll-mt-20 border-t border-white/6 bg-[#050912] py-32">
+    <section id="pricing" className="relative scroll-mt-20 border-t border-white/6 bg-ve-obsidian py-32">
       <div className="mx-auto max-w-7xl px-6">
 
         <motion.div
@@ -26,18 +31,29 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
           className="mx-auto max-w-3xl text-center"
         >
           <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-blue-300">
-            Pricing
+            {FREE_BETA_ALL_ACCESS ? "Open beta" : "Pricing"}
           </span>
 
           <h2 className="mt-6 text-5xl font-semibold tracking-tight text-white">
-            Premium intelligence.
-            <br />
-            Simple pricing.
+            {FREE_BETA_ALL_ACCESS ? (
+              <>
+                Premium intelligence.
+                <br />
+                Free during the beta.
+              </>
+            ) : (
+              <>
+                Premium intelligence.
+                <br />
+                Simple pricing.
+              </>
+            )}
           </h2>
 
           <p className="mt-8 text-lg leading-8 text-white/60">
-            Try every Beta research tool free for 7 days. After your trial,
-            continue for $7.99 per month until you cancel.
+            {FREE_BETA_ALL_ACCESS
+              ? `Every research tool is unlocked on every account. No card, no subscription, nothing to cancel. ${betaEndsCopy}`
+              : "Try every Beta research tool free for 7 days. After your trial, continue for $7.99 per month until you cancel."}
           </p>
         </motion.div>
 
@@ -55,17 +71,17 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
               <Sparkles className="h-6 w-6 text-blue-400" />
 
               <span className="font-semibold text-blue-300">
-                VouchEdge Beta
+                {FREE_BETA_ALL_ACCESS ? "VouchEdge Free Open Beta" : "VouchEdge Beta"}
               </span>
             </div>
 
             <div className="mt-8 flex items-end gap-2">
               <span className="text-6xl font-bold text-white">
-                $7.99
+                {FREE_BETA_ALL_ACCESS ? "$0" : "$7.99"}
               </span>
 
               <span className="pb-2 text-white/50">
-                /month
+                {FREE_BETA_ALL_ACCESS ? "no card required" : "/month"}
               </span>
             </div>
 
@@ -92,12 +108,14 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
               onClick={onJoinBeta}
               className="group mt-12 flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-500 px-6 py-4 text-base font-semibold text-white transition-all hover:bg-blue-400"
             >
-              Start 7-day free trial
+              {FREE_BETA_ALL_ACCESS ? "Join the free beta" : "Start 7-day free trial"}
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
 
             <p className="mt-5 text-center text-sm text-white/45">
-              Then $7.99/month. Cancel anytime.
+              {FREE_BETA_ALL_ACCESS
+                ? "Create an account and everything is unlocked. We'll announce pricing before the beta ends."
+                : "Then $7.99/month. Cancel anytime."}
             </p>
 
           </motion.div>

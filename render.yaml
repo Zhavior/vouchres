@@ -79,7 +79,7 @@ services:
     branch: main
     rootDir: .
     buildCommand: npm install && npm run build
-    schedule: "0 6 * * *"  # 2 AM ET (6 AM UTC) — after all MLB games are final
+    schedule: "*/10 * * * *"  # Grade newly final picks within the next 10-minute run
     startCommand: node dist/gradeJob.cjs
     envVars:
       - key: NODE_ENV

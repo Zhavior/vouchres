@@ -57,7 +57,6 @@ const REQUIRED_DOCUMENTS = [
 const REQUIRED_TOKEN_SOURCES = [
   'src/styles/vouchedge-tokens.css',
   'src/theme/auroraTokens.ts',
-  'src/theme/z8Tokens.ts',
 ] as const;
 
 function extension(path: string): string {
@@ -75,7 +74,7 @@ function readLines(path: string): string[] {
   return readFileSync(path, 'utf8')
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean);
+    .filter((line) => line && !line.startsWith('#'));
 }
 
 function findZ8Importers(root: string): string[] {

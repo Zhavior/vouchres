@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrWatchBoard, HrWatchMode, HrWatchRow, RiskTier, TruthStatus } from '../types/hrWatch';
+import { weatherBoostToScore } from '../engine/signalScore';
 
 type UnknownRecord = z.infer<typeof UnknownRecordSchema>;
 
@@ -108,6 +109,25 @@ function readWarnings(row: UnknownRecord): string[] {
   return single ? [single] : [];
 }
 
+/**
+ * Micro-weather as a 0–100 index. A pre-normalized score wins when the payload
+ * carries one; otherwise the pipeline's signed `weatherBoost` is mapped through
+ * `weatherBoostToScore`. A boost of 0 is ambiguous — neutral forecast or no
+ * forecast at all — so `weatherSource` decides, and an unavailable source stays
+ * null rather than posing as a neutral reading.
+ */
+function readWeatherScore(row: UnknownRecord, nested: UnknownRecord): number | null {
+  const explicit =
+    firstNullableNumber(nested, ['weather', 'weatherScore', 'weatherContext']) ??
+    firstNullableNumber(row, ['weatherScore', 'weatherContext']);
+  if (explicit != null) return explicit;
+
+  const source = firstString(row, ['weatherSource'], '').trim().toLowerCase();
+  if (!source || source === 'unavailable') return null;
+
+  return weatherBoostToScore(firstNullableNumber(row, ['weatherBoost']));
+}
+
 function readBreakdown(row: UnknownRecord) {
   const nested = readRecord(row.scoreBreakdown);
   const result = {
@@ -120,6 +140,11 @@ function readBreakdown(row: UnknownRecord) {
     parkFactor:
       firstNullableNumber(nested, ['parkFactor', 'park']) ??
       firstNullableNumber(row, ['parkFactor']),
+    // The pipeline reports the park twice: `parkContext` is the 0–100 layer
+    // score the Signal Score weighs, `parkFactor` is the raw venue HR index.
+    parkContext: firstNullableNumber(nested, ['parkContext', 'parkScore']),
+    parkIndex: firstNullableNumber(row, ['parkFactor', 'parkHrFactor']),
+    weather: readWeatherScore(row, nested),
     recentForm:
       firstNullableNumber(nested, ['recentForm', 'recentPower']) ??
       firstNullableNumber(row, ['recentFormScore', 'recentPower']),
@@ -128,7 +153,6 @@ function readBreakdown(row: UnknownRecord) {
       firstNullableNumber(row, ['vouchScore']),
   };
 
-  console.timeEnd("buildBoard");
   return result;
 }
 
@@ -172,6 +196,9 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       hitterPower: breakdown.hitterPower,
       pitcherVulnerability: breakdown.pitcherVulnerability,
       parkFactor: breakdown.parkFactor,
+      parkContext: breakdown.parkContext,
+      parkIndex: breakdown.parkIndex,
+      weather: breakdown.weather,
       recentForm: breakdown.recentForm,
       vouchScore: breakdown.vouchScore,
       dataConfidence: firstNullableNumber(row, ['dataConfidence']),
@@ -232,7 +259,6 @@ const HrBoardPayloadSchema = z
 type HrBoardPayload = z.infer<typeof HrBoardPayloadSchema>;
 
 export function buildBoard(input: unknown): HrWatchBoard {
-  console.time("buildBoard");
   const parsed = HrBoardPayloadSchema.safeParse(input);
   const board: HrBoardPayload = parsed.success ? parsed.data : {};
   const confirmedRaw = firstArray(board.candidates, board.confirmedCandidates, board.candidateBuckets?.confirmed);
@@ -260,7 +286,6 @@ export function buildBoard(input: unknown): HrWatchBoard {
     },
   };
 
-  console.timeEnd("buildBoard");
   return result;
 }
 
@@ -310,7 +335,7 @@ export function groupRowsByGame(rows: readonly HrWatchRow[]) {
   }
   return Array.from(buckets.entries()).map(([key, gameRows]) => {
     const first = gameRows[0];
-    const result = {
+    return {
       key,
       title: `${first.team} vs ${first.opponent}`,
       subtitle: `${first.venue} · ${gameRows.length} HR row${gameRows.length === 1 ? '' : 's'}`,

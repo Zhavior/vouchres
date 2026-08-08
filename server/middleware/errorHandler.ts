@@ -7,7 +7,11 @@ import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "./requestContext";
 
 /** Curated 5xx codes that may return a safe, non-leaking operational message. */
-const OPERATIONAL_5XX_CODES = new Set(["upstream_unavailable", "external_service_error"]);
+const OPERATIONAL_5XX_CODES = new Set([
+  "upstream_unavailable",
+  "external_service_error",
+  "payments_disabled",
+]);
 
 function statusFromUnknown(error: unknown): number {
   const status = Number((error as { status?: unknown; statusCode?: unknown })?.status ?? (error as { statusCode?: unknown })?.statusCode);

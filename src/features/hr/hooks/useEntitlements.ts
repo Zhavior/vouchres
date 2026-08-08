@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAuthMe } from '../../../hooks/queries/useAuthMe';
 import { queryKeys } from '../../../hooks/queries/queryKeys';
 import { isSupabaseConfigured } from '../../../lib/supabaseClient';
+import { FREE_BETA_ALL_ACCESS } from '../../../lib/betaAccess';
 
 export type CanonicalTier = 'free' | 'pro' | 'creator';
 export type DatabaseTier = 'free' | 'gold' | 'seller_pro';
@@ -97,7 +98,10 @@ export function useEntitlements(): FrontendEntitlements {
 
   return useMemo(() => {
     const normalized = normalizeTier(readTierFromAuthPayload(data));
-    const tier = normalized.tier;
+    // Free open beta: every account gets the top tier regardless of what the
+    // profile stores. The server applies the same grant in
+    // server/lib/betaAccess.ts, so gated endpoints match what the UI shows.
+    const tier = FREE_BETA_ALL_ACCESS ? 'creator' : normalized.tier;
     const isPro = tier === 'pro' || tier === 'creator';
     const isCreator = tier === 'creator';
     const isStaff = readStaffFromAuthPayload(data);

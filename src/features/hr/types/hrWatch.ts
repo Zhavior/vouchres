@@ -40,6 +40,11 @@ export interface HrWatchRow {
   pitcherVulnerability: number | null;
   pitchMix?: number | null;
   parkFactor: number | null;
+  /** Park HR environment as a 0–100 layer score (pipeline `scoreBreakdown.parkContext`). */
+  parkContext?: number | null;
+  /** Raw venue HR index, centred on 100 — Coors ≈ 121, Petco ≈ 88. */
+  parkIndex?: number | null;
+  /** Micro-weather as a 0–100 index; null when the game feed carries no forecast. */
   weather?: number | null;
   platoon?: number | null;
   recentForm: number | null;

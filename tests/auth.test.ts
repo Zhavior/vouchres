@@ -43,23 +43,23 @@ describeOrSkip("Auth flow", () => {
     // Direct middleware test
     const { requireAuth } = await import("../server/middleware/auth");
     const req: any = { headers: {} };
-    const res: any = { statusCode: 200, body: null, status(c: number) { this.statusCode = c; return this; }, json(b: any) { this.body = b; return this; } };
-    const next = () => { throw new Error("next() should not be called"); };
+    const res: any = {};
+    let nextError: unknown;
+    const next = (error?: unknown) => { nextError = error; };
 
     await requireAuth(req, res, next);
-    expect(res.statusCode).toBe(401);
-    expect(res.body.error).toBe("missing_token");
+    expect(nextError).toMatchObject({ status: 401, code: "missing_token" });
   });
 
   it("returns 401 with an invalid token", async () => {
     const { requireAuth } = await import("../server/middleware/auth");
     const req: any = { headers: { authorization: "Bearer invalid.jwt.token" } };
-    const res: any = { statusCode: 200, body: null, status(c: number) { this.statusCode = c; return this; }, json(b: any) { this.body = b; return this; } };
-    const next = () => { throw new Error("next() should not be called"); };
+    const res: any = {};
+    let nextError: unknown;
+    const next = (error?: unknown) => { nextError = error; };
 
     await requireAuth(req, res, next);
-    expect(res.statusCode).toBe(401);
-    expect(res.body.error).toBe("invalid_token");
+    expect(nextError).toMatchObject({ status: 401, code: "invalid_token" });
   });
 
   it("accepts a valid token and attaches profile to req.user", async () => {
@@ -125,7 +125,7 @@ describeOrSkip("Auth flow", () => {
     const { data: taken } = await supabaseAdmin
       .from("profiles")
       .select("id")
-      .eq("lower(username)", "uniquename123")
+      .eq("username", "uniquename123")
       .maybeSingle();
     expect(taken).toBeTruthy();
 

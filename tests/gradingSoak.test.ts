@@ -24,6 +24,7 @@ vi.mock("../server/lib/sports/sportsHttpClient", () => ({
 }));
 
 const gradePick = vi.fn();
+const createParlayLegSettledNotification = vi.fn(async () => ({ warnings: [] }));
 
 vi.mock("../server/services/persistence/pickService", () => ({
   gradePick: (...args: unknown[]) => gradePick(...args),
@@ -31,6 +32,7 @@ vi.mock("../server/services/persistence/pickService", () => ({
 
 vi.mock("../server/services/notifications/notificationService", () => ({
   createParlayGradedNotification: vi.fn(),
+  createParlayLegSettledNotification: (...args: unknown[]) => createParlayLegSettledNotification(...args),
 }));
 
 import { runWithDistributedLock } from "../server/lib/distributedLock";
@@ -213,6 +215,7 @@ describe("grading soak — idempotent pending-query contract", () => {
 
     const first = await gradePendingPicks({ days: 1, dryRun: true });
     expect(first.graded).toHaveLength(1);
+    expect(createParlayLegSettledNotification).not.toHaveBeenCalled();
 
     const second = await gradePendingPicks({ days: 1, dryRun: true });
     expect(second.graded).toHaveLength(0);

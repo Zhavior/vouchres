@@ -6,6 +6,7 @@ import {
 } from "./supabaseClient";
 import { apiClient } from "./apiClient";
 import { mapAuthMeToUserProfile } from "./profileFromAuth";
+import { FREE_BETA_ALL_ACCESS } from "./betaAccess";
 
 export type SubscriptionTier = "free" | "gold" | "seller_pro";
 
@@ -137,7 +138,8 @@ export function useEntitlements(user: UserProfile | null) {
   const can = (feature: string): boolean => {
     if (!user) return false;
     if (!user.age_confirmed_at || !user.jurisdiction_confirmed_at) {
-      // Legal gate not passed — block everything pick-related
+      // Legal gate not passed — block everything pick-related. This is a legal
+      // requirement, not a paywall, so the free beta does NOT lift it.
       if (["postPick", "viewPicks", "viewLedger"].includes(feature)) return false;
     }
 
@@ -150,19 +152,18 @@ export function useEntitlements(user: UserProfile | null) {
       case "useAiExplain": // limited to 10/day — server enforces
         return true;
 
-      // Gold ($8/mo)
+      // Paid — unlocked for everyone during the free open beta.
       case "postUnlimitedPicks":
       case "useAiUnlimited":
       case "viewAdvancedStats":
       case "saveParlays":
-        return tier === "gold" || tier === "seller_pro";
+        return FREE_BETA_ALL_ACCESS || tier === "gold" || tier === "seller_pro";
 
-      // Seller PRO ($40/mo) — REMOVED "monetize picks" feature
-      // pending legal review. Currently equivalent to Gold + badges.
+      // Creator — also unlocked during the free open beta.
       case "verifiedBadge":
       case "customProfileTheme":
       case "prioritySupport":
-        return tier === "seller_pro";
+        return FREE_BETA_ALL_ACCESS || tier === "seller_pro";
 
       default:
         return false;

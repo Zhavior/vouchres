@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_FEATURES } from '../src/lib/featureConfig';
 
-describe('ParlayOS navigation contract', () => {
-  it('exposes one canonical ParlayOS product entry', () => {
+describe('My List navigation contract', () => {
+  it('exposes one canonical My List product entry', () => {
     const parlayEntries = ALL_FEATURES.filter((feature) =>
       feature.id === 'live_parlays' || feature.id === 'build',
     );
@@ -10,7 +10,7 @@ describe('ParlayOS navigation contract', () => {
     expect(parlayEntries).toEqual([
       expect.objectContaining({
         id: 'live_parlays',
-        label: 'ParlayOS',
+        label: 'My List',
         enabled: true,
         locked: true,
       }),

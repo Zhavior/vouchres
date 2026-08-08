@@ -28,6 +28,8 @@ let server: Server;
 let baseUrl: string;
 
 beforeAll(async () => {
+  vi.stubEnv("FREE_BETA_ALL_ACCESS", "false");
+
   const app = express();
   app.use(express.json());
   app.use("/api/auth", authRoutes);
@@ -44,6 +46,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  vi.unstubAllEnvs();
   if (server) {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

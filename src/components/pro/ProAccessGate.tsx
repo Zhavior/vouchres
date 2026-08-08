@@ -3,6 +3,7 @@ import { Check, Crown, Lock } from 'lucide-react';
 import type { CreatorProofProfile } from '../../types';
 import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
 import { isFounderEmail } from '../../lib/founderAccess';
+import { FREE_BETA_ALL_ACCESS } from '../../lib/betaAccess';
 import {
   AURORA_LABEL,
   AURORA_PANEL_PREMIUM,
@@ -46,6 +47,12 @@ export function ProAccessGate({
   children,
 }: ProAccessGateProps) {
   const entitlements = useEntitlements();
+
+  // Free open beta: nothing is gated, so don't make anyone wait on the
+  // entitlements query just to be let through.
+  if (FREE_BETA_ALL_ACCESS) {
+    return <>{children}</>;
+  }
 
   if (entitlements.loading) {
     return (

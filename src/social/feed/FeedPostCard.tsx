@@ -72,8 +72,9 @@ import { useFeedStore } from '../../stores/feedStore';
 import { useAuth } from '../../lib/useAuth';
 import { useOptionalSocialGraph } from '../../hooks/SocialGraphProvider';
 import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
+import { FREE_BETA_ALL_ACCESS } from '../../lib/betaAccess';
 
-const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
+const QuotedPostEmbed =({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
   return (
     <div className="mt-2 text-left p-3 rounded-2xl border border-white/28 bg-black/34 hover:border-vouch-cyan/34 transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm shadow-black/12 select-none backdrop-blur-xl">
@@ -306,7 +307,11 @@ function FeedPostCard({
 
   const handleInstantUpgrade = () => {
     setShowUpgradeModal(false);
-    alert('Upgrade to Gold or Seller Pro to tail verified creators.');
+    alert(
+      FREE_BETA_ALL_ACCESS
+        ? 'Tailing verified creators is unlocked for everyone during the free open beta.'
+        : 'Upgrade to Gold or Seller Pro to tail verified creators.',
+    );
   };
 
   // Relative timestamp helper

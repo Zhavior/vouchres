@@ -34,7 +34,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield,
 };
 
 /** HR nav items use Flame per featureConfig. */
@@ -178,7 +178,10 @@ function MobileProfileDrawer({
   const [featureLayout] = useState(() => loadFeatureLayout());
   const groups = useMemo(() => {
     if (!open) return [];
-    const features = getSidebarFeatures(featureLayout, { activeSport: getActiveSport() }).map((feature) => {
+    const features = getSidebarFeatures(featureLayout, {
+      activeSport: getActiveSport(),
+      canAccessAdmin: Boolean(profile.isAdmin || profile.admin),
+    }).map((feature) => {
       if (feature.id !== 'premium') return feature;
       const managesPlan = profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
       return { ...feature, label: managesPlan ? 'Plan & Billing' : 'Upgrade' };
@@ -188,7 +191,7 @@ function MobileProfileDrawer({
       group,
       items: features.filter(f => f.group === group),
     })).filter(g => g.items.length > 0);
-  }, [open, featureLayout, profile.subscriptionTier]);
+  }, [open, featureLayout, profile.admin, profile.isAdmin, profile.subscriptionTier]);
 
   const sectionIdsByGroup = useMemo(() => {
     const map = new Map<string, string[]>();

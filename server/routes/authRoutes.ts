@@ -11,6 +11,7 @@ import { HttpsUrlSchema } from "../lib/httpsUrlSchema";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { normalizeCapperSettings } from "../../src/lib/capperSettings";
 import { syncLegacyCapperSettingsToCreatorBusiness } from "../services/business/creatorBusinessService";
+import { resolveEffectiveTier } from "../lib/betaAccess";
 
 /**
  * Auth routes — minimal session/profile endpoints used by the frontend.
@@ -95,7 +96,7 @@ authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithCon
       return res.json(apiOkFlat(req, {
         ...newProfile,
         email: req.user!.email ?? null,
-        entitlements: { tier: newProfile.tier },
+        entitlements: { tier: resolveEffectiveTier(newProfile.tier) },
       }));
     }
 
@@ -110,7 +111,7 @@ authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithCon
   return res.json(apiOkFlat(req, {
     ...profile,
     email: req.user!.email ?? null,
-    entitlements: { tier: profile.tier },
+    entitlements: { tier: resolveEffectiveTier(profile.tier) },
   }));
 }));
 
@@ -152,7 +153,8 @@ const ProfileUpdateSchema = z.object({
 function canCustomizeHeader(profile: { tier?: string; is_staff?: boolean } | undefined): boolean {
   if (!profile) return false;
   if (profile.is_staff) return true;
-  const tier = String(profile.tier ?? "free").toLowerCase();
+  // Free open beta: header customization is unlocked for every account.
+  const tier = String(resolveEffectiveTier(profile.tier ?? "free")).toLowerCase();
   return tier === "gold" || tier === "seller_pro" || tier === "pro" || tier === "creator";
 }
 

@@ -107,7 +107,7 @@ export const MostVouchedPodium: React.FC<MostVouchedPodiumProps> = ({
                     <button
                       type="button"
                       onClick={() => onAddToSlip(player)}
-                      title="Add to ParlayOS Slip"
+                      title="Add to My List"
                       className="flex h-8 px-2.5 items-center gap-1 rounded-lg border border-white/15 bg-black/40 text-xs font-bold text-white transition hover:border-vouch-emerald/50 hover:text-vouch-emerald"
                     >
                       <Plus className="h-3.5 w-3.5" /> Slip

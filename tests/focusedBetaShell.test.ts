@@ -7,9 +7,17 @@ describe('focused beta shell', () => {
     expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toEqual([
       'today',
       'hr_board',
+      'live_games',
       'results',
       'premium',
     ]);
+  });
+
+  it('shows Aurora HQ only when the current profile is an admin', () => {
+    const layout = getDefaultLayout();
+
+    expect(getSidebarFeatures(layout).map((feature) => feature.id)).not.toContain('admin');
+    expect(getSidebarFeatures(layout, { canAccessAdmin: true }).map((feature) => feature.id)).toContain('admin');
   });
 
   it('removes fabricated consensus and payment-based verification claims', () => {

@@ -67,6 +67,8 @@ let baseUrl: string;
 
 beforeAll(async () => {
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+  vi.stubEnv("FREE_BETA_ALL_ACCESS", "false");
+  vi.stubEnv("PAYMENTS_ENABLED", "true");
 
   const app = express();
   app.use(requestContext);

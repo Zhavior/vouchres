@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, Flame, Heart, Plus, Search, ShieldCheck, ShieldQuestion, Zap } from 'lucide-react';
 import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
+import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import type { PlayerVouchSummary } from '../../../../hooks/queries/usePlayerVouchLayer';
 import type { HrBuckets } from '../../hooks/useHrBoardViewModel';
 import type { HrWatchRow } from '../../types/hrWatch';
@@ -20,6 +21,9 @@ interface HrBoardProps {
 }
 
 type TierKey = keyof HrBuckets;
+
+/** Cards rendered per tier before the mobile list asks to be expanded. */
+const MOBILE_PAGE_SIZE = 8;
 
 type TierDefinition = {
   key: TierKey;
@@ -226,32 +230,51 @@ export function HrBoard({
 }: HrBoardProps) {
   const firstPopulated = useMemo(() => TIERS.find((tier) => buckets[tier.key].length > 0)?.key ?? 'Elite', [buckets]);
   const [activeTier, setActiveTier] = useState<TierKey>(firstPopulated);
+  const [mobileLimit, setMobileLimit] = useState(MOBILE_PAGE_SIZE);
+
+  // Only the layout actually on screen gets built. Rendering both and hiding
+  // one with `lg:hidden` still mounted every card in the losing branch — on a
+  // full slate that was a second board's worth of headshots and vouch panels
+  // constructed for nobody.
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     if (buckets[activeTier].length === 0) setActiveTier(firstPopulated);
   }, [activeTier, buckets, firstPopulated]);
 
+  useEffect(() => {
+    setMobileLimit(MOBILE_PAGE_SIZE);
+  }, [activeTier]);
+
   const active = TIERS.find((tier) => tier.key === activeTier) ?? TIERS[0];
   const players = buckets[activeTier];
+  const visiblePlayers = players.slice(0, mobileLimit);
+
+  if (isDesktop) {
+    return (
+      <section className="z8-hr-board space-y-3">
+        <div className="grid grid-cols-4 gap-2">
+          {TIERS.map((tier) => (
+            <DesktopTierColumn
+              key={tier.key}
+              tier={tier}
+              players={buckets[tier.key]}
+              onResearch={onViewProfile}
+              onAddToSlip={onAddToSlip}
+              onTogglePlayerVouch={onTogglePlayerVouch}
+              getPlayerVouchSummary={getPlayerVouchSummary}
+              playerVouchPendingId={playerVouchPendingId}
+              getHrResult={getHrResult}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="z8-hr-board space-y-3">
-      <div className="hidden grid-cols-4 gap-2 lg:grid">
-        {TIERS.map((tier) => (
-          <DesktopTierColumn
-            key={tier.key}
-            tier={tier}
-            players={buckets[tier.key]}
-            onResearch={onViewProfile}
-            onAddToSlip={onAddToSlip}
-            onTogglePlayerVouch={onTogglePlayerVouch}
-            getPlayerVouchSummary={getPlayerVouchSummary}
-            playerVouchPendingId={playerVouchPendingId}
-            getHrResult={getHrResult}
-          />
-        ))}
-      </div>
-
-      <div className="space-y-4 lg:hidden">
+      <div className="space-y-4">
         <div className="flex snap-x snap-mandatory overflow-x-auto border-b border-white/[0.08] bg-black/15 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Home run signal tiers">
           {TIERS.map((tier) => {
             const selected = tier.key === activeTier;
@@ -283,7 +306,7 @@ export function HrBoard({
         </div>
 
         <div className="z8-hr-card-grid" role="tabpanel" aria-label={active.title}>
-          {players.map((player) => (
+          {visiblePlayers.map((player) => (
             <HrPlayerCard
               key={player.stableId}
               player={player}
@@ -297,6 +320,17 @@ export function HrBoard({
             />
           ))}
         </div>
+
+        {players.length > visiblePlayers.length ? (
+          <button
+            type="button"
+            onClick={() => setMobileLimit((value) => value + MOBILE_PAGE_SIZE)}
+            className="flex min-h-11 w-full items-center justify-center gap-1.5 border border-white/[0.08] bg-black/20 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-white/45 transition hover:bg-white/[0.025] hover:text-white/75"
+          >
+            Show {Math.min(MOBILE_PAGE_SIZE, players.length - visiblePlayers.length)} more
+            <ChevronDown className="h-3 w-3" />
+          </button>
+        ) : null}
       </div>
     </section>
   );

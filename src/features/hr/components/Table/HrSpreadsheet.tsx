@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   ChevronLeft,
@@ -15,6 +15,8 @@ import { logoByTeamName } from '../../../../lib/teamLogos';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { PlayerHrTag } from '../HrHitBadge';
+import { oddsDisplay } from '../../engine/signalScore';
+import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
 import {
   buildHrMatchupGroups,
@@ -173,7 +175,7 @@ function ExpandedDetails({ row, freshness, generatedAt, showMarket }: {
         {showMarket ? (
           <p>
             <span className="font-mono text-[9px] font-black uppercase text-white/45">Market context</span><br />
-            {row.oddsLabel || 'Odds available'} / Model {probabilityLabel(row.hrProbability)} / Book {probabilityLabel(row.impliedProbability)}
+            {oddsDisplay(row) ?? 'No posted price'} / Model {probabilityLabel(row.hrProbability)} / Book {probabilityLabel(row.impliedProbability)}
             {marketEdge ? ` / ${marketEdge} model edge` : ''}
           </p>
         ) : null}
@@ -259,7 +261,7 @@ function MobileTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchIn
               type="button"
               onClick={() => onAddToSlip?.(row)}
               disabled={!brief.canAddToSlip}
-              title="Add to slip"
+              title="Add to My List"
               className="flex h-7 w-7 items-center justify-center rounded-md border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald disabled:opacity-30"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -335,7 +337,7 @@ function DesktopTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchI
         </td>
         {showMarket ? (
           <td className="px-3 py-3.5 align-top font-mono">
-            <p className="text-[12px] font-black text-white/80">{row.oddsLabel}</p>
+            <p className="text-[12px] font-black text-white/80">{oddsDisplay(row) ?? '—'}</p>
             <p className="mt-1 text-[9px] leading-4 text-white/45">Book {probabilityLabel(row.impliedProbability)}</p>
           </td>
         ) : null}
@@ -401,7 +403,9 @@ export function HrSpreadsheet({
   freshness,
   generatedAt,
 }: HrSpreadsheetProps) {
-  const groups = buildHrMatchupGroups(rows);
+  // Grouping re-buckets and re-sorts the whole slate, so it must not re-run on
+  // every render — expanding a single row was re-sorting all 350 rows.
+  const groups = useMemo(() => buildHrMatchupGroups(rows), [rows]);
   const [selectedGameKey, setSelectedGameKey] = useState('all');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
   const matchupRailRef = useRef<HTMLDivElement | null>(null);
@@ -409,7 +413,12 @@ export function HrSpreadsheet({
   const activeGameKey = selectedGameIndex >= 0 ? selectedGameKey : 'all';
   const activeGroup = selectedGameIndex >= 0 ? groups[selectedGameIndex] : null;
   const visibleGroups = activeGroup ? [activeGroup] : groups;
-  const showMarket = rows.some(hasMarketData);
+  const showMarket = useMemo(() => rows.some(hasMarketData), [rows]);
+  // Only the table that is actually on screen gets built. Rendering both and
+  // hiding one with `lg:hidden` mounted a second full table — on a 350-row
+  // slate that is tens of thousands of invisible elements and a duplicate
+  // PlayerHeadshot component per row.
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const previousGroup = groups.length > 0
     ? groups[selectedGameIndex >= 0 ? (selectedGameIndex - 1 + groups.length) % groups.length : groups.length - 1]
     : null;
@@ -654,7 +663,8 @@ export function HrSpreadsheet({
           </header>
 
           {/* Smart Mobile Table View */}
-          <div className="overflow-x-auto lg:hidden">
+          {!isDesktop ? (
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[360px] border-collapse text-left">
               <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.08em] text-slate-400 backdrop-blur">
                 <tr>
@@ -684,8 +694,9 @@ export function HrSpreadsheet({
               </tbody>
             </table>
           </div>
+          ) : (
 
-          <div className="hidden overflow-x-auto lg:block">
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[1160px] border-collapse text-left">
               <colgroup>
                 <col className="w-[19%]" /><col className="w-[9%]" /><col className="w-[16%]" />
@@ -724,6 +735,7 @@ export function HrSpreadsheet({
               </tbody>
             </table>
           </div>
+          )}
         </article>
       ))}
 

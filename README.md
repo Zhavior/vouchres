@@ -75,7 +75,7 @@ flowchart TB
         SENTRY["Sentry"]
     end
 
-    CRON["Cron jobs<br/>nightly grading · retention deletes"]
+    CRON["Cron jobs<br/>10-minute grading · retention deletes"]
 
     UI -->|"JWT-authenticated fetch"| MW
     MW --> V3 --> AEGIS
@@ -230,7 +230,7 @@ in a few places:
   `/api/health` health check.
 - **Container / anywhere Node runs** — `npm run build && npm start`.
 
-Cron jobs (nightly grading, data-retention deletes) build to separate bundles and are
+Cron jobs (10-minute grade-due checks, data-retention deletes) build to separate bundles and are
 scheduled by the host platform.
 
 ---

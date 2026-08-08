@@ -20,19 +20,57 @@
 -- =========================================================
 -- Demo user profiles
 -- =========================================================
--- Note: these profiles don't have corresponding auth.users rows
--- (auth.users can't be seeded via SQL easily). For local dev, create
--- real auth users via the Supabase dashboard or CLI, then update
--- these profile rows to match the auth.users IDs.
---
--- For testing without auth, use the service-role key to act as these users.
-
-INSERT INTO public.profiles (id, username, display_name, bio, tier, is_demo, age_confirmed_at, jurisdiction_confirmed_at, jurisdiction)
+-- Create matching local-only auth users first. The profile trigger creates the
+-- base records; the upsert below adds the demo-specific fields.
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+)
 VALUES
-  ('00000000-0000-0000-0000-000000000001', 'demo_alice', 'Alice (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NV'),
-  ('00000000-0000-0000-0000-000000000002', 'demo_bob', 'Bob (Demo)', 'Demo user for development. Not a real person.', 'gold', true, now(), now(), 'US-NV'),
-  ('00000000-0000-0000-0000-000000000003', 'demo_carol', 'Carol (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NJ')
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000001',
+    'authenticated', 'authenticated', 'demo_alice@local.vouchedge.dev',
+    crypt('demo-alice-local-only', gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}',
+    '{"handle":"demo_alice","username":"demo_alice","display_name":"Alice (Demo)"}',
+    now(), now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000002',
+    'authenticated', 'authenticated', 'demo_bob@local.vouchedge.dev',
+    crypt('demo-bob-local-only', gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}',
+    '{"handle":"demo_bob","username":"demo_bob","display_name":"Bob (Demo)"}',
+    now(), now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000003',
+    'authenticated', 'authenticated', 'demo_carol@local.vouchedge.dev',
+    crypt('demo-carol-local-only', gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}',
+    '{"handle":"demo_carol","username":"demo_carol","display_name":"Carol (Demo)"}',
+    now(), now()
+  )
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.profiles (id, username, handle, display_name, bio, tier, is_demo, age_confirmed_at, jurisdiction_confirmed_at, jurisdiction)
+VALUES
+  ('00000000-0000-0000-0000-000000000001', 'demo_alice', 'demo_alice', 'Alice (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NV'),
+  ('00000000-0000-0000-0000-000000000002', 'demo_bob', 'demo_bob', 'Bob (Demo)', 'Demo user for development. Not a real person.', 'gold', true, now(), now(), 'US-NV'),
+  ('00000000-0000-0000-0000-000000000003', 'demo_carol', 'demo_carol', 'Carol (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NJ')
+ON CONFLICT (id) DO UPDATE SET
+  username = EXCLUDED.username,
+  handle = EXCLUDED.handle,
+  display_name = EXCLUDED.display_name,
+  bio = EXCLUDED.bio,
+  tier = EXCLUDED.tier,
+  is_demo = EXCLUDED.is_demo,
+  age_confirmed_at = EXCLUDED.age_confirmed_at,
+  jurisdiction_confirmed_at = EXCLUDED.jurisdiction_confirmed_at,
+  jurisdiction = EXCLUDED.jurisdiction;
 
 -- =========================================================
 -- Demo capper picks (one per capper, with realistic data)

@@ -150,7 +150,7 @@ function LiveGameCard({
         ease: groundingEase,
       }}
       className={clsx(
-        "group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.05] bg-[#050505]/60 p-6 shadow-2xl backdrop-blur-2xl transition-all duration-500",
+        "group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.05] bg-ve-obsidian/60 p-6 shadow-2xl backdrop-blur-2xl transition-all duration-500",
         featured &&
           "border-cyan-400/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_65%),#050505/80] shadow-[0_32px_120px_rgba(34,211,238,0.12)]",
         className
@@ -244,7 +244,7 @@ function LiveGameCard({
 
 function SlateStateCard({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="md:col-span-2 xl:col-span-3 rounded-[2rem] border border-white/[0.05] bg-[#050505]/60 px-6 py-16 text-center backdrop-blur-xl">
+    <div className="md:col-span-2 xl:col-span-3 rounded-[2rem] border border-white/[0.05] bg-ve-obsidian/60 px-6 py-16 text-center backdrop-blur-xl">
       <p className="text-lg font-medium text-white/80">{title}</p>
       <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-white/50">{detail}</p>
     </div>
@@ -330,7 +330,7 @@ export default function LiveSportsIntelligence() {
               const Icon = signal.icon;
 
               return (
-                <div key={signal.label} className="min-w-0 rounded-3xl border border-white/[0.04] bg-[#050505]/80 p-5 sm:p-6 shadow-xl backdrop-blur-md">
+                <div key={signal.label} className="min-w-0 rounded-3xl border border-white/[0.04] bg-ve-obsidian/80 p-5 sm:p-6 shadow-xl backdrop-blur-md">
                   <Icon aria-hidden="true" className="h-5 w-5 text-sky-400" strokeWidth={2} />
                   <p className="mt-6 truncate font-mono text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                     {signal.value}

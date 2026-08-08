@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getGrader, type LegOutcome } from "./sportGraders";
 import { gradePick } from "../persistence/pickService";
-import { createParlayGradedNotification } from "../notifications/notificationService";
+import { createParlayGradedNotification, createParlayLegSettledNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
 import { trustLedgerRepository } from "../../repositories/trustLedgerRepository";
 
@@ -18,7 +18,7 @@ import { trustLedgerRepository } from "../../repositories/trustLedgerRepository"
  * from 'pending' to 'won'/'lost'/'push'. The client cannot grade picks.
  *
  * Run via:
- *   - Cron job (server/cron/dailyGradeJob.ts) — nightly at 2 AM ET
+ *   - Cron job (server/cron/dailyGradeJob.ts) — every 10 minutes
  *   - Manual staff trigger (POST /api/admin/grade-pending) — for re-grades
  *   - Realtime (future) — Supabase Realtime subscription to game final
  */
@@ -37,6 +37,8 @@ export interface GradeResult {
     leg_index: number;
     status: "won" | "lost" | "push";
     note?: string;
+    selection?: string;
+    market_code?: string;
   }>;
 }
 
@@ -228,12 +230,14 @@ async function runGradePendingPicks(opts: {
 
         if (!opts.dryRun) {
           let atomicSettlementSucceeded = false;
+          const settledLegIndexes = new Set<number>();
 
           if (pick.leg_type === "parlay" && result.leg_results?.length) {
             const atomicSettlement = await settleParlayPacketAtomically(pick.id, result);
 
             if (atomicSettlement.ok) {
               atomicSettlementSucceeded = true;
+              for (const leg of result.leg_results) settledLegIndexes.add(leg.leg_index);
             } else if (atomicSettlement.fatal) {
               skipped.push({
                 pick_id: pick.id,
@@ -273,12 +277,37 @@ async function runGradePendingPicks(opts: {
             if (result.leg_results?.length) {
               const appliedLegGrades = await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
               const failedLegGrades = appliedLegGrades.filter((leg) => !leg.updated);
+              for (const leg of appliedLegGrades) {
+                if (leg.updated) settledLegIndexes.add(leg.leg_index);
+              }
               if (failedLegGrades.length) {
                 result.warnings = [
                   ...(result.warnings ?? []),
                   ...failedLegGrades.map(
                     (leg) => leg.warning ?? `Leg ${leg.leg_index} was not updated during grading.`
                   ),
+                ];
+              }
+            }
+          }
+
+          if (pick.user_id && result.leg_results?.length) {
+            for (const leg of result.leg_results) {
+              if (!settledLegIndexes.has(leg.leg_index)) continue;
+              try {
+                const notification = await createParlayLegSettledNotification({
+                  userId: String(pick.user_id),
+                  parlayId: pick.id,
+                  legIndex: leg.leg_index,
+                  status: leg.status,
+                  selection: leg.selection || 'Pick',
+                  marketCode: leg.market_code,
+                });
+                result.warnings = [...(result.warnings ?? []), ...notification.warnings];
+              } catch (error) {
+                result.warnings = [
+                  ...(result.warnings ?? []),
+                  `Pick ${leg.leg_index} notification failed: ${(error as Error)?.message ?? 'unknown error'}`,
                 ];
               }
             }
@@ -597,6 +626,8 @@ async function gradeParlayPick(
     status: "won" | "lost" | "push";
     odds: number;
     note?: string;
+    selection?: string;
+    market_code?: string;
   }> = [];
 
   for (const leg of legs as any[]) {
@@ -644,6 +675,8 @@ async function gradeParlayPick(
         status: outcome.status,
         odds: Number(leg.odds_decimal ?? 2.0),
         note: outcome.note,
+        selection: String(leg.selection ?? ''),
+        market_code: String(leg.market_code || leg.market || '') || undefined,
       });
       continue;
     }
@@ -687,6 +720,8 @@ async function gradeParlayPick(
       status: gradedLeg.status,
       odds: Number(leg.odds_decimal ?? 2.0),
       note: gradedLeg.note,
+      selection: String(leg.selection ?? ''),
+      market_code: String(leg.market_code || leg.market || '') || undefined,
     });
   }
 
@@ -707,7 +742,7 @@ async function gradeParlayPick(
       status: "lost",
       settled_units: -Number(stake.toFixed(2)),
       learning_note: `Parlay lost: ${legResults.filter((r) => r.status === "lost").length} leg(s) lost.`,
-      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
+      leg_results: legResults.map(({ leg_index, status, note, selection, market_code }) => ({ leg_index, status, note, selection, market_code })),
     };
   }
 
@@ -720,7 +755,7 @@ async function gradeParlayPick(
       status: "push",
       settled_units: 0.0,
       learning_note: `Parlay pushed/skipped: no losing legs and no winning legs were gradable.`,
-      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
+      leg_results: legResults.map(({ leg_index, status, note, selection, market_code }) => ({ leg_index, status, note, selection, market_code })),
     };
   }
 
@@ -735,7 +770,7 @@ async function gradeParlayPick(
       pushLegs.length > 0
         ? `Parlay won with ${pushLegs.length} push/skipped leg(s). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
         : `Parlay won. ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`,
-    leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
+    leg_results: legResults.map(({ leg_index, status, note, selection, market_code }) => ({ leg_index, status, note, selection, market_code })),
   };
 }
 

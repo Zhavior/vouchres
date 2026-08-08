@@ -6,10 +6,14 @@ import {
   getProductWorkspace,
 } from '../src/app/productNavigation';
 
-const shellSources = [
-  '../src/social/feed/FeedSidebar.tsx',
-  '../src/social/feed/MobileProfileDrawer.tsx',
-].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'));
+const desktopSidebarSource = readFileSync(
+  new URL('../src/social/feed/FeedSidebar.tsx', import.meta.url),
+  'utf8',
+);
+const mobileDrawerSource = readFileSync(
+  new URL('../src/social/feed/MobileProfileDrawer.tsx', import.meta.url),
+  'utf8',
+);
 
 describe('customer-facing product navigation', () => {
   it('exposes exactly four stable beta product jobs', () => {
@@ -37,12 +41,11 @@ describe('customer-facing product navigation', () => {
   });
 
   it('drives desktop and mobile navigation from the workspace model without false active states', () => {
-    for (const source of shellSources) {
+    for (const source of [desktopSidebarSource, mobileDrawerSource]) {
       expect(source).toContain('getSidebarFeatures');
-      expect(
-        source.includes('activeSection === item.id') ||
-          source.includes('activeSection === f.id'),
-      ).toBe(true);
+      expect(source).toContain('isBetaDestinationActive');
     }
+    expect(desktopSidebarSource).toContain('isSidebarItemActive(activeSection, f.id)');
+    expect(mobileDrawerSource).toContain('isDrawerItemActive(activeSection, item.id)');
   });
 });

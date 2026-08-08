@@ -36,9 +36,9 @@ describe('ParlayOS workspace foundation', () => {
   });
 
   it('opens a compact dock without navigating away from the current page', () => {
-    expect(layer).toContain('Open slip dock');
+    expect(layer).toContain('Open picks');
     expect(layer).toContain('onClick={toggleSheet}');
-    expect(layer).toContain('aria-label="ParlayOS dock"');
+    expect(layer).toContain('aria-label="My List"');
     expect(layer).toContain('Full Workspace');
     expect(layer).toContain('onClick={handleOpenHub}');
     expect(layer).not.toContain('max-h-[85vh]');
@@ -49,7 +49,7 @@ describe('ParlayOS workspace foundation', () => {
   it('opens the canonical navigation on Build and gives mobile focused workspace tabs', () => {
     expect(router).toContain('<ParlayShell key="live_parlays" panel="build"');
     expect(workspace).toContain("'slip' | 'watchlist' | 'review'");
-    expect(workspace).toContain('ParlayOS mobile workspace');
+    expect(workspace).toContain('My List mobile workspace');
     expect(workspace).not.toContain('ParlayOsMobileSlipDock');
   });
 });

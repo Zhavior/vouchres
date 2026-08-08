@@ -68,9 +68,9 @@
     {
       "flow": "Legacy Z8 token aliases",
       "path": "src/theme/z8Tokens.ts",
-      "status": "mapped",
-      "decision": "N/A compatibility layer",
-      "primaryAction": "Migrate consumers to Aurora tokens"
+      "status": "removed",
+      "decision": "N/A legacy compatibility layer removed",
+      "primaryAction": "Use Aurora tokens"
     }
   ]
 }

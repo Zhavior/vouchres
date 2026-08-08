@@ -1,9 +1,18 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
-import {
-  getProAccessPresentation,
-  hasServerAccessForTier,
-} from '../src/components/pro/proAccessPresentation';
+import { describe, expect, it, vi } from 'vitest';
+
+// This suite describes the paid fallback. Free-beta access is covered separately.
+vi.mock('../src/lib/betaAccess', () => ({
+  FREE_BETA_ALL_ACCESS: false,
+  PAYMENTS_ENABLED: true,
+  FREE_BETA_ENDS_AT: null,
+  FREE_BETA_HEADLINE: 'Free open beta',
+  FREE_BETA_BLURB: 'Every feature is unlocked for every account during the beta.',
+}));
+
+const { getProAccessPresentation, hasServerAccessForTier } = await import(
+  '../src/components/pro/proAccessPresentation'
+);
 
 describe('Aurora access gate', () => {
   it('does not sell Seller Pro through the Beta checkout', () => {

@@ -17,8 +17,15 @@ export interface LiveHrLegMatch {
     comparator?: string | null;
     event_key?: string | null;
     status: string | null;
+    picks?: ParentPickReference | ParentPickReference[] | null;
   };
 }
+
+type ParentPickReference = {
+  game_date?: string | null;
+  created_at?: string | null;
+  user_id?: string | null;
+};
 
 const CANONICAL_HR_MARKET_CODES = new Set([
   "HR",
@@ -65,7 +72,7 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
 
   const { data: pendingLegs, error: legsError } = await admin
     .from("pick_legs")
-    .select("id,pick_id,leg_index,game_id,event_id,player_id,market_code,market,selection,stat_target,comparator,event_key,status,game_date,picks(game_date,created_at)")
+    .select("id,pick_id,leg_index,game_id,event_id,player_id,market_code,market,selection,stat_target,comparator,event_key,status,game_date,picks(game_date,created_at,user_id)")
     .eq("status", "pending");
 
   if (legsError) {
@@ -85,14 +92,14 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
 
   const dates = [
     ...new Set(
-      candidateLegs.map((leg: any) =>
-        date ||
-        ymdFromValue(
+      candidateLegs.map((leg: any) => {
+        const parentPick = Array.isArray(leg?.picks) ? leg.picks[0] : leg?.picks;
+        return date || ymdFromValue(
           leg?.game_date ||
-          leg?.picks?.game_date ||
-          leg?.picks?.created_at
-        )
-      )
+          parentPick?.game_date ||
+          parentPick?.created_at
+        );
+      })
     ),
   ];
 

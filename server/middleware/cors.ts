@@ -70,8 +70,8 @@ export const helmetMiddleware = helmet({
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
       scriptSrc: isProd
-        ? ["'self'"]
-        : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        ? ["'self'", "https://va.vercel-scripts.com"]
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://va.vercel-scripts.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind v4 needs unsafe-inline
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
       connectSrc: [
@@ -79,6 +79,8 @@ export const helmetMiddleware = helmet({
         "https://statsapi.mlb.com",
         "https://*.supabase.co",
         "https://api.stripe.com",
+        "https://*.ingest.us.sentry.io",
+        "https://vitals.vercel-insights.com",
         // Vite HMR websocket (dev only)
         ...(isProd ? [] : ["ws://localhost:*", "ws://127.0.0.1:*", "wss://localhost:*", "wss://127.0.0.1:*"]),
       ],

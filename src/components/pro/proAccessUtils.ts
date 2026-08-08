@@ -1,4 +1,5 @@
 import { CreatorProofProfile } from '../../types';
+import { FREE_BETA_ALL_ACCESS } from '../../lib/betaAccess';
 
 export type RequiredTier = 'GOLD' | 'SELLER_PRO';
 
@@ -16,11 +17,15 @@ export function normalizeSubscriptionTier(tier?: string | null): keyof typeof TI
   return 'BASIC';
 }
 
-/** True if the profile meets at least the given tier (defaults to GOLD). */
+/**
+ * True if the profile meets at least the given tier (defaults to GOLD).
+ * Always true during the free open beta — every surface is unlocked.
+ */
 export function hasTierAccess(
   profile: Pick<CreatorProofProfile, 'subscriptionTier'>,
   required: RequiredTier = 'GOLD',
 ): boolean {
+  if (FREE_BETA_ALL_ACCESS) return true;
   return TIER_RANK[normalizeSubscriptionTier(profile.subscriptionTier)] >= TIER_RANK[required];
 }
 

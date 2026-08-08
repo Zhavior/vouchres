@@ -11,7 +11,7 @@ export default function CTASection({
   onViewDemo,
 }: CTASectionProps) {
   return (
-    <section id="join-beta" className="relative scroll-mt-20 overflow-hidden border-t border-white/6 bg-[#04070d] py-40">
+    <section id="join-beta" className="relative scroll-mt-20 overflow-hidden border-t border-white/6 bg-ve-obsidian py-40">
 
       <div className="absolute inset-0">
         <div className="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/10 blur-[180px]" />

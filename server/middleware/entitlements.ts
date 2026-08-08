@@ -7,6 +7,7 @@ import {
 } from "../services/billing/tierConfig";
 import { AppError } from "../errors/AppError";
 import { runWithDistributedLock } from "../lib/distributedLock";
+import { isFreeBetaActive, resolveEffectiveTier } from "../lib/betaAccess";
 
 /**
  * Entitlements — server-side feature gates.
@@ -49,14 +50,18 @@ type QuotaRequest = AuthedRequest & {
 
 /**
  * Hard tier gate — reject if user's tier rank is below the required tier.
+ *
+ * During the free open beta every authenticated account resolves to the beta
+ * grant tier, so this passes for everyone. Authentication is still required.
  */
 export function requireTier(required: Tier) {
   return (req: AuthedRequest, res: Response, next: NextFunction) => {
-    const profileTier = req.user?.profile?.tier;
-    if (!profileTier) {
+    const storedTier = req.user?.profile?.tier;
+    if (!storedTier) {
       return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
     }
 
+    const profileTier = resolveEffectiveTier(storedTier);
     if (tierRank(profileTier) < tierRank(required)) {
       return next(new AppError({
         status: 403,
@@ -111,7 +116,10 @@ export function requireTierOrQuota(
       return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
     }
 
-    const isPaid = tierRank(profile.tier) >= tierRank(required);
+    // Free beta: everyone is treated as a paid subscriber, so the paid ceiling
+    // applies instead of the free one. The ceiling itself stays in force — it
+    // is cost protection on metered upstream APIs, not a feature gate.
+    const isPaid = tierRank(resolveEffectiveTier(profile.tier)) >= tierRank(required);
 
     // Paid tiers use the higher paid ceiling when one is configured; only a
     // paid tier with NO paid ceiling is truly unlimited (legacy behavior).
@@ -212,10 +220,13 @@ export function requireTierOrQuota(
 }
 
 export function getEntitlementsForTier(tier: unknown): TierEntitlements {
-  return getTierEntitlements(tier);
+  return getTierEntitlements(resolveEffectiveTier(tier));
 }
 
 export async function getUserEntitlements(userId: string): Promise<TierEntitlements> {
+  // During the free beta the stored tier is irrelevant — skip the lookup.
+  if (isFreeBetaActive()) return getEntitlementsForTier("free");
+
   const { supabaseAdmin } = await import("./auth");
   const { data, error } = await supabaseAdmin
     .from("profiles")

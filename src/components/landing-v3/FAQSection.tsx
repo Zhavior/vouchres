@@ -26,7 +26,7 @@ const faqs = [
 
 export default function FAQSection() {
   return (
-    <section className="relative border-t border-white/6 bg-[#05080f] py-32">
+    <section className="relative border-t border-white/6 bg-ve-obsidian py-32">
       <div className="mx-auto max-w-5xl px-6">
 
         <motion.div

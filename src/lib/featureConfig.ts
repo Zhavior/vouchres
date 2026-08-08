@@ -15,6 +15,7 @@ import {
   FOCUSED_BETA_SHELL_ENABLED,
   isFocusedBetaSidebarFeature,
 } from "../app/betaNavigation";
+import { FREE_BETA_ALL_ACCESS } from "./betaAccess";
 
 export type ViewMode = "beginner" | "pro";
 
@@ -30,7 +31,7 @@ export interface FeatureConfig {
   /** Features that can't be disabled (core app navigation) */
   locked?: boolean;
   /** Features hidden from regular users while still available to admin/dev operators. */
-  access?: "public" | "admin_dev";
+  access?: "public" | "admin_dev" | "admin";
   /** Sidebar section header this feature renders under. */
   group?: FeatureGroup;
   /**
@@ -73,7 +74,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "brain_performance", label: "Brain Performance", icon: "LineChart", enabled: true, order: 11.9, group: "AI", sports: ["mlb"], locked: true },
 
   // Build & Track
-  { id: "live_parlays", label: "ParlayOS", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
+  { id: "live_parlays", label: "My List", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track", locked: true },
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
@@ -86,9 +87,10 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
-  { id: "premium", label: "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "premium", label: FREE_BETA_ALL_ACCESS ? "Beta Access" : "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
+  { id: "admin", label: "Aurora HQ", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 
@@ -148,11 +150,12 @@ const SIDEBAR_HIDDEN_FEATURES = ['settings'];
 
 export function getEnabledFeatures(
   layout: FeatureLayout,
-  options: { canAccessThemeStore?: boolean; activeSport?: SportId } = {},
+  options: { canAccessThemeStore?: boolean; canAccessAdmin?: boolean; activeSport?: SportId } = {},
 ): FeatureConfig[] {
   return layout.features
     .filter((f) => f.enabled)
     .filter((f) => f.access !== 'admin_dev' || options.canAccessThemeStore)
+    .filter((f) => f.access !== 'admin' || options.canAccessAdmin)
     // Sport-scoped features only show when the active sport is in their list.
     // Sport-agnostic features (no `sports`) always show.
     .filter((f) => !f.sports || !options.activeSport || f.sports.includes(options.activeSport))
@@ -161,7 +164,7 @@ export function getEnabledFeatures(
 
 export function getSidebarFeatures(
   layout: FeatureLayout,
-  options: { canAccessThemeStore?: boolean; activeSport?: SportId; excludedFeatureIds?: string[] } = {},
+  options: { canAccessThemeStore?: boolean; canAccessAdmin?: boolean; activeSport?: SportId; excludedFeatureIds?: string[] } = {},
 ): FeatureConfig[] {
   const excluded = [...SIDEBAR_HIDDEN_FEATURES, ...(options.excludedFeatureIds ?? [])];
   return getEnabledFeatures(layout, options)

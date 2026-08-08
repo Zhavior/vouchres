@@ -30,6 +30,7 @@ export type SlipLifecycleStatus =
 export type SlipGradeStatus =
   | 'pending'
   | 'live'
+  | 'ready_to_grade'
   | 'won'
   | 'lost'
   | 'push'
@@ -87,6 +88,7 @@ export const LEG_STATUS_META: Record<LegGradeStatus, StatusMeta> = {
 export const SLIP_STATUS_META: Record<SlipGradeStatus, StatusMeta> = {
   pending:   { icon: '…',  label: 'Pending',  token: '--ve-text-muted' },
   live:      { icon: '▶',  label: 'Live',     token: '--ve-accent-cyan' },
+  ready_to_grade: { icon: '✓', label: 'Ready to grade', token: '--ve-warning' },
   won:       { icon: '✓',  label: 'Won',      token: '--ve-success' },
   lost:      { icon: '✕',  label: 'Lost',     token: '--ve-danger' },
   push:      { icon: '–',  label: 'Push',     token: '--ve-text-muted' },

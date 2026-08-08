@@ -1,15 +1,13 @@
 import React, { lazy, Suspense, useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, ScanSearch, ArrowRight, Clock3, TriangleAlert, CheckCircle2, Activity, ChevronRight, Crosshair, Plus } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import {
-  AURORA_LABEL,
   AURORA_PAGE,
   AURORA_PAGE_GAP,
   AURORA_PAGE_PAD_X,
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL_PREMIUM,
-  AURORA_STAT_CHIP,
 } from '../../../theme/auroraTokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
@@ -19,9 +17,17 @@ import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
 import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
-const MostVouchedPlayersPanel = lazy(() => import('../components/Social/MostVouchedPlayersPanel').then(m => ({ default: m.MostVouchedPlayersPanel })));
-const HrSpreadsheet = lazy(() => import('../components/Table/HrSpreadsheet').then(m => ({ default: m.HrSpreadsheet })));
-const HrPlayerProfile = lazy(() => import('../components/Profile/HrPlayerProfile').then(m => ({ default: m.HrPlayerProfile })));
+import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
+import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
+import { useProMode } from '../hooks/useProMode';
+
+const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel');
+const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
+const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile');
+
+const MostVouchedPlayersPanel = lazy(() => loadMostVouchedPanel().then(m => ({ default: m.MostVouchedPlayersPanel })));
+const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
+const HrPlayerProfile = lazy(() => loadHrPlayerProfile().then(m => ({ default: m.HrPlayerProfile })));
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -38,23 +44,34 @@ import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
 
-interface MiniStatChipProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClasses: string;
-  glowClasses: string;
+function warmChunk(load: () => Promise<unknown>): void {
+  void load().catch(() => {
+    // React retries on render, while the global chunk recovery handles deploy races.
+  });
 }
 
-const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div className={`${AURORA_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
-    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
-    <div className="flex flex-col leading-tight">
-      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
-    </div>
-  </div>
-);
+function whenIdle(run: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const win = window as unknown as {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  let completed = false;
+  const fire = () => {
+    if (completed) return;
+    completed = true;
+    run();
+  };
+  const timer = window.setTimeout(fire, 1200);
+  const idleHandle = win.requestIdleCallback?.(fire, { timeout: 2000 }) ?? null;
+
+  return () => {
+    completed = true;
+    window.clearTimeout(timer);
+    if (idleHandle !== null) win.cancelIdleCallback?.(idleHandle);
+  };
+}
 
 function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -70,24 +87,6 @@ function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null 
     </span>
   );
 }
-
-const statusTone = {
-  fresh: {
-    label: 'Fresh',
-    className: 'border-[hsl(var(--ve-success)/0.22)] bg-[hsl(var(--ve-success)/0.08)] text-[#7dffc5]',
-    icon: <CheckCircle2 className="h-2.5 w-2.5" />,
-  },
-  delayed: {
-    label: 'Delayed',
-    className: 'border-vouch-amber/25 bg-vouch-amber/10 text-vouch-amber',
-    icon: <Clock3 className="h-2.5 w-2.5" />,
-  },
-  stale: {
-    label: 'Stale',
-    className: 'border-red-500/25 bg-red-500/10 text-red-300',
-    icon: <TriangleAlert className="h-2.5 w-2.5" />,
-  },
-} as const;
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -140,6 +139,40 @@ const LoadingSkeleton: React.FC = () => (
         ))}
       </div>
     ))}
+  </div>
+);
+
+const PanelHold: React.FC<{ height: string; label: string }> = ({ height, label }) => (
+  <div className="deck-hold rounded-2xl" style={{ minHeight: height }} role="status" aria-label={label}>
+    <span className="sr-only">{label}</span>
+  </div>
+);
+
+const TableSkeleton: React.FC = () => (
+  <div className="deck-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
+    <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className={`h-2.5 rounded bg-white/[0.08] ${index === 0 ? 'w-32' : 'w-14'}`} />
+      ))}
+    </div>
+    {Array.from({ length: 10 }).map((_, rowIndex) => (
+      <div key={rowIndex} className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-3">
+        <div className="h-3 w-32 rounded bg-white/[0.06]" />
+        {Array.from({ length: 5 }).map((__, cellIndex) => (
+          <div key={cellIndex} className="h-3 w-14 rounded bg-white/[0.04]" />
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
+const ProfileLoadingFallback: React.FC = () => (
+  <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#02060b]/80 p-4 backdrop-blur-sm" role="status">
+    <div className="deck-hold flex min-h-40 w-full max-w-md items-center justify-center rounded-2xl border border-white/10">
+      <span className="font-mono text-xs font-bold uppercase tracking-wider text-vouch-cyan">
+        Loading player research...
+      </span>
+    </div>
   </div>
 );
 
@@ -229,6 +262,7 @@ function toBoardTier(tier: ToolbarTier): string {
 
 const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
+  const [isProMode, toggleProMode] = useProMode();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
@@ -248,14 +282,13 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
   const topPlayer = vm.rows?.[0] ?? null;
-  const freshnessTone = statusTone[vm.slate.freshness];
   const warningList = vm.slate.warnings.slice(0, 3);
   const noGamesToday = !vm.loading && !vm.slate.hasGames && (vm.slate.gameCount === 0 || totalCount === 0);
   const visiblePlayerIds = useMemo(
     () => (vm.rows ?? []).map((row) => row.playerId),
     [vm.rows],
   );
-  const playerVouchSummary = usePlayerVouchSummary(vm.date, visiblePlayerIds);
+  const playerVouchSummary = usePlayerVouchSummary(vm.date, isProMode ? visiblePlayerIds : []);
   const playerVouchLeaderboard = usePlayerVouchLeaderboard(vm.date, 5);
   const togglePlayerVouch = useTogglePlayerVouch();
   const playerVouchMap = useMemo(
@@ -311,6 +344,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
     if (!player) return;
+    warmChunk(loadHrPlayerProfile);
 
     if (vm.syncing) {
       setResearchNotice(
@@ -425,7 +459,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     });
   }, [togglePlayerVouch, vm.date]);
 
-  // Only the finished card and table views are public during the paid beta.
+  // Pro Mode remembers the user's preferred analytics view.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
 
     if (typeof window === 'undefined') return 'cards';
@@ -442,14 +476,17 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
-  React.useEffect(() => {
-    console.log("[HR Workspace]", workspace);
-  }, [workspace]);
+  React.useEffect(() => whenIdle(() => {
+    warmChunk(loadMostVouchedPanel);
+    warmChunk(loadHrPlayerProfile);
+    warmChunk(loadHrSpreadsheet);
+  }), []);
 
 
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;
+    if (mode === 'table') warmChunk(loadHrSpreadsheet);
     setLocalViewMode(mode);
     try {
       window.localStorage.setItem('vouchedge_hr_view_mode', mode);
@@ -459,25 +496,19 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
 
-  return (
-    <div className={`${AURORA_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
+  const handleProModeIntent = React.useCallback(() => {
+    warmChunk(loadMostVouchedPanel);
+    warmChunk(loadHrSpreadsheet);
+  }, []);
 
-        {/* ── Top Header & Command Center Bar ──────────────────────────── */}
-        <header className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
+  return (
+    <div className={`${AURORA_PAGE} hr-deck min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 sm:space-y-4 ${AURORA_PAGE_PAD_X}`}>
+
+        {/* ── Aurora command deck ─────────────────────────────────────── */}
+        <div className="deck-reveal space-y-3">
           <HrHeader
             mode={vm.mode}
-            onRefresh={handleRefresh}
-            isRefreshing={vm.syncing}
-            lastUpdated={lastUpdated}
-            date={vm.date}
-            isToday={isToday}
-            onDateChange={vm.setDate}
-          />
-          <HrCommandCenter
-            mode={vm.mode}
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
             onRefresh={handleRefresh}
             isRefreshing={vm.syncing}
             lastUpdated={lastUpdated}
@@ -485,40 +516,47 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             date={vm.date}
             isToday={isToday}
             onDateChange={vm.setDate}
-            autoSwitchedToPreview={autoSwitchedToPreview}
-            eliteCount={eliteCount}
-            strongCount={strongCount}
-            watchCount={watchCount}
-            sleeperCount={sleeperCount}
-            totalCount={totalCount}
-            searchValue={vm.search}
-            onSearchChange={vm.setSearch}
-            onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
-            activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
-            onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
-            visibleCount={vm.rows?.length ?? totalCount}
-            rows={(vm.rows ?? []) as unknown[]}
+            gameCount={vm.slate.gameCount}
+            hasGames={vm.slate.hasGames && !noGamesToday}
+            freshness={vm.slate.freshness}
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
+            isProMode={isProMode}
+            onToggleProMode={toggleProMode}
+            onProModeIntent={handleProModeIntent}
           />
-          <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
-        </header>
-
-        {/* ── Slate Status Summary Row ───────────────────────────── */}
-        {/* Mobile: Sleek 1-line compact ticker bar */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 font-mono text-[10px] font-bold text-slate-200 sm:hidden">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-vouch-cyan shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
-            <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
-          </div>
-          <span className="text-white/20">•</span>
-          <span className={`inline-flex items-center gap-1 ${freshnessTone.className}`}>
-            {freshnessTone.label}
-          </span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-emerald">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
-          <span className="text-white/20">•</span>
-          <span className="text-vouch-amber">{vm.modeCounts?.curated ?? 0} Preview</span>
+          {isProMode ? (
+            <div className={`${AURORA_PANEL_PREMIUM} space-y-3 rounded-2xl p-2.5 sm:p-4`}>
+              <HrCommandCenter
+                mode={vm.mode}
+                viewMode={viewMode}
+                onViewModeChange={handleViewModeChange}
+                onRefresh={handleRefresh}
+                isRefreshing={vm.syncing}
+                lastUpdated={lastUpdated}
+                lastUpdatedLabel={lastUpdatedLabel}
+                date={vm.date}
+                isToday={isToday}
+                onDateChange={vm.setDate}
+                autoSwitchedToPreview={autoSwitchedToPreview}
+                eliteCount={eliteCount}
+                strongCount={strongCount}
+                watchCount={watchCount}
+                sleeperCount={sleeperCount}
+                totalCount={totalCount}
+                searchValue={vm.search}
+                onSearchChange={vm.setSearch}
+                onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
+                activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+                onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
+                visibleCount={vm.rows?.length ?? totalCount}
+                rows={(vm.rows ?? []) as unknown[]}
+                confirmedCount={vm.modeCounts?.confirmed ?? 0}
+                previewCount={vm.modeCounts?.curated ?? 0}
+              />
+              <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
+            </div>
+          ) : null}
         </div>
 
         {(vm.refreshError || vm.connection?.isLastGood || warningList.length > 0) && (
@@ -542,33 +580,9 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
           </div>
         )}
 
-        {/* Tablet / Desktop: 4-card grid */}
-        <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">MLB Slate</p>
-            <p className="mt-1 text-sm font-black text-white">
-              {noGamesToday ? 'No MLB games' : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
-            </p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Freshness</p>
-            <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}>
-              {freshnessTone.icon}{freshnessTone.label}
-            </span>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Confirmed Orders</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.confirmed ?? 0} official</p>
-          </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">Preview Candidates</p>
-            <p className="mt-1 text-sm font-black text-white">{vm.modeCounts?.curated ?? 0} projected</p>
-          </div>
-        </div>
-
         {/* ── Main content area ───────────────────────────────────── */}
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
-          {topPlayer ? (
+          {isProMode && topPlayer ? (
             <HrTopSignalPanel
               player={topPlayer}
               freshness={vm.slate.freshness}
@@ -584,16 +598,49 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             />
           ) : null}
 
-          <MostVouchedPlayersPanel
-            players={playerVouchLeaderboard.data ?? []}
-            subtitle="The hottest community-backed bats on this slate."
-            onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
-            onSelectPlayer={(playerId) => {
-              const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
-              if (match) openPlayerProfile(match);
-            }}
-          />
+          {isProMode ? (
+            <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
+              <MostVouchedPlayersPanel
+                players={playerVouchLeaderboard.data ?? []}
+                subtitle="The hottest community-backed bats on this slate."
+                onViewFullPage={onSectionChange ? () => onSectionChange('most_vouched_today') : undefined}
+                onSelectPlayer={(playerId) => {
+                  const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+                  if (match) openPlayerProfile(match);
+                }}
+              />
+            </Suspense>
+          ) : null}
 
+          {!isProMode ? (
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4">
+              {vm.loading && !vm.rows?.length ? (
+                <LoadingSkeleton />
+              ) : vm.error ? (
+                <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
+              ) : isAllZero ? (
+                <EmptyState
+                  onRetry={handleRefresh}
+                  mode={vm.mode}
+                  previewCount={vm.modeCounts?.curated ?? 0}
+                  onShowPreview={() => vm.setMode('curated')}
+                />
+              ) : (
+                <>
+                  <HrSpotlightDeck
+                    rows={vm.rows ?? []}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                    onResearch={openPlayerProfile}
+                  />
+                  <HrSignalGrid
+                    rows={vm.rows ?? []}
+                    onResearch={openPlayerProfile}
+                    onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  />
+                </>
+              )}
+            </div>
+          ) : (
           <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
@@ -609,18 +656,20 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
-              <HrSpreadsheet
-                rows={(vm.rows ?? []) as any}
-                freshness={vm.slate.freshness}
-                generatedAt={vm.slate.generatedAt}
-                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-                onTogglePlayerVouch={handleTogglePlayerVouch}
-                playerVouchMap={playerVouchMap}
-                pendingPlayerVouchId={pendingPlayerVouchId}
-                onSelectPlayer={(player) => {
-                  openPlayerProfile(player);
-                }}
-              />
+              <Suspense fallback={<TableSkeleton />}>
+                <HrSpreadsheet
+                  rows={(vm.rows ?? []) as any}
+                  freshness={vm.slate.freshness}
+                  generatedAt={vm.slate.generatedAt}
+                  onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                  onTogglePlayerVouch={handleTogglePlayerVouch}
+                  playerVouchMap={playerVouchMap}
+                  pendingPlayerVouchId={pendingPlayerVouchId}
+                  onSelectPlayer={(player) => {
+                    openPlayerProfile(player);
+                  }}
+                />
+              </Suspense>
             ) : viewMode === 'treemap' ? (
               <HrSignalField
                 buckets={vm.buckets}
@@ -650,6 +699,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             )}
           </div>
           </WorkspaceRenderer>
+          )}
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
             <p>
@@ -682,16 +732,20 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         </div>
       ) : null}
 
-      <HrPlayerProfile
-        player={vm.selectedPlayer}
-        isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
-        onClose={closePlayerProfile}
-        onAddToSlip={addPlayerToSlip}
-        boardFreshness={vm.slate.freshness}
-        boardGeneratedAt={vm.slate.generatedAt}
-        boardDate={vm.date}
-        slipActionAvailable={Boolean(onSectionChange)}
-      />
+      {isProfileOpen && vm.selectedPlayer ? (
+        <Suspense fallback={<ProfileLoadingFallback />}>
+          <HrPlayerProfile
+            player={vm.selectedPlayer}
+            isOpen
+            onClose={closePlayerProfile}
+            onAddToSlip={addPlayerToSlip}
+            boardFreshness={vm.slate.freshness}
+            boardGeneratedAt={vm.slate.generatedAt}
+            boardDate={vm.date}
+            slipActionAvailable={Boolean(onSectionChange)}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 };

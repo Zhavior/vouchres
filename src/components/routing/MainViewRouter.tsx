@@ -47,6 +47,7 @@ const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
 const MostVouchedTodayPageZ8 = lazy(() => import('../../pages/MostVouchedTodayPageZ8'));
+const AuroraHqShell = lazy(() => import('../../features/admin/AuroraHqShell'));
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -387,6 +388,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <CustomizeShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
+    case 'admin':
+      return (
+        <LazyRoute>
+          <AuroraHqShell />
         </LazyRoute>
       );
     default:

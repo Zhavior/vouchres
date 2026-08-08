@@ -194,7 +194,7 @@ export default function ParlayPropPickerModal({
         className="fixed inset-0 z-[120] flex items-end justify-center p-0 sm:items-center sm:p-4"
         role="dialog"
         aria-modal="true"
-        aria-label="ParlayOS prop picker"
+        aria-label="My List prop picker"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -224,7 +224,7 @@ export default function ParlayPropPickerModal({
           <img src={headshot} alt="" className="h-14 w-14 rounded-2xl border border-white/15 object-cover" />
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">
-              {editLegId ? "Replace leg" : "ParlayOS"}
+              {editLegId ? "Replace leg" : "My List"}
             </p>
             <h2 className="text-lg font-black text-white truncate">{player.name}</h2>
             <p className="text-xs text-white/45 truncate">{player.team} · {role === "pitcher" ? "Pitcher props" : "Batter props"}</p>
@@ -388,7 +388,7 @@ export default function ParlayPropPickerModal({
 
         <div className="p-4 border-t border-white/10 bg-black/30 flex items-center gap-2 text-[10px] text-white/35">
           <Layers3 className="w-3.5 h-3.5 text-cyan-500/60" />
-          Selection adds to your ParlayOS slip — review before locking to ledger.
+          Selection adds to My List. Review it before locking to the ledger.
         </div>
       </motion.div>
       </motion.div>

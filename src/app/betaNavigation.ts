@@ -57,6 +57,7 @@ const ACCOUNT_SECTIONS = new Set([
   'customize',
   'themestore',
   'epic_themes',
+  'admin',
 ]);
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
@@ -65,6 +66,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'live_games',
   'results',
   'premium',
+  'admin',
 ]);
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
@@ -75,6 +77,7 @@ const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'premium',
   'profile',
   'settings',
+  'admin',
 ]);
 
 export function isBetaDestinationActive(

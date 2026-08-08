@@ -1,37 +1,25 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const SRC_ROOT = join(process.cwd(), 'src');
-
-/** Current baseline after the Z8 surface migration (Jul 2026). */
+/**
+ * Audited baseline after the Aurora landing and HR workspace migration.
+ * The scan uses Git-tracked sources so local backup files cannot change CI.
+ */
 const ALLOWED_BG_HEX_ARBITRARY_COUNT = 74;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 
-function listSourceFiles(dir: string): string[] {
-  const entries = readdirSync(dir);
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory()) {
-      files.push(...listSourceFiles(fullPath));
-      continue;
-    }
-    if (entry.endsWith('.ts') || entry.endsWith('.tsx')) {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
+function listTrackedSourceFiles(): string[] {
+  return execFileSync('git', ['ls-files', '-z', '--', 'src'], { encoding: 'utf8' })
+    .split('\0')
+    .filter((path) => path.endsWith('.ts') || path.endsWith('.tsx'));
 }
 
 function countBgHexArbitrary(): number {
   let total = 0;
 
-  for (const filePath of listSourceFiles(SRC_ROOT)) {
+  for (const filePath of listTrackedSourceFiles()) {
     const content = readFileSync(filePath, 'utf8');
     const matches = content.match(BG_HEX_ARBITRARY);
     if (matches) total += matches.length;

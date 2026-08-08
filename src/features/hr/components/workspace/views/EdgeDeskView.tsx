@@ -17,6 +17,7 @@ import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { PlayerHrTag } from "../../HrHitBadge";
+import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
@@ -28,12 +29,14 @@ function calculateEdge(row: HrWatchRow): {
   modelProb: number;
   impliedProb: number;
   evEdge: number;
-  oddsLabel: string;
+  oddsLabel: string | null;
 } {
   const modelProb = row.hrProbability ?? (row.hrScore ? row.hrScore / 100 * 0.35 : 0.20);
   const impliedProb = row.impliedProbability ?? (row.bookOdds ? (row.bookOdds > 0 ? 100 / (row.bookOdds + 100) : Math.abs(row.bookOdds) / (Math.abs(row.bookOdds) + 100)) : 0.22);
   const evEdge = Math.max(0, (modelProb - impliedProb) * 100);
-  const oddsLabel = row.oddsLabel || (row.bookOdds ? (row.bookOdds > 0 ? `+${row.bookOdds}` : `${row.bookOdds}`) : "+280");
+  // Null when the book hasn't posted a price — the desk shows a dash, never an
+  // invented number dressed up as a real market.
+  const oddsLabel = oddsDisplay(row);
 
   return { modelProb, impliedProb, evEdge, oddsLabel };
 }
@@ -208,7 +211,7 @@ export default function EdgeDeskView({ rows }: Props) {
               <div className="text-right">
                 <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-300/70">Book Odds</span>
                 <div className="font-mono text-xl font-extrabold text-white">
-                  {stats.topRow.oddsLabel || "+280"}
+                  {stats.topRow.oddsLabel ?? '—'}
                 </div>
               </div>
               <div className="text-right">
@@ -339,15 +342,17 @@ export default function EdgeDeskView({ rows }: Props) {
                     </div>
                   </div>
 
-                  {/* Book odds badge */}
-                  <div className="flex flex-col items-end">
-                    <span className="rounded-lg border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 font-mono text-sm font-black text-vouch-cyan">
-                      {oddsLabel}
-                    </span>
-                    <span className="mt-1 font-mono text-[9px] text-white/40 uppercase tracking-widest">
-                      Book Odds
-                    </span>
-                  </div>
+                  {/* Book odds badge — omitted entirely when no price is posted. */}
+                  {oddsLabel ? (
+                    <div className="flex flex-col items-end">
+                      <span className="rounded-lg border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 font-mono text-sm font-black text-vouch-cyan">
+                        {oddsLabel}
+                      </span>
+                      <span className="mt-1 font-mono text-[9px] text-white/40 uppercase tracking-widest">
+                        Book Odds
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Comparative probability gauges */}

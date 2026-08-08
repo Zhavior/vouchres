@@ -16,6 +16,8 @@ export const API_ERROR_CODES = {
   domain_state_error: 409,
   quota_exceeded: 429,
   rate_limited: 429,
+  /** Billing is intentionally switched off during the free open beta. */
+  payments_disabled: 503,
   external_service_error: 502,
   upstream_unavailable: 503,
   internal_server_error: 500,

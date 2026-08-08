@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { previewLiveHrParlayMatches } from "./liveHrParlayService";
 import { persistGradingRunLogs } from "./gradingLogService";
+import { createParlayLegSettledNotification } from "../notifications/notificationService";
 
 export interface LiveHrSyncResult {
   checked: number;
@@ -200,6 +201,21 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
       }]).catch((err) => {
         console.warn("[liveHrParlayWrite] grading log failed", (err as Error)?.message);
       });
+
+      const parentPick = Array.isArray(leg.picks) ? leg.picks[0] : leg.picks;
+      const userId = parentPick?.user_id;
+      if (userId) {
+        await createParlayLegSettledNotification({
+          userId: String(userId),
+          parlayId: String(leg.pick_id),
+          legIndex: Number(leg.leg_index),
+          status: "won",
+          selection: String(leg.selection ?? "Pick"),
+          marketCode: String(leg.market_code || leg.market || "") || undefined,
+        }).catch((err) => {
+          console.warn("[liveHrParlayWrite] pick graded notification failed", (err as Error)?.message);
+        });
+      }
     }
   }
 

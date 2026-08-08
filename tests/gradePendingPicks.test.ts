@@ -17,6 +17,7 @@ vi.mock("../server/services/persistence/pickService", () => ({
 
 vi.mock("../server/services/notifications/notificationService", () => ({
   createParlayGradedNotification: vi.fn(),
+  createParlayLegSettledNotification: vi.fn(async () => ({ warnings: [] })),
 }));
 
 import { gradePendingPicks } from "../server/services/grading/gradingService";
