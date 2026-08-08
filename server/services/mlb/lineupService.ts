@@ -2,6 +2,7 @@
 import { TTL, TTLCache } from "../../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { requiredYmd } from "../../lib/requestValidators";
 import { headshotUrl } from "./mlbTypes";
 import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "./mlbStatsApiSchemas";
 
@@ -170,11 +171,12 @@ async function fetchPlayerHandedness(playerIds: number[]) {
 }
 
 async function fetchLineupsFromUpstream(date: string): Promise<LineupGame[]> {
+  const ymd = requiredYmd(date);
   const data = await fetchMlb<unknown>(
-    `/v1/schedule?sportId=1&date=${date}&hydrate=lineups,probablePitcher(note),team,linescore`,
+    `/v1/schedule?sportId=1&date=${encodeURIComponent(ymd)}&hydrate=lineups,probablePitcher(note),team,linescore`,
   );
 
-  const { games, warnings } = parseMlbScheduleResponse(data, `lineup:${date}`);
+  const { games, warnings } = parseMlbScheduleResponse(data, `lineup:${ymd}`);
   for (const warning of warnings) console.warn(`[lineup] ${warning}`);
 
   const lineupPlayers = (game: MlbScheduleGame, side: "awayPlayers" | "homePlayers"): MlbPlayer[] => {

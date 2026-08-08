@@ -5,6 +5,7 @@ import {
   redisGetJson,
   redisIncr,
   redisPing,
+  redisRateLimitHit,
   redisReleaseLock,
   redisSet,
   redisSetJson,
@@ -40,6 +41,7 @@ export interface TitanRedis {
   setJson(key: string, value: unknown, ttlSeconds: number): Promise<void>
   del(key: string): Promise<void>
   incr(key: string, ttlSeconds: number): Promise<number | null>
+  rateLimitHit(key: string, ttlSeconds: number): Promise<{ count: number; ttlSeconds: number } | null>
   ping(): Promise<boolean>
   releaseLock(key: string, token: string): Promise<boolean>
   health(): Promise<RedisDependencyHealth>
@@ -127,6 +129,10 @@ class TitanRedisDependency implements TitanRedis {
 
   async incr(key: string, ttlSeconds: number): Promise<number | null> {
     return this.guarded('incr', () => redisIncr(key, ttlSeconds))
+  }
+
+  async rateLimitHit(key: string, ttlSeconds: number): Promise<{ count: number; ttlSeconds: number } | null> {
+    return this.guarded('rateLimitHit', () => redisRateLimitHit(key, ttlSeconds))
   }
 
   async ping(): Promise<boolean> {

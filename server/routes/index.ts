@@ -42,15 +42,17 @@ import { getBackendHealthReport } from "../services/health/backendHealthService"
 import { getLegacyRouteMetricsSnapshot } from "../lib/observability/legacyRouteMetrics";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
-import { getSupabaseAdmin } from "../middleware/auth";
-import { isUpstashEnabled, redisPing } from "../lib/upstashRedis";
+import { getReadiness } from "../lib/readinessProbe";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
+import { validate } from "../middleware/validation";
+import { GenericJsonObjectBodySchema } from "../validators/mutationSchemas";
 import { captureException } from "../lib/sentry";
 import type { Response } from "express";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { getSafePublicOrigin } from "../lib/publicOrigin";
+import appConfig from "../platform/config/appConfig";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -100,7 +102,7 @@ export function registerApiRoutes(app: Express): void {
   // Skills introspection + generic runner.
   app.get("/api/skills", (req: RequestWithContext, res: Response) =>
     res.json(apiOkFlat(req, { skills: listSkills() })));
-  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, validate({ body: GenericJsonObjectBodySchema }), asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       res.json(apiOkFlat(req, { result: await runSkill(req.params.id, req.body ?? {}) }));
     } catch (err) {
@@ -144,6 +146,8 @@ export function registerApiRoutes(app: Express): void {
     res.json(apiOkFlat(req, {
       status: "ok",
       service: "vouchedge-backend",
+      requestIp: req.ip,
+      trustProxy: appConfig.trustProxy,
       time: new Date().toISOString(),
     }))
   );
@@ -154,44 +158,22 @@ export function registerApiRoutes(app: Express): void {
   // instance instead of seeing a blind 200. Redis is required in production
   // boot, but readiness still only fails on database so a transient Redis
   // blip does not flap the load balancer.
-  app.get("/api/health/ready", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const checks: Record<string, { ok: boolean; detail?: string }> = {};
+  //
+  // The probe stays exempt from rate limiting (a 429'd probe describes the
+  // limiter, not the process), so the dependency checks behind it are memoized
+  // for a few seconds instead — see server/lib/readinessProbe.ts. Without that,
+  // this exemption was an unauthenticated amplifier: one GET, one Supabase query
+  // and one Redis PING, no ceiling.
+  app.get("/api/health/ready", asyncHandler(async (_req: RequestWithContext, res: Response) => {
+    const { ready, checks, checkedAt, fresh } = await getReadiness();
 
-    try {
-      const supabaseAdmin = await getSupabaseAdmin();
-      const probe = (await Promise.race([
-        supabaseAdmin.from("cappers").select("id", { head: true }).limit(1),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("db probe timed out after 3s")), 3000)),
-      ])) as { error?: { message?: string } | null };
-      checks.database = probe?.error
-        ? { ok: false, detail: "database unreachable" }
-        : { ok: true };
-      if (probe?.error) {
-        console.warn("[health/ready] database probe failed:", probe.error.message ?? "query error");
-      }
-    } catch (err) {
-      console.warn("[health/ready] database probe error:", (err as Error)?.message ?? err);
-      checks.database = { ok: false, detail: "database unreachable" };
-    }
-
-    if (isUpstashEnabled()) {
-      const redisOk = await redisPing();
-      checks.redis = redisOk
-        ? { ok: true, detail: "upstash pong" }
-        : { ok: false, detail: "upstash unreachable" };
-    } else {
-      // Not configured is fine for readiness — prod boot validates Redis separately.
-      checks.redis = { ok: true, detail: "not configured (degraded to in-memory)" };
-    }
-
-    // Fail readiness only on database. Redis check is observational so a blip
-    // does not flap the load balancer.
-    const ready = checks.database.ok;
     res.status(ready ? 200 : 503).json({
       ok: ready,
       status: ready ? "ready" : "degraded",
       service: "vouchedge-backend",
       checks,
+      checkedAt,
+      cached: !fresh,
       time: new Date().toISOString(),
     });
   }));

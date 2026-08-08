@@ -23,6 +23,7 @@ import {
 import type { HrWatchRow } from '../../types/hrWatch';
 import { buildHrDecisionBrief, type HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { useMediaQuery } from '../../../../hooks/useMediaQuery';
+import { oddsDisplay } from '../../engine/signalScore';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
@@ -452,7 +453,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                   tierLabel={tier.label}
                   tierColor={tier.color}
                   chips={[
-                    ...(player.oddsLabel ? [{ label: player.oddsLabel, tone: 'neutral' as const }] : []),
+                    ...(oddsDisplay(player) ? [{ label: oddsDisplay(player) as string, tone: 'neutral' as const }] : []),
                     ...(player.bookOdds != null ? [{ label: fmtOdds(player.bookOdds), tone: 'caution' as const }] : []),
                     ...(player.truthStatus
                       ? [{

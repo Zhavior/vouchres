@@ -3,6 +3,8 @@ import type { ClientIdentityAssessment } from "../../lib/parlayIdentity";
 export type SmartParlayStatus =
   | "pending"
   | "live"
+  | "in_progress"
+  | "ready_to_grade"
   | "upcoming"
   | "won"
   | "lost"

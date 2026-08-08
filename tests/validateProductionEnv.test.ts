@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { validateProductionEnvAtBoot } from "../server/lib/validateProductionEnv";
+import { parseTrustProxy } from "../server/platform/config/appConfig";
 
 function stubRequiredProductionEnv() {
   vi.stubEnv("NODE_ENV", "production");
@@ -56,5 +57,19 @@ describe("validateProductionEnvAtBoot", () => {
     stubRequiredProductionEnv();
 
     expect(() => validateProductionEnvAtBoot()).not.toThrow();
+  });
+});
+
+describe("parseTrustProxy", () => {
+  it("accepts integer strings only", () => {
+    expect(parseTrustProxy(undefined)).toBe(1);
+    expect(parseTrustProxy("0")).toBe(0);
+    expect(parseTrustProxy("2")).toBe(2);
+  });
+
+  it("rejects boolean-ish and empty trust proxy values", () => {
+    expect(() => parseTrustProxy("true")).toThrow(/TRUST_PROXY/);
+    expect(() => parseTrustProxy("")).toThrow(/TRUST_PROXY/);
+    expect(() => parseTrustProxy("9")).toThrow(/between 0 and 8/);
   });
 });

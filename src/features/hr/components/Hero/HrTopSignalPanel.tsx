@@ -5,6 +5,7 @@ import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrBoardFreshness } from '../../utils/hrDecisionBrief';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
+import { PlatoonPill } from '../Platoon/PlatoonPill';
 import { PlayerHrTag } from '../HrHitBadge';
 
 interface HrTopSignalPanelProps {
@@ -110,6 +111,7 @@ export function HrTopSignalPanel({
                 {teamLogo && <img src={teamLogo} alt="" className="h-3.5 w-3.5 object-contain inline" />}
                 <span className="font-bold text-white">{player.team}</span> vs <span>{player.opponent}</span>
                 {player.pitcherName ? <span className="hidden sm:inline text-slate-400"> / vs {player.pitcherName}</span> : null}
+                <PlatoonPill player={player} />
               </div>
             </div>
           </div>
@@ -167,6 +169,9 @@ export function HrTopSignalPanel({
           <MetricChip label="Hitter Power" value={numberLabel(player.hitterPower)} colorClass="text-vouch-cyan" />
           <MetricChip label="Pitcher Vuln" value={numberLabel(player.pitcherVulnerability)} colorClass="text-vouch-emerald" />
           <MetricChip label="Park Factor" value={numberLabel(player.parkFactor)} colorClass="text-amber-300" />
+          {player.platoon != null && (
+            <MetricChip label="Platoon" value={numberLabel(player.platoon)} colorClass="text-violet-300" />
+          )}
           {player.weather != null && (
             <MetricChip label="Weather Context" value={`${Math.round(player.weather)}/100`} colorClass="text-sky-300" />
           )}

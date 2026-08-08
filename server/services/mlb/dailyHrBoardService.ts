@@ -12,7 +12,7 @@
  *
  * Cache: 8 minutes (fresh after each game update cycle).
  */
-import { getScheduleByDate, getBoxscore, todayISO } from "./mlbClient";
+import { getScheduleByDate, getBoxscore, getPitcherHands, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
 import { reportCache } from "./mlbCache";
@@ -235,6 +235,18 @@ export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> 
     for (const g of games) {
       if (g.probablePitchers.away?.pitcherId) allPitcherIds.add(g.probablePitchers.away.pitcherId);
       if (g.probablePitchers.home?.pitcherId) allPitcherIds.add(g.probablePitchers.home.pitcherId);
+    }
+
+    // The schedule's probablePitcher hydration omits pitchHand, so resolve it
+    // once for the whole slate before scoring — the platoon layer is meaningless
+    // without the starter's throwing hand.
+    const pitcherHands = await getPitcherHands([...allPitcherIds]);
+    for (const g of games) {
+      for (const side of [g.probablePitchers.away, g.probablePitchers.home]) {
+        if (side && side.throws === "U") {
+          side.throws = pitcherHands.get(side.pitcherId) ?? "U";
+        }
+      }
     }
 
     const hitterIds = [...allHitterIds];

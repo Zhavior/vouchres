@@ -15,6 +15,7 @@ import { isUpstashEnabled, redisGetJson, redisSetJson } from "../server/lib/upst
 import {
   expireValidatedHrBoardHubCacheForTests,
   getCachedValidatedHrBoard,
+  getValidatedHrBoardHubCacheStatsForTests,
   resetValidatedHrBoardHubForTests,
 } from "../server/services/hubs/hrBoardHub";
 
@@ -193,5 +194,27 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
       "Serving last good snapshot — upstream temporarily unavailable",
     );
     expect(redisGetJson).toHaveBeenCalled();
+  });
+
+  it("bounds local validated board caches with LRU capacity", async () => {
+    vi.mocked(buildValidatedHrBoard).mockImplementation(async (date?: string) => ({
+      ...sampleBoard,
+      date: date ?? sampleBoard.date,
+      generatedAt: `2026-07-08T12:${String(0).padStart(2, "0")}:00.000Z`,
+    }));
+
+    const { validatedCacheCapacity, lastGoodCapacity, playerIndexCapacity } =
+      getValidatedHrBoardHubCacheStatsForTests();
+
+    for (let day = 1; day <= validatedCacheCapacity + 8; day += 1) {
+      const date = `2026-07-${String(day).padStart(2, "0")}`;
+      await getCachedValidatedHrBoard(date);
+      await getCachedValidatedHrBoard(date);
+    }
+
+    const stats = getValidatedHrBoardHubCacheStatsForTests();
+    expect(stats.validatedCacheSize).toBeLessThanOrEqual(validatedCacheCapacity);
+    expect(stats.lastGoodSize).toBeLessThanOrEqual(lastGoodCapacity);
+    expect(stats.playerIndexSize).toBeLessThanOrEqual(playerIndexCapacity);
   });
 });

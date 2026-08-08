@@ -5,6 +5,7 @@ import {
   getTierCustomizationPoints,
   isActiveTier,
 } from "../server/services/billing/tierConfig";
+import { STRIPE_WEBHOOK_RAW_PATHS } from "../server/middleware/webhookRaw";
 
 const root = process.cwd();
 
@@ -38,14 +39,21 @@ const { effectiveTierForSubscriptionStatus, getStripePriceConfigs } = await impo
 const JSON_BODY_MIDDLEWARE = "app.use(express.json(";
 
 includesAll(server, [
-  '["/api/billing/webhook", "/api/stripe/webhook"]',
+  "STRIPE_WEBHOOK_RAW_PATHS",
   'express.raw({ type: "application/json", limit: "1mb" })',
   JSON_BODY_MIDDLEWARE,
 ], "raw body webhook mount");
 assert(
-  server.indexOf('["/api/billing/webhook", "/api/stripe/webhook"]') < server.indexOf(JSON_BODY_MIDDLEWARE),
+  server.indexOf("STRIPE_WEBHOOK_RAW_PATHS") < server.indexOf(JSON_BODY_MIDDLEWARE),
   "Stripe webhook raw body middleware must be mounted before express.json"
 );
+for (const webhookPath of [
+  "/api/billing/webhook",
+  "/api/stripe/webhook",
+  "/api/v3/billing/webhook",
+]) {
+  assert(STRIPE_WEBHOOK_RAW_PATHS.includes(webhookPath as (typeof STRIPE_WEBHOOK_RAW_PATHS)[number]), `raw body webhook path missing: ${webhookPath}`);
+}
 
 const routeIndex = read("server/routes/index.ts");
 includesAll(routeIndex, [

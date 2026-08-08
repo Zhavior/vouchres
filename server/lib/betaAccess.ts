@@ -17,16 +17,63 @@ import type { CanonicalTier } from "../services/billing/tierConfig";
  * (PAYMENTS_ENABLED then defaults back to true; Stripe keys are still required.)
  */
 
-function readFlag(name: string): boolean | null {
-  const raw = process.env[name]?.trim().toLowerCase();
-  if (!raw) return null;
-  if (raw === "true" || raw === "1" || raw === "yes" || raw === "on") return true;
-  if (raw === "false" || raw === "0" || raw === "no" || raw === "off") return false;
-  return null;
-}
-
 /** Tier every account is granted while the free beta runs. */
 export const BETA_ACCESS_TIER: CanonicalTier = "creator";
+
+const TRUE_TOKENS = ["true", "1", "yes", "on"] as const;
+const FALSE_TOKENS = ["false", "0", "no", "off"] as const;
+
+/**
+ * Env flags that decide whether every account is handed BETA_ACCESS_TIER.
+ * Validated at boot by validateProductionEnvAtBoot so a typo can never be
+ * mistaken for "unset".
+ */
+export const ENTITLEMENT_FLAG_NAMES = ["FREE_BETA_ALL_ACCESS", "PAYMENTS_ENABLED"] as const;
+
+export class InvalidEntitlementFlagError extends Error {
+  readonly flag: string;
+
+  constructor(flag: string, rawValue: string) {
+    super(
+      `${flag} is set to ${JSON.stringify(rawValue)}, which is not a boolean. ` +
+        `Use one of ${TRUE_TOKENS.join("/")} or ${FALSE_TOKENS.join("/")}. ` +
+        "Refusing to guess: treating an unreadable entitlement flag as unset would " +
+        `silently grant every authenticated account ${BETA_ACCESS_TIER} access.`,
+    );
+    this.name = "InvalidEntitlementFlagError";
+    this.flag = flag;
+  }
+}
+
+/**
+ * Absent/blank -> null (caller applies its default). A value we recognise ->
+ * that boolean. Anything else throws: an entitlement switch that cannot be read
+ * is a configuration error, never a silent grant.
+ */
+function readFlag(name: string): boolean | null {
+  const raw = process.env[name]?.trim();
+  if (!raw) return null;
+  const normalized = raw.toLowerCase();
+  if ((TRUE_TOKENS as readonly string[]).includes(normalized)) return true;
+  if ((FALSE_TOKENS as readonly string[]).includes(normalized)) return false;
+  throw new InvalidEntitlementFlagError(name, raw);
+}
+
+/**
+ * Boot-time check — one message per entitlement flag that cannot be parsed.
+ * Empty array means every flag is either unset or unambiguously boolean.
+ */
+export function collectEntitlementFlagErrors(): string[] {
+  const errors: string[] = [];
+  for (const name of ENTITLEMENT_FLAG_NAMES) {
+    try {
+      readFlag(name);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  return errors;
+}
 
 /** True while the free open beta grants full access to every account. */
 export function isFreeBetaActive(): boolean {

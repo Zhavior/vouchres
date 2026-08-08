@@ -17,6 +17,15 @@ import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
 import { notifyFollowersOfAuthorPost } from "../services/social/followService";
 import { socialOutboxRepository } from "../repositories/socialOutboxRepository";
 import { filterUuids, isUuid } from "../lib/uuid";
+import { boundedInt } from "../lib/requestValidators";
+
+/**
+ * Deepest page an unauthenticated caller may request. `.range(offset, …)` is
+ * pushed straight into Postgres OFFSET, so an unbounded value lets anyone ask
+ * the planner to walk millions of rows before returning nothing.
+ */
+const MAX_FEED_OFFSET = 5_000;
+const MAX_PAGE_SIZE = 100;
 
 async function denyUnlessOwns(
   userId: string,
@@ -131,9 +140,11 @@ async function loadPostForViewAcl(postId: string): Promise<{
 }
 
 postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit ?? 50), 100);
-  const offset = Number(req.query.offset ?? 0);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, MAX_PAGE_SIZE);
+  const offset = boundedInt(req.query.offset, "offset", 0, 0, MAX_FEED_OFFSET);
 
+  // count:"planned" reads the planner's estimate instead of forcing a COUNT(*)
+  // across this 4-way embedded select on every unauthenticated request.
   let query = supabaseAdmin
     .from("posts")
     .select(`
@@ -142,7 +153,7 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
       pick:picks(id, market, selection, status, settled_units, locked_at, created_at),
       likes_count:post_likes(count),
       comments_count:post_comments(count)
-    `, { count: "exact" })
+    `, { count: "planned" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -176,14 +187,16 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
   }
 
   const rows = data ?? [];
-  const total = count ?? rows.length;
+  // `total` is now a planner estimate, so paging decisions come from the page
+  // itself: a full page means there is probably another one.
+  const total = Math.max(count ?? 0, offset + rows.length);
 
   return res.json(apiOkFlat(req, {
     posts: rows,
     total,
     limit,
     offset,
-    has_more: offset + rows.length < total,
+    has_more: rows.length >= limit && offset + limit <= MAX_FEED_OFFSET,
     has_real_content: rows.some((p: any) => !p.is_demo),
   }));
 }));
@@ -618,8 +631,8 @@ postRoutes.get("/posts/:id/comments", optionalAuth, asyncHandler(async (req: Aut
   const aclPost = await loadPostForViewAcl(id);
   await assertCanViewPost(req.user?.id, aclPost);
 
-  const limit = Math.min(Number(req.query.limit ?? 50), 100);
-  const offset = Number(req.query.offset ?? 0);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, MAX_PAGE_SIZE);
+  const offset = boundedInt(req.query.offset, "offset", 0, 0, MAX_FEED_OFFSET);
 
   let data: Record<string, unknown>[] | null = null;
   let error: { code?: string; message?: string } | null = null;

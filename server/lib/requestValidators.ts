@@ -18,6 +18,52 @@ export function requiredYmd(value: unknown, field = "date"): string {
   });
 }
 
+/** Calendar day in US Eastern, which is the timezone MLB slate dates follow. */
+export function currentMlbYmd(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+function shiftYmd(ymd: string, days: number): string {
+  const shifted = new Date(`${ymd}T00:00:00Z`);
+  shifted.setUTCDate(shifted.getUTCDate() + days);
+  return shifted.toISOString().slice(0, 10);
+}
+
+/**
+ * A YYYY-MM-DD that also has to land inside a rolling window around today.
+ *
+ * `requiredYmd` alone accepts any syntactically valid date — roughly 3.6M of
+ * them — and each distinct value becomes a fresh key in the board caches and a
+ * fresh upstream build. The window keeps the reachable key space in the low
+ * hundreds, which is what makes bounding those caches meaningful.
+ */
+export function windowedYmd(
+  value: unknown,
+  options: { pastDays: number; futureDays: number; field?: string; now?: Date },
+): string {
+  const field = options.field ?? "date";
+  const date = requiredYmd(value, field);
+  const today = currentMlbYmd(options.now);
+  const min = shiftYmd(today, -options.pastDays);
+  const max = shiftYmd(today, options.futureDays);
+
+  if (date < min || date > max) {
+    throw new AppError({
+      status: 400,
+      code: "validation_error",
+      message: `${field} must be between ${min} and ${max}.`,
+      details: [{ path: field, message: `Expected a date in ${min}..${max}.` }],
+    });
+  }
+
+  return date;
+}
+
 export function optionalYmd(value: unknown, field = "date"): string | undefined {
   const raw = firstQueryValue(value);
   if (raw == null || raw === "") return undefined;

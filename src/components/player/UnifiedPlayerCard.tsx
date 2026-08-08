@@ -4,6 +4,7 @@ import { logoByTeamName } from '../../lib/teamLogos';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import { PlayerHrTag } from '../../features/hr/components/HrHitBadge';
 import { HrOpportunitySummary } from '../../features/hr/components/Opportunity/HrOpportunitySummary';
+import { PlatoonPill } from '../../features/hr/components/Platoon/PlatoonPill';
 import VouchCursorTip from '../vouch-system/VouchCursorTip';
 import '../../styles/unified-player-card.css';
 
@@ -24,8 +25,8 @@ function tierStyle(score: number): TierStyle {
     return {
       label: 'Elite',
       scoreColor: '#fcd34d',
-      badge: 'border-amber-300/40 bg-amber-400/20 text-amber-100 shadow-[0_0_15px_rgba(251,191,36,0.4)] backdrop-blur-md',
-      shell: 've-tier-elite backdrop-blur-2xl bg-black/40',
+      badge: 'border-amber-300/40 bg-amber-400/20 text-amber-100 shadow-[0_0_15px_rgba(251,191,36,0.4)]',
+      shell: 've-tier-elite bg-black/55',
       barColor: 'linear-gradient(90deg, #d97706, #f59e0b, #fcd34d)',
     };
   }
@@ -33,8 +34,8 @@ function tierStyle(score: number): TierStyle {
     return {
       label: 'Strong',
       scoreColor: '#67e8f9',
-      badge: 'border-cyan-300/40 bg-cyan-400/20 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.4)] backdrop-blur-md',
-      shell: 've-tier-strong backdrop-blur-2xl bg-black/40',
+      badge: 'border-cyan-300/40 bg-cyan-400/20 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.4)]',
+      shell: 've-tier-strong bg-black/55',
       barColor: 'linear-gradient(90deg, #0891b2, #06b6d4, #67e8f9)',
     };
   }
@@ -42,8 +43,8 @@ function tierStyle(score: number): TierStyle {
     return {
       label: 'Watch',
       scoreColor: '#e2e8f0',
-      badge: 'border-slate-300/30 bg-slate-400/15 text-slate-100 shadow-[0_0_10px_rgba(148,163,184,0.3)] backdrop-blur-md',
-      shell: 've-tier-watch backdrop-blur-2xl bg-black/40',
+      badge: 'border-slate-300/30 bg-slate-400/15 text-slate-100 shadow-[0_0_10px_rgba(148,163,184,0.3)]',
+      shell: 've-tier-watch bg-black/55',
       barColor: 'linear-gradient(90deg, #334155, #64748b, #cbd5e1)',
     };
   }
@@ -51,8 +52,8 @@ function tierStyle(score: number): TierStyle {
     return {
       label: 'Sleeper',
       scoreColor: '#c4b5fd',
-      badge: 'border-violet-400/40 bg-violet-500/20 text-violet-100 shadow-[0_0_15px_rgba(139,92,246,0.4)] backdrop-blur-md',
-      shell: 've-tier-sleeper backdrop-blur-2xl bg-black/40',
+      badge: 'border-violet-400/40 bg-violet-500/20 text-violet-100 shadow-[0_0_15px_rgba(139,92,246,0.4)]',
+      shell: 've-tier-sleeper bg-black/55',
       barColor: 'linear-gradient(90deg, #6d28d9, #8b5cf6, #c4b5fd)',
     };
   }
@@ -60,7 +61,7 @@ function tierStyle(score: number): TierStyle {
     label: 'Fade',
     scoreColor: '#94a3b8',
     badge: 'border-rose-900/50 bg-rose-950/40 text-rose-300/70',
-    shell: 've-tier-fade backdrop-blur-2xl bg-black/40',
+    shell: 've-tier-fade bg-black/55',
     barColor: 'linear-gradient(90deg, #334155, #475569)',
   };
 }
@@ -286,6 +287,9 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
                 {isOfficial ? <ShieldCheck className="h-2.5 w-2.5" /> : <ShieldQuestion className="h-2.5 w-2.5" />}
                 {isOfficial ? 'Confirmed lineup' : 'Preview only'}
               </span>
+
+              <PlatoonPill player={player} />
+
 
               {hrResult === 'hit' && (
                 <span className="inline-flex items-center gap-1 rounded border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-amber-200">

@@ -1,6 +1,5 @@
 /** AI explanation / daily report / learning note routes (Gemini backend-only). */
 import type { Express, Response } from "express";
-import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { AuthedRequest } from "../middleware/auth";
@@ -20,6 +19,8 @@ import { generationLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import {
   AiChatRequestSchema,
+  AiDailyReportRequestSchema,
+  AiExplainPickRequestSchema,
   AiImageRequestSchema,
   AiThemeRequestSchema,
   ParlayEdgeRequestSchema,
@@ -99,16 +100,9 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     requireTierOrQuota("gold", 10, "ai_explain", 300),
+    validate({ body: AiExplainPickRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const pick = req.body?.pick as PickCandidate;
-      if (!pick) {
-        throw new AppError({
-          status: 400,
-          code: "validation_error",
-          message: "pick is required.",
-          details: [{ path: "pick", message: "Required." }],
-        });
-      }
       const result = await explainPick(pick);
       await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
@@ -120,6 +114,7 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     requireTierOrQuota("gold", 1, "ai_daily_report", 30),
+    validate({ body: AiDailyReportRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await getDailyReportNarrative(req.body?.date);
       await incrementAiQuotaIfNeeded(req);

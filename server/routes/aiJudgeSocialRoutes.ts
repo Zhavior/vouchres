@@ -5,6 +5,8 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
+import { validate } from "../middleware/validation";
+import { AiJudgeSocialDraftGenerateSchema, EmptyBodySchema } from "../validators/mutationSchemas";
 import {
   generateHrSocialDrafts,
   listDrafts,
@@ -27,6 +29,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
+    validate({ body: AiJudgeSocialDraftGenerateSchema }),
     asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateHrSocialDrafts({
         date: req.body?.date,
@@ -59,6 +62,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
+    validate({ body: EmptyBodySchema }),
     asyncHandler(async (req: RequestWithContext, res: Response) => {
       try {
         const draft = queueDraft(req.params.draftId);
@@ -80,6 +84,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
+    validate({ body: EmptyBodySchema }),
     asyncHandler(async (req: RequestWithContext, res: Response) => {
       try {
         const draft = mockPostDraft(req.params.draftId);

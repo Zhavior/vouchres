@@ -13,6 +13,8 @@ import { apiOkFlat } from "../lib/apiResponse";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import { assertCronAuthorized } from "../lib/cronAuth";
 import { AppError } from "../errors/AppError";
+import { requireAuth } from "../middleware/auth";
+import { requireTier } from "../middleware/entitlements";
 import type { RequestWithContext } from "../middleware/requestContext";
 import {
   optionalYmd as optionalDateQuery,
@@ -135,7 +137,14 @@ export function registerMatchupRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/matchup-matrix", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  /**
+   * Pro Lab data. These back the GOLD-gated Pitcher Matchup / Hitter Matchup Zones
+   * pages, which were previously protected only by the client-side ProAccessGate —
+   * the payload was fetchable anonymously. Gate server-side. During the free open
+   * beta every authenticated account resolves to `creator`, so this is auth-only
+   * in practice today and becomes a real paywall when the beta flag flips.
+   */
+  app.get("/api/mlb/matchup-matrix", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const date = dateQueryOrToday(req.query.date);
       const matrix = await getMatchupMatrix(date);
@@ -145,7 +154,7 @@ export function registerMatchupRoutes(app: Express): void {
     }
   }));
 
-  app.get("/api/mlb/matchup-matrix/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/matchup-matrix/live", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const date = dateQueryOrToday(req.query.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
@@ -174,7 +183,7 @@ export function registerMatchupRoutes(app: Express): void {
     return res.json(apiOkFlat(req, { matchup: m }));
   }));
 
-  app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
       const pitcherId = requiredPositiveIntParam(req.params.pitcherId, "pitcherId");

@@ -142,6 +142,49 @@ export async function redisIncr(key: string, ttlSeconds: number): Promise<number
   return count;
 }
 
+export type RedisRateLimitHit = {
+  count: number;
+  ttlSeconds: number;
+};
+
+/**
+ * Atomically increment a rate-limit bucket and ensure it has an expiry.
+ * Replaces INCR + EXPIRE/TTL follow-up calls with one Lua EVAL.
+ */
+export async function redisRateLimitHit(
+  key: string,
+  ttlSeconds: number,
+): Promise<RedisRateLimitHit | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const script = `
+local count = redis.call("INCR", KEYS[1])
+local ttl = redis.call("TTL", KEYS[1])
+if count == 1 or ttl < 0 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+  ttl = tonumber(ARGV[1])
+end
+return { count, ttl }`;
+
+  const result = await redisCommand<unknown[]>([
+    "EVAL",
+    script,
+    1,
+    key,
+    String(ttlSeconds),
+  ]);
+
+  if (!Array.isArray(result)) return null;
+  const count = Number(result[0]);
+  const ttl = Number(result[1]);
+  if (!Number.isFinite(count) || !Number.isFinite(ttl)) return null;
+
+  return {
+    count,
+    ttlSeconds: Math.max(1, Math.ceil(ttl)),
+  };
+}
+
 export async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }

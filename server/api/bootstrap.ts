@@ -7,6 +7,7 @@ import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
 import { apiErrorHandler } from "../middleware/errorHandler";
 import { apiNotFoundHandler } from "../middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "../middleware/rateLimit";
+import { STRIPE_WEBHOOK_RAW_PATHS } from "../middleware/webhookRaw";
 import { requestContext } from "../platform/request-context";
 import { routeTiming } from "../middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "../lib/sentry";
@@ -29,9 +30,10 @@ export async function createApiApp(httpServer?: http.Server) {
   app.use(routeTiming);
   app.use(helmetMiddleware);
 
-  // Raw body for Stripe webhook isolation
+  // Raw body for Stripe webhook isolation. Paths come from the shared constant
+  // so this factory and createV3App cannot drift — see webhookRaw.ts.
   app.use(
-    ["/api/billing/webhook", "/api/stripe/webhook"],
+    [...STRIPE_WEBHOOK_RAW_PATHS],
     express.raw({ type: "application/json", limit: "1mb" }),
   );
   app.use(express.json({ limit: "256kb" }));

@@ -9,7 +9,7 @@ import { AppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { assertUserOwnsResource } from "../middleware/ownership";
 import { validate } from "../middleware/validation";
-import { NotificationPreferencesPatchSchema } from "../validators/mutationSchemas";
+import { NotificationPreferencesPatchSchema, PushSubscriptionSchema } from "../validators/mutationSchemas";
 import {
   deletePushSubscription,
   getPublicVapidKey,
@@ -114,7 +114,7 @@ notificationRoutes.post("/notifications/read-all", requireAuth, asyncHandler(asy
   return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+notificationRoutes.post("/notifications/push/subscribe", requireAuth, validate({ body: PushSubscriptionSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const body = req.body ?? {};
   if (typeof body.endpoint !== "string" || typeof body.keys?.p256dh !== "string" || typeof body.keys?.auth !== "string") {
     throw new AppError({

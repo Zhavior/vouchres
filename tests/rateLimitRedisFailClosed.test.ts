@@ -9,6 +9,9 @@ vi.mock("../server/lib/upstashRedis", () => ({
   redisIncr: vi.fn(async () => {
     throw new Error("Upstash Redis 503");
   }),
+  redisRateLimitHit: vi.fn(async () => {
+    throw new Error("Upstash Redis 503");
+  }),
 }));
 
 let server: Server;

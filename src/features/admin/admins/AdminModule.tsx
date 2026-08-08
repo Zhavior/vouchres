@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER } from '../../../theme/auroraTokens';
-import { Search, Shield, ShieldAlert, Key, Plus, LogOut } from 'lucide-react';
-import { supabase } from '../../../lib/supabaseClient';
+import { History, Search, Shield, ShieldAlert, Plus } from 'lucide-react';
+import { apiClient } from '../../../lib/apiClient';
 
 interface AdminProfile {
   id: string;
   display_name: string;
   username: string;
-  is_admin?: boolean;
-  role?: string;
+  is_staff?: boolean;
   created_at?: string;
 }
 
@@ -18,23 +17,23 @@ export function AdminModule() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Reads go through the staff-gated API — public.profiles is revoked from
+    // anon/authenticated. Note the previous query filtered on `is_admin`, a
+    // column that does not exist in any migration; the staff flag is `is_staff`.
     async function loadAdmins() {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('is_admin', true)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setAdmins(data || []);
+        const payload = await apiClient.get<{ users: AdminProfile[] }>(
+          '/api/admin/users',
+          { limit: 200 },
+        );
+        setAdmins((payload?.users ?? []).filter((u) => u.is_staff));
       } catch (err) {
         console.error('Error fetching admins:', err);
       } finally {
         setLoading(false);
       }
     }
-    
+
     void loadAdmins();
   }, []);
 
@@ -118,7 +117,7 @@ export function AdminModule() {
                   <td className="px-5 py-3">
                     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400`}>
                       <Shield className="h-3 w-3" />
-                      {admin.role || 'Super Admin'}
+                      Staff
                     </span>
                   </td>
                   <td className="px-5 py-3 text-white/40 text-xs">

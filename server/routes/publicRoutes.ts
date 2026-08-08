@@ -8,7 +8,7 @@ import { PUBLIC_PICK_COLUMNS, toPublicPickDtos } from "../lib/publicPickDto";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { validate } from "../middleware/validation";
-import { FollowCreateSchema, FollowDeleteSchema } from "../validators/mutationSchemas";
+import { FollowCreateSchema, FollowDeleteSchema, PlayerVouchToggleSchema } from "../validators/mutationSchemas";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 import {
   getRelationshipForTarget,
@@ -674,7 +674,7 @@ publicRoutes.get("/player-vouches/leaderboard", optionalAuth, asyncHandler(async
   return res.json(apiOkFlat(req, { players }));
 }));
 
-publicRoutes.post("/player-vouches/toggle", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+publicRoutes.post("/player-vouches/toggle", requireAuth, validate({ body: PlayerVouchToggleSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const body = req.body as {
     player_id?: string | number;
     player_name?: string;

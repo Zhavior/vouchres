@@ -7,6 +7,9 @@ import { logoByTeamName } from '../../../../lib/teamLogos';
 
 const PAGE_SIZE = 12;
 
+/** Cards in the first screenful, whose headshots load up front instead of on scroll. */
+const EAGER_CARDS = 8;
+
 interface HrSignalGridProps {
   rows: readonly HrWatchRow[];
   onResearch: (player: HrWatchRow) => void;
@@ -33,11 +36,14 @@ function pitcherVulnerabilityLabel(row: HrWatchRow): string | null {
 const SimpleSignalCard = React.memo(function SimpleSignalCard({
   row,
   score,
+  priority,
   onResearch,
   onAddToSlip,
 }: {
   row: HrWatchRow;
   score: number;
+  /** Rendered in the first screenful — load its headshot up front, not on scroll. */
+  priority: boolean;
   onResearch: (player: HrWatchRow) => void;
   onAddToSlip?: (player: HrWatchRow) => void;
 }) {
@@ -48,7 +54,7 @@ const SimpleSignalCard = React.memo(function SimpleSignalCard({
   const pitcher = row.pitcherName && row.pitcherName !== 'Pitcher TBD' ? row.pitcherName : null;
 
   return (
-    <article className="flex min-w-0 flex-col gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 backdrop-blur-xl transition hover:border-white/20 hover:bg-black/50">
+    <article className="flex min-w-0 flex-col gap-2.5 rounded-2xl border border-white/10 bg-black/45 p-3 transition hover:border-white/20 hover:bg-black/50">
       <div className="flex min-w-0 items-center gap-2.5">
         <button
           type="button"
@@ -56,7 +62,7 @@ const SimpleSignalCard = React.memo(function SimpleSignalCard({
           className="flex h-12 w-12 shrink-0 items-end justify-center overflow-hidden rounded-xl border border-white/12 bg-black/50"
           aria-label={`Open research for ${row.playerName}`}
         >
-          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={48} />
+          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={48} priority={priority} />
         </button>
 
         <div className="min-w-0 flex-1">
@@ -157,8 +163,15 @@ export function HrSignalGrid({ rows, onResearch, onAddToSlip }: HrSignalGridProp
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {visible.map(({ row, score }) => (
-          <SimpleSignalCard key={row.stableId} row={row} score={score} onResearch={onResearch} onAddToSlip={onAddToSlip} />
+        {visible.map(({ row, score }, index) => (
+          <SimpleSignalCard
+            key={row.stableId}
+            row={row}
+            score={score}
+            priority={index < EAGER_CARDS}
+            onResearch={onResearch}
+            onAddToSlip={onAddToSlip}
+          />
         ))}
       </div>
 

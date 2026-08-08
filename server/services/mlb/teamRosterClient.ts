@@ -13,7 +13,7 @@ import { parseMlbPeopleResponse, parseMlbRosterResponse, parseMlbTeamsResponse, 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
 // Bust old cache by incrementing the key version when verification logic changes
-const CACHE_KEY = "hitters_v4_team_provenance";
+const CACHE_KEY = "hitters_v5_bat_side";
 const hittersCache = new TTLCache<Map<number, NormalizedPlayer[]>>(20 * 60_000);
 
 function bats(code?: string): "L" | "R" | "S" | "U" {
@@ -37,9 +37,23 @@ async function getMlbTeams(): Promise<Array<{ id: number; name: string; abbrevia
 }
 
 /** Fetch currentTeam.id for a batch of player IDs via the people API. */
-async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id: number; name: string; abbreviation: string }>> {
+/**
+ * Verifies each player's current team and, from the same response, records the
+ * side they bat from.
+ *
+ * `/v1/teams/{id}/roster` returns a minimal person object with no `batSide`, so
+ * reading handedness off the roster row yielded "U" for every hitter on the
+ * slate — which collapsed the platoon layer to a constant. `/v1/people` carries
+ * `batSide` natively and is already being called here for team provenance, so
+ * capturing it costs no extra requests.
+ */
+async function verifyCurrentTeams(playerIds: number[]): Promise<{
+  teams: Map<number, { id: number; name: string; abbreviation: string }>;
+  bats: Map<number, "L" | "R" | "S" | "U">;
+}> {
   const result = new Map<number, { id: number; name: string; abbreviation: string }>();
-  if (playerIds.length === 0) return result;
+  const batsById = new Map<number, "L" | "R" | "S" | "U">();
+  if (playerIds.length === 0) return { teams: result, bats: batsById };
 
   // MLB API accepts up to ~50 IDs per call
   const BATCH = 50;
@@ -59,6 +73,9 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
       for (const warning of warnings) console.warn(`[teamRosterClient] ${warning}`);
 
       for (const p of people) {
+        if (p?.id) {
+          batsById.set(p.id, bats(p?.batSide?.code));
+        }
         const ctId: number | undefined = p?.currentTeam?.id;
         if (p?.id && ctId) {
           result.set(p.id, {
@@ -72,7 +89,7 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
       console.warn(`[teamRosterClient] people verification error:`, (err as Error).message);
     }
   }
-  return result;
+  return { teams: result, bats: batsById };
 }
 
 async function getTeamActiveHitters(team: { id: number; name: string; abbreviation: string }): Promise<NormalizedPlayer[]> {
@@ -97,7 +114,7 @@ async function getTeamActiveHitters(team: { id: number; name: string; abbreviati
   const candidateIds = candidates.map((r) => r.person?.id as number);
 
   // Step 2: verify each player's currentTeam.id matches teamId
-  const currentTeamMap = await verifyCurrentTeams(candidateIds);
+  const { teams: currentTeamMap, bats: batsMap } = await verifyCurrentTeams(candidateIds);
 
   const verified: NormalizedPlayer[] = [];
   for (const r of candidates) {
@@ -130,7 +147,8 @@ async function getTeamActiveHitters(team: { id: number; name: string; abbreviati
       playerId,
       playerName: r.person?.fullName ?? "Unknown",
       position: pos,
-      bats: bats(r.person?.batSide?.code),
+      // /v1/people is authoritative here; the roster row rarely carries batSide.
+      bats: batsMap.get(playerId) ?? bats(r.person?.batSide?.code),
       team: team.name,
       teamId,
       teamAbbrev: team.abbreviation,
@@ -158,7 +176,7 @@ async function getTodayTeamIds(): Promise<number[]> {
   const date = todayIsoDate();
 
   try {
-    const data = await sportsFetchJson<any>(`${BASE}/v1/schedule?sportId=1&date=${date}`, {
+    const data = await sportsFetchJson<any>(`${BASE}/v1/schedule?sportId=1&date=${encodeURIComponent(date)}`, {
       cacheKey: `mlb:schedule:team-ids:${date}`,
       ttlMs: 10 * 60_000,
       staleIfErrorMs: 10 * 60_000,

@@ -16,6 +16,7 @@ import {
 
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
+import { requiredYmd } from "../../lib/requestValidators";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
@@ -65,10 +66,11 @@ export function resetMlbRequestCount(): void {
  * "no games today" when the MLB Stats API was actually down.
  */
 async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> {
-  const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
+  const ymd = requiredYmd(date);
+  const url = `${BASE}/v1/schedule?sportId=1&date=${encodeURIComponent(ymd)}&hydrate=probablePitcher(note),linescore,team`;
   try {
     const data = await fetchJson<unknown>(url);
-    const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
+    const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${ymd}`);
     for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
     return games.map(normalizeGame);
   } catch (err) {
@@ -78,15 +80,17 @@ async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> 
 }
 
 export async function getScheduleByDate(date: string): Promise<NormalizedGame[]> {
-  return scheduleCache.getOrSet(`schedule:${date}`, () => fetchScheduleNormalized(date)) as Promise<NormalizedGame[]>;
+  const ymd = requiredYmd(date);
+  return scheduleCache.getOrSet(`schedule:${ymd}`, () => fetchScheduleNormalized(ymd)) as Promise<NormalizedGame[]>;
 }
 
 /** Faster refresh for today's live board — 30s TTL vs 5min default schedule cache. */
 export async function getScheduleForLiveBoard(date: string): Promise<NormalizedGame[]> {
-  const isToday = date === todayISO();
-  const key = isToday ? `schedule:live-board:${date}` : `schedule:${date}`;
+  const ymd = requiredYmd(date);
+  const isToday = ymd === todayISO();
+  const key = isToday ? `schedule:live-board:${ymd}` : `schedule:${ymd}`;
   const ttlMs = isToday ? 30_000 : undefined;
-  return scheduleCache.getOrSet(key, () => fetchScheduleNormalized(date), ttlMs) as Promise<NormalizedGame[]>;
+  return scheduleCache.getOrSet(key, () => fetchScheduleNormalized(ymd), ttlMs) as Promise<NormalizedGame[]>;
 }
 
 export async function getTodayGames(): Promise<NormalizedGame[]> {
@@ -210,6 +214,40 @@ export async function getBoxscore(gamePk: number): Promise<any | null> {
     );
     return null;
   }
+}
+
+/**
+ * Throwing hand for a batch of pitchers, in one request per 50 ids.
+ *
+ * The schedule hydrates `probablePitcher(note)`, which returns only the id and
+ * name — no `pitchHand` — so every probable starter normalized to "U" and the
+ * L/R platoon split had nothing to compare a hitter against. `/v1/people`
+ * carries `pitchHand` natively, and a slate only ever has ~30 probables, so one
+ * batched lookup resolves the whole board.
+ */
+export async function getPitcherHands(pitcherIds: number[]): Promise<Map<number, "L" | "R" | "U">> {
+  const hands = new Map<number, "L" | "R" | "U">();
+  const ids = [...new Set(pitcherIds.filter((id) => Number.isFinite(id) && id > 0))];
+  if (ids.length === 0) return hands;
+
+  const BATCH = 50;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const batch = ids.slice(i, i + BATCH);
+    try {
+      const data = await fetchJson<any>(`${BASE}/v1/people?personIds=${batch.join(",")}`);
+      for (const person of data?.people ?? []) {
+        const code = person?.pitchHand?.code;
+        if (person?.id) hands.set(person.id, code === "L" || code === "R" ? code : "U");
+      }
+    } catch (err) {
+      console.warn(
+        `[mlbClient] getPitcherHands failed for batch of ${batch.length}:`,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  return hands;
 }
 
 /** Lightweight player lookup (basics + headshot). */

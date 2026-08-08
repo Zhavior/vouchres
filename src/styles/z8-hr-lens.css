@@ -181,10 +181,19 @@
   scrollbar-color: rgba(49,181,131,.24) transparent;
 }
 
+/*
+ * No `content-visibility: auto` here.
+ *
+ * It told the browser to skip rendering every off-screen card and paint it only
+ * as it scrolled into view — so scrolling the board rebuilt cards a screenful at
+ * a time, which is exactly the "loading in chunks while I scroll" people report.
+ * `contain-intrinsic-size` made it worse: the placeholder was a flat 22rem guess,
+ * so each card resized the moment it was really measured and the scrollbar
+ * shifted under the cursor. The lists that reach this grid are capped, so
+ * rendering them outright is cheaper than skipping and repainting them.
+ */
 .z8-hr-card-grid .ve-unified-player-card {
   flex: none;
-  content-visibility: auto;
-  contain-intrinsic-size: 22rem;
 }
 
 .z8-hr-map-hit {

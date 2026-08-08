@@ -11,6 +11,8 @@ import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
 import { upstreamUnavailable } from "../lib/requestValidators";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { validate } from "../middleware/validation";
+import { DateOnlyBodySchema } from "../validators/mutationSchemas";
 
 function publicCapperView(agent: ReturnType<typeof getAgent>) {
   if (!agent) return null;
@@ -50,6 +52,7 @@ export function registerAgentRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     requireTierOrQuota("gold", 5, "agent_generate_picks", 100),
+    validate({ body: DateOnlyBodySchema }),
     asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const start = Date.now();
     const agent = getAgent(req.params.id);
@@ -101,7 +104,7 @@ export function registerAgentRoutes(app: Express): void {
    * Builds the daily report ONCE, then runs all 5 cappers against it.
    * This is the most efficient endpoint — one MLB data fetch, 5 cappers.
    */
-  app.post("/api/agents/generate-all-picks", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post("/api/agents/generate-all-picks", requireAuth, requireStaff, generationLimiter, validate({ body: DateOnlyBodySchema }), asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     try {
       const report = await getSharedDailyReport(req.body?.date);

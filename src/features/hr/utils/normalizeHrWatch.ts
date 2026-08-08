@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { logoByTeamName } from '../../../lib/teamLogos';
-import type { HrWatchBoard, HrWatchMode, HrWatchRow, RiskTier, TruthStatus } from '../types/hrWatch';
+import type { BatSide, HrWatchBoard, HrWatchMode, HrWatchRow, RiskTier, ThrowHand, TruthStatus } from '../types/hrWatch';
 import { weatherBoostToScore } from '../engine/signalScore';
 
 type UnknownRecord = z.infer<typeof UnknownRecordSchema>;
@@ -128,6 +128,20 @@ function readWeatherScore(row: UnknownRecord, nested: UnknownRecord): number | n
   return weatherBoostToScore(firstNullableNumber(row, ['weatherBoost']));
 }
 
+/** Batting side, `S` for switch hitters. `U`/unknown from the feed becomes null. */
+function readBatSide(row: UnknownRecord): BatSide | null {
+  const raw = firstString(row, ['batSide', 'battingHand', 'bats'], '').trim().toUpperCase();
+  return raw === 'L' || raw === 'R' || raw === 'S' ? raw : null;
+}
+
+/** Throwing hand of the opposing starter. */
+function readThrowHand(row: UnknownRecord): ThrowHand | null {
+  const raw = firstString(row, ['opponentPitcherHand', 'pitcherHand', 'pitcherThrows', 'throws'], '')
+    .trim()
+    .toUpperCase();
+  return raw === 'L' || raw === 'R' ? raw : null;
+}
+
 function readBreakdown(row: UnknownRecord) {
   const nested = readRecord(row.scoreBreakdown);
   const result = {
@@ -143,6 +157,11 @@ function readBreakdown(row: UnknownRecord) {
     // The pipeline reports the park twice: `parkContext` is the 0–100 layer
     // score the Signal Score weighs, `parkFactor` is the raw venue HR index.
     parkContext: firstNullableNumber(nested, ['parkContext', 'parkScore']),
+    // The pipeline scores the handedness matchup as `handednessEdge`; the board
+    // has always called that layer `platoon`.
+    platoon:
+      firstNullableNumber(nested, ['handednessEdge', 'platoon', 'platoonEdge']) ??
+      firstNullableNumber(row, ['handednessEdge', 'platoon']),
     parkIndex: firstNullableNumber(row, ['parkFactor', 'parkHrFactor']),
     weather: readWeatherScore(row, nested),
     recentForm:
@@ -195,6 +214,9 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       hrScore,
       hitterPower: breakdown.hitterPower,
       pitcherVulnerability: breakdown.pitcherVulnerability,
+      batSide: readBatSide(row),
+      pitcherHand: readThrowHand(row),
+      platoon: breakdown.platoon,
       parkFactor: breakdown.parkFactor,
       parkContext: breakdown.parkContext,
       parkIndex: breakdown.parkIndex,

@@ -9,6 +9,7 @@ import { buildHrBoard } from "../mlb/dailyHrBoardService";
 import { getTodayGamesWeather } from "../mlb/weatherService";
 import { getMaterializedHrResearch } from "../mlb/hrResearchSnapshotService";
 import { limitConcurrency } from "../../lib/cache";
+import { BoundedLruMap } from "../../lib/boundedLruMap";
 
 const LAST_GOOD_WARNING =
   "Serving last good snapshot — upstream temporarily unavailable";
@@ -28,8 +29,18 @@ type CacheEntry = {
   board: HrBoardSnapshot;
 };
 
-const localHrBoardCache = new Map<string, CacheEntry>();
-const localHrBoardBuilds = new Map<string, Promise<HrBoardSnapshot>>();
+const HR_BOARD_CACHE_MAX_ENTRIES = 96;
+const HR_BOARD_BUILD_MAX_ENTRIES = 32;
+const HR_BOARD_PLAYER_INDEX_MAX_ENTRIES = 96;
+
+const localHrBoardCache = new BoundedLruMap<string, CacheEntry>(
+  HR_BOARD_CACHE_MAX_ENTRIES,
+  "hr-board-response-cache",
+);
+const localHrBoardBuilds = new BoundedLruMap<string, Promise<HrBoardSnapshot>>(
+  HR_BOARD_BUILD_MAX_ENTRIES,
+  "hr-board-response-builds",
+);
 
 function cacheKey(date?: string | null, previewLimit = 350): string {
   return `hr-board:${date ?? "today"}:preview:${previewLimit}`;
@@ -102,15 +113,21 @@ type DeepCacheEntry = {
   board: DeepHrBoardSnapshot;
 };
 
-const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
-const localValidatedHrBoardBuilds = new Map<
+const localValidatedHrBoardCache = new BoundedLruMap<string, ValidatedCacheEntry>(
+  HR_BOARD_CACHE_MAX_ENTRIES,
+  "validated-hr-board-cache",
+);
+const localValidatedHrBoardBuilds = new BoundedLruMap<
   string,
   Promise<ValidatedHrBoardSnapshot>
->();
-const lastGoodValidatedHrBoards = new Map<
+>(
+  HR_BOARD_BUILD_MAX_ENTRIES,
+  "validated-hr-board-builds",
+);
+const lastGoodValidatedHrBoards = new BoundedLruMap<
   string,
   { board: ValidatedHrBoardSnapshot; storedAt: number }
->();
+>(HR_BOARD_CACHE_MAX_ENTRIES, "validated-hr-board-last-good");
 
 type ValidatedPlayerCandidate = Record<string, unknown>;
 
@@ -120,7 +137,10 @@ type ValidatedPlayerIndexEntry = {
   candidates: Map<number, ValidatedPlayerCandidate>;
 };
 
-const localValidatedPlayerIndex = new Map<string, ValidatedPlayerIndexEntry>();
+const localValidatedPlayerIndex = new BoundedLruMap<string, ValidatedPlayerIndexEntry>(
+  HR_BOARD_PLAYER_INDEX_MAX_ENTRIES,
+  "validated-hr-board-player-index",
+);
 
 function validatedBoardGeneratedAt(
   board: ValidatedHrBoardSnapshot,
@@ -355,8 +375,32 @@ export function expireValidatedHrBoardHubCacheForTests(): void {
   localValidatedHrBoardCache.clear();
 }
 
-const localDeepHrBoardCache = new Map<string, DeepCacheEntry>();
-const localDeepHrBoardBuilds = new Map<string, Promise<DeepHrBoardSnapshot>>();
+export function getValidatedHrBoardHubCacheStatsForTests(): {
+  validatedCacheSize: number;
+  validatedCacheCapacity: number;
+  lastGoodSize: number;
+  lastGoodCapacity: number;
+  playerIndexSize: number;
+  playerIndexCapacity: number;
+} {
+  return {
+    validatedCacheSize: localValidatedHrBoardCache.size,
+    validatedCacheCapacity: localValidatedHrBoardCache.capacity,
+    lastGoodSize: lastGoodValidatedHrBoards.size,
+    lastGoodCapacity: lastGoodValidatedHrBoards.capacity,
+    playerIndexSize: localValidatedPlayerIndex.size,
+    playerIndexCapacity: localValidatedPlayerIndex.capacity,
+  };
+}
+
+const localDeepHrBoardCache = new BoundedLruMap<string, DeepCacheEntry>(
+  HR_BOARD_CACHE_MAX_ENTRIES,
+  "deep-hr-board-cache",
+);
+const localDeepHrBoardBuilds = new BoundedLruMap<string, Promise<DeepHrBoardSnapshot>>(
+  HR_BOARD_BUILD_MAX_ENTRIES,
+  "deep-hr-board-builds",
+);
 
 function currentMlbDate(): string {
   // MLB slate dates should follow Eastern Time rather than server UTC.

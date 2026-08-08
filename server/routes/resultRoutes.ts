@@ -9,6 +9,8 @@ import { requireAuth, requireStaff } from "../middleware/auth";
 import type { AuthedRequest } from "../middleware/auth";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { gradingLimiter } from "../middleware/rateLimit";
+import { validate } from "../middleware/validation";
+import { ResultGradeSchema } from "../validators/mutationSchemas";
 
 type ResultReq = AuthedRequest & RequestWithContext;
 
@@ -46,7 +48,7 @@ export function registerResultRoutes(app: Express): void {
    * Staff grading writes to Postgres (pending → settled).
    * The old in-memory seed ledger path is retired — it never touched real picks.
    */
-  app.post("/api/results/grade", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: ResultReq, res: Response) => {
+  app.post("/api/results/grade", requireAuth, requireStaff, gradingLimiter, validate({ body: ResultGradeSchema }), asyncHandler(async (req: ResultReq, res: Response) => {
     const { pickId, result, whatActuallyHappened } = req.body ?? {};
     if (!pickId || !result) {
       throw new AppError({

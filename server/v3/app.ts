@@ -5,6 +5,7 @@ import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
 import { apiErrorHandler } from "../middleware/errorHandler";
 import { apiNotFoundHandler } from "../middleware/apiNotFound";
 import { globalLimiter } from "../middleware/rateLimit";
+import { STRIPE_WEBHOOK_RAW_PATHS } from "../middleware/webhookRaw";
 import { requestContext } from "../middleware/requestContext";
 import { routeTiming } from "../middleware/routeTiming";
 import { initServerSentry, isSentryEnabled, sentryErrorHandler } from "../lib/sentry";
@@ -17,7 +18,7 @@ export function createV3App() {
   app.use(requestContext);
   app.use(routeTiming);
   app.use(helmetMiddleware);
-  app.use("/api/v3/billing/webhook", express.raw({ type: "application/json", limit: "1mb" }));
+  app.use([...STRIPE_WEBHOOK_RAW_PATHS], express.raw({ type: "application/json", limit: "1mb" }));
   app.use(express.json({ limit: "256kb" }));
   app.use("/api", corsMiddleware);
   app.use("/api", globalLimiter);

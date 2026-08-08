@@ -19,7 +19,7 @@ import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
-import { boundedInt, optionalYmd, positiveInt, requiredYmd, upstreamUnavailable } from "../lib/requestValidators";
+import { boundedInt, optionalYmd, positiveInt, requiredYmd, upstreamUnavailable, windowedYmd } from "../lib/requestValidators";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import {
   getCachedDeepHrBoard,
@@ -37,6 +37,23 @@ import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/aut
 
 function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 120, 10, 350);
+}
+
+/**
+ * Board dates are clamped to a rolling window around today.
+ *
+ * A bare YYYY-MM-DD check accepts ~3.6M distinct dates, and each one is a cache
+ * key plus a full upstream board build. One prior season back covers every real
+ * research case; the forward edge covers the published schedule.
+ */
+const HR_BOARD_PAST_DAYS = 400;
+const HR_BOARD_FUTURE_DAYS = 10;
+
+function parseBoardDate(raw: unknown): string {
+  return windowedYmd(raw, {
+    pastDays: HR_BOARD_PAST_DAYS,
+    futureDays: HR_BOARD_FUTURE_DAYS,
+  });
 }
 
 function wantsCompactHrBoard(raw: unknown): boolean {
@@ -252,7 +269,7 @@ res.json(apiOkFlat(req, {
 
   app.get("/api/mlb/hr-board/date/:date", mlbExpensiveReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      const date = requiredYmd(req.params.date);
+      const date = parseBoardDate(req.params.date);
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard(date);
       const payload = buildHrBoardApiPayload(result, previewLimit);

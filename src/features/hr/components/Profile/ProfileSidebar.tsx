@@ -6,6 +6,7 @@ import {
   ConfidenceSummary,
   StickyResearchAction,
 } from "../../../../components/player-intelligence";
+import { oddsDisplay } from "../../engine/signalScore";
 
 interface NavItem {
   id: string;
@@ -85,8 +86,8 @@ export default function ProfileSidebar({
           tierLabel={tier.label}
           tierColor={tier.color}
           chips={[
-            ...(player.oddsLabel
-              ? [{ label: player.oddsLabel, tone: "neutral" as const }]
+            ...(oddsDisplay(player)
+              ? [{ label: oddsDisplay(player) as string, tone: "neutral" as const }]
               : []),
             ...(player.bookOdds != null
               ? [{ label: fmtOdds(player.bookOdds), tone: "caution" as const }]

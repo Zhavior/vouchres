@@ -4,6 +4,7 @@
  * graceful fallback so the frontend never crashes when AI is unavailable.
  */
 import { GoogleGenAI } from "@google/genai";
+import { createHash } from "node:crypto";
 import { TTLCache, TTL } from "../../lib/cache";
 import appConfig from "../../platform/config/appConfig";
 import { z } from "zod";
@@ -23,6 +24,34 @@ export function getGeminiApiKey(): string | undefined {
 export function hasGeminiKey(): boolean {
   const key = getGeminiApiKey();
   return !!key && key.trim().length > 0;
+}
+
+/**
+ * Bind a cache entry to the EXACT content that produced it.
+ *
+ * These caches are process-global and shared across all users, so a cache key
+ * that omits any attacker-controlled part of the prompt is a cross-user
+ * poisoning primitive: send one request with injected text in a field that is
+ * in the prompt but not in the key, and every other user asking about the same
+ * subject is served your steered answer until the TTL expires. In a betting
+ * product, injecting "guaranteed lock" into content the platform presents as
+ * its own analysis is a compliance hazard, not just a correctness bug.
+ *
+ * Callers keep passing a readable namespace (e.g. "player-research:Aaron Judge")
+ * for debuggability; the digest of the full request is appended so two
+ * different prompts can never collide on one entry.
+ *
+ * Trade-off: hit rate drops, because inputs that genuinely differ (updated
+ * stats, a different system instruction) now miss instead of silently serving
+ * a stale answer built from other inputs. That is the correct behaviour — the
+ * old hits were returning answers computed from different data.
+ */
+function contentBoundCacheKey(namespace: string, parts: Array<string | undefined>): string {
+  const digest = createHash("sha256")
+    .update(parts.map((part) => part ?? "").join("\u0000"))
+    .digest("hex")
+    .slice(0, 32);
+  return `${namespace}#${digest}`;
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -48,7 +77,8 @@ export async function generateText(opts: {
   fallback: string;
   ttlMs?: number;
 }): Promise<GeminiResult> {
-  const cached = aiCache.get(opts.cacheKey);
+  const cacheKey = contentBoundCacheKey(opts.cacheKey, [opts.prompt, opts.systemInstruction, MODEL]);
+  const cached = aiCache.get(cacheKey);
   if (cached) return { text: cached, status: "cached" };
 
   if (!hasGeminiKey()) return { text: opts.fallback, status: "no-key" };
@@ -67,7 +97,7 @@ export async function generateText(opts: {
       TIMEOUT_MS
     );
     const text = (response.text || "").trim() || opts.fallback;
-    aiCache.set(opts.cacheKey, text, opts.ttlMs);
+    aiCache.set(cacheKey, text, opts.ttlMs);
     return { text, status: "live" };
   } catch (err) {
     console.error("[geminiClient] generateText failed:", (err as Error).message);
@@ -83,7 +113,12 @@ export async function generateStructured<TSchema extends z.ZodTypeAny>(opts: {
   systemInstruction?: string;
   model?: string;
 }): Promise<{ data: z.infer<TSchema>; status: "live" | "cached" | "fallback" | "no-key"; model: string }> {
-  const cached = structuredCache.get(opts.cacheKey);
+  const cacheKey = contentBoundCacheKey(opts.cacheKey, [
+    opts.prompt,
+    opts.systemInstruction,
+    opts.model ?? appConfig.gemini.brainModel,
+  ]);
+  const cached = structuredCache.get(cacheKey);
   if (cached) return { data: opts.schema.parse(cached), status: "cached", model: opts.model ?? MODEL };
   if (!hasGeminiKey()) return { data: opts.fallback, status: "no-key", model: opts.model ?? MODEL };
 
@@ -107,7 +142,7 @@ export async function generateStructured<TSchema extends z.ZodTypeAny>(opts: {
       },
     }), TIMEOUT_MS);
     const parsed = opts.schema.parse(JSON.parse(response.text || "{}"));
-    structuredCache.set(opts.cacheKey, parsed);
+    structuredCache.set(cacheKey, parsed);
     return { data: parsed, status: "live", model };
   } catch (error) {
     console.error("[geminiClient] generateStructured failed:", (error as Error).message);

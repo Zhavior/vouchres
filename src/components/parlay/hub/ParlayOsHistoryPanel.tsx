@@ -7,6 +7,7 @@ import {
 } from '../../../stores/parlayCommandStore';
 import type { PublicParlaySlip } from '../../../lib/parlayDisplay';
 import { projectSmartParlayFromPublic } from '../../../domain/parlay';
+import type { SmartParlayLeg, SmartParlaySlip, SmartParlayStatus } from '../../../domain/parlay';
 import { classifyParlayHistoryTab } from '../../../lib/trustLockSchedule';
 import type { TrustAudience } from '../../../lib/trustLockSchedule';
 import { repairAllSavedParlays } from '../../../lib/parlays/repairSavedParlay';
@@ -60,19 +61,21 @@ export default function ParlayOsHistoryPanel() {
       gamePk: leg.gamePk,
       playerId: leg.playerId,
       marketCode: leg.marketCode,
-      statTarget: leg.statTarget,
+      statTarget: leg.statTarget != null && Number.isFinite(Number(leg.statTarget))
+        ? Number(leg.statTarget)
+        : null,
     })));
   }, [rawLiveSlips]);
 
   const { data: progressData } = useParlaySlipLiveProgress(progressLegs, { enabled: rawLiveSlips.length > 0 });
   const progressMap = useMemo(() => liveProgressMap(progressData), [progressData]);
 
-  const liveSlips = useMemo(() => {
-    return rawLiveSlips.map((slip) => {
+  const liveSlips = useMemo<SmartParlaySlip[]>(() => {
+    return rawLiveSlips.map((slip): SmartParlaySlip => {
       let updated = false;
       let hasLive = false;
       let allFinal = slip.legs.length > 0;
-      const legs = slip.legs.map((leg) => {
+      const legs = slip.legs.map((leg): SmartParlayLeg => {
         const p = progressMap.get(leg.id);
         if (p) {
           updated = true;
@@ -91,13 +94,13 @@ export default function ParlayOsHistoryPanel() {
       });
       if (!updated) return slip;
       
-      let newStatus = slip.status;
+      let newStatus: SmartParlayStatus = slip.status;
       if (slip.status === 'pending') {
         if (hasLive) newStatus = 'live';
         else if (allFinal) newStatus = 'ready_to_grade';
       }
       
-      const slipProgress = deriveSlipProgress(legs as any);
+      const slipProgress = deriveSlipProgress(legs.map((leg) => ({ ...leg })));
       return { ...slip, legs, status: newStatus, slipProgress };
     });
   }, [rawLiveSlips, progressMap]);

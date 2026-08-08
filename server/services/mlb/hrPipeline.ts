@@ -19,7 +19,7 @@
 
 import { TTLCache } from "../../lib/cache";
 import { HybridTTLCache } from "../../lib/hybridTTLCache";
-import { getScheduleByDate, todayISO } from "./mlbClient";
+import { getScheduleByDate, getPitcherHands, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
 import { NormalizedGame } from "./mlbTypes";
@@ -233,6 +233,24 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
 
   // STEP 3.5: Fetch weather
   const weatherList = await getTodayGamesWeather(date);
+
+  // STEP 3.6: Resolve each probable starter's throwing hand. The schedule
+  // hydrates `probablePitcher(note)`, which carries no `pitchHand`, so every
+  // starter arrived as "U" and the handedness layer scored a flat 45 for the
+  // whole slate. One batched people lookup covers ~30 probables.
+  const probablePitcherIds: number[] = [];
+  for (const g of games) {
+    if (g.probablePitchers?.away?.pitcherId) probablePitcherIds.push(g.probablePitchers.away.pitcherId);
+    if (g.probablePitchers?.home?.pitcherId) probablePitcherIds.push(g.probablePitchers.home.pitcherId);
+  }
+  const pitcherHands = await getPitcherHands(probablePitcherIds);
+  for (const g of games) {
+    for (const side of [g.probablePitchers?.away, g.probablePitchers?.home]) {
+      if (side && side.throws === "U") {
+        side.throws = pitcherHands.get(side.pitcherId) ?? "U";
+      }
+    }
+  }
 
   // STEP 4: Build game contexts for validation
   const gameContexts: GameContext[] = games.map((g) => {

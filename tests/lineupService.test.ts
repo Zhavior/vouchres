@@ -93,6 +93,11 @@ describe("getTodayLineups last-good fallback", () => {
     await expect(getTodayLineups("2026-07-08")).rejects.toThrow("statsapi down");
   });
 
+  it("rejects injected date query strings before fetching lineups", async () => {
+    await expect(getTodayLineups("2026-07-08&hydrate=linescore")).rejects.toThrow(/YYYY-MM-DD/);
+    expect(sportsFetchJson).not.toHaveBeenCalled();
+  });
+
   it("serves last-good lineups from Redis when local L1 is empty", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
     vi.mocked(sportsFetchJson)

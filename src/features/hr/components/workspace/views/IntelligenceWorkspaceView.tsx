@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 
 import type { HrWatchRow } from "../../../types/hrWatch";
+import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
@@ -88,10 +89,13 @@ export default function IntelligenceWorkspaceView({ rows }: Props) {
               }
             />
 
-            <Metric
-              label="Odds"
-              value={topCandidate.oddsLabel}
-            />
+            {/* No posted price means no tile — an "Odds TBD" cell is dead space. */}
+            {oddsDisplay(topCandidate) ? (
+              <Metric
+                label="Odds"
+                value={oddsDisplay(topCandidate) as string}
+              />
+            ) : null}
           </div>
         </div>
       </section>

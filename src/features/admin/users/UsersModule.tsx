@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER } from '../../../theme/auroraTokens';
 import { Search, Shield, Ban, Clock, CheckCircle2, UserX } from 'lucide-react';
-import { supabase } from '../../../lib/supabaseClient';
+import { apiClient } from '../../../lib/apiClient';
 
 interface UserProfile {
   id: string;
   display_name: string;
   username: string;
-  subscription_tier?: string;
-  is_admin?: boolean;
-  role?: string;
+  email?: string;
+  tier?: string;
+  is_staff?: boolean;
+  is_banned?: boolean;
   created_at?: string;
 }
 
@@ -19,23 +20,24 @@ export function UsersModule() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Reads go through the staff-gated API, not the browser Supabase client.
+    // public.profiles is revoked from anon/authenticated — it carries email,
+    // stripe_customer_id and is_staff, which must never reach the browser
+    // except for an authenticated staff account.
     async function loadUsers() {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-        setUsers(data || []);
+        const payload = await apiClient.get<{ users: UserProfile[] }>(
+          '/api/admin/users',
+          { limit: 100 },
+        );
+        setUsers(payload?.users ?? []);
       } catch (err) {
         console.error('Error fetching users:', err);
       } finally {
         setLoading(false);
       }
     }
-    
+
     void loadUsers();
   }, []);
 
@@ -114,16 +116,23 @@ export function UsersModule() {
                     </div>
                   </td>
                   <td className="px-5 py-3 text-white/70">
-                    <span className="capitalize">{user.role || (user.is_admin ? 'admin' : 'user')}</span>
+                    <span className="capitalize">{user.is_staff ? 'staff' : 'user'}</span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-vouch-emerald/10 text-vouch-emerald`}>
-                      <CheckCircle2 className="h-3 w-3" />
-                      <span className="capitalize">Active</span>
-                    </span>
+                    {user.is_banned ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400">
+                        <Ban className="h-3 w-3" />
+                        <span className="capitalize">Banned</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-vouch-emerald/10 text-vouch-emerald">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span className="capitalize">Active</span>
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-3">
-                    <span className="font-mono text-xs">{user.subscription_tier || 'BASIC'}</span>
+                    <span className="font-mono text-xs">{(user.tier || 'free').toUpperCase()}</span>
                   </td>
                   <td className="px-5 py-3 text-white/40 text-xs">
                     <div className="flex items-center gap-1.5">

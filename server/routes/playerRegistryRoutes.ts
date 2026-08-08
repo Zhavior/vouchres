@@ -6,6 +6,7 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { positiveInt, upstreamUnavailable } from "../lib/requestValidators";
 import { requireAuth, requireStaff } from "../middleware/auth";
+import { requireTier } from "../middleware/entitlements";
 import { generationLimiter } from "../middleware/rateLimit";
 import {
   getActivePlayers,
@@ -80,7 +81,9 @@ playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(async (req: RequestWithContext, res: Response) => {
+// Pro Lab data — backs the GOLD-gated Player Edge Lab. Was anonymous; the
+// client-side ProAccessGate hid the graphs but the payload had already shipped.
+playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const playerId = positiveInt(req.params.playerId, "playerId");
     const pitcherRaw = queryString(req.query.pitcherId, 12);

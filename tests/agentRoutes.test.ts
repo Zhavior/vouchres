@@ -132,4 +132,22 @@ describe("agent routes", () => {
       },
     });
   });
+
+  it("rejects invalid generate-picks dates before MLB report lookup", async () => {
+    vi.mocked(getSharedDailyReport).mockClear();
+
+    const response = await fetch(`${baseUrl}/api/agents/alpha/generate-picks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: "2026-07-08&hydrate=linescore" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({
+      ok: false,
+      error: { code: "validation_error" },
+    });
+    expect(getSharedDailyReport).not.toHaveBeenCalled();
+  });
 });

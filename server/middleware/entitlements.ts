@@ -188,8 +188,15 @@ export function requireTierOrQuota(
         pending: true,
       };
 
-      // Refund the reserved slot if the handler fails (keeps race-safe reserve
-      // without permanently burning quota on 4xx/5xx / aborted requests).
+      // Refund the reserved slot only when the *handler* failed — i.e. we sent a
+      // complete non-2xx response. A client that hangs up before the response is
+      // finished is treated as having consumed its slot.
+      //
+      // Refunding on abort is what made this exploitable: the upstream Gemini
+      // call is already in flight (and already billed) when the socket closes, and
+      // nothing cancels it. `curl -m 1` in a loop therefore bought unbounded
+      // upstream spend while the counter was decremented right back down every
+      // time. Charging the aborter is the only version of this that has a ceiling.
       let settled = false;
       const maybeRefund = (reason: "finish" | "close") => {
         if (settled) return;
@@ -197,10 +204,8 @@ export function requireTierOrQuota(
         const q = req.__quota;
         if (!q?.pending) return;
         q.pending = false;
-        const failed =
-          reason === "close"
-            ? !res.writableEnded
-            : res.statusCode < 200 || res.statusCode >= 400;
+        if (reason === "close" && !res.writableEnded) return;
+        const failed = res.statusCode < 200 || res.statusCode >= 400;
         if (!failed) return;
         void refundQuotaCounter(profileId, quotaKey, day).catch((err) => {
           console.warn(

@@ -99,6 +99,8 @@ describe("API route smoke envelopes", () => {
       ok: true,
       status: "ok",
       service: "vouchedge-backend",
+      requestIp: expect.any(String),
+      trustProxy: expect.any(Number),
     });
 
     const response = await requestJson("/api/health/backend");
@@ -190,12 +192,32 @@ describe("API route smoke envelopes", () => {
       details: [{ path: "playerId", message: "Expected positive integer." }],
     });
 
+    // edge-research is now GOLD-gated, so requireAuth short-circuits ahead of
+    // param validation — an anonymous caller gets 401, never a 400 that would
+    // confirm which params the endpoint accepts.
     const badEdgeResearchPitcher = await requestJson("/api/mlb/players/592450/edge-research?pitcherId=bad");
-    expect(badEdgeResearchPitcher.status).toBe(400);
+    expect(badEdgeResearchPitcher.status).toBe(401);
     expect(badEdgeResearchPitcher.body.error).toMatchObject({
-      code: "validation_error",
-      message: "pitcherId must be a positive integer.",
+      code: "missing_token",
     });
+  });
+
+  it("gates Pro Lab data routes against anonymous callers", async () => {
+    // Regression guard: these back the GOLD-tier Pro Lab pages. They were
+    // previously protected only by the client-side ProAccessGate, so the full
+    // premium payload was fetchable with no account at all.
+    const gated = [
+      "/api/mlb/matchup-matrix",
+      "/api/mlb/matchup-matrix/live",
+      "/api/mlb/matchup-matrix/777001/pitcher/592450",
+      "/api/mlb/players/592450/edge-research",
+    ];
+
+    for (const path of gated) {
+      const response = await requestJson(path);
+      expect(response.status, `${path} must reject anonymous callers`).toBe(401);
+      expect(response.body.error).toMatchObject({ code: "missing_token" });
+    }
   });
 
   it("normalizes MLB player registry validation errors before upstream work", async () => {

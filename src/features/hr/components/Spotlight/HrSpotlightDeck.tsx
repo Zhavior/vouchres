@@ -36,7 +36,7 @@ function SpotlightCard({
 
   return (
     <article
-      className={`flex min-w-0 flex-col gap-2.5 rounded-2xl border ${accent.ring} bg-gradient-to-b from-white/[0.04] to-black/40 p-3 backdrop-blur-xl ${accent.glow}`}
+      className={`flex min-w-0 flex-col gap-2.5 rounded-2xl border ${accent.ring} bg-gradient-to-b from-white/[0.04] to-black/45 p-3 ${accent.glow}`}
     >
       <div className="flex items-center gap-1.5">
         <span aria-hidden className="text-sm leading-none">{pick.icon}</span>
@@ -52,7 +52,8 @@ function SpotlightCard({
         aria-label={`Open research for ${row.playerName}`}
       >
         <span className="flex h-11 w-11 shrink-0 items-end justify-center overflow-hidden rounded-xl border border-white/12 bg-black/50">
-          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={44} />
+          {/* Above the fold — these load eagerly rather than popping in. */}
+          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={44} priority />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-black tracking-tight text-white">{row.playerName}</span>

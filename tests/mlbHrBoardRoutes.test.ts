@@ -160,6 +160,19 @@ describe("mlb hr board routes", () => {
     expect(response.headers.get("x-request-id")).toBe(inboundId);
   });
 
+  it("rejects date-board requests outside the season window before building a board", async () => {
+    const { getCachedValidatedHrBoard } = await import("../server/services/hubs/hrBoardHub");
+    const beforeCalls = (getCachedValidatedHrBoard as any).mock.calls.length;
+
+    const response = await fetch(`${baseUrl}/api/mlb/hr-board/date/1900-01-01`);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.ok).toBe(false);
+    expect(String(body.error?.message)).toContain("date must be between");
+    expect((getCachedValidatedHrBoard as any).mock.calls.length).toBe(beforeCalls);
+  });
+
   it("returns ok flat envelope for GET /api/mlb/hr-board/player/:playerId", async () => {
     const response = await fetch(`${baseUrl}/api/mlb/hr-board/player/592450`);
     const body = await response.json();

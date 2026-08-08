@@ -14,41 +14,15 @@ import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
 import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
 import { useProMode } from '../hooks/useProMode';
 import { useRevealOnce } from '../hooks/useRevealOnce';
-// Loaders are named so intent handlers can warm the chunk before it is rendered —
-// a view switch should never be the first time the browser asks for the code.
-const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel');
-const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile');
-
-// Pro-only surfaces, split out of the page chunk. Standard mode never renders
-// any of them, and cold traffic that only ever sees four spotlight cards should
-// not pay to download the tier board, the treemap and five workspace views.
-const loadHrCommandCenter = () => import('../components/CommandCenter/HrCommandCenter');
-const loadWorkspaceSwitcher = () => import('../components/workspace/WorkspaceSwitcher');
-const loadWorkspaceRenderer = () => import('../components/workspace/WorkspaceRenderer');
-const loadHrTopSignalPanel = () => import('../components/Hero/HrTopSignalPanel');
-const loadHrBoard = () => import('../components/Columns/HrBoard');
-const loadHrSignalField = () => import('../components/SignalField/HrSignalField');
-const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet');
-
-/** Everything Pro mode paints on arrival — warmed together the moment it's wanted. */
-const PRO_CHUNKS: Array<() => Promise<unknown>> = [
-  loadHrCommandCenter,
-  loadWorkspaceSwitcher,
-  loadWorkspaceRenderer,
-  loadHrTopSignalPanel,
-  loadHrBoard,
-  loadHrSpreadsheet,
-];
-
-const MostVouchedPlayersPanel = lazy(() => loadMostVouchedPanel().then(m => ({ default: m.MostVouchedPlayersPanel })));
-const HrPlayerProfile = lazy(() => loadHrPlayerProfile().then(m => ({ default: m.HrPlayerProfile })));
-const HrCommandCenter = lazy(() => loadHrCommandCenter().then(m => ({ default: m.HrCommandCenter })));
-const WorkspaceSwitcher = lazy(loadWorkspaceSwitcher);
-const WorkspaceRenderer = lazy(loadWorkspaceRenderer);
-const HrTopSignalPanel = lazy(() => loadHrTopSignalPanel().then(m => ({ default: m.HrTopSignalPanel })));
-const HrBoard = lazy(() => loadHrBoard().then(m => ({ default: m.HrBoard })));
-const HrSignalField = lazy(() => loadHrSignalField().then(m => ({ default: m.HrSignalField })));
-const HrSpreadsheet = lazy(() => loadHrSpreadsheet().then(m => ({ default: m.HrSpreadsheet })));
+import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
+import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
+import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
+import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
+import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
+import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
+import { HrBoard } from '../components/Columns/HrBoard';
+import { HrSignalField } from '../components/SignalField/HrSignalField';
+import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -66,42 +40,7 @@ import '../../../styles/z8-hr-lens.css';
 import '../../../styles/command-deck.css';
 import '../hr-command.css';
 
-/** Warm a lazy chunk without blocking; failures are retried by React on render. */
-function warmChunk(load: () => Promise<unknown>): void {
-  void load().catch(() => {});
-}
 
-/**
- * Run once the main thread is free. Idle callbacks are the right primitive but
- * they never fire in a backgrounded tab, so a timer races alongside and whichever
- * lands first wins — the warm-up always happens, it just prefers a quiet frame.
- */
-function whenIdle(run: () => void): () => void {
-  if (typeof window === 'undefined') return () => {};
-
-  const win = window as unknown as {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  };
-
-  let done = false;
-  const fire = () => {
-    if (done) return;
-    done = true;
-    run();
-  };
-
-  const timer = window.setTimeout(fire, 1200);
-  const idleHandle = typeof win.requestIdleCallback === 'function'
-    ? win.requestIdleCallback(fire, { timeout: 2000 })
-    : null;
-
-  return () => {
-    done = true;
-    window.clearTimeout(timer);
-    if (idleHandle !== null) win.cancelIdleCallback?.(idleHandle);
-  };
-}
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -491,23 +430,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const [workspace, setWorkspace] = useState<WorkspaceView>("overview");
 
-  // Warm the chunks both modes reach for — research and the vouch panel — once
-  // the board is interactive, so opening either never waits on a round-trip.
-  React.useEffect(() => whenIdle(() => {
-    warmChunk(loadMostVouchedPanel);
-    warmChunk(loadHrPlayerProfile);
-  }), []);
-
-  const warmProChunks = React.useCallback(() => {
-    for (const load of PRO_CHUNKS) warmChunk(load);
-  }, []);
-
-  // A Pro user's chunks are fetched on idle; a Standard user's are fetched the
-  // moment they reach for the toggle, so the switch never lands on a spinner.
-  React.useEffect(() => {
-    if (!isProMode) return;
-    return whenIdle(warmProChunks);
-  }, [isProMode, warmProChunks]);
+  const warmProChunks = React.useCallback(() => {}, []);
 
 
   const viewMode = localViewMode;

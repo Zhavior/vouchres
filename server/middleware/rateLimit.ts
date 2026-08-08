@@ -28,6 +28,7 @@ const MAX_MEMORY_BUCKETS = 10_000
 type MemoryBucket = { count: number; resetAt: number }
 
 const memoryBuckets = new Map<string, MemoryBucket>()
+const blockedVerdicts = new Map<string, { resetAt: number }>()
 
 /** Path without query string, tolerating bare request objects used in unit tests. */
 function requestPath(req: Pick<RequestWithContext, 'originalUrl' | 'path'>): string {
@@ -65,6 +66,17 @@ function pruneMemoryBuckets(now: number): void {
   }
 }
 
+function pruneBlockedVerdicts(now: number): void {
+  for (const [key, verdict] of blockedVerdicts) {
+    if (verdict.resetAt <= now) blockedVerdicts.delete(key)
+  }
+  while (blockedVerdicts.size > MAX_MEMORY_BUCKETS) {
+    const oldest = blockedVerdicts.keys().next()
+    if (oldest.done) break
+    blockedVerdicts.delete(oldest.value)
+  }
+}
+
 function memoryIncr(key: string, ttlSeconds: number): MemoryBucket {
   const now = Date.now()
   const existing = memoryBuckets.get(key)
@@ -83,6 +95,7 @@ function memoryIncr(key: string, ttlSeconds: number): MemoryBucket {
 /** Test hook — clears per-process counters between cases. */
 export function resetRateLimitMemoryForTests(): void {
   memoryBuckets.clear()
+  blockedVerdicts.clear()
 }
 
 function sendRateLimited(
@@ -116,6 +129,13 @@ export function rateLimit(options: RateLimitOptions) {
 
     const ip = clientIpKey(req)
     const key = `${options.keyPrefix}:${ip}`
+    const localBlocked = blockedVerdicts.get(key)
+    if (localBlocked) {
+      if (localBlocked.resetAt > Date.now()) {
+        return sendRateLimited(req, res, options, localBlocked.resetAt)
+      }
+      blockedVerdicts.delete(key)
+    }
 
     // No shared store configured — limit per process rather than not at all.
     if (!redis.isEnabled()) {
@@ -127,10 +147,13 @@ export function rateLimit(options: RateLimitOptions) {
     }
 
     try {
-      const count = await redis.incr(key, ttlSeconds)
-      const hits = count ?? 0
+      const hit = await redis.rateLimitHit(key, ttlSeconds)
+      const hits = hit?.count ?? 0
 
       if (hits > options.max) {
+        const resetAt = Date.now() + (hit?.ttlSeconds ?? ttlSeconds) * 1000
+        blockedVerdicts.set(key, { resetAt })
+        if (blockedVerdicts.size > MAX_MEMORY_BUCKETS) pruneBlockedVerdicts(Date.now())
         logger.info('ratelimit.block', {
           requestId: req.requestId,
           route: req.originalUrl,
@@ -139,7 +162,7 @@ export function rateLimit(options: RateLimitOptions) {
           hits,
         })
 
-        return sendRateLimited(req, res, options, Date.now() + ttlSeconds * 1000)
+        return sendRateLimited(req, res, options, resetAt)
       }
 
       return next()

@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LEG_STATUS_META,
+  SLIP_STATUS_META,
   type LegGradeStatus,
   type SlipGradeStatus,
 } from '../types/parlayOsTypes';
@@ -23,7 +24,8 @@ export function ParlayOsStatusBadge({
   status: LegGradeStatus | SlipGradeStatus;
   size?: 'xs' | 'sm';
 }) {
-  const meta = (LEG_STATUS_META as Record<string, typeof LEG_STATUS_META[LegGradeStatus]>)[status]
+  const meta = (SLIP_STATUS_META as Record<string, typeof SLIP_STATUS_META[SlipGradeStatus]>)[status]
+    ?? (LEG_STATUS_META as Record<string, typeof LEG_STATUS_META[LegGradeStatus]>)[status]
     ?? LEG_STATUS_META.pending;
   const sz = size === 'xs' ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5';
   return (

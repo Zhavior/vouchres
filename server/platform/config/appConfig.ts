@@ -19,8 +19,22 @@ export interface AppConfig {
   };
 }
 
+export function parseTrustProxy(raw: string | undefined): number {
+  const value = (raw ?? "1").trim();
+  if (!/^\d+$/.test(value)) {
+    throw new Error("TRUST_PROXY must be an integer string such as 0, 1, or 2.");
+  }
+
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > 8) {
+    throw new Error("TRUST_PROXY must be an integer between 0 and 8.");
+  }
+
+  return parsed;
+}
+
 export const appConfig: AppConfig = {
-  trustProxy: Number(process.env.TRUST_PROXY ?? 1),
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
 
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,

@@ -17,6 +17,11 @@ function includesAll(source: string, snippets: string[], label: string): void {
   }
 }
 
+function definesPolicy(source: string, policyName: string): boolean {
+  const escaped = policyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`create\\s+policy\\s+"${escaped}"`, "i").test(source);
+}
+
 const auth = read("server/middleware/auth.ts");
 const ownership = read("server/middleware/ownership.ts");
 const parlayUserRoutes = read("server/routes/parlay/parlayUserRoutes.ts");
@@ -36,6 +41,7 @@ const grading = read("server/services/grading/gradingService.ts");
 const rlsBase = read("supabase/schema.sql");
 const rlsVisibility = read("supabase/migrations/0005_parlay_visibility.sql");
 const rlsNotifications = read("supabase/migrations/0010_auth_ownership_rls.sql");
+const rlsWriteLockdown = read("supabase/migrations/20260807095357_rls_lockdown_all_writes.sql");
 
 const auditedTables = [
   "profiles",
@@ -60,7 +66,7 @@ for (const table of ["profiles", "picks", "pick_legs", "subscriptions", "posts",
 // re-adds one of these to the base schema, this test fails on purpose.
 // (See migration 20260710000100_rls_lockdown_profiles_picks.sql.)
 for (const forbidden of ["profiles_update_self", "picks_update_self", "picks_insert_self", "pick_legs_write_self"]) {
-  assert(!rlsBase.includes(forbidden), `RLS lockdown regressed: base schema must NOT define owner-write policy "${forbidden}" (writes are service-role only)`);
+  assert(!definesPolicy(rlsBase, forbidden), `RLS lockdown regressed: base schema must NOT define owner-write policy "${forbidden}" (writes are service-role only)`);
 }
 for (const table of ["notifications", "notification_preferences", "push_subscriptions"]) {
   assert(rlsNotifications.includes(`alter table public.${table} enable row level security`), `${table} RLS must be enabled`);
@@ -68,18 +74,21 @@ for (const table of ["notifications", "notification_preferences", "push_subscrip
 
 includesAll(rlsNotifications, [
   "notifications_select_self",
-  "notifications_insert_self",
-  "notifications_update_self",
-  "notifications_delete_self",
   "notification_preferences_select_self",
-  "notification_preferences_insert_self",
-  "notification_preferences_update_self",
   "push_subscriptions_select_self",
-  "push_subscriptions_insert_self",
-  "push_subscriptions_update_self",
-  "push_subscriptions_delete_self",
   "subscriptions_read_self",
-], "RLS policies");
+], "RLS read policies");
+
+includesAll(rlsWriteLockdown, [
+  'drop policy if exists "notifications_insert_self"',
+  'drop policy if exists "notifications_update_self"',
+  'drop policy if exists "notifications_delete_self"',
+  'drop policy if exists "notification_preferences_insert_self"',
+  'drop policy if exists "notification_preferences_update_self"',
+  'drop policy if exists "push_subscriptions_insert_self"',
+  'drop policy if exists "push_subscriptions_update_self"',
+  'drop policy if exists "push_subscriptions_delete_self"',
+], "RLS write lockdown");
 
 includesAll(rlsVisibility + rlsNotifications, [
   "picks_read_public_or_own",

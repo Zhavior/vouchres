@@ -1,5 +1,9 @@
 import { getSupabaseAdmin, supabaseAdmin } from "../../middleware/auth";
-import { hasActiveMembershipForFollower, loadCreatorBusinessBrandSettingsByProfileIds } from "../business/creatorBusinessService";
+import {
+  canFollowerAccessBusinessCapability,
+  hasActiveMembershipForFollower,
+  loadCreatorBusinessBrandSettingsByProfileIds,
+} from "../business/creatorBusinessService";
 import { getProfileSocialStats } from "./followService";
 
 export interface SubscriberChannelProjection {
@@ -82,6 +86,18 @@ export async function buildSubscriberChannelsProjection(userId: string): Promise
   const businessIdByProfileId = new Map<string, string>(
     (profileBusinessRows ?? []).map((row: { owner_profile_id: string; id: string }) => [String(row.owner_profile_id), String(row.id)]),
   );
+  const sharedParlaysAccessByProfileId = new Map<string, boolean>(
+    await Promise.all(
+      profileIds.map(async (profileId) => [
+        profileId,
+        await canFollowerAccessBusinessCapability({
+          ownerProfileId: profileId,
+          followerProfileId: userId,
+          capability: "shared_parlays",
+        }).catch(() => false),
+      ] as const),
+    ),
+  );
   const membershipCountByBusinessId = (membershipRows ?? []).reduce((acc: Record<string, number>, row: { business_id?: string | null }) => {
     const key = String(row.business_id ?? "");
     if (!key) return acc;
@@ -117,6 +133,7 @@ export async function buildSubscriberChannelsProjection(userId: string): Promise
       ...profile,
       capper_settings: businessBrandSettingsByProfileId.get(String(profile.id)) ?? null,
       subscriber_count: membershipCountByBusinessId[businessIdByProfileId.get(String(profile.id)) ?? ""] ?? 0,
+      shared_parlays_access: sharedParlaysAccessByProfileId.get(String(profile.id)) ?? false,
     })),
     owner_profile_id: userId,
   };

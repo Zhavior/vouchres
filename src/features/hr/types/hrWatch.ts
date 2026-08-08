@@ -2,6 +2,11 @@ export type HrWatchMode = 'confirmed' | 'curated' | 'all' | 'blocked';
 export type TruthStatus = 'official' | 'projected' | 'blocked' | 'unknown';
 export type RiskTier = 'Elite' | 'Core' | 'Watch' | 'Deep' | 'Blocked';
 
+/** Which side a hitter bats from. `S` is a switch hitter. */
+export type BatSide = 'L' | 'R' | 'S';
+/** Which hand a pitcher throws with. */
+export type ThrowHand = 'L' | 'R';
+
 export type HrWatchAddLegHandler = (
   player: {
     id: string;
@@ -28,6 +33,10 @@ export interface HrWatchRow {
   teamLogoUrl: string | null;
   opponentLogoUrl: string | null;
   pitcherName?: string | null;
+  /** Side the hitter bats from, for the L/R platoon split. */
+  batSide?: BatSide | null;
+  /** Hand the opposing starter throws with, for the L/R platoon split. */
+  pitcherHand?: ThrowHand | null;
   venue?: string | null;
   gamePk: string | number | null;
   gameTime: string | null;

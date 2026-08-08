@@ -1,3 +1,4 @@
+import { collectEntitlementFlagErrors } from "./betaAccess";
 import { getMissingProductionConfig } from "../services/health/backendHealthService";
 
 /**
@@ -5,8 +6,19 @@ import { getMissingProductionConfig } from "../services/health/backendHealthServ
  * Development and test runs log warnings only so local boot stays frictionless.
  *
  * Production hard-requires: Supabase, CRON_SECRET, Upstash Redis, SENTRY_DSN.
+ *
+ * Entitlement flags are the one thing that fails in *every* environment: a value
+ * we cannot parse would otherwise fall back to "unset" and hand every account the
+ * beta tier, so it has to stop the boot rather than be logged and ignored.
  */
 export function validateProductionEnvAtBoot(): void {
+  const flagErrors = collectEntitlementFlagErrors();
+  if (flagErrors.length > 0) {
+    throw new Error(
+      `Invalid entitlement flag configuration:\n  - ${flagErrors.join("\n  - ")}`,
+    );
+  }
+
   const missing = getMissingProductionConfig();
   const env = process.env.NODE_ENV || "development";
 

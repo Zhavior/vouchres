@@ -18,6 +18,7 @@ import { PlayerHrTag } from '../HrHitBadge';
 import { oddsDisplay } from '../../engine/signalScore';
 import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import { HrOpportunitySummary } from '../Opportunity/HrOpportunitySummary';
+import { PlatoonPill } from '../Platoon/PlatoonPill';
 import {
   buildHrMatchupGroups,
   getHrTableReason,
@@ -161,10 +162,11 @@ function ExpandedDetails({ row, freshness, generatedAt, showMarket }: {
     <div className="grid gap-3 border-t border-[#00f0ff]/15 bg-[#00f0ff]/[0.025] p-3 sm:p-4 xl:grid-cols-[1fr_300px]">
       <div>
         <p className="mb-2 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-[#00f0ff]/75">Signal inputs</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <Metric label="Power" value={row.hitterPower} />
           <Metric label="Pitcher vulnerability" value={row.pitcherVulnerability} />
           <Metric label="Park" value={row.parkFactor} />
+          <Metric label="Platoon" value={row.platoon} />
           <Metric label="Form" value={row.recentForm} />
           <Metric label="Data confidence" value={row.dataConfidence} />
         </div>
@@ -334,6 +336,7 @@ function DesktopTarget({ row, onSelect, onAddToSlip, onTogglePlayerVouch, vouchI
         <td className="px-3 py-3.5 align-top">
           <p className="text-[12px] font-bold leading-5 text-white/80">vs {brief.pitcherLabel}</p>
           <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.06em] text-white/58">Pitcher vulnerability {numberLabel(row.pitcherVulnerability)}</p>
+          <PlatoonPill player={row} className="mt-1.5" />
         </td>
         {showMarket ? (
           <td className="px-3 py-3.5 align-top font-mono">
