@@ -483,6 +483,13 @@ create trigger subscriptions_touch
 -- =========================================================
 -- Row-Level Security
 -- =========================================================
+-- Backend mutations and trusted maintenance always use the service-role key.
+-- Supabase no longer auto-exposes new tables to API roles, so make the server
+-- privilege explicit instead of depending on an environment-specific default.
+grant usage on schema public to service_role;
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
+
 alter table public.profiles        enable row level security;
 alter table public.beta_signups    enable row level security;
 alter table public.cappers         enable row level security;
