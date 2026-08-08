@@ -63,7 +63,7 @@ vi.mock("../server/services/intelligence/centralBrain/brainGeminiReviewService",
 import { registerCentralBrainRoutes } from "../server/routes/centralBrainRoutes";
 import { getDailyMlbCentralBrain } from "../server/services/intelligence/centralBrain/centralBrainService";
 
-let server: Server;
+let server: Server | undefined;
 let baseUrl: string;
 
 beforeAll(async () => {
@@ -82,6 +82,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (!server) return;
+
   await new Promise<void>((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
