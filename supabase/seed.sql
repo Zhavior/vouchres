@@ -27,11 +27,11 @@
 --
 -- For testing without auth, use the service-role key to act as these users.
 
-INSERT INTO public.profiles (id, username, display_name, bio, tier, is_demo, age_confirmed_at, jurisdiction_confirmed_at, jurisdiction)
+INSERT INTO public.profiles (id, username, handle, display_name, bio, tier, is_demo, age_confirmed_at, jurisdiction_confirmed_at, jurisdiction)
 VALUES
-  ('00000000-0000-0000-0000-000000000001', 'demo_alice', 'Alice (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NV'),
-  ('00000000-0000-0000-0000-000000000002', 'demo_bob', 'Bob (Demo)', 'Demo user for development. Not a real person.', 'gold', true, now(), now(), 'US-NV'),
-  ('00000000-0000-0000-0000-000000000003', 'demo_carol', 'Carol (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NJ')
+  ('00000000-0000-0000-0000-000000000001', 'demo_alice', 'demo_alice', 'Alice (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NV'),
+  ('00000000-0000-0000-0000-000000000002', 'demo_bob', 'demo_bob', 'Bob (Demo)', 'Demo user for development. Not a real person.', 'gold', true, now(), now(), 'US-NV'),
+  ('00000000-0000-0000-0000-000000000003', 'demo_carol', 'demo_carol', 'Carol (Demo)', 'Demo user for development. Not a real person.', 'free', true, now(), now(), 'US-NJ')
 ON CONFLICT (id) DO NOTHING;
 
 -- =========================================================
