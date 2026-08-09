@@ -28,6 +28,7 @@ import { parseApiErrorBody, unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../lib/hrBoardSlice";
 import { parseHrBoardApiResponse } from "./hrBoardApiContract";
+import { apiClient, type ApiError } from "../lib/apiClient";
 
 const CLIENT_FETCH_TIMEOUT_MS = 12_000;
 
@@ -139,6 +140,20 @@ function normalizeLiveGamesFallback(raw: LiveGamesDirectPayload): LiveGamesPaylo
   };
 }
 
+async function getAuthenticatedJson<T>(path: string, query?: Record<string, string | undefined>): Promise<T> {
+  try {
+    return await apiClient.get<T>(path, query);
+  } catch (error) {
+    const apiError = error as Partial<ApiError> & { status?: number; code?: string; requestId?: string };
+    throw new VouchEdgeHttpError({
+      status: typeof apiError.status === "number" ? apiError.status : 500,
+      code: typeof apiError.code === "string" ? apiError.code : typeof apiError.error === "string" ? apiError.error : undefined,
+      message: typeof apiError.message === "string" ? apiError.message : undefined,
+      requestId: typeof apiError.requestId === "string" ? apiError.requestId : undefined,
+    });
+  }
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(apiUrl(url), {
     method: "POST",
@@ -164,7 +179,7 @@ export const vouchedgeApi = {
   hrTargets: () => getJson<{ targets: HrTarget[] }>("/api/mlb/reports/hr-targets"),
   sneakyHr: () => getJson<{ sneaky: SneakyHrTarget[] }>("/api/mlb/reports/sneaky-hr"),
   runEnvironments: () => getJson<{ environments: RunEnvironment[] }>("/api/mlb/reports/run-environments"),
-  marketRadar: (date?: string) => getJson<MarketRadarResponse>(`/api/market-radar${date ? `?date=${encodeURIComponent(date)}` : ""}`),
+  marketRadar: (date?: string) => getAuthenticatedJson<MarketRadarResponse>("/api/market-radar", { date }),
 
   // Agents
   agents: () => getJson<{ cappers: CapperAgent[]; judges: JudgeAgent[] }>("/api/agents"),

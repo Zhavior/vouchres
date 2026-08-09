@@ -207,7 +207,7 @@ function MarketDecisionMatrix({
   const lockedMarkets = markets.filter((market) => market.marketEdges.every((edge) => !edge.verifiedComparison));
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/12 bg-[#07111e]/95 shadow-2xl" aria-label="Markets ranked by verified model edge">
+    <section className="overflow-hidden rounded-2xl border border-white/12 bg-ve-graphite/95 shadow-2xl" aria-label="Markets ranked by verified model edge">
       <div className="grid grid-cols-[1.05fr_1.15fr_1.15fr_.95fr] gap-4 border-b border-white/10 bg-black/35 px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white/38 max-lg:hidden">
         <p>Edge rank</p>
         <p>Model vs book</p>
@@ -311,7 +311,7 @@ function LineDisplacementTable({
   const rows = rankedEdges(summary).slice(0, 8);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/12 bg-[#07111e]/95" aria-labelledby="line-displacement-title">
+    <section className="overflow-hidden rounded-2xl border border-white/12 bg-ve-graphite/95" aria-labelledby="line-displacement-title">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
         <div>
           <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Numerical decision matrix</p>
@@ -515,7 +515,7 @@ function MarketTargetDrawer({
   return createPortal(
     <div className="fixed inset-0 z-[10000]" role="dialog" aria-modal="true" aria-labelledby="market-target-drawer-title">
       <button type="button" aria-label="Close market targets" onClick={onClose} className="absolute inset-0 cursor-default bg-black/72 backdrop-blur-sm" />
-      <aside ref={drawerRef} className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col border-l border-white/12 bg-[#07111e] shadow-[-24px_0_70px_rgba(0,0,0,.5)]">
+      <aside ref={drawerRef} className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col border-l border-white/12 bg-ve-graphite shadow-[-24px_0_70px_rgba(0,0,0,.5)]">
         <header className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-4 sm:px-6">
           <div>
             <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Market target drawer</p>
@@ -627,7 +627,7 @@ export default function SlateEdgeRadarPage({ summary, onSectionChange, onBack }:
 
   return (
     <>
-      <main className="min-h-screen w-full bg-[#040910] pb-24 text-white">
+      <main className="min-h-screen w-full bg-ve-obsidian pb-24 text-white">
         <div className="mx-auto max-w-7xl space-y-6 px-3 py-4 sm:px-6 lg:px-8">
           <SlateMacroHero summary={summary} onSectionChange={onSectionChange} onSelectMarket={setSelectedMarket} onBack={onBack} />
 
@@ -636,7 +636,7 @@ export default function SlateEdgeRadarPage({ summary, onSectionChange, onBack }:
           <MarketDecisionMatrix markets={summary.markets} onSelectMarket={setSelectedMarket} />
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="rounded-2xl border border-white/12 bg-[#07111e]/90 p-5">
+            <div className="rounded-2xl border border-white/12 bg-ve-graphite/90 p-5">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-vouch-cyan" />
                 <h2 className="text-xs font-black uppercase tracking-[0.16em] text-white">How the radar thinks</h2>
