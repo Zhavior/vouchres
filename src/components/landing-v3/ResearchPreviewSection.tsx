@@ -1,310 +1,118 @@
-import { useMemo } from "react";
-import {
-  ArrowRight,
-  Clock3,
-  Radio,
-  ShieldAlert,
-  ShieldCheck,
-  TriangleAlert,
-} from "lucide-react";
+import { ArrowRight, CircleDot, Clock3, MapPin, Radio, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useLiveGames } from "../../hooks/queries/useLiveGames";
-import { useHrBoardToday } from "../../hooks/queries/useHrBoardToday";
-import { buildBoard } from "../../features/hr/utils/normalizeHrWatch";
-import type { HrWatchRow } from "../../features/hr/types/hrWatch";
 import { TeamLogo } from "../live/LiveTeamLogo";
-import { logoByTeamId, logoByTeamName, teamIdByName } from "../../lib/teamLogos";
+import { logoByTeamId, logoByTeamName } from "../../lib/teamLogos";
+import { liveGameDisplayStatus } from "../../types/liveGames";
 import {
-  liveGameDisplayStatus,
-  sortLiveGameCards,
-  type LiveGameCard,
-} from "../../types/liveGames";
+  formatGameTime,
+  isFinalGame,
+  isLiveGame,
+  useResearchPreview,
+  type EvidenceItem,
+  type EvidenceState,
+} from "./researchPreviewData";
 
 const groundingEase = [0.22, 1, 0.36, 1] as const;
 
-type EvidenceState = "available" | "partial" | "unavailable";
-
-type EvidenceItem = {
-  label: string;
-  explanation: string;
-  source: string;
-  freshness: string;
-  state: EvidenceState;
-  detail: string;
+const STATE_STYLE: Record<
+  EvidenceState,
+  { chip: string; card: string; label: string; Icon: typeof ShieldCheck }
+> = {
+  available: {
+    chip: "border-emerald-300/25 bg-emerald-300/10 text-emerald-200",
+    card: "border-emerald-300/15 hover:border-emerald-300/30",
+    label: "Available",
+    Icon: ShieldCheck,
+  },
+  partial: {
+    chip: "border-amber-300/25 bg-amber-300/10 text-amber-100",
+    card: "border-amber-300/15 hover:border-amber-300/30",
+    label: "Partial",
+    Icon: TriangleAlert,
+  },
+  unavailable: {
+    chip: "border-white/12 bg-white/[0.04] text-white/50",
+    card: "border-white/[0.07] hover:border-white/15",
+    label: "Unavailable",
+    Icon: ShieldAlert,
+  },
 };
 
-function formatGameTime(iso: string | null): string {
-  if (!iso) return "Time TBD";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "Time TBD";
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  }).format(date);
-}
-
-function formatFeedTime(iso: string | null | undefined): string {
-  if (!iso) return "Timestamp unavailable";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "Timestamp unavailable";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short",
-  }).format(date);
-}
-
-function isLiveGame(game: LiveGameCard): boolean {
-  return Boolean(game.isLive) || /progress|live|in play|warmup|delayed/i.test(game.status);
-}
-
-function isFinalGame(game: LiveGameCard): boolean {
-  return Boolean(game.isFinal) || /final|game over|completed/i.test(game.status);
-}
-
-function pickFeaturedGame(
-  games: LiveGameCard[],
-  boardInput: unknown,
-): LiveGameCard | null {
-  const sorted = sortLiveGameCards(games);
-  if (sorted.length === 0) return null;
-
-  const withResearch = sorted.find(
-    (game) => !isFinalGame(game) && pickMatchupPlayers(game, boardInput).length > 0,
+function MetaCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="mt-1 truncate text-[13px] text-white/80" title={value}>
+        {value}
+      </p>
+    </div>
   );
-  if (withResearch) return withResearch;
+}
+
+function LayerStat({ label, value }: { label: string; value: number | null }) {
+  const pct = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value)));
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-black/25 px-3 py-2.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/40">
+          {label}
+        </span>
+        <span className="font-mono text-sm font-semibold text-white/90">
+          {value == null ? "n/a" : pct}
+        </span>
+      </div>
+      <div
+        className={`mt-2 h-1 overflow-hidden rounded-full ${
+          value == null ? "border border-dashed border-white/15" : "bg-white/[0.08]"
+        }`}
+      >
+        {value != null && (
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-cyan-400/80 to-emerald-300/80"
+            style={{ width: `${pct}%` }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EvidenceCard({ item }: { item: EvidenceItem }) {
+  const style = STATE_STYLE[item.state];
+  const { Icon } = style;
 
   return (
-    sorted.find((game) => isLiveGame(game)) ??
-    sorted.find((game) => !isFinalGame(game)) ??
-    sorted[0] ??
-    null
-  );
-}
+    <div
+      className={`flex h-full flex-col rounded-2xl border bg-white/[0.02] p-4 transition-colors ${style.card}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[14px] font-semibold text-white">{item.label}</p>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] ${style.chip}`}
+        >
+          <Icon aria-hidden="true" className="h-3 w-3" />
+          {style.label}
+        </span>
+      </div>
 
-function resolveTeamId(value: string | null | undefined, fallbackId?: number | null): number | null {
-  if (fallbackId != null && Number.isFinite(fallbackId)) return fallbackId;
-  if (!value) return null;
-  return teamIdByName(value) ?? null;
-}
+      <p className="mt-2 text-[13px] leading-6 text-white/65">{item.explanation}</p>
+      <p className="mt-2.5 text-[12px] leading-5 text-white/45">{item.detail}</p>
 
-function sameTeam(
-  leftName: string | null | undefined,
-  leftId: number | null | undefined,
-  rightName: string | null | undefined,
-  rightId: number | null | undefined,
-): boolean {
-  const left = resolveTeamId(leftName, leftId);
-  const right = resolveTeamId(rightName, rightId);
-  if (left != null && right != null) return left === right;
-
-  const a = (leftName || "").trim().toLowerCase();
-  const b = (rightName || "").trim().toLowerCase();
-  if (!a || !b) return false;
-  return a === b || a.includes(b) || b.includes(a);
-}
-
-function pickMatchupPlayers(game: LiveGameCard, boardInput: unknown): HrWatchRow[] {
-  const board = buildBoard(boardInput);
-  const pool = [...board.confirmed, ...board.curated, ...board.all];
-  const gamePk = String(game.id);
-  const byGame = pool.filter((row) => row.gamePk != null && String(row.gamePk) === gamePk);
-  const byTeams = pool.filter(
-    (row) =>
-      (sameTeam(row.team, null, game.awayTeam, game.awayTeamId) &&
-        sameTeam(row.opponent, null, game.homeTeam, game.homeTeamId)) ||
-      (sameTeam(row.team, null, game.homeTeam, game.homeTeamId) &&
-        sameTeam(row.opponent, null, game.awayTeam, game.awayTeamId)) ||
-      (sameTeam(row.team, null, game.awayAbbr, game.awayTeamId) &&
-        sameTeam(row.opponent, null, game.homeAbbr, game.homeTeamId)) ||
-      (sameTeam(row.team, null, game.homeAbbr, game.homeTeamId) &&
-        sameTeam(row.opponent, null, game.awayAbbr, game.awayTeamId)),
-  );
-  const matched = (byGame.length > 0 ? byGame : byTeams).filter(
-    (row, index, rows) => rows.findIndex((candidate) => candidate.stableId === row.stableId) === index,
-  );
-  return matched.sort((a, b) => b.hrScore - a.hrScore).slice(0, 2);
-}
-
-function scoreState(value: number | null | undefined): EvidenceState {
-  return value == null || Number.isNaN(value) ? "unavailable" : "available";
-}
-
-function buildEvidenceItems(
-  player: HrWatchRow | null,
-  feedAsOf: string | null | undefined,
-  usingDemo: boolean,
-): EvidenceItem[] {
-  const freshness = usingDemo
-    ? "Demo sample — not a live feed timestamp"
-    : formatFeedTime(feedAsOf);
-
-  if (usingDemo || !player) {
-    return [
-      {
-        label: "Bullpen context",
-        explanation: "Shows whether recent usage or rest may affect late-inning leverage.",
-        source: "Research workspace (when published)",
-        freshness,
-        state: "unavailable",
-        detail: usingDemo
-          ? "Demo view only — no live bullpen feed is shown here."
-          : "No bullpen signal is attached to this matchup preview yet.",
-      },
-      {
-        label: "Weather",
-        explanation: "Park weather can change fly-ball carry and matchup context.",
-        source: "Game environment feed (when available)",
-        freshness,
-        state: "unavailable",
-        detail: "Weather is omitted until the product feed returns a forecast.",
-      },
-      {
-        label: "Travel and rest",
-        explanation: "Helps flag short rest, long trips, or home-stand stability.",
-        source: "Schedule context",
-        freshness,
-        state: "partial",
-        detail: "Venue and start time are known; travel/rest scoring is not claimed here.",
-      },
-      {
-        label: "Player or team trends",
-        explanation: "Recent form and matchup trends support the research conclusion.",
-        source: usingDemo ? "Sample copy" : "HR research board",
-        freshness,
-        state: usingDemo ? "unavailable" : "partial",
-        detail: usingDemo
-          ? "Sample data only — open the board after signup for live rows."
-          : "Trend detail appears when a player row is linked to this game.",
-      },
-      {
-        label: "Injury information",
-        explanation: "Lineup and availability notes change who can actually play.",
-        source: "Official lineup / injury reporting (when posted)",
-        freshness,
-        state: "unavailable",
-        detail: "Injury status is not invented when the feed is silent.",
-      },
-      {
-        label: "Historical matchup context",
-        explanation: "Pitcher, park, and platoon history when the board has enough inputs.",
-        source: "MLB Stats API-backed research rows",
-        freshness,
-        state: usingDemo ? "unavailable" : "partial",
-        detail: usingDemo
-          ? "Demo placeholder — not graded history."
-          : "Shown only through player reasons and layer scores when present.",
-      },
-    ];
-  }
-
-  return [
-    {
-      label: "Bullpen context",
-      explanation: "Late-inning leverage depends on who is actually available.",
-      source: "HR research pipeline",
-      freshness,
-      state: scoreState(player.bullpen),
-      detail:
-        player.bullpen != null
-          ? `Bullpen layer score: ${Math.round(player.bullpen)}.`
-          : "Bullpen layer not present on this row.",
-    },
-    {
-      label: "Weather",
-      explanation: "Environment can support or mute power outcomes at the park.",
-      source: player.weather != null ? "Game environment feed" : "Not in payload",
-      freshness,
-      state: scoreState(player.weather),
-      detail:
-        player.weather != null
-          ? `Weather index: ${Math.round(player.weather)}.`
-          : "No weather forecast attached to this player row.",
-    },
-    {
-      label: "Travel and rest",
-      explanation: "Schedule context is used when rest or travel pressure is known.",
-      source: "Schedule + venue context",
-      freshness,
-      state: player.venue || player.gameTime ? "partial" : "unavailable",
-      detail: player.venue
-        ? `Venue listed as ${player.venue}. Dedicated rest/travel score is not claimed unless the row includes it.`
-        : "Travel/rest detail unavailable on this preview.",
-    },
-    {
-      label: "Player or team trends",
-      explanation: "Recent form and pitcher vulnerability help frame the matchup.",
-      source: "HR research board",
-      freshness,
-      state:
-        player.recentForm != null || player.pitcherVulnerability != null
-          ? "available"
-          : "partial",
-      detail: [
-        player.recentForm != null ? `Recent form ${Math.round(player.recentForm)}` : null,
-        player.pitcherVulnerability != null
-          ? `Pitcher vulnerability ${Math.round(player.pitcherVulnerability)}`
-          : null,
-        player.pitcherName ? `vs ${player.pitcherName}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ") || "Trend fields are not populated on this row.",
-    },
-    {
-      label: "Injury / lineup status",
-      explanation: "Confirmed lineups are treated differently from projected previews.",
-      source: "Lineup truth status",
-      freshness,
-      state: player.truthStatus === "official" ? "available" : "partial",
-      detail:
-        player.truthStatus === "official"
-          ? "Confirmed lineup row."
-          : player.truthStatus === "projected"
-            ? "Preview only — official lineup not posted yet."
-            : `Lineup state: ${player.truthStatus}.`,
-    },
-    {
-      label: "Historical matchup context",
-      explanation: "Park, power, and reason codes summarize the supporting evidence.",
-      source: "MLB Stats API-backed research rows",
-      freshness,
-      state: player.reasons.length > 0 || player.parkFactor != null ? "available" : "partial",
-      detail:
-        player.reasons[0] ||
-        (player.parkFactor != null
-          ? `Park factor ${Math.round(player.parkFactor)}.`
-          : "No historical reason text on this row yet."),
-    },
-  ];
-}
-
-function StatePill({ state }: { state: EvidenceState }) {
-  if (state === "available") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">
-        <ShieldCheck className="h-3 w-3" />
-        Available
-      </span>
-    );
-  }
-  if (state === "partial") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-100">
-        <TriangleAlert className="h-3 w-3" />
-        Partial
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
-      <ShieldAlert className="h-3 w-3" />
-      Unavailable
-    </span>
+      <dl className="mt-auto grid gap-1 pt-3.5 text-[11px] leading-4 text-white/35">
+        <div className="flex gap-1.5">
+          <dt className="shrink-0 font-semibold uppercase tracking-[0.1em]">Source</dt>
+          <dd className="min-w-0 truncate" title={item.source}>
+            {item.source}
+          </dd>
+        </div>
+        <div className="flex gap-1.5">
+          <dt className="shrink-0 font-semibold uppercase tracking-[0.1em]">Fresh</dt>
+          <dd className="min-w-0 truncate" title={item.freshness}>
+            {item.freshness}
+          </dd>
+        </div>
+      </dl>
+    </div>
   );
 }
 
@@ -316,43 +124,23 @@ export default function ResearchPreviewSection({
   onExploreBoard,
 }: ResearchPreviewSectionProps) {
   const reduceMotion = useReducedMotion();
-  const liveQuery = useLiveGames({ refetchInterval: 45_000 });
-  const hrQuery = useHrBoardToday(24);
+  const {
+    featuredGame,
+    primaryPlayer,
+    evidenceItems,
+    status,
+    statusLabel,
+    usingDemo,
+    isLoading,
+    slateCount,
+    liveCount,
+    feedTimestamp,
+    sourceLabel,
+  } = useResearchPreview();
 
-  const featuredGame = useMemo(
-    () => pickFeaturedGame(liveQuery.data?.games ?? [], hrQuery.data),
-    [liveQuery.data?.games, hrQuery.data],
-  );
-  const matchupPlayers = useMemo(
-    () => (featuredGame ? pickMatchupPlayers(featuredGame, hrQuery.data) : []),
-    [featuredGame, hrQuery.data],
-  );
-  const primaryPlayer = matchupPlayers[0] ?? null;
-  const usingDemo = !liveQuery.isLoading && !liveQuery.isError && !featuredGame;
-  const evidenceItems = useMemo(
-    () =>
-      buildEvidenceItems(
-        primaryPlayer,
-        featuredGame?.feedAsOf ?? liveQuery.data?.updatedAt,
-        usingDemo,
-      ),
-    [featuredGame?.feedAsOf, liveQuery.data?.updatedAt, primaryPlayer, usingDemo],
-  );
-
-  const statusLabel = !featuredGame
-    ? usingDemo
-      ? "DEMO"
-      : liveQuery.isLoading
-        ? "LOADING"
-        : liveQuery.isError
-          ? "FEED UNAVAILABLE"
-          : "NO GAME"
-    : isLiveGame(featuredGame)
-      ? "LIVE"
-      : isFinalGame(featuredGame)
-        ? "FINAL"
-        : "SCHEDULED";
-
+  const showScore = featuredGame
+    ? isLiveGame(featuredGame) || isFinalGame(featuredGame)
+    : false;
   const awayLogo = featuredGame
     ? logoByTeamId(featuredGame.awayTeamId) ?? logoByTeamName(featuredGame.awayTeam)
     : null;
@@ -364,258 +152,281 @@ export default function ResearchPreviewSection({
     <section
       id="research-preview"
       aria-labelledby="research-preview-title"
-      className="relative isolate scroll-mt-20 border-t border-white/[0.05] bg-black px-4 py-24 sm:px-6 sm:py-32 lg:px-8"
+      className="relative isolate scroll-mt-20 border-t border-white/[0.06] bg-[#04070c] px-4 py-20 sm:px-6 sm:py-24 lg:px-8"
     >
-      <div className="mx-auto max-w-7xl">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-[min(90vw,60rem)] -translate-x-1/2 rounded-full bg-cyan-500/[0.06] blur-3xl"
+      />
+
+      <div className="mx-auto max-w-6xl">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 18 }}
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.4, ease: groundingEase }}
-          className="max-w-3xl"
+          className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1.5">
-            <Radio className="h-3.5 w-3.5 text-cyan-300" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
-              Real research preview
-            </span>
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1.5">
+              <Radio aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-100/80">
+                Real research preview
+              </span>
+            </div>
+            <h2
+              id="research-preview-title"
+              className="mt-5 text-balance text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
+            >
+              See one matchup the way the research board shows it.
+            </h2>
+            <p className="mt-4 max-w-xl text-[15px] leading-7 text-white/65">
+              Pulled from today&apos;s MLB schedule feed and a linked research row when one
+              exists. Missing fields stay missing — no invented confidence, weather, or results.
+            </p>
           </div>
-          <h2
-            id="research-preview-title"
-            className="mt-6 text-balance text-4xl font-black tracking-tight text-white sm:text-5xl"
-          >
-            See one matchup the way the research board shows it.
-          </h2>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-white/60 sm:text-lg sm:leading-8">
-            This preview uses today&apos;s MLB schedule feed and, when available, linked HR
-            research rows. Missing fields stay missing — we do not invent confidence, weather,
-            or results.
-          </p>
+
+          <div className="flex shrink-0 gap-2.5">
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+              <p className="font-mono text-2xl font-semibold text-white">
+                {isLoading ? "—" : slateCount}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/40">
+                Games today
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+              <p className="font-mono text-2xl font-semibold text-white">
+                {isLoading ? "—" : liveCount}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/40">
+                Live now
+              </p>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="mt-12 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-          <article className="rounded-[2rem] border border-white/[0.08] bg-[#070b12]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-8">
-            {usingDemo && (
-              <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-300/[0.08] px-4 py-3 text-sm text-amber-50">
-                Demo research view — sample data. Today&apos;s official slate has no game to
-                feature right now.
-              </div>
-            )}
-            {liveQuery.isError && (
-              <div className="mb-5 rounded-2xl border border-rose-300/25 bg-rose-300/[0.08] px-4 py-3 text-sm text-rose-50">
-                The MLB schedule feed is unavailable. No fallback scores or fake matchups are
-                shown.
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/[0.08] pb-5">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
-                  Featured matchup
-                </p>
-                <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  {featuredGame
-                    ? `${featuredGame.awayTeam} vs ${featuredGame.homeTeam}`
-                    : usingDemo
-                      ? "Sample Away vs Sample Home"
-                      : "Waiting for today’s slate"}
-                </h3>
-                <p className="mt-2 flex items-center gap-2 text-sm text-white/50">
-                  <Clock3 className="h-4 w-4" />
-                  {featuredGame
-                    ? isLiveGame(featuredGame) || isFinalGame(featuredGame)
-                      ? liveGameDisplayStatus(featuredGame)
-                      : formatGameTime(featuredGame.gameDate)
-                    : "Game time unavailable"}
-                </p>
-              </div>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
+        <motion.article
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.4, ease: groundingEase }}
+          className="mt-10 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-b from-[#0a1018]/95 to-[#05080d]/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.85)]"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-4 sm:px-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/60">
+                Featured matchup
+              </span>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${
+                  status === "live"
+                    ? "border border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
+                    : status === "demo"
+                      ? "border border-amber-300/25 bg-amber-300/10 text-amber-100"
+                      : status === "error"
+                        ? "border border-rose-300/25 bg-rose-300/10 text-rose-100"
+                        : "border border-white/10 bg-white/[0.04] text-white/55"
+                }`}
+              >
+                {status === "live" ? (
+                  <CircleDot aria-hidden="true" className="h-2.5 w-2.5" />
+                ) : (
+                  <Clock3 aria-hidden="true" className="h-2.5 w-2.5" />
+                )}
                 {statusLabel}
               </span>
             </div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/35">
+              {feedTimestamp}
+            </p>
+          </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                <div className="flex items-center gap-3">
-                  {awayLogo ? (
-                    <TeamLogo src={awayLogo} alt="" size={36} />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-[10px] text-white/50">
-                      AWY
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-white">
-                      {featuredGame?.awayTeam ?? "Away team"}
-                    </p>
-                    <p className="text-xs text-white/40">Away</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                <div className="flex items-center gap-3">
-                  {homeLogo ? (
-                    <TeamLogo src={homeLogo} alt="" size={36} />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-[10px] text-white/50">
-                      HOM
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-white">
-                      {featuredGame?.homeTeam ?? "Home team"}
-                    </p>
-                    <p className="text-xs text-white/40">Home</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {usingDemo && (
+            <p className="border-b border-amber-300/20 bg-amber-300/[0.07] px-5 py-3 text-[13px] leading-6 text-amber-50 sm:px-7">
+              Demo research view — sample data. Today&apos;s official slate has no game to feature
+              right now.
+            </p>
+          )}
+          {status === "error" && (
+            <p className="border-b border-rose-300/20 bg-rose-300/[0.07] px-5 py-3 text-[13px] leading-6 text-rose-50 sm:px-7">
+              The MLB schedule feed is unavailable. No fallback scores or fake matchups are shown.
+            </p>
+          )}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/[0.07] bg-black/20 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                  Venue
-                </p>
-                <p className="mt-2 text-sm text-white/80">
-                  {featuredGame?.venue || "Venue not yet listed"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/[0.07] bg-black/20 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                  Data timestamp
-                </p>
-                <p className="mt-2 text-sm text-white/80">
-                  {usingDemo
-                    ? "Demo sample"
-                    : formatFeedTime(featuredGame?.feedAsOf ?? liveQuery.data?.updatedAt)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/[0.07] bg-black/20 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
-                  Source
-                </p>
-                <p className="mt-2 text-sm text-white/80">
-                  {usingDemo
-                    ? "Labeled demo only"
-                    : liveQuery.isError
-                      ? "Feed unavailable"
-                      : "MLB schedule feed via VouchEdge API"}
-                </p>
-              </div>
-            </div>
+          <div className="grid gap-6 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div>
+              <h3 className="text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
+                {featuredGame
+                  ? `${featuredGame.awayTeam} @ ${featuredGame.homeTeam}`
+                  : isLoading
+                    ? "Loading today’s slate…"
+                    : usingDemo
+                      ? "Sample Away @ Sample Home"
+                      : "Waiting for today’s slate"}
+              </h3>
 
-            <div className="mt-6 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/70">
-                Key research signals
-              </p>
-              {primaryPlayer ? (
-                <div className="mt-4 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-white">{primaryPlayer.playerName}</p>
-                      <p className="text-sm text-white/50">
-                        {primaryPlayer.team} vs {primaryPlayer.opponent}
-                        {primaryPlayer.pitcherName ? ` · vs ${primaryPlayer.pitcherName}` : ""}
-                      </p>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  {
+                    name: featuredGame?.awayTeam ?? "Away team",
+                    logo: awayLogo,
+                    score: showScore ? featuredGame?.awayScore ?? null : null,
+                    role: "Away",
+                  },
+                  {
+                    name: featuredGame?.homeTeam ?? "Home team",
+                    logo: homeLogo,
+                    score: showScore ? featuredGame?.homeScore ?? null : null,
+                    role: "Home",
+                  },
+                ].map((team) => (
+                  <div
+                    key={team.role}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] p-1.5 text-[10px] font-bold text-white/55">
+                        {team.logo ? <TeamLogo src={team.logo} alt="" size={26} /> : team.role[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-semibold text-white">{team.name}</p>
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-white/35">
+                          {team.role}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-mono text-2xl font-bold text-cyan-200">
-                        {Math.round(primaryPlayer.hrScore)}
-                      </p>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">
-                        HR research score
-                      </p>
-                    </div>
+                    {showScore && (
+                      <span className="font-mono text-xl font-semibold tabular-nums text-white">
+                        {team.score ?? "—"}
+                      </span>
+                    )}
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">
-                        Data confidence
-                      </p>
-                      <p className="mt-1 font-mono text-lg text-white">
-                        {primaryPlayer.dataConfidence == null
-                          ? "Not provided"
-                          : `${Math.round(primaryPlayer.dataConfidence)}`}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">
-                        Lineup truth
-                      </p>
-                      <p className="mt-1 text-sm text-white/80">
-                        {primaryPlayer.truthStatus === "official"
-                          ? "Confirmed lineup"
-                          : primaryPlayer.truthStatus === "projected"
-                            ? "Preview only"
-                            : primaryPlayer.truthStatus}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6 text-white/65">
-                    {primaryPlayer.reasons[0] ||
-                      "No reason text is attached to this row yet. Open the board to inspect the full evidence stack."}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-3 text-sm leading-6 text-white/60">
-                  {usingDemo
-                    ? "Sample mode does not attach fabricated player signals."
-                    : hrQuery.isLoading
-                      ? "Loading linked research rows for this matchup…"
-                      : "No linked HR research row is available for this game yet. Schedule context still stands on its own."}
-                </p>
-              )}
-              <p className="mt-4 text-sm leading-6 text-white/50">
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/[0.07] pt-4 sm:grid-cols-3">
+                <MetaCell
+                  label="First pitch"
+                  value={
+                    featuredGame
+                      ? showScore
+                        ? liveGameDisplayStatus(featuredGame)
+                        : formatGameTime(featuredGame.gameDate)
+                      : "Unavailable"
+                  }
+                />
+                <MetaCell label="Venue" value={featuredGame?.venue || "Not listed"} />
+                <MetaCell label="Source" value={sourceLabel} />
+              </div>
+
+              <p className="mt-5 flex items-start gap-2 rounded-xl border border-white/[0.07] bg-black/25 px-3.5 py-3 text-[12px] leading-6 text-white/50">
+                <MapPin aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/35" />
                 Confidence represents how strongly the available evidence supports the current
                 research conclusion. It is not a guarantee of the outcome.
               </p>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 border-t border-white/[0.08] pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-white/50">
-                After the game, tracked decisions can be compared with the final result in your
-                results workspace.
+            <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-100/70">
+                Key research signals
               </p>
-              <button
-                type="button"
-                onClick={onExploreBoard}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-5 text-sm font-bold text-[#031017] transition hover:bg-cyan-300"
-              >
-                Explore Today&apos;s MLB Board
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </article>
 
-          <div className="space-y-4">
-            <div className="rounded-[2rem] border border-white/[0.08] bg-[#070b12]/90 p-6 sm:p-7">
-              <h3 className="text-xl font-semibold text-white">Evidence cards</h3>
-              <p className="mt-2 text-sm leading-6 text-white/50">
-                Each item shows what is known, what is partial, and what is unavailable for this
-                preview.
-              </p>
-              <div className="mt-5 space-y-3">
-                {evidenceItems.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-white">{item.label}</p>
-                      <StatePill state={item.state} />
+              {primaryPlayer ? (
+                <>
+                  <div className="mt-4 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xl font-bold text-white">
+                        {primaryPlayer.playerName}
+                      </p>
+                      <p className="mt-1 truncate text-[13px] text-white/55">
+                        {primaryPlayer.team} vs {primaryPlayer.opponent}
+                        {primaryPlayer.pitcherName ? ` · vs ${primaryPlayer.pitcherName}` : ""}
+                      </p>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-white/60">{item.explanation}</p>
-                    <p className="mt-3 text-xs leading-5 text-white/40">
-                      Source: {item.source}
-                      <br />
-                      Freshness: {item.freshness}
-                      <br />
-                      {item.detail}
-                    </p>
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-4xl font-bold leading-none text-cyan-200">
+                        {Math.round(primaryPlayer.hrScore)}
+                      </p>
+                      <p className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40">
+                        HR research score
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-2.5">
+                    <LayerStat label="Power" value={primaryPlayer.hitterPower} />
+                    <LayerStat label="Pitcher" value={primaryPlayer.pitcherVulnerability} />
+                    <LayerStat label="Park" value={primaryPlayer.parkFactor} />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span
+                      className={`rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
+                        primaryPlayer.truthStatus === "official"
+                          ? STATE_STYLE.available.chip
+                          : STATE_STYLE.partial.chip
+                      }`}
+                    >
+                      {primaryPlayer.truthStatus === "official"
+                        ? "Confirmed lineup"
+                        : "Preview only"}
+                    </span>
+                    <span className="rounded-md border border-white/12 bg-white/[0.04] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white/55">
+                      Data confidence{" "}
+                      {primaryPlayer.dataConfidence == null
+                        ? "not provided"
+                        : Math.round(primaryPlayer.dataConfidence)}
+                    </span>
+                  </div>
+
+                  {primaryPlayer.reasons[0] && (
+                    <p className="mt-4 border-t border-white/[0.07] pt-4 text-[13px] leading-6 text-white/70">
+                      {primaryPlayer.reasons[0]}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="mt-4 text-[13px] leading-6 text-white/60">
+                  {usingDemo
+                    ? "Sample mode does not attach fabricated player signals."
+                    : isLoading
+                      ? "Loading linked research rows for this matchup…"
+                      : "No linked research row is available for this game yet. Schedule context still stands on its own."}
+                </p>
+              )}
             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-white/[0.07] bg-black/25 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+            <p className="text-[13px] leading-6 text-white/50">
+              After the game, tracked decisions can be compared with the final result.
+            </p>
+            <button
+              type="button"
+              onClick={onExploreBoard}
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-5 text-sm font-bold text-[#03131a] transition hover:brightness-110"
+            >
+              Explore Today&apos;s MLB Board
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        </motion.article>
+
+        <div className="mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h3 className="text-xl font-bold tracking-tight text-white">
+              Evidence behind this matchup
+            </h3>
+            <p className="text-[13px] text-white/45">
+              Colour shows what is known, partial, or unavailable.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            {evidenceItems.map((item) => (
+              <EvidenceCard key={item.label} item={item} />
+            ))}
           </div>
         </div>
       </div>

@@ -29,6 +29,14 @@ const liveHudSource = readFileSync(
   new URL('../src/components/landing/hero/LiveHud.tsx', import.meta.url),
   'utf8',
 );
+const heroCardSource = readFileSync(
+  new URL('../src/components/landing-v3/HeroResearchCard.tsx', import.meta.url),
+  'utf8',
+);
+const previewDataSource = readFileSync(
+  new URL('../src/components/landing-v3/researchPreviewData.ts', import.meta.url),
+  'utf8',
+);
 
 describe('public landing conversion contract', () => {
   it('states the MLB research promise and trust boundaries on the mounted landing', () => {
@@ -44,13 +52,31 @@ describe('public landing conversion contract', () => {
     expect(heroSource).not.toContain('Intel Engine v3.4');
   });
 
+  it('anchors the hero with a data-backed product card instead of hardcoded metrics', () => {
+    expect(heroSource).toContain('<HeroResearchCard');
+    expect(heroCardSource).toContain('useResearchPreview');
+    // Displayed scores must be derived from the feed payload, never literals.
+    expect(heroCardSource).toContain('Math.round(primaryPlayer.hrScore)');
+    for (const fabricated of ['84%', '1,480', 'Refreshed 2 sec ago', '+8.4 Edge', '74°F']) {
+      expect(heroCardSource).not.toContain(fabricated);
+    }
+    expect(heroCardSource).toContain('Demo research view — sample data');
+    expect(heroCardSource).toContain('schedule feed is unavailable');
+  });
+
+  it('reads preview data from one shared source so hero and section agree', () => {
+    expect(previewSource).toContain('useResearchPreview');
+    expect(previewDataSource).toContain('export function useResearchPreview');
+    expect(previewDataSource).toContain('formatFeedTime');
+  });
+
   it('offers the free MLB research beta without inventing paid-only defaults', () => {
     expect(heroSource).toContain('Join Beta');
     expect(heroSource).toContain('onJoinBeta');
     expect(heroSource).toContain('Log in');
     expect(pricingSource).toContain('Join the MLB Research Beta.');
     expect(pricingSource).toContain('No card required');
-    expect(pricingSource).toContain('you will not be charged without explicit consent');
+    expect(pricingSource).toMatch(/will not be charged without explicit consent/i);
     expect(terminalSource).toContain("vouchedge_after_auth_destination");
     expect(terminalSource).toContain('SIGNED_IN_HOME');
   });

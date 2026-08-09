@@ -1,6 +1,7 @@
 import { ArrowRight, LogIn, ShieldCheck } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import VouchEdgeLogo from '../../brand/VouchEdgeLogo';
+import HeroResearchCard from '../../landing-v3/HeroResearchCard';
 import AuroraBackground from './AuroraBackground';
 
 type AuroraHeroProps = {
@@ -19,19 +20,24 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative isolate min-h-[85vh] overflow-hidden border-b border-white/[0.05] bg-black">
+    <section className="relative isolate overflow-hidden border-b border-white/[0.05] bg-black">
       <AuroraBackground />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(32,199,244,0.14),transparent_42%),linear-gradient(to_bottom,transparent_45%,#000_100%)]" />
 
-      <nav className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
+      <nav className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <motion.a
           href="#top"
           initial={reduceMotion ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
+          className="min-w-0"
           aria-label="VouchEdge home"
         >
-          <VouchEdgeLogo showBeta />
+          <VouchEdgeLogo
+            showBeta
+            markClassName="h-9 w-9 sm:h-10 sm:w-10"
+            betaClassName="hidden sm:inline-block"
+          />
         </motion.a>
 
         <div className="hidden items-center gap-7 text-sm font-medium text-white/55 md:flex">
@@ -46,19 +52,20 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           </a>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={onLogin}
+            aria-label="Log in"
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 text-sm font-semibold text-white/75 transition hover:border-white/20 hover:text-white sm:px-4"
           >
-            <LogIn className="h-4 w-4" />
+            <LogIn aria-hidden="true" className="h-4 w-4" />
             <span className="hidden sm:inline">Log in</span>
           </button>
           <button
             type="button"
             onClick={onJoinBeta}
-            className="min-h-11 rounded-xl bg-cyan-400 px-4 text-sm font-black text-[#031017] transition hover:bg-cyan-300"
+            className="min-h-11 whitespace-nowrap rounded-xl bg-cyan-400 px-3.5 text-sm font-black text-[#031017] transition hover:bg-cyan-300 sm:px-4"
           >
             Join Beta
           </button>
@@ -67,32 +74,32 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
 
       <div
         id="top"
-        className="relative z-10 mx-auto flex max-w-[1400px] flex-col items-center px-5 pb-24 pt-24 text-center sm:px-6 lg:px-8 lg:pb-32 lg:pt-32"
+        className="relative z-10 mx-auto grid max-w-[1400px] items-center gap-12 px-5 pb-20 pt-16 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-20"
       >
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center text-center"
+          className="flex w-full flex-col text-center lg:text-left"
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300/90">
-            VouchEdge
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/90">
+            MLB research workspace
           </p>
 
-          <h1 className="mt-6 text-balance text-4xl font-black leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 text-balance text-[2.6rem] font-black leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[4.1rem]">
             Research every MLB matchup before first pitch.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-white/70 sm:text-xl sm:leading-8">
+          <p className="mx-auto mt-5 max-w-xl text-pretty text-base leading-7 text-white/75 sm:text-lg sm:leading-8 lg:mx-0">
             VouchEdge combines official game data, matchup context, trends, and transparent
             reasoning in one research workspace.
           </p>
 
-          <div className="mx-auto mt-9 flex w-full max-w-xl flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
+          <div className="mx-auto mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:items-center lg:mx-0 lg:max-w-none">
             <button
               type="button"
               onClick={onJoinBeta}
-              className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-8 text-base font-black text-[#031017] transition hover:bg-cyan-300 sm:w-auto"
+              className="group inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-7 text-base font-black text-[#03131a] shadow-[0_0_32px_-6px_rgba(34,211,238,0.55)] transition hover:brightness-110 sm:w-auto"
             >
               Explore Today&apos;s MLB Board
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -100,46 +107,37 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             <button
               type="button"
               onClick={onViewDemo}
-              className="min-h-14 w-full rounded-2xl border border-white/15 bg-white/[0.05] px-7 text-base font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/[0.09] sm:w-auto"
+              className="min-h-14 w-full rounded-2xl border border-white/15 px-6 text-base font-semibold text-white/90 transition hover:border-cyan-300/50 hover:bg-white/[0.05] hover:text-white sm:w-auto"
             >
               View a Real Research Example
             </button>
           </div>
 
-          <div className="mx-auto mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 lg:justify-start">
             {trustPoints.map((point) => (
               <span
                 key={point}
-                className="inline-flex items-center gap-2 text-xs font-medium text-white/60 sm:text-sm"
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-white/65"
               >
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 {point}
               </span>
             ))}
           </div>
+
+          <p className="mx-auto mt-6 max-w-xl text-sm leading-6 text-white/45 lg:mx-0">
+            After you create a free beta account you land on today&apos;s research board — not an
+            empty dashboard.
+          </p>
         </motion.div>
 
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: reduceMotion ? 0 : 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="relative mx-auto mt-14 w-full max-w-3xl"
+          className="w-full"
         >
-          <div className="absolute inset-6 rounded-full bg-cyan-500/10 blur-[70px]" aria-hidden="true" />
-          <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#070b12]/80 px-6 py-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200/80">
-              What you can do before signup
-            </p>
-            <p className="mt-3 text-lg font-semibold text-white sm:text-xl">
-              Inspect today&apos;s slate, open a research example, and see how evidence and
-              confidence are labeled.
-            </p>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base sm:leading-7">
-              After you create a free beta account, you land on today&apos;s research board — not
-              an empty dashboard — so you can open a matchup, review evidence, and track a
-              decision.
-            </p>
-          </div>
+          <HeroResearchCard onOpenPreview={onViewDemo} />
         </motion.div>
       </div>
     </section>
