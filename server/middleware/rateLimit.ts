@@ -246,3 +246,10 @@ export const worldChatLimiter = rateLimit({
   max: 40,
   keyPrefix: 'rl:world-chat',
 })
+
+/** Covers /api/discord/authorize, /callback, and /retry — OAuth handshake + Discord API calls. */
+export const discordLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  keyPrefix: 'rl:discord',
+})
