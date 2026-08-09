@@ -52,50 +52,54 @@ export default function PremiumFeatures() {
     <section
       id="evidence"
       aria-labelledby="evidence-title"
-      className="relative scroll-mt-20 border-t border-white/[0.05] bg-black py-24 sm:py-32"
+      className="relative scroll-mt-20 border-t border-white/[0.06] bg-black py-20 sm:py-24"
     >
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="mx-auto mb-16 max-w-3xl text-center"
+          className="max-w-2xl"
         >
-          <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
             Evidence
           </span>
 
           <h2
             id="evidence-title"
-            className="mt-8 text-balance text-4xl font-black tracking-tight text-white sm:text-5xl"
+            className="mt-5 text-balance text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
           >
             Evidence you can inspect — including what is incomplete.
           </h2>
 
-          <p className="mt-6 text-lg leading-8 text-white/60">
+          <p className="mt-4 text-[15px] leading-7 text-white/65">
             Each evidence type has a plain-English role, a source, and a freshness rule. If the
             feed does not have it, the board does not pretend it does.
           </p>
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-12 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {evidenceTypes.map(({ icon: Icon, title, text, source }, index) => (
             <motion.div
               key={title}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05, duration: 0.35 }}
-              className="rounded-[1.75rem] border border-white/[0.06] bg-ve-obsidian/80 p-7"
+              transition={{ delay: index * 0.04, duration: 0.32 }}
+              className="flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-cyan-300/25"
             >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10">
-                <Icon className="h-6 w-6 text-cyan-300" strokeWidth={1.8} />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/18 to-emerald-400/10">
+                  <Icon aria-hidden="true" className="h-5 w-5 text-cyan-200" strokeWidth={1.9} />
+                </div>
+                <h3 className="text-[15px] font-bold tracking-tight text-white">{title}</h3>
               </div>
-              <h3 className="text-xl font-semibold tracking-tight text-white">{title}</h3>
-              <p className="mt-3 text-sm leading-7 text-white/60">{text}</p>
-              <p className="mt-4 text-xs uppercase tracking-[0.16em] text-white/35">
-                Source: {source}
+
+              <p className="mt-3.5 text-[13px] leading-6 text-white/65">{text}</p>
+
+              <p className="mt-auto pt-4 text-[11px] leading-4 text-white/35">
+                <span className="font-semibold uppercase tracking-[0.1em]">Source</span> {source}
               </p>
             </motion.div>
           ))}

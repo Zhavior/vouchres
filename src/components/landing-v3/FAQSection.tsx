@@ -48,46 +48,54 @@ export default function FAQSection() {
     <section
       id="faq"
       aria-labelledby="faq-title"
-      className="relative scroll-mt-20 border-t border-white/6 bg-ve-obsidian py-24 sm:py-32"
+      className="relative scroll-mt-20 border-t border-white/[0.06] bg-ve-obsidian py-20 sm:py-24"
     >
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-4xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="text-center"
+          className="max-w-2xl"
         >
-          <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
             FAQ
           </span>
 
-          <h2 id="faq-title" className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h2
+            id="faq-title"
+            className="mt-5 text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
+          >
             Questions skeptical visitors ask first
           </h2>
 
-          <p className="mt-6 text-lg text-white/60">
+          <p className="mt-4 text-[15px] leading-7 text-white/65">
             Clear answers about what VouchEdge is — and what it is not.
           </p>
         </motion.div>
 
-        <div className="mt-14 space-y-4">
+        <div className="mt-10 divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02]">
           {faqs.map((faq, index) => (
             <motion.details
               key={faq.question}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.04, duration: 0.35 }}
-              className="group rounded-3xl border border-white/8 bg-white/[0.03] p-6 open:bg-white/[0.04]"
+              transition={{ delay: index * 0.03, duration: 0.3 }}
+              className="group px-5 py-4 transition-colors open:bg-white/[0.03] sm:px-6"
             >
-              <summary className="cursor-pointer list-none text-left text-lg font-semibold text-white marker:content-none">
+              <summary className="cursor-pointer list-none text-left text-[15px] font-semibold text-white marker:content-none">
                 <span className="flex items-center justify-between gap-4">
                   {faq.question}
-                  <span className="text-cyan-300 transition group-open:rotate-45">+</span>
+                  <span
+                    aria-hidden="true"
+                    className="text-lg leading-none text-cyan-300 transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
                 </span>
               </summary>
-              <p className="mt-4 leading-7 text-white/60">{faq.answer}</p>
+              <p className="mt-3 max-w-3xl text-[14px] leading-7 text-white/65">{faq.answer}</p>
             </motion.details>
           ))}
         </div>

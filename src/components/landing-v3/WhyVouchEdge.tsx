@@ -30,51 +30,56 @@ export default function WhyVouchEdge() {
     <section
       id="how-it-works"
       aria-labelledby="how-it-works-title"
-      className="relative scroll-mt-20 border-t border-white/6 bg-ve-obsidian py-24 sm:py-32"
+      className="relative scroll-mt-20 border-t border-white/[0.06] bg-ve-obsidian py-20 sm:py-24"
     >
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="mx-auto max-w-3xl text-center"
+          className="max-w-2xl"
         >
-          <div className="mb-5 inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
             How it works
-          </div>
+          </span>
 
           <h2
             id="how-it-works-title"
-            className="text-4xl font-semibold tracking-tight text-white sm:text-5xl"
+            className="mt-5 text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
           >
             A simple MLB research workflow.
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
-            VouchEdge is built for people who want context before they decide — not a sportsbook
-            tip sheet and not a guarantee.
+          <p className="mt-4 text-[15px] leading-7 text-white/65">
+            Built for people who want context before they decide — not a sportsbook tip sheet and
+            not a guarantee.
           </p>
         </motion.div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
           {steps.map(({ icon: Icon, step, title, description }, index) => (
             <motion.div
               key={title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.4 }}
-              className="rounded-3xl border border-white/8 bg-white/[0.03] p-8"
+              transition={{ delay: index * 0.07, duration: 0.35 }}
+              className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-6 transition-colors hover:border-cyan-300/25"
             >
-              <div className="mb-6 flex items-center justify-between gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10">
-                  <Icon className="h-6 w-6 text-cyan-300" strokeWidth={1.8} />
-                </div>
-                <span className="font-mono text-sm font-semibold text-white/30">{step}</span>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-2 -top-5 font-mono text-[5rem] font-black leading-none text-white/[0.045]"
+              >
+                {step}
+              </span>
+
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/10">
+                <Icon aria-hidden="true" className="h-5 w-5 text-cyan-200" strokeWidth={1.9} />
               </div>
-              <h3 className="text-xl font-semibold text-white">{title}</h3>
-              <p className="mt-3 leading-7 text-white/60">{description}</p>
+
+              <h3 className="relative mt-5 text-lg font-bold text-white">{title}</h3>
+              <p className="relative mt-2 text-[14px] leading-6 text-white/65">{description}</p>
             </motion.div>
           ))}
         </div>

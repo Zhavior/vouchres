@@ -1,5 +1,7 @@
 export { default as ResearchPreviewSection } from "./ResearchPreviewSection";
 export type { ResearchPreviewSectionProps } from "./ResearchPreviewSection";
+export { default as HeroResearchCard } from "./HeroResearchCard";
+export type { HeroResearchCardProps } from "./HeroResearchCard";
 export { default as LiveSportsIntelligence } from "./LiveSportsIntelligence";
 export { default as WhyVouchEdge } from "./WhyVouchEdge";
 export { default as PremiumFeatures } from "./PremiumFeatures";
