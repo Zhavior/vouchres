@@ -78,6 +78,8 @@ export const helmetMiddleware = helmet({
         "'self'",
         "https://statsapi.mlb.com",
         "https://*.supabase.co",
+        // Supabase Realtime uses a separate WebSocket origin (wss://), not https://
+        "wss://*.supabase.co",
         "https://api.stripe.com",
         "https://*.ingest.us.sentry.io",
         "https://vitals.vercel-insights.com",
