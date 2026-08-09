@@ -2,6 +2,7 @@ import { putGuildMember, putGuildMemberRole, type PutGuildMemberResult } from ".
 import { getDiscordAuthTokens } from "../../repositories/discordAuthRepository";
 import { getLiveDiscordAccessToken, refreshAndPersistDiscordTokens } from "./discordTokenService";
 import type { GuildJoinOutcome } from "./discordTypes";
+import { captureException } from "../../lib/sentry";
 
 /**
  * Server-only. Adds a user to the VouchEdge Discord guild (via their OAuth
@@ -71,6 +72,18 @@ export async function interpretGuildMemberResult(result: PutGuildMemberResult, d
         errorCode: roleResult.errorBody?.code,
         errorMessage: roleResult.errorBody?.message,
       });
+      // Ops misconfiguration (bot role sits below @Open Beta, or lacks Manage
+      // Roles) — this is never a user-fixable error, so it needs to page
+      // someone rather than sit quietly in stdout. betaAccess is still never
+      // marked true (see guildJoinSucceeded() in discordConnectionService.ts).
+      captureException(new Error("[discord] role assignment forbidden — bot role hierarchy or Manage Roles misconfiguration"), {
+        tags: { service: "discord", discord_failure: "role_assignment_forbidden" },
+        extra: {
+          discordUserId,
+          errorCode: roleResult.errorBody?.code,
+          errorMessage: roleResult.errorBody?.message,
+        },
+      });
       return { kind: "forbidden", roleAssigned: false, reason: "role_assignment_forbidden" };
     }
     console.error("[discord] role assignment failed with unexpected status", {
@@ -87,6 +100,17 @@ export async function interpretGuildMemberResult(result: PutGuildMemberResult, d
       discordUserId,
       errorCode: result.errorBody?.code,
       errorMessage: result.errorBody?.message,
+    });
+    // Same rationale as the role-assignment 403 above: an ops
+    // misconfiguration (bot lacks guilds.join-relevant permissions, or its
+    // role sits below @Open Beta), never marked as betaAccess success.
+    captureException(new Error("[discord] guild join forbidden — bot permission or role hierarchy misconfiguration"), {
+      tags: { service: "discord", discord_failure: "guild_join_forbidden" },
+      extra: {
+        discordUserId,
+        errorCode: result.errorBody?.code,
+        errorMessage: result.errorBody?.message,
+      },
     });
     return { kind: "forbidden", roleAssigned: false, reason: "guild_join_forbidden" };
   }
