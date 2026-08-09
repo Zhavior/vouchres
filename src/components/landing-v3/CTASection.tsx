@@ -13,7 +13,7 @@ export default function CTASection({
   return (
     <section
       id="join-beta"
-      className="relative scroll-mt-20 overflow-hidden border-t border-white/[0.06] bg-[#04070c] py-24"
+      className="relative scroll-mt-20 overflow-hidden border-t border-white/[0.06] bg-black py-24"
     >
       <div aria-hidden="true" className="absolute inset-0">
         <div className="absolute left-1/2 top-1/2 h-[420px] w-[min(92vw,44rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/[0.09] blur-[130px]" />

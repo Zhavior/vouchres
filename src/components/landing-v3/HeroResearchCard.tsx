@@ -113,7 +113,7 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
         className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(circle_at_30%_20%,rgba(34,211,238,0.18),transparent_60%),radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.14),transparent_55%)] blur-2xl"
       />
 
-      <div className="relative overflow-hidden rounded-[26px] border border-white/12 bg-gradient-to-b from-[#0b131d]/95 to-[#05080d]/95 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-[26px] border border-white/12 bg-gradient-to-b from-ve-graphite/95 to-ve-obsidian/95 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent"

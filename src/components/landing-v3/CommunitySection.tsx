@@ -45,7 +45,7 @@ export default function CommunitySection({
     <section
       id="trust-ledger"
       aria-labelledby="trust-ledger-title"
-      className="relative scroll-mt-20 border-t border-white/[0.06] bg-[#04070c] py-20 sm:py-24"
+      className="relative scroll-mt-20 border-t border-white/[0.06] bg-black py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
@@ -111,7 +111,7 @@ export default function CommunitySection({
                   transition={{ delay: index * 0.06, duration: 0.35 }}
                   className="relative flex gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-cyan-300/25"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#080d14]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-ve-graphite">
                     <Icon aria-hidden="true" className="h-4.5 w-4.5 text-cyan-200" />
                   </div>
                   <div className="min-w-0">

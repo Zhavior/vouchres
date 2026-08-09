@@ -152,7 +152,7 @@ export default function ResearchPreviewSection({
     <section
       id="research-preview"
       aria-labelledby="research-preview-title"
-      className="relative isolate scroll-mt-20 border-t border-white/[0.06] bg-[#04070c] px-4 py-20 sm:px-6 sm:py-24 lg:px-8"
+      className="relative isolate scroll-mt-20 border-t border-white/[0.06] bg-black px-4 py-20 sm:px-6 sm:py-24 lg:px-8"
     >
       <div
         aria-hidden="true"
@@ -211,7 +211,7 @@ export default function ResearchPreviewSection({
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.4, ease: groundingEase }}
-          className="mt-10 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-b from-[#0a1018]/95 to-[#05080d]/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.85)]"
+          className="mt-10 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-b from-ve-graphite/95 to-ve-obsidian/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.85)]"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-4 sm:px-7">
             <div className="flex flex-wrap items-center gap-2">

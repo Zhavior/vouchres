@@ -56,7 +56,7 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="mt-10 overflow-hidden rounded-[26px] border border-cyan-300/20 bg-gradient-to-b from-cyan-400/[0.09] to-[#05080d]/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.8)]"
+          className="mt-10 overflow-hidden rounded-[26px] border border-cyan-300/20 bg-gradient-to-b from-cyan-400/[0.09] to-ve-obsidian/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.8)]"
         >
           <div className="grid gap-8 p-7 sm:p-9 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:items-center">
             <div>

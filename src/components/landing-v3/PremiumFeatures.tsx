@@ -52,7 +52,7 @@ export default function PremiumFeatures() {
     <section
       id="evidence"
       aria-labelledby="evidence-title"
-      className="relative scroll-mt-20 border-t border-white/[0.06] bg-[#04070c] py-20 sm:py-24"
+      className="relative scroll-mt-20 border-t border-white/[0.06] bg-black py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl px-6">
         <motion.div
