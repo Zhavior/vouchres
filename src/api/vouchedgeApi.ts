@@ -19,7 +19,7 @@ import type { HrFeedResponse } from "../types/notifications";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import type { LiveGamesPayload } from "../types/liveGames";
-import type { MarketRadarResponse } from "../types/marketRadar";
+import type { MarketRadarResponse, MlbMarketRadarResponse } from "../types/marketRadar";
 import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
 import type { LiveGamesDirectPayload } from "../lib/mlbDirect";
 import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
@@ -180,6 +180,7 @@ export const vouchedgeApi = {
   sneakyHr: () => getJson<{ sneaky: SneakyHrTarget[] }>("/api/mlb/reports/sneaky-hr"),
   runEnvironments: () => getJson<{ environments: RunEnvironment[] }>("/api/mlb/reports/run-environments"),
   marketRadar: (date?: string) => getAuthenticatedJson<MarketRadarResponse>("/api/market-radar", { date }),
+  mlbMarketRadar: (date?: string) => getJson<MlbMarketRadarResponse>(`/api/mlb/market-radar${date ? `?date=${encodeURIComponent(date)}` : ""}`, 30_000),
 
   // Agents
   agents: () => getJson<{ cappers: CapperAgent[]; judges: JudgeAgent[] }>("/api/agents"),

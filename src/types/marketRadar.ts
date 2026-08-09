@@ -42,3 +42,35 @@ export interface MarketRadarResponse {
   counts: Record<MarketRadarMarket, number>;
   warnings: string[];
 }
+
+export interface MlbPitcherKResearch {
+  subjectId: string;
+  subject: string;
+  team: string;
+  opponent: string;
+  seasonKPer9: number;
+  recentKAverage: number | null;
+  gamesStarted: number;
+  inningsPitched: number;
+}
+
+export interface MlbStolenBaseResearch {
+  subjectId: string;
+  subject: string;
+  team: string;
+  opponent: string;
+  estimatedProbability: number;
+  seasonStolenBases: number;
+  successRate: number;
+  attemptsPerGame: number;
+  lineupConfirmed: boolean;
+}
+
+export interface MlbMarketRadarResponse {
+  date: string;
+  generatedAt: string;
+  provider: { id: 'mlb_stats_api'; status: 'live'; eventCount: number; signalCount: number };
+  pitcherKs: MlbPitcherKResearch[];
+  stolenBases: MlbStolenBaseResearch[];
+  warnings: string[];
+}

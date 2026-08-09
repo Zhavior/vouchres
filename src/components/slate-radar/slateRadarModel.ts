@@ -1,6 +1,6 @@
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import type { DailyMlbReport, DataQuality } from '../../types/mlb';
-import type { MarketRadarEdge, MarketRadarResponse } from '../../types/marketRadar';
+import type { MlbMarketRadarResponse } from '../../types/marketRadar';
 
 export type SlateMarketId = 'home_runs' | 'pitcher_ks' | 'stolen_bases' | 'hits';
 export type SlateMarketVerdict = 'research' | 'selective' | 'monitor' | 'avoid';
@@ -34,7 +34,7 @@ export interface SlateMarketEdge {
   bookLine: string;
   modelProjection: string;
   deltaLabel: string;
-  direction: 'over' | 'under' | 'value' | 'awaiting';
+  direction: 'over' | 'under' | 'value' | 'research' | 'awaiting';
   detail: string;
   modelValue?: number;
   marketValue?: number;
@@ -42,6 +42,8 @@ export interface SlateMarketEdge {
   edgePoints?: number;
   valueUnit?: '%' | 'Ks';
   verifiedComparison?: boolean;
+  researchSignal?: boolean;
+  researchRankValue?: number;
   addable?: boolean;
   candidate?: {
     stableId: string;
@@ -80,7 +82,7 @@ export interface SlateRadarSummary {
   provider: {
     status: 'loading' | 'live' | 'error';
     eventCount: number | null;
-    quoteCount: number | null;
+    signalCount: number | null;
     message: string;
   };
 }
@@ -90,7 +92,7 @@ interface BuildSlateRadarInput {
   hrRows: readonly HrWatchRow[];
   loading: boolean;
   hasError: boolean;
-  marketRadar?: MarketRadarResponse | null;
+  mlbResearch?: MlbMarketRadarResponse | null;
   marketRadarLoading?: boolean;
   marketRadarError?: string | null;
 }
@@ -152,123 +154,29 @@ function formatProbability(value: number | null | undefined) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function normalizedName(value: string) {
-  return value.toLowerCase().replace(/\b(jr|sr|ii|iii|iv)\b\.?/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
-function serverMarketEdge(edge: MarketRadarEdge, rows: readonly HrWatchRow[]): SlateMarketEdge {
-  const probabilityMarket = edge.modelProbability != null;
-  const deltaValue = probabilityMarket ? edge.delta * 100 : edge.delta;
-  const row = rows.find((candidate) => normalizedName(candidate.playerName) === normalizedName(edge.subject));
-  const direction = edge.status === 'TARGET UNDER' || edge.direction === 'under' || edge.direction === 'no'
-    ? 'under'
-    : edge.status === 'NO EDGE / MONITOR' ? 'awaiting' : edge.market === 'batter_home_runs' ? 'value' : 'over';
-  return {
-    id: edge.id,
-    subject: edge.subject,
-    bookLine: `${edge.direction.toUpperCase()} ${edge.line ?? 0.5} · ${edge.price.american > 0 ? '+' : ''}${edge.price.american} · ${edge.bookmaker}`,
-    modelProjection: probabilityMarket ? `${(edge.modelValue * 100).toFixed(1)}%` : `${edge.modelValue.toFixed(1)} Ks`,
-    deltaLabel: `${deltaValue >= 0 ? '+' : ''}${deltaValue.toFixed(1)} ${probabilityMarket ? 'pts' : 'Ks'}`,
-    direction,
-    detail: `${edge.status}. ${edge.warnings[0] ?? 'All required comparison inputs are present.'}`,
-    modelValue: probabilityMarket ? edge.modelValue * 100 : edge.modelValue,
-    marketValue: probabilityMarket ? edge.marketImpliedProbability * 100 : edge.line ?? undefined,
-    scaleMax: probabilityMarket ? 50 : 15,
-    edgePoints: deltaValue,
-    valueUnit: probabilityMarket ? '%' : 'Ks',
-    verifiedComparison: true,
-    addable: edge.status === 'VALUE' || edge.status === 'TARGET OVER' || edge.status === 'TARGET UNDER' || edge.status === 'HIGH SB EDGE',
-    candidate: row ? {
-      stableId: row.stableId, playerId: row.playerId, playerName: row.playerName, team: row.team,
-      opponent: row.opponent, headshotUrl: row.headshotUrl, gamePk: row.gamePk,
-      bookOdds: edge.price.american, truthStatus: 'official',
-      primaryReason: row.reasons[0] ?? null, primaryRisk: edge.warnings[0] ?? row.warnings[0] ?? null,
-    } : undefined,
-  };
-}
-
-function mergeLiveEdges(markets: SlateMarketRadar[], radar: MarketRadarResponse | null | undefined, rows: readonly HrWatchRow[]) {
-  if (!radar) return markets;
-  const marketMap: Partial<Record<SlateMarketId, MarketRadarEdge['market'][]>> = {
-    home_runs: ['batter_home_runs'], pitcher_ks: ['pitcher_strikeouts'], stolen_bases: ['batter_stolen_bases'],
-    hits: ['batter_hits', 'batter_total_bases'],
-  };
-  return markets.map((market) => {
-    const keys = marketMap[market.id] ?? [];
-    const liveEdges = radar.edges.filter((edge) => keys.includes(edge.market)).map((edge) => serverMarketEdge(edge, rows));
-    if (liveEdges.length === 0) return market;
-    return {
-      ...market,
-      marketEdges: liveEdges,
-      verdict: 'research' as const,
-      edgeLabel: 'Verified model vs book',
-      detail: `${liveEdges.length} server-verified comparison${liveEdges.length === 1 ? '' : 's'} with a current sportsbook price.`,
-    };
-  });
-}
-
 function buildHrMarketEdges(rows: readonly HrWatchRow[]): SlateMarketEdge[] {
-  const edges = rows
-    .filter((row) => typeof row.hrProbability === 'number' && typeof row.impliedProbability === 'number')
-    .map((row) => {
-      const model = row.hrProbability ?? 0;
-      const implied = row.impliedProbability ?? 0;
-      const delta = model - implied;
-      return {
-        row,
-        delta,
-      };
-    })
-    .sort((a, b) => b.delta - a.delta)
-    .slice(0, 3);
+  const modeled = rows.filter((row) => row.truthStatus === 'official' && typeof row.hrProbability === 'number')
+    .sort((a, b) => (b.hrProbability ?? 0) - (a.hrProbability ?? 0));
+  if (modeled.length === 0) return [{
+    id: 'hr-awaiting-mlb', subject: 'Home run market', bookLine: 'Awaiting confirmed MLB lineups',
+    modelProjection: 'Slate environment pending', deltaLabel: 'PASS FOR NOW', direction: 'awaiting',
+    detail: 'The MLB board has not returned enough confirmed hitters to assess the home-run market today.',
+  }];
 
-  if (edges.length === 0) {
-    return [{
-      id: 'hr-awaiting-lines',
-      subject: 'HR market',
-      bookLine: 'Awaiting sportsbook lines',
-      modelProjection: 'Model probability available only when player feed includes it',
-      deltaLabel: 'No EV delta',
-      direction: 'awaiting',
-      detail: 'The radar will not claim a home-run betting edge without a book-implied probability or usable price.',
-    }];
-  }
-
-  return edges.map(({ row, delta }) => ({
-    id: `hr-edge-${row.stableId}`,
-    subject: row.playerName,
-    bookLine: `${row.oddsLabel} · ${formatProbability(row.impliedProbability) ?? 'market ?'}`,
-    modelProjection: formatProbability(row.hrProbability) ?? 'model ?',
-    deltaLabel: `${delta >= 0 ? '+' : ''}${(delta * 100).toFixed(1)} pts`,
-    direction: delta >= 0 ? 'value' : 'under',
-    modelValue: (row.hrProbability ?? 0) * 100,
-    marketValue: (row.impliedProbability ?? 0) * 100,
-    scaleMax: 50,
-    edgePoints: delta * 100,
-    verifiedComparison: row.truthStatus === 'official'
-      && typeof row.bookOdds === 'number'
-      && Number.isFinite(row.bookOdds),
-    addable: row.truthStatus === 'official'
-      && typeof row.bookOdds === 'number'
-      && Number.isFinite(row.bookOdds)
-      && delta > 0,
-    candidate: {
-      stableId: row.stableId,
-      playerId: row.playerId,
-      playerName: row.playerName,
-      team: row.team,
-      opponent: row.opponent,
-      headshotUrl: row.headshotUrl,
-      gamePk: row.gamePk,
-      bookOdds: row.bookOdds ?? null,
-      truthStatus: row.truthStatus,
-      primaryReason: row.reasons[0] ?? null,
-      primaryRisk: row.warnings[0] ?? null,
-    },
-    detail: delta >= 0
-      ? 'Model probability is above the book-implied probability.'
-      : 'Book price is richer than the current model probability.',
-  }));
+  const topSample = modeled.slice(0, 10);
+  const averageTopProbability = average(topSample.map((row) => row.hrProbability ?? 0));
+  const qualifiedSpots = modeled.filter((row) => row.hrScore >= 72).length;
+  return [{
+    id: 'hr-market-research',
+    subject: 'Home run market',
+    bookLine: `${modeled.length} confirmed hitters analyzed`,
+    modelProjection: `${formatProbability(averageTopProbability)} average among top 10`,
+    deltaLabel: qualifiedSpots >= 6 ? 'LOOK AT HRs' : qualifiedSpots >= 3 ? 'SELECTIVE HRs' : 'PASS / MONITOR',
+    direction: 'research',
+    detail: `${qualifiedSpots} hitters clear the current HR Intelligence core threshold. This is a slate-level market hint, not an individual player pick.`,
+    researchSignal: true,
+    researchRankValue: Math.min(1, (averageTopProbability / 0.15) * 0.7 + Math.min(qualifiedSpots / 10, 1) * 0.3),
+  }];
 }
 
 function split(
@@ -397,7 +305,7 @@ function buildHomeRunRadar(report: DailyMlbReport | null, rows: readonly HrWatch
   };
 }
 
-function buildPitcherKsRadar(report: DailyMlbReport | null): SlateMarketRadar {
+function buildPitcherKsRadar(report: DailyMlbReport | null, research: MlbMarketRadarResponse | null | undefined): SlateMarketRadar {
   const counts = gameCounts(report);
   const probablePitchers = (report?.games ?? []).reduce((sum, game) => (
     sum + (game.probablePitchers.away ? 1 : 0) + (game.probablePitchers.home ? 1 : 0)
@@ -411,6 +319,34 @@ function buildPitcherKsRadar(report: DailyMlbReport | null): SlateMarketRadar {
   const score = round((pitcherCoverage * 100 * 0.34) + (stability * 100 * 0.24) + (timing * 0.22) + (dataQualityMultiplier(report?.dataQuality) * 100 * 0.2));
   const confidence = round((pitcherCoverage * 100 * 0.5) + (dataQualityMultiplier(report?.dataQuality) * 100 * 0.32) + (vulnerableCount > 0 ? 18 : 0));
   const verdict = marketVerdict(score, Math.min(confidence, 62));
+  const pitcherRows = research?.pitcherKs ?? [];
+  const topPitcher = pitcherRows[0];
+  const topPitcherSample = pitcherRows.slice(0, 8);
+  const averageSeasonKPer9 = average(topPitcherSample.map((pitcher) => pitcher.seasonKPer9));
+  const recentValues = topPitcherSample.map((pitcher) => pitcher.recentKAverage).filter((value): value is number => value != null);
+  const averageRecentKs = recentValues.length > 0 ? average(recentValues) : null;
+  const highKStarters = pitcherRows.filter((pitcher) => pitcher.seasonKPer9 >= 9).length;
+  const marketEdges: SlateMarketEdge[] = pitcherRows.length > 0
+    ? [{
+      id: 'k-market-research',
+      subject: 'Pitcher strikeout market',
+      bookLine: `${pitcherRows.length} probable starters analyzed`,
+      modelProjection: `${averageSeasonKPer9.toFixed(1)} K/9 among top 8`,
+      deltaLabel: highKStarters >= 6 ? 'LOOK AT Ks' : highKStarters >= 3 ? 'SELECTIVE Ks' : 'PASS / MONITOR',
+      direction: 'research',
+      detail: `${highKStarters} starters carry at least 9.0 K/9${averageRecentKs == null ? '' : `; the top-eight recent average is ${averageRecentKs.toFixed(1)} Ks`}. This is a slate-level market hint, not a pitcher pick.`,
+      researchSignal: true,
+      researchRankValue: Math.min(1, (averageSeasonKPer9 / 10.5) * 0.7 + Math.min(highKStarters / 8, 1) * 0.3),
+    }]
+    : [{
+      id: 'k-awaiting-mlb',
+      subject: 'Pitcher K market',
+      bookLine: 'Awaiting probable-pitcher history',
+      modelProjection: 'MLB data pending',
+      deltaLabel: 'No MLB target',
+      direction: 'awaiting',
+      detail: 'The MLB feed has not returned a probable pitcher with usable season strikeout history.',
+    }];
 
   return {
     id: 'pitcher_ks',
@@ -419,45 +355,68 @@ function buildPitcherKsRadar(report: DailyMlbReport | null): SlateMarketRadar {
     score,
     confidence: Math.min(confidence, 62),
     verdict,
-    edgeLabel: verdictLabel(verdict),
-    detail: 'Use this only as a watchlist until opponent whiff rate, pitcher pitch count, umpire zone, and posted K lines are in the model.',
+    edgeLabel: pitcherRows.length > 0 ? 'MLB K research' : verdictLabel(verdict),
+    detail: pitcherRows.length > 0
+      ? 'Rank probable pitchers by real MLB season K/9 and recent strikeout output. Opponent whiff, projected batters faced, and a posted line are still required for a betting call.'
+      : 'The probable-pitcher feed is still waiting for usable MLB strikeout history.',
     drivers: [
       scoreDriver('probables', 'Probable pitchers', `${probablePitchers}/${Math.max(counts.total * 2, 0)}`, pitcherCoverage * 100),
       scoreDriver('stability', 'Pitcher risk filter', pct(stability), stability * 100),
       scoreDriver('timing', 'Slate timing', counts.upcoming > 0 ? 'Pregame' : counts.live > 0 ? 'Live' : 'Late', timing),
       scoreDriver('quality', 'Report quality', report?.dataQuality ?? 'limited', dataQualityMultiplier(report?.dataQuality) * 100),
     ],
-    marketEdges: [{
-      id: 'k-awaiting-lines',
-      subject: 'Pitcher K market',
-      bookLine: 'Awaiting O/U K lines',
-      modelProjection: 'No K projection contract yet',
-      deltaLabel: 'No line delta',
-      direction: 'awaiting',
-      detail: 'K edge requires projected strikeouts compared against each posted pitcher strikeout line.',
-    }],
+    marketEdges,
     physicalSplits: [
       split(
         'k-whiff-collision',
-        'Pitcher CSW vs opponent whiff',
-        'Pitcher CSW',
-        'Unavailable',
+        'Season strikeout rate vs recent output',
+        'Season K/9',
+        topPitcher ? topPitcher.seasonKPer9.toFixed(1) : 'Unavailable',
         null,
-        'Opponent whiff',
-        'Unavailable',
+        'Recent K average',
+        topPitcher?.recentKAverage == null ? 'Unavailable' : topPitcher.recentKAverage.toFixed(1),
         null,
-        'CSW, whiff, and leash missing',
+        topPitcher ? 'MLB history, not a prop projection' : 'MLB history pending',
       ),
     ],
     cautions: [
       'No K projection: CSW, opponent whiff, and batters faced are missing.',
-      'Awaiting pitcher strikeout lines.',
+      'No sportsbook line is used in this MLB-only view.',
     ],
     nextSection: 'pitcher_matchup_intelligence',
   };
 }
 
-function buildStolenBasesRadar(): SlateMarketRadar {
+function buildStolenBasesRadar(research: MlbMarketRadarResponse | null | undefined): SlateMarketRadar {
+  const allRunnerRows = research?.stolenBases ?? [];
+  const confirmedRunnerRows = allRunnerRows.filter((runner) => runner.lineupConfirmed);
+  const runnerRows = confirmedRunnerRows.length > 0 ? confirmedRunnerRows : allRunnerRows;
+  const topRunner = runnerRows[0];
+  const runnerSample = runnerRows.slice(0, 12);
+  const averageSbProbability = average(runnerSample.map((runner) => runner.estimatedProbability));
+  const activeThreats = runnerRows.filter((runner) => runner.estimatedProbability >= 0.18 && runner.successRate >= 0.75).length;
+  const marketEdges: SlateMarketEdge[] = runnerRows.length > 0
+    ? [{
+      id: 'sb-market-research',
+      subject: 'Stolen-base market',
+      bookLine: `${runnerRows.length} active runners analyzed`,
+      modelProjection: `${formatProbability(averageSbProbability)} average top-12 attempt chance`,
+      deltaLabel: activeThreats >= 6 ? 'LOOK AT SBs' : activeThreats >= 3 ? 'SELECTIVE SBs' : 'PASS / MONITOR',
+      direction: 'research',
+      detail: `${activeThreats} runners clear the current volume and success filters. This is a slate-level market hint; catcher and pitcher timing are still missing.`,
+      researchSignal: true,
+      researchRankValue: Math.min(1, (averageSbProbability / 0.25) * 0.7 + Math.min(activeThreats / 8, 1) * 0.3),
+    }]
+    : [{
+      id: 'sb-awaiting-mlb',
+      subject: 'Stolen-base market',
+      bookLine: 'Awaiting MLB runner history',
+      modelProjection: 'MLB data pending',
+      deltaLabel: 'No MLB target',
+      direction: 'awaiting',
+      detail: 'The MLB feed has not returned an active runner with usable stolen-base history.',
+    }];
+
   return {
     id: 'stolen_bases',
     label: 'Stolen Bases',
@@ -465,38 +424,32 @@ function buildStolenBasesRadar(): SlateMarketRadar {
     score: 0,
     confidence: 0,
     verdict: 'monitor',
-    edgeLabel: 'Data locked',
-    detail: 'A stolen-base timing edge requires runner sprint speed, catcher pop time, pitcher delivery time, and a posted sportsbook line.',
+    edgeLabel: runnerRows.length > 0 ? 'MLB runner research' : 'MLB data pending',
+    detail: runnerRows.length > 0
+      ? 'Use season attempts and success rate to identify runners worth checking. A true timing edge still requires sprint speed, catcher pop time, and pitcher delivery.'
+      : 'The MLB runner feed has not returned usable stolen-base history yet.',
     drivers: [
       scoreDriver('sprint', 'Runner sprint speed', 'Unavailable', 0),
       scoreDriver('pop-time', 'Catcher pop time', 'Unavailable', 0),
       scoreDriver('delivery', 'Pitcher delivery', 'Unavailable', 0),
       scoreDriver('sb-lines', 'Sportsbook lines', 'Awaiting', 0),
     ],
-    marketEdges: [{
-      id: 'sb-awaiting-contract',
-      subject: 'Stolen-base market',
-      bookLine: 'Awaiting SB lines and timing inputs',
-      modelProjection: 'No SB timing projection contract yet',
-      deltaLabel: 'No timing delta',
-      direction: 'awaiting',
-      detail: 'The lane remains locked until sprint speed, catcher pop time, pitcher delivery time, and a sportsbook line are all available.',
-    }],
+    marketEdges,
     physicalSplits: [split(
       'sb-timing-window',
-      'Runner speed vs catcher pop time',
-      'Runner sprint speed',
-      'Unavailable',
+      'Season volume vs attempt success',
+      'Season SB',
+      topRunner ? String(topRunner.seasonStolenBases) : 'Unavailable',
       null,
-      'Catcher pop time',
-      'Unavailable',
+      'Attempt success',
+      topRunner ? `${Math.round(topRunner.successRate * 100)}%` : 'Unavailable',
       null,
-      'Timing window unavailable',
+      topRunner ? 'MLB history, timing inputs pending' : 'MLB history pending',
     )],
     cautions: [
       'No sprint speed contract.',
       'No catcher pop-time contract.',
-      'Awaiting stolen-base lines.',
+      'No sportsbook line is used in this MLB-only view.',
     ],
     nextSection: 'daily_players',
   };
@@ -565,30 +518,34 @@ function buildHitsRadar(report: DailyMlbReport | null, rows: readonly HrWatchRow
   };
 }
 
-export function buildSlateRadar({ report, hrRows, loading, hasError, marketRadar, marketRadarLoading = false, marketRadarError = null }: BuildSlateRadarInput): SlateRadarSummary {
+export function buildSlateRadar({ report, hrRows, loading, hasError, mlbResearch, marketRadarLoading = false, marketRadarError = null }: BuildSlateRadarInput): SlateRadarSummary {
   const state = slateState(report, loading, hasError);
-  const markets = mergeLiveEdges([
+  const markets = [
     buildHomeRunRadar(report, hrRows),
-    buildPitcherKsRadar(report),
-    buildStolenBasesRadar(),
+    buildPitcherKsRadar(report, mlbResearch),
+    buildStolenBasesRadar(mlbResearch),
     buildHitsRadar(report, hrRows),
-  ], marketRadar, hrRows).sort((a, b) => {
+  ].sort((a, b) => {
     const aEdge = Math.max(...a.marketEdges.filter((edge) => edge.verifiedComparison).map((edge) => Math.abs(edge.edgePoints ?? Number.NEGATIVE_INFINITY)));
     const bEdge = Math.max(...b.marketEdges.filter((edge) => edge.verifiedComparison).map((edge) => Math.abs(edge.edgePoints ?? Number.NEGATIVE_INFINITY)));
     const aPriced = Number.isFinite(aEdge);
     const bPriced = Number.isFinite(bEdge);
     if (aPriced !== bPriced) return aPriced ? -1 : 1;
     if (aPriced && bPriced && aEdge !== bEdge) return bEdge - aEdge;
+    const aResearch = Math.max(...a.marketEdges.filter((edge) => edge.researchSignal).map((edge) => edge.researchRankValue ?? Number.NEGATIVE_INFINITY));
+    const bResearch = Math.max(...b.marketEdges.filter((edge) => edge.researchSignal).map((edge) => edge.researchRankValue ?? Number.NEGATIVE_INFINITY));
+    if (Number.isFinite(aResearch) !== Number.isFinite(bResearch)) return Number.isFinite(aResearch) ? -1 : 1;
+    if (Number.isFinite(aResearch) && Number.isFinite(bResearch) && aResearch !== bResearch) return bResearch - aResearch;
     return 0;
   });
 
-  const eligibleTop = markets.find((market) => market.marketEdges.some((edge) => edge.verifiedComparison)) ?? null;
+  const eligibleTop = markets.find((market) => market.marketEdges.some((edge) => edge.verifiedComparison || edge.researchSignal)) ?? null;
   const dataWarnings = [
     ...(hasError ? ['Daily report failed to load. No market should be treated as verified.'] : []),
     ...(report && report.dataQuality !== 'full' ? [`Daily report quality is ${report.dataQuality}.`] : []),
     ...(hrRows.length === 0 && report?.gameCount ? ['HR board has no visible rows yet.'] : []),
-    ...(marketRadarError ? [`Sportsbook feed error: ${marketRadarError}`] : []),
-    ...(marketRadar?.warnings ?? []),
+    ...(marketRadarError ? [`MLB radar feed error: ${marketRadarError}`] : []),
+    ...(mlbResearch?.warnings ?? []),
   ];
 
   return {
@@ -597,15 +554,15 @@ export function buildSlateRadar({ report, hrRows, loading, hasError, marketRadar
     topMarket: state === 'no-slate' || state === 'unavailable' ? null : eligibleTop,
     markets,
     methodNotes: [
-      'Priced markets rank first by absolute model-minus-market line displacement.',
-      'K and Hits are intentionally capped until full market-specific projection inputs are available.',
+      'MLB research lanes rank current season and recent evidence; those signals are not sportsbook edges.',
+      'Pitcher K projections remain capped until CSW, opponent whiff, and projected batters faced are available.',
       'No sportsbook line means no claimed betting edge.',
     ],
     dataWarnings,
     provider: marketRadarLoading
-      ? { status: 'loading', eventCount: null, quoteCount: null, message: 'Loading sportsbook markets' }
+      ? { status: 'loading', eventCount: null, signalCount: null, message: 'Loading MLB market research' }
       : marketRadarError
-        ? { status: 'error', eventCount: null, quoteCount: null, message: marketRadarError }
-        : { status: 'live', eventCount: marketRadar?.provider.eventCount ?? 0, quoteCount: marketRadar?.provider.quoteCount ?? 0, message: marketRadar ? 'Sportsbook provider connected' : 'Sportsbook response pending' },
+        ? { status: 'error', eventCount: null, signalCount: null, message: marketRadarError }
+        : { status: 'live', eventCount: mlbResearch?.provider.eventCount ?? 0, signalCount: mlbResearch?.provider.signalCount ?? 0, message: mlbResearch ? 'MLB Stats API connected' : 'MLB response pending' },
   };
 }

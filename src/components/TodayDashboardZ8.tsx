@@ -133,7 +133,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
       hrRows: visibleHrRows,
       loading: isLoading,
       hasError: Boolean(isDegraded),
-      marketRadar: marketRadarQuery.data ?? null,
+      mlbResearch: marketRadarQuery.data ?? null,
       marketRadarLoading: marketRadarQuery.isLoading,
       marketRadarError: marketRadarQuery.error instanceof VouchEdgeHttpError
         ? `${marketRadarQuery.error.status} ${marketRadarQuery.error.code}${marketRadarQuery.error.requestId ? ` · request ${marketRadarQuery.error.requestId}` : ''}`

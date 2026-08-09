@@ -19,6 +19,7 @@ import type {
   MarketRadarProviderResult,
   MarketRadarQuote,
   MarketRadarResponse,
+  MlbMarketRadarResponse,
   PitcherKSignal,
   StolenBaseSignal,
 } from "./types";
@@ -243,5 +244,70 @@ export async function getMarketRadar(date: string, dependencies: MarketRadarDepe
   return {
     date, generatedAt: dependencies.now().toISOString(), provider: providerSummary, edges, counts,
     warnings: edges.length === 0 ? ["Live prices were returned, but no sportsbook subject had every required verified model input."] : [],
+  };
+}
+
+export async function getMlbMarketRadar(date: string): Promise<MlbMarketRadarResponse> {
+  const [pitcherSnapshots, stolenBaseSnapshots] = await Promise.all([
+    mlbPitcherKFeatureAdapter.build({ date }),
+    mlbStolenBaseFeatureAdapter.build({ date }),
+  ]);
+
+  const pitcherKs = pitcherSnapshots.flatMap((snapshot) => {
+    const seasonKPer9 = numeric(snapshot.features.seasonKPer9);
+    const gamesStarted = numeric(snapshot.features.gamesStarted);
+    const inningsPitched = numeric(snapshot.features.inningsPitched);
+    if (seasonKPer9 == null || gamesStarted == null || inningsPitched == null) return [];
+    return [{
+      subjectId: snapshot.subjectId,
+      subject: snapshot.subjectLabel,
+      team: snapshot.team,
+      opponent: snapshot.opponent,
+      seasonKPer9,
+      recentKAverage: numeric(snapshot.features.recentKAverage),
+      gamesStarted,
+      inningsPitched,
+    }];
+  }).sort((a, b) => (b.recentKAverage ?? b.seasonKPer9 / 1.5) - (a.recentKAverage ?? a.seasonKPer9 / 1.5));
+
+  const stolenBases = stolenBaseSnapshots.flatMap((snapshot) => {
+    const estimatedProbability = numeric(snapshot.features.estimatedStolenBaseProbability);
+    const seasonStolenBases = numeric(snapshot.features.seasonStolenBases);
+    const successRate = numeric(snapshot.features.stealSuccessRate);
+    const attemptsPerGame = numeric(snapshot.features.attemptsPerGame);
+    if (estimatedProbability == null || seasonStolenBases == null || successRate == null || attemptsPerGame == null) return [];
+    return [{
+      subjectId: snapshot.subjectId,
+      subject: snapshot.subjectLabel,
+      team: snapshot.team,
+      opponent: snapshot.opponent,
+      estimatedProbability,
+      seasonStolenBases,
+      successRate,
+      attemptsPerGame,
+      lineupConfirmed: snapshot.features.lineupConfirmed === true,
+    }];
+  }).sort((a, b) => b.estimatedProbability - a.estimatedProbability);
+
+  const eventCount = new Set([
+    ...pitcherSnapshots.map((snapshot) => snapshot.eventId),
+    ...stolenBaseSnapshots.map((snapshot) => snapshot.eventId),
+  ]).size;
+
+  return {
+    date,
+    generatedAt: new Date().toISOString(),
+    provider: {
+      id: "mlb_stats_api",
+      status: "live",
+      eventCount,
+      signalCount: pitcherKs.length + stolenBases.length,
+    },
+    pitcherKs,
+    stolenBases,
+    warnings: [
+      "Pitcher K research uses MLB season and recent game logs; CSW, opponent whiff, and projected batters faced are not available.",
+      "Stolen-base research uses MLB attempt history; sprint speed, catcher pop time, and pitcher delivery are not available.",
+    ],
   };
 }

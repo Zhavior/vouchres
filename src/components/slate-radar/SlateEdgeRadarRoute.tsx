@@ -34,7 +34,7 @@ export default function SlateEdgeRadarRoute({
       hrRows,
       loading: dailyReportQuery.isLoading || hrBoardQuery.loading,
       hasError: dailyReportQuery.isError || Boolean(hrBoardQuery.error) || report?.dataQuality === 'limited',
-      marketRadar: marketRadarQuery.data ?? null,
+      mlbResearch: marketRadarQuery.data ?? null,
       marketRadarLoading: marketRadarQuery.isLoading,
       marketRadarError: marketRadarQuery.error instanceof VouchEdgeHttpError
         ? `${marketRadarQuery.error.status} ${marketRadarQuery.error.code}${marketRadarQuery.error.requestId ? ` · request ${marketRadarQuery.error.requestId}` : ''}`

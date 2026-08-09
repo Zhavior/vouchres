@@ -9,11 +9,20 @@ import { todayISO } from "../services/mlb/mlbClient";
 import { structuredLog } from "../lib/structuredLog";
 import {
   getMarketRadar,
+  getMlbMarketRadar,
   MarketRadarConfigurationError,
   MarketRadarProviderError,
 } from "../services/marketRadar";
 
 export const marketRadarRoutes = Router();
+
+marketRadarRoutes.get(
+  "/mlb/market-radar",
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    const date = ymdOrDefault(req.query.date, todayISO(), "date");
+    return res.json(apiOk(req, await getMlbMarketRadar(date)));
+  }),
+);
 
 marketRadarRoutes.get(
   "/market-radar",

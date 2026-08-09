@@ -9,14 +9,12 @@ import {
   Eye,
   Gauge,
   LockKeyhole,
-  Plus,
   ShieldCheck,
   Target,
   TrendingUp,
   X,
   Zap,
 } from 'lucide-react';
-import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 import type { SlateMarketRadar, SlateRadarSummary } from './slateRadarModel';
 
 interface SlateEdgeRadarWidgetProps {
@@ -106,6 +104,7 @@ function SplitCollision({ market }: { market: SlateMarketRadar }) {
 function edgeTone(direction: SlateMarketRadar['marketEdges'][number]['direction']) {
   if (direction === 'value' || direction === 'over') return 'border-vouch-emerald/35 bg-vouch-emerald/10 text-vouch-emerald';
   if (direction === 'under') return 'border-rose-300/35 bg-rose-500/10 text-rose-200';
+  if (direction === 'research') return 'border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan';
   return 'border-amber-300/35 bg-amber-300/10 text-amber-100';
 }
 
@@ -113,6 +112,7 @@ function MarketLineDelta({ market }: { market: SlateMarketRadar }) {
   const edge = market.marketEdges[0];
   if (!edge) return null;
   const awaiting = edge.direction === 'awaiting';
+  const researchOnly = edge.direction === 'research';
   const scaleMax = edge.scaleMax ?? 100;
   const unit = edge.valueUnit ?? '%';
   const modelPosition = edge.modelValue == null ? null : clampPercent((edge.modelValue / scaleMax) * 100);
@@ -121,12 +121,17 @@ function MarketLineDelta({ market }: { market: SlateMarketRadar }) {
   return (
     <div className="border border-white/10 bg-black/28 p-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/38">Model vs book line</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/38">{researchOnly ? 'MLB research evidence' : 'Model vs book line'}</p>
         <span className={`border px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-wider ${edgeTone(edge.direction)}`}>
           {edge.deltaLabel}
         </span>
       </div>
-      {awaiting ? (
+      {researchOnly ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="border border-white/10 bg-white/[0.025] px-3 py-2"><p className="font-mono text-[8px] uppercase text-white/30">MLB metric</p><p className="mt-1 font-mono text-xs font-black text-white/78">{edge.modelProjection}</p></div>
+          <div className="border border-white/10 bg-white/[0.025] px-3 py-2"><p className="font-mono text-[8px] uppercase text-white/30">Slate sample</p><p className="mt-1 truncate font-mono text-xs font-black text-white/78">{edge.bookLine}</p></div>
+        </div>
+      ) : awaiting ? (
         <p className="mt-3 rounded-lg border border-amber-300/20 bg-amber-300/8 px-3 py-2 text-xs font-bold leading-5 text-amber-50/75">
           {edge.bookLine}
         </p>
@@ -203,16 +208,16 @@ function MarketDecisionMatrix({
   markets: SlateMarketRadar[];
   onSelectMarket: (market: SlateMarketRadar) => void;
 }) {
-  const rankedMarkets = markets.filter((market) => market.marketEdges.some((edge) => edge.verifiedComparison));
-  const lockedMarkets = markets.filter((market) => market.marketEdges.every((edge) => !edge.verifiedComparison));
+  const rankedMarkets = markets.filter((market) => market.marketEdges.some((edge) => edge.verifiedComparison || edge.researchSignal));
+  const lockedMarkets = markets.filter((market) => market.marketEdges.every((edge) => !edge.verifiedComparison && !edge.researchSignal));
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/12 bg-ve-graphite/95 shadow-2xl" aria-label="Markets ranked by verified model edge">
+    <section className="overflow-hidden rounded-2xl border border-white/12 bg-ve-graphite/95 shadow-2xl" aria-label="MLB research markets and verified edges">
       <div className="grid grid-cols-[1.05fr_1.15fr_1.15fr_.95fr] gap-4 border-b border-white/10 bg-black/35 px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white/38 max-lg:hidden">
-        <p>Edge rank</p>
-        <p>Model vs book</p>
+        <p>Research rank</p>
+        <p>MLB evidence</p>
         <p>Matchup collision</p>
-        <p>Open targets</p>
+        <p>Open evidence</p>
       </div>
       <div className="divide-y divide-white/10">
         {rankedMarkets.map((market, index) => (
@@ -239,7 +244,7 @@ function MarketDecisionMatrix({
 
             <div className="flex items-center justify-between gap-3 lg:block">
               <span className={`inline-flex min-h-8 items-center rounded-md border-2 px-3 text-[10px] font-black uppercase tracking-wider ${VERDICT_TONES[market.verdict]}`}>
-                View top {market.shortLabel}
+                View {market.shortLabel} case
               </span>
               <ArrowRight className="h-4 w-4 text-white/35 lg:mt-3" />
             </div>
@@ -248,8 +253,8 @@ function MarketDecisionMatrix({
       </div>
       {rankedMarkets.length === 0 ? (
         <div className="border-b border-white/10 px-5 py-6 text-center">
-          <p className="font-mono text-xs font-black uppercase tracking-wider text-white/55">No verified model-market delta yet</p>
-          <p className="mt-2 text-xs text-white/38">Priced markets will move here automatically when projections and sportsbook lines overlap.</p>
+          <p className="font-mono text-xs font-black uppercase tracking-wider text-white/55">No MLB research signal yet</p>
+          <p className="mt-2 text-xs text-white/38">The MLB feed has not returned enough current slate evidence to rank a market.</p>
         </div>
       ) : null}
       {lockedMarkets.length > 0 ? (
@@ -273,12 +278,19 @@ function slateArchetype(summary: SlateRadarSummary) {
   if (!summary.topMarket) {
     return {
       label: 'No verified edge yet',
-      detail: 'The matchup data is useful for research, but no market has both a projection and sportsbook line required for a ranked edge.',
+      detail: 'The MLB slate is not providing enough market-wide evidence to recommend a lane yet.',
       icon: Eye,
     };
   }
 
   const leadingEdge = summary.topMarket.marketEdges[0];
+  if (leadingEdge?.researchSignal) {
+    return {
+      label: `${summary.topMarket.label} research focus`,
+      detail: `${summary.topMarket.label} leads the MLB-only evidence: ${leadingEdge.deltaLabel}. Use this to choose which market to research before opening individual props.`,
+      icon: Target,
+    };
+  }
   if ((leadingEdge?.edgePoints ?? 0) <= 0) {
     return {
       label: 'No positive priced edge',
@@ -301,6 +313,13 @@ function rankedEdges(summary: SlateRadarSummary) {
     .sort((a, b) => Math.abs(b.edge.edgePoints ?? Number.NEGATIVE_INFINITY) - Math.abs(a.edge.edgePoints ?? Number.NEGATIVE_INFINITY));
 }
 
+function researchEdges(summary: SlateRadarSummary) {
+  return summary.markets.flatMap((market) => market.marketEdges
+    .filter((edge) => edge.researchSignal)
+    .map((edge) => ({ market, edge })))
+    .sort((a, b) => (b.edge.researchRankValue ?? 0) - (a.edge.researchRankValue ?? 0));
+}
+
 function LineDisplacementTable({
   summary,
   onSelectMarket,
@@ -308,36 +327,38 @@ function LineDisplacementTable({
   summary: SlateRadarSummary;
   onSelectMarket: (market: SlateMarketRadar) => void;
 }) {
-  const rows = rankedEdges(summary).slice(0, 8);
+  const verifiedRows = rankedEdges(summary);
+  const rows = (verifiedRows.length > 0 ? verifiedRows : researchEdges(summary)).slice(0, 8);
+  const researchOnly = verifiedRows.length === 0;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-white/12 bg-ve-graphite/95" aria-labelledby="line-displacement-title">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
         <div>
           <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Numerical decision matrix</p>
-          <h2 id="line-displacement-title" className="mt-1 text-lg font-black text-white">Model vs sportsbook line</h2>
+          <h2 id="line-displacement-title" className="mt-1 text-lg font-black text-white">{researchOnly ? 'Which market should you look at?' : 'Model vs sportsbook line'}</h2>
         </div>
-        <p className="font-mono text-[8px] uppercase tracking-wider text-white/30">Official candidates with real prices only</p>
+        <p className="font-mono text-[8px] uppercase tracking-wider text-white/30">{researchOnly ? 'Current MLB data · no betting claim' : 'Official candidates with real prices only'}</p>
       </header>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <LockKeyhole className="mx-auto h-5 w-5 text-amber-300/70" />
-          <p className="mt-3 text-sm font-black text-white/65">No comparable player lines are available.</p>
-          <p className="mt-1 text-xs text-white/35">{summary.provider.status === 'error' ? 'The sportsbook response failed; see the exact request state in Decision guardrails.' : 'Lanes remain locked until an official player projection overlaps a posted sportsbook price.'}</p>
+          <p className="mt-3 text-sm font-black text-white/65">No market-wide MLB signal is available.</p>
+          <p className="mt-1 text-xs text-white/35">{summary.provider.status === 'error' ? 'The MLB response failed; see the exact request state in Decision guardrails.' : 'The current slate does not have enough evidence to rank HRs, Ks, SBs, or Hits.'}</p>
         </div>
       ) : (
         <>
           <div className="hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[760px] border-collapse text-left">
-              <thead className="bg-black/25 font-mono text-[8px] uppercase tracking-[0.14em] text-white/30"><tr><th className="px-5 py-3">Market / player</th><th className="px-4 py-3">Book line</th><th className="px-4 py-3">Model projection</th><th className="px-4 py-3">Edge delta</th><th className="px-5 py-3 text-right">Action</th></tr></thead>
+              <thead className="bg-black/25 font-mono text-[8px] uppercase tracking-[0.14em] text-white/30"><tr><th className="px-5 py-3">Market</th><th className="px-4 py-3">{researchOnly ? 'Slate sample' : 'Book line'}</th><th className="px-4 py-3">{researchOnly ? 'MLB readout' : 'Model projection'}</th><th className="px-4 py-3">{researchOnly ? 'Market hint' : 'Edge delta'}</th><th className="px-5 py-3 text-right">Action</th></tr></thead>
               <tbody className="divide-y divide-white/8">
                 {rows.map(({ market, edge }) => (
                   <tr key={edge.id} className="transition hover:bg-white/[0.025]">
-                    <td className="px-5 py-4"><strong className="block text-sm text-white/85">{edge.subject}</strong><span className="mt-1 block font-mono text-[8px] uppercase text-white/30">{market.label} · {edge.candidate?.team ?? 'Team unavailable'}</span></td>
+                    <td className="px-5 py-4"><strong className="block text-sm text-white/85">{edge.subject}</strong><span className="mt-1 block font-mono text-[8px] uppercase text-white/30">{market.label}{researchOnly ? ' · MLB only' : ` · ${edge.candidate?.team ?? 'Team unavailable'}`}</span></td>
                     <td className="px-4 py-4 font-mono text-xs font-black text-white/65">{edge.bookLine}</td>
                     <td className="px-4 py-4 font-mono text-xs font-black text-white/75">{edge.modelProjection}</td>
                     <td className="px-4 py-4"><span className={`border px-2 py-1 font-mono text-xs font-black ${edgeTone(edge.direction)}`}>{edge.deltaLabel}</span></td>
-                    <td className="px-5 py-4 text-right"><button type="button" onClick={() => onSelectMarket(market)} className="min-h-9 border border-white/12 bg-white/[0.03] px-3 text-[10px] font-black text-white/60 hover:border-vouch-cyan/30 hover:text-vouch-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">View targets</button></td>
+                    <td className="px-5 py-4 text-right"><button type="button" onClick={() => onSelectMarket(market)} className="min-h-9 border border-white/12 bg-white/[0.03] px-3 text-[10px] font-black text-white/60 hover:border-vouch-cyan/30 hover:text-vouch-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">View evidence</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -346,7 +367,7 @@ function LineDisplacementTable({
           <div className="divide-y divide-white/8 sm:hidden">
             {rows.map(({ market, edge }) => (
               <button key={edge.id} type="button" onClick={() => onSelectMarket(market)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
-                <span className="min-w-0"><strong className="block truncate text-sm text-white/85">{edge.subject}</strong><small className="mt-1 block truncate font-mono text-[8px] uppercase text-white/30">{market.shortLabel} · Book {edge.bookLine} · Model {edge.modelProjection}</small></span>
+                <span className="min-w-0"><strong className="block truncate text-sm text-white/85">{edge.subject}</strong><small className="mt-1 block truncate font-mono text-[8px] uppercase text-white/30">{market.shortLabel} · {researchOnly ? 'Sample' : 'Book'} {edge.bookLine} · {researchOnly ? 'MLB' : 'Model'} {edge.modelProjection}</small></span>
                 <span className={`self-center border px-2 py-1 font-mono text-xs font-black ${edgeTone(edge.direction)}`}>{edge.deltaLabel}</span>
               </button>
             ))}
@@ -371,7 +392,9 @@ function SlateMacroHero({
   const archetype = slateArchetype(summary);
   const Icon = archetype.icon;
   const top = summary.topMarket;
-  const topEdges = rankedEdges(summary).slice(0, 3);
+  const verifiedTopEdges = rankedEdges(summary);
+  const topEdges = (verifiedTopEdges.length > 0 ? verifiedTopEdges : researchEdges(summary)).slice(0, 3);
+  const researchOnly = verifiedTopEdges.length === 0;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-vouch-cyan/20 bg-[radial-gradient(circle_at_top_left,rgba(0,240,255,.18),transparent_34%),linear-gradient(135deg,#071623,#050910_62%,#08110d)] p-5 shadow-[8px_8px_0_rgba(0,0,0,.42)] sm:p-7">
@@ -385,7 +408,7 @@ function SlateMacroHero({
         </button>
         <div className="flex flex-wrap justify-end gap-2">
           <span className={`rounded-md border px-3 py-1.5 font-mono text-[9px] font-black uppercase tracking-wider ${summary.provider.status === 'error' ? 'border-rose-300/35 bg-rose-500/10 text-rose-200' : summary.provider.status === 'loading' ? 'border-amber-300/30 bg-amber-300/10 text-amber-100' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`} title={summary.provider.message}>
-            {summary.provider.status === 'live' ? `Odds live · ${summary.provider.quoteCount} quotes` : summary.provider.status === 'error' ? 'Odds feed error' : 'Odds loading'}
+            {summary.provider.status === 'live' ? `MLB live · ${summary.provider.signalCount} signals` : summary.provider.status === 'error' ? 'MLB feed error' : 'MLB loading'}
           </span>
           <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-wider text-white/45">
             {summary.dateLabel} · {stateCopy(summary.slateState)}
@@ -418,17 +441,17 @@ function SlateMacroHero({
 
         <div className="border border-white/10 bg-black/25">
           <div className="flex items-center justify-between border-b border-white/10 px-3 py-2.5">
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/45">Top verified comparisons</p>
-            <p className="font-mono text-[8px] uppercase text-white/25">Model minus market</p>
+            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{researchOnly ? 'Today’s market ranking' : 'Top verified comparisons'}</p>
+            <p className="font-mono text-[8px] uppercase text-white/25">{researchOnly ? 'MLB data only' : 'Model minus market'}</p>
           </div>
           {topEdges.length > 0 ? topEdges.map(({ market, edge }, index) => (
             <button key={edge.id} type="button" onClick={() => onSelectMarket(market)} className="grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/8 px-3 py-3 text-left last:border-b-0 hover:bg-white/[0.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
               <span className="font-mono text-xs font-black text-white/28">{String(index + 1).padStart(2, '0')}</span>
-              <span className="min-w-0"><strong className="block truncate text-xs text-white/80">{edge.subject}</strong><small className="mt-0.5 block truncate font-mono text-[8px] uppercase text-white/32">{market.shortLabel} · {edge.bookLine} vs {edge.modelProjection}</small></span>
+              <span className="min-w-0"><strong className="block truncate text-xs text-white/80">{edge.subject}</strong><small className="mt-0.5 block truncate font-mono text-[8px] uppercase text-white/32">{market.shortLabel} · {edge.bookLine} · {edge.modelProjection}</small></span>
               <span className="font-mono text-sm font-black text-vouch-emerald">{edge.deltaLabel}</span>
             </button>
           )) : (
-            <div className="px-4 py-6 text-center"><LockKeyhole className="mx-auto h-4 w-4 text-amber-300/65" /><p className="mt-2 text-xs font-bold text-white/48">Sportsbook overlap is still pending.</p><p className="mt-1 text-[10px] text-white/28">No player is promoted without a comparable line.</p></div>
+            <div className="px-4 py-6 text-center"><LockKeyhole className="mx-auto h-4 w-4 text-amber-300/65" /><p className="mt-2 text-xs font-bold text-white/48">MLB research is still pending.</p><p className="mt-1 text-[10px] text-white/28">No market is promoted without current slate evidence.</p></div>
           )}
         </div>
       </div>
@@ -436,38 +459,7 @@ function SlateMacroHero({
   );
 }
 
-function addEdgeCandidateToList(edge: SlateMarketRadar['marketEdges'][number]) {
-  const candidate = edge.candidate;
-  if (!candidate || candidate.playerId == null || candidate.truthStatus === 'blocked') return;
-
-  openParlayAdd({
-    player: {
-      id: String(candidate.playerId),
-      name: candidate.playerName,
-      team: candidate.team,
-      position: '',
-      headshot: candidate.headshotUrl ?? '',
-      propositions: [],
-      ...(candidate.gamePk == null ? {} : { resolvedGamePk: String(candidate.gamePk) }),
-    },
-    propHint: {
-      id: `slate-radar-${candidate.stableId}`,
-      market: 'Home Runs',
-      odds: candidate.bookOdds,
-      spec: `${candidate.playerName} 1+ Home Run`,
-      gamePk: candidate.gamePk ?? undefined,
-      playerId: candidate.playerId,
-    },
-    initialFamily: 'home_runs',
-    isPitcher: false,
-    source: 'slate_radar',
-    dataStatus: candidate.truthStatus === 'official' ? 'official' : candidate.truthStatus === 'projected' ? 'projected' : 'unknown',
-    reasoningSnapshot: candidate.primaryReason,
-    riskSnapshot: candidate.primaryRisk,
-  });
-}
-
-function MarketTargetDrawer({
+function MarketEvidenceDrawer({
   market,
   onClose,
   onSectionChange,
@@ -509,18 +501,19 @@ function MarketTargetDrawer({
   }, [market, onClose]);
 
   if (!market || typeof document === 'undefined') return null;
-  const targets = market.marketEdges.filter((edge) => edge.verifiedComparison).slice(0, 3);
+  const targets = market.marketEdges.filter((edge) => edge.verifiedComparison || edge.researchSignal).slice(0, 3);
   const awaiting = targets.length === 0;
+  const researchOnly = targets.length > 0 && targets.every((edge) => edge.researchSignal && !edge.verifiedComparison);
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000]" role="dialog" aria-modal="true" aria-labelledby="market-target-drawer-title">
-      <button type="button" aria-label="Close market targets" onClick={onClose} className="absolute inset-0 cursor-default bg-black/72 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-[10000]" role="dialog" aria-modal="true" aria-labelledby="market-evidence-drawer-title">
+      <button type="button" aria-label="Close market evidence" onClick={onClose} className="absolute inset-0 cursor-default bg-black/72 backdrop-blur-sm" />
       <aside ref={drawerRef} className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col border-l border-white/12 bg-ve-graphite shadow-[-24px_0_70px_rgba(0,0,0,.5)]">
         <header className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-4 sm:px-6">
           <div>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Market target drawer</p>
-            <h2 id="market-target-drawer-title" className="mt-1 text-xl font-black text-white">{market.label}</h2>
-            <p className="mt-1 text-xs leading-5 text-white/42">{awaiting ? 'This lane is locked until projections and sportsbook lines overlap.' : 'Ranked by model probability minus market-implied probability.'}</p>
+            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-vouch-cyan">Market evidence</p>
+            <h2 id="market-evidence-drawer-title" className="mt-1 text-xl font-black text-white">{market.label}</h2>
+            <p className="mt-1 text-xs leading-5 text-white/42">{awaiting ? 'This lane is waiting for current MLB evidence.' : researchOnly ? 'Ranked using MLB season and recent evidence. No sportsbook claim.' : 'Ranked by model probability minus market-implied probability.'}</p>
           </div>
           <button ref={closeButtonRef} type="button" onClick={onClose} title="Close" className="grid h-10 w-10 shrink-0 place-items-center border border-white/12 bg-black/30 text-white/55 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"><X className="h-4 w-4" /></button>
         </header>
@@ -536,16 +529,14 @@ function MarketTargetDrawer({
           ) : (
             <div className="space-y-3">
               {targets.map((edge, index) => {
-                const addable = Boolean(edge.addable && edge.candidate && edge.candidate.playerId != null);
                 return (
                   <article key={edge.id} className="border border-white/10 bg-black/25 p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><p className="font-mono text-[8px] font-black uppercase tracking-wider text-white/28">Target {String(index + 1).padStart(2, '0')}</p><h3 className="mt-1 truncate text-base font-black text-white">{edge.subject}</h3><p className="mt-1 text-[10px] text-white/38">{edge.candidate?.team} vs {edge.candidate?.opponent}</p></div>
+                      <div className="min-w-0"><p className="font-mono text-[8px] font-black uppercase tracking-wider text-white/28">Slate read {String(index + 1).padStart(2, '0')}</p><h3 className="mt-1 truncate text-base font-black text-white">{edge.subject}</h3><p className="mt-1 text-[10px] text-white/38">{edge.bookLine}</p></div>
                       <span className={`shrink-0 border px-2.5 py-1 font-mono text-xs font-black ${edgeTone(edge.direction)}`}>{edge.deltaLabel}</span>
                     </div>
                     <div className="mt-4"><MarketLineDelta market={{ ...market, marketEdges: [edge] }} /></div>
                     <p className="mt-3 text-xs leading-5 text-white/48">{edge.detail}</p>
-                    <button type="button" disabled={!addable} onClick={() => { onClose(); addEdgeCandidateToList(edge); }} title={addable ? 'Review this researched pick in My List' : 'A positive, official, gradeable edge is required'} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-xs font-black text-vouch-emerald transition hover:bg-vouch-emerald/15 disabled:cursor-not-allowed disabled:border-white/8 disabled:bg-white/[0.02] disabled:text-white/25"><Plus className="h-3.5 w-3.5" />Review in My List</button>
                   </article>
                 );
               })}
@@ -604,7 +595,7 @@ export function SlateEdgeRadarWidget({ summary, onSectionChange }: SlateEdgeRada
         {summary.markets.map((market) => (
           <div key={market.id} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-2.5">
             <p className="truncate text-[10px] font-black uppercase tracking-wider text-white/55">{market.shortLabel}</p>
-            <p className="truncate font-mono text-[8px] uppercase tracking-wider text-white/35">{market.marketEdges[0]?.direction === 'awaiting' ? market.marketEdges[0]?.bookLine : `${market.marketEdges[0]?.subject} model vs book`}</p>
+            <p className="truncate font-mono text-[8px] uppercase tracking-wider text-white/35">{market.marketEdges[0]?.direction === 'awaiting' ? market.marketEdges[0]?.bookLine : market.marketEdges[0]?.direction === 'research' ? `${market.marketEdges[0]?.subject} · MLB research` : `${market.marketEdges[0]?.subject} model vs book`}</p>
             <p className="text-right font-mono text-[10px] font-black text-white">{market.marketEdges[0]?.direction === 'awaiting' ? 'WAIT' : market.marketEdges[0]?.deltaLabel}</p>
           </div>
         ))}
@@ -670,7 +661,7 @@ export default function SlateEdgeRadarPage({ summary, onSectionChange, onBack }:
           </section>
         </div>
       </main>
-      <MarketTargetDrawer market={selectedMarket} onClose={closeDrawer} onSectionChange={onSectionChange} />
+      <MarketEvidenceDrawer market={selectedMarket} onClose={closeDrawer} onSectionChange={onSectionChange} />
     </>
   );
 }

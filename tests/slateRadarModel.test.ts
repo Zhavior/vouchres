@@ -110,7 +110,7 @@ function hrRow(overrides: Partial<HrWatchRow>): HrWatchRow {
 }
 
 describe('buildSlateRadar', () => {
-  it('elevates home runs when HR signal, price, weather, and vulnerable pitcher context are present', () => {
+  it('elevates the home-run market from aggregate MLB slate evidence', () => {
     const summary = buildSlateRadar({
       report: baseReport,
       hrRows: [
@@ -126,13 +126,11 @@ describe('buildSlateRadar', () => {
     expect(summary.topMarket?.verdict).toBe('research');
     expect(summary.markets.find((market) => market.id === 'home_runs')?.confidence).toBeGreaterThan(70);
     expect(summary.topMarket?.marketEdges[0]).toMatchObject({
-      subject: 'Test Hitter',
-      bookLine: '+420 · 5.0%',
-      modelProjection: '8.0%',
-      deltaLabel: '+3.0 pts',
-      modelValue: 8,
-      marketValue: 5,
-      scaleMax: 50,
+      subject: 'Home run market',
+      bookLine: '3 confirmed hitters analyzed',
+      modelProjection: '8.0% average among top 10',
+      deltaLabel: 'SELECTIVE HRs',
+      researchSignal: true,
     });
     expect(summary.topMarket?.physicalSplits[0]?.label).toBe('Starter susceptibility vs power');
     expect(summary.markets[0]?.id).toBe('home_runs');
@@ -150,11 +148,43 @@ describe('buildSlateRadar', () => {
     expect(ks?.confidence).toBeLessThanOrEqual(62);
     expect(ks?.cautions.join(' ')).toContain('opponent whiff');
     expect(ks?.marketEdges[0]).toMatchObject({
-      bookLine: 'Awaiting O/U K lines',
-      deltaLabel: 'No line delta',
+      bookLine: 'Awaiting probable-pitcher history',
+      deltaLabel: 'No MLB target',
       direction: 'awaiting',
     });
     expect(summary.topMarket).toBeNull();
+  });
+
+  it('ranks market lanes instead of individual players when MLB research is available', () => {
+    const summary = buildSlateRadar({
+      report: baseReport,
+      hrRows: [],
+      loading: false,
+      hasError: false,
+      mlbResearch: {
+        date: '2026-08-08',
+        generatedAt: '2026-08-08T15:00:00Z',
+        provider: { id: 'mlb_stats_api', status: 'live', eventCount: 2, signalCount: 4 },
+        pitcherKs: [
+          { subjectId: '10', subject: 'Away Arm', team: 'AWY', opponent: 'HME', seasonKPer9: 11.2, recentKAverage: 8.8, gamesStarted: 22, inningsPitched: 130 },
+          { subjectId: '20', subject: 'Home Arm', team: 'HME', opponent: 'AWY', seasonKPer9: 10.8, recentKAverage: 8.2, gamesStarted: 21, inningsPitched: 126 },
+        ],
+        stolenBases: [
+          { subjectId: '100', subject: 'Fast Runner', team: 'AWY', opponent: 'HME', estimatedProbability: 0.2, seasonStolenBases: 25, successRate: 0.82, attemptsPerGame: 0.3, lineupConfirmed: true },
+          { subjectId: '200', subject: 'Other Runner', team: 'HME', opponent: 'AWY', estimatedProbability: 0.12, seasonStolenBases: 12, successRate: 0.75, attemptsPerGame: 0.18, lineupConfirmed: true },
+        ],
+        warnings: [],
+      },
+    });
+
+    expect(summary.topMarket?.id).toBe('pitcher_ks');
+    expect(summary.topMarket?.marketEdges).toHaveLength(1);
+    expect(summary.topMarket?.marketEdges[0]).toMatchObject({
+      subject: 'Pitcher strikeout market',
+      bookLine: '2 probable starters analyzed',
+      researchSignal: true,
+    });
+    expect(summary.topMarket?.marketEdges[0]?.subject).not.toContain('Away Arm');
   });
 
   it('does not return a top market when the report is unavailable', () => {
@@ -170,7 +200,7 @@ describe('buildSlateRadar', () => {
     expect(summary.dataWarnings[0]).toContain('Daily report failed');
   });
 
-  it('surfaces the sportsbook HTTP state and keeps missing physical lanes locked', () => {
+  it('surfaces the MLB HTTP state and keeps missing physical lanes locked', () => {
     const summary = buildSlateRadar({
       report: baseReport,
       hrRows: [],
