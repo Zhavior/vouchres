@@ -35,6 +35,7 @@ export function shouldForcePublicLanding() {
 /** Only poll live games while a view that consumes them is active. */
 export const SECTIONS_USING_LIVE_GAMES = new Set([
   'today',
+  'slate_radar',
   'build',
   'live_parlays',
   'ai_engine',
@@ -181,6 +182,10 @@ export function resolveDevSectionFromLocation() {
     return 'today';
   }
 
+  if (target === 'slate-radar' || target === '/slate-radar' || target === 'slate_radar' || target === '/slate_radar') {
+    return 'slate_radar';
+  }
+
   if (
     target === 'welcome' || target === '/welcome' ||
     target === 'island' || target === '/island'
@@ -276,7 +281,7 @@ export function resolveDevSectionFromLocation() {
   // General fallback normalization for all valid section route names
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
   const validSections = new Set([
-    'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
+    'today', 'slate_radar', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
     'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',

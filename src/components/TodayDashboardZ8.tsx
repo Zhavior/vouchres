@@ -19,6 +19,8 @@ import type { CreatorProofProfile, Parlay } from '../types';
 import { useDailyHrBoard } from '../features/hr/hooks/useDailyHrBoard';
 import { buildBoard } from '../features/hr/utils/normalizeHrWatch';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
+import { useMarketRadar } from '../hooks/queries/useMarketRadar';
+import { VouchEdgeHttpError } from '../api/vouchedgeApi';
 import { todayISO } from '../hooks/queries/hrBoardQuery';
 import { AURORA_LABEL, AURORA_PAGE } from '../theme/auroraTokens';
 import { buildTodayDecision } from './today/todayDecisionModel';
@@ -28,6 +30,8 @@ import TodayAuroraHero, { type TodayHeroState } from './today/TodayAuroraHero';
 import TodayPersonalizationPanel, { type TodayPlayerOption } from './today/TodayPersonalizationPanel';
 import TodayChangeDigest from './today/TodayChangeDigest';
 import TodayAccountabilityCard from './today/TodayAccountabilityCard';
+import { SlateEdgeRadarWidget } from './slate-radar/SlateEdgeRadar';
+import { buildSlateRadar } from './slate-radar/slateRadarModel';
 import { toHrParlayPickerPlayer } from '../features/hr/utils/hrDecisionBrief';
 import { openParlayAdd } from '../lib/parlays/parlayAddContract';
 import { useTodayPreferences } from '../hooks/queries/useTodayPreferences';
@@ -73,6 +77,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
+  const marketRadarQuery = useMarketRadar(todayISO());
   const todayPreferencesQuery = useTodayPreferences(isLoggedIn);
   const preferences = todayPreferencesQuery.preferences;
   const report = dailyReportQuery.data ?? null;
@@ -106,6 +111,8 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
     () => savedSlips.filter((slip) => String(slip.status || 'PENDING').toUpperCase() === 'PENDING'),
     [savedSlips],
   );
+  const isLoading = dailyReportQuery.isLoading || hrBoardQuery.loading;
+  const isDegraded = dailyReportQuery.isError || hrBoardQuery.error || report?.dataQuality === 'limited';
 
   const decision = useMemo(
     () => buildTodayDecision({
@@ -118,6 +125,21 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
       hrSignalsLoading: hrBoardQuery.loading,
     }),
     [dailyReportQuery.isError, dailyReportQuery.isLoading, hrBoard, hrBoardQuery.loading, pendingSlipList.length, report, savedSlips.length, visibleHrRows.length],
+  );
+
+  const slateRadar = useMemo(
+    () => buildSlateRadar({
+      report,
+      hrRows: visibleHrRows,
+      loading: isLoading,
+      hasError: Boolean(isDegraded),
+      marketRadar: marketRadarQuery.data ?? null,
+      marketRadarLoading: marketRadarQuery.isLoading,
+      marketRadarError: marketRadarQuery.error instanceof VouchEdgeHttpError
+        ? `${marketRadarQuery.error.status} ${marketRadarQuery.error.code}${marketRadarQuery.error.requestId ? ` · request ${marketRadarQuery.error.requestId}` : ''}`
+        : marketRadarQuery.error instanceof Error ? marketRadarQuery.error.message : null,
+    }),
+    [isDegraded, isLoading, marketRadarQuery.data, marketRadarQuery.error, marketRadarQuery.isLoading, report, visibleHrRows],
   );
 
   const reelSlides = useMemo(
@@ -175,8 +197,6 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
   }, [featuredPlayer]);
 
   const activeSlip = pendingSlipList[0] ?? null;
-  const isLoading = dailyReportQuery.isLoading || hrBoardQuery.loading;
-  const isDegraded = dailyReportQuery.isError || hrBoardQuery.error || report?.dataQuality === 'limited';
   const statusTone = isLoading ? 'text-vouch-cyan' : isDegraded ? 'text-amber-300' : 'text-vouch-emerald';
   const statusDot = isLoading ? 'bg-vouch-cyan animate-pulse' : isDegraded ? 'bg-amber-300' : 'bg-vouch-emerald';
   const statusLabel = isLoading ? 'Syncing sources' : decision.statusLabel;
@@ -402,6 +422,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], pro
           </div>
 
           <div className="space-y-6 lg:sticky lg:top-20">
+            <SlateEdgeRadarWidget summary={slateRadar} onSectionChange={onSectionChange} />
             <TodayAccountabilityCard savedSlips={savedSlips} finalGames={decision.finalGames} onSectionChange={onSectionChange} />
             {/* ── Active Slip card ───────────────────────────── */}
             <section id="today-active-slip">

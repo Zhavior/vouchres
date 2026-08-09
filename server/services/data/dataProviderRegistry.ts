@@ -83,5 +83,8 @@ export function listDataProviders(): DataProviderDefinition[] {
 }
 
 export function isOddsProviderConfigured(): boolean {
-  return Boolean(String(process.env.ODDS_API_KEY ?? "").trim());
+  return Boolean(
+    String(process.env.ODDS_API_KEY ?? "").trim()
+    || String(process.env.THE_ODDS_API_KEY ?? "").trim(),
+  );
 }

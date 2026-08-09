@@ -9,13 +9,19 @@ type CacheEntry<T> = {
   expiresAt: number;
 };
 
-type SportsFetchOptions = {
+export type SportsFetchResponseContext = {
+  attempt: number;
+  durationMs: number;
+};
+
+export type SportsFetchOptions = {
   cacheKey?: string;
   ttlMs?: number;
   staleIfErrorMs?: number;
   timeoutMs?: number;
   retries?: number;
   debugLabel?: string;
+  onResponse?: (response: Response, context: SportsFetchResponseContext) => void;
 };
 
 const cache = new Map<string, CacheEntry<unknown>>();
@@ -39,6 +45,7 @@ const DEFAULT_ALLOWED_SPORTS_HOSTS = [
   "baseballsavant.mlb.com",
   "site.api.espn.com",
   "sports.core.api.espn.com",
+  "api.the-odds-api.com",
 ] as const;
 
 function getAllowedSportsHosts(): Set<string> {
@@ -179,6 +186,10 @@ async function sportsFetch<T>(
         }
 
         const res = await fetchWithTimeout(url, timeoutMs);
+        options.onResponse?.(res, {
+          attempt: attempt + 1,
+          durationMs: Date.now() - started,
+        });
 
         // Manual redirect mode — never follow Location (SSRF via open redirect).
         if (res.status >= 300 && res.status < 400) {

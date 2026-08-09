@@ -67,9 +67,43 @@ export default function ParlayPropPickerModal({
 
   useEffect(() => {
     if (!pickerOpen) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const frame = window.requestAnimationFrame(() => dialogRef.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
-  }, [pickerOpen]);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closePicker();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ));
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [closePicker, pickerOpen]);
 
   const activeFamilyData = useMemo(
     () => families.find((f) => f.id === activeFamily) ?? families[0],
@@ -259,6 +293,7 @@ export default function ParlayPropPickerModal({
           <button
             type="button"
             onClick={closePicker}
+            aria-label="Close My List prop picker"
             className="aurora-pressable min-h-11 min-w-11 rounded-xl border border-white/10 p-2 text-white/50 hover:bg-white/5 hover:text-white sm:min-h-0 sm:min-w-0"
           >
             <X className="w-5 h-5" />

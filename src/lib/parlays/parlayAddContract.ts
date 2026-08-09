@@ -8,6 +8,7 @@ export type ParlayAddSource =
   | "hr_intelligence"
   | "player_research"
   | "pitcher_research"
+  | "slate_radar"
   | "vouch_card"
   | "unknown";
 

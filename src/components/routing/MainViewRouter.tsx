@@ -18,6 +18,7 @@ const PersonalizedOnboarding = lazy(() =>
 const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboardZ8 = lazy(() => import('../TodayDashboardZ8'));
+const SlateEdgeRadarRoute = lazy(() => import('../slate-radar/SlateEdgeRadarRoute'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
 const VouchBoardZ8 = lazy(() => import('../VouchBoardZ8'));
 const ProfilePageZ8 = lazy(() => import('../ProfilePageZ8'));
@@ -168,6 +169,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
+        </LazyRoute>
+      );
+    case 'slate_radar':
+      return (
+        <LazyRoute>
+          <SlateEdgeRadarRoute onSectionChange={navigateSection} />
         </LazyRoute>
       );
     case 'feed':
