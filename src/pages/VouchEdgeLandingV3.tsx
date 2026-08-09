@@ -2,7 +2,7 @@ import AuroraHero from "@/components/landing/aurora/AuroraHero";
 import "@/styles/public-landing.css";
 
 import {
-  LiveSportsIntelligence,
+  ResearchPreviewSection,
   WhyVouchEdge,
   PremiumFeatures,
   DecisionIntelligence,
@@ -33,7 +33,7 @@ export default function VouchEdgeLandingV3({
     <main className="min-h-screen bg-black text-white overflow-x-hidden">
       <AuroraHero onLogin={onLogin} onJoinBeta={onJoinBeta} onViewDemo={onViewDemo} />
 
-      <LiveSportsIntelligence />
+      <ResearchPreviewSection onExploreBoard={onJoinBeta} />
 
       <WhyVouchEdge />
 

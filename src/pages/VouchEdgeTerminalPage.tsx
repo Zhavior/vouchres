@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import type { FooterNavigationTarget } from '../components/landing-v3';
+import { SIGNED_IN_HOME } from '../app/sectionNavigation';
 import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
 
 type AuthMode = 'login' | 'signup';
@@ -21,6 +22,14 @@ function scrollToSection(id: string) {
   });
 }
 
+function rememberAfterAuthDestination(destination = SIGNED_IN_HOME) {
+  try {
+    localStorage.setItem('vouchedge_after_auth_destination', destination);
+  } catch {
+    // ignore storage failures
+  }
+}
+
 export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
   const initialMode = authModeFromPath();
   const [authOpen, setAuthOpen] = useState(Boolean(initialMode));
@@ -39,6 +48,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
   }, [syncAuthPath]);
 
   const openAuth = useCallback((mode: AuthMode, plan: SignupPlan = 'free') => {
+    if (mode === 'signup') {
+      rememberAfterAuthDestination(SIGNED_IN_HOME);
+    }
     setAuthMode(mode);
     setAuthPlan(plan);
     setAuthOpen(true);
@@ -60,10 +72,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   const handleFooterNavigate = useCallback((target: FooterNavigationTarget) => {
     const sectionByTarget: Partial<Record<FooterNavigationTarget, string>> = {
-      'Live Games': 'live-intelligence',
-      Research: 'features',
-      Results: 'community',
-      Pricing: 'pricing',
+      'Research preview': 'research-preview',
+      'How it works': 'how-it-works',
+      Results: 'trust-ledger',
+      Beta: 'pricing',
     };
 
     if (target === 'GitHub') {
@@ -79,7 +91,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       <VouchEdgeLandingV3
         onLogin={() => openAuth('login')}
         onJoinBeta={() => openAuth('signup', 'pro')}
-        onViewDemo={() => scrollToSection('live-intelligence')}
+        onViewDemo={() => scrollToSection('research-preview')}
         onExploreCommunity={() => openAuth('signup', 'free')}
         onFooterNavigate={handleFooterNavigate}
       />

@@ -1,91 +1,80 @@
 import { motion } from "framer-motion";
-import {
-  Brain,
-  ShieldCheck,
-  Activity,
-  Sparkles,
-} from "lucide-react";
+import { ClipboardCheck, Search, Shuffle } from "lucide-react";
 
-const items = [
+const steps = [
   {
-    icon: Brain,
-    title: "Evidence Before Emotion",
+    icon: Search,
+    step: "01",
+    title: "Choose a game",
     description:
-      "Every recommendation is backed by data, trends, context and transparent reasoning instead of hype.",
+      "Open today’s MLB board and pick the matchup you want to research before first pitch.",
   },
   {
-    icon: ShieldCheck,
-    title: "Built For Trust",
+    icon: Shuffle,
+    step: "02",
+    title: "Review the evidence",
     description:
-      "Your decisions are organized through an intelligence platform designed around confidence and accountability.",
+      "Inspect matchup context, trends, and supporting signals. Missing data stays labeled as missing.",
   },
   {
-    icon: Activity,
-    title: "Live Intelligence",
+    icon: ClipboardCheck,
+    step: "03",
+    title: "Track the decision",
     description:
-      "Monitor games, player trends and momentum in real time with continuously updating insights.",
-  },
-  {
-    icon: Sparkles,
-    title: "Premium Experience",
-    description:
-      "Designed with the polish, speed and clarity expected from modern premium software.",
+      "Save what you decided, then compare it with the final result after the game.",
   },
 ];
 
 export default function WhyVouchEdge() {
   return (
-    <section className="relative border-t border-white/6 bg-ve-obsidian py-32">
+    <section
+      id="how-it-works"
+      aria-labelledby="how-it-works-title"
+      className="relative scroll-mt-20 border-t border-white/6 bg-ve-obsidian py-24 sm:py-32"
+    >
       <div className="mx-auto max-w-7xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto max-w-5xl text-center"
+          transition={{ duration: 0.45 }}
+          className="mx-auto max-w-3xl text-center"
         >
-          <div className="mb-5 inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-300">
-            Why VouchEdge
+          <div className="mb-5 inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">
+            How it works
           </div>
 
-          <h2 className="text-5xl font-semibold tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
-            Every prediction
-            <br />
-            begins with evidence.
+          <h2
+            id="how-it-works-title"
+            className="text-4xl font-semibold tracking-tight text-white sm:text-5xl"
+          >
+            A simple MLB research workflow.
           </h2>
 
-          <p className="mx-auto mt-10 max-w-3xl text-xl leading-9 text-white/60">
-            The best sports decisions aren't driven by instinct alone. VouchEdge brings together research, live context, and transparent evidence so every matchup can be understood before the game begins.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
+            VouchEdge is built for people who want context before they decide — not a sportsbook
+            tip sheet and not a guarantee.
           </p>
         </motion.div>
 
-        <div className="mt-24 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
-          {items.map(({ icon: Icon, title, description }, i) => (
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
+          {steps.map(({ icon: Icon, step, title, description }, index) => (
             <motion.div
               key={title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{
-                delay: i * 0.08,
-                duration: 0.45,
-              }}
-              className="group rounded-3xl border border-white/8 bg-white/[0.03] p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:bg-white/[0.05]"
+              transition={{ delay: index * 0.08, duration: 0.4 }}
+              className="rounded-3xl border border-white/8 bg-white/[0.03] p-8"
             >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10">
-                <Icon
-                  className="h-7 w-7 text-blue-400"
-                  strokeWidth={1.8}
-                />
+              <div className="mb-6 flex items-center justify-between gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10">
+                  <Icon className="h-6 w-6 text-cyan-300" strokeWidth={1.8} />
+                </div>
+                <span className="font-mono text-sm font-semibold text-white/30">{step}</span>
               </div>
-
-              <h3 className="mb-3 text-xl font-semibold text-white">
-                {title}
-              </h3>
-
-              <p className="leading-7 text-white/60">
-                {description}
-              </p>
+              <h3 className="text-xl font-semibold text-white">{title}</h3>
+              <p className="mt-3 leading-7 text-white/60">{description}</p>
             </motion.div>
           ))}
         </div>

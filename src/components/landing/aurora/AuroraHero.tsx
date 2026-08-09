@@ -1,7 +1,6 @@
-import { ArrowRight, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, LogIn, ShieldCheck } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import VouchEdgeLogo from '../../brand/VouchEdgeLogo';
-import LiveHud from '../hero/LiveHud';
 import AuroraBackground from './AuroraBackground';
 
 type AuroraHeroProps = {
@@ -11,9 +10,9 @@ type AuroraHeroProps = {
 };
 
 const trustPoints = [
-  'Official game context',
-  'Transparent reasoning',
-  'Results stay visible',
+  'For MLB bettors and serious researchers',
+  'Evidence before the decision',
+  'Free during open beta',
 ] as const;
 
 export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHeroProps) {
@@ -22,7 +21,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
   return (
     <section className="relative isolate min-h-[85vh] overflow-hidden border-b border-white/[0.05] bg-black">
       <AuroraBackground />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(32,199,244,0.15),transparent_40%),linear-gradient(to_bottom,transparent_40%,#000_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(32,199,244,0.14),transparent_42%),linear-gradient(to_bottom,transparent_45%,#000_100%)]" />
 
       <nav className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
         <motion.a
@@ -36,9 +35,15 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </motion.a>
 
         <div className="hidden items-center gap-7 text-sm font-medium text-white/55 md:flex">
-          <a href="#live-intelligence" className="transition hover:text-white">Live research</a>
-          <a href="#features" className="transition hover:text-white">Features</a>
-          <a href="#pricing" className="transition hover:text-white">Pricing</a>
+          <a href="#research-preview" className="transition hover:text-white">
+            Research preview
+          </a>
+          <a href="#how-it-works" className="transition hover:text-white">
+            How it works
+          </a>
+          <a href="#pricing" className="transition hover:text-white">
+            Beta
+          </a>
         </div>
 
         <div className="flex items-center gap-2">
@@ -60,60 +65,53 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
         </div>
       </nav>
 
-      <div id="top" className="relative z-10 mx-auto flex max-w-[1400px] flex-col items-center px-5 pb-32 pt-28 text-center sm:px-6 lg:px-8 lg:pb-40 lg:pt-36">
-        {/* Main Hero Header Stack - PERFECTLY CENTERED */}
+      <div
+        id="top"
+        className="relative z-10 mx-auto flex max-w-[1400px] flex-col items-center px-5 pb-24 pt-24 text-center sm:px-6 lg:px-8 lg:pb-32 lg:pt-32"
+      >
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="flex w-full max-w-4xl flex-col items-center justify-center text-center mx-auto"
+          className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center text-center"
         >
-          {/* High-Tech Status Pill */}
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-black/80 to-emerald-950/60 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.25)] backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
-            </span>
-            <Sparkles className="h-4 w-4 text-cyan-300" />
-            <span>VouchEdge Intel Engine v3.4 • Open Beta</span>
-          </div>
-
-          {/* Eye-catching Responsive Headline */}
-          <h1 className="mt-8 text-balance text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-[104px]">
-            The game begins.
-            <span className="mt-3 block bg-gradient-to-r from-cyan-300 via-sky-400 to-emerald-300 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(34,211,238,0.4)]">
-              Before the first pitch.
-            </span>
-          </h1>
-
-          {/* Subtitle - Explicitly Centered */}
-          <p className="mt-7 max-w-2xl text-pretty text-base leading-relaxed text-white/70 sm:text-xl sm:leading-8 mx-auto">
-            Live sports intelligence that reveals every signal, every reason, and every result before the game unfolds.
+          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300/90">
+            VouchEdge
           </p>
 
-          {/* CTA Buttons - Explicitly Centered */}
-          <div className="mt-9 flex w-full max-w-md flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row mx-auto">
+          <h1 className="mt-6 text-balance text-4xl font-black leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Research every MLB matchup before first pitch.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-white/70 sm:text-xl sm:leading-8">
+            VouchEdge combines official game data, matchup context, trends, and transparent
+            reasoning in one research workspace.
+          </p>
+
+          <div className="mx-auto mt-9 flex w-full max-w-xl flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
             <button
               type="button"
               onClick={onJoinBeta}
-              className="group inline-flex min-h-14 w-full sm:w-auto items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-300 px-8 text-base font-black text-[#031017] shadow-[0_0_36px_rgba(34,211,238,0.35)] transition-all hover:scale-[1.02] hover:bg-cyan-300 hover:shadow-[0_0_54px_rgba(34,211,238,0.5)] active:scale-[0.98]"
+              className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-8 text-base font-black text-[#031017] transition hover:bg-cyan-300 sm:w-auto"
             >
-              Join Open Beta
+              Explore Today&apos;s MLB Board
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
             <button
               type="button"
               onClick={onViewDemo}
-              className="min-h-14 w-full sm:w-auto rounded-2xl border border-white/15 bg-white/[0.05] px-7 text-base font-semibold text-white transition-all hover:border-cyan-400/40 hover:bg-white/[0.09] hover:shadow-[0_0_24px_rgba(255,255,255,0.08)] active:scale-[0.98]"
+              className="min-h-14 w-full rounded-2xl border border-white/15 bg-white/[0.05] px-7 text-base font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/[0.09] sm:w-auto"
             >
-              See live research preview
+              View a Real Research Example
             </button>
           </div>
 
-          {/* Trust points - Explicitly Centered */}
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mx-auto text-center">
+          <div className="mx-auto mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
             {trustPoints.map((point) => (
-              <span key={point} className="inline-flex items-center gap-2 text-xs font-medium text-white/60 sm:text-sm">
+              <span
+                key={point}
+                className="inline-flex items-center gap-2 text-xs font-medium text-white/60 sm:text-sm"
+              >
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 {point}
               </span>
@@ -121,19 +119,26 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           </div>
         </motion.div>
 
-        {/* Hero Interactive Terminal Showcase - CENTERED */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 36 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: reduceMotion ? 0 : 0.15, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: reduceMotion ? 0 : 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="relative mx-auto mt-14 w-full max-w-3xl"
         >
-          {/* Background Ambient Glow */}
-          <div className="absolute inset-4 rounded-full bg-gradient-to-r from-cyan-500/20 via-sky-500/15 to-emerald-500/20 blur-[80px]" />
-          
-          {/* Console Container */}
-          <div className="relative">
-            <LiveHud />
+          <div className="absolute inset-6 rounded-full bg-cyan-500/10 blur-[70px]" aria-hidden="true" />
+          <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#070b12]/80 px-6 py-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200/80">
+              What you can do before signup
+            </p>
+            <p className="mt-3 text-lg font-semibold text-white sm:text-xl">
+              Inspect today&apos;s slate, open a research example, and see how evidence and
+              confidence are labeled.
+            </p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base sm:leading-7">
+              After you create a free beta account, you land on today&apos;s research board — not
+              an empty dashboard — so you can open a matchup, review evidence, and track a
+              decision.
+            </p>
           </div>
         </motion.div>
       </div>
