@@ -72,5 +72,9 @@ export function mapAuthMeToUserProfile(data: AuthMePayload): UserProfile {
     jurisdiction: (data.jurisdiction as string | null | undefined) ?? null,
     is_staff: Boolean(data.is_staff),
     is_demo: Boolean(data.is_demo),
+    discord_username: (data.discord_username as string | null | undefined) ?? null,
+    discord_connected_at: (data.discord_connected_at as string | null | undefined) ?? null,
+    discord_guild_member: Boolean(data.discord_guild_member),
+    discord_beta_access: Boolean(data.discord_beta_access),
   };
 }

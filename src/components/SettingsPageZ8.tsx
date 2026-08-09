@@ -34,6 +34,7 @@ import {
   type BillingStatus,
 } from '../lib/billingClient';
 import { buildPremiumAuroraModel, type BillingSourceState } from './premiumAuroraModel';
+import ConnectDiscordButton, { type ConnectDiscordButtonProfile } from './discord/ConnectDiscordButton';
 import {
   FREE_BETA_ALL_ACCESS,
   FREE_BETA_BLURB,
@@ -247,6 +248,22 @@ export default function SettingsPageZ8({
     setTimeout(() => setToast(null), 3000);
   }, []);
 
+  const [discordState, setDiscordState] = useState<ConnectDiscordButtonProfile | null>(null);
+
+  const refreshDiscordState = useCallback(async () => {
+    try {
+      const data = await apiClient.get<Record<string, unknown>>('/api/auth/me');
+      setDiscordState({
+        discord_username: (data.discord_username as string | null | undefined) ?? null,
+        discord_connected_at: (data.discord_connected_at as string | null | undefined) ?? null,
+        discord_guild_member: Boolean(data.discord_guild_member),
+        discord_beta_access: Boolean(data.discord_beta_access),
+      });
+    } catch (err) {
+      console.warn('[Settings] failed to load Discord connection state', err);
+    }
+  }, []);
+
   const refreshBilling = useCallback(async (message?: string, announce = true) => {
     setBillingLoading(true);
     setBillingSourceState('checking');
@@ -369,6 +386,41 @@ export default function SettingsPageZ8({
       window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     } catch { /* cosmetic */ }
   }, [refreshBilling]);
+
+  useEffect(() => {
+    void refreshDiscordState();
+
+    const params = new URLSearchParams(window.location.search);
+    const discordResult = params.get('discord');
+    if (!discordResult) return;
+
+    const reason = params.get('reason');
+    if (discordResult === 'connected') {
+      showToast("Discord connected — you're verified for Open Beta.");
+    } else if (discordResult === 'retry') {
+      showToast('Discord connected, but Open Beta verification is still pending. Retry below.', 'err');
+    } else if (discordResult === 'denied') {
+      showToast('Discord connection was cancelled.', 'err');
+    } else {
+      showToast(
+        reason === 'already_linked_to_another_account'
+          ? 'That Discord account is already connected to a different VouchEdge account.'
+          : 'Discord connection failed. Please try again.',
+        'err',
+      );
+    }
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('discord');
+      url.searchParams.delete('reason');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    } catch { /* cosmetic */ }
+    // Intentionally omits refreshDiscordState/showToast to run once on mount —
+    // both are stable useCallbacks and re-running per render would re-fire
+    // the toast on every rerender if the query params haven't been stripped yet.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -693,6 +745,24 @@ export default function SettingsPageZ8({
                         <p className="mt-1 text-xs text-white/60">{customTitle || 'No title set'}</p>
                       </div>
                     </div>
+                  </Section>
+
+                  {/* Discord Open Beta connect */}
+                  <Section
+                    title="Open Beta access"
+                    subtitle="Connect Discord to join the VouchEdge server and unlock the @Open Beta role. This is separate from the plain Discord link under Social links below."
+                  >
+                    <ConnectDiscordButton
+                      profile={
+                        discordState ?? {
+                          discord_username: null,
+                          discord_connected_at: null,
+                          discord_guild_member: false,
+                          discord_beta_access: false,
+                        }
+                      }
+                      onVerified={refreshDiscordState}
+                    />
                   </Section>
 
                   {/* Fields */}
