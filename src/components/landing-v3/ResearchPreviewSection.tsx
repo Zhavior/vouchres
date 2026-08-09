@@ -13,7 +13,7 @@ import { useHrBoardToday } from "../../hooks/queries/useHrBoardToday";
 import { buildBoard } from "../../features/hr/utils/normalizeHrWatch";
 import type { HrWatchRow } from "../../features/hr/types/hrWatch";
 import { TeamLogo } from "../live/LiveTeamLogo";
-import { logoByTeamId, logoByTeamName } from "../../lib/teamLogos";
+import { logoByTeamId, logoByTeamName, teamIdByName } from "../../lib/teamLogos";
 import {
   liveGameDisplayStatus,
   sortLiveGameCards,
@@ -67,8 +67,18 @@ function isFinalGame(game: LiveGameCard): boolean {
   return Boolean(game.isFinal) || /final|game over|completed/i.test(game.status);
 }
 
-function pickFeaturedGame(games: LiveGameCard[]): LiveGameCard | null {
+function pickFeaturedGame(
+  games: LiveGameCard[],
+  boardInput: unknown,
+): LiveGameCard | null {
   const sorted = sortLiveGameCards(games);
+  if (sorted.length === 0) return null;
+
+  const withResearch = sorted.find(
+    (game) => !isFinalGame(game) && pickMatchupPlayers(game, boardInput).length > 0,
+  );
+  if (withResearch) return withResearch;
+
   return (
     sorted.find((game) => isLiveGame(game)) ??
     sorted.find((game) => !isFinalGame(game)) ??
@@ -77,20 +87,46 @@ function pickFeaturedGame(games: LiveGameCard[]): LiveGameCard | null {
   );
 }
 
-function teamsMatch(a: string, b: string): boolean {
-  const left = a.trim().toLowerCase();
-  const right = b.trim().toLowerCase();
-  if (!left || !right) return false;
-  return left === right || left.includes(right) || right.includes(left);
+function resolveTeamId(value: string | null | undefined, fallbackId?: number | null): number | null {
+  if (fallbackId != null && Number.isFinite(fallbackId)) return fallbackId;
+  if (!value) return null;
+  return teamIdByName(value) ?? null;
+}
+
+function sameTeam(
+  leftName: string | null | undefined,
+  leftId: number | null | undefined,
+  rightName: string | null | undefined,
+  rightId: number | null | undefined,
+): boolean {
+  const left = resolveTeamId(leftName, leftId);
+  const right = resolveTeamId(rightName, rightId);
+  if (left != null && right != null) return left === right;
+
+  const a = (leftName || "").trim().toLowerCase();
+  const b = (rightName || "").trim().toLowerCase();
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
 }
 
 function pickMatchupPlayers(game: LiveGameCard, boardInput: unknown): HrWatchRow[] {
   const board = buildBoard(boardInput);
-  const pool = [...board.confirmed, ...board.curated];
-  const matched = pool.filter(
+  const pool = [...board.confirmed, ...board.curated, ...board.all];
+  const gamePk = String(game.id);
+  const byGame = pool.filter((row) => row.gamePk != null && String(row.gamePk) === gamePk);
+  const byTeams = pool.filter(
     (row) =>
-      (teamsMatch(row.team, game.awayTeam) && teamsMatch(row.opponent, game.homeTeam)) ||
-      (teamsMatch(row.team, game.homeTeam) && teamsMatch(row.opponent, game.awayTeam)),
+      (sameTeam(row.team, null, game.awayTeam, game.awayTeamId) &&
+        sameTeam(row.opponent, null, game.homeTeam, game.homeTeamId)) ||
+      (sameTeam(row.team, null, game.homeTeam, game.homeTeamId) &&
+        sameTeam(row.opponent, null, game.awayTeam, game.awayTeamId)) ||
+      (sameTeam(row.team, null, game.awayAbbr, game.awayTeamId) &&
+        sameTeam(row.opponent, null, game.homeAbbr, game.homeTeamId)) ||
+      (sameTeam(row.team, null, game.homeAbbr, game.homeTeamId) &&
+        sameTeam(row.opponent, null, game.awayAbbr, game.awayTeamId)),
+  );
+  const matched = (byGame.length > 0 ? byGame : byTeams).filter(
+    (row, index, rows) => rows.findIndex((candidate) => candidate.stableId === row.stableId) === index,
   );
   return matched.sort((a, b) => b.hrScore - a.hrScore).slice(0, 2);
 }
@@ -284,8 +320,8 @@ export default function ResearchPreviewSection({
   const hrQuery = useHrBoardToday(24);
 
   const featuredGame = useMemo(
-    () => pickFeaturedGame(liveQuery.data?.games ?? []),
-    [liveQuery.data?.games],
+    () => pickFeaturedGame(liveQuery.data?.games ?? [], hrQuery.data),
+    [liveQuery.data?.games, hrQuery.data],
   );
   const matchupPlayers = useMemo(
     () => (featuredGame ? pickMatchupPlayers(featuredGame, hrQuery.data) : []),
