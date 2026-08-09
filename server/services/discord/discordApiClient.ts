@@ -113,7 +113,7 @@ export async function putGuildMember(discordUserId: string, userAccessToken: str
     },
     body: JSON.stringify({
       access_token: userAccessToken,
-      roles: [config.openBetaRoleId],
+      roles: [config.openBetaRoleId, config.vouchEdgeRoleId],
     }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
@@ -138,17 +138,21 @@ export async function putGuildMember(discordUserId: string, userAccessToken: str
 export async function putGuildMemberRole(discordUserId: string): Promise<{ status: number; errorBody: DiscordApiErrorBody | null }> {
   const config = assertDiscordConfigured();
 
-  const res = await fetch(
-    `${DISCORD_API_BASE}/guilds/${config.guildId}/members/${discordUserId}/roles/${config.openBetaRoleId}`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bot ${config.botToken}` },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    },
-  );
+  for (const roleId of [config.openBetaRoleId, config.vouchEdgeRoleId]) {
+    const res = await fetch(
+      `${DISCORD_API_BASE}/guilds/${config.guildId}/members/${discordUserId}/roles/${roleId}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bot ${config.botToken}` },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    );
 
-  if (res.status === 204) return { status: res.status, errorBody: null };
+    if (res.status !== 204) {
+      const errorBody = await parseErrorBody(res);
+      return { status: res.status, errorBody };
+    }
+  }
 
-  const errorBody = await parseErrorBody(res);
-  return { status: res.status, errorBody };
+  return { status: 204, errorBody: null };
 }

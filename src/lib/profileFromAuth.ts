@@ -45,6 +45,10 @@ export function mapAuthMeToCreatorProof(
     isStaff: Boolean(data.is_staff ?? current?.isStaff),
     staff: Boolean(data.is_staff ?? current?.isStaff),
     isDeveloper: current?.isDeveloper,
+    discordUsername: (data.discord_username as string | null | undefined) ?? null,
+    discordConnectedAt: (data.discord_connected_at as string | null | undefined) ?? null,
+    discordGuildMember: Boolean(data.discord_guild_member),
+    discordBetaAccess: Boolean(data.discord_beta_access),
     capperSettings: normalizeCapperSettings(data.capper_settings ?? current?.capperSettings),
   };
 }

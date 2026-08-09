@@ -255,6 +255,10 @@ export interface CreatorProofProfile {
   isStaff?: boolean;
   staff?: boolean;
   isDeveloper?: boolean;
+  discordUsername?: string | null;
+  discordConnectedAt?: string | null;
+  discordGuildMember?: boolean;
+  discordBetaAccess?: boolean;
   capperSettings?: CapperSettings;
   uiPreferences?: {
     sidebarCollapsedGroups?: Record<string, boolean>;

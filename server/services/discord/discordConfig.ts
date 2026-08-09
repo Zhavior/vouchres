@@ -15,6 +15,7 @@ export interface DiscordConfig {
   botToken: string;
   guildId: string;
   openBetaRoleId: string;
+  vouchEdgeRoleId: string;
   redirectUri: string;
 }
 
@@ -31,6 +32,7 @@ export function isDiscordConfigured(): boolean {
     readRequiredEnv("DISCORD_BOT_TOKEN") &&
     readRequiredEnv("DISCORD_GUILD_ID") &&
     readRequiredEnv("DISCORD_OPEN_BETA_ROLE_ID") &&
+    readRequiredEnv("DISCORD_VOUCHEDGE_ROLE_ID") &&
     readRequiredEnv("DISCORD_REDIRECT_URI"),
   );
 }
@@ -41,15 +43,17 @@ export function assertDiscordConfigured(): DiscordConfig {
   const botToken = readRequiredEnv("DISCORD_BOT_TOKEN");
   const guildId = readRequiredEnv("DISCORD_GUILD_ID");
   const openBetaRoleId = readRequiredEnv("DISCORD_OPEN_BETA_ROLE_ID");
+  const vouchEdgeRoleId = readRequiredEnv("DISCORD_VOUCHEDGE_ROLE_ID");
   const redirectUri = readRequiredEnv("DISCORD_REDIRECT_URI");
 
-  if (!clientId || !clientSecret || !botToken || !guildId || !openBetaRoleId || !redirectUri) {
+  if (!clientId || !clientSecret || !botToken || !guildId || !openBetaRoleId || !vouchEdgeRoleId || !redirectUri) {
     console.error("[discord] missing configuration — connect flow disabled", {
       hasClientId: Boolean(clientId),
       hasClientSecret: Boolean(clientSecret),
       hasBotToken: Boolean(botToken),
       hasGuildId: Boolean(guildId),
       hasOpenBetaRoleId: Boolean(openBetaRoleId),
+      hasVouchEdgeRoleId: Boolean(vouchEdgeRoleId),
       hasRedirectUri: Boolean(redirectUri),
     });
     throw new AppError({
@@ -61,7 +65,7 @@ export function assertDiscordConfigured(): DiscordConfig {
     });
   }
 
-  return { clientId, clientSecret, botToken, guildId, openBetaRoleId, redirectUri };
+  return { clientId, clientSecret, botToken, guildId, openBetaRoleId, vouchEdgeRoleId, redirectUri };
 }
 
 /**

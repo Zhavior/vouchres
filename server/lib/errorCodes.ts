@@ -8,6 +8,7 @@ export const API_ERROR_CODES = {
   invalid_token: 401,
   forbidden: 403,
   entitlement_required: 403,
+  discord_beta_access_required: 403,
   parlay_post_locked: 403,
   parlay_locked: 403,
   not_found: 404,

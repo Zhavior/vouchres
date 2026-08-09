@@ -74,6 +74,9 @@ export interface AuthedRequest extends Request {
       age_confirmed_at: string | null;
       jurisdiction_confirmed_at: string | null;
       jurisdiction: string | null;
+      discord_connected_at: string | null;
+      discord_guild_member: boolean;
+      discord_beta_access: boolean;
       deletion_scheduled_at?: string | null;
     };
   };
@@ -241,6 +244,34 @@ function authAccessError(
   return null;
 }
 
+const DISCORD_BETA_EXEMPT_PREFIXES = [
+  "/api/auth",
+  "/api/discord",
+  "/api/billing",
+  "/api/privacy",
+];
+
+function isDiscordBetaExemptRequest(req: AuthedRequest): boolean {
+  const path = String(req.originalUrl ?? req.url ?? "").split("?", 1)[0];
+  return DISCORD_BETA_EXEMPT_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
+function discordBetaAccessError(
+  profile: NonNullable<AuthedRequest["user"]>["profile"],
+  req: AuthedRequest,
+): AppError | null {
+  // Staff must retain operational access to repair Discord connections and
+  // investigate accounts even when their own profile is not beta-linked.
+  if (profile.is_staff || isDiscordBetaExemptRequest(req)) return null;
+  if (profile.discord_guild_member && profile.discord_beta_access) return null;
+  return new AppError({
+    status: 403,
+    code: "discord_beta_access_required",
+    message: "Connect Discord and verify VouchEdge server membership to access the Open Beta.",
+    details: { error: "discord_beta_access_required" },
+  });
+}
+
 function createRequireAuth(options: RequireAuthOptions = {}) {
   return async function requireAuthImpl(
     req: AuthedRequest,
@@ -260,6 +291,8 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
       if (cached) {
         const blocked = authAccessError(cached.profile, options);
         if (blocked) return next(blocked);
+        const betaBlocked = discordBetaAccessError(cached.profile, req);
+        if (betaBlocked) return next(betaBlocked);
         req.user = cached;
         return next();
       }
@@ -275,6 +308,7 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
       const PROFILE_COLUMNS = `
     id, username, handle, tier, is_banned, is_staff, is_demo,
     age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
+    discord_connected_at, discord_guild_member, discord_beta_access,
     deletion_scheduled_at
   `;
 
@@ -321,6 +355,8 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
 
       const blocked = authAccessError(profile, options);
       if (blocked) return next(blocked);
+      const betaBlocked = discordBetaAccessError(profile, req);
+      if (betaBlocked) return next(betaBlocked);
 
       req.user = {
         id: data.user.id,
@@ -384,6 +420,7 @@ export async function optionalAuth(
       .select(`
         id, username, handle, tier, is_banned, is_staff, is_demo,
         age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
+        discord_connected_at, discord_guild_member, discord_beta_access,
         deletion_scheduled_at
       `)
       .eq("id", data.user.id)
