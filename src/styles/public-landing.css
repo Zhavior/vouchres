@@ -1,4 +1,10 @@
 @import "tailwindcss" source(none);
+@import "./vouchedge-tokens.css";
+@import "./vouchedge-utilities.css";
+@import "./vouchedge-motion.css";
+@import "./z8-design-system.css";
+@import "./z8-premium.css";
+
 @config "../../tailwind.public.config.ts";
 @source "../pages/VouchEdgeLandingV3.tsx";
 @source "../components/landing-v3/**/*.{ts,tsx}";
@@ -7,11 +13,6 @@
 @source "../components/landing/aurora/AuroraBackground.tsx";
 @source "../components/landing/hero/LiveHud.tsx";
 
-@import "./vouchedge-tokens.css";
-@import "./vouchedge-utilities.css";
-@import "./vouchedge-motion.css";
-@import "./z8-design-system.css";
-@import "./z8-premium.css";
 
 body {
   background-color: var(--bg-obsidian);

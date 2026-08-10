@@ -1,4 +1,10 @@
 @import "tailwindcss";
+@import "./styles/vouchedge-tokens.css";
+@import "./styles/vouchedge-utilities.css";
+@import "./styles/vouchedge-motion.css";
+@import "./styles/z8-design-system.css";
+@import "./styles/z8-premium.css";
+
 @config "../tailwind.config.ts";
 @source "../src/**/*.{js,ts,jsx,tsx}";
 @source "../components/**/*.{js,ts,jsx,tsx}";
@@ -7,11 +13,6 @@
 @source not "../vouchedge/**";
 @source not "../vouchedge-terminal/**";
 @source not "../tests/**";
-@import "./styles/vouchedge-tokens.css";
-@import "./styles/vouchedge-utilities.css";
-@import "./styles/vouchedge-motion.css";
-@import "./styles/z8-design-system.css";
-@import "./styles/z8-premium.css";
 
 *, ::before, ::after {
   box-sizing: border-box;

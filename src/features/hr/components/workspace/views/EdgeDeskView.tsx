@@ -17,7 +17,7 @@ import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { PlayerHrTag } from "../../HrHitBadge";
-import { oddsDisplay } from "../../../engine/signalScore";
+import { modelEdgePct, oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
@@ -25,15 +25,37 @@ interface Props {
 
 type EdgeTierFilter = "all" | "prime" | "solid" | "positive";
 
+/** A value only when it is a real, finite number — never a stand-in. */
+function realNumber(value: number | null | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** Descending sort that always parks unknown values at the end. */
+function compareDesc(a: number | null, b: number | null): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return b - a;
+}
+
+/**
+ * Both sides of the edge comparison are nullable on purpose. A missing model
+ * probability or a missing market price makes the edge unknowable, and an
+ * unknowable edge is rendered as such — the desk never substitutes a literal
+ * for a number the pipeline did not supply.
+ */
 function calculateEdge(row: HrWatchRow): {
-  modelProb: number;
-  impliedProb: number;
-  evEdge: number;
+  modelProb: number | null;
+  impliedProb: number | null;
+  evEdge: number | null;
   oddsLabel: string | null;
 } {
-  const modelProb = row.hrProbability ?? (row.hrScore ? row.hrScore / 100 * 0.35 : 0.20);
-  const impliedProb = row.impliedProbability ?? (row.bookOdds ? (row.bookOdds > 0 ? 100 / (row.bookOdds + 100) : Math.abs(row.bookOdds) / (Math.abs(row.bookOdds) + 100)) : 0.22);
-  const evEdge = Math.max(0, (modelProb - impliedProb) * 100);
+  const modelProb = realNumber(row.hrProbability);
+  const impliedProb = realNumber(row.impliedProbability);
+  // Null unless both sides are real numbers. The floor at zero is unchanged
+  // behaviour and is addressed separately by HOTFIX-HR-EDGE-002.
+  const rawEdge = modelEdgePct(row);
+  const evEdge = rawEdge == null ? null : Math.max(0, rawEdge);
   // Null when the book hasn't posted a price — the desk shows a dash, never an
   // invented number dressed up as a real market.
   const oddsLabel = oddsDisplay(row);
@@ -57,19 +79,26 @@ export default function EdgeDeskView({ rows }: Props) {
     });
   }, [rows]);
 
-  // Statistics
+  // Statistics — priced rows only. A row with no market price contributes
+  // nothing to the +EV count, the max, the average, or the top-edge banner.
   const stats = useMemo(() => {
-    const positiveEvRows = processedRows.filter((r) => r.evEdge > 0);
-    const topEdgeRow = [...processedRows].sort((a, b) => b.evEdge - a.evEdge)[0];
+    const pricedRows = processedRows.flatMap((r) =>
+      r.evEdge == null ? [] : [{ ...r, evEdge: r.evEdge }]
+    );
+    const positiveEvRows = pricedRows.filter((r) => r.evEdge > 0);
+    const topEdgeEntry = [...pricedRows].sort((a, b) => b.evEdge - a.evEdge)[0] ?? null;
     const avgEdge = positiveEvRows.length
       ? positiveEvRows.reduce((acc, curr) => acc + curr.evEdge, 0) / positiveEvRows.length
       : 0;
 
     return {
       positiveEvCount: positiveEvRows.length,
-      topEdge: topEdgeRow?.evEdge ?? 0,
-      topRow: topEdgeRow?.row ?? null,
+      topEdge: topEdgeEntry?.evEdge ?? 0,
+      topEntry: topEdgeEntry,
       avgEdge,
+      // With nothing priced there is no edge to average or top — the stats read
+      // as unknown rather than as a measured zero.
+      hasPricedEdge: pricedRows.length > 0,
     };
   }, [processedRows]);
 
@@ -86,17 +115,18 @@ export default function EdgeDeskView({ rows }: Props) {
           if (!matchesName && !matchesTeam && !matchesPitcher) return false;
         }
 
-        // Tier filter
-        if (tierFilter === "prime") return evEdge >= 8;
-        if (tierFilter === "solid") return evEdge >= 4 && evEdge < 8;
-        if (tierFilter === "positive") return evEdge > 0 && evEdge < 4;
+        // Tier filter — an unknown edge belongs to no edge tier.
+        if (tierFilter === "prime") return evEdge != null && evEdge >= 8;
+        if (tierFilter === "solid") return evEdge != null && evEdge >= 4 && evEdge < 8;
+        if (tierFilter === "positive") return evEdge != null && evEdge > 0 && evEdge < 4;
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === "edge") return b.evEdge - a.evEdge;
+        // Rows with an unknown value sort last rather than reading as zero.
+        if (sortBy === "edge") return compareDesc(a.evEdge, b.evEdge);
         if (sortBy === "score") return b.row.hrScore - a.row.hrScore;
-        if (sortBy === "prob") return b.modelProb - a.modelProb;
-        if (sortBy === "odds") return (b.row.bookOdds ?? 0) - (a.row.bookOdds ?? 0);
+        if (sortBy === "prob") return compareDesc(a.modelProb, b.modelProb);
+        if (sortBy === "odds") return compareDesc(a.row.bookOdds ?? null, b.row.bookOdds ?? null);
         return 0;
       });
   }, [processedRows, searchQuery, tierFilter, sortBy]);
@@ -166,26 +196,26 @@ export default function EdgeDeskView({ rows }: Props) {
             <div className="rounded-2xl border border-white/10 bg-black/40 p-2.5 sm:p-4 text-center backdrop-blur-md">
               <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-white/40 block truncate">Max EV</span>
               <div className="mt-1 text-lg sm:text-2xl font-black text-vouch-cyan">
-                +{stats.topEdge.toFixed(1)}%
+                {stats.hasPricedEdge ? `+${stats.topEdge.toFixed(1)}%` : "—"}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/40 p-2.5 sm:p-4 text-center backdrop-blur-md">
               <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-white/40 block truncate">Avg Edge</span>
               <div className="mt-1 text-lg sm:text-2xl font-black text-amber-300">
-                +{stats.avgEdge.toFixed(1)}%
+                {stats.hasPricedEdge ? `+${stats.avgEdge.toFixed(1)}%` : "—"}
               </div>
             </div>
           </div>
         </div>
 
         {/* Top Highlight Banner if present */}
-        {stats.topRow && (
+        {stats.topEntry && (
           <div className="relative z-10 mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 sm:flex-row sm:px-6">
             <div className="flex items-center gap-4">
               <PlayerHeadshot
-                name={stats.topRow.playerName}
-                playerId={stats.topRow.playerId}
-                headshotUrl={stats.topRow.headshotUrl}
+                name={stats.topEntry.row.playerName}
+                playerId={stats.topEntry.row.playerId}
+                headshotUrl={stats.topEntry.row.headshotUrl}
                 size={48}
               />
               <div>
@@ -194,15 +224,15 @@ export default function EdgeDeskView({ rows }: Props) {
                     Top +EV Edge
                   </span>
                   <span className="text-xs font-semibold text-white/60">
-                    {stats.topRow.team} vs {stats.topRow.opponent}
+                    {stats.topEntry.row.team} vs {stats.topEntry.row.opponent}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-lg font-black text-white">{stats.topRow.playerName}</h4>
-                  <PlayerHrTag player={stats.topRow} />
+                  <h4 className="text-lg font-black text-white">{stats.topEntry.row.playerName}</h4>
+                  <PlayerHrTag player={stats.topEntry.row} />
                 </div>
                 <p className="text-xs text-emerald-200/80">
-                  vs {stats.topRow.pitcherName || "Opposing Starter"} • HR Score: <strong className="text-white">{stats.topRow.hrScore}</strong>
+                  vs {stats.topEntry.row.pitcherName || "Opposing Starter"} • HR Score: <strong className="text-white">{stats.topEntry.row.hrScore}</strong>
                 </p>
               </div>
             </div>
@@ -211,7 +241,7 @@ export default function EdgeDeskView({ rows }: Props) {
               <div className="text-right">
                 <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-300/70">Book Odds</span>
                 <div className="font-mono text-xl font-extrabold text-white">
-                  {stats.topRow.oddsLabel ?? '—'}
+                  {stats.topEntry.oddsLabel ?? '—'}
                 </div>
               </div>
               <div className="text-right">
@@ -222,7 +252,7 @@ export default function EdgeDeskView({ rows }: Props) {
               </div>
               <button
                 type="button"
-                onClick={() => handleAddToSlip(stats.topRow!)}
+                onClick={() => handleAddToSlip(stats.topEntry!.row)}
                 className="flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/20 px-4 py-2.5 font-mono text-xs font-bold text-emerald-300 transition duration-200 hover:bg-emerald-400/30 hover:text-white"
               >
                 <Plus className="h-4 w-4" />
@@ -292,8 +322,8 @@ export default function EdgeDeskView({ rows }: Props) {
       {/* ── Candidates Edge Grid ─────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredRows.map(({ row, modelProb, impliedProb, evEdge, oddsLabel }, idx) => {
-          const isPrime = evEdge >= 8;
-          const isPositive = evEdge > 0;
+          const isPrime = evEdge != null && evEdge >= 8;
+          const isPositive = evEdge != null && evEdge > 0;
           const logoUrl = row.teamLogoUrl || logoByTeamName(row.team);
 
           return (
@@ -357,32 +387,44 @@ export default function EdgeDeskView({ rows }: Props) {
 
                 {/* Comparative probability gauges */}
                 <div className="mt-5 space-y-3 rounded-xl border border-white/5 bg-black/30 p-3.5">
-                  {/* Model Probability */}
+                  {/* Model Probability — no bar when the model has not priced it. */}
                   <div>
                     <div className="flex justify-between font-mono text-[10px] font-bold">
                       <span className="text-vouch-cyan uppercase tracking-wider">Model HR Prob</span>
-                      <span className="text-white font-extrabold">{(modelProb * 100).toFixed(1)}%</span>
+                      <span className={modelProb != null ? "text-white font-extrabold" : "text-white/40"}>
+                        {modelProb != null ? `${(modelProb * 100).toFixed(1)}%` : "Model probability unavailable"}
+                      </span>
                     </div>
-                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-vouch-cyan to-emerald-400 transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(5, modelProb * 100 * 2))}%` }}
-                      />
-                    </div>
+                    {modelProb != null && (
+                      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-vouch-cyan to-emerald-400 transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(5, modelProb * 100 * 2))}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
 
-                  {/* Implied Probability */}
+                  {/* Implied Probability — omitted entirely when no price is posted. */}
                   <div>
                     <div className="flex justify-between font-mono text-[10px] font-bold">
                       <span className="text-white/40 uppercase tracking-wider">Book Implied Prob</span>
-                      <span className="text-white/70">{(impliedProb * 100).toFixed(1)}%</span>
+                      <span className="text-white/40">
+                        {impliedProb != null ? (
+                          <span className="text-white/70">{(impliedProb * 100).toFixed(1)}%</span>
+                        ) : (
+                          "Market unavailable"
+                        )}
+                      </span>
                     </div>
-                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-white/30 transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(5, impliedProb * 100 * 2))}%` }}
-                      />
-                    </div>
+                    {impliedProb != null && (
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-white/30 transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(5, impliedProb * 100 * 2))}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -400,8 +442,12 @@ export default function EdgeDeskView({ rows }: Props) {
                       : "border-white/5 bg-white/[0.02] text-white/50"
                   }`}>
                     <span className="font-mono text-[9px] uppercase tracking-wider opacity-70">EV Edge</span>
-                    <div className="font-mono text-lg font-black">
-                      {evEdge > 0 ? `+${evEdge.toFixed(1)}%` : "0.0%"}
+                    <div className={evEdge != null ? "font-mono text-lg font-black" : "font-mono text-[10px] font-bold leading-tight text-white/40"}>
+                      {evEdge == null
+                        ? "Market unavailable"
+                        : evEdge > 0
+                        ? `+${evEdge.toFixed(1)}%`
+                        : "0.0%"}
                     </div>
                   </div>
                 </div>
