@@ -49,14 +49,42 @@ export function calculatePVM(pitcher: PitcherProfileV2, bullpen: BullpenProfileV
     0.25 * contactDamageAllowed +
     0.2 * bullpenExposureBoost;
 
+  const notes = [
+    `Pitcher_Air_Vulnerability=${pitcherAirVulnerability.toFixed(4)}`,
+    `Regression_Indicator=${regressionIndicator.toFixed(4)}`,
+    `Contact_Damage_Allowed=${contactDamageAllowed.toFixed(4)}`,
+    `Bullpen_Exposure_Boost=${bullpenExposureBoost.toFixed(4)}`,
+    `Raw_PVM=${rawPvm.toFixed(4)}`,
+  ];
+
+  const missingPitcherFields = [
+    pitcher.hrPerFbAllowed == null && "HR/FB allowed",
+    pitcher.swingingStrikePercent == null && "swinging-strike rate",
+    pitcher.FIP == null && "FIP",
+    pitcher.xFIP == null && "xFIP",
+    pitcher.barrelPercentAllowed == null && "barrel rate allowed",
+    pitcher.flyBallPercentAllowed == null && "fly-ball rate allowed",
+    pitcher.xSlgAllowed == null && "xSLG allowed",
+  ].filter(Boolean) as string[];
+
+  const missingBullpenFields = [
+    bullpen.bullpenFatigueIndex == null && "fatigue index",
+    bullpen.last3DaysPitchCount == null && "last-three-days pitch count",
+    bullpen.last2DaysHighLeverageUsage == null && "high-leverage usage",
+    bullpen.bullpenHrPerFb == null && "HR/FB",
+    bullpen.bullpenBarrelPercentAllowed == null && "barrel rate allowed",
+  ].filter(Boolean) as string[];
+
+  if (missingPitcherFields.length > 0) {
+    notes.push(`PVM_PARTIAL: pitcher data unavailable: ${missingPitcherFields.join(", ")}.`);
+  }
+
+  if (missingBullpenFields.length > 0) {
+    notes.push(`PVM_PARTIAL: bullpen data unavailable: ${missingBullpenFields.join(", ")}.`);
+  }
+
   return {
     value: clamp01(rawPvm),
-    notes: [
-      `Pitcher_Air_Vulnerability=${pitcherAirVulnerability.toFixed(4)}`,
-      `Regression_Indicator=${regressionIndicator.toFixed(4)}`,
-      `Contact_Damage_Allowed=${contactDamageAllowed.toFixed(4)}`,
-      `Bullpen_Exposure_Boost=${bullpenExposureBoost.toFixed(4)}`,
-      `Raw_PVM=${rawPvm.toFixed(4)}`,
-    ],
+    notes,
   };
 }

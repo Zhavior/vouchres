@@ -29,15 +29,28 @@ export function calculateOVS(batter: BatterProfileV2, game: GameContextV2): Comp
     teamTotalScore * 0.15 +
     fourPlusPaLikelihood * 0.15;
 
+  const notes = [
+    `Projected_PA_Score=${paScore.toFixed(4)}`,
+    `Lineup_Spot_Score=${lineupSpotScore.toFixed(4)}`,
+    `Starter_Probability=${starterProbability.toFixed(4)}`,
+    `Team_Implied_Total_Score=${teamTotalScore.toFixed(4)}`,
+    `FourPlus_PA_Likelihood=${fourPlusPaLikelihood.toFixed(4)}`,
+    `Raw_OVS=${rawOvs.toFixed(4)}`,
+  ];
+
+  const missingOpportunityInputs = [
+    batter.projectedPlateAppearances == null && "projected plate appearances",
+    batter.projectedLineupSpot == null && "projected lineup spot",
+    batter.starterProbability == null && "starter probability",
+    !Number.isFinite(teamImpliedTotal) && "team implied total",
+  ].filter(Boolean) as string[];
+
+  if (missingOpportunityInputs.length > 0) {
+    notes.push(`OVS_PARTIAL: opportunity data unavailable: ${missingOpportunityInputs.join(", ")}.`);
+  }
+
   return {
     value: clamp01(rawOvs),
-    notes: [
-      `Projected_PA_Score=${paScore.toFixed(4)}`,
-      `Lineup_Spot_Score=${lineupSpotScore.toFixed(4)}`,
-      `Starter_Probability=${starterProbability.toFixed(4)}`,
-      `Team_Implied_Total_Score=${teamTotalScore.toFixed(4)}`,
-      `FourPlus_PA_Likelihood=${fourPlusPaLikelihood.toFixed(4)}`,
-      `Raw_OVS=${rawOvs.toFixed(4)}`,
-    ],
+    notes,
   };
 }

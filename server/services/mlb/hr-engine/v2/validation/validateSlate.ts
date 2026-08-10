@@ -42,6 +42,18 @@ export function validateSlate(request: HrEngineRequestV2): SlateValidationResult
     dataQuality = "INVALID";
   };
 
+  if (!batter.batterId || !batter.batterName?.trim()) {
+    invalidate("Batter identity is missing.");
+  }
+
+  if (!pitcher.pitcherId || !pitcher.pitcherName?.trim()) {
+    invalidate("Pitcher identity is missing.");
+  }
+
+  if (!game.gameId?.trim() || !game.awayTeam?.trim() || !game.homeTeam?.trim()) {
+    invalidate("Game identity is missing.");
+  }
+
   if (batter.lineupStatus !== "confirmed" || !game.confirmedLineupsStatus) {
     downgrade("Lineup is unconfirmed.", "LOW");
   }
@@ -83,7 +95,10 @@ export function validateSlate(request: HrEngineRequestV2): SlateValidationResult
     dataQuality =
       dataQuality === "INVALID"
         ? "INVALID"
-        : worstConfidence(dataQuality === "HIGH" ? "HIGH" : dataQuality === "MEDIUM" ? "MEDIUM" : "LOW", market.marketLimitQuality) === "LOW"
+        : worstConfidence(
+              dataQuality === "HIGH" ? "HIGH" : dataQuality === "MEDIUM" ? "MEDIUM" : "LOW",
+              market.marketLimitQuality,
+            ) === "LOW"
           ? "LOW"
           : dataQuality;
   }
