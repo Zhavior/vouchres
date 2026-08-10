@@ -31,6 +31,10 @@ export interface UserProfile {
   jurisdiction: string | null;
   is_staff: boolean;
   is_demo: boolean;
+  discord_username: string | null;
+  discord_connected_at: string | null;
+  discord_guild_member: boolean;
+  discord_beta_access: boolean;
 }
 
 interface AuthState {

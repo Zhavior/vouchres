@@ -1275,6 +1275,11 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         ["injured_list", "scratched", "day_to_day", "questionable"].includes(p.injuryStatus)
       ).length,
       hrCandidatesScored: candidates.length,
+      // When this board was actually computed. The validated board is cached for
+      // 5 minutes, so a consumer that receives it cannot otherwise tell whether
+      // it is fresh or nearly stale. Snapshot capture records this alongside its
+      // own captured_at to make that gap measurable.
+      lastRefresh: new Date().toISOString(),
     };
 
     return {

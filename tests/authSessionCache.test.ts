@@ -43,6 +43,9 @@ describe("requireAuth session cache", () => {
         age_confirmed_at: "2026-01-01T00:00:00.000Z",
         jurisdiction_confirmed_at: "2026-01-01T00:00:00.000Z",
         jurisdiction: "US-NY",
+        discord_connected_at: "2026-01-01T00:00:00.000Z",
+        discord_guild_member: true,
+        discord_beta_access: true,
         deletion_scheduled_at: null,
       },
       error: null,
@@ -83,6 +86,9 @@ describe("requireAuth session cache", () => {
           age_confirmed_at: "2026-01-01T00:00:00.000Z",
           jurisdiction_confirmed_at: "2026-01-01T00:00:00.000Z",
           jurisdiction: "US-NY",
+          discord_connected_at: "2026-01-01T00:00:00.000Z",
+          discord_guild_member: true,
+          discord_beta_access: true,
           deletion_scheduled_at: null,
         },
         error: null,
@@ -99,6 +105,9 @@ describe("requireAuth session cache", () => {
           age_confirmed_at: "2026-01-01T00:00:00.000Z",
           jurisdiction_confirmed_at: "2026-01-01T00:00:00.000Z",
           jurisdiction: "US-NY",
+          discord_connected_at: "2026-01-01T00:00:00.000Z",
+          discord_guild_member: true,
+          discord_beta_access: true,
           deletion_scheduled_at: null,
         },
         error: null,
@@ -122,5 +131,53 @@ describe("requireAuth session cache", () => {
     expect(getUser).toHaveBeenCalledTimes(2);
     const err = next2.mock.calls[0]?.[0];
     expect(err?.message).toMatch(/banned/i);
+  });
+
+  it("blocks unverified users from beta routes but leaves auth setup routes available", async () => {
+    getUser.mockResolvedValue({
+      data: { user: { id: "user-unverified", email: "u@example.com" } },
+      error: null,
+    });
+    maybeSingle.mockResolvedValue({
+      data: {
+        id: "user-unverified",
+        username: "unverified",
+        handle: "unverified",
+        tier: "free",
+        is_banned: false,
+        is_staff: false,
+        is_demo: false,
+        age_confirmed_at: null,
+        jurisdiction_confirmed_at: null,
+        jurisdiction: null,
+        discord_connected_at: null,
+        discord_guild_member: false,
+        discord_beta_access: false,
+        deletion_scheduled_at: null,
+      },
+      error: null,
+    });
+
+    const auth = await import("../server/middleware/auth");
+    auth.resetAuthSessionCacheForTests();
+
+    const betaNext = vi.fn();
+    await auth.requireAuth(
+      { headers: { authorization: "Bearer tok_unverified" }, method: "GET", originalUrl: "/api/today/preferences" } as any,
+      {} as any,
+      betaNext,
+    );
+    expect(betaNext.mock.calls[0]?.[0]).toMatchObject({
+      status: 403,
+      code: "discord_beta_access_required",
+    });
+
+    const setupNext = vi.fn();
+    await auth.requireAuth(
+      { headers: { authorization: "Bearer tok_setup" }, method: "GET", originalUrl: "/api/auth/me" } as any,
+      {} as any,
+      setupNext,
+    );
+    expect(setupNext.mock.calls[0]?.[0]).toBeUndefined();
   });
 });

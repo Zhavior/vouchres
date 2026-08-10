@@ -46,6 +46,11 @@ const ME_PROFILE_COLUMNS = `
   age_confirmed_at,
   jurisdiction_confirmed_at,
   jurisdiction,
+  discord_user_id,
+  discord_username,
+  discord_connected_at,
+  discord_guild_member,
+  discord_beta_access,
   created_at,
   updated_at
 `;

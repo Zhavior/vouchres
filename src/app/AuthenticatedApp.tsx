@@ -34,6 +34,32 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
     syncProfile: bootstrap.syncProfile,
   });
 
+  const discordBetaVerified = bootstrap.accountId === null || (
+    bootstrap.profile.discordGuildMember === true && bootstrap.profile.discordBetaAccess === true
+  );
+  const canUseAccountSetup = navigation.activeSection === 'settings' || navigation.activeSection === 'profile';
+
+  if (!discordBetaVerified && !canUseAccountSetup) {
+    return (
+      <div className="z8-app-shell flex min-h-screen items-center justify-center bg-black px-6 text-white">
+        <div className="w-full max-w-lg rounded-3xl border border-vouch-cyan/20 bg-white/[0.04] p-8 text-center shadow-2xl">
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-vouch-cyan">Discord verification required</p>
+          <h1 className="mt-3 text-2xl font-semibold">Join the VouchEdge Discord to enter the Open Beta</h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            Your account is created, but beta features stay locked until Discord membership and the required roles are verified.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigation.navigateSection('settings')}
+            className="mt-6 rounded-xl bg-vouch-cyan px-5 py-3 font-semibold text-black transition hover:brightness-110"
+          >
+            Connect Discord
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AppShell
       activeSection={navigation.activeSection}
