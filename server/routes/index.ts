@@ -20,6 +20,7 @@ import { subscriberRoutes } from "./subscriberRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
 import { registerNflRoutes } from "./nflRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
+import { registerHrMasterIntelligenceRoutes } from "./mlbHrIntelligenceRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
 import { registerJudgeRoutes } from "./judgeRoutes";
@@ -88,6 +89,7 @@ export function registerApiRoutes(app: Express): void {
   registerMlbRoutes(app);
   registerNflRoutes(app);
   registerHrBoardRoutes(app);
+  registerHrMasterIntelligenceRoutes(app);
   registerMatchupRoutes(app);
   registerAgentRoutes(app);
   registerJudgeRoutes(app);
