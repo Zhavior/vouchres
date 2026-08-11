@@ -230,7 +230,21 @@
   .z8-hr-hero__flight { right: -2rem; top: -5rem; opacity: .55; }
   .z8-hr-control-dock { border-left: 0; border-right: 0; }
   .z8-hr-tier-section { border: 0; background: transparent; }
-  .z8-hr-card-grid { grid-template-columns: 1fr; gap: .75rem; }
+  .z8-hr-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+  }
+
+  /* Keep the existing full-fidelity card usable in the two-column mobile grid. */
+  .z8-hr-card-grid .ve-unified-player-card__header-bar { height: 5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__header-bar > .absolute.inset-x-0 { padding-inline: .5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__header-bar .ve-player-team-header-logo { height: 5rem; width: 5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__header-bar .ve-player-team-header-logo + img { left: .5rem; height: 1.75rem; width: 1.75rem; }
+  .z8-hr-card-grid .ve-unified-player-card > div:last-child { gap: .5rem; padding: .5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__panel { padding: .5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__panel .ve-player-headshot-bg { height: 2.5rem; width: 2.5rem; }
+  .z8-hr-card-grid .ve-unified-player-card__panel .ve-player-headshot-bg + div { gap: .375rem; }
+  .z8-hr-card-grid .ve-unified-player-card .ve-vouch-action { padding-block: .375rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
