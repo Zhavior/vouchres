@@ -1,6 +1,7 @@
 import { getExperimentVariant } from '../../lib/experiments';
 import React, { Suspense, lazy, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
+import HrRouteSkeleton from '../boot/HrRouteSkeleton';
 import FadeInMount from '../system/FadeInMount';
 import { useAppShell } from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
@@ -70,9 +71,9 @@ function ParlayProofShell() {
   return <ParlayProofPage pickId={pickId} />;
 }
 
-function LazyRoute({ children }: { children: React.ReactNode }) {
+function LazyRoute({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
-    <Suspense fallback={<RouteShellSkeleton />}>
+    <Suspense fallback={fallback ?? <RouteShellSkeleton />}>
       <FadeInMount>{children}</FadeInMount>
     </Suspense>
   );
@@ -209,7 +210,7 @@ function MainViewRouter({
     case 'daily_hr_watch_new':
     case 'hr_board':
       return (
-        <LazyRoute>
+        <LazyRoute fallback={<HrRouteSkeleton />}>
           <HomeRunIntelligencePage onSectionChange={navigateSection} />
         </LazyRoute>
       );
