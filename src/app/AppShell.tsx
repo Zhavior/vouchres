@@ -5,6 +5,7 @@ import { NotificationProvider } from '../components/notifications/UnifiedNotific
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
+import HrRouteSkeleton from '../components/boot/HrRouteSkeleton';
 import { TerminalBackground } from '../components/layout/TerminalBackground';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
@@ -66,8 +67,10 @@ export function AppShell({
     warmLikelyRoutes(activeSection);
   }, [isPublicFrontPage, activeSection]);
 
+  const isHrRoute = activeSection === 'hr_board' || activeSection === 'daily_hr_watch_new';
+
   const routeContent = (
-    <Suspense fallback={<RouteShellSkeleton />}>
+    <Suspense fallback={isHrRoute ? <HrRouteSkeleton /> : <RouteShellSkeleton />}>
       <MainViewRouter
         activeSection={activeSection}
         navigateSection={navigateSection}

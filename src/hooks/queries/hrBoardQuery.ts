@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
+import { claimEarlyHrBoard } from "../../lib/boot/hrBoardEarlyFetch";
 import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../../lib/hrBoardSlice";
 import type { HrBoardResponse } from "../../types/hrBoard";
@@ -21,6 +22,18 @@ export function getHrBoardBootInitialUpdatedAt(date: string): number | undefined
 }
 
 async function fetchHrBoard(date: string, signal?: AbortSignal): Promise<HrBoardResponse> {
+  if (date === todayISO()) {
+    // Started during HTML parse, so this usually resolves with no network wait.
+    const early = claimEarlyHrBoard();
+    if (early) {
+      try {
+        return await early;
+      } catch {
+        // Fall through to the normal loader — the early request is best effort.
+      }
+    }
+  }
+
   const { loadHrBoard } = await import('../../kernel/loaders/hrBoardLoader');
   return loadHrBoard(date, HR_BOARD_CANONICAL_FETCH_LIMIT, signal) as Promise<HrBoardResponse>;
 }

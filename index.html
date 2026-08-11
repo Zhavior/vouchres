@@ -164,6 +164,43 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      HR Intelligence early fetch. The board request used to start only after the
+      whole route module graph had loaded and the page mounted, so the flagship
+      screen waited on JS before it even asked for its data. Firing it here puts
+      the request in flight during HTML parse, in parallel with the bundle, so the
+      board is usually resolved by the time React mounts and the page can paint
+      complete instead of skeleton-then-content.
+
+      previewLimit must match HR_BOARD_CANONICAL_FETCH_LIMIT in src/lib/hrBoardSlice.ts —
+      a mismatch makes this a wasted request instead of a warm one.
+    -->
+    <script>
+      (function () {
+        try {
+          // Section comes from the entry URL only. "/" resolves to the Today home
+          // regardless of the last section visited, so a stored section here would
+          // just buy a ~300KB response nobody reads.
+          var section = (window.location.hash.replace(/^#/, '') || window.location.pathname)
+            .toLowerCase()
+            .replace(/^\//, '');
+          if (section !== 'hr_board' && section !== 'daily_hr_watch_new') return;
+
+          window.__veHrBoardEarly = fetch('/api/mlb/hr-board/today?previewLimit=350&compact=1', {
+            credentials: 'include',
+          }).then(function (res) {
+            if (!res.ok) throw new Error('hr_board_early_fetch_failed');
+            window.__veHrBoardEarlyCacheControl = res.headers.get('cache-control');
+            return res.json();
+          });
+          // The consumer attaches its own handler; this one only stops an
+          // unhandled rejection from surfacing when the early fetch loses.
+          window.__veHrBoardEarly.catch(function () {});
+        } catch (e) {
+          /* Best effort only — the app still fetches the board on its own. */
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

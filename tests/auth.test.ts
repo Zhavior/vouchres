@@ -63,11 +63,11 @@ describeOrSkip("Auth flow", () => {
   });
 
   it("accepts a valid token and attaches profile to req.user", async () => {
-    const user = await createTestUser({ username: "authflow_test_2" });
+    const user = await createTestUser({ username: "authflow_test_2", discordBeta: true });
     const token = await signInTestUser(user.email, user.password);
 
     const { requireAuth } = await import("../server/middleware/auth");
-    const req: any = { headers: { authorization: `Bearer ${token}` } };
+    const req: any = { headers: { authorization: `Bearer ${token}` }, url: "/api/hr/board" };
     const res: any = { statusCode: 200, body: null, status(c: number) { this.statusCode = c; return this; }, json(b: any) { this.body = b; return this; } };
     let nextCalled = false;
     const next = () => { nextCalled = true; };
@@ -77,6 +77,36 @@ describeOrSkip("Auth flow", () => {
     expect(req.user).toBeTruthy();
     expect(req.user.id).toBe(user.id);
     expect(req.user.profile.username).toBe("authflow_test_2");
+  });
+
+  it("blocks a valid token without Discord Open Beta access on gated routes", async () => {
+    const user = await createTestUser({ username: "authflow_test_2b" });
+    const token = await signInTestUser(user.email, user.password);
+
+    const { requireAuth } = await import("../server/middleware/auth");
+    const req: any = { headers: { authorization: `Bearer ${token}` }, url: "/api/hr/board" };
+    const res: any = {};
+    let nextError: unknown;
+    const next = (error?: unknown) => { nextError = error; };
+
+    await requireAuth(req, res, next);
+    expect(nextError).toMatchObject({ status: 403, code: "discord_beta_access_required" });
+    expect(req.user).toBeUndefined();
+  });
+
+  it("allows a non-beta user through on exempt auth routes", async () => {
+    const user = await createTestUser({ username: "authflow_test_2c" });
+    const token = await signInTestUser(user.email, user.password);
+
+    const { requireAuth } = await import("../server/middleware/auth");
+    const req: any = { headers: { authorization: `Bearer ${token}` }, url: "/api/auth/me" };
+    const res: any = {};
+    let nextArg: unknown = "unset";
+    const next = (error?: unknown) => { nextArg = error; };
+
+    await requireAuth(req, res, next);
+    expect(nextArg).toBeUndefined();
+    expect(req.user?.profile.username).toBe("authflow_test_2c");
   });
 
   it("rejects tier updates from the client (security)", async () => {

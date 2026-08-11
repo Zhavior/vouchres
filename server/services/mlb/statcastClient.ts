@@ -416,7 +416,7 @@ export async function getPitchMixMapResult(
 ): Promise<FeedMapResult<StatcastPitchMixRow[]>> {
   return loadFeedMap(`pitchMix:v2:${year}`, "pitch-mix", async () => {
     const rows = await fetchCsv(
-      `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=batter&year=${year}&min=${MIN_PA}&csv=true`,
+      `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=pitcher&year=${year}&min=1&csv=true`,
     );
     const map: Record<number, StatcastPitchMixRow[]> = {};
     for (const row of rows) {

@@ -4,6 +4,7 @@ import { queryKeys } from '../../hooks/queries/queryKeys';
 import { todayISO } from '../../hooks/queries/hrBoardQuery';
 import type { HrBoardResponse } from '../../types/hrBoard';
 import { parseHrBoardApiResponse } from '../../api/hrBoardApiContract';
+import { claimEarlyHrBoard } from './hrBoardEarlyFetch';
 
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from '../hrBoardSlice';
 
@@ -45,12 +46,18 @@ export async function warmGuestHrBoardCache(): Promise<void> {
 
   warmInFlight = (async () => {
     try {
-      const { apiClient } = await import('../apiClient');
-      const wireBoard = await apiClient.get<unknown>(
-        '/api/mlb/hr-board/today',
-        { previewLimit: PREVIEW_LIMIT, compact: 1 },
-      );
-      const board = parseHrBoardApiResponse(wireBoard);
+      // Shares the request the inline early fetch already put in flight when the
+      // visitor landed straight on the HR page, instead of asking for the same
+      // ~300KB board a second time.
+      const early = claimEarlyHrBoard();
+      const board = early
+        ? await early
+        : parseHrBoardApiResponse(
+            await (await import('../apiClient')).apiClient.get<unknown>(
+              '/api/mlb/hr-board/today',
+              { previewLimit: PREVIEW_LIMIT, compact: 1 },
+            ),
+          );
       if (!board) return;
 
       bootDataStore.set('dailyHrBoard', board);
