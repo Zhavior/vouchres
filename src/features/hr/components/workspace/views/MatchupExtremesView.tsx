@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
 
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 type ExtremeMetric =
@@ -268,7 +270,13 @@ import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { Plus } from "lucide-react";
 
-function ExtremeCard({ result }: { result: ExtremeResult }) {
+function ExtremeCard({
+  result,
+  getHrResult,
+}: {
+  result: ExtremeResult;
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
+}) {
   const { definition, row, value } = result;
   const tone = TONE_CLASSES[definition.tone];
   const teamLogoUrl = row.teamLogoUrl || logoByTeamName(row.team);
@@ -358,7 +366,7 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
               <h4 className="text-xl font-black tracking-tight text-white group-hover:text-vouch-cyan transition-colors">
                 {row.playerName}
               </h4>
-              <PlayerHrTag player={row} />
+              <PlayerHrTag player={row} hrResult={getHrResult?.(row.playerId) ?? null} />
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {teamLogoUrl && <img src={teamLogoUrl} alt="" className="h-3.5 w-3.5 object-contain" />}
@@ -465,7 +473,7 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
   );
 }
 
-export default function MatchupExtremesView({ rows }: Props) {
+export default function MatchupExtremesView({ rows, getHrResult }: Props) {
   const extremes = useMemo(
     () =>
       EXTREME_DEFINITIONS.map((definition) =>
@@ -600,7 +608,7 @@ export default function MatchupExtremesView({ rows }: Props) {
 
       <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
         {extremes.map((result) => (
-          <ExtremeCard key={result.definition.id} result={result} />
+          <ExtremeCard key={result.definition.id} result={result} getHrResult={getHrResult} />
         ))}
       </div>
 

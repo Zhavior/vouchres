@@ -641,7 +641,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
               )}
             </div>
           ) : (
-          <WorkspaceRenderer workspace={workspace} rows={vm.rows}>
+          <WorkspaceRenderer
+            workspace={workspace}
+            rows={vm.rows}
+            getHrResult={isToday ? vm.getHrResult : undefined}
+          >
           {/* Candidates Board / Spreadsheet / Treemap */}
           <div className="flex-1 pr-1">
             {vm.loading && !vm.rows?.length ? (

@@ -40,6 +40,7 @@ import {
   isPlaceholder,
 } from "./hrValidation";
 import { getTodayGamesWeather } from "./weatherService";
+import { summarizeHomeRunsInCalendarDays } from "./recentHitterWindow";
 
 /* ============ Caches (each has its own TTL) ============ */
 
@@ -487,6 +488,9 @@ function scoreCandidate(
   let recentHrGames = 0;
   let smallSamplePenalty = 0;
   let hrRate = 0; // HR per plate appearance (function-scoped for the hitterPower calc)
+  const last7DaySummary = hitterStats?.recentGames?.length
+    ? summarizeHomeRunsInCalendarDays(hitterStats.recentGames, game.gameDate, 7)
+    : null;
 
   // Hitter power component — this should dominate over generic environment boosts.
   if (hitterStats?.season) {
@@ -776,6 +780,8 @@ function scoreCandidate(
     recentHomeRuns: hitterStats?.recentGames?.length ? recentHr : undefined,
     recentHrGames: hitterStats?.recentGames?.length ? recentHrGames : undefined,
     recentGamesChecked: hitterStats?.recentGames?.length,
+    last7DayHomeRuns: last7DaySummary?.homeRuns,
+    last7DayGamesChecked: last7DaySummary?.gamesChecked,
     confidenceTier,
     dataConfidence,
     scoreBreakdown,

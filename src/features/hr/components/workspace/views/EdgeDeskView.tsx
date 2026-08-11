@@ -1,17 +1,13 @@
 import React, { useMemo, useState } from "react";
 import {
   TrendingUp,
-  Percent,
   Search,
   Sparkles,
-  ArrowUpRight,
   ShieldCheck,
   Plus,
-  Zap,
-  Info,
-  DollarSign,
 } from "lucide-react";
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
@@ -21,6 +17,7 @@ import { modelEdgePct, oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 type EdgeTierFilter = "all" | "prime" | "solid" | "positive";
@@ -63,7 +60,7 @@ function calculateEdge(row: HrWatchRow): {
   return { modelProb, impliedProb, evEdge, oddsLabel };
 }
 
-export default function EdgeDeskView({ rows }: Props) {
+export default function EdgeDeskView({ rows, getHrResult }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<EdgeTierFilter>("all");
   const [sortBy, setSortBy] = useState<"edge" | "score" | "prob" | "odds">("edge");
@@ -229,7 +226,10 @@ export default function EdgeDeskView({ rows }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-lg font-black text-white">{stats.topEntry.row.playerName}</h4>
-                  <PlayerHrTag player={stats.topEntry.row} />
+                  <PlayerHrTag
+                    player={stats.topEntry.row}
+                    hrResult={getHrResult?.(stats.topEntry.row.playerId) ?? null}
+                  />
                 </div>
                 <p className="text-xs text-emerald-200/80">
                   vs {stats.topEntry.row.pitcherName || "Opposing Starter"} • HR Score: <strong className="text-white">{stats.topEntry.row.hrScore}</strong>
@@ -364,7 +364,7 @@ export default function EdgeDeskView({ rows }: Props) {
                         <h3 className="text-base font-black text-white group-hover:text-vouch-cyan transition-colors">
                           {row.playerName}
                         </h3>
-                        <PlayerHrTag player={row} />
+                        <PlayerHrTag player={row} hrResult={getHrResult?.(row.playerId) ?? null} />
                       </div>
                       <p className="text-[11px] text-white/50">
                         vs {row.pitcherName || "Starter TBD"}

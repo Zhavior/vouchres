@@ -15,6 +15,7 @@
  *   accent     #4FB8DC   mineral-cyan — selection, primary action, live focus
  *   positive   #31B583   muted emerald — won/confirmed/good
  *   caution    #D99C4A   warm amber — projected/stale/review
+ *   bronze     #CD7F32   verified seven-day result history
  *   negative   #D96459   muted coral — lost/error/blocked
  *   live       #F0536B   brighter rose — reserved strictly for live game state
  *
@@ -35,6 +36,7 @@
   --color-ve-voltage: #31B583;
   --color-ve-locked: #2b3344;
   --color-ve-caution: #D99C4A;
+  --color-ve-bronze: #CD7F32;
   --color-ve-negative: #D96459;
   --color-ve-live: #F0536B;
 

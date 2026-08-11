@@ -1,17 +1,11 @@
 import React, { useMemo, useState } from "react";
 import {
   Grid,
-  Sparkles,
-  Layers,
   Crosshair,
-  Maximize2,
   Plus,
-  Flame,
-  ArrowUpRight,
-  TrendingUp,
-  ShieldAlert,
 } from "lucide-react";
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
@@ -20,6 +14,7 @@ import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 type AxisMetric = "hitterPower" | "pitcherVulnerability" | "hrScore" | "recentForm" | "parkFactor" | "vouchScore";
@@ -52,7 +47,7 @@ function getMetricValue(row: HrWatchRow, metric: AxisMetric): number {
   }
 }
 
-export default function ProjectionMatrixView({ rows }: Props) {
+export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
   const [xAxisMetric, setXAxisMetric] = useState<AxisMetric>("pitcherVulnerability");
   const [yAxisMetric, setYAxisMetric] = useState<AxisMetric>("hitterPower");
   const [selectedQuadrant, setSelectedQuadrant] = useState<"all" | "q1" | "q2" | "q3" | "q4">("all");
@@ -65,7 +60,7 @@ export default function ProjectionMatrixView({ rows }: Props) {
       const y = Math.min(100, Math.max(0, getMetricValue(row, yAxisMetric)));
 
       // Determine quadrant (threshold = 50)
-      let quadrant: "q1" | "q2" | "q3" | "q4" = "q4";
+      let quadrant: "q1" | "q2" | "q3" | "q4";
       if (x >= 50 && y >= 50) quadrant = "q1"; // Top Right: Elite Target
       else if (x < 50 && y >= 50) quadrant = "q2"; // Top Left: Sneaky Power
       else if (x >= 50 && y < 50) quadrant = "q3"; // Bottom Right: Pitcher Trap
@@ -334,7 +329,11 @@ export default function ProjectionMatrixView({ rows }: Props) {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1">
                               <h5 className="truncate text-xs font-bold text-white">{row.playerName}</h5>
-                              <PlayerHrTag player={row} compact />
+                              <PlayerHrTag
+                                player={row}
+                                hrResult={getHrResult?.(row.playerId) ?? null}
+                                compact
+                              />
                             </div>
                             <p className="text-[10px] text-white/50">{row.team} vs {row.opponent}</p>
                           </div>
@@ -378,7 +377,11 @@ export default function ProjectionMatrixView({ rows }: Props) {
                     </span>
                     <div className="flex items-center gap-1.5">
                       <h4 className="text-sm font-extrabold text-white">{row.playerName}</h4>
-                      <PlayerHrTag player={row} compact />
+                      <PlayerHrTag
+                        player={row}
+                        hrResult={getHrResult?.(row.playerId) ?? null}
+                        compact
+                      />
                     </div>
                     <p className="text-[10px] text-white/50">vs {row.pitcherName || "Pitcher TBD"}</p>
                   </div>

@@ -2,14 +2,10 @@ import React, { useMemo } from "react";
 import {
   Layers,
   Flame,
-  TrendingUp,
-  ArrowUpRight,
-  ShieldCheck,
   Plus,
-  Zap,
-  Sparkles,
 } from "lucide-react";
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
@@ -19,6 +15,7 @@ import { oddsDisplay } from "../../../engine/signalScore";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 interface TeamStack {
@@ -34,7 +31,7 @@ interface TeamStack {
   stackRank: number;
 }
 
-export default function SlateStacksView({ rows }: Props) {
+export default function SlateStacksView({ rows, getHrResult }: Props) {
   // Group rows by team and calculate stack scores
   const teamStacks = useMemo<TeamStack[]>(() => {
     const map = new Map<string, HrWatchRow[]>();
@@ -254,7 +251,11 @@ export default function SlateStacksView({ rows }: Props) {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <h4 className="text-sm font-bold text-white">{player.playerName}</h4>
-                            <PlayerHrTag player={player} compact />
+                            <PlayerHrTag
+                              player={player}
+                              hrResult={getHrResult?.(player.playerId) ?? null}
+                              compact
+                            />
                           </div>
                           <span className="font-mono text-[10px] text-white/50">
                             Power: {player.hitterPower ?? player.hrScore}
