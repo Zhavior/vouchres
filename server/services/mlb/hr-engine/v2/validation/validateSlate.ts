@@ -37,6 +37,8 @@ export function validateSlate(request: HrEngineRequestV2): SlateValidationResult
     }
   };
 
+  const currentDataQuality = (): DataQualityLabel => dataQuality;
+
   const invalidate = (reason: string) => {
     reasons.push(reason);
     dataQuality = "INVALID";
@@ -92,15 +94,10 @@ export function validateSlate(request: HrEngineRequestV2): SlateValidationResult
       downgrade("Odds timestamp is stale.", "LOW");
     }
 
-    dataQuality =
-      dataQuality === "INVALID"
-        ? "INVALID"
-        : worstConfidence(
-              dataQuality === "HIGH" ? "HIGH" : dataQuality === "MEDIUM" ? "MEDIUM" : "LOW",
-              market.marketLimitQuality,
-            ) === "LOW"
-          ? "LOW"
-          : dataQuality;
+    const current = currentDataQuality();
+    if (current !== "INVALID" && worstConfidence(current, market.marketLimitQuality) === "LOW") {
+      dataQuality = "LOW";
+    }
   }
 
   if (pitcher.pitchMixUsage == null) {
