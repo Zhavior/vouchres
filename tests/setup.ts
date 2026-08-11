@@ -123,6 +123,7 @@ export async function createTestUser(opts?: {
   handle?: string;
   tier?: "free" | "gold" | "seller_pro";
   ageConfirmed?: boolean;
+  discordBeta?: boolean;
 }): Promise<{
   id: string;
   email: string;
@@ -157,6 +158,13 @@ export async function createTestUser(opts?: {
     profileUpdate.age_confirmed_at = new Date().toISOString();
     profileUpdate.jurisdiction_confirmed_at = new Date().toISOString();
     profileUpdate.jurisdiction = "US-NV"; // Nevada — legal
+  }
+  if (opts?.discordBeta) {
+    // Open Beta gate: requireAuth blocks non-exempt routes unless both columns are true.
+    profileUpdate.discord_connected_at = new Date().toISOString();
+    profileUpdate.discord_guild_member = true;
+    profileUpdate.discord_beta_access = true;
+    profileUpdate.discord_beta_access_granted_at = new Date().toISOString();
   }
 
   await testDb.from("profiles").update(profileUpdate).eq("id", data.user.id);
