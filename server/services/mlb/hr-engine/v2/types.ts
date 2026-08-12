@@ -2,7 +2,7 @@
 // Pure types only. No I/O, no framework deps.
 
 export type Handedness = "L" | "R" | "S";
-export type RoofStatus = "open" | "closed" | "retractable_open" | "retractable_closed" | "none";
+export type RoofStatus = "open" | "closed" | "retractable_open" | "retractable_closed" | "none" | "unknown";
 export type DataQualityLabel = "HIGH" | "MEDIUM" | "LOW" | "INVALID";
 export type ConfidenceLabel = "HIGH" | "MEDIUM" | "LOW";
 export type LineupStatus = "confirmed" | "projected_unconfirmed";
@@ -16,17 +16,19 @@ export type GameContextV2 = {
   ballpark: string;
   roofStatus: RoofStatus;
   gameTimeLocal: string;
-  impliedTeamTotals: { away: number; home: number };
+  impliedTeamTotals: { away: number | null; home: number | null };
   confirmedLineupsStatus: boolean;
 };
 
 // 2. BATTER PROFILE
 export type SeasonMetrics = {
   EV: number;
+  /** Rate fields are normalized to 0..1 at the adapter boundary. */
   FB_percent: number;
   HH_percent: number;
   Barrel_percent: number;
-  xwOBAcon: number;
+  /** Baseball Savant's public leaderboards expose xwOBA, not xwOBAcon. Null until sourced exactly. */
+  xwOBAcon: number | null;
   pull_air_percent: number;
   avg_launch_angle: number;
   sweet_spot_percent: number;
@@ -34,6 +36,7 @@ export type SeasonMetrics = {
 
 export type Rolling30dMetrics = {
   EV: number;
+  /** Rate fields are normalized to 0..1 at the adapter boundary. */
   FB_percent: number;
   HH_percent: number;
   Barrel_percent: number;

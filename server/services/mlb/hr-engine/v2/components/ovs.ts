@@ -20,7 +20,11 @@ export function calculateOVS(batter: BatterProfileV2, game: GameContextV2): Comp
     batter.team === game.homeTeam ? game.impliedTeamTotals.home : game.impliedTeamTotals.away;
 
   const paScore = normalizeRange(projectedPa, 3, 5.5, 0);
-  const teamTotalScore = normalizeRange(teamImpliedTotal, 3, 6.5, 0.25);
+  // MLB does not publish sportsbook implied totals. Missing market context is
+  // neutral in shadow mode and is still recorded as a missing input below.
+  const teamTotalScore = teamImpliedTotal == null
+    ? 0.5
+    : normalizeRange(teamImpliedTotal, 3, 6.5, 0.25);
 
   const rawOvs =
     paScore * 0.35 +
@@ -42,7 +46,7 @@ export function calculateOVS(batter: BatterProfileV2, game: GameContextV2): Comp
     batter.projectedPlateAppearances == null && "projected plate appearances",
     batter.projectedLineupSpot == null && "projected lineup spot",
     batter.starterProbability == null && "starter probability",
-    !Number.isFinite(teamImpliedTotal) && "team implied total",
+    (teamImpliedTotal == null || !Number.isFinite(teamImpliedTotal)) && "team implied total",
   ].filter(Boolean) as string[];
 
   if (missingOpportunityInputs.length > 0) {

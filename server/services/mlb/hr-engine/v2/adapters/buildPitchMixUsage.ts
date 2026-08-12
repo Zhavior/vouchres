@@ -19,7 +19,7 @@ const EMPTY_USAGE: PitchMixUsage = {
   changeup: 0,
 };
 
-function normalizePitchType(value: string): PitchTypeKey | null {
+export function normalizePitchType(value: string): PitchTypeKey | null {
   const key = value.trim().toLowerCase();
 
   if (["ff", "fa", "four-seam", "4-seam fastball", "4-seam fb", "fourseam"].includes(key)) {
@@ -49,7 +49,7 @@ function normalizePitchType(value: string): PitchTypeKey | null {
   return null;
 }
 
-function buildUsageFromRows(rows: StatcastPitchMixRow[]): PitchMixUsage | null {
+export function buildUsageFromRows(rows: StatcastPitchMixRow[]): PitchMixUsage | null {
   const usage: PitchMixUsage = { ...EMPTY_USAGE };
   let matchedUsage = 0;
 

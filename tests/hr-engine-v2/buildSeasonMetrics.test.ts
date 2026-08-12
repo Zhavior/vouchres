@@ -30,6 +30,8 @@ describe("buildSeasonMetrics", () => {
         barrelPct: 14.2,
         hardHitPct: 48.5,
         avgExitVelo: 92.4,
+        avgLaunchAngle: 17.3,
+        sweetSpotPct: 39.1,
       },
     });
 
@@ -52,16 +54,16 @@ describe("buildSeasonMetrics", () => {
 
     const result = await buildSeasonMetrics(42, 2026);
 
-    expect(result.warnings).toEqual([]);
+    expect(result.warnings.join(" ")).toMatch(/xwOBAcon unavailable/i);
     expect(result.seasonMetrics).not.toBeNull();
     expect(result.seasonMetrics?.EV).toBe(92.4);
-    expect(result.seasonMetrics?.FB_percent).toBe(41);
-    expect(result.seasonMetrics?.HH_percent).toBe(48.5);
-    expect(result.seasonMetrics?.Barrel_percent).toBe(14.2);
-    expect(result.seasonMetrics?.xwOBAcon).toBe(0.371);
-    expect(result.seasonMetrics?.pull_air_percent).toBe(18);
-    expect(result.seasonMetrics?.avg_launch_angle).toBeGreaterThan(0);
-    expect(result.seasonMetrics?.sweet_spot_percent).toBeGreaterThan(0);
+    expect(result.seasonMetrics?.FB_percent).toBe(0.41);
+    expect(result.seasonMetrics?.HH_percent).toBe(0.485);
+    expect(result.seasonMetrics?.Barrel_percent).toBe(0.142);
+    expect(result.seasonMetrics?.xwOBAcon).toBeNull();
+    expect(result.seasonMetrics?.pull_air_percent).toBe(0.18);
+    expect(result.seasonMetrics?.avg_launch_angle).toBe(17.3);
+    expect(result.seasonMetrics?.sweet_spot_percent).toBe(0.391);
   });
 
   it("returns null when both backing sources are absent", async () => {
@@ -91,6 +93,8 @@ describe("buildSeasonMetrics", () => {
         barrelPct: 14.2,
         hardHitPct: 48.5,
         avgExitVelo: 92.4,
+        avgLaunchAngle: 17.3,
+        sweetSpotPct: 39.1,
       },
     });
 
@@ -102,7 +106,8 @@ describe("buildSeasonMetrics", () => {
 
     const result = await buildSeasonMetrics(42, 2026);
 
-    expect(result.seasonMetrics).not.toBeNull();
+    expect(result.seasonMetrics).toBeNull();
+    expect(result.warnings.join(" ")).toMatch(/withheld rather than zero-filled/i);
     expect(result.warnings.join(" ")).toMatch(/feed unavailable/i);
     expect(result.warnings.join(" ")).toMatch(/timeout/i);
   });

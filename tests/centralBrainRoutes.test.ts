@@ -56,6 +56,21 @@ vi.mock("../server/services/intelligence/centralBrain/brainOperationsService", (
 vi.mock("../server/services/intelligence/centralBrain/brainLearningService", () => ({
   evaluateBrainHrHistory: vi.fn(async () => [{ engineVersion: "brain-hr-selection@2", samples: 0, evaluation: null, readyForJudgment: false }]),
 }));
+vi.mock("../server/services/intelligence/centralBrain/hrPairedEvaluationService", () => ({
+  evaluatePairedHrHistory: vi.fn(async () => ({
+    status: "INSUFFICIENT_DATA",
+    promotionEligible: false,
+    pairedObservations: 0,
+    positiveOutcomes: 0,
+    incumbentModelVersions: [],
+    challengerModelVersions: [],
+    dropped: { missingOutcome: 0, temporalLeakage: 0, invalidPrediction: 0 },
+    incumbent: { samples: 0, positives: 0, brierScore: 0, logLoss: 0, calibrationError: 0, buckets: [] },
+    challenger: { samples: 0, positives: 0, brierScore: 0, logLoss: 0, calibrationError: 0, buckets: [] },
+    brierImprovement: 0,
+    reasons: [],
+  })),
+}));
 vi.mock("../server/services/intelligence/centralBrain/brainGeminiReviewService", () => ({
   getBrainGeminiReviews: vi.fn(async () => ({ home_run: { status: "live", reviews: [] } })),
 }));

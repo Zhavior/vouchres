@@ -18,6 +18,7 @@ import { evaluateBrainHrHistory } from "../services/intelligence/centralBrain/br
 import { requireTier } from "../middleware/entitlements";
 import { getBrainGeminiReviews } from "../services/intelligence/centralBrain/brainGeminiReviewService";
 import { generationLimiter } from "../middleware/rateLimit";
+import { evaluatePairedHrHistory } from "../services/intelligence/centralBrain/hrPairedEvaluationService";
 
 export function registerCentralBrainRoutes(app: Express): void {
   app.get("/api/intelligence/brain", requireAuth, requireTier("gold"), (req: RequestWithContext, res: Response) =>
@@ -45,8 +46,8 @@ export function registerCentralBrainRoutes(app: Express): void {
       throw new AppError({ status: 400, code: "validation_error", message: "date must use YYYY-MM-DD format.", details: parsedQuery.error.issues });
     }
     const date = parsedQuery.data.date ?? new Date().toISOString().slice(0, 10);
-    const [ledger, stolenBaseLedger, pitcherStrikeoutsLedger, modelRecords] = await Promise.all([getBrainHrLedger(), getBrainStolenBaseLedger(), getBrainPitcherKLedger(), evaluateBrainHrHistory()]);
-    return res.json(apiOkFlat(req, { ...ledger, stolenBase: stolenBaseLedger, pitcherStrikeouts: pitcherStrikeoutsLedger, modelRecords }));
+    const [ledger, stolenBaseLedger, pitcherStrikeoutsLedger, modelRecords, pairedHrEvaluation] = await Promise.all([getBrainHrLedger(), getBrainStolenBaseLedger(), getBrainPitcherKLedger(), evaluateBrainHrHistory(), evaluatePairedHrHistory()]);
+    return res.json(apiOkFlat(req, { ...ledger, stolenBase: stolenBaseLedger, pitcherStrikeouts: pitcherStrikeoutsLedger, modelRecords, pairedHrEvaluation }));
   }));
 
   app.get("/api/intelligence/brain/mlb/picks", requireAuth, requireTier("gold"), asyncHandler(async (req: RequestWithContext, res: Response) => {

@@ -9,38 +9,9 @@ type BuildSeasonMetricsResult = {
   warnings: string[];
 };
 
-function asPercent(value: number | null | undefined): number | null {
+function asRate(value: number | null | undefined): number | null {
   if (value == null || !Number.isFinite(value)) return null;
-  return value;
-}
-
-function avgLaunchAngleFromProfile(profile: {
-  gbPct: number | null;
-  fbPct: number | null;
-  ldPct: number | null;
-}): number | null {
-  const gb = profile.gbPct ?? 0;
-  const fb = profile.fbPct ?? 0;
-  const ld = profile.ldPct ?? 0;
-  const total = gb + fb + ld;
-
-  if (total <= 0) return null;
-
-  const gbAngle = -10;
-  const ldAngle = 12;
-  const fbAngle = 32;
-
-  return ((gb * gbAngle) + (ld * ldAngle) + (fb * fbAngle)) / total;
-}
-
-function sweetSpotFromProfile(profile: {
-  ldPct: number | null;
-  fbPct: number | null;
-}): number | null {
-  const ld = profile.ldPct ?? 0;
-  const fb = profile.fbPct ?? 0;
-  const estimate = ld + fb * 0.35;
-  return Number.isFinite(estimate) ? estimate : null;
+  return value > 1 ? value / 100 : value;
 }
 
 export async function buildSeasonMetrics(
@@ -65,33 +36,34 @@ export async function buildSeasonMetrics(
     warnings.push(`No batted-ball profile found for batter ${batterId}.`);
   }
 
-  if (!quality && !profile) {
-    return { seasonMetrics: null, warnings };
-  }
-
   if (battedBallResult.feedStatus !== "ok") {
     warnings.push(
       `Batted-ball profile feed unavailable${battedBallResult.errorMessage ? `: ${battedBallResult.errorMessage}` : "."}`,
     );
   }
 
+  if (!quality && !profile) {
+    return { seasonMetrics: null, warnings };
+  }
+
+  if (!quality || !profile) {
+    warnings.push("Incomplete season Statcast inputs; V2 season metrics withheld rather than zero-filled.");
+    return { seasonMetrics: null, warnings };
+  }
+
   const seasonMetrics: SeasonMetrics = {
-    EV: quality?.avgExitVelo ?? 0,
-    FB_percent: asPercent(profile?.fbPct) ?? 0,
-    HH_percent: asPercent(quality?.hardHitPct) ?? 0,
-    Barrel_percent: asPercent(quality?.barrelPct) ?? 0,
-    xwOBAcon: quality?.xwoba ?? 0,
-    pull_air_percent: asPercent(profile?.pullAirPct) ?? 0,
-    avg_launch_angle: avgLaunchAngleFromProfile({
-      gbPct: profile?.gbPct ?? null,
-      fbPct: profile?.fbPct ?? null,
-      ldPct: profile?.ldPct ?? null,
-    }) ?? 0,
-    sweet_spot_percent: sweetSpotFromProfile({
-      ldPct: profile?.ldPct ?? null,
-      fbPct: profile?.fbPct ?? null,
-    }) ?? 0,
+    EV: quality.avgExitVelo ?? 0,
+    FB_percent: asRate(profile.fbPct) ?? 0,
+    HH_percent: asRate(quality.hardHitPct) ?? 0,
+    Barrel_percent: asRate(quality.barrelPct) ?? 0,
+    // Do not relabel leaderboard xwOBA as contact-only xwOBAcon.
+    xwOBAcon: null,
+    pull_air_percent: asRate(profile.pullAirPct) ?? 0,
+    avg_launch_angle: quality.avgLaunchAngle ?? 0,
+    sweet_spot_percent: asRate(quality.sweetSpotPct) ?? 0,
   };
+
+  warnings.push("xwOBAcon unavailable from the current official leaderboard feed; field left null.");
 
   return {
     seasonMetrics,
