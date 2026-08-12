@@ -38,7 +38,7 @@ function makeRow(overrides: Partial<HrWatchRow>): HrWatchRow {
 }
 
 describe('HR matchup slider', () => {
-  it('filters the table to the selected team-versus-team game', () => {
+  it('starts on one matchup and only mounts the full slate when requested', () => {
     render(
       <HrSpreadsheet
         rows={[
@@ -52,12 +52,43 @@ describe('HR matchup slider', () => {
     );
 
     expect(screen.getAllByText('First Hitter').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Second Hitter').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Second Hitter')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show TOR vs BAL' }));
 
     expect(screen.queryByText('First Hitter')).toBeNull();
     expect(screen.getAllByText('Second Hitter').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: /All slate/i }));
+    expect(screen.getAllByText('First Hitter').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Second Hitter').length).toBeGreaterThan(0);
+  });
+
+  it('keeps the all-slate table responsive by paging matchups without accumulating DOM', () => {
+    render(
+      <HrSpreadsheet
+        rows={[
+          makeRow({ stableId: 'one', playerName: 'Game One' }),
+          makeRow({ stableId: 'two', playerName: 'Game Two', team: 'TOR', opponent: 'BAL', gamePk: 20 }),
+          makeRow({ stableId: 'three', playerName: 'Game Three', team: 'LAD', opponent: 'SF', gamePk: 30 }),
+          makeRow({ stableId: 'four', playerName: 'Game Four', team: 'ATL', opponent: 'MIA', gamePk: 40 }),
+        ]}
+        freshness="fresh"
+        generatedAt={new Date()}
+        onSelectPlayer={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /All slate/i }));
+
+    expect(screen.getAllByText('Game One').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Game Two').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Game Three').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Game Four')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next matchups' }));
+    expect(screen.queryByText('Game One')).toBeNull();
+    expect(screen.getAllByText('Game Four').length).toBeGreaterThan(0);
   });
 
   it('compresses the selector when only one game is available', () => {
@@ -153,6 +184,7 @@ describe('HR matchup slider', () => {
     expect(screen.queryByRole('button', { name: 'Details' })).toBeNull();
     expect(screen.getAllByRole('button', { name: 'Show details for First Hitter' }).length).toBeGreaterThan(0);
     expect(container.querySelector('thead')?.className).toContain('sticky');
+    expect(container.querySelector('thead')?.className).not.toContain('backdrop-blur');
 
     const expandControls = screen.getAllByRole('button', { name: 'Show details for First Hitter' });
     fireEvent.keyDown(expandControls[0], { key: 'Enter' });

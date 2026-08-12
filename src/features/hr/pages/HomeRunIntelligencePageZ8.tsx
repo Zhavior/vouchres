@@ -1,22 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { RefreshCw, AlertOctagon, Inbox } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
-import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
-import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
 import type { WorkspaceView } from '../components/workspace/types';
-import { HrTopSignalPanel } from '../components/Hero/HrTopSignalPanel';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
 import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
 import { useProMode } from '../hooks/useProMode';
-import { MostVouchedPlayersPanel } from '../components/Social/MostVouchedPlayersPanel';
-import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
-import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
-import { HrSignalField } from '../components/SignalField/HrSignalField';
 import { usePlayerVouchLeaderboard, usePlayerVouchSummary, useTogglePlayerVouch } from '../../../hooks/queries/usePlayerVouchLayer';
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -29,9 +22,39 @@ import {
   readHrResearchPlayerId,
 } from '../utils/hrResearchRoute';
 import { ProductEvents } from '../../../lib/productEvents';
+import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 import type { HrWatchRow } from '../types/hrWatch';
 import '../../../styles/z8-hr-lens.css';
 import '../hr-aurora-max.css';
+
+const loadHrCommandCenter = () => import('../components/CommandCenter/HrCommandCenter')
+  .then(({ HrCommandCenter }) => ({ default: HrCommandCenter }));
+const loadWorkspaceRenderer = () => import('../components/workspace/WorkspaceRenderer')
+  .then(({ default: WorkspaceRenderer }) => ({ default: WorkspaceRenderer }));
+const loadHrTopSignalPanel = () => import('../components/Hero/HrTopSignalPanel')
+  .then(({ HrTopSignalPanel }) => ({ default: HrTopSignalPanel }));
+const loadMostVouchedPanel = () => import('../components/Social/MostVouchedPlayersPanel')
+  .then(({ MostVouchedPlayersPanel }) => ({ default: MostVouchedPlayersPanel }));
+const loadHrSpreadsheet = () => import('../components/Table/HrSpreadsheet')
+  .then(({ HrSpreadsheet }) => ({ default: HrSpreadsheet }));
+const loadHrPlayerProfile = () => import('../components/Profile/HrPlayerProfile')
+  .then(({ HrPlayerProfile }) => ({ default: HrPlayerProfile }));
+const loadHrSignalField = () => import('../components/SignalField/HrSignalField')
+  .then(({ HrSignalField }) => ({ default: HrSignalField }));
+
+const HrCommandCenter = lazyWithRetry(loadHrCommandCenter);
+const WorkspaceRenderer = lazyWithRetry(loadWorkspaceRenderer);
+const HrTopSignalPanel = lazyWithRetry(loadHrTopSignalPanel);
+const MostVouchedPlayersPanel = lazyWithRetry(loadMostVouchedPanel);
+const HrSpreadsheet = lazyWithRetry(loadHrSpreadsheet);
+const HrPlayerProfile = lazyWithRetry(loadHrPlayerProfile);
+const HrSignalField = lazyWithRetry(loadHrSignalField);
+
+function warmChunk(load: () => Promise<unknown>): void {
+  void load().catch(() => {
+    // Render remains protected by lazyWithRetry and the route error boundary.
+  });
+}
 
 function HeroTeamMark({ team, logoUrl }: { team: string; logoUrl: string | null }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -99,6 +122,40 @@ const LoadingSkeleton: React.FC = () => (
         ))}
       </div>
     ))}
+  </div>
+);
+
+const PanelHold: React.FC<{ height: string; label: string }> = ({ height, label }) => (
+  <div className="deck-hold rounded-2xl" style={{ minHeight: height }} role="status" aria-label={label}>
+    <span className="sr-only">{label}</span>
+  </div>
+);
+
+const TableSkeleton: React.FC = () => (
+  <div className="deck-hold overflow-hidden rounded-2xl" role="status" aria-label="Loading table view">
+    <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className={`h-2.5 rounded bg-white/[0.08] ${index === 0 ? 'w-32' : 'w-14'}`} />
+      ))}
+    </div>
+    {Array.from({ length: 10 }).map((_, rowIndex) => (
+      <div key={rowIndex} className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-3">
+        <div className="h-3 w-32 rounded bg-white/[0.06]" />
+        {Array.from({ length: 5 }).map((__, cellIndex) => (
+          <div key={cellIndex} className="h-3 w-14 rounded bg-white/[0.04]" />
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
+const ProfileLoadingFallback: React.FC = () => (
+  <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#02060b]/80 p-4 backdrop-blur-sm" role="status">
+    <div className="deck-hold flex min-h-40 w-full max-w-md items-center justify-center rounded-2xl border border-white/10">
+      <span className="font-mono text-xs font-bold uppercase tracking-wider text-vouch-cyan">
+        Loading player research...
+      </span>
+    </div>
   </div>
 );
 
@@ -270,6 +327,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
 
   const openPlayerProfile = React.useCallback((player: typeof topPlayer) => {
     if (!player) return;
+    warmChunk(loadHrPlayerProfile);
 
     if (vm.syncing) {
       setResearchNotice(
@@ -404,6 +462,8 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     if (mode === 'treemap' && !HR_MAP_ENABLED) return;
+    if (mode === 'table') warmChunk(loadHrSpreadsheet);
+    if (mode === 'treemap') warmChunk(loadHrSignalField);
     setLocalViewMode(mode);
     try {
       window.localStorage.setItem('vouchedge_hr_view_mode', mode);
@@ -413,12 +473,20 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
     vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
 
+  const handleProModeIntent = React.useCallback(() => {
+    if (isProMode) return;
+    warmChunk(loadHrCommandCenter);
+    warmChunk(loadWorkspaceRenderer);
+    warmChunk(loadHrTopSignalPanel);
+    warmChunk(loadMostVouchedPanel);
+  }, [isProMode]);
+
   return (
     <div className="hr-aurora-max hr-deck min-h-0 min-w-0 w-full max-w-full space-y-3 overflow-x-hidden py-4 text-ve-flash sm:space-y-4 sm:py-5">
       <div className="mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-3 px-3 sm:space-y-4 sm:px-6">
 
         {/* ── Aurora command deck ─────────────────────────────────────── */}
-        <div className="deck-reveal space-y-3">
+        <div className="space-y-3">
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
@@ -435,9 +503,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             previewCount={vm.modeCounts?.curated ?? 0}
             isProMode={isProMode}
             onToggleProMode={toggleProMode}
+            onProModeIntent={handleProModeIntent}
           />
           {isProMode ? (
             <div className="hr-aurora-command space-y-3 p-2.5 sm:p-4">
+              <Suspense fallback={<PanelHold height="228px" label="Loading Pro controls" />}>
                 <HrCommandCenter
                   mode={vm.mode}
                   viewMode={viewMode}
@@ -465,6 +535,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                   confirmedCount={vm.modeCounts?.confirmed ?? 0}
                   previewCount={vm.modeCounts?.curated ?? 0}
                 />
+              </Suspense>
               <WorkspaceSwitcher value={workspace} onChange={setWorkspace} />
             </div>
           ) : null}
@@ -494,6 +565,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
         {/* ── Main content area ───────────────────────────────────── */}
         <div className="flex flex-col gap-3 sm:gap-4">
           {isProMode && topPlayer ? (
+            <Suspense fallback={<PanelHold height="196px" label="Loading top signal" />}>
               <HrTopSignalPanel
                 player={topPlayer}
                 freshness={vm.slate.freshness}
@@ -507,9 +579,11 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 playerVouchedByViewer={getPlayerVouchSummaryFor(topPlayer.playerId)?.viewerHasVouched ?? false}
                 playerVouchPending={topPlayer.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId}
               />
+            </Suspense>
           ) : null}
 
           {isProMode ? (
+            <Suspense fallback={<PanelHold height="168px" label="Loading most vouched players" />}>
               <MostVouchedPlayersPanel
                 players={playerVouchLeaderboard.data ?? []}
                 subtitle="The hottest community-backed bats on this slate."
@@ -519,6 +593,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                   if (match) openPlayerProfile(match);
                 }}
               />
+            </Suspense>
           ) : null}
 
           {!isProMode ? (
@@ -550,13 +625,14 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
               )}
             </div>
           ) : (
-            <WorkspaceRenderer
-              workspace={workspace}
-              rows={vm.rows}
-              getHrResult={isToday ? vm.getHrResult : undefined}
-            >
-          {/* Candidates Board / Spreadsheet / Treemap */}
-          <div className="flex-1 pr-1">
+            <Suspense fallback={<PanelHold height="520px" label="Loading Pro workspace" />}>
+              <WorkspaceRenderer
+                workspace={workspace}
+                rows={vm.rows}
+                getHrResult={isToday ? vm.getHrResult : undefined}
+              >
+                {/* Candidates Board / Spreadsheet / Treemap */}
+                <div className="flex-1 pr-1">
             {vm.loading && !vm.rows?.length ? (
               <LoadingSkeleton />
             ) : vm.error ? (
@@ -569,6 +645,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 onShowPreview={() => vm.setMode('curated')}
               />
             ) : viewMode === 'table' ? (
+              <Suspense fallback={<TableSkeleton />}>
                 <HrSpreadsheet
                   rows={(vm.rows ?? []) as any}
                   freshness={vm.slate.freshness}
@@ -581,7 +658,9 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                     openPlayerProfile(player);
                   }}
                 />
+              </Suspense>
             ) : viewMode === 'treemap' ? (
+              <Suspense fallback={<PanelHold height="520px" label="Loading signal map" />}>
                 <HrSignalField
                   buckets={vm.buckets}
                   onSelectPlayer={(player) => {
@@ -590,6 +669,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                   onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
                   getHrResult={vm.getHrResult}
                 />
+              </Suspense>
             ) : (
               <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
                 <HrBoard
@@ -608,8 +688,9 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
                 />
               </div>
             )}
-          </div>
-            </WorkspaceRenderer>
+                </div>
+              </WorkspaceRenderer>
+            </Suspense>
           )}
 
           <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
@@ -644,6 +725,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
       ) : null}
 
       {isProfileOpen && vm.selectedPlayer ? (
+        <Suspense fallback={<ProfileLoadingFallback />}>
           <HrPlayerProfile
             player={vm.selectedPlayer}
             isOpen
@@ -654,6 +736,7 @@ const HomeRunIntelligencePageZ8: React.FC<{ onSectionChange?: (section: string) 
             boardDate={vm.date}
             slipActionAvailable={Boolean(onSectionChange)}
           />
+        </Suspense>
       ) : null}
     </div>
   );
