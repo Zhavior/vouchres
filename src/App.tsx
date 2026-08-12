@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
@@ -6,6 +6,7 @@ import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import { PUBLIC_SECTIONS, shouldForcePublicLanding } from './app/sectionNavigation';
 import { AURORA_MAX_SHELL } from './theme/auroraTokens';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
 function isAuthCallbackPath(): boolean {
   if (typeof window === 'undefined') return false;
@@ -22,9 +23,9 @@ function isPublicAuthPath(): boolean {
   return ['/login', '/signin', '/signup', '/join'].includes(window.location.pathname.toLowerCase());
 }
 
-const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
-const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const AuthenticatedApp = lazyWithRetry(() => import('./app/AuthenticatedApp'));
+const VouchEdgeTerminalPage = lazyWithRetry(() => import('./pages/VouchEdgeTerminalPage'));
+const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
