@@ -1,22 +1,51 @@
-import { useEffect, useState, type ComponentProps } from 'react';
-import { BubbleField } from './ParticleFields';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  type ComponentProps,
+} from 'react';
+import type { BubbleField as BubbleFieldType } from './ParticleFields';
 
-type DeferredBubbleFieldProps = ComponentProps<typeof BubbleField>;
+type DeferredBubbleFieldProps = ComponentProps<typeof BubbleFieldType>;
 
-/** Mount BubbleField after first paint / idle — keeps route switches snappy. */
+const LazyBubbleField = lazy(async () => {
+  const module = await import('./ParticleFields');
+  return { default: module.BubbleField };
+});
+
+/**
+ * Loads and mounts BubbleField after the browser gets its first opportunity
+ * to become idle.
+ *
+ * Unlike a static import, the ParticleFields implementation now lives behind
+ * a real dynamic-import boundary and does not need to execute with the
+ * initial route module.
+ */
 export function DeferredBubbleField(props: DeferredBubbleFieldProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const ric = window.requestIdleCallback;
-    if (ric) {
-      const id = ric(() => setMounted(true), { timeout: 1200 });
+    if (typeof window === 'undefined') return;
+
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(
+        () => setMounted(true),
+        { timeout: 1200 },
+      );
+
       return () => window.cancelIdleCallback(id);
     }
-    const id = window.setTimeout(() => setMounted(true), 0);
+
+    const id = window.setTimeout(() => setMounted(true), 250);
     return () => window.clearTimeout(id);
   }, []);
 
   if (!mounted) return null;
-  return <BubbleField {...props} />;
+
+  return (
+    <Suspense fallback={null}>
+      <LazyBubbleField {...props} />
+    </Suspense>
+  );
 }

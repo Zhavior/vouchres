@@ -8,6 +8,7 @@ import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
+import { routeModules } from '../../lib/routeModules';
 
 const ProAccessGate = lazyWithRetry(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
@@ -17,39 +18,39 @@ const PersonalizedOnboarding = lazyWithRetry(() =>
     default: module.PersonalizedOnboarding,
   })),
 );
-const FollowingHubPage = lazyWithRetry(() => import('../../pages/FollowingHubPage'));
-const HomeFeedPage = lazyWithRetry(() => import('../../social/feed/HomeFeedPage'));
-const TodayDashboardZ8 = lazyWithRetry(() => import('../TodayDashboardZ8'));
-const VouchEdgeTerminalPage = lazyWithRetry(() => import('../../pages/VouchEdgeTerminalPage'));
-const VouchBoardZ8 = lazyWithRetry(() => import('../VouchBoardZ8'));
-const ProfilePageZ8 = lazyWithRetry(() => import('../ProfilePageZ8'));
-const SettingsPageZ8 = lazyWithRetry(() => import('../SettingsPageZ8'));
-const PremiumSubPage = lazyWithRetry(() => import('../PremiumSubPage'));
-const PlayerResearchHub = lazyWithRetry(() => import('../PlayerResearchHub'));
-const CustomizePage = lazyWithRetry(() => import('../CustomizePage'));
-const ResultsStudio = lazyWithRetry(() => import('../results/ResultsStudio'));
-const SmartAiEngine = lazyWithRetry(() => import('../SmartAiEngine'));
-const MlbIntelligenceHub = lazyWithRetry(() => import('../../features/brain-edge/BrainEdgeLabPage'));
-const Leaderboard = lazyWithRetry(() => import('../Leaderboard'));
-const SubscriberHub = lazyWithRetry(() => import('../SubscriberHub'));
-const HomeRunIntelligencePage = lazyWithRetry(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));
-const BrainPicksPage = lazyWithRetry(() => import('../../features/brain/BrainPicksPage'));
-const BrainPerformancePage = lazyWithRetry(() => import('../../features/brain/BrainPerformancePage'));
-const AiPilotPage = lazyWithRetry(() => import('../../features/ai/pages/AiPilotPage'));
-const MlbStatHubPage = lazyWithRetry(() => import('../../features/mlb-stats/pages/MlbStatHubPage'));
-const DailyPlayersPage = lazyWithRetry(() => import('../../pages/DailyPlayersPageZ8'));
-const LiveGamesPro = lazyWithRetry(() => import('../LiveGamesProZ8'));
-const NotificationsPage = lazyWithRetry(() => import('../notifications/NotificationsPage'));
-const PlayerEdgeLabPageZ8 = lazyWithRetry(() => import('../../pages/pro/PlayerEdgeLabPageZ8'));
-const PitcherMatchupIntelligencePageZ8 = lazyWithRetry(() => import('../../pages/pro/PitcherMatchupIntelligencePageZ8'));
-const HitterMatchupZonesPageZ8 = lazyWithRetry(() => import('../../pages/pro/HitterMatchupZonesPageZ8'));
-const ProCommandCenterPageZ8 = lazyWithRetry(() => import('../../pages/pro/ProCommandCenterPageZ8'));
-const ParlayOsWorkspace = lazyWithRetry(() => import('../parlay/ParlayOsWorkspace'));
-const ParlayProofPage = lazyWithRetry(() => import('../../pages/ParlayProofPage'));
-const NbaNflArena = lazyWithRetry(() => import('../NbaNflArena'));
-const AisLandingPage = lazyWithRetry(() => import('../AisLandingPage'));
-const MostVouchedTodayPageZ8 = lazyWithRetry(() => import('../../pages/MostVouchedTodayPageZ8'));
-const AuroraHqShell = lazyWithRetry(() => import('../../features/admin/AuroraHqShell'));
+const FollowingHubPage = lazyWithRetry(routeModules.following);
+const HomeFeedPage = lazyWithRetry(routeModules.homeFeed);
+const TodayDashboardZ8 = lazyWithRetry(routeModules.todayDashboard);
+const VouchEdgeTerminalPage = lazyWithRetry(routeModules.vouchEdgeTerminal);
+const VouchBoardZ8 = lazyWithRetry(routeModules.vouchBoard);
+const ProfilePageZ8 = lazyWithRetry(routeModules.profile);
+const SettingsPageZ8 = lazyWithRetry(routeModules.settings);
+const PremiumSubPage = lazyWithRetry(routeModules.premium);
+const PlayerResearchHub = lazyWithRetry(routeModules.research);
+const CustomizePage = lazyWithRetry(routeModules.customize);
+const ResultsStudio = lazyWithRetry(routeModules.results);
+const SmartAiEngine = lazyWithRetry(routeModules.smartAiEngine);
+const MlbIntelligenceHub = lazyWithRetry(routeModules.brainEdge);
+const Leaderboard = lazyWithRetry(routeModules.leaderboard);
+const SubscriberHub = lazyWithRetry(routeModules.subscriberHub);
+const HomeRunIntelligencePage = lazyWithRetry(routeModules.hrBoard);
+const BrainPicksPage = lazyWithRetry(routeModules.brainPicks);
+const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
+const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
+const MlbStatHubPage = lazyWithRetry(routeModules.mlbStats);
+const DailyPlayersPage = lazyWithRetry(routeModules.dailyPlayers);
+const LiveGamesPro = lazyWithRetry(routeModules.liveGames);
+const NotificationsPage = lazyWithRetry(routeModules.notifications);
+const PlayerEdgeLabPageZ8 = lazyWithRetry(routeModules.playerEdgeLab);
+const PitcherMatchupIntelligencePageZ8 = lazyWithRetry(routeModules.pitcherMatchup);
+const HitterMatchupZonesPageZ8 = lazyWithRetry(routeModules.hitterMatchup);
+const ProCommandCenterPageZ8 = lazyWithRetry(routeModules.proCommandCenter);
+const ParlayOsWorkspace = lazyWithRetry(routeModules.parlayOs);
+const ParlayProofPage = lazyWithRetry(routeModules.parlayProof);
+const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
+const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
+const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
+const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
