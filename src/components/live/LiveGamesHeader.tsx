@@ -1,6 +1,5 @@
 import React from 'react';
 import { Radio, RefreshCw, Tv } from 'lucide-react';
-import { AURORA_LABEL } from '../../theme/auroraTokens';
 import '../../styles/command-deck.css';
 import './live-command.css';
 
@@ -76,10 +75,10 @@ export function LiveGamesHeader({
   };
 
   return (
-    <header className="deck-hero rounded-2xl p-3.5 sm:p-5">
+    <header className="deck-hero live-games-aurora-header p-3.5 sm:p-5">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
-          <div className={`${AURORA_LABEL} deck-product-mark !text-[9.5px] font-bold sm:!text-xs`}>
+          <div className="aurora-max-eyebrow deck-product-mark !text-[9.5px] font-bold sm:!text-xs">
             <Tv className="h-3.5 w-3.5 shrink-0" />
             <span className="min-w-0 truncate">
               Live Games<span className="hidden sm:inline"> · Real-Time Telemetry</span>

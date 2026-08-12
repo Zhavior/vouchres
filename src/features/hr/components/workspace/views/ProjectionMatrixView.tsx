@@ -11,6 +11,7 @@ import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { oddsDisplay } from "../../../engine/signalScore";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -107,24 +108,18 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-white/10 bg-black/30 p-12 text-center backdrop-blur-xl">
-        <Grid className="mx-auto h-10 w-10 text-vouch-cyan/40" />
-        <h3 className="mt-3 text-lg font-bold text-white">No Projection Matrix Data</h3>
-        <p className="mt-1 text-sm text-white/50">
-          Waiting for slate player projections to map power vs matchup metrics.
-        </p>
-      </div>
+      <AuroraMaxFallback title="No projection matrix data" detail="Waiting for slate player inputs. Missing axis values remain explicitly unavailable and are not synthesized." />
     );
   }
 
   return (
-    <section className="space-y-6">
+    <section className="hr-projection-matrix aurora-max-ranked-workspace space-y-4" data-workspace="matrix">
       {/* ── Matrix Controls Header ───────────────────────────────── */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-vouch-cyan/25 bg-gradient-to-r from-vouch-cyan/10 via-black/60 to-emerald-500/10 p-6 backdrop-blur-xl sm:p-8">
+      <div className="aurora-max-panel flex flex-col gap-4 border p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 font-mono text-[10px] font-extrabold uppercase tracking-widest text-vouch-cyan">
+              <span className="aurora-max-eyebrow inline-flex items-center gap-1.5 border px-3 py-1">
                 <Crosshair className="h-3.5 w-3.5" />
                 2D Projection Matrix
               </span>

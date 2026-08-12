@@ -13,6 +13,7 @@ import { AppNav } from './AppNav';
 import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
+import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 
 const DeployUpdateBanner = lazy(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
@@ -85,7 +86,7 @@ export function AppShell({
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
       <AppShellProvider value={appShellState}>
         <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
-          <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
+          <div className={`z8-app-shell ve-motion-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
             <TerminalBackground />
 
             <div className="ve-motion-content">

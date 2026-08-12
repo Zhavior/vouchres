@@ -23,7 +23,7 @@ import {
   type LiveGamesFilterTab,
 } from './live/LiveGamesHeader';
 import StadiumWindVectorWidget from './stadium/StadiumWindVectorWidget';
-import { AURORA_LABEL, AURORA_PAGE, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE } from '../theme/auroraTokens';
+import { AuroraMaxControl, AuroraMaxFallback, AuroraMaxPanel, AuroraMaxRankedWorkspace, AuroraMaxTruthBadge } from './aurora-max/AuroraMaxPrimitives';
 import './live/live-games-lens.css';
 
 interface Props {
@@ -347,11 +347,11 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity" />
       <div
-        className="relative w-full max-w-lg h-full bg-[#070e17] border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
+        className="aurora-max-panel relative w-full max-w-lg h-full border-l border-white/12 overflow-y-auto shadow-2xl space-y-4 p-4 sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#070e17]/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-[#071012]/95 backdrop-blur-xl border-b border-white/12 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TeamLogo src={m.away.logo} alt={m.away.name} size={28} />
             <span className="text-sm font-black text-white">{m.away.abbreviation} @ {m.home.abbreviation}</span>
@@ -364,17 +364,17 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
         </div>
 
         {/* Scoreboard */}
-        <div className="rounded-2xl border border-white/12 bg-black/40 p-4 space-y-3">
+        <AuroraMaxPanel className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold uppercase text-slate-400">Live Scoreboard</span>
             <span className="text-[10px] font-mono text-vouch-cyan">{m.venue ?? 'Venue TBD'}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
+            <div className="border border-white/10 bg-white/[0.03] p-3 text-center">
               <p className="text-xs font-bold text-slate-400">{m.away.name}</p>
               <p className="text-3xl font-black font-mono text-white mt-1">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
+            <div className="border border-white/10 bg-white/[0.03] p-3 text-center">
               <p className="text-xs font-bold text-slate-400">{m.home.name}</p>
               <p className="text-3xl font-black font-mono text-white mt-1">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
             </div>
@@ -382,7 +382,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           <div className="pt-2">
             <LineScoreTable game={m} />
           </div>
-        </div>
+        </AuroraMaxPanel>
 
         {/* Stadium Wind Vector & Ballpark Physics */}
         <StadiumWindVectorWidget
@@ -406,7 +406,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           ) : (
             <div className="space-y-2">
               {topHrWatch.map((w) => (
-                <div key={w.playerId} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/40 p-3 hover:border-amber-400/40 transition">
+                <div key={w.playerId} className="flex items-center justify-between gap-3 border border-white/10 bg-black/40 p-3 hover:border-amber-400/40 transition">
                   <div className="flex items-center gap-3 min-w-0">
                     <PlayerHeadshot headshotUrl={w.headshot} name={w.playerName} size={36} />
                     <div className="min-w-0">
@@ -418,7 +418,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
                     <span className="font-mono text-xs font-black text-amber-400">{w.grade}</span>
                     <button
                       onClick={() => onAddLeg(w)}
-                      className="flex items-center gap-1 rounded-lg bg-vouch-emerald px-2.5 py-1.5 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90"
+                      className="aurora-max-control aurora-max-control--primary !min-h-0 !px-2.5 !py-1.5 !text-[10px] !text-[#02100d] !bg-[#00d9a0]"
                     >
                       <Plus className="w-3 h-3" /> Slip
                     </button>
@@ -534,7 +534,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${AURORA_PAGE} live-deck w-full max-w-full min-w-0 overflow-x-hidden px-3 sm:px-6 lg:px-8 pt-4 pb-24`}>
+    <main className="aurora-max-live-games live-deck w-full max-w-full min-w-0 overflow-x-hidden px-3 sm:px-6 lg:px-8 pt-4 pb-24">
       <div className="deck-reveal mb-4 sm:mb-6">
         <LiveGamesHeader
           onRefresh={handleManualRefresh}
@@ -552,40 +552,39 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-center text-sm text-rose-300 mb-6">
+        <AuroraMaxPanel className="mb-6 border-rose-500/30 bg-rose-500/10 p-6 text-center text-sm text-rose-300">
           <p>{error}</p>
-          <button type="button" onClick={handleManualRefresh} className="mt-4 rounded-xl border border-rose-400/40 bg-rose-500/20 px-4 py-2 font-bold text-white hover:bg-rose-500/30">
+          <AuroraMaxControl tone="danger" onClick={handleManualRefresh} className="mt-4">
             Try again
-          </button>
-        </div>
+          </AuroraMaxControl>
+        </AuroraMaxPanel>
       )}
 
       {liveGamesQuery.isLoading && matchups.length === 0 && (
         <div className="grid sm:grid-cols-2 gap-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-56 rounded-2xl border border-white/10 bg-white/[0.02] animate-pulse" />
+            <div key={i} className="h-56 border border-white/10 bg-white/[0.02] animate-pulse" />
           ))}
         </div>
       )}
 
       {!error && matchups.length > 0 && (
         filteredGames.length === 0 ? (
-          <div className="rounded-2xl border border-white/12 bg-black/40 p-12 text-center text-sm text-slate-400 space-y-3">
-            <p className="font-bold text-white">{filterTab === 'live' ? 'No games are live right now.' : 'No games found for this filter tab.'}</p>
-            <button
-              type="button"
-              onClick={() => setFilterTab('all')}
-              className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-4 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/20"
-            >
+          <AuroraMaxFallback
+            title={filterTab === 'live' ? 'No games are live right now.' : 'No games found for this filter tab.'}
+            detail="The MLB schedule returned no records for this view. The live feed remains available for refresh."
+            action={(
+              <AuroraMaxControl tone="primary" onClick={() => setFilterTab('all')}>
               Show today&apos;s schedule
-            </button>
-          </div>
+              </AuroraMaxControl>
+            )}
+          />
         ) : (
           <div className="space-y-6">
 
             {/* ── Featured Active Spotlight Hero Scoreboard ─────────────────── */}
             {activeGame && (
-              <section className="live-game-scoreboard rounded-2xl border border-white/15 bg-gradient-to-br from-[#0c192c] via-[#07111e] to-[#040810] p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+              <AuroraMaxPanel as="section" className="live-game-scoreboard relative overflow-hidden p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -600,18 +599,21 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <StatusBadge m={activeGame} />
-                    <button
+                    <AuroraMaxTruthBadge state={activeGame.isLive ? 'live' : activeGame.isFinal ? 'confirmed' : 'projected'}>
+                      {activeGame.isLive ? 'LIVE FEED' : activeGame.isFinal ? 'FINAL' : 'SCHEDULED'}
+                    </AuroraMaxTruthBadge>
+                    <AuroraMaxControl
+                      tone="primary"
                       onClick={() => setSelectedGamePk(activeGame.gamePk)}
-                      className="rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/10 px-3 py-1.5 text-xs font-black text-vouch-emerald hover:bg-vouch-emerald/20 transition"
+                      className="!min-h-0 !px-3 !py-1.5 !text-xs !text-[#02100d] !bg-[#00d9a0]"
                     >
                       Open matchup
-                    </button>
+                    </AuroraMaxControl>
                   </div>
                 </div>
 
                 {/* Scoreboard display */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4 bg-black/40 rounded-2xl p-4 sm:p-6 border border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4 bg-black/40 p-4 sm:p-6 border border-white/10">
                   <div className="flex items-center gap-3">
                     <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={44} />
                     <div>
@@ -660,7 +662,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                       {activeGame.topHrWatch.slice(0, 3).map((w) => (
-                        <div key={w.playerId} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/40 p-2.5 hover:border-amber-400/40 transition">
+                        <div key={w.playerId} className="flex items-center justify-between gap-3 border border-white/10 bg-black/40 p-2.5 hover:border-amber-400/40 transition">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <PlayerHeadshot headshotUrl={w.headshot} name={w.playerName} size={32} />
                             <div className="min-w-0">
@@ -670,7 +672,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                           </div>
                           <button
                             onClick={() => addLeg(w)}
-                            className="flex shrink-0 items-center gap-1 rounded-lg bg-vouch-emerald px-2 py-1 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90 shadow-[0_0_10px_rgba(0,255,148,0.2)]"
+                            className="aurora-max-control aurora-max-control--primary !min-h-0 !px-2 !py-1 !text-[10px] !text-[#02100d] !bg-[#00d9a0]"
                           >
                             <Plus className="w-3 h-3" /> Slip
                           </button>
@@ -679,21 +681,20 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                     </div>
                   </div>
                 )}
-              </section>
+              </AuroraMaxPanel>
             )}
 
             {/* ── Multi-Game Slate Selector Grid ────────────────────────────── */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-black font-mono uppercase tracking-wider text-slate-400">
-                Today&apos;s MLB Game Slate ({filteredGames.length})
-              </h3>
-
+            <AuroraMaxRankedWorkspace
+              title={`Today’s MLB Game Slate (${filteredGames.length})`}
+              subtitle="Dense game-state index with explicit feed status and matchup selection."
+            >
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                 {filteredGames.map((m) => (
                   <button
                     key={m.gamePk}
                     onClick={() => setActiveGamePk(m.gamePk)}
-                    className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
+                    className={`text-left p-3.5 border transition-all duration-200 ${
                       String(activeGame?.gamePk) === String(m.gamePk)
                         ? 'border-vouch-cyan bg-vouch-cyan/10 shadow-[0_0_15px_rgba(79,184,220,0.15)]'
                         : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-black/60'
@@ -724,7 +725,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                   </button>
                 ))}
               </div>
-            </div>
+            </AuroraMaxRankedWorkspace>
 
             {/* ── Live At-Bat Pitch-by-Pitch Sweat Stream Module ─────────────── */}
             {activeGame?.isLive && activeGame.gamePk != null && (
@@ -736,9 +737,7 @@ export default function LiveGamesProZ8({ onAddLegToParlay }: Props) {
                       Pitch-by-Pitch Sweat Stream
                     </h3>
                   </div>
-                  <span className="font-mono text-[10px] font-bold text-vouch-cyan bg-vouch-cyan/10 border border-vouch-cyan/30 px-2.5 py-1 rounded-full">
-                    6s Real-Time Sensor Stream
-                  </span>
+                  <AuroraMaxTruthBadge state="live">6s Real-Time Sensor Stream</AuroraMaxTruthBadge>
                 </div>
 
                 <div className="min-w-0 max-w-4xl mx-auto w-full">

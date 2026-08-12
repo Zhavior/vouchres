@@ -56,6 +56,58 @@ function sameCandidateSequence(left: unknown, right: unknown): boolean {
   return left.every((row, index) => candidateIdentity(row) === candidateIdentity(right[index]));
 }
 
+const COMPACT_CANDIDATE_FIELDS = [
+  "playerId",
+  "playerName",
+  "team",
+  "teamAbbrev",
+  "teamId",
+  "opponent",
+  "gamePk",
+  "opponentPitcherName",
+  "venue",
+  "parkFactor",
+  "hrMultiplier",
+  "weatherBoost",
+  "lineupStatus",
+  "battingOrder",
+  "injuryStatus",
+  "hrScore",
+  "estimatedHrProbability",
+  "recentHomeRuns",
+  "recentHrGames",
+  "recentGamesChecked",
+  "last7DayHomeRuns",
+  "last7DayGamesChecked",
+  "confidenceTier",
+  "dataConfidence",
+  "scoreBreakdown",
+  "riskTier",
+  "status",
+  "reasons",
+  "warnings",
+  "dataQuality",
+  "lastUpdated",
+  "dataSource",
+  "source",
+  "rank",
+  "isConfirmed",
+] as const;
+
+function compactCandidateRow(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const row = value as Record<string, unknown>;
+  const compact: Record<string, unknown> = {};
+  for (const field of COMPACT_CANDIDATE_FIELDS) {
+    if (field in row) compact[field] = row[field];
+  }
+  return compact;
+}
+
+function compactCandidateRows(value: unknown): unknown {
+  return Array.isArray(value) ? value.map(compactCandidateRow) : value;
+}
+
 function compactHrBoardPayload(payload: Record<string, any>): Record<string, unknown> {
   const {
     rows: _rows,
@@ -69,9 +121,10 @@ function compactHrBoardPayload(payload: Record<string, any>): Record<string, unk
     ...rest,
     contractVersion: "hr-board.v2",
     transportMode: "compact",
+    projectedCandidates: compactCandidateRows(payload.projectedCandidates),
     ...(sameCandidateSequence(payload.projectedCandidates, allProjectedCandidates)
       ? {}
-      : { allProjectedCandidates }),
+      : { allProjectedCandidates: compactCandidateRows(allProjectedCandidates) }),
   };
 }
 

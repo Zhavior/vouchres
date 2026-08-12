@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "hr-v2-backtest.v1",
+  "model": {
+    "modelVersion": "hr-probability-v2-backtest-logit-v1",
+    "featureSchemaVersion": "pregame-history-v1",
+    "calibrationMethod": "heldout-prevalence-scaling"
+  },
+  "generatedAt": "2026-08-11T20:55:33.748Z",
+  "sources": [
+    "MLB Baseball Savant / Statcast Search CSV"
+  ],
+  "featureCutoffRule": "features use only rows before the current game date; no random split",
+  "split": {
+    "trainEnd": "2024-10-01",
+    "calibrationEnd": "2025-07-01"
+  },
+  "sourceRowCount": 333658,
+  "rowCount": 333658,
+  "splitCounts": {
+    "train": 166329,
+    "calibration": 88273,
+    "test": 79056
+  },
+  "missingRates": {
+    "exitVelocity": 0.32189847088935375,
+    "launchAngle": 0.3215118474605734,
+    "barrelFlag": 0,
+    "hardHitFlag": 0.32189847088935375,
+    "pitchType": 0.0032098735831300315,
+    "lineupSlot": 1
+  },
+  "coefficients": [
+    -3.400041625624692,
+    -0.000632101059111461,
+    0.0016612047644645601,
+    -0.05177952289662936,
+    -0.004197373093876543
+  ],
+  "calibration": {
+    "sampleCount": 88273,
+    "positiveRate": 0.029408765987334745,
+    "logLoss": 0.13280095606063225,
+    "brierScore": 0.02855113094528898,
+    "meanPrediction": 0.03165076493810806,
+    "baselineLogLoss": 0.13268422943401734,
+    "baselineBrierScore": 0.028544080303982013,
+    "reliability": [
+      {
+        "bucket": 0,
+        "count": 88273,
+        "meanPrediction": 0.03165076493810806,
+        "observedRate": 0.029408765987334745
+      }
+    ],
+    "ranking": {
+      "topDecileCount": 8828,
+      "topDecileHrRate": 0.01551880380607159,
+      "overallHrRate": 0.029408765987334745,
+      "lift": 0.5276931311145445
+    }
+  },
+  "finalTest": {
+    "sampleCount": 79056,
+    "positiveRate": 0.033052519732847604,
+    "logLoss": 0.14545781647755665,
+    "brierScore": 0.03197538612944191,
+    "meanPrediction": 0.029399517841388084,
+    "baselineLogLoss": 0.14536980146293918,
+    "baselineBrierScore": 0.031970342288073605,
+    "reliability": [
+      {
+        "bucket": 0,
+        "count": 79056,
+        "meanPrediction": 0.029399517841388084,
+        "observedRate": 0.033052519732847604
+      }
+    ],
+    "ranking": {
+      "topDecileCount": 7906,
+      "topDecileHrRate": 0.019352390589425752,
+      "overallHrRate": 0.033052519732847604,
+      "lift": 0.5855042443312829
+    }
+  },
+  "dataQuality": {
+    "HIGH": {
+      "sampleCount": 53630,
+      "positiveRate": 0.048685437255267576,
+      "logLoss": 0.20014691215967476,
+      "brierScore": 0.04669033813138091,
+      "meanPrediction": 0.029404357486502657,
+      "baselineLogLoss": 0.19979513179617464,
+      "baselineBrierScore": 0.046670147694370855,
+      "reliability": [
+        {
+          "bucket": 0,
+          "count": 53630,
+          "meanPrediction": 0.029404357486502657,
+          "observedRate": 0.048685437255267576
+        }
+      ],
+      "ranking": {
+        "topDecileCount": 5363,
+        "topDecileHrRate": 0.025172478090620922,
+        "overallHrRate": 0.048685437255267576,
+        "lift": 0.5170432784373803
+      }
+    },
+    "MEDIUM": {
+      "sampleCount": 25426,
+      "positiveRate": 0.00007865963973885,
+      "logLoss": 0.030104390793928012,
+      "brierScore": 0.000937752374074371,
+      "meanPrediction": 0.029389309780053278,
+      "baselineLogLoss": 0.030572725014531333,
+      "baselineBrierScore": 0.0009646566143499039,
+      "reliability": [
+        {
+          "bucket": 0,
+          "count": 25426,
+          "meanPrediction": 0.029389309780053278,
+          "observedRate": 0.00007865963973885
+        }
+      ],
+      "ranking": {
+        "topDecileCount": 2543,
+        "topDecileHrRate": 0.00039323633503735744,
+        "overallHrRate": 0.00007865963973885,
+        "lift": 4.999213527329925
+      }
+    },
+    "LOW": {
+      "sampleCount": 0,
+      "positiveRate": null,
+      "logLoss": null,
+      "brierScore": null,
+      "meanPrediction": null,
+      "baselineLogLoss": null,
+      "baselineBrierScore": null,
+      "reliability": [],
+      "ranking": {
+        "topDecileCount": 0,
+        "topDecileHrRate": null,
+        "overallHrRate": null,
+        "lift": null
+      }
+    }
+  }
+}

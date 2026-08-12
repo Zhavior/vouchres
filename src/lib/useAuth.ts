@@ -1,9 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
-import {
-  supabase,
-  onAuthStateChange,
-  getAuthToken,
-} from "./supabaseClient";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import type { User } from "@supabase/supabase-js";
+import { signOut as signOutCurrentSession } from "./supabaseClient";
+import { useAuthSession } from "./authSessionStore";
 import { apiClient } from "./apiClient";
 import { mapAuthMeToUserProfile } from "./profileFromAuth";
 import { FREE_BETA_ALL_ACCESS } from "./betaAccess";
@@ -43,6 +41,93 @@ interface AuthState {
   error: string | null;
 }
 
+let authState: AuthState = { user: null, loading: true, error: null };
+let profileRequest: { key: string; promise: Promise<void> } | null = null;
+let activeProfileKey: string | null = null;
+let loadedProfileKey: string | null = null;
+const authListeners = new Set<() => void>();
+
+function publishAuthState(next: AuthState) {
+  authState = next;
+  authListeners.forEach((listener) => listener());
+}
+
+function fallbackUser(user: User): UserProfile {
+  const metadata = user.user_metadata ?? {};
+  const emailHandle = user.email?.split('@')[0] ?? '';
+  const handle = String(metadata.handle ?? metadata.username ?? emailHandle);
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    username: handle,
+    handle,
+    display_name: String(metadata.display_name ?? metadata.full_name ?? handle),
+    avatar_url: typeof metadata.avatar_url === 'string' ? metadata.avatar_url : null,
+    header_url: null,
+    bio: '',
+    tier: 'free',
+    trust_score: 0,
+    total_picks: 0,
+    won_picks: 0,
+    lost_picks: 0,
+    pushed_picks: 0,
+    net_units: 0,
+    age_confirmed_at: null,
+    jurisdiction_confirmed_at: null,
+    jurisdiction: null,
+    is_staff: false,
+    is_demo: false,
+    discord_username: null,
+    discord_connected_at: null,
+    discord_guild_member: false,
+    discord_beta_access: false,
+  };
+}
+
+function loadProfile(accessToken: string, user: User, force = false): Promise<void> {
+  const requestKey = `${user.id}:${accessToken}`;
+  activeProfileKey = requestKey;
+  if (!force && loadedProfileKey === requestKey) return Promise.resolve();
+  if (profileRequest?.key === requestKey) return profileRequest.promise;
+
+  if (authState.user?.id !== user.id) {
+    publishAuthState({ user: fallbackUser(user), loading: true, error: null });
+  } else {
+    publishAuthState({ ...authState, loading: true, error: null });
+  }
+
+  const promise = apiClient.get<Record<string, unknown>>("/api/auth/me")
+    .then((data) => {
+      if (activeProfileKey !== requestKey) return;
+      loadedProfileKey = requestKey;
+      publishAuthState({ user: mapAuthMeToUserProfile(data), loading: false, error: null });
+    })
+    .catch((error: unknown) => {
+      if (activeProfileKey !== requestKey) return;
+      const message = error instanceof Error ? error.message : 'Profile temporarily unavailable';
+      publishAuthState({
+        user: authState.user?.id === user.id ? authState.user : fallbackUser(user),
+        loading: false,
+        error: message,
+      });
+    })
+    .finally(() => {
+      if (profileRequest?.key === requestKey) profileRequest = null;
+    });
+
+  profileRequest = { key: requestKey, promise };
+  return promise;
+}
+
+function subscribeAuthProfile(listener: () => void) {
+  authListeners.add(listener);
+  return () => authListeners.delete(listener);
+}
+
+function getAuthProfileSnapshot() {
+  return authState;
+}
+
 /**
  * useAuth — React hook that subscribes to Supabase auth state and
  * fetches the user's profile from the API.
@@ -57,63 +142,32 @@ interface AuthState {
  *   return <App user={user} />;
  */
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null,
-  });
+  const sessionState = useAuthSession();
+  const state = useSyncExternalStore(subscribeAuthProfile, getAuthProfileSnapshot, getAuthProfileSnapshot);
 
-  const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
-    const token = await getAuthToken();
-    if (!token) return null;
-    try {
-      // Hit any authenticated endpoint that returns profile data;
-      // /api/auth/me is the cleanest single source of truth.
-      return mapAuthMeToUserProfile(await apiClient.get<Record<string, unknown>>("/api/auth/me"));
-    } catch (err: any) {
-      if (err?.status === 401) return null;
-      console.error("[useAuth] profile fetch failed", err);
-      return null;
+  useEffect(() => {
+    if (sessionState.status === 'loading') return;
+    if (!sessionState.session) {
+      activeProfileKey = null;
+      loadedProfileKey = null;
+      profileRequest = null;
+      publishAuthState({ user: null, loading: false, error: null });
+      return;
     }
-  }, []);
-
-  // Initial load
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const profile = await fetchProfile();
-      if (!cancelled) {
-        setState({ user: profile, loading: false, error: null });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchProfile]);
-
-  // Subscribe to auth changes
-  useEffect(() => {
-    const { data } = onAuthStateChange(async (event) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-        setState((s) => ({ ...s, loading: true }));
-        const profile = await fetchProfile();
-        setState({ user: profile, loading: false, error: null });
-      } else if (event === "SIGNED_OUT") {
-        setState({ user: null, loading: false, error: null });
-      }
-    });
-    return () => data.subscription.unsubscribe();
-  }, [fetchProfile]);
+    void loadProfile(
+      sessionState.session.access_token,
+      sessionState.session.user,
+    );
+  }, [sessionState.session, sessionState.status]);
 
   const refresh = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true }));
-    const profile = await fetchProfile();
-    setState({ user: profile, loading: false, error: null });
-  }, [fetchProfile]);
+    if (!sessionState.session) return;
+    await loadProfile(sessionState.session.access_token, sessionState.session.user, true);
+  }, [sessionState.session]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setState({ user: null, loading: false, error: null });
+    await signOutCurrentSession();
+    publishAuthState({ user: null, loading: false, error: null });
   }, []);
 
   return {

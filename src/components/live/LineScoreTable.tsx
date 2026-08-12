@@ -104,11 +104,11 @@ export const LineScoreTable: React.FC<LineScoreTableProps> = ({ game, compact = 
   const lineScore = deriveLineScoreInnings(game);
 
   return (
-    <div className="w-full min-w-0 overflow-x-auto rounded-xl border border-white/10 bg-black/50 p-2 sm:p-3 shadow-inner">
+    <div className="aurora-max-panel w-full min-w-0 overflow-x-auto bg-black/50 p-2 sm:p-3 shadow-inner">
       <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] font-black uppercase text-slate-400">Official Line Score</span>
-          <span className="font-mono text-[10px] font-bold text-vouch-cyan bg-vouch-cyan/10 border border-vouch-cyan/30 px-2 py-0.5 rounded-full">
+          <span className="aurora-max-truth-badge aurora-max-truth-badge--projected font-mono text-[10px]">
             {lineScore.stateLabel}
           </span>
         </div>

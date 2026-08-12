@@ -21,6 +21,7 @@ import { useSmartAiCandidates } from "../../components/smart-ai/useSmartAiCandid
 import { AskVouchPanel } from "../../features/ai/components/AskVouchPanel";
 import { FeaturedEdgeCard } from "./FeaturedEdgeCard";
 import { AiMarketPulseCard } from "./AiMarketPulseCard";
+import "../../features/hr/hr-aurora-max.css";
 
 interface ProCommandCenterPageProps {
   onSectionChange?: (section: string) => void;
@@ -39,7 +40,7 @@ export default function ProCommandCenterPageZ8({
     .slice(0, 3);
 
   return (
-    <div className="space-y-4">
+    <div className="hr-pro-aurora-max space-y-4">
       <ProPageHeader
         icon={Brain}
         title="VouchEdge Pro Command Center"

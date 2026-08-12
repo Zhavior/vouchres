@@ -26,6 +26,43 @@ vi.mock("../server/services/persistence/betaService", () => ({
   issueInvite: vi.fn(async () => null),
 }));
 
+vi.mock("../server/services/hubs/hrBoardHub", () => ({
+  getCachedValidatedHrBoard: vi.fn(async () => ({
+    date: "2026-08-12",
+    generatedAt: "2026-08-12T12:00:00.000Z",
+    candidates: [{
+      playerName: "Test Hitter",
+      team: "TST",
+      opponent: "OPP",
+      gamePk: 123,
+      hrScore: 88,
+      estimatedHrProbability: 0.12,
+      riskTier: "Playable",
+      dataConfidence: 0.74,
+      lineupStatus: "projected",
+      dataQuality: "partial",
+      reasons: ["Power profile"],
+      warnings: [],
+    }],
+  })),
+}));
+
+vi.mock("../server/services/intelligence/centralBrain/hrPairedEvaluationService", () => ({
+  evaluatePairedHrHistory: vi.fn(async () => ({
+    status: "INSUFFICIENT_DATA",
+    promotionEligible: false,
+    incumbentModelVersions: [],
+    challengerModelVersions: [],
+    pairedObservations: 0,
+    positiveOutcomes: 0,
+    dropped: { missingOutcome: 0, temporalLeakage: 0, invalidPrediction: 0 },
+    incumbent: { samples: 0, positives: 0, brierScore: 0, logLoss: 0, calibration: [] },
+    challenger: { samples: 0, positives: 0, brierScore: 0, logLoss: 0, calibration: [] },
+    brierImprovement: 0,
+    reasons: ["Need more paired observations."],
+  })),
+}));
+
 import { issueInvite } from "../server/services/persistence/betaService";
 
 let server: Server;
@@ -118,6 +155,29 @@ describe("admin routes", () => {
         code: "bad_request",
         message: "You cannot demote yourself.",
       },
+    });
+  });
+
+  it("returns a staff-only HR redesign preview without routing V2 to production", async () => {
+    const response = await fetch(`${baseUrl}/api/admin/hr-research`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      mode: "admin_preview",
+      publicImpact: "none",
+      production: {
+        notProductionRouted: true,
+        totalCandidates: 1,
+        topCandidates: [{ playerName: "Test Hitter", hrScore: 88 }],
+      },
+      v2: {
+        status: "INSUFFICIENT_DATA",
+        pairedObservations: 0,
+        promotionEligible: false,
+      },
+      redesign: { version: "admin-only-prototype" },
     });
   });
 });

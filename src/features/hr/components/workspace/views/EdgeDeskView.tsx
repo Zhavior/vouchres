@@ -14,6 +14,7 @@ import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { modelEdgePct, oddsDisplay } from "../../../engine/signalScore";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -150,27 +151,21 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-white/10 bg-black/30 p-12 text-center backdrop-blur-xl">
-        <TrendingUp className="mx-auto h-10 w-10 text-vouch-cyan/40" />
-        <h3 className="mt-3 text-lg font-bold text-white">No Edge Data Available</h3>
-        <p className="mt-1 text-sm text-white/50">
-          Waiting for slate odds & probability models to synthesize edge predictions.
-        </p>
-      </div>
+      <AuroraMaxFallback title="No edge data available" detail="Waiting for real slate prices and model probabilities. No market edge is inferred while either input is missing." />
     );
   }
 
   return (
-    <section className="space-y-6">
+    <section className="hr-edge-desk aurora-max-ranked-workspace space-y-4" data-workspace="edge">
       {/* ── Top Header Banner & Stats ────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-vouch-cyan/25 bg-gradient-to-r from-vouch-cyan/10 via-black/60 to-emerald-500/10 p-6 backdrop-blur-xl sm:p-8">
+      <div className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-vouch-cyan/15 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 font-mono text-[10px] font-extrabold uppercase tracking-widest text-vouch-cyan">
+              <span className="aurora-max-eyebrow inline-flex items-center gap-1.5 border px-3 py-1">
                 <Sparkles className="h-3 w-3" />
                 Vegas Edge Desk
               </span>

@@ -3,6 +3,7 @@ export type ApiDataQuality =
   | "official_mlb_lineup"
   | "official_mlb_scores"
   | "official_mlb_live_feed"
+  | "official_mlb_player_research"
   | "sports_truth_snapshot"
   | "validated_hr_board"
   | "projection_preview"

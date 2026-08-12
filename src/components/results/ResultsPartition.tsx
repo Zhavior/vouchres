@@ -59,14 +59,30 @@ export function ResultsPartition({ slips }: ResultsPartitionProps) {
 
   const root = usePartitionLayout(data, W, H, 1.5);
   const nodes = root.descendants().filter((n) => n.depth > 0) as HierarchyRectangularNode<PartitionDatum>[];
+  const mobileRows = STATUS_ORDER.map((status) => {
+    const statusSlips = slips.filter((slip) => slip.status === status);
+    const groups = Array.from(new Set(statusSlips.map((slip) => legTypeLabel(slip.totalLegs))));
+    return { status, count: statusSlips.length, groups };
+  }).filter((row) => row.count > 0);
 
   if (slips.length === 0) {
     return <p className="text-[11px] text-slate-600">No data yet — build and save parlays to see breakdown.</p>;
   }
 
   return (
-    <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }} role="img" aria-label="Saved slips broken down by result and leg count">
+    <div className="min-w-0">
+      <div className="results-partition-mobile sm:hidden" role="list" aria-label="Saved slips broken down by result and leg count">
+        {mobileRows.map((row) => (
+          <div key={row.status} className="results-partition-mobile__row" role="listitem">
+            <span className="h-2 w-2" style={{ background: STATUS_COLOR[row.status] }} />
+            <span className="min-w-0 text-[10px] font-bold uppercase text-white/62">
+              {row.status} <small className="ml-1 font-normal normal-case text-white/32">{row.groups.join(' · ') || 'No leg group'}</small>
+            </span>
+            <strong className="font-mono text-xs text-white">{row.count}</strong>
+          </div>
+        ))}
+      </div>
+      <svg className="hidden sm:block" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Saved slips broken down by result and leg count">
         {nodes.map((node) => {
           const w = node.x1 - node.x0;
           const h = node.y1 - node.y0;
@@ -80,7 +96,7 @@ export function ResultsPartition({ slips }: ResultsPartitionProps) {
               <rect
                 width={w}
                 height={h}
-                rx={2}
+                rx={0}
                 fill={color}
                 fillOpacity={isStatusRow ? 0.28 : 0.14}
                 stroke={color}
@@ -101,7 +117,7 @@ export function ResultsPartition({ slips }: ResultsPartitionProps) {
       <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
         {STATUS_ORDER.filter((s) => slips.some((slip) => slip.status === s)).map((s) => (
           <span key={s} className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm" style={{ background: STATUS_COLOR[s] }} />
+            <span className="h-2 w-2" style={{ background: STATUS_COLOR[s] }} />
             {s.charAt(0) + s.slice(1).toLowerCase()}
           </span>
         ))}

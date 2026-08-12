@@ -10,8 +10,8 @@ import { recordHrBoardCacheControl } from "./hrBoardCache";
  *   - Content-Type: application/json  (when body present)
  *   - X-Client-Version: from package.json (for client-compat checks)
  *
- * On 401 from /api/auth/me, signs the user out via Supabase. Other 401s are
- * surfaced to callers without killing the session (tier gates, etc.).
+ * On 401 from /api/auth/me, refreshes once and retries. A profile endpoint
+ * failure never revokes the user's other sessions or destroys local auth.
  */
 const CLIENT_VERSION = import.meta.env.VITE_CLIENT_VERSION ?? "0.1.0-beta";
 
@@ -29,7 +29,8 @@ async function request<T = any>(
     body?: any;
     query?: Record<string, string | number | boolean | undefined>;
     signal?: AbortSignal;
-  } = {}
+  } = {},
+  authRetried = false,
 ): Promise<T> {
   const url = new URL(
     path,
@@ -63,15 +64,17 @@ async function request<T = any>(
     credentials: "include",
   });
 
-  // Handle 401 — only force sign-out for session validation, not tier-gated resources.
-  // Pro Lab routes can return 401 for Basic users; signing out globally would drop
-  // them back to the logged-out landing page instead of showing the paywall.
+  // A briefly stale access token is recoverable. Refresh once, outside any auth
+  // callback, then retry with Supabase's newly persisted token.
   if (res.status === 401) {
-    const body = await res.json().catch(() => ({ error: 'unauthorized' }));
     const isAuthMe = path.startsWith('/api/auth/me');
-    if (token && isAuthMe) {
-      await supabase.auth.signOut();
+    if (token && isAuthMe && !authRetried) {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (!error && data.session?.access_token) {
+        return request<T>(path, opts, true);
+      }
     }
+    const body = await res.json().catch(() => ({ error: 'unauthorized' }));
     const parsed = parseApiErrorBody(body, res.status) as ApiError;
     throw { ...parsed, status: 401 } as ApiError;
   }

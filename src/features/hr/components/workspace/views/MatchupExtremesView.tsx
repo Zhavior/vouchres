@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 
 import type { HrWatchRow } from "../../../types/hrWatch";
 import type { HrCardResult } from "../../Cards/HrPlayerCard";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -527,35 +528,20 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
 
   if (rows.length === 0) {
     return (
-      <section className="relative overflow-hidden rounded-3xl border border-dashed border-white/10 bg-zinc-950/60 p-10 text-center">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_45%)]" />
-        <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-400">
-            Workspace intelligence
-          </p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
-            Matchup Extremes
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-            No matchup intelligence is available for the current workspace.
-            Once players are loaded, this view highlights the strongest and
-            weakest signals across today&apos;s board.
-          </p>
-        </div>
-      </section>
+      <AuroraMaxFallback title="No matchup extremes available" detail="Extremes appear only after supported slate metrics arrive. Missing measurements remain unavailable rather than being ranked as zero." />
     );
   }
 
   return (
-    <section className="space-y-8">
-      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
+    <section className="hr-matchup-extremes aurora-max-ranked-workspace space-y-4" data-workspace="extremes">
+      <header className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_36%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
 
         <div className="relative">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
+              <p className="aurora-max-eyebrow">
                 Slate intelligence terminal
               </p>
 

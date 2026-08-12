@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient';
 import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import { PUBLIC_SECTIONS, shouldForcePublicLanding } from './app/sectionNavigation';
+import { AURORA_MAX_SHELL } from './theme/auroraTokens';
 
 function isAuthCallbackPath(): boolean {
   if (typeof window === 'undefined') return false;
@@ -62,7 +63,7 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   }, []);
 
   return (
-    <div className="z8-app-shell ve-theme-transition font-z8" style={{ background: '#000' }}>
+    <div className={`z8-app-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
       <div>
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">

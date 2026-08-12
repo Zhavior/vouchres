@@ -18,23 +18,25 @@ import {
   tierToSubscriptionTier,
   type BillingStatus,
 } from '../lib/billingClient';
-import {
-  AURORA_LABEL,
-  AURORA_PANEL,
-  AURORA_PANEL_PREMIUM,
-  AURORA_SURFACE,
-} from '../theme/auroraTokens';
 import type { CreatorProofProfile } from '../types';
 import {
-  buildPremiumAuroraModel,
+  buildPremiumAccessModel,
   type BillingSourceState,
-} from './premiumAuroraModel';
+} from './premiumAccessModel';
+import {
+  AuroraMaxCommandHeader,
+  AuroraMaxControl,
+  AuroraMaxEyebrow,
+  AuroraMaxPanel,
+  AuroraMaxRankedWorkspace,
+  AuroraMaxTruthBadge,
+} from './aurora-max/AuroraMaxPrimitives';
 import {
   FREE_BETA_ALL_ACCESS,
   FREE_BETA_BLURB,
-  FREE_BETA_HEADLINE,
   PAYMENTS_ENABLED,
 } from '../lib/betaAccess';
+import './billing-settings-aurora-max.css';
 
 interface PremiumSubPageProps {
   profile: CreatorProofProfile;
@@ -99,7 +101,7 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
     }
   }, [refreshBilling]);
 
-  const model = buildPremiumAuroraModel({
+  const model = buildPremiumAccessModel({
     profileTier: profile.subscriptionTier,
     billingStatus,
     billingSourceState,
@@ -137,31 +139,30 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-[900px] space-y-4 p-3 font-z8 sm:p-5" id="premium-hub-panel">
-      <section className={`${AURORA_PANEL_PREMIUM} space-y-5 p-5 sm:p-6`} aria-labelledby="aurora-account-access-title">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-xl space-y-2">
-            <p className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Aurora account
-            </p>
-            <h1 id="aurora-account-access-title" className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-              Account access
-            </h1>
-            <p className="text-sm leading-relaxed text-white/55">
-              See what your account can open now and whether that access was confirmed by the billing source.
-            </p>
+    <main className="billing-aurora-max mx-auto min-h-screen w-full max-w-[1000px] min-w-0 space-y-4 px-3 py-4 font-z8 sm:px-6 sm:py-5" id="premium-hub-panel">
+      <AuroraMaxPanel as="section" className="billing-command-panel space-y-5 p-4 sm:p-5" ariaLabelledBy="billing-account-access-title">
+        <AuroraMaxCommandHeader
+          eyebrow={<span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4" aria-hidden="true" /> Plan &amp; billing</span>}
+          title={<span id="billing-account-access-title">Account access</span>}
+          description="See what your account can open now and whether that access was confirmed by the billing source."
+          meta={<AuroraMaxTruthBadge state={billingSourceState === 'confirmed' ? 'confirmed' : billingSourceState === 'checking' ? 'projected' : 'missing'}>{model.billingLabel}</AuroraMaxTruthBadge>}
+        />
+
+        <div className="billing-access-grid">
+          <div className="billing-access-cell">
+            <AuroraMaxEyebrow>Current access</AuroraMaxEyebrow>
+            <strong>{model.accessLabel}</strong>
+            <span>Tier {model.activeTier}</span>
           </div>
-          <div className={`${AURORA_SURFACE} min-w-[180px] p-3`}>
-            <div className={`${AURORA_LABEL} text-white/40`}>Current access</div>
-            <div className="mt-1 text-lg font-black text-white">{model.accessLabel}</div>
-            <div className="mt-1 font-mono text-[11px] text-vouch-cyan">Tier {model.activeTier}</div>
+          <div className="billing-access-cell">
+            <AuroraMaxEyebrow>Billing source</AuroraMaxEyebrow>
+            <strong>{billingSourceState === 'confirmed' ? 'Connected' : billingSourceState === 'checking' ? 'Checking' : 'Unavailable'}</strong>
+            <span>{model.billingDetail}</span>
           </div>
         </div>
 
-        <div className={`${AURORA_SURFACE} flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between`}>
+        <div className="billing-source-row">
           <div className="min-w-0">
-            <div className={`${AURORA_LABEL} text-white/40`}>Billing source</div>
             <div className="mt-1 flex items-center gap-2 text-sm font-bold text-white">
               {billingSourceState === 'checking' ? <Loader className="h-4 w-4 animate-spin text-vouch-cyan" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4 text-vouch-cyan" aria-hidden="true" />}
               {model.billingLabel}
@@ -169,27 +170,17 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
             <p className="mt-1 text-xs leading-relaxed text-white/45">{model.billingDetail}</p>
           </div>
           {billingSourceState === 'unavailable' && (
-            <button
-              type="button"
-              onClick={() => void refreshBilling()}
-              className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 text-xs font-bold text-white transition-colors hover:border-vouch-cyan/40 hover:text-vouch-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
-            >
+            <AuroraMaxControl onClick={() => void refreshBilling()}>
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Retry status
-            </button>
+            </AuroraMaxControl>
           )}
         </div>
-      </section>
+      </AuroraMaxPanel>
 
       {FREE_BETA_ALL_ACCESS ? (
-        <section className="space-y-3" aria-labelledby="aurora-plan-choice-title">
-          <div>
-            <p className={`${AURORA_LABEL} text-vouch-cyan`}>{FREE_BETA_HEADLINE}</p>
-            <h2 id="aurora-plan-choice-title" className="mt-1 text-xl font-black text-white">Everything is unlocked</h2>
-            <p className="mt-1 text-xs text-white/45">{FREE_BETA_BLURB}</p>
-          </div>
-
-          <div className="grid gap-3" id="upgrade-tiers-grid">
+        <AuroraMaxRankedWorkspace title="Everything is unlocked" subtitle={FREE_BETA_BLURB} className="billing-plan-workspace">
+              <div className="grid gap-3" id="upgrade-tiers-grid">
             <PlanSurface
               title="Free open beta"
               price="$0"
@@ -198,17 +189,11 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
               features={FREE_BETA_FEATURES}
               active
               premium
-            />
+              />
           </div>
-        </section>
+        </AuroraMaxRankedWorkspace>
       ) : (
-      <section className="space-y-3" aria-labelledby="aurora-plan-choice-title">
-        <div>
-          <p className={`${AURORA_LABEL} text-vouch-cyan`}>Choose by need</p>
-          <h2 id="aurora-plan-choice-title" className="mt-1 text-xl font-black text-white">Plans</h2>
-          <p className="mt-1 text-xs text-white/45">Basic stays free. Beta adds the deeper research workflow.</p>
-        </div>
-
+      <AuroraMaxRankedWorkspace title="Plans" subtitle="Basic stays free. Beta adds the deeper research workflow." className="billing-plan-workspace">
         <div className="grid gap-3 md:grid-cols-2" id="upgrade-tiers-grid">
           <PlanSurface
             title="Basic"
@@ -229,43 +214,42 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
             premium
           >
             {model.shouldManageBilling ? (
-              <button
-                type="button"
+              <AuroraMaxControl
                 onClick={() => void handleManageBilling()}
                 disabled={portalLoading}
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 text-xs font-black text-vouch-cyan transition-colors hover:bg-vouch-cyan/15 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+                className="w-full"
               >
                 {portalLoading ? <Loader className="h-4 w-4 animate-spin" aria-hidden="true" /> : <CreditCard className="h-4 w-4" aria-hidden="true" />}
                 Manage billing
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              </AuroraMaxControl>
             ) : (
-              <button
-                type="button"
+              <AuroraMaxControl
+                tone="primary"
                 onClick={() => void handleSubscribe()}
                 disabled={checkoutLoading}
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-vouch-emerald px-4 text-xs font-black text-black transition-colors hover:bg-vouch-emerald/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+                className="w-full"
               >
                 {checkoutLoading && <Loader className="h-4 w-4 animate-spin" aria-hidden="true" />}
                 {checkoutLoading ? 'Opening secure checkout…' : 'Start 7-day free trial'}
-              </button>
+              </AuroraMaxControl>
             )}
           </PlanSurface>
         </div>
-      </section>
+      </AuroraMaxRankedWorkspace>
       )}
 
       {billingError && (
-        <section className={`${AURORA_PANEL} flex items-start gap-3 p-4 text-sm text-amber-200`} role="alert">
+        <AuroraMaxPanel className="flex items-start gap-3 border-amber-400/20 p-4 text-sm text-amber-200" role="alert">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
           <div>{billingError}</div>
-        </section>
+        </AuroraMaxPanel>
       )}
 
-      <section className={`${AURORA_PANEL} flex items-start gap-3 p-4`} aria-labelledby="aurora-secure-billing-title">
+      <AuroraMaxPanel as="section" className="flex items-start gap-3 p-4" ariaLabelledBy="secure-billing-title">
         <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" aria-hidden="true" />
         <div>
-          <h2 id="aurora-secure-billing-title" className={`${AURORA_LABEL} text-white/55`}>
+          <h2 id="secure-billing-title" className="aurora-max-eyebrow text-white/55">
             {PAYMENTS_ENABLED ? 'Secure billing notice' : 'Beta access notice'}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-white/45">
@@ -274,7 +258,7 @@ export function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubPageProps
               : 'No payment is collected during the beta and no card is stored. Access is granted to every signed-in account; it does not verify identity, research quality, or prediction accuracy.'}
           </p>
         </div>
-      </section>
+      </AuroraMaxPanel>
     </main>
   );
 }
@@ -301,12 +285,12 @@ function PlanSurface({
   children,
 }: PlanSurfaceProps) {
   return (
-    <article className={`${premium ? AURORA_PANEL_PREMIUM : AURORA_PANEL} flex min-h-full flex-col justify-between gap-6 p-5`}>
+    <AuroraMaxPanel as="article" className={`billing-plan-card flex min-h-full flex-col justify-between gap-6 p-4 sm:p-5 ${premium ? 'billing-plan-card--premium' : ''}`}>
       <div className="space-y-4">
         <div>
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-base font-black text-white">{title}</h3>
-            {active && <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-vouch-emerald">Current access</span>}
+            {active ? <AuroraMaxTruthBadge state="confirmed">Current access</AuroraMaxTruthBadge> : null}
           </div>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-3xl font-black text-white">{price}</span>
@@ -324,7 +308,7 @@ function PlanSurface({
         </ul>
       </div>
       {children}
-    </article>
+    </AuroraMaxPanel>
   );
 }
 

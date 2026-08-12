@@ -8,6 +8,8 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { issueInvite } from "../services/persistence/betaService";
+import { getCachedValidatedHrBoard } from "../services/hubs/hrBoardHub";
+import { evaluatePairedHrHistory } from "../services/intelligence/centralBrain/hrPairedEvaluationService";
 
 /**
  * Admin routes — staff-only.
@@ -172,7 +174,9 @@ adminRoutes.get(
 
     let query = supabaseAdmin
       .from("profiles")
-      .select("id, username, display_name, email, tier, is_banned, is_staff, is_demo, created_at", { count: "exact" })
+      // Email belongs to Supabase Auth in this schema, not public.profiles.
+      // Keep this staff list limited to columns that actually exist here.
+      .select("id, username, display_name, tier, is_banned, is_staff, is_demo, created_at", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -367,5 +371,70 @@ adminRoutes.get(
       },
       estimated_mrr: ((subsGold.count ?? 0) * 8) + ((subsSellerPro.count ?? 0) * 40),
     }));
+  }),
+);
+
+/**
+ * Staff-only HR redesign preview. This deliberately combines the current
+ * production board with V2 evaluation status without exposing a V2 ranking
+ * or routing anything into the public HR experience.
+ */
+adminRoutes.get(
+  "/hr-research",
+  requireAuth,
+  requireStaff,
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    try {
+      const [board, v2] = await Promise.all([
+        getCachedValidatedHrBoard(),
+        evaluatePairedHrHistory(),
+      ]);
+      const candidates = (Array.isArray(board.candidates) ? board.candidates : [])
+        .slice(0, 12)
+        .map((candidate: any) => ({
+          playerName: candidate.playerName,
+          team: candidate.team,
+          opponent: candidate.opponent,
+          gamePk: candidate.gamePk,
+          hrScore: candidate.hrScore,
+          estimatedHrProbability: candidate.estimatedHrProbability ?? null,
+          riskTier: candidate.riskTier,
+          dataConfidence: candidate.dataConfidence,
+          lineupStatus: candidate.lineupStatus,
+          dataQuality: candidate.dataQuality,
+          reasons: Array.isArray(candidate.reasons) ? candidate.reasons.slice(0, 3) : [],
+          warnings: Array.isArray(candidate.warnings) ? candidate.warnings.slice(0, 3) : [],
+        }));
+
+      return res.json(apiOkFlat(req, {
+        mode: "admin_preview",
+        publicImpact: "none",
+        production: {
+          date: board.date,
+          generatedAt: typeof board.debug?.lastRefresh === "string" ? board.debug.lastRefresh : null,
+          totalCandidates: Array.isArray(board.candidates) ? board.candidates.length : 0,
+          topCandidates: candidates,
+          notProductionRouted: true,
+        },
+        v2,
+        redesign: {
+          version: "admin-only-prototype",
+          principles: [
+            "Show fewer, higher-signal targets instead of a saturated wall of picks.",
+            "Display calibrated probability, baseline comparison, confidence, and freshness together.",
+            "Require timestamped pregame snapshots and graded outcomes before any promotion decision.",
+            "Keep V2 shadow results separate until paired evidence proves an improvement.",
+          ],
+        },
+      }));
+    } catch (error) {
+      throw new AppError({
+        status: 503,
+        code: "internal_server_error",
+        message: "HR research preview is temporarily unavailable.",
+        expose: true,
+        cause: error,
+      });
+    }
   }),
 );

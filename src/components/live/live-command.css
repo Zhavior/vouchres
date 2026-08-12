@@ -23,3 +23,49 @@
   background: rgba(244, 63, 94, 0.12);
   color: #fda4af;
 }
+
+/* Live Games keeps its command header content, but Aurora Max owns the atmosphere. */
+.live-games-aurora-header {
+  border: 1px solid rgba(157, 215, 175, 0.12) !important;
+  border-radius: 0 !important;
+  background: rgba(5, 11, 13, 0.36) !important;
+  box-shadow: inset 0 1px rgba(242, 240, 233, 0.035) !important;
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.live-games-aurora-header .deck-rail {
+  border-radius: 0 !important;
+  border-color: rgba(157, 215, 175, 0.1) !important;
+  background: rgba(4, 11, 13, 0.3) !important;
+}
+
+.live-games-aurora-header .deck-control,
+.live-games-aurora-header .deck-tab {
+  border-radius: 0 !important;
+}
+
+.aurora-max-live-games {
+  background: transparent;
+}
+
+.aurora-max-live-games .live-game-scoreboard {
+  border-color: rgba(157, 215, 175, 0.14) !important;
+  background:
+    linear-gradient(135deg, rgba(242, 240, 233, 0.035), transparent 50%),
+    rgba(7, 16, 18, 0.84) !important;
+  box-shadow: 0 28px 70px -48px rgba(0, 0, 0, 0.96), inset 0 1px rgba(242, 240, 233, 0.045) !important;
+}
+
+.aurora-max-live-games :is(.rounded-2xl, .rounded-xl, .rounded-lg) {
+  border-radius: 0 !important;
+}
+
+.aurora-max-live-games :is(.bg-black\/40, .bg-black\/60, .bg-gradient-to-br) {
+  background-color: rgba(4, 11, 13, 0.52) !important;
+  background-image: none !important;
+}
+
+.aurora-max-live-games .aurora-max-fallback {
+  border: 1px solid rgba(157, 215, 175, 0.14);
+  background: rgba(7, 16, 18, 0.72);
+}

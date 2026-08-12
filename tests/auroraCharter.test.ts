@@ -62,6 +62,42 @@ describe('Aurora Master Charter', () => {
     const provider = readProjectFile('src/components/theme/ThemeProvider.tsx');
 
     expect(provider).toContain("setAttribute('data-vouchedge-system', 'aurora')");
+    expect(provider).toContain("setAttribute('data-aurora-generation', 'max')");
     expect(provider).toContain("setAttribute('data-theme', 'z8-premium')");
+  });
+
+  it('applies Aurora Max through the shared app shell', () => {
+    const shell = readProjectFile('src/app/AppShell.tsx');
+    const publicApp = readProjectFile('src/App.tsx');
+    const css = readProjectFile('src/styles/aurora-max.css');
+    const layout = readProjectFile('src/social/feed/HomeFeedLayout.tsx');
+    const routeFrame = readProjectFile('src/components/layout/AuroraMaxRouteFrame.tsx');
+
+    expect(shell).toContain('AURORA_MAX_SHELL');
+    expect(shell).toContain('data-aurora-generation="max"');
+    expect(publicApp).toContain('AURORA_MAX_SHELL');
+    expect(css).toContain('.aurora-max-shell');
+    expect(css).toContain('.aurora-max-panel');
+    expect(css).toContain('.aurora-max-control');
+    expect(layout).toContain('<AuroraMaxRouteFrame section={activeSection}>');
+    expect(routeFrame).toContain('data-aurora-route={section}');
+    expect(routeFrame).toContain("'dense'");
+    expect(routeFrame).toContain("'focused'");
+  });
+
+  it('keeps Aurora Max primitives shared by the canonical desk and Today', () => {
+    const primitives = readProjectFile('src/components/aurora-max/AuroraMaxPrimitives.tsx');
+    const canonicalDesk = readProjectFile('src/components/admin/AuroraMax.tsx');
+    const todayDesk = readProjectFile('src/components/today/TodayFieldDesk.tsx');
+
+    for (const primitive of ['AuroraMaxCommandHeader', 'AuroraMaxEvidenceLadder', 'AuroraMaxRankedWorkspace', 'AuroraMaxTruthBadge', 'AuroraMaxFallback']) {
+      expect(primitives).toContain(`export function ${primitive}`);
+    }
+    expect(canonicalDesk).toContain("from '../aurora-max/AuroraMaxPrimitives'");
+    expect(canonicalDesk).toContain('<AuroraMaxCommandHeader');
+    expect(canonicalDesk).toContain('<AuroraMaxRankedWorkspace');
+    expect(todayDesk).toContain("from '../aurora-max/AuroraMaxPrimitives'");
+    expect(todayDesk).toContain('<AuroraMaxEvidenceLadder');
+    expect(todayDesk).toContain('<AuroraMaxFallback');
   });
 });

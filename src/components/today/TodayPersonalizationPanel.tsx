@@ -1,6 +1,7 @@
 import { Check, RotateCcw, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { logoByTeamId } from '../../lib/teamLogos';
+import { AuroraMaxControl, AuroraMaxEyebrow, AuroraMaxPanel } from '../aurora-max/AuroraMaxPrimitives';
 import type {
   TodayFollowedPlayer,
   TodayInAppAlertType,
@@ -104,17 +105,15 @@ export default function TodayPersonalizationPanel({
   };
 
   return (
-    <section
+    <AuroraMaxPanel
+      as="section"
       id="today-personalization-panel"
-      className="relative overflow-hidden rounded-3xl border border-vouch-cyan/25 bg-[linear-gradient(145deg,rgba(8,23,36,.98),rgba(4,9,17,.98))] p-4 shadow-[0_24px_70px_rgba(0,0,0,.48),0_0_36px_rgba(79,184,220,.08)] sm:p-6"
+      className="relative overflow-hidden p-4 sm:p-6"
       aria-labelledby="today-personalization-title"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/80 to-transparent" />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-vouch-emerald">
-            <Sparkles className="h-3.5 w-3.5" /> Your Aurora briefing
-          </p>
+          <AuroraMaxEyebrow className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> Your Aurora briefing</AuroraMaxEyebrow>
           <h2 id="today-personalization-title" className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">
             Personalize Today
           </h2>
@@ -122,9 +121,9 @@ export default function TodayPersonalizationPanel({
             Choose what matters to you. These explicit choices rank your briefing; they do not create or change any research signal.
           </p>
         </div>
-        <button type="button" onClick={onClose} className="z8-control shrink-0 rounded-full border border-white/10 bg-black/30 text-white/60 hover:text-white" aria-label="Close personalization">
+        <AuroraMaxControl type="button" onClick={onClose} className="h-10 w-10 shrink-0 p-0" aria-label="Close personalization">
           <X className="h-4 w-4" />
-        </button>
+        </AuroraMaxControl>
       </div>
 
       <PreferenceGroup title="Favorite teams" helper={`${favoriteMlbTeamIds.length}/5 selected`}>
@@ -133,13 +132,13 @@ export default function TodayPersonalizationPanel({
             const selected = favoriteMlbTeamIds.includes(team.id);
             const disabled = !selected && favoriteMlbTeamIds.length >= 5;
             return (
-              <button key={team.id} type="button" onClick={() => toggleTeam(team.id)} aria-pressed={selected} disabled={disabled} className={`z8-control flex min-h-14 items-center gap-2 rounded-xl border px-3 text-left transition disabled:cursor-not-allowed disabled:opacity-35 ${selected ? 'border-vouch-emerald/55 bg-vouch-emerald/12 text-white' : 'border-white/10 bg-black/25 text-white/62 hover:border-vouch-cyan/35'}`}>
+              <AuroraMaxControl key={team.id} type="button" onClick={() => toggleTeam(team.id)} aria-pressed={selected} disabled={disabled} className={`flex min-h-14 items-center justify-start gap-2 px-3 text-left disabled:cursor-not-allowed disabled:opacity-35 ${selected ? '!border-[rgba(0,217,160,0.4)] !bg-[rgba(0,217,160,0.075)] text-white' : 'bg-black/25 text-white/62'}`}>
                 <img src={logoByTeamId(team.id) ?? ''} alt="" className="h-7 w-7 shrink-0 object-contain" loading="lazy" />
                 <span className="min-w-0">
                   <span className="block text-xs font-black">{team.abbreviation}</span>
                   <span className="block truncate text-[10px] text-white/42">{team.name}</span>
                 </span>
-              </button>
+              </AuroraMaxControl>
             );
           })}
         </div>
@@ -151,15 +150,15 @@ export default function TodayPersonalizationPanel({
             {players.map((player) => {
               const selected = followedPlayers.some((item) => item.id === player.id);
               return (
-                <button key={player.id} type="button" onClick={() => togglePlayer(player)} aria-pressed={selected} className={`z8-control flex min-w-44 shrink-0 items-center gap-3 rounded-xl border px-3 py-2 text-left ${selected ? 'border-vouch-emerald/55 bg-vouch-emerald/12' : 'border-white/10 bg-black/25 hover:border-vouch-cyan/35'}`}>
-                  <span className="flex h-9 w-9 shrink-0 items-end justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+                <AuroraMaxControl key={player.id} type="button" onClick={() => togglePlayer(player)} aria-pressed={selected} className={`flex min-w-44 shrink-0 items-center justify-start gap-3 px-3 py-2 text-left ${selected ? '!border-[rgba(0,217,160,0.4)] !bg-[rgba(0,217,160,0.075)]' : 'bg-black/25'}`}>
+                  <span className="flex h-9 w-9 shrink-0 items-end justify-center overflow-hidden border border-white/10 bg-white/5">
                     {player.headshotUrl ? <img src={player.headshotUrl} alt="" className="h-full w-full object-contain object-bottom" loading="lazy" /> : <span className="pb-2 text-xs font-black text-vouch-cyan">{player.name.slice(0, 1)}</span>}
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-xs font-black text-white">{player.name}</span>
                     <span className="block text-[10px] uppercase tracking-wider text-white/40">{player.team}</span>
                   </span>
-                </button>
+                </AuroraMaxControl>
               );
             })}
           </div>
@@ -171,12 +170,12 @@ export default function TodayPersonalizationPanel({
           {INTEREST_OPTIONS.map((interest) => {
             const selected = researchInterests.includes(interest.id);
             return (
-              <button key={interest.id} type="button" onClick={() => toggleInterest(interest.id)} aria-pressed={selected} className={`z8-control rounded-xl border p-3 text-left ${selected ? 'border-vouch-cyan/55 bg-vouch-cyan/10' : 'border-white/10 bg-black/25 hover:border-vouch-cyan/35'}`}>
+              <AuroraMaxControl key={interest.id} type="button" onClick={() => toggleInterest(interest.id)} aria-pressed={selected} className={`p-3 text-left ${selected ? '!border-[rgba(0,217,160,0.4)] !bg-[rgba(0,217,160,0.075)]' : 'bg-black/25'}`}>
                 <span className="flex items-center justify-between gap-2 text-xs font-black text-white">
                   {interest.label}{selected ? <Check className="h-3.5 w-3.5 text-vouch-emerald" /> : null}
                 </span>
                 <span className="mt-1 block text-[10px] leading-4 text-white/42">{interest.detail}</span>
-              </button>
+              </AuroraMaxControl>
             );
           })}
         </div>
@@ -192,30 +191,30 @@ export default function TodayPersonalizationPanel({
             const disabled = (alert.id === 'favorite_team_game_state' && favoriteMlbTeamIds.length === 0)
               || (alert.id === 'followed_player_lineup' && followedPlayers.length === 0);
             return (
-              <button key={alert.id} type="button" onClick={() => toggleAlert(alert.id)} aria-pressed={selected} disabled={disabled} className={`z8-control rounded-xl border p-3 text-left disabled:cursor-not-allowed disabled:opacity-35 ${selected ? 'border-vouch-emerald/55 bg-vouch-emerald/10' : 'border-white/10 bg-black/25 hover:border-vouch-cyan/35'}`}>
+              <AuroraMaxControl key={alert.id} type="button" onClick={() => toggleAlert(alert.id)} aria-pressed={selected} disabled={disabled} className={`p-3 text-left disabled:cursor-not-allowed disabled:opacity-35 ${selected ? '!border-[rgba(0,217,160,0.4)] !bg-[rgba(0,217,160,0.075)]' : 'bg-black/25'}`}>
                 <span className="flex items-center justify-between gap-2 text-xs font-black text-white">
                   {alert.label}{selected ? <Check className="h-3.5 w-3.5 text-vouch-emerald" /> : null}
                 </span>
                 <span className="mt-1 block text-[10px] leading-4 text-white/42">{alert.detail}</span>
-              </button>
+              </AuroraMaxControl>
             );
           })}
         </div>
       </PreferenceGroup>
 
       <div className="mt-6 flex flex-col-reverse gap-2 border-t border-white/8 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <button type="button" onClick={clearAll} className="z8-control inline-flex items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold text-white/48 hover:text-white">
+        <AuroraMaxControl type="button" onClick={clearAll} className="px-3 text-xs font-bold text-white/48">
           <RotateCcw className="h-3.5 w-3.5" /> Clear choices
-        </button>
+        </AuroraMaxControl>
         <div className="flex items-center gap-3">
           {saveError ? <p role="alert" className="text-xs text-rose-300">Preferences could not be saved. Try again.</p> : null}
           {saved ? <p role="status" className="text-xs font-bold text-vouch-emerald">Saved to your account</p> : null}
-          <button type="button" onClick={() => void save()} disabled={isSaving} className="z8-control inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/50 bg-vouch-emerald px-5 text-xs font-black text-[#03110c] shadow-[0_0_22px_rgba(49,181,131,.22)] disabled:cursor-wait disabled:opacity-60 sm:flex-none">
+          <AuroraMaxControl tone="primary" type="button" onClick={() => void save()} disabled={isSaving} className="!border-[rgba(0,217,160,0.4)] !bg-[var(--aurora-max-emerald)] !text-[#02100d] flex-1 px-5 text-xs sm:flex-none">
             {isSaving ? 'Saving…' : 'Save personalization'}
-          </button>
+          </AuroraMaxControl>
         </div>
       </div>
-    </section>
+    </AuroraMaxPanel>
   );
 }
 

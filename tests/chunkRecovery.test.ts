@@ -4,6 +4,7 @@ import {
   initChunkRecovery,
   isChunkRecoveryPending,
   onChunkRecoveryMountSuccess,
+  scheduleChunkRecoveryMountSuccess,
   setChunkRecoveryFallback,
 } from "../src/lib/chunkRecovery";
 
@@ -130,6 +131,22 @@ describe("chunk recovery", () => {
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(CHUNK_RELOAD_KEY);
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(CHUNK_FAILED_KEY);
     expect(isChunkRecoveryPending()).toBe(false);
+  });
+
+  it("keeps the reload guard through the lazy-route boot window", () => {
+    vi.useFakeTimers();
+    sessionStorageMock.setItem(CHUNK_RELOAD_KEY, "1");
+
+    const cancel = scheduleChunkRecoveryMountSuccess(8_000);
+    expect(isChunkRecoveryPending()).toBe(true);
+
+    vi.advanceTimersByTime(7_999);
+    expect(isChunkRecoveryPending()).toBe(true);
+
+    vi.advanceTimersByTime(1);
+    expect(isChunkRecoveryPending()).toBe(false);
+    cancel();
+    vi.useRealTimers();
   });
 
   it("clears stale flags when no reload is pending", () => {

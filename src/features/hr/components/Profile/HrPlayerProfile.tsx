@@ -26,7 +26,6 @@ import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
 import { useHrResearch } from '../../hooks/useHrResearch';
 import { logoByTeamName } from '../../../../lib/teamLogos';
-import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import { useAppProfile } from '../../../../context/AppShellContext';
 import { useBodyScrollLock } from '../../../../lib/scroll/useBodyScrollLock';
 import {
@@ -131,7 +130,7 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
         {value > 0 && <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 ${lge} 1 ${f.x} ${f.y}`} stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />}
         <text x={cx} y={cy + 5} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>{value > 0 ? Math.round(value) : '—'}</text>
       </svg>
-      <span className={AURORA_LABEL}>{label}</span>
+      <span className="aurora-max-eyebrow">{label}</span>
     </div>
   );
 };
@@ -424,7 +423,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
             transition={auroraSurfaceTransition(reducedMotion)}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
             tabIndex={-1}
-            className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
+            className="hr-aurora-max ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
             <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">

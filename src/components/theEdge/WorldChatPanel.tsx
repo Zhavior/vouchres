@@ -25,6 +25,7 @@ import ChatAuthorChip, { type ChatAuthor } from './ChatAuthorChip';
 import ChatProfileEditor from './ChatProfileEditor';
 import ProfileAvatarBorder from '../profile/ProfileAvatarBorder';
 import { accentHex, type ChatAccentColor } from '../../lib/chatProfileStorage';
+import '../../styles/shell-surfaces-aurora-max.css';
 
 type Props = {
   profile?: CreatorProofProfile;
@@ -834,7 +835,7 @@ export default function WorldChatPanel({
   }, [followingHub.people, messages, user?.id]);
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col">
+    <div className="world-chat-panel-aurora-max flex h-full min-h-[420px] flex-col">
       <div className="mb-2 flex items-center gap-2 px-1">
         <Globe className="h-3.5 w-3.5 shrink-0 text-vouch-emerald/70" />
         <p className="min-w-0 flex-1 truncate text-[11px] text-white/40">

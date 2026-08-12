@@ -1,0 +1,74 @@
+/* Canonical Aurora Max shell surfaces: sidebar, ParlayOS, and World Chat. */
+.ve-logo-mark--emerald {
+  filter: sepia(1) saturate(8) hue-rotate(102deg) brightness(1.18) drop-shadow(0 0 12px rgba(0, 217, 160, 0.34));
+}
+
+.ve-aurora-sidebar,
+.ve-aurora-mobile-drawer {
+  border-color: rgba(157, 215, 175, 0.12) !important;
+  background: rgba(4, 10, 11, 0.82) !important;
+  backdrop-filter: blur(20px) saturate(1.06);
+}
+
+.ve-aurora-sidebar::before,
+.ve-aurora-mobile-drawer::before {
+  opacity: 0.2;
+  background-image: linear-gradient(rgba(0, 217, 160, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 217, 160, 0.035) 1px, transparent 1px) !important;
+  background-size: 38px 38px !important;
+}
+
+.ve-aurora-sidebar :is(.ve-aurora-sidebar-brand, .ve-aurora-sidebar-search, .ve-aurora-profile-card, button[class*='rounded-xl'], button[class*='rounded-2xl']),
+.ve-aurora-mobile-drawer :is(button, article, section)[class*='rounded']:not(.rounded-full) {
+  border-radius: 0 !important;
+}
+
+.ve-aurora-sidebar-brand,
+.ve-aurora-profile-card,
+.ve-aurora-sidebar-search {
+  border-color: rgba(157, 215, 175, 0.12) !important;
+  background-image: none !important;
+  background-color: rgba(5, 12, 13, 0.64) !important;
+  box-shadow: inset 2px 0 rgba(0, 217, 160, 0.34), var(--aurora-max-shadow) !important;
+}
+
+.ve-aurora-accent-line { background: linear-gradient(90deg, transparent, rgba(0, 217, 160, 0.72), transparent) !important; }
+.ve-aurora-nav-item[data-active='true'] { border-color: rgba(0, 217, 160, 0.2) !important; background: rgba(0, 217, 160, 0.075) !important; box-shadow: inset 2px 0 rgba(0, 217, 160, 0.72) !important; }
+.ve-aurora-sidebar-dock { border-color: rgba(157, 215, 175, 0.1) !important; background: rgba(4, 10, 11, 0.92) !important; }
+
+.parlay-os-aurora-max,
+.parlay-os-workspace-aurora-max,
+.world-chat-aurora-max,
+.world-chat-panel-aurora-max {
+  --shell-max-line: rgba(157, 215, 175, 0.13);
+  color: var(--aurora-max-paper);
+}
+
+.parlay-os-aurora-max,
+.world-chat-aurora-max {
+  border-color: var(--shell-max-line) !important;
+  border-radius: 0 !important;
+  background: rgba(4, 10, 11, 0.86) !important;
+  box-shadow: inset 2px 0 rgba(0, 217, 160, 0.5), 0 32px 90px rgba(0, 0, 0, 0.72) !important;
+}
+
+:is(.parlay-os-aurora-max, .parlay-os-workspace-aurora-max, .world-chat-aurora-max, .world-chat-panel-aurora-max)
+  :is(article, section, header, aside, nav, form, input, textarea, button)[class*='rounded']:not(.rounded-full) {
+  border-radius: 0 !important;
+}
+
+:is(.parlay-os-aurora-max, .parlay-os-workspace-aurora-max, .world-chat-aurora-max, .world-chat-panel-aurora-max)
+  :is(article, section, aside)[class*='border'] {
+  border-color: var(--shell-max-line) !important;
+  background-image: none !important;
+  background-color: rgba(5, 12, 13, 0.62) !important;
+}
+
+.parlay-os-workspace-aurora-max { background: transparent !important; }
+.parlay-os-workspace-aurora-max > div > header { border-radius: 0 !important; border-color: var(--shell-max-line) !important; background: rgba(5, 12, 13, 0.68) !important; box-shadow: inset 2px 0 rgba(0, 217, 160, 0.46), var(--aurora-max-shadow) !important; }
+.world-chat-aurora-max > div:first-child { border-color: var(--shell-max-line) !important; background: rgba(5, 12, 13, 0.9) !important; }
+.world-chat-panel-aurora-max :is(input, textarea) { border-color: var(--shell-max-line) !important; background: rgba(3, 9, 10, 0.76) !important; }
+
+@media (max-width: 767px) {
+  .world-chat-aurora-max { inset-inline: 0.65rem; max-width: calc(100vw - 1.3rem); }
+  .parlay-os-aurora-max { max-width: calc(100vw - 1.25rem); }
+}

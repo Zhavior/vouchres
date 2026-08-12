@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
-  BarChart3, Calendar, CheckCircle2, XCircle,
-  TrendingUp, Search, ChevronLeft, ChevronRight, Database,
+  BarChart3, Search, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
 import { ResultsLedgerSummary } from "./ResultsLedgerSummary";
@@ -9,15 +8,20 @@ import ResultsPartition from "./ResultsPartition";
 import SmartParlaySlipCard from "../parlay/smart/SmartParlaySlipCard";
 import { projectSmartParlayFromParlay } from "../../domain/parlay";
 import {
-  AURORA_LABEL,
-  AURORA_PAGE,
-  AURORA_PANEL,
-  AURORA_SURFACE,
-} from '../../theme/auroraTokens';
+  AuroraMaxCommandHeader,
+  AuroraMaxControl,
+  AuroraMaxEyebrow,
+  AuroraMaxFallback,
+  AuroraMaxMetricStrip,
+  AuroraMaxPanel,
+  AuroraMaxRankedWorkspace,
+  AuroraMaxTruthBadge,
+} from '../aurora-max/AuroraMaxPrimitives';
 import {
-  buildResultsAuroraSummary,
-  type ResultsAuroraSummary,
-} from './resultsAuroraModel';
+  buildResultsRecordSummary,
+  type ResultsRecordSummary,
+} from './resultsRecordModel';
+import './results-aurora-max.css';
 
 /**
  * ResultsStudio — Premium proof dashboard
@@ -42,13 +46,14 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const ownerName = profile?.displayName || "You";
 
   // Build all slips from savedParlays
   const allSlips = useMemo(() => {
     const slips = savedParlays.map((p) => ({
       id: p.id,
       title: p.title,
-      ownerName: profile?.displayName || "You",
+      ownerName,
       ownerType: "user" as const,
       legs: p.legs,
       totalLegs: p.legs.length,
@@ -58,7 +63,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
       riskTier: p.riskTier,
     }));
     return slips;
-  }, [savedParlays, profile]);
+  }, [savedParlays, ownerName]);
 
   const filteredParlays = useMemo(() => {
     let result = savedParlays;
@@ -110,83 +115,69 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
     return days;
   }, [calendarMonth, allSlips]);
 
-  const stats = useMemo(() => buildResultsAuroraSummary(savedParlays), [savedParlays]);
+  const stats = useMemo(() => buildResultsRecordSummary(savedParlays), [savedParlays]);
 
   const monthName = calendarMonth.toLocaleString("default", { month: "long", year: "numeric" });
 
   return (
-    <main className={`${AURORA_PAGE} min-h-screen pb-12`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        <section className={`${AURORA_PANEL} p-5`} aria-labelledby="track-record-title">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className={`${AURORA_LABEL} flex items-center gap-2 text-vouch-cyan`}>
-                <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Aurora track record
-              </p>
-              <h1 id="track-record-title" className="mt-2 text-3xl font-black tracking-tight text-white">Track Record</h1>
-              <p className="mt-1.5 max-w-xl text-sm leading-6 text-white/55">
-                Saved slips and their current recorded states. Backend-synced and local records stay visibly distinct.
-              </p>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { label: 'Slips',    value: stats.total,                                                         tone: 'text-white' },
-                { label: 'Settled',  value: stats.settled,                                                        tone: 'text-vouch-cyan' },
-                { label: 'Win rate', value: stats.winRate === null ? 'Unavailable' : `${stats.winRate}%`,        tone: 'text-vouch-emerald' },
-                { label: 'Synced',   value: stats.synced,                                                         tone: 'text-white/70' },
-              ].map((kpi) => (
-                <div key={kpi.label} className={`${AURORA_SURFACE} min-w-[82px] px-3 py-2.5 text-center`}>
-                  <div className={`font-mono text-lg font-black tabular-nums ${kpi.tone}`}>{kpi.value}</div>
-                  <div className={`${AURORA_LABEL} mt-1 text-white/35`}>{kpi.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
+    <main className="results-aurora-max min-h-screen min-w-0 overflow-x-hidden pb-24 sm:pb-12">
+      <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5">
+        <AuroraMaxPanel as="section" className="results-command-panel p-4 sm:p-5" ariaLabelledBy="track-record-title">
+          <AuroraMaxCommandHeader
+            eyebrow={<span className="inline-flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Results command desk</span>}
+            title={<span id="track-record-title">Track Record</span>}
+            description="Saved slips and their current recorded states. Backend-synced and local records remain visibly distinct."
+            meta={(
+              <AuroraMaxTruthBadge state={stats.synced > 0 ? 'confirmed' : 'missing'}>
+                {stats.synced > 0 ? `${stats.synced} receipts synced` : 'No synced receipts'}
+              </AuroraMaxTruthBadge>
+            )}
+          />
+          <AuroraMaxMetricStrip
+            className="mt-4"
+            items={[
+              { label: 'Saved slips', value: stats.total, tone: 'neutral' },
+              { label: 'Settled', value: stats.settled, tone: 'neutral' },
+              { label: 'Win rate', value: stats.winRate === null ? 'Unavailable' : `${stats.winRate}%`, tone: stats.winRate === null ? 'warning' : 'confirmed' },
+              { label: 'Backend synced', value: stats.synced, tone: stats.synced > 0 ? 'confirmed' : 'warning' },
+            ]}
+          />
+        </AuroraMaxPanel>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid lg:grid-cols-12 gap-5">
-          {/* LEFT: Calendar + Slip Feed */}
-          <div className="lg:col-span-8 space-y-5">
-            {/* Summary cards */}
-            <ResultsSummaryCards stats={stats} />
-
-            <section className={`${AURORA_PANEL} p-4`} aria-labelledby="saved-activity-title">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div id="saved-activity-title" className={`${AURORA_LABEL} text-white/45`}>Saved activity</div>
-                  <div className="flex items-center gap-2.5 text-[9px] text-slate-600">
-                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(52,211,153,0.25)",border:"1px solid rgba(52,211,153,0.4)"}} />Win</span>
-                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(248,113,113,0.2)",border:"1px solid rgba(248,113,113,0.35)"}} />Loss</span>
-                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(34,211,238,0.15)",border:"1px solid rgba(34,211,238,0.3)"}} />Pending</span>
+        <div className="grid min-w-0 gap-4 lg:grid-cols-12">
+          <div className="min-w-0 space-y-4 lg:col-span-8">
+            <AuroraMaxPanel as="section" className="results-calendar p-3 sm:p-4" ariaLabelledBy="saved-activity-title">
+              <div className="results-calendar__header">
+                <div className="min-w-0">
+                  <AuroraMaxEyebrow>Evidence calendar</AuroraMaxEyebrow>
+                  <h2 id="saved-activity-title" className="mt-1 text-base font-black text-white">Saved activity</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[9px] text-white/38">
+                    <span className="flex items-center gap-1"><span className="results-key results-key--won" />Win</span>
+                    <span className="flex items-center gap-1"><span className="results-key results-key--lost" />Loss</span>
+                    <span className="flex items-center gap-1"><span className="results-key results-key--pending" />Pending</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button type="button" aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="flex h-11 w-11 items-center justify-center text-white/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80">
-                    <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                  <span className="text-xs font-bold text-white">{monthName}</span>
-                  <button type="button" aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="flex h-11 w-11 items-center justify-center text-white/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vouch-cyan/80">
-                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
+                <div className="results-month-control">
+                  <AuroraMaxControl aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="!h-11 !w-11 !p-0">
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  </AuroraMaxControl>
+                  <span className="min-w-0 text-center text-xs font-bold text-white">{monthName}</span>
+                  <AuroraMaxControl aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="!h-11 !w-11 !p-0">
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </AuroraMaxControl>
                 </div>
               </div>
 
               {allSlips.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-                  <p className="text-xs text-white/50">No saved slips yet.</p>
-                  <p className="mt-1 text-[10px] text-white/35">Save a decision to begin a track record.</p>
-                </div>
+                <AuroraMaxFallback compact title="No saved activity" detail="Save a decision to begin a traceable track record." />
               ) : (
                 <>
-                  <div className="grid grid-cols-7 gap-1 mb-2">
+                  <div className="results-calendar-grid mb-1 mt-4">
                     {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                      <div key={i} className="text-[8px] text-slate-600 text-center font-mono uppercase">{d}</div>
+                      <div key={i} className="text-center font-mono text-[8px] uppercase text-white/28">{d}</div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-7 gap-1">
+                  <div className="results-calendar-grid">
                     {/* Empty cells for first week offset */}
                     {Array.from({ length: new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay() }).map((_, i) => (
                       <div key={`empty-${i}`} />
@@ -220,7 +211,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                         <button
                           key={day.date}
                           onClick={() => hasSlips && setSelectedDate(isSelected ? null : day.date)}
-                          className={`rounded-lg flex flex-col items-center pt-1.5 pb-1 px-0.5 gap-0.5 transition-all relative ${
+                          className={`results-calendar-day relative flex min-w-0 flex-col items-center gap-0.5 px-0.5 pb-1 pt-1.5 transition-all ${
                             hasSlips ? "cursor-pointer hover:brightness-125" : "cursor-default"
                           } ${isSelected ? "ring-1 ring-cyan-400" : ""}`}
                           style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
@@ -270,81 +261,79 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                   {selectedDate && (
                     <div className="mt-3 flex items-center gap-2">
                       <span className="text-[10px] text-slate-500">Filtered to: {selectedDate}</span>
-                      <button type="button" onClick={() => setSelectedDate(null)} className="min-h-11 px-3 text-[10px] text-vouch-cyan hover:text-white">Clear</button>
+                      <AuroraMaxControl onClick={() => setSelectedDate(null)} className="!min-h-9">Clear</AuroraMaxControl>
                     </div>
                   )}
                 </>
               )}
-            </section>
+            </AuroraMaxPanel>
 
-            {/* Filter bar */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[150px] max-w-xs">
+            <AuroraMaxPanel className="results-filter-panel p-3">
+              <div className="relative min-w-0 flex-1">
                 <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search slips..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="min-h-11 w-full border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-vouch-cyan/80"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  className="results-search min-h-11 w-full border py-2 pl-9 pr-3 text-xs text-white placeholder-white/30 focus:outline-none"
                 />
               </div>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="results-filter-grid">
                 {([
                   { id: "all" as ResultFilter, label: "All" },
-                  { id: "wins" as ResultFilter, label: "Wins", color: "#34d399" },
-                  { id: "losses" as ResultFilter, label: "Losses", color: "#f87171" },
-                  { id: "pending" as ResultFilter, label: "Pending", color: "#22d3ee" },
-                  { id: "voids" as ResultFilter, label: "Void", color: "#94a3b8" },
+                  { id: "wins" as ResultFilter, label: "Wins" },
+                  { id: "losses" as ResultFilter, label: "Losses" },
+                  { id: "pending" as ResultFilter, label: "Pending" },
+                  { id: "voids" as ResultFilter, label: "Void" },
                 ]).map((f) => (
                   <button
                     key={f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`min-h-11 px-3 text-[10px] font-bold uppercase transition-colors ${filter === f.id ? "text-slate-950" : "text-white/45"}`}
-                    style={filter === f.id ? { background: f.color || "#22d3ee" } : { background: "rgba(255,255,255,0.03)" }}
+                    className={`results-filter-control min-h-11 px-3 text-[10px] font-bold uppercase transition-colors ${filter === f.id ? "is-active" : ""}`}
+                    data-tone={f.id}
                   >
                     {f.label}
                   </button>
                 ))}
               </div>
-            </div>
+            </AuroraMaxPanel>
 
-            {/* Slip feed */}
-            <div className="space-y-3">
+            <AuroraMaxRankedWorkspace
+              title="Research receipt ledger"
+              subtitle={`${filteredParlays.length} visible of ${allSlips.length} saved slips`}
+              className="results-receipt-workspace"
+            >
               {filteredParlays.length === 0 ? (
                 <EmptyResultsState hasSlips={allSlips.length > 0} />
               ) : (
-                <>
+                <div className="space-y-2.5">
                   {filteredParlays.map((parlay) => (
                     <ResultSmartSlipCard
                       key={parlay.id}
                       parlay={parlay}
-                      ownerName={profile?.displayName || "You"}
+                      ownerName={ownerName}
                     />
                   ))}
-                </>
+                </div>
               )}
-            </div>
+            </AuroraMaxRankedWorkspace>
           </div>
 
-          {/* RIGHT: Win Rates + Breakdown */}
-          <div className="lg:col-span-4 space-y-5">
-            {/* Ledger summary */}
+          <aside className="min-w-0 space-y-4 lg:col-span-4">
             <ResultsLedgerSummary summary={stats} />
 
-            {/* Parlay breakdown — result x leg-count, real saved-slip data */}
-            <section className={`${AURORA_PANEL} p-4`} aria-labelledby="record-breakdown-title">
-              <div id="record-breakdown-title" className={`${AURORA_LABEL} mb-3 text-white/45`}>Record breakdown</div>
+            <AuroraMaxPanel as="section" className="p-3 sm:p-4" ariaLabelledBy="record-breakdown-title">
+              <AuroraMaxEyebrow>Ranked workspace</AuroraMaxEyebrow>
+              <h2 id="record-breakdown-title" className="mb-3 mt-1 text-base font-black text-white">Record breakdown</h2>
               <ResultsPartition slips={allSlips} />
               <p className="mt-3 text-[10px] leading-5 text-white/35">Grouped by current saved status and leg count.</p>
-            </section>
+            </AuroraMaxPanel>
 
-            {/* Disclaimer */}
-            <p className="text-[9px] text-slate-700 text-center px-4">
+            <p className="border border-white/[0.06] bg-[#071012]/60 px-3 py-2 text-center text-[9px] leading-4 text-white/28">
               VouchEdge is for sports research and entertainment. Local records are not presented as verified. No guarantees.
             </p>
-          </div>
+          </aside>
         </div>
       </div>
     </main>
@@ -391,47 +380,10 @@ function ResultSmartSlipCard({
   );
 }
 
-/* ============ Summary Cards ============ */
-function ResultsSummaryCards({ stats }: { stats: ResultsAuroraSummary }) {
-  const cards = [
-    { label: "Total Slips", value: stats.total,                                                                              icon: BarChart3,    color: "#22d3ee" },
-    { label: "Wins",        value: stats.won,                                                                                icon: CheckCircle2, color: "#34d399" },
-    { label: "Losses",      value: stats.lost,                                                                               icon: XCircle,      color: "#f87171" },
-    { label: "Win Rate",    value: stats.winRate === null ? "Unavailable" : `${stats.winRate}%`,                            icon: TrendingUp,   color: "#a78bfa" },
-    { label: "Backend Synced", value: stats.synced,                                                                           icon: Database,     color: "#4FB8DC" },
-  ];
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-      {cards.map((c) => (
-        <div key={c.label} className="rounded-xl p-3" style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${c.color}20` }}>
-          <c.icon className="w-3.5 h-3.5 mb-2" style={{ color: c.color }} />
-          <div className="text-lg font-bold font-mono" style={{ color: c.color }}>{c.value}</div>
-          <div className="text-[8px] text-slate-600 uppercase tracking-widest">{c.label}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default ResultsStudio;
 
 
 /* ============ Empty State ============ */
 function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {
-  return (
-    <div className="rounded-2xl p-8 text-center" style={{ background: "rgba(15,23,42,0.3)", border: "1px solid rgba(255,255,255,0.04)" }}>
-      <BarChart3 className="w-8 h-8 text-slate-700 mx-auto mb-3" />
-      {hasSlips ? (
-        <>
-          <p className="text-sm text-slate-400 mb-1">No slips match your filters.</p>
-          <p className="text-[10px] text-slate-600">Try changing the filter or search term.</p>
-        </>
-      ) : (
-        <>
-          <p className="mb-1 text-sm text-white/55">No saved slips yet.</p>
-          <p className="text-[10px] text-white/35">Save a decision to begin a track record.</p>
-        </>
-      )}
-    </div>
-  );
+  return <AuroraMaxFallback title={hasSlips ? 'No matching receipts' : 'No saved slips'} detail={hasSlips ? 'Change the active filter or search term to restore receipt rows.' : 'Save a researched decision to begin a traceable track record.'} />;
 }

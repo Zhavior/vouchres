@@ -7,6 +7,7 @@ import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
 import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
+import { useAuthSession } from '../lib/authSessionStore';
 import '../index.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
@@ -14,10 +15,12 @@ type NavigationState = ReturnType<typeof useSectionNavigation>;
 patchPublicNotificationsFetch();
 
 function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }) {
+  const authSession = useAuthSession();
   const bootstrap = useAppBootstrap({
     activeSection: navigation.activeSection,
     commitSection: navigation.commitSection,
     isLoggedIn: navigation.isLoggedIn,
+    authUser: authSession.session?.user ?? null,
   });
   const domain = useAppDomain({
     accountId: bootstrap.accountId,
@@ -38,6 +41,19 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
     bootstrap.profile.discordGuildMember === true && bootstrap.profile.discordBetaAccess === true
   );
   const canUseAccountSetup = navigation.activeSection === 'settings' || navigation.activeSection === 'profile';
+
+  if (bootstrap.authProfileLoading && !canUseAccountSetup) {
+    return (
+      <div className="z8-app-shell flex min-h-screen items-center justify-center bg-black px-6 text-white">
+        <div className="w-full max-w-lg rounded-3xl border border-vouch-cyan/20 bg-white/[0.04] p-8 text-center shadow-2xl">
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-vouch-cyan">Checking account access</p>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            Restoring your VouchEdge session and Discord access status…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!discordBetaVerified && !canUseAccountSetup) {
     return (

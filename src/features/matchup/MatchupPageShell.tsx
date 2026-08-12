@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Flame, ShieldAlert, Sparkles, Activity } from 'lucide-react';
 import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y } from '../../theme/auroraTokens';
+import '../hr/hr-aurora-max.css';
 
 export function MatchupPageShell({
   active,
@@ -20,7 +21,7 @@ export function MatchupPageShell({
   };
 
   return (
-    <main className={`${AURORA_PAGE} matchup-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+    <main className={`${AURORA_PAGE} hr-pro-aurora-max matchup-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1380px] flex-col ${AURORA_PAGE_GAP}`}>
         {/* Unified Matchup Header Hero */}
         <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a121e] via-[#070c14] to-[#04080e] p-6 sm:p-8 shadow-2xl">

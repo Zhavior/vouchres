@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { LayoutGrid, TrendingUp, Layers, Grid, Flame } from "lucide-react";
 import { WORKSPACE_TABS } from "./constants";
 import type { WorkspaceView } from "./types";
@@ -21,7 +20,7 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
   return (
     <nav
       aria-label="HR Intelligence Workspace View"
-      className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-1.5 backdrop-blur-xl no-scrollbar"
+      className="hr-workspace-switcher flex items-center gap-1.5 overflow-x-auto border border-white/10 bg-black/40 p-1.5 backdrop-blur-xl no-scrollbar"
     >
       {WORKSPACE_TABS.map((tab) => {
         const isActive = value === tab.id;
@@ -35,21 +34,13 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
             onClick={() => onChange(tab.id)}
             title={tab.description}
             className={[
-              "group relative flex min-h-[42px] shrink-0 items-center gap-2.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-200 select-none",
+              "group relative flex min-h-[42px] shrink-0 items-center gap-2.5 border px-4 py-2 text-xs font-bold transition-colors duration-200 select-none",
               isActive
-                ? "text-vouch-cyan shadow-[0_0_20px_rgba(79,184,220,0.18)]"
-                : "text-white/60 hover:bg-white/[0.06] hover:text-white cursor-pointer",
+                ? "border-vouch-emerald/30 bg-vouch-emerald/[0.08] text-vouch-emerald shadow-[inset_2px_0_rgba(0,217,160,0.75)]"
+                : "border-transparent text-white/60 hover:border-white/10 hover:bg-white/[0.04] hover:text-white cursor-pointer",
             ].join(" ")}
           >
-            {isActive && (
-              <motion.div
-                layoutId="workspace-active-pill"
-                className="absolute inset-0 rounded-xl border border-vouch-cyan/40 bg-gradient-to-r from-vouch-cyan/15 to-emerald-500/10"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
-
-            <span className={`relative z-10 transition-transform duration-200 ${isActive ? "text-vouch-cyan scale-110" : "text-white/50 group-hover:text-white"}`}>
+            <span className={`relative z-10 ${isActive ? "text-vouch-emerald" : "text-white/50 group-hover:text-white"}`}>
               {icon}
             </span>
 
@@ -73,4 +64,3 @@ export default function WorkspaceSwitcher({ value, onChange }: Props) {
     </nav>
   );
 }
-

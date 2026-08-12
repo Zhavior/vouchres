@@ -77,3 +77,9 @@ export function auroraStatusColor(token: string): string {
 export const AURORA_PAGE_PAD_X = 'px-3 sm:px-4';
 export const AURORA_PAGE_PAD_Y = 'py-4 lg:py-5';
 export const AURORA_PAGE_GAP = 'space-y-4 sm:space-y-5';
+
+/** Aurora Max is the 2026 structural layer shared by every routed surface. */
+export const AURORA_MAX_SHELL = 'aurora-max-shell';
+export const AURORA_MAX_PANEL = 'aurora-max-panel';
+export const AURORA_MAX_CONTROL = 'aurora-max-control';
+export const AURORA_MAX_EYEBROW = 'aurora-max-eyebrow';

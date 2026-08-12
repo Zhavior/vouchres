@@ -1,5 +1,14 @@
 import PlayerResearchDecisionCard from '@/components/player/PlayerResearchDecisionCard';
 import { AuroraDisclosure } from '@/components/aurora/decision/AuroraDisclosure';
+import {
+  AuroraMaxCommandHeader,
+  AuroraMaxFallback,
+  AuroraMaxMetricStrip,
+  AuroraMaxPanel,
+  AuroraMaxProductMark,
+  AuroraMaxRankedWorkspace,
+  AuroraMaxTruthBadge,
+} from '@/components/aurora-max/AuroraMaxPrimitives';
 import { useMemo, useState } from 'react';
 import {
   Activity,
@@ -30,7 +39,6 @@ import {
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL,
   AURORA_SECTION_HEADER,
-  AURORA_SURFACE,
 } from '../../theme/auroraTokens';
 import {
   buildPlayerPayload,
@@ -39,6 +47,7 @@ import {
   useHrBoardProData,
 } from './proLabData';
 import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
+import '../../features/hr/hr-aurora-max.css';
 
 const MAX_VISIBLE_PLAYERS = 30;
 
@@ -107,29 +116,6 @@ function getLineupLabel(row: any): string {
   return 'Unavailable';
 }
 
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: typeof Activity;
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className="border-l border-white/10 pl-4 first:border-l-0 first:pl-0">
-      <div className={`flex items-center gap-2 ${AURORA_LABEL} text-white/40`}>
-        <Icon className="h-3.5 w-3.5 text-vouch-cyan" aria-hidden="true" />
-        {label}
-      </div>
-      <div className="mt-2 truncate text-xl font-black tracking-tight text-white">{value}</div>
-      <div className="mt-0.5 text-[11px] text-white/45">{detail}</div>
-    </div>
-  );
-}
-
 export default function PlayerEdgeLabPageZ8() {
   const { rows, loading, error, source } = useHrBoardProData();
   const { isPro } = useEntitlements();
@@ -161,8 +147,24 @@ export default function PlayerEdgeLabPageZ8() {
   const researchUpdatedAt = formatResearchUpdatedAt(research?.updatedAt);
 
   return (
-    <main className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
+    <main className={`${AURORA_PAGE} aurora-max-shell hr-pro-aurora-max ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className="mx-auto max-w-[1600px] space-y-4">
+        <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-3">
+          <AuroraMaxProductMark />
+          <AuroraMaxTruthBadge state={source === 'network' ? 'live' : loading ? 'projected' : 'missing'}>
+            {loading ? 'Reading HR Board' : source === 'network' ? 'Official feed connected' : 'Feed unavailable'}
+          </AuroraMaxTruthBadge>
+        </div>
+        <AuroraMaxCommandHeader
+          eyebrow="Player research / MLB evidence desk"
+          title="Research the player. Read the receipt."
+          description="A grounded player workspace built from the current HR Board row and available official MLB evidence. Missing inputs remain visible; no substitute players, odds, or outcomes are created."
+          meta={
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
+              {researchUpdatedAt ? `Updated ${researchUpdatedAt}` : 'Awaiting research response'}
+            </div>
+          }
+        />
         <section className="relative overflow-hidden border border-white/10 bg-black/30">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(31,226,255,0.14),transparent_34%),radial-gradient(circle_at_86%_18%,rgba(74,222,128,0.10),transparent_32%)]" />
           <div className="relative grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-7">
@@ -179,29 +181,21 @@ export default function PlayerEdgeLabPageZ8() {
                   </span>
                 </div>
 
-                <p className={`mt-5 ${AURORA_LABEL} text-white/35`}>VOUCHEDGE PLAYER LAB</p>
-                <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl lg:text-5xl">
-                  Player research, presented with evidence
-                </h1>
+                <p className={`mt-5 ${AURORA_LABEL} text-white/35`}>CURRENT RESEARCH CONTEXT</p>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55 sm:text-base">
-                  Aurora turns the current HR Board payload and available MLB research into a clear answer, its trust state, and the evidence behind it.
+                  The focus card below is the only player context used by this workspace. Research is a read of available evidence, not a guarantee.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 sm:grid-cols-4">
-                <Metric icon={Database} label="Player pool" value={String(rows.length)} detail="current board rows" />
-                <Metric icon={Target} label="Edge score" value={score === null ? '—' : String(score)} detail="selected player" />
-                <Metric icon={Activity} label="Data confidence" value={confidence === null ? '—' : `${confidence}%`} detail="payload completeness" />
-                <Metric
-                  icon={Radar}
-                  label="Research feed"
-                  value={researchLoading ? 'Loading' : researchSource === 'network' && research ? 'Available' : 'Unavailable'}
-                  detail="MLB evidence layer"
-                />
-              </div>
+              <AuroraMaxMetricStrip items={[
+                { label: 'Player pool', value: rows.length, icon: <Database className="h-3.5 w-3.5" />, tone: source === 'network' ? 'live' : 'warning' },
+                { label: 'Edge score', value: score ?? '—', icon: <Target className="h-3.5 w-3.5" />, tone: 'neutral' },
+                { label: 'Data confidence', value: confidence === null ? '—' : `${confidence}%`, icon: <Activity className="h-3.5 w-3.5" />, tone: confidence !== null && confidence >= 70 ? 'confirmed' : 'warning' },
+                { label: 'Research feed', value: researchLoading ? 'Loading' : researchSource === 'network' && research ? 'Live' : 'Missing', icon: <Radar className="h-3.5 w-3.5" />, tone: researchSource === 'network' && research ? 'live' : 'warning' },
+              ]} />
             </div>
 
-            <div className="relative min-h-[260px] overflow-hidden border border-white/10 bg-white/[0.025] p-5">
+            <AuroraMaxPanel className="relative min-h-[260px] overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(31,226,255,0.08),transparent_48%,rgba(74,222,128,0.06))]" />
               {selectedRow ? (
                 <div className="relative flex h-full flex-col justify-between gap-5">
@@ -279,7 +273,7 @@ export default function PlayerEdgeLabPageZ8() {
                   </div>
                 </div>
               )}
-            </div>
+            </AuroraMaxPanel>
           </div>
         </section>
 
@@ -290,7 +284,11 @@ export default function PlayerEdgeLabPageZ8() {
           detail={error ? `${error}. No substitute player data is shown.` : 'Every Aurora panel uses the current HR Board payload and available research response.'}
         />
 
-        <section className={`${AURORA_PANEL} overflow-hidden p-0`}>
+        <AuroraMaxRankedWorkspace
+          title="Choose a player to review"
+          subtitle="Rows come from the current HR Board response. Select a row to load its official research bundle."
+          className="overflow-hidden"
+        >
           <div className={`flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 ${AURORA_SECTION_HEADER}`}>
               <div>
               <div className={`${AURORA_LABEL} text-white/40`}>Player queue</div>
@@ -308,14 +306,10 @@ export default function PlayerEdgeLabPageZ8() {
             aria-label="Select a player to research"
           >
             {loading ? (
-              <div className={`${AURORA_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
-                Loading current candidates…
-              </div>
+              <AuroraMaxFallback compact title="Reading current candidates" detail="Waiting for the HR Board response." />
             ) : null}
             {!loading && !rows.length ? (
-              <div className={`${AURORA_SURFACE} w-[84%] max-w-[300px] min-w-[280px] shrink-0 snap-center first:ml-1 last:mr-6 p-4 text-sm text-white/45`}>
-                No current player rows available.
-              </div>
+              <AuroraMaxFallback compact title="No current player rows" detail="No verified player rows were returned by the HR Board." />
             ) : null}
             {rows.slice(0, MAX_VISIBLE_PLAYERS).map((row, index) => {
               const id = getPlayerId(row);
@@ -387,7 +381,7 @@ export default function PlayerEdgeLabPageZ8() {
               );
             })}
           </div>
-        </section>
+        </AuroraMaxRankedWorkspace>
 
         <section aria-label="Aurora player decision">
           {playerPayload ? (

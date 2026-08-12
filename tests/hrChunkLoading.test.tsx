@@ -16,15 +16,13 @@ vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
   useTogglePlayerVouch: () => ({ mutate: vi.fn(), variables: null }),
 }));
 
-vi.mock('../src/features/hr/components/Social/MostVouchedPlayersPanel', () => new Promise(() => {}));
-
 import HomeRunIntelligencePageZ8 from '../src/features/hr/pages/HomeRunIntelligencePageZ8';
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
 
-describe('HR chunk loading', () => {
-  it('keeps the page visible and reserves space while a Pro chunk is loading', () => {
+describe('HR feature loading', () => {
+  it('renders the complete HR feature without nested chunk placeholders', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
@@ -71,8 +69,6 @@ describe('HR chunk loading', () => {
     render(<HomeRunIntelligencePageZ8 />);
 
     expect(screen.getByRole('heading', { name: /Every bat that can leave the yard/i })).toBeTruthy();
-    const fallback = screen.getByRole('status', { name: /Loading most vouched players/i });
-    expect(fallback).toBeTruthy();
-    expect(fallback.getAttribute('style')).toContain('min-height: 168px');
+    expect(screen.queryByRole('status', { name: /Loading .* (panel|workspace|players)/i })).toBeNull();
   });
 });

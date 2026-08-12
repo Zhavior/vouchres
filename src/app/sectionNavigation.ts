@@ -1,3 +1,5 @@
+import { hasPersistedAuthSession } from '../lib/supabaseClient';
+
 export const DEV_BYPASS_AUTH =
   import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
@@ -90,43 +92,7 @@ export function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
 }
 
 export function hasRealAuthToken() {
-  try {
-    const legacyToken = localStorage.getItem('vouchedge_auth_token');
-    if (legacyToken && legacyToken.length >= 20) {
-      return true;
-    }
-
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (!key) continue;
-      const isSupabaseSessionKey =
-        key === 'vouchedge.auth' ||
-        key === 'vouchedge_auth' ||
-        (key.startsWith('sb-') && key.includes('auth-token'));
-      if (!isSupabaseSessionKey) continue;
-
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-
-      try {
-        const parsed = JSON.parse(raw);
-        const session = parsed?.currentSession ?? parsed;
-        const accessToken = session?.access_token;
-        const userId = session?.user?.id;
-
-        if (accessToken && userId && accessToken.length >= 20) {
-          localStorage.setItem('vouchedge_auth_token', accessToken);
-          return true;
-        }
-      } catch {
-        continue;
-      }
-    }
-  } catch {
-    return false;
-  }
-
-  return false;
+  return hasPersistedAuthSession();
 }
 
 export function saveActiveSection(section: string) {

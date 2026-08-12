@@ -183,8 +183,6 @@
 
 .z8-hr-card-grid .ve-unified-player-card {
   flex: none;
-  content-visibility: auto;
-  contain-intrinsic-size: 22rem;
 }
 
 .z8-hr-map-hit {

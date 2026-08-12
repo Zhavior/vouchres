@@ -75,7 +75,8 @@ function showChunkFallbackUi(): void {
   });
 }
 
-function reloadOnceOnChunkFailure(): void {
+function reloadOnceOnChunkFailure(event?: Event): void {
+  event?.preventDefault();
   if (safeSessionGet(CHUNK_RELOAD_KEY) === "1") {
     safeSessionSet(CHUNK_FAILED_KEY, "1");
     showChunkFallbackUi();
@@ -126,6 +127,17 @@ export function onChunkRecoveryMountSuccess(): void {
   if (typeof window === "undefined") return;
   safeSessionRemove(CHUNK_RELOAD_KEY);
   safeSessionRemove(CHUNK_FAILED_KEY);
+}
+
+/**
+ * Keep the one-reload guard alive long enough for the requested lazy route to
+ * resolve. Clearing it on the first React commit can create a reload loop when
+ * the shell mounts but a stale route chunk fails immediately afterward.
+ */
+export function scheduleChunkRecoveryMountSuccess(delayMs = 8_000): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  const timer = globalThis.setTimeout(onChunkRecoveryMountSuccess, delayMs);
+  return () => globalThis.clearTimeout(timer);
 }
 
 /** Optional hook for app-owned fallback UI when chunk recovery fails twice. */

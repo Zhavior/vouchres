@@ -6,12 +6,12 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { positiveInt, upstreamUnavailable } from "../lib/requestValidators";
 import { requireAuth, requireStaff } from "../middleware/auth";
-import { generationLimiter } from "../middleware/rateLimit";
+import { generationLimiter, mlbReadLimiter } from "../middleware/rateLimit";
+import { buildApiMeta } from "../lib/apiResponseMeta";
 import {
   getActivePlayers,
   getPlayerById,
   getPlayerCount,
-  getPlayerRegistry,
   getPlayerRegistryPayload,
   refreshPlayerRegistry,
   searchPlayers,
@@ -80,7 +80,7 @@ playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(async (req: RequestWithContext, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const playerId = positiveInt(req.params.playerId, "playerId");
     const pitcherRaw = queryString(req.query.pitcherId, 12);
@@ -95,7 +95,21 @@ playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(as
       gamePk,
     });
 
-    return res.json(apiOkFlat(req, research as unknown as Record<string, unknown>));
+    res.setHeader("Cache-Control", "private, max-age=60, stale-while-revalidate=300");
+    return res.json(apiOkFlat(req, {
+      ...research,
+      meta: buildApiMeta({
+        source: "official_mlb_statsapi_statcast",
+        dataQuality: research.warnings.length > 0 ? "limited" : "official_mlb_player_research",
+        updatedAt: research.updatedAt,
+        warnings: research.warnings,
+        cache: {
+          strategy: "player_edge_research_upstream_cache",
+          ttlMs: 60_000,
+          asOf: research.updatedAt,
+        },
+      }),
+    }));
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw registryUnavailable(error);

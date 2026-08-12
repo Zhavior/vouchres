@@ -9,8 +9,8 @@ import {
   type LegLiveProgress,
 } from "../../../domain/parlay/smartParlayProject";
 import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayOsTypes";
-import { auroraStatusColor } from "../../../theme/auroraTokens";
 import { marketStyle } from "./smartSlipStyles";
+import { AuroraMaxTruthBadge, type AuroraMaxTruthState } from '../../aurora-max/AuroraMaxPrimitives';
 
 function resolveOddsLabel(leg: SmartParlayLeg, odds?: number | null): string {
   if (odds != null) return americanLabel(odds);
@@ -18,7 +18,24 @@ function resolveOddsLabel(leg: SmartParlayLeg, odds?: number | null): string {
   return "TBD";
 }
 
-function IdentityChip({ complete }: { complete: boolean }) {
+function legTruthState(status: LegGradeStatus): AuroraMaxTruthState {
+  if (status === 'won') return 'confirmed';
+  if (status === 'lost') return 'warning';
+  if (status === 'void') return 'missing';
+  return 'projected';
+}
+
+function statusColor(token: string): string {
+  if (token === '--ve-accent-cyan') return '#4fb8dc';
+  if (token === '--ve-accent-gold') return '#d99c4a';
+  if (token === '--ve-accent-pink' || token === '--ve-accent-violet') return '#00d9a0';
+  return `hsl(var(${token}))`;
+}
+
+function IdentityChip({ complete, auroraMax = false }: { complete: boolean; auroraMax?: boolean }) {
+  if (auroraMax) {
+    return <AuroraMaxTruthBadge state={complete ? 'confirmed' : 'warning'}>{complete ? 'Graded ID' : 'Link slate'}</AuroraMaxTruthBadge>;
+  }
   if (complete) {
     return (
       <span className="inline-flex items-center gap-0.5 rounded-full border border-emerald-400/35 bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-emerald-300">
@@ -44,6 +61,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
   compact = false,
   isWeak = false,
   showTicketChrome = true,
+  auroraMax = false,
 }: {
   leg: SmartParlayLeg;
   legIndex?: number;
@@ -53,6 +71,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
   compact?: boolean;
   isWeak?: boolean;
   showTicketChrome?: boolean;
+  auroraMax?: boolean;
 }) {
   const oddsLabel = resolveOddsLabel(leg, odds);
   const progress = leg.progress;
@@ -63,8 +82,10 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
 
   return (
     <article
-      className={`relative overflow-hidden rounded-xl border bg-gradient-to-br ${market.glow} backdrop-blur-md transition-all ${
-        showTicketChrome ? "border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" : "border-white/10"
+      className={`relative overflow-hidden border transition-all ${
+        auroraMax
+          ? 'aurora-max-result-leg border-white/[0.08] bg-[#050c0d]/62'
+          : `rounded-xl bg-gradient-to-br ${market.glow} backdrop-blur-md ${showTicketChrome ? "border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" : "border-white/10"}`
       } ${compact ? "p-2.5 pl-3" : "p-3 pl-4"} ${isWeak ? "ring-1 ring-amber-400/50" : ""}`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${market.stripe}`} aria-hidden="true" />
@@ -72,7 +93,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
       <div className="flex gap-2.5">
         {legIndex != null ? (
           <div
-            className="flex h-10 w-6 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-black/50 font-mono text-[9px] font-black text-white/50"
+            className={`flex h-10 w-6 shrink-0 flex-col items-center justify-center border border-white/10 bg-black/50 font-mono text-[9px] font-black text-white/50 ${auroraMax ? '' : 'rounded-md'}`}
             aria-label={`Leg ${legIndex}`}
           >
             <span className="text-[7px] uppercase tracking-widest text-white/25">Leg</span>
@@ -82,14 +103,14 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
         <img
           src={leg.headshotUrl ?? undefined}
           alt=""
-          className={`rounded-lg border border-white/15 bg-black/50 object-cover shrink-0 ring-1 ring-white/10 ${compact ? "h-10 w-10" : "h-11 w-11"}`}
+          className={`border border-white/15 bg-black/50 object-cover shrink-0 ring-1 ring-white/10 ${auroraMax ? '' : 'rounded-lg'} ${compact ? "h-10 w-10" : "h-11 w-11"}`}
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                 <span className="text-[8px] font-black uppercase tracking-widest text-white/40">{market.label}</span>
-                <IdentityChip complete={leg.identityComplete} />
+                <IdentityChip complete={leg.identityComplete} auroraMax={auroraMax} />
                 {isWeak ? (
                   <span className="inline-flex items-center gap-0.5 text-[8px] font-bold uppercase text-amber-300">
                     <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
@@ -105,12 +126,13 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
             </div>
             <div className="text-right shrink-0 flex flex-col items-end gap-1">
               <span className="text-sm font-mono font-black text-cyan-300 tabular-nums">{oddsLabel}</span>
-              <span
-                className="text-[8px] font-bold uppercase tracking-wide"
-                style={{ color: auroraStatusColor(legMeta.token) }}
-              >
-                {legMeta.icon} {legMeta.label}
-              </span>
+              {auroraMax ? (
+                <AuroraMaxTruthBadge state={legTruthState(legStatus)}>{legMeta.label}</AuroraMaxTruthBadge>
+              ) : (
+                <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: statusColor(legMeta.token) }}>
+                  {legMeta.icon} {legMeta.label}
+                </span>
+              )}
               <div className="flex flex-col items-end gap-0.5">
                 {onEdit ? (
                   <button
@@ -135,7 +157,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
           </div>
 
           {progress ? (
-            <div className="mt-2 rounded-lg bg-black/35 border border-cyan-500/15 p-2">
+            <div className={`mt-2 bg-black/35 border border-cyan-500/15 p-2 ${auroraMax ? '' : 'rounded-lg'}`}>
               <div className="flex justify-between text-[9px] font-mono text-cyan-200/80 mb-1">
                 <span>{progress.label}</span>
                 <span className="tabular-nums">{progress.current}/{progress.target}</span>

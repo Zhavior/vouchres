@@ -39,8 +39,8 @@ export default function TodayAuroraHero({
   const firstName = displayName?.trim().split(/\s+/)[0];
 
   return (
-    <section id="today-aurora-hero" data-performance-page="today" data-state={state} className="today-aurora-hero overflow-hidden rounded-[28px] border border-white/12">
-      <div className="today-aurora-hero__grid relative grid min-h-[520px] items-stretch md:min-h-[430px] md:grid-cols-[minmax(0,1.05fr)_minmax(300px,.95fr)]">
+    <section id="today-aurora-hero" data-performance-page="today" data-state={state} className="today-aurora-hero overflow-hidden rounded-2xl border border-white/12">
+      <div className="today-aurora-hero__grid relative grid min-h-[430px] items-stretch md:min-h-[350px] md:grid-cols-[minmax(0,1.08fr)_minmax(300px,.92fr)]">
         <div className="relative z-10 flex flex-col justify-center px-5 pb-6 pt-7 sm:px-8 sm:py-9 lg:px-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/[0.08] px-3 font-mono text-[10px] font-black uppercase tracking-[0.15em] text-vouch-cyan">
