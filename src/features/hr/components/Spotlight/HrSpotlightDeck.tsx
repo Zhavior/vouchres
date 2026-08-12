@@ -36,10 +36,10 @@ function SpotlightCard({
 
   return (
     <article
-      className={`flex min-w-0 flex-col gap-2.5 rounded-2xl border ${accent.ring} bg-gradient-to-b from-white/[0.04] to-black/40 p-3 backdrop-blur-xl ${accent.glow}`}
+      className={`flex min-w-0 flex-col gap-2 rounded-xl border ${accent.ring} bg-gradient-to-b from-white/[0.04] to-black/40 p-2.5 backdrop-blur-xl sm:gap-2.5 sm:rounded-2xl sm:p-3 ${accent.glow}`}
     >
       <div className="flex items-center gap-1.5">
-        <span aria-hidden className="text-sm leading-none">{pick.icon}</span>
+        <span aria-hidden className="text-xs leading-none sm:text-sm">{pick.icon}</span>
         <span className={`truncate font-mono text-[9px] font-black uppercase tracking-[0.12em] ${accent.text}`}>
           {pick.title}
         </span>
@@ -48,14 +48,14 @@ function SpotlightCard({
       <button
         type="button"
         onClick={() => onResearch(row)}
-        className="flex min-w-0 items-center gap-2.5 text-left"
+        className="flex min-w-0 items-center gap-2 text-left sm:gap-2.5"
         aria-label={`Open research for ${row.playerName}`}
       >
-        <span className="flex h-11 w-11 shrink-0 items-end justify-center overflow-hidden rounded-xl border border-white/12 bg-black/50">
+        <span className="flex h-8 w-8 shrink-0 items-end justify-center overflow-hidden rounded-lg border border-white/12 bg-black/50 sm:h-11 sm:w-11 sm:rounded-xl">
           <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={44} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-black tracking-tight text-white">{row.playerName}</span>
+          <span className="block truncate text-[11px] font-black leading-tight tracking-tight text-white sm:text-[13px]">{row.playerName}</span>
           <span className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-white/50">
             {teamLogo ? <img src={teamLogo} alt="" className="h-3 w-3 shrink-0 object-contain" loading="lazy" /> : null}
             <span className="truncate">{row.team} vs {row.opponent}</span>
@@ -64,12 +64,12 @@ function SpotlightCard({
       </button>
 
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/12 bg-black/45 px-2 py-1 font-mono text-[10px]">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/12 bg-black/45 px-1.5 py-0.5 font-mono text-[9px] sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px]">
           <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">{pick.metricLabel}</span>
           <span className={`font-black tabular-nums ${accent.text}`}>{pick.metricValue}</span>
         </span>
         {price ? (
-          <span className="inline-flex shrink-0 items-center rounded-lg border border-white/10 bg-black/35 px-2 py-1 font-mono text-[10px] font-bold tabular-nums text-white/60">
+          <span className="inline-flex shrink-0 items-center rounded-md border border-white/10 bg-black/35 px-1.5 py-0.5 font-mono text-[9px] font-bold tabular-nums text-white/60 sm:rounded-lg sm:px-2 sm:py-1 sm:text-[10px]">
             {price}
           </span>
         ) : null}
@@ -80,9 +80,9 @@ function SpotlightCard({
           type="button"
           onClick={() => onAddToSlip(row)}
           disabled={blocked}
-          className="mt-auto flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-vouch-emerald/40 bg-vouch-emerald/12 px-2 font-mono text-[10px] font-black uppercase tracking-wider text-vouch-emerald transition hover:bg-vouch-emerald/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-auto flex min-h-0 items-center justify-center gap-1 rounded-lg border border-vouch-emerald/40 bg-vouch-emerald/12 px-1.5 py-1 font-mono text-[9px] font-black uppercase tracking-wider text-vouch-emerald transition hover:bg-vouch-emerald/20 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-9 sm:gap-1.5 sm:rounded-xl sm:px-2 sm:py-0 sm:text-[10px]"
         >
-          <Plus className="h-3.5 w-3.5" /> Add to My List
+          <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span className="sm:hidden">My List</span><span className="hidden sm:inline">Add to My List</span>
         </button>
       ) : null}
     </article>
@@ -174,7 +174,7 @@ export function HrSpotlightDeck({ rows, onAddToSlip, onResearch }: HrSpotlightDe
         ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         {picks.map((pick) => (
           <SpotlightCard key={pick.key} pick={pick} onAddToSlip={onAddToSlip} onResearch={onResearch} />
         ))}

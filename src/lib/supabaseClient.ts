@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, type AuthChangeEvent, type Session } from "@supabase/supabase-js";
 
 /**
  * Browser-side Supabase client.
@@ -88,12 +88,33 @@ export async function signUpWithEmail(opts: {
  * Persist session token for legacy helpers (hasRealAuthToken, API client).
  */
 export function persistAuthSession(session: { access_token?: string; user?: { id?: string } } | null | undefined) {
-  if (!session?.access_token || !session.user?.id) return;
   try {
+    if (!session?.access_token || !session.user?.id) {
+      localStorage.removeItem('vouchedge_auth_token');
+      return;
+    }
     localStorage.setItem('vouchedge_auth_token', session.access_token);
   } catch {
     // ignore storage failures
   }
+}
+
+/** Read only the canonical Supabase session, never the stale legacy token copy. */
+export function getPersistedAuthSession(): Session | null {
+  try {
+    const raw = localStorage.getItem('vouchedge.auth');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const session = (parsed.currentSession ?? parsed) as Partial<Session>;
+    if (!session?.access_token || !session.refresh_token || !session.user?.id) return null;
+    return session as Session;
+  } catch {
+    return null;
+  }
+}
+
+export function hasPersistedAuthSession(): boolean {
+  return getPersistedAuthSession() !== null;
 }
 
 /**
@@ -173,16 +194,16 @@ export function getGoogleAuthAvailability(): Promise<boolean | null> {
  * Sign out.
  */
 export async function signOut() {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
 }
 
 /**
  * Listen for auth state changes.
  */
 export function onAuthStateChange(
-  cb: (event: "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | "USER_UPDATED", session: any) => void
+  cb: (event: AuthChangeEvent, session: Session | null) => void
 ) {
   return supabase.auth.onAuthStateChange((event, session) => {
-    cb(event as any, session);
+    cb(event, session);
   });
 }

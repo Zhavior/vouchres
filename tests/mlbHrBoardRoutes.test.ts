@@ -20,7 +20,17 @@ const sampleBoard = {
       warnings: [],
     },
   ],
-  projectedCandidates: [],
+  projectedCandidates: [{
+    playerId: 592451,
+    playerName: "Juan Soto",
+    team: "NYY",
+    gamePk: 777001,
+    hrScore: 84,
+    lineupStatus: "projected_unconfirmed",
+    dataQuality: "projection_preview",
+    warnings: ["Official lineup not posted yet"],
+    internalDebugTrace: "must-not-cross-wire-boundary",
+  }],
   allProjectedCandidates: [],
   pool: {
     totalPlayersChecked: 26,
@@ -127,6 +137,13 @@ describe("mlb hr board routes", () => {
     expect(body.confirmedCandidates).toBeUndefined();
     expect(body.candidateBuckets).toBeUndefined();
     expect(body.candidates).toHaveLength(1);
+    expect(body.projectedCandidates[0]).toMatchObject({
+      playerId: 592451,
+      playerName: "Juan Soto",
+      lineupStatus: "projected_unconfirmed",
+      warnings: ["Official lineup not posted yet"],
+    });
+    expect(body.projectedCandidates[0].internalDebugTrace).toBeUndefined();
   });
 
   it("walls off deep board so it cannot claim confirmed candidates", async () => {

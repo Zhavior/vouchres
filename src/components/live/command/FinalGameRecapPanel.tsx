@@ -1,3 +1,5 @@
+import { AuroraMaxPanel, AuroraMaxTruthBadge } from '../../aurora-max/AuroraMaxPrimitives';
+
 type TeamSummary = {
   name?: string;
   abbreviation?: string;
@@ -60,19 +62,14 @@ export function FinalGameRecapPanel({ game }: FinalGameRecapPanelProps) {
         : "This game separated clearly on execution, run creation, and who controlled the pressure innings.";
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-emerald-400/20 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),linear-gradient(145deg,rgba(6,15,28,0.98),rgba(3,7,14,0.96))] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.45)] sm:p-5">
+    <AuroraMaxPanel as="section" className="relative overflow-hidden p-4 sm:p-5">
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
-              Vouch AI Final Read
-            </span>
-
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-              Postgame
-            </span>
+            <AuroraMaxTruthBadge state="confirmed">Vouch AI Final Read</AuroraMaxTruthBadge>
+            <AuroraMaxTruthBadge state="confirmed">Postgame</AuroraMaxTruthBadge>
           </div>
 
           <h3 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
@@ -84,7 +81,7 @@ export function FinalGameRecapPanel({ game }: FinalGameRecapPanelProps) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 text-xs text-white/55 lg:min-w-60">
+        <div className="border border-white/10 bg-black/25 p-3 text-xs text-white/55 lg:min-w-60">
           <p className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-white/35">
             Result context
           </p>
@@ -109,7 +106,7 @@ export function FinalGameRecapPanel({ game }: FinalGameRecapPanelProps) {
           body="Carry forward lineup pressure, bullpen usage, and which hitters produced quality contact. Those signals matter more than the final score alone."
         />
       </div>
-    </section>
+    </AuroraMaxPanel>
   );
 }
 
@@ -121,7 +118,7 @@ function RecapCard({
   body: string;
 }) {
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/[0.045] p-4">
+    <article className="aurora-max-panel border-white/10 bg-white/[0.045] p-4">
       <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300/80">
         {title}
       </p>

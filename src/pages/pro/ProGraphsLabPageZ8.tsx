@@ -18,6 +18,7 @@ import {
 } from '../../theme/auroraTokens';
 import { AuroraGraphComparisonCard } from './AuroraGraphComparisonCard';
 import { buildPlayerPayload, useHrBoardProData } from './proLabData';
+import '../../features/hr/hr-aurora-max.css';
 import {
   buildAuroraGraphCandidate,
   formatGraphMetric,
@@ -73,8 +74,8 @@ export function ProGraphsLabPageZ8({ embedded = false }: ProGraphsLabPageZ8Props
     <main
       className={
         embedded
-          ? 'min-w-0 font-z8 text-white'
-          : `${AURORA_PAGE} ${AURORA_PAGE_PAD_X} py-6 pb-24 text-white`
+          ? 'hr-pro-aurora-max min-w-0 font-z8 text-white'
+          : `${AURORA_PAGE} hr-pro-aurora-max ${AURORA_PAGE_PAD_X} py-6 pb-24 text-white`
       }
     >
       <div className={AURORA_PAGE_GAP}>

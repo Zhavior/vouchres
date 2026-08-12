@@ -39,6 +39,7 @@ import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
 import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
 import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
 import '../../styles/aurora-sidebar.css';
+import '../../styles/shell-surfaces-aurora-max.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -319,10 +320,10 @@ function FeedSidebar({
               id="brand-logo-id"
               aria-label={FOCUSED_BETA_SHELL_ENABLED ? 'Go to Today' : 'Go to Home Feed'}
             >
-              <VouchEdgeLogo markClassName="h-10 w-10" className="min-w-0" />
+              <VouchEdgeLogo emeraldMark markClassName="h-10 w-10" className="min-w-0" />
               <div className="ve-aurora-brand-status absolute bottom-2.5 right-3 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.65)]" />
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Open Beta · Aurora</span>
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Open Beta · Aurora Max</span>
               </div>
             </button>
             <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />

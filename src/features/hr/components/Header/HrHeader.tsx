@@ -9,7 +9,6 @@ import {
   RefreshCw,
   TriangleAlert,
 } from 'lucide-react';
-import { AURORA_LABEL } from '../../../../theme/auroraTokens';
 import '../../../../styles/command-deck.css';
 import '../../hr-command.css';
 import { localISODate } from '../../utils/localDate';
@@ -108,7 +107,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
     <header className="deck-hero rounded-2xl p-3.5 sm:p-5">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
-          <div className={`${AURORA_LABEL} deck-product-mark !text-[9.5px] font-bold sm:!text-xs`}>
+          <div className="aurora-max-eyebrow deck-product-mark !text-[9.5px] font-bold sm:!text-xs">
             <Crosshair className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
             <span className="min-w-0 truncate">
               Home Run Intelligence<span className="hidden sm:inline"> · MLB Signal Deck</span>

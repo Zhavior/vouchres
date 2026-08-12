@@ -2,23 +2,21 @@ import React, { useMemo } from "react";
 import {
   Layers,
   Flame,
-  TrendingUp,
-  ArrowUpRight,
-  ShieldCheck,
   Plus,
-  Zap,
-  Sparkles,
 } from "lucide-react";
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { oddsDisplay } from "../../../engine/signalScore";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 interface TeamStack {
@@ -34,7 +32,7 @@ interface TeamStack {
   stackRank: number;
 }
 
-export default function SlateStacksView({ rows }: Props) {
+export default function SlateStacksView({ rows, getHrResult }: Props) {
   // Group rows by team and calculate stack scores
   const teamStacks = useMemo<TeamStack[]>(() => {
     const map = new Map<string, HrWatchRow[]>();
@@ -139,24 +137,18 @@ export default function SlateStacksView({ rows }: Props) {
 
   if (rows.length === 0 || teamStacks.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-white/10 bg-black/30 p-12 text-center backdrop-blur-xl">
-        <Layers className="mx-auto h-10 w-10 text-vouch-cyan/40" />
-        <h3 className="mt-3 text-lg font-bold text-white">No Slate Team Stacks Available</h3>
-        <p className="mt-1 text-sm text-white/50">
-          Waiting for slate lineup postings to generate multi-player team HR stacks.
-        </p>
-      </div>
+      <AuroraMaxFallback title="No slate stacks available" detail="Team stacks appear only when slate lineup rows exist. Missing lineup evidence is never replaced with an estimated stack." />
     );
   }
 
   return (
-    <section className="space-y-6">
+    <section className="hr-slate-stacks aurora-max-ranked-workspace space-y-4" data-workspace="stacks">
       {/* ── Header Banner ────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-vouch-cyan/25 bg-gradient-to-r from-vouch-cyan/10 via-black/60 to-emerald-500/10 p-6 backdrop-blur-xl sm:p-8">
+      <div className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 font-mono text-[10px] font-extrabold uppercase tracking-widest text-vouch-cyan">
+              <span className="aurora-max-eyebrow inline-flex items-center gap-1.5 border px-3 py-1">
                 <Layers className="h-3.5 w-3.5" />
                 MLB Team Stacks
               </span>
@@ -254,7 +246,11 @@ export default function SlateStacksView({ rows }: Props) {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <h4 className="text-sm font-bold text-white">{player.playerName}</h4>
-                            <PlayerHrTag player={player} compact />
+                            <PlayerHrTag
+                              player={player}
+                              hrResult={getHrResult?.(player.playerId) ?? null}
+                              compact
+                            />
                           </div>
                           <span className="font-mono text-[10px] text-white/50">
                             Power: {player.hitterPower ?? player.hrScore}

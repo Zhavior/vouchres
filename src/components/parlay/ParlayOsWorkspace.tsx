@@ -29,6 +29,7 @@
 import React, {
   useEffect, useState, useCallback, useRef, useMemo, useId,
 } from 'react';
+import '../../styles/shell-surfaces-aurora-max.css';
 import {
   Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
   ChevronUp, ChevronDown, X, AlertTriangle, Clock3, Archive, ListPlus,
@@ -1421,7 +1422,7 @@ export default function ParlayOsWorkspace({
       `}</style>
 
       <section
-        className={`${AURORA_PAGE} flex flex-col`}
+        className={`${AURORA_PAGE} parlay-os-workspace-aurora-max flex flex-col`}
         aria-label="My List"
       >
         {/* Header */}

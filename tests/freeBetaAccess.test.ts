@@ -2,7 +2,7 @@
  * Free open beta — every feature unlocked, payments off.
  *
  * The paid-path counterparts live in tests/billingRoutes.test.ts,
- * tests/premiumAuroraModel.test.ts, and tests/auroraAccessGate.test.ts, which
+ * tests/premiumAccessModel.test.ts, and tests/auroraAccessGate.test.ts, which
  * pin the beta flags off so both modes stay covered.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

@@ -41,3 +41,26 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Aurora Max finishes at the route boundary: child command modules inherit the same quiet glass contract. */
+.aurora-max-live-games :is(.glass-panel, .glass-panel-strong, .glass-panel-premium, .glass-border) {
+  border-color: rgba(157, 215, 175, 0.14) !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(135deg, rgba(242, 240, 233, 0.032), transparent 50%),
+    rgba(7, 16, 18, 0.82) !important;
+  box-shadow: 0 28px 70px -48px rgba(0, 0, 0, 0.96), inset 0 1px rgba(242, 240, 233, 0.045) !important;
+}
+
+.aurora-max-live-games :is(.rounded-\[2rem\], .rounded-3xl, .rounded-2xl, .rounded-xl, .rounded-lg) {
+  border-radius: 0 !important;
+}
+
+.aurora-max-live-games :is(.bg-\[radial-gradient\(circle_at_top_left\,rgba\(0\,240\,255\,0\.16\)\,transparent_34\%\)\,linear-gradient\(145deg\,rgba\(6\,15\,28\,0\.98\)\,rgba\(3\,7\,14\,0\.96\)\)\], .bg-\[radial-gradient\(circle_at_top_left\,rgba\(16\,185\,129\,0\.16\)\,transparent_34\%\)\,linear-gradient\(145deg\,rgba\(6\,15\,28\,0\.98\)\,rgba\(3\,7\,14\,0\.96\)\)\]) {
+  background-image: none !important;
+  background-color: rgba(7, 16, 18, 0.82) !important;
+}
+
+.aurora-max-live-games [class*='bg-black\/'] {
+  background-color: rgba(4, 11, 13, 0.52) !important;
+}

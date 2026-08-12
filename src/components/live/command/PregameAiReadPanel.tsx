@@ -1,3 +1,5 @@
+import { AuroraMaxPanel, AuroraMaxTruthBadge } from '../../aurora-max/AuroraMaxPrimitives';
+
 type TeamSummary = {
   name?: string;
   abbreviation?: string;
@@ -62,19 +64,14 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
       : "The edge is still forming while VouchEdge waits for confirmed market and lineup context.";
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-vouch-cyan/20 bg-[radial-gradient(circle_at_top_left,rgba(0,240,255,0.16),transparent_34%),linear-gradient(145deg,rgba(6,15,28,0.98),rgba(3,7,14,0.96))] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.45)] sm:p-5">
+    <AuroraMaxPanel as="section" className="relative overflow-hidden p-4 sm:p-5">
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/70 to-transparent" />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">
-              Vouch AI Game Read
-            </span>
-
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-              Pregame
-            </span>
+            <AuroraMaxTruthBadge state="projected">Vouch AI Game Read</AuroraMaxTruthBadge>
+            <AuroraMaxTruthBadge state="projected">Pregame</AuroraMaxTruthBadge>
           </div>
 
           <h3 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
@@ -88,7 +85,7 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 text-xs text-white/55 lg:min-w-60">
+        <div className="border border-white/10 bg-black/25 p-3 text-xs text-white/55 lg:min-w-60">
           <p className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-white/35">
             Game context
           </p>
@@ -113,7 +110,7 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
           body="Once the game starts, this panel gives way to the Live Command Center: score, pitcher/batter matchup, live at-bat feed, win probability, and impact plays."
         />
       </div>
-    </section>
+    </AuroraMaxPanel>
   );
 }
 
@@ -125,7 +122,7 @@ function ReadCard({
   body: string;
 }) {
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/[0.045] p-4">
+    <article className="aurora-max-panel border-white/10 bg-white/[0.045] p-4">
       <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-vouch-cyan/70">
         {title}
       </p>

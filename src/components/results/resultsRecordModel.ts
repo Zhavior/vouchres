@@ -1,6 +1,6 @@
 import type { Parlay } from '../../types';
 
-export interface ResultsAuroraSummary {
+export interface ResultsRecordSummary {
   total: number;
   won: number;
   lost: number;
@@ -13,24 +13,18 @@ export interface ResultsAuroraSummary {
   committedBeforeOutcome: number;
 }
 
-function hasBackendRecord(parlay: Parlay): boolean {
-  return parlay.backendSyncState === 'synced' && Boolean(parlay.backendPickId);
-}
-
-export function buildResultsAuroraSummary(parlays: readonly Parlay[]): ResultsAuroraSummary {
+export function buildResultsRecordSummary(parlays: readonly Parlay[]): ResultsRecordSummary {
   const won = parlays.filter((parlay) => parlay.status === 'WON').length;
   const lost = parlays.filter((parlay) => parlay.status === 'LOST').length;
-  const pending = parlays.filter((parlay) => parlay.status === 'PENDING').length;
-  const voids = parlays.filter((parlay) => parlay.status === 'VOID').length;
   const settled = won + lost;
-  const synced = parlays.filter(hasBackendRecord).length;
+  const synced = parlays.filter((parlay) => parlay.backendSyncState === 'synced' && Boolean(parlay.backendPickId)).length;
 
   return {
     total: parlays.length,
     won,
     lost,
-    pending,
-    voids,
+    pending: parlays.filter((parlay) => parlay.status === 'PENDING').length,
+    voids: parlays.filter((parlay) => parlay.status === 'VOID').length,
     settled,
     winRate: settled > 0 ? Math.round((won / settled) * 100) : null,
     synced,

@@ -72,6 +72,9 @@ export interface HrWatchRow {
   recentHomeRuns?: number | null;
   recentHrGames?: number | null;
   recentGamesChecked?: number | null;
+  /** Verified calendar-window result count, distinct from the recent-game scoring sample. */
+  last7DayHomeRuns?: number | null;
+  last7DayGamesChecked?: number | null;
 
   reasons: string[];
   warnings: string[];

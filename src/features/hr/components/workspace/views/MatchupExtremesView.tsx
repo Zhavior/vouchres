@@ -1,9 +1,12 @@
 import React, { useMemo } from "react";
 
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 type ExtremeMetric =
@@ -268,7 +271,13 @@ import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { Plus } from "lucide-react";
 
-function ExtremeCard({ result }: { result: ExtremeResult }) {
+function ExtremeCard({
+  result,
+  getHrResult,
+}: {
+  result: ExtremeResult;
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
+}) {
   const { definition, row, value } = result;
   const tone = TONE_CLASSES[definition.tone];
   const teamLogoUrl = row.teamLogoUrl || logoByTeamName(row.team);
@@ -358,7 +367,7 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
               <h4 className="text-xl font-black tracking-tight text-white group-hover:text-vouch-cyan transition-colors">
                 {row.playerName}
               </h4>
-              <PlayerHrTag player={row} />
+              <PlayerHrTag player={row} hrResult={getHrResult?.(row.playerId) ?? null} />
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {teamLogoUrl && <img src={teamLogoUrl} alt="" className="h-3.5 w-3.5 object-contain" />}
@@ -465,7 +474,7 @@ function ExtremeCard({ result }: { result: ExtremeResult }) {
   );
 }
 
-export default function MatchupExtremesView({ rows }: Props) {
+export default function MatchupExtremesView({ rows, getHrResult }: Props) {
   const extremes = useMemo(
     () =>
       EXTREME_DEFINITIONS.map((definition) =>
@@ -519,35 +528,20 @@ export default function MatchupExtremesView({ rows }: Props) {
 
   if (rows.length === 0) {
     return (
-      <section className="relative overflow-hidden rounded-3xl border border-dashed border-white/10 bg-zinc-950/60 p-10 text-center">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_45%)]" />
-        <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-400">
-            Workspace intelligence
-          </p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
-            Matchup Extremes
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-            No matchup intelligence is available for the current workspace.
-            Once players are loaded, this view highlights the strongest and
-            weakest signals across today&apos;s board.
-          </p>
-        </div>
-      </section>
+      <AuroraMaxFallback title="No matchup extremes available" detail="Extremes appear only after supported slate metrics arrive. Missing measurements remain unavailable rather than being ranked as zero." />
     );
   }
 
   return (
-    <section className="space-y-8">
-      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
+    <section className="hr-matchup-extremes aurora-max-ranked-workspace space-y-4" data-workspace="extremes">
+      <header className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_36%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
 
         <div className="relative">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
+              <p className="aurora-max-eyebrow">
                 Slate intelligence terminal
               </p>
 
@@ -600,7 +594,7 @@ export default function MatchupExtremesView({ rows }: Props) {
 
       <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
         {extremes.map((result) => (
-          <ExtremeCard key={result.definition.id} result={result} />
+          <ExtremeCard key={result.definition.id} result={result} getHrResult={getHrResult} />
         ))}
       </div>
 

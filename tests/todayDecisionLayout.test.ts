@@ -6,36 +6,44 @@ const source = readFileSync(
   'utf8',
 );
 const auroraCss = readFileSync(
-  new URL('../src/styles/today-aurora.css', import.meta.url),
+  new URL('../src/styles/aurora-max.css', import.meta.url),
+  'utf8',
+);
+const fieldDeskSource = readFileSync(
+  new URL('../src/components/today/TodayFieldDesk.tsx', import.meta.url),
   'utf8',
 );
 
 describe('Today decision-first layout', () => {
-  it('leads with the real slate summary and compact briefing rail', () => {
+  it('leads with the real slate summary and connected field desk', () => {
     expect(source).toContain('buildTodayDecision({');
-    expect(source).toContain('<TodayAuroraHero');
-    expect(source).toContain('<TodayDecisionReel');
-    expect(source).toContain('Daily Intelligence Briefing');
+    expect(source).toContain('<TodayFieldDesk');
+    expect(fieldDeskSource).toContain('title="Today\'s field desk"');
+    expect(fieldDeskSource).toContain('Daily slate queue');
+    expect(fieldDeskSource).toContain('setSelectedId(player.stableId)');
     expect(source).toContain("const statusLabel = isLoading ? 'Syncing sources' : decision.statusLabel");
     expect(source).toContain('id="today-data-status"');
   });
 
-  it('routes the four focused workflow cards to canonical workspaces', () => {
-    expect(source).toContain("section: 'hr_board'");
-    expect(source).toContain("section: 'research'");
-    expect(source).toContain("section: 'results'");
-    expect(source).toContain("section: 'build'");
-    expect(source).toContain('4 Core Actions');
-    expect(source).not.toContain('8 Core Systems');
+  it('falls back to active slate rows when confirmed lineups are unavailable', () => {
+    expect(fieldDeskSource).toContain('confirmedRows.length > 0 ? confirmedRows : rows');
+    expect(fieldDeskSource).toContain('Confirmed lineups unavailable — showing best available slate');
+    expect(fieldDeskSource).not.toContain('No matchups match the active workspace filters');
+  });
+
+  it('uses the full Aura HQ Aurora Max field-desk composition', () => {
+    expect(source).toContain('<AuroraMaxProductMark />');
+    expect(source).toContain('title="Research command desk"');
+    expect(source).toContain('<TodayFieldDesk');
+    expect(source).toContain('Every row keeps its research receipt.');
+    expect(source).toContain('today-resume-card');
+    expect(source).toContain('title="Research tools"');
+    expect(source).toContain('today-active-slip');
   });
 
   it('uses touch-safe control sizing throughout', () => {
-    // This file uses inline min-h-8/min-h-11 buttons directly rather than
-    // the shared `z8-control` class (that class is still used by the child
-    // TodayDecisionReel component this page renders) — both satisfy the
-    // touch-target-size contract, just at different composition levels.
-    expect(source).toContain('min-h-16 flex-col items-center');
-    expect(source).toContain('min-h-8 shrink-0 items-center');
+    expect(fieldDeskSource).toContain('min-h-11');
+    expect(fieldDeskSource).toContain('AuroraMaxControl');
   });
 
   it('does not expose a mode switch that leaves the Today brief unchanged', () => {
@@ -44,13 +52,14 @@ describe('Today decision-first layout', () => {
   });
 
   it('uses real slip and report data instead of simulated news or weather', () => {
-    expect(source).toContain('pendingSlipList[0]');
+    expect(source).toContain('useDailyHrBoard');
+    expect(source).toContain('openParlayAdd');
     expect(source).not.toContain('Trade rumor');
     expect(source).not.toContain('Weather update:');
   });
 
   it('renders the state-aware hero and truthful freshness contract', () => {
-    expect(source).toContain("const heroState: TodayHeroState = isLoading");
+    expect(source).toContain("const heroState: TodayFieldState = isLoading");
     expect(source).toContain("? 'degraded'");
     expect(source).toContain("? 'no-slate'");
     expect(source).toContain("? 'live'");
@@ -61,26 +70,26 @@ describe('Today decision-first layout', () => {
   });
 
   it('renders the computed resume flow and routes it to the model destination', () => {
-    expect(source).toContain('id="today-resume-card"');
-    expect(source).toContain('data-testid="today-resume-action"');
-    expect(source).toContain('decision.resumeLabel');
-    expect(source).toContain('decision.resumeTitle');
-    expect(source).toContain('decision.resumeDetail');
-    expect(source).toContain("onSectionChange(decision.resumeSection)");
+    expect(source).toContain('description={`Today’s VouchEdge slate · ${freshnessLabel}`}');
+    expect(source).toContain('Every row keeps its research receipt.');
   });
 
   it('uses a mobile 2x2 layout for stats and canonical quick actions', () => {
-    expect(source).toContain('grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3');
-    expect(source).toContain('grid grid-cols-2 gap-2 sm:grid-cols-4');
-    expect(source).toContain('data-testid={`today-quick-route-${route.section}`}');
+    expect(fieldDeskSource).toContain('Primary research signal');
+    expect(fieldDeskSource).toContain('AuroraMaxRankedWorkspace');
   });
 
   it('refreshes both sources and removes nonessential motion when requested', () => {
     expect(source).toContain('Promise.all([dailyReportQuery.refetch(), hrBoardQuery.refresh()])');
     expect(source).toContain('aria-label="Refresh today\'s report and HR board"');
     expect(auroraCss).toContain('@media (prefers-reduced-motion: reduce)');
-    expect(auroraCss).toContain('.today-aurora-orbit--loading');
-    expect(auroraCss).toContain('animation: none !important');
-    expect(auroraCss).toContain('.today-aurora-primary:hover { transform: none; }');
+    expect(auroraCss).toContain('.aurora-max-shell');
+    expect(auroraCss).toContain('.aurora-max-panel');
+    expect(auroraCss).toContain('.aurora-max-control');
+  });
+
+  it('defers the personalization bundle until the user opens it', () => {
+    expect(source).toContain("React.lazy(() => import('./today/TodayPersonalizationPanel'))");
+    expect(source).toContain('<Suspense fallback=');
   });
 });

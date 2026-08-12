@@ -13,6 +13,7 @@ import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog"
 import { notify } from "../../../lib/appNotifications";
 import { useAutoRepairDraftIdentity } from "../../../hooks/useAutoRepairDraftIdentity";
 import PlayerHeadshot from "../../parlays/PlayerHeadshot";
+import "../../../styles/shell-surfaces-aurora-max.css";
 
 export type ParlayOsLayerProps = {
   onConfirmTier: (tier: ParlayMarketTier) => void;
@@ -92,7 +93,7 @@ export default function ParlayOsLayer({
               role="dialog"
               aria-modal="false"
               aria-label="My List"
-              className="fixed inset-x-2.5 bottom-[5.25rem] z-[90] flex h-[min(78dvh,720px)] flex-col overflow-hidden rounded-lg border border-cyan-300/30 bg-[radial-gradient(circle_at_85%_0%,rgba(0,240,255,0.1),transparent_30%),linear-gradient(155deg,#07131c_0%,#02070c_72%)] shadow-[0_32px_100px_rgba(0,0,0,0.74),0_0_32px_rgba(0,240,255,0.09),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl lg:inset-x-auto lg:bottom-5 lg:right-5 lg:h-[min(86vh,780px)] lg:w-[410px]"
+              className="parlay-os-aurora-max fixed inset-x-2.5 bottom-[5.25rem] z-[90] flex h-[min(78dvh,720px)] flex-col overflow-hidden border backdrop-blur-xl lg:inset-x-auto lg:bottom-5 lg:right-5 lg:h-[min(86vh,780px)] lg:w-[410px]"
             >
               <header className="flex shrink-0 items-center gap-2.5 border-b border-white/10 bg-black/10 px-3.5 py-2.5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-md border border-cyan-300/25 bg-cyan-300/10">

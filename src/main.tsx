@@ -5,7 +5,7 @@ import { AppErrorBoundary } from './components/system/AppErrorBoundary';
 import {
   clearChunkRecoveryFlag,
   initChunkRecovery,
-  onChunkRecoveryMountSuccess,
+  scheduleChunkRecoveryMountSuccess,
 } from './lib/chunkRecovery';
 import { initSentry } from './lib/sentry';
 
@@ -23,7 +23,7 @@ clearChunkRecoveryFlag();
 
 function ChunkRecoveryBootMarker() {
   useEffect(() => {
-    onChunkRecoveryMountSuccess();
+    return scheduleChunkRecoveryMountSuccess();
   }, []);
   return null;
 }

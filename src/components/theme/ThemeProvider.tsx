@@ -211,6 +211,7 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
     const root = document.documentElement;
     root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
     root.setAttribute('data-vouchedge-system', 'aurora');
+    root.setAttribute('data-aurora-generation', 'max');
     root.setAttribute('data-theme', 'z8-premium');
     root.setAttribute('data-vouchedge-theme', 'z8-premium');
   }, []);

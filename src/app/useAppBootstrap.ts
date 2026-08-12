@@ -25,6 +25,7 @@ import { setAccountStorageScope } from '../lib/accountStorage';
 import { queryClient } from '../lib/queryClient';
 import { queryKeys } from '../hooks/queries/queryKeys';
 import { INITIAL_PROFILE } from '../data/mockData';
+import type { User } from '@supabase/supabase-js';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -46,13 +47,28 @@ type UseAppBootstrapArgs = {
   activeSection: string;
   commitSection: (section: string) => void;
   isLoggedIn: boolean;
+  authUser: User | null;
 };
 
-export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: UseAppBootstrapArgs) {
+export function useAppBootstrap({ activeSection, commitSection, isLoggedIn, authUser }: UseAppBootstrapArgs) {
   const gradingRef = useRef(false);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [authProfileLoading, setAuthProfileLoading] = useState(Boolean(authUser));
   const [, setIsGrading] = useState(false);
   const [, setGradingLastChecked] = useState<Date | null>(null);
+  const authUserId = authUser?.id ?? '';
+  const authEmail = authUser?.email;
+  const authHandle = typeof authUser?.user_metadata?.handle === 'string'
+    ? authUser.user_metadata.handle
+    : undefined;
+  const authUsername = typeof authUser?.user_metadata?.username === 'string'
+    ? authUser.user_metadata.username
+    : undefined;
+  const authDisplayNameValue = authUser?.user_metadata?.display_name ?? authUser?.user_metadata?.full_name;
+  const authDisplayName = typeof authDisplayNameValue === 'string' ? authDisplayNameValue : undefined;
+  const authAvatarUrl = typeof authUser?.user_metadata?.avatar_url === 'string'
+    ? authUser.user_metadata.avatar_url
+    : undefined;
 
   const posts = useFeedStore(selectPosts);
   const syncPosts = useFeedStore(selectSyncPosts);
@@ -84,6 +100,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
 
   useEffect(() => {
     if (!isLoggedIn) {
+      setAuthProfileLoading(false);
       setAccountId(null);
       setAccountStorageScope(null);
       useFeedStore.getState().hydrateFromStorage();
@@ -95,32 +112,74 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
       return;
     }
 
-    // Never show anonymous or a prior account's browser cache during account bootstrap.
-    setAccountId(null);
-    useFeedStore.setState({ posts: [] });
-    useSlipsStore.setState({ savedSlips: [] });
-    useVouchesStore.setState({ savedVouches: [] });
-    useProfileStore.setState({ profile: INITIAL_PROFILE });
+    if (authUserId) {
+      setAuthProfileLoading(true);
+      // Scope and hydrate immediately from the authenticated session. A slow or
+      // failed profile request must not turn the account shell into a guest UI.
+      setAccountStorageScope(authUserId);
+      useFeedStore.getState().hydrateFromStorage();
+      useSlipsStore.getState().hydrateFromStorage();
+      useProfileStore.getState().hydrateFromStorage();
+      useVouchesStore.getState().hydrateFromStorage();
+      useParlayCommandStore.getState().hydrateDraftSession();
+
+      const current = useProfileStore.getState().profile;
+      const fallback = mapAuthMeToCreatorProof({
+        id: authUserId,
+        email: authEmail,
+        handle: authHandle,
+        username: authUsername,
+        display_name: authDisplayName,
+        avatar_url: authAvatarUrl,
+      }, current);
+      syncProfile(fallback);
+      syncAnalyticsProfile(authUserId, fallback);
+      setAccountId(authUserId);
+    } else {
+      // Development bypass can intentionally render without a real session.
+      setAccountId(null);
+      useFeedStore.setState({ posts: [] });
+      useSlipsStore.setState({ savedSlips: [] });
+      useVouchesStore.setState({ savedVouches: [] });
+      useProfileStore.setState({ profile: INITIAL_PROFILE });
+    }
 
     let cancelled = false;
-    void fetchAuthMe().then((data) => {
-      const userId = String(data?.id ?? '');
-      if (cancelled || !userId) return;
-      setAccountStorageScope(userId);
-      useParlayCommandStore.getState().hydrateDraftSession();
-      queryClient.removeQueries({ queryKey: queryKeys.myParlays() });
-      queryClient.removeQueries({ queryKey: queryKeys.myVouches() });
-      queryClient.removeQueries({ queryKey: queryKeys.feed() });
-      useProfileStore.getState().hydrateFromStorage();
-      const current = useProfileStore.getState().profile;
-      const nextProfile = mapAuthMeToCreatorProof(data as unknown as Record<string, unknown>, current);
-      syncProfile(nextProfile);
-      syncAnalyticsProfile(userId, nextProfile);
-      setAccountId(userId);
-    });
+    void fetchAuthMe()
+      .then((data) => {
+        const userId = String(data?.id ?? '');
+        if (cancelled || !userId) return;
+        setAccountStorageScope(userId);
+        useParlayCommandStore.getState().hydrateDraftSession();
+        queryClient.removeQueries({ queryKey: queryKeys.myParlays() });
+        queryClient.removeQueries({ queryKey: queryKeys.myVouches() });
+        queryClient.removeQueries({ queryKey: queryKeys.feed() });
+        useProfileStore.getState().hydrateFromStorage();
+        const current = useProfileStore.getState().profile;
+        const nextProfile = mapAuthMeToCreatorProof(data as unknown as Record<string, unknown>, current);
+        syncProfile(nextProfile);
+        syncAnalyticsProfile(userId, nextProfile);
+        setAccountId(userId);
+      })
+      .catch(() => {
+        // Keep the authenticated shell visible, but never leave the Discord
+        // gate in an indeterminate loading state.
+      })
+      .finally(() => {
+        if (!cancelled) setAuthProfileLoading(false);
+      });
 
     return () => { cancelled = true; };
-  }, [isLoggedIn, syncProfile]);
+  }, [
+    authAvatarUrl,
+    authDisplayName,
+    authEmail,
+    authHandle,
+    authUserId,
+    authUsername,
+    isLoggedIn,
+    syncProfile,
+  ]);
 
   useEffect(() => {
     trackReturningSession();
@@ -318,6 +377,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
 
   return {
     accountId,
+    authProfileLoading,
     posts,
     profile,
     savedSlips,

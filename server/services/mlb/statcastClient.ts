@@ -27,6 +27,8 @@ export interface StatcastBatterQuality {
   barrelPct: number | null;
   hardHitPct: number | null;
   avgExitVelo: number | null;
+  avgLaunchAngle: number | null;
+  sweetSpotPct: number | null;
 }
 
 const MIN_PA = 25;
@@ -156,6 +158,8 @@ export async function getSingleYearStatcastBatterMap(
           barrelPct: null,
           hardHitPct: null,
           avgExitVelo: null,
+          avgLaunchAngle: null,
+          sweetSpotPct: null,
         };
       }
 
@@ -175,11 +179,15 @@ export async function getSingleYearStatcastBatterMap(
           barrelPct: null,
           hardHitPct: null,
           avgExitVelo: null,
+          avgLaunchAngle: null,
+          sweetSpotPct: null,
         };
 
         existing.barrelPct = num(row.brl_percent);
         existing.hardHitPct = num(row.ev95percent);
         existing.avgExitVelo = num(row.avg_hit_speed);
+        existing.avgLaunchAngle = num(row.avg_hit_angle);
+        existing.sweetSpotPct = num(row.anglesweetspotpercent);
         map[playerId] = existing;
       }
 
@@ -260,6 +268,8 @@ export async function getStatcastBatterMap(
         barrelPct: blendVal(curr.barrelPct, prev.barrelPct),
         hardHitPct: blendVal(curr.hardHitPct, prev.hardHitPct),
         avgExitVelo: blendVal(curr.avgExitVelo, prev.avgExitVelo),
+        avgLaunchAngle: blendVal(curr.avgLaunchAngle, prev.avgLaunchAngle),
+        sweetSpotPct: blendVal(curr.sweetSpotPct, prev.sweetSpotPct),
       };
     }
   }
@@ -306,9 +316,11 @@ export interface StatcastPitchMixRow {
   pitchUsage: number | null;
   woba: number | null;
   xwoba: number | null;
+  xslg: number | null;
   whiffPct: number | null;
   hardHitPct: number | null;
   pitches: number | null;
+  pa: number | null;
 }
 
 type FeedMapResult<T> = {
@@ -411,12 +423,13 @@ export async function getPlateDisciplineMap(
 }
 
 /** Season pitch-type breakdown per batter from Savant Pitch Arsenal Stats. */
-export async function getPitchMixMapResult(
+export async function getPitchArsenalMapResult(
+  playerType: "batter" | "pitcher",
   year = seasonYear(),
 ): Promise<FeedMapResult<StatcastPitchMixRow[]>> {
-  return loadFeedMap(`pitchMix:v2:${year}`, "pitch-mix", async () => {
+  return loadFeedMap(`pitchArsenal:v3:${playerType}:${year}`, `${playerType}-pitch-arsenal`, async () => {
     const rows = await fetchCsv(
-      `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=pitcher&year=${year}&min=1&csv=true`,
+      `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=${playerType}&year=${year}&min=1&csv=true`,
     );
     const map: Record<number, StatcastPitchMixRow[]> = {};
     for (const row of rows) {
@@ -428,9 +441,11 @@ export async function getPitchMixMapResult(
         pitchUsage: num(row.pitch_usage),
         woba: num(row.woba),
         xwoba: num(row.est_woba) ?? num(row.woba),
+        xslg: num(row.est_slg) ?? num(row.slg),
         whiffPct: num(row.whiff_percent),
         hardHitPct: num(row.hard_hit_percent),
         pitches: num(row.pitches),
+        pa: num(row.pa),
       };
       if (!map[playerId]) map[playerId] = [];
       map[playerId].push(entry);
@@ -440,6 +455,18 @@ export async function getPitchMixMapResult(
     }
     return map;
   });
+}
+
+export async function getPitchMixMapResult(
+  year = seasonYear(),
+): Promise<FeedMapResult<StatcastPitchMixRow[]>> {
+  return getPitchArsenalMapResult("pitcher", year);
+}
+
+export async function getBatterPitchArsenalMapResult(
+  year = seasonYear(),
+): Promise<FeedMapResult<StatcastPitchMixRow[]>> {
+  return getPitchArsenalMapResult("batter", year);
 }
 
 export async function getPitchMixMap(

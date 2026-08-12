@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   AlertTriangle,
   CreditCard,
   FileText,
+  FlaskConical,
+  LayoutTemplate,
   RefreshCw,
   Search,
   Server,
@@ -19,7 +21,9 @@ import {
   AURORA_SECTION_HEADER,
 } from '../../theme/auroraTokens';
 
-type AdminTab = 'overview' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'system';
+const AuroraMax = lazy(() => import('./AuroraMax'));
+
+type AdminTab = 'overview' | 'aurora-max' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'hr-research' | 'system';
 
 interface DashboardStats {
   users: number;
@@ -84,13 +88,50 @@ interface GradingResult {
   details?: { skipped?: Array<{ pick_id?: string; error?: string }> };
 }
 
+interface HrResearchCandidate {
+  playerName: string;
+  team: string;
+  opponent?: string;
+  gamePk: number;
+  hrScore: number;
+  estimatedHrProbability: number | null;
+  riskTier: string;
+  dataConfidence: number;
+  lineupStatus: string;
+  dataQuality: string;
+  reasons: string[];
+  warnings: string[];
+}
+
+interface HrResearchPayload {
+  mode: string;
+  publicImpact: string;
+  production: {
+    date: string;
+    generatedAt: string | null;
+    totalCandidates: number;
+    topCandidates: HrResearchCandidate[];
+    notProductionRouted: boolean;
+  };
+  v2: {
+    status: string;
+    promotionEligible: boolean;
+    pairedObservations: number;
+    positiveOutcomes: number;
+    reasons: string[];
+  };
+  redesign: { version: string; principles: string[] };
+}
+
 const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: LucideIcon }> = [
   { id: 'overview', label: 'Overview', icon: Activity },
+  { id: 'aurora-max', label: 'Aurora Max', icon: LayoutTemplate },
   { id: 'waitlist', label: 'Beta Waitlist', icon: Users },
   { id: 'users', label: 'Users & Roles', icon: UserCog },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'cappers', label: 'Cappers', icon: Shield },
   { id: 'grading', label: 'Grading', icon: FileText },
+  { id: 'hr-research', label: 'HR Research Lab', icon: FlaskConical },
   { id: 'system', label: 'System Health', icon: Server },
 ];
 
@@ -197,11 +238,17 @@ export function AdminDashboard() {
       {activeTab === 'overview' ? (
         <Overview stats={stats} error={statsError} loading={loadingStats} onRefresh={refreshStats} />
       ) : null}
+      {activeTab === 'aurora-max' ? (
+        <Suspense fallback={<div className={`${PANEL} p-5 text-sm text-white/55`}>Loading Aurora Max...</div>}>
+          <AuroraMax />
+        </Suspense>
+      ) : null}
       {activeTab === 'waitlist' ? <Waitlist /> : null}
       {activeTab === 'users' ? <UsersPanel /> : null}
       {activeTab === 'billing' ? <BillingPanel stats={stats} error={statsError} loading={loadingStats} onRefresh={refreshStats} /> : null}
       {activeTab === 'cappers' ? <CappersPanel /> : null}
       {activeTab === 'grading' ? <GradingPanel /> : null}
+      {activeTab === 'hr-research' ? <HrResearchLab /> : null}
       {activeTab === 'system' ? <SystemHealth /> : null}
     </div>
   );
@@ -760,6 +807,89 @@ function SystemHealth() {
         <section className={`${PANEL} overflow-hidden`}><PanelTitle>Dependencies</PanelTitle><div className="grid grid-cols-1 divide-y divide-white/5 sm:grid-cols-3 sm:divide-x sm:divide-y-0"><MetricCell label={`Redis (${health.dependencies.redis.mode})`} value={health.dependencies.redis.enabled ? 'Enabled' : 'Disabled'} /><MetricCell label="Redis writes" value={health.dependencies.redis.writeCapable === null ? 'Not checked' : health.dependencies.redis.writeCapable ? 'Available' : 'Unavailable'} /><MetricCell label="Sentry" value={health.dependencies.sentry.configured ? 'Configured' : 'Not configured'} /></div><div className="grid grid-cols-1 border-t border-white/5 text-xs text-white/45 sm:grid-cols-2"><p className="p-3">Heap used: {health.memory.heapUsedMb} MB</p><p className="p-3">RSS memory: {health.memory.rssMb} MB</p></div></section>
         <section className={`${PANEL} overflow-hidden`}><PanelTitle>Warnings</PanelTitle><div className="p-4 sm:p-5">{health.warnings.length ? <ul className="space-y-2 text-sm text-amber-200">{health.warnings.map((warning) => <li key={warning} className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{warning}</li>)}</ul> : <p className="text-sm text-emerald-200">No backend warnings reported.</p>}</div></section>
         <section className={`${PANEL} overflow-hidden`}><PanelTitle>Configuration checks</PanelTitle><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm text-white/70"><thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45"><tr><th className="px-4 py-3 font-medium">Setting</th><th className="px-4 py-3 font-medium">Present</th><th className="px-4 py-3 font-medium">Required in production</th><th className="px-4 py-3 font-medium">Detail</th></tr></thead><tbody className="divide-y divide-white/5">{configChecks.map((check) => <tr key={check.name}><td className="px-4 py-3 font-mono text-xs text-white">{check.name}</td><td className="px-4 py-3">{check.present ? 'Yes' : 'No'}</td><td className="px-4 py-3">{check.requiredInProduction ? 'Yes' : 'No'}</td><td className="px-4 py-3 text-xs text-white/50">{check.detail ?? 'None'}</td></tr>)}</tbody></table></div></section>
+      </> : null}
+    </div>
+  );
+}
+
+function HrResearchLab() {
+  const [research, setResearch] = useState<HrResearchPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadResearch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const payload = await apiClient.get<HrResearchPayload>('/api/admin/hr-research');
+      setResearch(payload);
+      setError(null);
+    } catch (researchError) {
+      setError(errorMessage(researchError));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadResearch();
+  }, [loadResearch]);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-white">HR Research Lab</h2>
+            <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-100">Staff only · no public impact</span>
+          </div>
+          <p className="mt-1 max-w-3xl text-sm text-white/55">A private redesign preview. Production candidates are shown for comparison; V2 remains separate and cannot replace the live HR board from this page.</p>
+        </div>
+        <button type="button" className={BUTTON} onClick={() => void loadResearch()} disabled={loading}><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh</button>
+      </div>
+
+      {error ? <p className="text-sm text-rose-200">{error}</p> : null}
+      {loading && !research ? <div className={`${PANEL} p-5 text-sm text-white/55`}>Loading the private HR preview...</div> : null}
+
+      {research ? <>
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Production candidates" value={formatNumber(research.production.totalCandidates)} detail={`Board date ${research.production.date}`} />
+          <MetricCard label="Paired V2 observations" value={formatNumber(research.v2.pairedObservations)} detail="Pregame predictions matched to outcomes" />
+          <MetricCard label="V2 positive outcomes" value={formatNumber(research.v2.positiveOutcomes)} detail="Evidence collected so far" />
+          <MetricCard label="Promotion status" value={research.v2.promotionEligible ? 'Eligible' : 'Not eligible'} detail={research.v2.status.replaceAll('_', ' ')} />
+        </section>
+
+        <section className={`${PANEL} overflow-hidden`}>
+          <PanelTitle>What the redesigned board adds</PanelTitle>
+          <ul className="grid gap-3 p-4 text-sm text-white/70 sm:grid-cols-2 sm:p-5">
+            {research.redesign.principles.map((principle) => <li key={principle} className="rounded-md border border-white/8 bg-white/[0.03] p-3">{principle}</li>)}
+          </ul>
+        </section>
+
+        <section className={`${PANEL} overflow-hidden`}>
+          <PanelTitle action={<span className="text-xs text-white/40">Generated {formatDate(research.production.generatedAt)}</span>}>Current board preview</PanelTitle>
+          <div className="border-b border-white/5 px-4 py-3 text-xs text-white/45 sm:px-5">These are current production candidates displayed to preview the redesign layout. This tab does not change their ranking, score, or public visibility.</div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] text-left text-sm text-white/70">
+              <thead className="border-b border-white/5 bg-white/[0.02] text-xs uppercase text-white/45"><tr><th className="px-4 py-3 font-medium">Player</th><th className="px-4 py-3 font-medium">Score</th><th className="px-4 py-3 font-medium">Est. HR</th><th className="px-4 py-3 font-medium">Confidence</th><th className="px-4 py-3 font-medium">Data state</th><th className="px-4 py-3 font-medium">Why</th></tr></thead>
+              <tbody className="divide-y divide-white/5">
+                {research.production.topCandidates.length ? research.production.topCandidates.map((candidate) => <tr key={`${candidate.gamePk}-${candidate.playerName}`}>
+                  <td className="px-4 py-3"><p className="font-medium text-white">{candidate.playerName}</p><p className="text-xs text-white/40">{candidate.team}{candidate.opponent ? ` vs ${candidate.opponent}` : ''} · {candidate.riskTier}</p></td>
+                  <td className="px-4 py-3 font-semibold text-indigo-100">{candidate.hrScore}</td>
+                  <td className="px-4 py-3">{candidate.estimatedHrProbability == null ? 'Not available' : `${(candidate.estimatedHrProbability * 100).toFixed(1)}%`}</td>
+                  <td className="px-4 py-3">{Number.isFinite(candidate.dataConfidence) ? `${Math.round(candidate.dataConfidence * 100)}%` : 'Unknown'}</td>
+                  <td className="px-4 py-3"><span className="rounded-full border border-white/10 px-2 py-1 text-xs">{candidate.lineupStatus} · {candidate.dataQuality}</span></td>
+                  <td className="max-w-[300px] px-4 py-3 text-xs text-white/55">{candidate.reasons.length ? candidate.reasons.join(' · ') : 'No reason returned'}{candidate.warnings.length ? <p className="mt-1 text-amber-200/70">Warning: {candidate.warnings.join(' · ')}</p> : null}</td>
+                </tr>) : <EmptyRow columns={6}>No production candidates returned.</EmptyRow>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className={`${PANEL} p-4 sm:p-5`}>
+          <h3 className="text-sm font-semibold text-white">V2 evidence gate</h3>
+          {research.v2.pairedObservations === 0 ? <p className="mt-2 text-sm text-amber-100/80">No paired V2 players have been evaluated yet. V2 is set aside and has not replaced production.</p> : <p className="mt-2 text-sm text-white/60">V2 has {formatNumber(research.v2.pairedObservations)} paired observations. It still needs to pass the promotion gate before it can be considered for the live board.</p>}
+          {research.v2.reasons.length ? <ul className="mt-3 space-y-1 text-xs text-white/45">{research.v2.reasons.map((reason) => <li key={reason}>• {reason}</li>)}</ul> : null}
+        </section>
       </> : null}
     </div>
   );

@@ -29,6 +29,7 @@ import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
 import { getActiveSport } from '../../sports/registry';
 import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
 import '../../styles/aurora-sidebar.css';
+import '../../styles/shell-surfaces-aurora-max.css';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -242,7 +243,7 @@ function MobileProfileDrawer({
             <div className="border-b border-white/[0.07] px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
               <div className="flex items-center justify-between gap-3 pt-1">
                 <button type="button" onClick={() => go('today')} aria-label="Go to Today" className="min-w-0 rounded-xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
-                  <VouchEdgeLogo markClassName="h-10 w-10" />
+                  <VouchEdgeLogo emeraldMark markClassName="h-10 w-10" />
                 </button>
                 <div className="flex items-center gap-1.5">
                   <NotificationBellButton size="sm" />

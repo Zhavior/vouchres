@@ -175,8 +175,8 @@ function BriefingCard({
   return (
     <article
       data-reel-card
-      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
-      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-[#07111b] shadow-[0_18px_60px_-42px_rgba(0,240,255,0.65)] ${
+      style={{ height: 410, width: 'min(304px, calc(100vw - 40px))' }}
+      className={`group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-lg border bg-[#0b141e] shadow-[0_18px_50px_-44px_rgba(0,0,0,0.95)] ${
         priority ? accent.border : 'border-white/[0.09]'
       }`}
     >
@@ -224,8 +224,8 @@ function PlayerSignalCard({
   return (
     <article
       data-reel-card
-      style={{ height: 468, width: 'min(304px, calc(100vw - 40px))' }}
-      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-vouch-emerald/60 bg-[#061018] shadow-[0_20px_65px_-38px_rgba(0,255,148,0.75)]"
+      style={{ height: 410, width: 'min(304px, calc(100vw - 40px))' }}
+      className="group relative flex max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-vouch-emerald/45 bg-[#0b1515] shadow-[0_20px_55px_-42px_rgba(0,0,0,0.95)]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,148,0.13),transparent_34%)]" />
 

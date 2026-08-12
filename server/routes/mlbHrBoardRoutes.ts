@@ -12,6 +12,7 @@
  *   GET /api/mlb/hr-board/today        → Validated HR candidates + pool summary
  *   GET /api/mlb/hr-board/today/pool   → Today Player Pool summary
  *   GET /api/mlb/hr-board/today/debug  → Debug info (blocked reasons, counts, warnings)
+ *   GET /api/mlb/hr-board/today/v2-shadow → Staff-only uncalibrated V2 diagnostics
  *   GET /api/mlb/hr-board/date/:date   → Same but for a specific date
  *   GET /api/mlb/hr-board/player/:id   → Single player detail
  */
@@ -31,6 +32,7 @@ import { getLiveAtBat } from "../services/mlb/liveAtBatService";
 import { LIVE_HUB_TTL_MS } from "../services/hubs/liveGameHub";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 import { getMaterializedHrResearch } from "../services/mlb/hrResearchSnapshotService";
+import { buildHrV2ShadowReport } from "../services/mlb/hr-engine/v2/shadowService";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { mlbExpensiveReadLimiter, mlbReadLimiter } from "../middleware/rateLimit";
 import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/auth";
@@ -54,6 +56,58 @@ function sameCandidateSequence(left: unknown, right: unknown): boolean {
   return left.every((row, index) => candidateIdentity(row) === candidateIdentity(right[index]));
 }
 
+const COMPACT_CANDIDATE_FIELDS = [
+  "playerId",
+  "playerName",
+  "team",
+  "teamAbbrev",
+  "teamId",
+  "opponent",
+  "gamePk",
+  "opponentPitcherName",
+  "venue",
+  "parkFactor",
+  "hrMultiplier",
+  "weatherBoost",
+  "lineupStatus",
+  "battingOrder",
+  "injuryStatus",
+  "hrScore",
+  "estimatedHrProbability",
+  "recentHomeRuns",
+  "recentHrGames",
+  "recentGamesChecked",
+  "last7DayHomeRuns",
+  "last7DayGamesChecked",
+  "confidenceTier",
+  "dataConfidence",
+  "scoreBreakdown",
+  "riskTier",
+  "status",
+  "reasons",
+  "warnings",
+  "dataQuality",
+  "lastUpdated",
+  "dataSource",
+  "source",
+  "rank",
+  "isConfirmed",
+] as const;
+
+function compactCandidateRow(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const row = value as Record<string, unknown>;
+  const compact: Record<string, unknown> = {};
+  for (const field of COMPACT_CANDIDATE_FIELDS) {
+    if (field in row) compact[field] = row[field];
+  }
+  return compact;
+}
+
+function compactCandidateRows(value: unknown): unknown {
+  return Array.isArray(value) ? value.map(compactCandidateRow) : value;
+}
+
 function compactHrBoardPayload(payload: Record<string, any>): Record<string, unknown> {
   const {
     rows: _rows,
@@ -67,9 +121,10 @@ function compactHrBoardPayload(payload: Record<string, any>): Record<string, unk
     ...rest,
     contractVersion: "hr-board.v2",
     transportMode: "compact",
+    projectedCandidates: compactCandidateRows(payload.projectedCandidates),
     ...(sameCandidateSequence(payload.projectedCandidates, allProjectedCandidates)
       ? {}
-      : { allProjectedCandidates }),
+      : { allProjectedCandidates: compactCandidateRows(allProjectedCandidates) }),
   };
 }
 
@@ -219,6 +274,25 @@ res.json(apiOkFlat(req, {
       } catch (err: any) {
         console.error("[hr-board/today/debug] failed:", err?.message);
         throw upstreamUnavailable("Debug unavailable.", err);
+      }
+    }),
+  );
+
+  /* V2 shadow — real MLB/Statcast inputs, never used for public ranking. */
+  app.get(
+    "/api/mlb/hr-board/today/v2-shadow",
+    requireAuth,
+    requireStaff,
+    mlbExpensiveReadLimiter,
+    asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+      try {
+        const result = await getCachedValidatedHrBoard();
+        const report = await buildHrV2ShadowReport(result.candidates);
+        res.setHeader("Cache-Control", "private, max-age=60, stale-while-revalidate=300");
+        res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
+      } catch (err: any) {
+        console.error("[hr-board/today/v2-shadow] failed:", err?.message);
+        throw upstreamUnavailable("HR V2 shadow diagnostics unavailable.", err);
       }
     }),
   );

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Front Page Lab Visual Check</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import FrontPageLab from '/src/components/admin/FrontPageLab.tsx';
+      import '/src/index.css';
+
+      createRoot(document.getElementById('root')).render(
+        React.createElement('main', { className: 'min-h-screen bg-[#050A14] p-4' }, React.createElement(FrontPageLab)),
+      );
+    </script>
+  </body>
+</html>

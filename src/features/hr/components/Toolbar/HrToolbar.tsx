@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2, LayoutDashboard, ChevronDown, ShieldCheck, TriangleAlert, Layers } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrRiskTier } from '../Cards/HrPlayerCard';
@@ -34,13 +35,6 @@ const TIER_OPTIONS: HrTierFilter[] = [
   { key: 'watch', label: 'Watch' },
   { key: 'sleeper', label: 'Sleeper' },
 ];
-
-const TIER_ACTIVE_CLASSES: Record<string, string> = {
-  elite: 'border-ve-ion/45 bg-ve-ion/10 text-ve-ion',
-  strong: 'border-vouch-emerald/40 bg-vouch-emerald/8 text-vouch-emerald',
-  watch: 'border-ve-fuse/55 bg-ve-graphite/50 text-ve-flash',
-  sleeper: 'border-vouch-amber/35 bg-vouch-amber/8 text-vouch-amber',
-};
 
 function csvEscape(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return '';
@@ -469,7 +463,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
       </div>
 
       {/* Mobile filter sheet */}
-      {filtersOpen && (
+      {filtersOpen ? createPortal(
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Filters">
           <button
             type="button"
@@ -595,8 +589,9 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body,
+      ) : null}
     </>
   );
 };

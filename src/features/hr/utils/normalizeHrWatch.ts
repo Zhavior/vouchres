@@ -211,6 +211,8 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       recentHomeRuns: firstNullableNumber(row, ['recentHomeRuns']),
       recentHrGames: firstNullableNumber(row, ['recentHrGames']),
       recentGamesChecked: firstNullableNumber(row, ['recentGamesChecked']),
+      last7DayHomeRuns: firstNullableNumber(row, ['last7DayHomeRuns']),
+      last7DayGamesChecked: firstNullableNumber(row, ['last7DayGamesChecked']),
       reasons: readReasons(row),
       warnings: readWarnings(row),
       sourceMode: mode,

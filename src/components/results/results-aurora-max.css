@@ -1,0 +1,161 @@
+.results-aurora-max {
+  color: var(--aurora-max-paper);
+  background: transparent;
+}
+
+.results-command-panel {
+  background:
+    linear-gradient(110deg, rgba(0, 217, 160, 0.035), transparent 48%),
+    rgba(5, 12, 13, 0.58);
+  backdrop-filter: blur(18px) saturate(1.06);
+}
+
+.results-calendar__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.results-month-control {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(7.5rem, 1fr) 2.75rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.results-calendar-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.results-calendar-day {
+  min-height: 3.5rem;
+  border-radius: 0 !important;
+}
+
+.results-calendar-day:hover {
+  border-color: rgba(0, 217, 160, 0.3) !important;
+}
+
+.results-key {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid currentColor;
+}
+
+.results-key--won { color: rgba(52, 211, 153, 0.7); background: rgba(52, 211, 153, 0.22); }
+.results-key--lost { color: rgba(248, 113, 113, 0.68); background: rgba(248, 113, 113, 0.18); }
+.results-key--pending { color: rgba(79, 184, 220, 0.68); background: rgba(79, 184, 220, 0.16); }
+
+.results-filter-panel {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.results-search {
+  border-color: rgba(157, 215, 175, 0.14);
+  background: rgba(3, 9, 11, 0.72);
+}
+
+.results-search:focus {
+  border-color: var(--aurora-max-line-strong);
+  box-shadow: 0 0 0 3px rgba(0, 217, 160, 0.08);
+}
+
+.results-filter-grid {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.3rem;
+}
+
+.results-filter-control {
+  border: 1px solid rgba(157, 215, 175, 0.1);
+  background: rgba(5, 12, 13, 0.68);
+  color: rgba(242, 240, 233, 0.48);
+}
+
+.results-filter-control:hover,
+.results-filter-control.is-active {
+  border-color: rgba(79, 184, 220, 0.4);
+  background: rgba(79, 184, 220, 0.12);
+  color: var(--aurora-max-paper);
+}
+
+.results-filter-control.is-active[data-tone='wins'] {
+  border-color: rgba(0, 217, 160, 0.34);
+  background: rgba(0, 217, 160, 0.12);
+  color: rgba(160, 239, 202, 0.94);
+}
+
+.results-filter-control.is-active[data-tone='losses'] {
+  border-color: rgba(248, 113, 113, 0.32);
+  background: rgba(248, 113, 113, 0.1);
+  color: rgba(253, 186, 186, 0.94);
+}
+
+.results-filter-control.is-active[data-tone='pending'] {
+  border-color: rgba(217, 156, 74, 0.34);
+  background: rgba(217, 156, 74, 0.1);
+  color: rgba(240, 201, 143, 0.94);
+}
+
+.results-receipt-workspace {
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(5, 12, 13, 0.54);
+  padding: 0.75rem;
+}
+
+.aurora-max-results-slip {
+  min-width: 0;
+  background: rgba(7, 16, 18, 0.74);
+  content-visibility: auto;
+  contain-intrinsic-size: 260px;
+}
+
+.aurora-max-results-slip[data-result-state='won'] { box-shadow: inset 2px 0 rgba(0, 217, 160, 0.72); }
+.aurora-max-results-slip[data-result-state='lost'] { box-shadow: inset 2px 0 rgba(248, 113, 113, 0.6); }
+.aurora-max-results-slip[data-result-state='pending'] { box-shadow: inset 2px 0 rgba(217, 156, 74, 0.58); }
+.aurora-max-results-slip[data-result-state='void'] { box-shadow: inset 2px 0 rgba(148, 163, 184, 0.45); }
+
+.aurora-max-result-leg {
+  box-shadow: inset 0 1px rgba(242, 240, 233, 0.025);
+}
+
+.results-aurora-max .aurora-max-truth-badge {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.results-partition-mobile {
+  border-top: 1px solid rgba(157, 215, 175, 0.1);
+}
+
+.results-partition-mobile__row {
+  display: grid;
+  grid-template-columns: 0.55rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  border-bottom: 1px solid rgba(157, 215, 175, 0.075);
+}
+
+@media (max-width: 639px) {
+  .results-calendar__header { flex-direction: column; }
+  .results-month-control { width: 100%; }
+  .results-filter-panel { align-items: stretch; flex-direction: column; }
+  .results-filter-grid { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .results-filter-control { min-width: 0; padding-inline: 0.35rem; }
+  .results-receipt-workspace { padding: 0.6rem; }
+}
+
+@media (max-width: 379px) {
+  .results-calendar-day { min-height: 3rem; }
+  .results-calendar-grid { gap: 0.12rem; }
+  .aurora-max-result-leg { padding-inline: 0.45rem; }
+}

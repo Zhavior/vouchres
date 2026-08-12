@@ -97,6 +97,9 @@ export interface ScoredHrCandidate {
   recentHomeRuns?: number;
   recentHrGames?: number;
   recentGamesChecked?: number;
+  /** Verified home runs in the seven-calendar-day window ending on the board date. */
+  last7DayHomeRuns?: number;
+  last7DayGamesChecked?: number;
   confidenceTier?: "elite" | "strong" | "watchlist" | "thin" | "avoid";
   dataConfidence: number;
   scoreBreakdown?: {

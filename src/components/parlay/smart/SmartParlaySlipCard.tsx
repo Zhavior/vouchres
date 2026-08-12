@@ -10,6 +10,7 @@ import { trustLockCountdownLabel } from "../../../lib/trustLockSchedule";
 import type { SmartParlaySlip } from "../../../domain/parlay";
 import { ParlayOsStatusBadge } from "../hub/parlayOsUi";
 import type { SlipGradeStatus } from "../types/parlayOsTypes";
+import { AuroraMaxTruthBadge, type AuroraMaxTruthState } from '../../aurora-max/AuroraMaxPrimitives';
 import {
   deriveSlipDisplayTitle,
   deriveSlipMarketChips,
@@ -31,18 +32,12 @@ function Perforation() {
   );
 }
 
-function resultsShellStyle(status: string): { background: string; border: string } {
+function resultsTruthState(status: string): AuroraMaxTruthState {
   const normalized = String(status ?? "pending").toUpperCase();
-  if (normalized === "WON" || normalized === "won") {
-    return { background: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.25)" };
-  }
-  if (normalized === "LOST" || normalized === "lost") {
-    return { background: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.25)" };
-  }
-  if (normalized === "VOID" || normalized === "void") {
-    return { background: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)" };
-  }
-  return { background: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.18)" };
+  if (normalized === "WON") return 'confirmed';
+  if (normalized === "LOST") return 'warning';
+  if (normalized === "VOID") return 'missing';
+  return 'projected';
 }
 
 export default function SmartParlaySlipCard({
@@ -83,7 +78,6 @@ export default function SmartParlaySlipCard({
   const pickId = String(slip.sourceId ?? "").trim();
   const showTrust = showTrustPanel && Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
   const visibleLegs = slip.legs.slice(0, maxLegs);
-  const resultsStyle = variant === "results" ? resultsShellStyle(slip.status) : null;
   const identitySummary = slip.identity.complete
     ? `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked to slate`
     : `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked — repair before lock`;
@@ -96,6 +90,7 @@ export default function SmartParlaySlipCard({
         legIndex={index + 1}
         odds={legOdds?.[leg.id]}
         compact
+        auroraMax={variant === 'results'}
       />
     ) : (
       <SmartParlayLegRow key={leg.id} leg={leg} legIndex={index + 1} />
@@ -124,23 +119,19 @@ export default function SmartParlaySlipCard({
   const shellClass = isTicket
     ? `rounded-2xl border border-dashed bg-gradient-to-b shadow-lg ${theme.borderClass} ${theme.shellGradient}`
     : variant === "results"
-      ? "rounded-xl p-4 backdrop-blur-md"
+      ? "aurora-max-panel aurora-max-results-slip p-3 sm:p-4"
       : "rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] p-3";
 
   return (
     <article
       className={`relative overflow-hidden flex flex-col ${shellClass} ${className}`.trim()}
-      style={
-        resultsStyle
-          ? { background: resultsStyle.background, border: `1px solid ${resultsStyle.border}` }
-          : undefined
-      }
+      data-result-state={variant === 'results' ? status : undefined}
       aria-label={slip.title}
     >
       {isTicket ? <Perforation /> : null}
 
       <div className={`flex flex-col gap-2 ${isTicket ? "px-3 pt-2 pb-3" : ""}`}>
-        <div className="flex items-start justify-between gap-2">
+        <div className={`flex items-start justify-between gap-2 ${variant === 'results' ? 'flex-col min-[420px]:flex-row' : ''}`}>
           <div className="min-w-0">
             {isTicket ? (
               <div className="flex items-center gap-1.5 mb-1">
@@ -165,7 +156,7 @@ export default function SmartParlaySlipCard({
                 {marketChips.map((chip) => (
                   <span
                     key={chip}
-                    className={`rounded-md border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${theme.chipClass}`}
+                    className={`border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${variant === 'results' ? 'border-white/10 bg-white/[0.035] text-white/50' : `rounded-md ${theme.chipClass}`}`}
                   >
                     {chip}
                   </span>
@@ -177,7 +168,7 @@ export default function SmartParlaySlipCard({
                 `${slip.legCount} leg${slip.legCount !== 1 ? "s" : ""}${lockLabel ? ` · ${lockLabel}` : ""}`}
             </p>
             {slip.oddsLabel && slip.oddsLabel !== "—" ? (
-              <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2 py-1">
+              <div className={`mt-1.5 inline-flex items-center gap-1.5 border border-emerald-400/25 bg-emerald-500/10 px-2 py-1 ${variant === 'results' ? '' : 'rounded-lg'}`}>
                 <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-300/70">Combined</span>
                 <span className="font-mono text-xs font-black text-emerald-300 tabular-nums">{slip.oddsLabel}</span>
               </div>
@@ -194,7 +185,13 @@ export default function SmartParlaySlipCard({
                 }}
               />
             ) : null}
-            {showIdentityBadge ? (
+            {showIdentityBadge && variant === 'results' ? (
+              <div className="mt-1.5">
+                <AuroraMaxTruthBadge state={slip.identity.complete ? 'confirmed' : 'warning'}>
+                  {identitySummary}
+                </AuroraMaxTruthBadge>
+              </div>
+            ) : showIdentityBadge ? (
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <ParlayIdentityBadge identity={slip.identity} />
                 <span className={`text-[9px] ${slip.identity.complete ? "text-emerald-300/70" : "text-amber-300/80"}`}>
@@ -224,7 +221,11 @@ export default function SmartParlaySlipCard({
               </p>
             ) : null}
           </div>
-          <ParlayOsStatusBadge status={status} size="xs" />
+          {variant === 'results' ? (
+            <AuroraMaxTruthBadge state={resultsTruthState(slip.status)}>{status}</AuroraMaxTruthBadge>
+          ) : (
+            <ParlayOsStatusBadge status={status} size="xs" />
+          )}
         </div>
 
         <div

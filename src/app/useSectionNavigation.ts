@@ -14,8 +14,10 @@ import {
   shouldForcePublicLanding,
 } from './sectionNavigation';
 import { persistAuthSession, supabase } from '../lib/supabaseClient';
+import { useAuthSession } from '../lib/authSessionStore';
 
 export function useSectionNavigation() {
+  const authSession = useAuthSession();
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
     return sessionStorage.getItem('vouchedge_entering_edge_island') === 'true';
   });
@@ -136,12 +138,12 @@ export function useSectionNavigation() {
   useEffect(() => {
     if (loggingOut) return;
     if (shouldForcePublicLanding()) return;
-    if (!hasRealAuthToken()) return;
+    if (authSession.status !== 'authenticated') return;
     if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);
     replaceLandingUrl(next);
     commitSection(next);
-  }, [activeSection, commitSection, loggingOut]);
+  }, [activeSection, authSession.status, commitSection, loggingOut]);
 
   useEffect(() => {
     const syncSectionFromLocation = () => {
@@ -160,7 +162,7 @@ export function useSectionNavigation() {
     };
   }, []);
 
-  const isLoggedIn = hasRealAuthToken();
+  const isLoggedIn = DEV_BYPASS_AUTH || authSession.status === 'authenticated';
   const isPublicFrontPageView = isPublicFrontPage(activeSection, isLoggedIn);
   const showGlobalAppChrome = !isPublicFrontPageView;
 

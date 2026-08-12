@@ -1,25 +1,21 @@
 import React, { useMemo, useState } from "react";
 import {
   Grid,
-  Sparkles,
-  Layers,
   Crosshair,
-  Maximize2,
   Plus,
-  Flame,
-  ArrowUpRight,
-  TrendingUp,
-  ShieldAlert,
 } from "lucide-react";
 import type { HrWatchRow } from "../../../types/hrWatch";
+import type { HrCardResult } from "../../Cards/HrPlayerCard";
 import PlayerHeadshot from "../../../../../components/parlays/PlayerHeadshot";
 import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { oddsDisplay } from "../../../engine/signalScore";
+import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
 type AxisMetric = "hitterPower" | "pitcherVulnerability" | "hrScore" | "recentForm" | "parkFactor" | "vouchScore";
@@ -52,7 +48,7 @@ function getMetricValue(row: HrWatchRow, metric: AxisMetric): number {
   }
 }
 
-export default function ProjectionMatrixView({ rows }: Props) {
+export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
   const [xAxisMetric, setXAxisMetric] = useState<AxisMetric>("pitcherVulnerability");
   const [yAxisMetric, setYAxisMetric] = useState<AxisMetric>("hitterPower");
   const [selectedQuadrant, setSelectedQuadrant] = useState<"all" | "q1" | "q2" | "q3" | "q4">("all");
@@ -65,7 +61,7 @@ export default function ProjectionMatrixView({ rows }: Props) {
       const y = Math.min(100, Math.max(0, getMetricValue(row, yAxisMetric)));
 
       // Determine quadrant (threshold = 50)
-      let quadrant: "q1" | "q2" | "q3" | "q4" = "q4";
+      let quadrant: "q1" | "q2" | "q3" | "q4";
       if (x >= 50 && y >= 50) quadrant = "q1"; // Top Right: Elite Target
       else if (x < 50 && y >= 50) quadrant = "q2"; // Top Left: Sneaky Power
       else if (x >= 50 && y < 50) quadrant = "q3"; // Bottom Right: Pitcher Trap
@@ -112,24 +108,18 @@ export default function ProjectionMatrixView({ rows }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-white/10 bg-black/30 p-12 text-center backdrop-blur-xl">
-        <Grid className="mx-auto h-10 w-10 text-vouch-cyan/40" />
-        <h3 className="mt-3 text-lg font-bold text-white">No Projection Matrix Data</h3>
-        <p className="mt-1 text-sm text-white/50">
-          Waiting for slate player projections to map power vs matchup metrics.
-        </p>
-      </div>
+      <AuroraMaxFallback title="No projection matrix data" detail="Waiting for slate player inputs. Missing axis values remain explicitly unavailable and are not synthesized." />
     );
   }
 
   return (
-    <section className="space-y-6">
+    <section className="hr-projection-matrix aurora-max-ranked-workspace space-y-4" data-workspace="matrix">
       {/* ── Matrix Controls Header ───────────────────────────────── */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-vouch-cyan/25 bg-gradient-to-r from-vouch-cyan/10 via-black/60 to-emerald-500/10 p-6 backdrop-blur-xl sm:p-8">
+      <div className="aurora-max-panel flex flex-col gap-4 border p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 font-mono text-[10px] font-extrabold uppercase tracking-widest text-vouch-cyan">
+              <span className="aurora-max-eyebrow inline-flex items-center gap-1.5 border px-3 py-1">
                 <Crosshair className="h-3.5 w-3.5" />
                 2D Projection Matrix
               </span>
@@ -334,7 +324,11 @@ export default function ProjectionMatrixView({ rows }: Props) {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1">
                               <h5 className="truncate text-xs font-bold text-white">{row.playerName}</h5>
-                              <PlayerHrTag player={row} compact />
+                              <PlayerHrTag
+                                player={row}
+                                hrResult={getHrResult?.(row.playerId) ?? null}
+                                compact
+                              />
                             </div>
                             <p className="text-[10px] text-white/50">{row.team} vs {row.opponent}</p>
                           </div>
@@ -378,7 +372,11 @@ export default function ProjectionMatrixView({ rows }: Props) {
                     </span>
                     <div className="flex items-center gap-1.5">
                       <h4 className="text-sm font-extrabold text-white">{row.playerName}</h4>
-                      <PlayerHrTag player={row} compact />
+                      <PlayerHrTag
+                        player={row}
+                        hrResult={getHrResult?.(row.playerId) ?? null}
+                        compact
+                      />
                     </div>
                     <p className="text-[10px] text-white/50">vs {row.pitcherName || "Pitcher TBD"}</p>
                   </div>
