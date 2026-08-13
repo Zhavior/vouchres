@@ -32,4 +32,18 @@ describe('HR Aurora Max page contract', () => {
     expect(v2).not.toMatch(/\blazy\(/);
     expect(v2).not.toMatch(/import\(/);
   });
+
+  it('shows Aurora Max as its own sidebar destination next to Home Run Intelligence', () => {
+    const features = readFileSync('src/lib/featureConfig.ts', 'utf8');
+    const beta = readFileSync('src/app/betaNavigation.ts', 'utf8');
+    const sidebar = readFileSync('src/social/feed/FeedSidebar.tsx', 'utf8');
+    const drawer = readFileSync('src/social/feed/MobileProfileDrawer.tsx', 'utf8');
+
+    expect(features).toContain('id: "hr_aurora_max"');
+    expect(features).toContain('label: "Aurora Max"');
+    expect(beta).toContain("'hr_aurora_max'");
+    expect(sidebar).toContain("id={`sidebar-link-${id}`}");
+    expect(sidebar).toContain("FOCUSED_BETA_SHELL_ENABLED ? (");
+    expect(drawer).toContain("id={`sidebar-link-${item.id}`}");
+  });
 });

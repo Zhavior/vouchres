@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Flame,
   Gamepad2,
+  LayoutTemplate,
   Radio,
   RefreshCw,
   Sparkles,
@@ -262,6 +263,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
         >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
+              { icon: LayoutTemplate, section: 'hr_aurora_max', label: 'Aurora Max', detail: 'Field desk HR board' },
               { icon: Flame, section: 'hr_board', label: 'Research board', detail: 'Ranked HR evidence' },
               { icon: UserRoundSearch, section: 'research', label: 'Player evidence', detail: 'Source dossiers' },
               { icon: BarChart3, section: 'results', label: 'Track record', detail: 'Projection vs outcome' },

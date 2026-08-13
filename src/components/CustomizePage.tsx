@@ -12,6 +12,7 @@ import {
   Grid3x3,
   Home,
   LayoutDashboard,
+  LayoutTemplate,
   LineChart,
   Lock,
   Palette,
@@ -79,6 +80,12 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     label: "Home Run Intelligence",
     description: "Home run board, power spots, and matchup context.",
     icon: Flame,
+  },
+  hr_aurora_max: {
+    id: "hr_aurora_max",
+    label: "Aurora Max",
+    description: "Field desk home run board with ranked evidence and research receipts.",
+    icon: LayoutTemplate,
   },
   mlb_stats: {
     id: "mlb_stats",

@@ -94,6 +94,15 @@ interface NavItemProps {
   showLiveOnAir?: boolean;
 }
 
+function NavBadge({ id }: { id: string }) {
+  if (id !== 'hr_aurora_max') return null;
+  return (
+    <span className="relative z-10 ml-auto shrink-0 rounded-full bg-vouch-cyan/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-vouch-cyan">
+      New
+    </span>
+  );
+}
+
 const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, showLiveOnAir = false }: NavItemProps) {
   const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
@@ -145,6 +154,7 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       <span className="relative z-10 min-w-0 flex-1 truncate text-left text-[12px] font-bold leading-none">
         {label}
       </span>
+      <NavBadge id={id} />
       {showLiveOnAir && (
         <span className="relative z-10 ml-auto shrink-0">
           <SidebarLiveOnAirBadge />
@@ -402,35 +412,53 @@ function FeedSidebar({
               </button>
             )}
           </div>
-          {ungrouped.length > 0 && (
-            <div className="space-y-1">
-              {ungrouped.map(f => (
+          {FOCUSED_BETA_SHELL_ENABLED ? (
+            <div className="space-y-0.5">
+              {sidebarFeatures.map(f => (
                 <NavItem
                   key={f.id}
                   id={f.id}
                   label={f.label}
                   icon={f.icon}
-                  isActive={f.id === 'brain_picks'
-                    ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
-                    : isSidebarItemActive(activeSection, f.id)}
+                  isActive={isSidebarItemActive(activeSection, f.id)}
                   onNavigate={handleNavigate}
+                  showLiveOnAir={liveGamesActive && f.id === 'live_games'}
                 />
               ))}
             </div>
-          )}
+          ) : (
+            <>
+              {ungrouped.length > 0 && (
+                <div className="space-y-1">
+                  {ungrouped.map(f => (
+                    <NavItem
+                      key={f.id}
+                      id={f.id}
+                      label={f.label}
+                      icon={f.icon}
+                      isActive={f.id === 'brain_picks'
+                        ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
+                        : isSidebarItemActive(activeSection, f.id)}
+                      onNavigate={handleNavigate}
+                    />
+                  ))}
+                </div>
+              )}
 
-          {grouped.map(({ group, items }) => (
-            <SidebarSection
-              key={group}
-              group={group}
-              items={items}
-              activeSection={activeSection}
-              onNavigate={handleNavigate}
-              liveGamesActive={liveGamesActive}
-              collapsed={isCollapsed(group)}
-              onToggle={() => toggleGroup(group)}
-            />
-          ))}
+              {grouped.map(({ group, items }) => (
+                <SidebarSection
+                  key={group}
+                  group={group}
+                  items={items}
+                  activeSection={activeSection}
+                  onNavigate={handleNavigate}
+                  liveGamesActive={liveGamesActive}
+                  collapsed={isCollapsed(group)}
+                  onToggle={() => toggleGroup(group)}
+                />
+              ))}
+            </>
+          )}
         </nav>
       </div>
 
