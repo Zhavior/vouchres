@@ -276,13 +276,13 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="ve-hr-drawer fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[var(--ve-hr-panel)] shadow-2xl sm:h-full"
+            className="ve-hr-drawer aurora-max-shell fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-[var(--aurora-max-line-strong)] bg-[rgba(5,11,13,0.97)] shadow-[-24px_0_80px_rgba(0,0,0,0.48)] sm:h-full"
           >
             {/* ── Header ────────────────────────────────────── */}
-            <div className="ve-hr-drawer-header relative shrink-0 border-b border-white/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
+            <div className="ve-hr-drawer-header relative shrink-0 border-b border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] p-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:p-5 sm:pt-5">
               <button
                 onClick={onClose} aria-label="Close"
-                className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:border-vouch-cyan/35 hover:text-vouch-cyan sm:right-4 sm:top-4 sm:h-8 sm:w-8"
+                className="aurora-max-control absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center !p-0 text-white/55 transition hover:!border-[rgba(0,217,160,0.45)] hover:!text-[var(--aurora-max-emerald)] sm:right-4 sm:top-4 sm:h-8 sm:w-8"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -315,12 +315,12 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                   </div>
                   <p className="truncate text-sm text-slate-400">
                     <span className="inline-flex items-center gap-1">
-                      {teamLogo && <img src={teamLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {teamLogo && <img src={teamLogo} alt="" className="h-4 w-4 object-contain" loading="eager" />}
                       {player.team || '—'}
                     </span>
                     <span className="mx-1 text-white/25">vs</span>
                     <span className="inline-flex items-center gap-1">
-                      {oppLogo && <img src={oppLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {oppLogo && <img src={oppLogo} alt="" className="h-4 w-4 object-contain" loading="eager" />}
                       {player.opponent || '—'}
                     </span>
                   </p>
@@ -405,7 +405,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
               {/* LAYERS TAB */}
               {tab === 'layers' && (
                 <div className="flex flex-col gap-5">
-                  <div className="rounded-xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-4">
+                  <div className="aurora-max-panel rounded-xl border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.72)] p-4">
                     <p className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-muted)/0.55)]">
                       <BarChart3 className="h-3.5 w-3.5" />12-Layer Model
                     </p>
@@ -439,7 +439,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                   </div>
 
                   {/* Confidence model note */}
-                  <div className="rounded-xl border border-[hsl(var(--ve-border)/0.24)] bg-[hsl(var(--ve-bg-panel)/0.20)] p-3.5">
+                  <div className="aurora-max-panel rounded-xl border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.62)] p-3.5">
                     <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[hsl(var(--ve-text-muted)/0.50)] mb-1.5">
                       Confidence
                     </p>
@@ -488,7 +488,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                       </p>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-4">
+                    <div className="aurora-max-panel rounded-xl border-[var(--aurora-max-line-strong)] bg-[rgba(8,17,18,0.72)] p-4">
                       <p className="text-sm text-[hsl(var(--ve-text-muted)/0.50)]">
                         No Vegas line available for this player today.
                       </p>
@@ -518,7 +518,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
 
                   {/* Edge bar */}
                   {hasLine && edgeRaw != null && (
-                    <div className="rounded-xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-3.5">
+                    <div className="aurora-max-panel rounded-xl border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.72)] p-3.5">
                       <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[hsl(var(--ve-text-muted)/0.50)] mb-2">
                         Model vs. Book
                       </p>
@@ -545,7 +545,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                   )}
 
                   {/* Explainer */}
-                  <div className="rounded-xl border border-[hsl(var(--ve-border)/0.22)] bg-[hsl(var(--ve-bg-panel)/0.18)] p-3.5">
+                  <div className="aurora-max-panel rounded-xl border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.56)] p-3.5">
                     <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[hsl(var(--ve-text-muted)/0.45)] mb-1.5">
                       How VE Edge Works
                     </p>

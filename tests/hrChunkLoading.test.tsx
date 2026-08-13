@@ -7,7 +7,7 @@ vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
 }));
 
 vi.mock('../src/features/hr/hooks/useProMode', () => ({
-  useProMode: () => [true, vi.fn()],
+  useProMode: () => [false, vi.fn()],
 }));
 
 vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
@@ -22,7 +22,7 @@ import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewMode
 const mockedVm = vi.mocked(useHrBoardViewModel);
 
 describe('HR feature loading', () => {
-  it('renders the complete HR feature without nested chunk placeholders', () => {
+  it('renders the core board without starting Pro-only chunk placeholders', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
@@ -69,6 +69,6 @@ describe('HR feature loading', () => {
     render(<HomeRunIntelligencePageZ8 />);
 
     expect(screen.getByRole('heading', { name: /Every bat that can leave the yard/i })).toBeTruthy();
-    expect(screen.queryByRole('status', { name: /Loading .* (panel|workspace|players)/i })).toBeNull();
+    expect(screen.queryByRole('status', { name: /Loading (Pro|top|most|signal)/i })).toBeNull();
   });
 });

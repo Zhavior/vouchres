@@ -101,11 +101,11 @@ export const HrOverviewDossier: React.FC<HrOverviewDossierProps> = ({
   const formHRs = formLogs.filter((g) => g.hrs > 0).length;
 
   return (
-    <div className={`ve-hr-dossier ve-hr-dossier--${variant}`}>
+    <div className={`aurora-max-shell ve-hr-dossier ve-hr-dossier--${variant}`}>
       {/* Matchup strip — same language as landing cards */}
       <div className="ve-hr-dossier-matchup">
         {teamLogo && (
-          <img src={teamLogo} alt="" className="ve-hr-dossier-matchup-watermark" loading="lazy" decoding="async" />
+          <img src={teamLogo} alt="" className="ve-hr-dossier-matchup-watermark" loading="eager" decoding="async" />
         )}
         <div className="ve-hr-dossier-matchup-inner">
           <div className="flex items-end justify-between gap-3">

@@ -52,6 +52,8 @@ const TRUTH_STYLES: Record<HrWatchRow['truthStatus'], string> = {
   unknown: 'text-white/55',
 };
 
+const ALL_SLATE_INITIAL_GROUPS = 3;
+
 function numberLabel(value: number | null | undefined): string {
   return value == null || !Number.isFinite(value) ? '-' : String(Math.round(value));
 }
@@ -406,13 +408,31 @@ export function HrSpreadsheet({
   // Grouping re-buckets and re-sorts the whole slate, so it must not re-run on
   // every render — expanding a single row was re-sorting all 350 rows.
   const groups = useMemo(() => buildHrMatchupGroups(rows), [rows]);
-  const [selectedGameKey, setSelectedGameKey] = useState('all');
+  // Start on one matchup. Rendering the full slate mounted every player row
+  // and every sticky table header at once, making ordinary reverse scrolling
+  // look like the page was streaming chunks back in.
+  const [selectedGameKey, setSelectedGameKey] = useState<string | null>(null);
+  const [allSlatePageIndex, setAllSlatePageIndex] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
   const matchupRailRef = useRef<HTMLDivElement | null>(null);
   const selectedGameIndex = groups.findIndex((group) => group.key === selectedGameKey);
-  const activeGameKey = selectedGameIndex >= 0 ? selectedGameKey : 'all';
-  const activeGroup = selectedGameIndex >= 0 ? groups[selectedGameIndex] : null;
-  const visibleGroups = activeGroup ? [activeGroup] : groups;
+  const activeGroup = selectedGameKey === 'all'
+    ? null
+    : selectedGameIndex >= 0
+      ? groups[selectedGameIndex]
+      : groups[0] ?? null;
+  const activeGameIndex = activeGroup ? groups.indexOf(activeGroup) : -1;
+  const activeGameKey = activeGroup?.key ?? 'all';
+  // "All slate" is an explicit browsing mode, but it must not recreate the
+  // giant one-shot DOM surface that caused reverse-scroll hitching. Page the
+  // matchup groups instead of letting each request accumulate more DOM.
+  const allSlatePageCount = Math.max(1, Math.ceil(groups.length / ALL_SLATE_INITIAL_GROUPS));
+  const allSlatePage = Math.min(allSlatePageIndex, allSlatePageCount - 1);
+  const allSlateStart = allSlatePage * ALL_SLATE_INITIAL_GROUPS;
+  const visibleGroups = activeGroup
+    ? [activeGroup]
+    : groups.slice(allSlateStart, allSlateStart + ALL_SLATE_INITIAL_GROUPS);
+  const allSlateEnd = allSlateStart + visibleGroups.length;
   const showMarket = useMemo(() => rows.some(hasMarketData), [rows]);
   // Only the table that is actually on screen gets built. Rendering both and
   // hiding one with `lg:hidden` mounted a second full table — on a 350-row
@@ -420,10 +440,10 @@ export function HrSpreadsheet({
   // PlayerHeadshot component per row.
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const previousGroup = groups.length > 0
-    ? groups[selectedGameIndex >= 0 ? (selectedGameIndex - 1 + groups.length) % groups.length : groups.length - 1]
+    ? groups[activeGameIndex >= 0 ? (activeGameIndex - 1 + groups.length) % groups.length : groups.length - 1]
     : null;
   const nextGroup = groups.length > 0
-    ? groups[selectedGameIndex >= 0 ? (selectedGameIndex + 1) % groups.length : 0]
+    ? groups[activeGameIndex >= 0 ? (activeGameIndex + 1) % groups.length : 0]
     : null;
 
   useEffect(() => {
@@ -448,11 +468,11 @@ export function HrSpreadsheet({
 
   const selectAdjacentGame = (direction: -1 | 1) => {
     if (groups.length === 0) return;
-    if (selectedGameIndex < 0) {
+    if (activeGameIndex < 0) {
       setSelectedGameKey(direction > 0 ? groups[0].key : groups[groups.length - 1].key);
       return;
     }
-    const nextIndex = (selectedGameIndex + direction + groups.length) % groups.length;
+    const nextIndex = (activeGameIndex + direction + groups.length) % groups.length;
     setSelectedGameKey(groups[nextIndex].key);
   };
 
@@ -486,7 +506,7 @@ export function HrSpreadsheet({
                   Matchup navigator
                 </p>
                 <span className="border border-white/10 bg-black/30 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-[0.08em] text-white/45">
-                  {activeGroup ? `Game ${selectedGameIndex + 1} of ${groups.length}` : `${groups.length} games`}
+                  {activeGroup ? `Game ${activeGameIndex + 1} of ${groups.length}` : `${groups.length} games`}
                 </span>
               </div>
 
@@ -561,7 +581,10 @@ export function HrSpreadsheet({
             <button
               type="button"
               data-matchup-key="all"
-              onClick={() => setSelectedGameKey('all')}
+              onClick={() => {
+                setAllSlatePageIndex(0);
+                setSelectedGameKey('all');
+              }}
               aria-pressed={activeGameKey === 'all'}
               aria-current={activeGameKey === 'all' ? 'true' : undefined}
               className={`min-h-[76px] min-w-[136px] snap-center border px-3 py-2 text-left transition ${
@@ -636,8 +659,34 @@ export function HrSpreadsheet({
         </section>
       ) : null}
 
+      {activeGameKey === 'all' && allSlatePageCount > 1 ? (
+        <div className="flex flex-col items-start gap-2 border border-white/[0.11] bg-black/25 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-white/55">
+            Showing matchups {allSlateStart + 1}-{allSlateEnd} of {groups.length} to keep the board responsive.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={allSlatePage === 0}
+              onClick={() => setAllSlatePageIndex((current) => Math.max(0, current - 1))}
+              className="border border-white/15 bg-black/30 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-white/70 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Previous matchups
+            </button>
+            <button
+              type="button"
+              disabled={allSlatePage >= allSlatePageCount - 1}
+              onClick={() => setAllSlatePageIndex((current) => Math.min(allSlatePageCount - 1, current + 1))}
+              className="border border-[#00f0ff]/35 bg-[#00f0ff]/[0.07] px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-[#75efff] transition hover:border-[#00f0ff]/65 hover:bg-[#00f0ff]/[0.14] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Next matchups
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {visibleGroups.map((group) => (
-        <article key={group.key} className="overflow-hidden border border-white/12 bg-[hsl(var(--ve-bg-panel)/0.88)] shadow-[0_16px_50px_rgba(0,0,0,0.2)]">
+        <article key={group.key} className="aurora-max-panel overflow-hidden border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
           <header className="relative overflow-hidden border-b border-white/[0.14] bg-[linear-gradient(105deg,rgba(0,255,148,0.065),rgba(0,0,0,0.22)_48%,rgba(0,240,255,0.055))] px-3 py-2.5 sm:px-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">
@@ -666,7 +715,7 @@ export function HrSpreadsheet({
           {!isDesktop ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[360px] border-collapse text-left">
-              <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.08em] text-slate-400 backdrop-blur">
+              <thead className={`${activeGroup ? 'sticky top-0 z-20' : ''} border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.08em] text-slate-400`}>
                 <tr>
                   <th className="p-2">Player</th>
                   <th className="p-2">Score</th>
@@ -703,7 +752,7 @@ export function HrSpreadsheet({
                 {showMarket ? <col className="w-[9%]" /> : null}
                 <col className="w-[18%]" /><col className="w-[16%]" /><col className="w-[10%]" /><col className="w-[210px]" />
               </colgroup>
-              <thead className="sticky top-0 z-20 border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.1em] text-white/62 shadow-[0_3px_10px_rgba(0,0,0,.35)] backdrop-blur">
+              <thead className={`${activeGroup ? 'sticky top-0 z-20' : ''} border-b border-white/18 bg-[#080d14]/95 font-mono text-[9px] font-black uppercase tracking-[0.1em] text-white/62 shadow-[0_3px_10px_rgba(0,0,0,.35)]`}>
                 <tr>
                   <th className="px-3 py-2">Player</th>
                   <th className="px-3 py-2"><span title="Composite matchup score. Not an estimated home-run probability.">Signal score</span></th>

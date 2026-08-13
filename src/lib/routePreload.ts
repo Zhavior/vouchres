@@ -1,47 +1,70 @@
+import { routeModules } from './routeModules';
+
 const preloaded = new Set<string>();
 
-/** Cheap intent-based preload for likely next lazy routes. Paths must match MainViewRouter lazy() imports. */
+/**
+ * Cheap intent-based preload for likely next lazy routes.
+ *
+ * Section aliases live here; actual module paths live exclusively in
+ * routeModules.ts so preloading cannot drift from routed modules.
+ */
 const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
-  feed: () => import('../social/feed/HomeFeedPage'),
-  following: () => import('../pages/FollowingHubPage'),
-  today: () => import('../components/TodayDashboardZ8'),
-  welcome: () => import('../components/TodayDashboardZ8'),
-  island: () => import('../components/TodayDashboardZ8'),
-  vouchedge_intro: () => import('../pages/VouchEdgeTerminalPage'),
-  legacy_studio: () => import('../components/AisLandingPage'),
-  hr_board: () => import('../features/hr/pages/HomeRunIntelligencePageZ8'),
-  brain_picks: () => import('../features/brain/BrainPicksPage'),
-  brain_performance: () => import('../features/brain/BrainPerformancePage'),
-  daily_hr_watch_new: () => import('../features/hr/pages/HomeRunIntelligencePageZ8'),
-  mlb_stats: () => import('../features/mlb-stats/pages/MlbStatHubPage'),
-  daily_players: () => import('../pages/DailyPlayersPageZ8'),
-  live_games: () => import('../components/LiveGamesProZ8'),
-  intel: () => import('../components/MlbIntelligenceHubZ8'),
-  live_parlays: () => import('../components/parlay/ParlayOsWorkspace'),
-  build: () => import('../components/parlay/ParlayOsWorkspace'),
-  board: () => import('../components/VouchBoardZ8'),
-  research: () => import('../components/PlayerResearchHub'),
-  profile: () => import('../components/ProfilePageZ8'),
-  ai_engine: () => import('../components/SmartAiEngine'),
-  ai_pilot: () => import('../features/ai/pages/AiPilotPage'),
-  notifications: () => import('../components/notifications/NotificationsPage'),
-  results: () => import('../components/results/ResultsStudio'),
-  leaderboard: () => import('../components/Leaderboard'),
-  settings: () => import('../components/SettingsPageZ8'),
-  premium: () => import('../components/PremiumSubPage'),
-  customize: () => import('../components/CustomizePage'),
-  subscriber_hub: () => import('../components/SubscriberHub'),
-  nba_nfl: () => import('../components/NbaNflArena'),
-  pro_command_center: () => import('../pages/pro/ProCommandCenterPageZ8'),
-  player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPageZ8'),
-  team_matchup_lab: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
-  pitcher_matchup_intelligence: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
-  pitcher_matchup: () => import('../pages/pro/PitcherMatchupIntelligencePageZ8'),
-  hitter_matchup_zones: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
-  hitter_matchup: () => import('../pages/pro/HitterMatchupZonesPageZ8'),
-  most_vouched_today: () => import('../pages/MostVouchedTodayPageZ8'),
-  most_vouched: () => import('../pages/MostVouchedTodayPageZ8'),
-  pro_graphs_lab: () => import('../components/MlbIntelligenceHubZ8'),
+  feed: routeModules.homeFeed,
+  following: routeModules.following,
+
+  today: routeModules.todayDashboard,
+  welcome: routeModules.todayDashboard,
+  island: routeModules.todayDashboard,
+
+  vouchedge_intro: routeModules.vouchEdgeTerminal,
+  legacy_studio: routeModules.aisLanding,
+
+  hr_board: routeModules.hrBoard,
+  daily_hr_watch_new: routeModules.hrBoard,
+
+  brain_picks: routeModules.brainPicks,
+  brain_performance: routeModules.brainPerformance,
+
+  mlb_stats: routeModules.mlbStats,
+  daily_players: routeModules.dailyPlayers,
+  live_games: routeModules.liveGames,
+
+  intel: routeModules.brainEdge,
+  pro_graphs_lab: routeModules.brainEdge,
+
+  live_parlays: routeModules.parlayOs,
+  build: routeModules.parlayOs,
+
+  board: routeModules.vouchBoard,
+  research: routeModules.research,
+  profile: routeModules.profile,
+
+  ai_engine: routeModules.smartAiEngine,
+  ai_pilot: routeModules.aiPilot,
+
+  notifications: routeModules.notifications,
+  results: routeModules.results,
+  leaderboard: routeModules.leaderboard,
+
+  settings: routeModules.settings,
+  premium: routeModules.premium,
+  customize: routeModules.customize,
+
+  subscriber_hub: routeModules.subscriberHub,
+  nba_nfl: routeModules.nbaNflArena,
+
+  pro_command_center: routeModules.proCommandCenter,
+  player_edge_lab: routeModules.playerEdgeLab,
+
+  team_matchup_lab: routeModules.pitcherMatchup,
+  pitcher_matchup_intelligence: routeModules.pitcherMatchup,
+  pitcher_matchup: routeModules.pitcherMatchup,
+
+  hitter_matchup_zones: routeModules.hitterMatchup,
+  hitter_matchup: routeModules.hitterMatchup,
+
+  most_vouched_today: routeModules.mostVouchedToday,
+  most_vouched: routeModules.mostVouchedToday,
 };
 
 const WARM_NEIGHBORS: Record<string, string[]> = {

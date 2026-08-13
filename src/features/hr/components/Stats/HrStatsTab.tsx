@@ -29,6 +29,7 @@ import {
 } from '../Profile/HrProfileCharts';
 import '../../../../styles/hr-profile.css';
 
+import { AuroraMaxPanel } from '../../../../components/aurora-max/AuroraMaxPrimitives';
 interface HrStatsTabProps {
   player: HrWatchRow;
   isPro?: boolean;
@@ -127,12 +128,12 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
           title="Layer model"
           subtitle="Full 12-layer breakdown with charts"
         />
-        <div className="ve-hr-chart-panel mb-3">
+        <AuroraMaxPanel className="ve-hr-chart-panel mb-3">
           <LayerRadarChart layers={layers} height={240} />
-        </div>
-        <div className="ve-hr-chart-panel">
+        </AuroraMaxPanel>
+        <AuroraMaxPanel className="ve-hr-chart-panel">
           <LayerHorizontalChart layers={layers} height={300} />
-        </div>
+        </AuroraMaxPanel>
       </div>
 
       {/* Recent form — REAL */}
@@ -168,11 +169,11 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                 </div>
               ))}
             </div>
-            <div className="ve-hr-chart-panel mb-3">
+            <AuroraMaxPanel className="ve-hr-chart-panel mb-3">
               <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Total bases per game</p>
               <ProductionBarChart logs={formLogs} height={130} />
-            </div>
-            <div className="ve-hr-chart-panel">
+            </AuroraMaxPanel>
+            <AuroraMaxPanel className="ve-hr-chart-panel">
               <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">TB trend + HR activity</p>
               <FormTrendChart logs={formLogs} height={110} />
               <div className="mt-2">
@@ -186,7 +187,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                   </div>
                 ))}
               </div>
-            </div>
+            </AuroraMaxPanel>
           </>
         )}
       </div>
@@ -201,9 +202,9 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
         />
         {isPro ? (
           <>
-            <div className="ve-hr-chart-panel mb-3">
+            <AuroraMaxPanel className="ve-hr-chart-panel mb-3">
               <BvPSeasonChart logs={bvpLogs} height={160} />
-            </div>
+            </AuroraMaxPanel>
             <div className="overflow-hidden rounded-xl border border-white/10">
               <div className="grid grid-cols-6 gap-0 bg-[var(--ve-hr-shell)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
                 <span>Season</span>
@@ -278,9 +279,9 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                   </div>
                 ))}
               </div>
-              <div className="ve-hr-chart-panel mb-3">
+              <AuroraMaxPanel className="ve-hr-chart-panel mb-3">
                 <ProductionBarChart logs={teamLogs} height={120} />
-              </div>
+              </AuroraMaxPanel>
               <div className="overflow-hidden rounded-xl border border-white/10">
                 <div className="grid grid-cols-6 gap-0 bg-[var(--ve-hr-shell)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
                   <span>Date</span>

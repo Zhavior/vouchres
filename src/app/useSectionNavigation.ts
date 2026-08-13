@@ -36,7 +36,7 @@ export function useSectionNavigation() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     const raw = locationSection
-      ?? (DEV_BYPASS_AUTH && hasRealAuthToken() ? 'hr_board' : 'vouchedge_intro');
+      ?? (DEV_BYPASS_AUTH ? 'hr_board' : 'vouchedge_intro');
     return resolveAuthenticatedSection(raw);
   });
   const activeSectionRef = useRef(activeSection);
@@ -46,7 +46,6 @@ export function useSectionNavigation() {
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
 
   const commitSection = useCallback((target: string) => {
-    void import('../lib/routePreload').then(({ preloadSection }) => preloadSection(target));
     startTransition(() => {
       saveActiveSection(target);
       setActiveSection(target);
@@ -69,7 +68,7 @@ export function useSectionNavigation() {
       return;
     }
 
-    if (requiresLogin(target) && !hasRealAuthToken()) {
+    if (requiresLogin(target) && !DEV_BYPASS_AUTH && !hasRealAuthToken()) {
       try {
         localStorage.setItem('vouchedge_after_auth_destination', target);
       } catch {

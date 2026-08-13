@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
@@ -14,12 +14,14 @@ import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
+import { lazyWithRetry } from '../lib/lazyWithRetry';
 
-const DeployUpdateBanner = lazy(() =>
+import type { Leg } from '../types';
+const DeployUpdateBanner = lazyWithRetry(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
-const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
-const ParlayOsLayer = lazy(() => import('../components/parlay/os/ParlayOsLayer'));
+const MainViewRouter = lazyWithRetry(() => import('../components/routing/MainViewRouter'));
+const ParlayOsLayer = lazyWithRetry(() => import('../components/parlay/os/ParlayOsLayer'));
 
 export type AppShellProps = {
   activeSection: string;
@@ -40,6 +42,7 @@ export type AppShellProps = {
   handleUpdateProfile: (profile: Partial<CreatorProofProfile>) => void;
   onConfirmParlayTier: (tier: import('../lib/parlays/parlayMarketCatalog').ParlayMarketTier) => void;
   onSaveParlaySlip: () => void;
+  activeLegs: Leg[];
 };
 
 export function AppShell({
@@ -51,6 +54,7 @@ export function AppShell({
   showGlobalAppChrome,
   profileViewUserId,
   canSeeThemeStore,
+  activeLegs,
   savedSlips,
   profile,
   appShellState,
@@ -78,6 +82,7 @@ export function AppShell({
         isLoggedIn={isLoggedIn}
         profileViewUserId={profileViewUserId}
         canSeeThemeStore={canSeeThemeStore}
+        activeLegs={activeLegs}
       />
     </Suspense>
   );

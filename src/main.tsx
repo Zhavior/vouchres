@@ -1,4 +1,4 @@
-import { lazy, StrictMode, Suspense, useEffect, useState } from 'react';
+import { StrictMode, Suspense, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { AppErrorBoundary } from './components/system/AppErrorBoundary';
@@ -8,11 +8,12 @@ import {
   scheduleChunkRecoveryMountSuccess,
 } from './lib/chunkRecovery';
 import { initSentry } from './lib/sentry';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
-const SpeedInsights = lazy(() =>
+const SpeedInsights = lazyWithRetry(() =>
   import('@vercel/speed-insights/react').then((module) => ({ default: module.SpeedInsights })),
 );
-const Analytics = lazy(() =>
+const Analytics = lazyWithRetry(() =>
   import('@vercel/analytics/react').then((module) => ({ default: module.Analytics })),
 );
 if (import.meta.env.VITE_SENTRY_DSN) {

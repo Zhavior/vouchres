@@ -1,54 +1,67 @@
-import { getExperimentVariant } from '../../lib/experiments';
-import React, { Suspense, lazy, memo } from 'react';
+import {
+  getExperimentVariant } from '../../lib/experiments';
+import React,
+  { Suspense,
+  memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import HrRouteSkeleton from '../boot/HrRouteSkeleton';
 import FadeInMount from '../system/FadeInMount';
-import { useAppShell } from '../../context/AppShellContext';
+import {
+  useAppShell,
+  useAppPosts,
+  useAppProfile,
+  useAppSavedVouches,
+  useAppSavedSlips,
+  useAppSavedVouchIds
+} from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
+import { routeModules } from '../../lib/routeModules';
 
-const ProAccessGate = lazy(() =>
+import { useLiveGames } from '../../hooks/queries/useLiveGames';
+const ProAccessGate = lazyWithRetry(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
 );
-const PersonalizedOnboarding = lazy(() =>
+const PersonalizedOnboarding = lazyWithRetry(() =>
   import('../onboarding/PersonalizedOnboarding').then((module) => ({
     default: module.PersonalizedOnboarding,
   })),
 );
-const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
-const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
-const TodayDashboardZ8 = lazy(() => import('../TodayDashboardZ8'));
-const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
-const VouchBoardZ8 = lazy(() => import('../VouchBoardZ8'));
-const ProfilePageZ8 = lazy(() => import('../ProfilePageZ8'));
-const SettingsPageZ8 = lazy(() => import('../SettingsPageZ8'));
-const PremiumSubPage = lazy(() => import('../PremiumSubPage'));
-const PlayerResearchHub = lazy(() => import('../PlayerResearchHub'));
-const CustomizePage = lazy(() => import('../CustomizePage'));
-const ResultsStudio = lazy(() => import('../results/ResultsStudio'));
-const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
-const MlbIntelligenceHub = lazy(() => import('../../features/brain-edge/BrainEdgeLabPage'));
-const Leaderboard = lazy(() => import('../Leaderboard'));
-const SubscriberHub = lazy(() => import('../SubscriberHub'));
-const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));
-const BrainPicksPage = lazy(() => import('../../features/brain/BrainPicksPage'));
-const BrainPerformancePage = lazy(() => import('../../features/brain/BrainPerformancePage'));
-const AiPilotPage = lazy(() => import('../../features/ai/pages/AiPilotPage'));
-const MlbStatHubPage = lazy(() => import('../../features/mlb-stats/pages/MlbStatHubPage'));
-const DailyPlayersPage = lazy(() => import('../../pages/DailyPlayersPageZ8'));
-const LiveGamesPro = lazy(() => import('../LiveGamesProZ8'));
-const NotificationsPage = lazy(() => import('../notifications/NotificationsPage'));
-const PlayerEdgeLabPageZ8 = lazy(() => import('../../pages/pro/PlayerEdgeLabPageZ8'));
-const PitcherMatchupIntelligencePageZ8 = lazy(() => import('../../pages/pro/PitcherMatchupIntelligencePageZ8'));
-const HitterMatchupZonesPageZ8 = lazy(() => import('../../pages/pro/HitterMatchupZonesPageZ8'));
-const ProCommandCenterPageZ8 = lazy(() => import('../../pages/pro/ProCommandCenterPageZ8'));
-const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
-const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
-const NbaNflArena = lazy(() => import('../NbaNflArena'));
-const AisLandingPage = lazy(() => import('../AisLandingPage'));
-const MostVouchedTodayPageZ8 = lazy(() => import('../../pages/MostVouchedTodayPageZ8'));
-const AuroraHqShell = lazy(() => import('../../features/admin/AuroraHqShell'));
+const FollowingHubPage = lazyWithRetry(routeModules.following);
+const HomeFeedPage = lazyWithRetry(routeModules.homeFeed);
+const TodayDashboardZ8 = lazyWithRetry(routeModules.todayDashboard);
+const VouchEdgeTerminalPage = lazyWithRetry(routeModules.vouchEdgeTerminal);
+const VouchBoardZ8 = lazyWithRetry(routeModules.vouchBoard);
+const ProfilePageZ8 = lazyWithRetry(routeModules.profile);
+const SettingsPageZ8 = lazyWithRetry(routeModules.settings);
+const PremiumSubPage = lazyWithRetry(routeModules.premium);
+const PlayerResearchHub = lazyWithRetry(routeModules.research);
+const CustomizePage = lazyWithRetry(routeModules.customize);
+const ResultsStudio = lazyWithRetry(routeModules.results);
+const SmartAiEngine = lazyWithRetry(routeModules.smartAiEngine);
+const MlbIntelligenceHub = lazyWithRetry(routeModules.brainEdge);
+const Leaderboard = lazyWithRetry(routeModules.leaderboard);
+const SubscriberHub = lazyWithRetry(routeModules.subscriberHub);
+const HomeRunIntelligencePage = lazyWithRetry(routeModules.hrBoard);
+const BrainPicksPage = lazyWithRetry(routeModules.brainPicks);
+const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
+const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
+const MlbStatHubPage = lazyWithRetry(routeModules.mlbStats);
+const DailyPlayersPage = lazyWithRetry(routeModules.dailyPlayers);
+const LiveGamesPro = lazyWithRetry(routeModules.liveGames);
+const NotificationsPage = lazyWithRetry(routeModules.notifications);
+const PlayerEdgeLabPageZ8 = lazyWithRetry(routeModules.playerEdgeLab);
+const PitcherMatchupIntelligencePageZ8 = lazyWithRetry(routeModules.pitcherMatchup);
+const HitterMatchupZonesPageZ8 = lazyWithRetry(routeModules.hitterMatchup);
+const ProCommandCenterPageZ8 = lazyWithRetry(routeModules.proCommandCenter);
+const ParlayOsWorkspace = lazyWithRetry(routeModules.parlayOs);
+const ParlayProofPage = lazyWithRetry(routeModules.parlayProof);
+const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
+const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
+const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
+const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -101,6 +114,7 @@ export type MainViewRouterProps = {
   isLoggedIn: boolean;
   profileViewUserId: string | null;
   canSeeThemeStore: boolean;
+  activeLegs: Parameters<typeof PlayerResearchHub>[0]['activeLegs'];
 };
 
 function MainViewRouter({
@@ -109,6 +123,7 @@ function MainViewRouter({
   isLoggedIn,
   profileViewUserId,
   canSeeThemeStore: _canSeeThemeStore,
+  activeLegs,
 }: MainViewRouterProps) {
   const onLoginSuccess = useAppCommandStore((state) => state.onLoginSuccess);
 
@@ -311,7 +326,7 @@ function MainViewRouter({
     case 'research':
       return (
         <LazyRoute>
-          <ResearchShell />
+          <ResearchShell activeLegs={activeLegs} />
         </LazyRoute>
       );
     case 'board':
@@ -413,7 +428,11 @@ function TodayDashboardShell({
   navigateSection: (section: string) => void;
   isLoggedIn: boolean;
 }) {
-  const { accountId, liveGames, profile, savedSlips } = useAppShell();
+  const liveGamesQuery = useLiveGames();
+  const liveGames = liveGamesQuery.data?.games ?? [];
+  const { accountId } = useAppShell();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   return (
     <TodayDashboardZ8
       onSectionChange={navigateSection}
@@ -452,7 +471,7 @@ function LegacyPublicBanner({
 }
 
 function LegacyStudioShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
 
   return (
@@ -465,7 +484,11 @@ function LegacyStudioShell({ navigateSection }: { navigateSection: (section: str
 }
 
 function FeedShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { posts, profile, savedVouchIds, savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   const {
     onPostCreated,
     onLikePost,
@@ -509,7 +532,8 @@ function ParlayShell({
   panel: 'build' | 'live';
   navigateSection: (section: string) => void;
 }) {
-  const { savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedSlips = useAppSavedSlips();
   const {
     liveGames,
     onAddLegFromResearch,
@@ -560,7 +584,7 @@ function AiEngineShell({ navigateSection }: { navigateSection: (section: string)
 }
 
 function IntelShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 }
 
@@ -573,7 +597,7 @@ function ProGateShell({
   navigateSection: (section: string) => void;
   children: React.ReactNode;
 }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return (
     <ProAccessGate
       profile={profile}
@@ -592,8 +616,13 @@ function LiveGamesShell({ navigateSection: _navigateSection }: { navigateSection
   );
 }
 
-function ResearchShell() {
-  const { savedVouchIds, activeLegs, onSaveVouch } = useAppShell();
+function ResearchShell({
+  activeLegs,
+}: {
+  activeLegs: Parameters<typeof PlayerResearchHub>[0]['activeLegs'];
+}) {
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
   const { liveGames, onAddLegFromResearch } = useAppCommandStore();
 
   return (
@@ -608,7 +637,8 @@ function ResearchShell() {
 }
 
 function BoardShell() {
-  const { savedVouches, profile } = useAppShell();
+  const savedVouches = useAppSavedVouches();
+  const profile = useAppProfile();
   const { onRemoveVouchFromBoard, onPostCreated } = useAppCommandStore();
 
   return (
@@ -622,12 +652,14 @@ function BoardShell() {
 }
 
 function LeaderboardShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return <Leaderboard profile={profile} onSectionChange={navigateSection} />;
 }
 
 function ResultsShell() {
-  const { posts, profile, savedSlips } = useAppShell();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   return <ResultsStudio posts={posts} profile={profile} savedParlays={savedSlips} />;
 }
 
@@ -638,7 +670,11 @@ function ProfileShell({
   profileViewUserId: string | null;
   navigateSection?: (section: string) => void;
 }) {
-  const { posts, profile, savedVouchIds, savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   const {
     onClearProfileViewUser,
     onUpdateProfile,
@@ -670,13 +706,13 @@ function ProfileShell({
 }
 
 function PremiumShell() {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return <PremiumSubPage profile={profile} onUpdateProfile={onUpdateProfile} />;
 }
 
 function SubscriberShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
 
   return (
@@ -696,7 +732,7 @@ function SubscriberShell({ navigateSection }: { navigateSection: (section: strin
 }
 
 function SettingsShell() {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const { onResetDatabase, onUpdateProfile } = useAppCommandStore();
 
   return (
@@ -710,7 +746,7 @@ function SettingsShell() {
 }
 
 function CustomizeShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return (
     <CustomizePage profile={profile} onUpdateProfile={onUpdateProfile} onSectionChange={navigateSection} />

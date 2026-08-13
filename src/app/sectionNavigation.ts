@@ -67,6 +67,7 @@ export function resolvePublicSection(section: string): string {
 /** Signed-in users must never land on the public intro terminal. */
 export function resolveAuthenticatedSection(section: string): string {
   if (shouldForcePublicLanding()) return 'vouchedge_intro';
+  if (DEV_BYPASS_AUTH) return section === 'vouchedge_intro' ? SIGNED_IN_HOME : section;
   if (!hasRealAuthToken()) return resolvePublicSection(section);
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
@@ -116,12 +117,12 @@ export function resolveDevSectionFromLocation() {
   const target = hash || pathname;
 
   if (target === '' || target === '/') {
-    return hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    return DEV_BYPASS_AUTH || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
   }
 
   if (target === 'vouchres/vouchedge' || target === '/vouchres/vouchedge') {
-    const section = hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
-    window.history.replaceState(null, '', hasRealAuthToken() ? `/${section}` : '/vouchedge');
+    const section = DEV_BYPASS_AUTH || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    window.history.replaceState(null, '', DEV_BYPASS_AUTH || hasRealAuthToken() ? `/${section}` : '/vouchedge');
     return section;
   }
 
@@ -136,7 +137,7 @@ export function resolveDevSectionFromLocation() {
     target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
     target === 'vouchedge' || target === '/vouchedge'
   ) {
-    if (hasRealAuthToken()) {
+    if (DEV_BYPASS_AUTH || hasRealAuthToken()) {
       window.history.replaceState(null, '', `/${SIGNED_IN_HOME}`);
       return SIGNED_IN_HOME;
     }
@@ -151,7 +152,7 @@ export function resolveDevSectionFromLocation() {
     target === 'welcome' || target === '/welcome' ||
     target === 'island' || target === '/island'
   ) {
-    if (!hasRealAuthToken()) {
+    if (!DEV_BYPASS_AUTH && !hasRealAuthToken()) {
       window.history.replaceState(null, '', '/');
       return 'vouchedge_intro';
     }

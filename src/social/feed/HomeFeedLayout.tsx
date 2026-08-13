@@ -96,10 +96,12 @@ const MobileDrawerHost = React.memo(function MobileDrawerHost({
   const mobileDrawerOpen = useNavUiStore((s) => s.mobileDrawerOpen);
   const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
 
+  if (!mobileDrawerOpen) return null;
+
   return (
     <Suspense fallback={null}>
       <MobileProfileDrawer
-        open={mobileDrawerOpen}
+        open
         onClose={closeMobileDrawer}
         profile={profile}
         activeSection={activeSection}
@@ -196,7 +198,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
           </FeedScrollProvider>
         </main>
 
-        {!isPublicFrontPage && (
+        {!isPublicFrontPage && activeSection === 'feed' && (
           <FeedRightRailColumn activeSection={activeSection} />
         )}
       </div>

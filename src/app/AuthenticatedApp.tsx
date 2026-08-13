@@ -96,6 +96,7 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
       handleUpdateProfile={domain.handleUpdateProfile}
       onConfirmParlayTier={domain.handleConfirmParlayTier}
       onSaveParlaySlip={() => navigation.navigateSection('build')}
+      activeLegs={domain.activeLegs}
     />
   );
 }

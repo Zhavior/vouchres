@@ -1,5 +1,4 @@
 import React, { useState, lazy, Suspense, useRef, useCallback, useMemo } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { AURORA_PAGE } from '../../theme/auroraTokens';
 import FeedTabs from './FeedTabs';
 import V3FeedComposer from './V3FeedComposer';
@@ -253,20 +252,9 @@ function V3FeedStream({
   const visiblePosts = algorithmPosts.slice(0, visiblePostCount);
   const hasMorePosts = visiblePostCount < algorithmPosts.length || hasMoreServer;
 
-  const rowVirtualizer = useVirtualizer({
-    count: visiblePosts.length,
-    getScrollElement: getFeedScrollElement,
-    estimateSize: () => 320,
-    overscan: 4,
-  });
-
   React.useEffect(() => {
     setVisiblePostCount(FEED_BATCH_SIZE);
   }, [activeTab, selectedSport, selectedPostType, searchQuery, proOnlyMode, posts.length]);
-
-  React.useEffect(() => {
-    rowVirtualizer.measure();
-  }, [activeTab, selectedSport, selectedPostType, searchQuery, proOnlyMode, visiblePosts.length]);
 
   React.useEffect(() => {
     const node = feedSentinelRef.current;
@@ -525,38 +513,31 @@ function V3FeedStream({
             body={`No active VouchEdge plays match your "${activeTab}" filter or search query. Create a post above to populate the feed!`}
           />
         ) : (
-          /* List of Posts — virtualized X-style stream */
+          /* Persistent feed stream — exposed posts remain mounted. */
           <div
             ref={feedListRef}
-            className="relative border-t border-white/[0.08]"
+            className="border-t border-white/[0.08]"
             id="posts-feed-stream-container"
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const post = visiblePosts[virtualRow.index];
-              if (!post) return null;
-              return (
-                <div
-                  key={post.id}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  className="absolute left-0 top-0 w-full border-b border-white/[0.08]"
-                  style={{ transform: `translateY(${virtualRow.start}px)` }}
-                >
-                  <FeedPostCard
-                    post={post}
-                    onLike={onLikePost}
-                    onVouchAction={onVouchPost}
-                    onRepost={onRepostPost}
-                    onSaveVouch={onSaveVouch}
-                    savedVouchIds={savedVouchIds}
-                    onAddComment={onAddComment}
-                    onDeletePost={onDeletePost}
-                    onPostCreated={onPostCreated}
-                  />
-                </div>
-              );
-            })}
+            {visiblePosts.map((post, index) => (
+              <div
+                key={post.id}
+                data-index={index}
+                className="border-b border-white/[0.08]"
+              >
+                <FeedPostCard
+                  post={post}
+                  onLike={onLikePost}
+                  onVouchAction={onVouchPost}
+                  onRepost={onRepostPost}
+                  onSaveVouch={onSaveVouch}
+                  savedVouchIds={savedVouchIds}
+                  onAddComment={onAddComment}
+                  onDeletePost={onDeletePost}
+                  onPostCreated={onPostCreated}
+                />
+              </div>
+            ))}
           </div>
         )}
         {/* Infinite Scroll Loader */}

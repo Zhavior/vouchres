@@ -22,6 +22,7 @@ import { useAppCommandStore } from '../stores/appCommandStore';
 import type { AppShellState } from '../context/AppShellContext';
 import type { CreatorProofProfile, Leg, MLBPlayer, Parlay, Vouch } from '../types';
 
+import type { FeedPost } from '../types';
 type UseAppDomainArgs = {
   accountId: string | null;
   navigateSection: (section: string) => void;
@@ -31,7 +32,7 @@ type UseAppDomainArgs = {
   liveGames: any[];
   savedSlips: Parlay[];
   savedVouches: Vouch[];
-  posts: AppShellState['posts'];
+  posts: FeedPost[];
   profile: CreatorProofProfile;
   syncSlips: (slips: Parlay[]) => void;
   syncProfile: (profile: CreatorProofProfile) => void;
@@ -288,31 +289,15 @@ export function useAppDomain({
     liveGames,
   ]);
 
-  const savedVouchIds = useMemo(() => savedVouches.map((v) => v.id), [savedVouches]);
-
   const appShellState = useMemo(
     () => ({
       accountId,
-      posts,
-      profile,
-      savedVouchIds,
-      savedVouches,
-      savedSlips,
-      activeLegs,
-      liveGames,
       onSaveVouch: handleSaveVouch,
       onAuthLoginSuccess: handleLoginSuccess,
       onAuthLogoutComplete: handleLogoutComplete,
     }),
     [
       accountId,
-      posts,
-      profile,
-      savedVouchIds,
-      savedVouches,
-      savedSlips,
-      activeLegs,
-      liveGames,
       handleSaveVouch,
       handleLoginSuccess,
       handleLogoutComplete,

@@ -2,41 +2,37 @@ import { createRoot, type Root } from 'react-dom/client';
 import { VEButton } from '../ui/ve/VEButton';
 import { VECard } from '../ui/ve/VECard';
 import { VEPageShell } from '../ui/ve/VEPageShell';
-import { setChunkRecoveryFallback } from '../../lib/chunkRecovery';
-
-const CHUNK_RELOAD_KEY = 'vouchedge_chunk_reload_v1';
-const CHUNK_FAILED_KEY = 'vouchedge_chunk_failed_v1';
+import {
+  manuallyRecoverFromChunkFailure,
+  setChunkRecoveryFallback,
+} from '../../lib/chunkRecovery';
 
 let recoveryRoot: Root | null = null;
-
-function clearRecoveryFlags(): void {
-  try {
-    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-    sessionStorage.removeItem(CHUNK_FAILED_KEY);
-  } catch {
-    // ignore quota / privacy mode
-  }
-}
 
 export function ChunkRecoveryFallback() {
   return (
     <VEPageShell>
-      <div className="flex min-h-[80vh] items-center justify-center">
+      <div className="flex min-h-[80vh] items-center justify-center px-4">
         <VECard strong className="w-full max-w-md text-center">
-          <p className="terminal-text mb-3 text-vouch-emerald">VouchEdge update recovery</p>
-          <h1 className="mb-2 text-xl font-black text-white">New version available</h1>
-          <p className="mb-5 text-sm leading-relaxed text-white/70">
-            This tab could not load the latest app bundle after a deploy. Reload once to pick up the new build.
+          <p className="terminal-text mb-3 text-vouch-emerald">
+            Vouchres
           </p>
+
+          <h1 className="mb-2 text-xl font-black text-white">
+            We couldn't finish loading this page
+          </h1>
+
+          <p className="mb-5 text-sm leading-relaxed text-white/70">
+            Vouchres was updated while this tab was open.
+            Refresh to load the latest version.
+          </p>
+
           <VEButton
             type="button"
             className="w-full"
-            onClick={() => {
-              clearRecoveryFlags();
-              window.location.reload();
-            }}
+            onClick={manuallyRecoverFromChunkFailure}
           >
-            Reload VouchEdge
+            Refresh Vouchres
           </VEButton>
         </VECard>
       </div>
@@ -53,7 +49,10 @@ export function mountChunkRecoveryFallback(): void {
   recoveryRoot.render(<ChunkRecoveryFallback />);
 }
 
-/** Register themed React fallback before chunk recovery boots. */
+/**
+ * Register the React-owned recovery UI with the central chunk
+ * recovery authority.
+ */
 export function registerChunkRecoveryFallback(): void {
-  setChunkRecoveryFallback(() => mountChunkRecoveryFallback());
+  setChunkRecoveryFallback(mountChunkRecoveryFallback);
 }

@@ -252,7 +252,7 @@ export function HrBoard({
 
   if (isDesktop) {
     return (
-      <section className="z8-hr-board space-y-3">
+      <section className="aurora-max-shell z8-hr-board space-y-3">
         <div className="grid grid-cols-4 gap-2">
           {TIERS.map((tier) => (
             <DesktopTierColumn
@@ -273,7 +273,7 @@ export function HrBoard({
   }
 
   return (
-    <section className="z8-hr-board space-y-3">
+    <section className="aurora-max-shell z8-hr-board space-y-3">
       <div className="space-y-4">
         <div className="flex snap-x snap-mandatory overflow-x-auto border-b border-white/[0.08] bg-black/15 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Home run signal tiers">
           {TIERS.map((tier) => {

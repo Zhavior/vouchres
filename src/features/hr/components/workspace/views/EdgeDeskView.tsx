@@ -14,7 +14,11 @@ import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { logoByTeamName } from "../../../../../lib/teamLogos";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { modelEdgePct, oddsDisplay } from "../../../engine/signalScore";
-import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
+import {
+  AuroraMaxControl,
+  AuroraMaxFallback,
+  AuroraMaxPanel,
+} from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -158,9 +162,7 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
   return (
     <section className="hr-edge-desk aurora-max-ranked-workspace space-y-4" data-workspace="edge">
       {/* ── Top Header Banner & Stats ────────────────────────────── */}
-      <div className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-vouch-cyan/15 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
+      <AuroraMaxPanel className="relative overflow-hidden p-4 sm:p-6">
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
@@ -181,22 +183,22 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-2.5 sm:p-4 text-center backdrop-blur-md">
+            <AuroraMaxPanel className="p-2.5 text-center sm:p-4">
               <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-white/40 block truncate">+EV Picks</span>
               <div className="mt-1 text-lg sm:text-2xl font-black text-emerald-400">{stats.positiveEvCount}</div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-2.5 sm:p-4 text-center backdrop-blur-md">
+            </AuroraMaxPanel>
+            <AuroraMaxPanel className="p-2.5 text-center sm:p-4">
               <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-white/40 block truncate">Max EV</span>
               <div className="mt-1 text-lg sm:text-2xl font-black text-vouch-cyan">
                 {stats.hasPricedEdge ? `+${stats.topEdge.toFixed(1)}%` : "—"}
               </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-2.5 sm:p-4 text-center backdrop-blur-md">
+            </AuroraMaxPanel>
+            <AuroraMaxPanel className="p-2.5 text-center sm:p-4">
               <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-white/40 block truncate">Avg Edge</span>
               <div className="mt-1 text-lg sm:text-2xl font-black text-amber-300">
                 {stats.hasPricedEdge ? `+${stats.avgEdge.toFixed(1)}%` : "—"}
               </div>
-            </div>
+            </AuroraMaxPanel>
           </div>
         </div>
 
@@ -245,21 +247,21 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
                   +{stats.topEdge.toFixed(1)}% EV
                 </div>
               </div>
-              <button
-                type="button"
+              <AuroraMaxControl
+                tone="primary"
                 onClick={() => handleAddToSlip(stats.topEntry!.row)}
-                className="flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/20 px-4 py-2.5 font-mono text-xs font-bold text-emerald-300 transition duration-200 hover:bg-emerald-400/30 hover:text-white"
+                className="gap-1.5 px-4 py-2.5"
               >
                 <Plus className="h-4 w-4" />
                 Add Pick
-              </button>
+              </AuroraMaxControl>
             </div>
           </div>
         )}
-      </div>
+      </AuroraMaxPanel>
 
       {/* ── Toolbar & Filters ────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+      <AuroraMaxPanel className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Search */}
         <div className="relative min-w-[240px] flex-1">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
@@ -268,7 +270,7 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search edge candidates by name, team, pitcher..."
-            className="w-full rounded-xl border border-white/10 bg-black/50 py-2.5 pl-10 pr-4 font-mono text-xs text-white placeholder-white/40 outline-none transition focus:border-vouch-cyan/50"
+            className="aurora-max-control w-full justify-start py-2.5 pl-10 pr-4 text-left font-mono text-xs normal-case tracking-normal placeholder:text-white/40"
           />
         </div>
 
@@ -282,19 +284,16 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
               { id: "positive", label: "Any +EV (>0%)" },
             ] as const
           ).map((tier) => (
-            <button
+            <AuroraMaxControl
               key={tier.id}
               type="button"
+              tone={tierFilter === tier.id ? "primary" : "neutral"}
+              aria-pressed={tierFilter === tier.id}
               onClick={() => setTierFilter(tier.id)}
-              className={[
-                "rounded-xl px-3 py-1.5 font-mono text-[11px] font-bold transition-all select-none whitespace-nowrap",
-                tierFilter === tier.id
-                  ? "border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan"
-                  : "border border-white/5 bg-white/[0.03] text-white/50 hover:bg-white/[0.08] hover:text-white",
-              ].join(" ")}
+              className="whitespace-nowrap px-3 py-1.5 text-[11px]"
             >
               {tier.label}
-            </button>
+            </AuroraMaxControl>
           ))}
         </div>
 
@@ -304,7 +303,7 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="rounded-xl border border-white/10 bg-black/60 px-3 py-1.5 font-mono text-xs font-bold text-white outline-none focus:border-vouch-cyan/50"
+            className="aurora-max-control px-3 py-1.5 font-mono text-xs font-bold normal-case tracking-normal"
           >
             <option value="edge">Highest EV Edge</option>
             <option value="score">Highest HR Score</option>
@@ -312,7 +311,7 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
             <option value="odds">Longest Book Odds</option>
           </select>
         </div>
-      </div>
+      </AuroraMaxPanel>
 
       {/* ── Candidates Edge Grid ─────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -322,14 +321,14 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
           const logoUrl = row.teamLogoUrl || logoByTeamName(row.team);
 
           return (
-            <div
-              key={`${row.stableId}-${idx}`}
-              className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-300 p-5 ${
+            <AuroraMaxPanel
+              key={row.stableId}
+              className={`group relative flex flex-col justify-between p-5 transition-all duration-300 ${
                 isPrime
-                  ? "border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 via-black/50 to-black/70 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(49,181,131,0.2)]"
+                  ? "border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(49,181,131,0.16)]"
                   : isPositive
-                  ? "border-vouch-cyan/25 bg-gradient-to-b from-vouch-cyan/10 via-black/50 to-black/70 hover:border-vouch-cyan/50 hover:shadow-[0_0_25px_rgba(79,184,220,0.15)]"
-                  : "border-white/10 bg-black/40 hover:border-white/20"
+                  ? "border-vouch-cyan/30 hover:border-vouch-cyan/55 hover:shadow-[0_0_25px_rgba(79,184,220,0.12)]"
+                  : "hover:border-white/20"
               }`}
             >
               {/* Header */}
@@ -455,16 +454,16 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
                   <span>{row.truthStatus === "official" ? "Official Lineup" : "Projected"}</span>
                 </div>
 
-                <button
-                  type="button"
+                <AuroraMaxControl
+                  tone="primary"
                   onClick={() => handleAddToSlip(row)}
-                  className="flex items-center gap-1.5 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-3 py-1.5 font-mono text-xs font-bold text-vouch-cyan transition duration-200 hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black"
+                  className="gap-1.5 px-3 py-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add Leg
-                </button>
+                </AuroraMaxControl>
               </div>
-            </div>
+            </AuroraMaxPanel>
           );
         })}
       </div>

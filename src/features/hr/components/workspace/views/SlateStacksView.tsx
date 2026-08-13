@@ -12,7 +12,11 @@ import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { oddsDisplay } from "../../../engine/signalScore";
-import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
+import {
+  AuroraMaxControl,
+  AuroraMaxFallback,
+  AuroraMaxPanel,
+} from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -144,7 +148,7 @@ export default function SlateStacksView({ rows, getHrResult }: Props) {
   return (
     <section className="hr-slate-stacks aurora-max-ranked-workspace space-y-4" data-workspace="stacks">
       {/* ── Header Banner ────────────────────────────────────────── */}
-      <div className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
+      <AuroraMaxPanel className="relative overflow-hidden p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -162,12 +166,12 @@ export default function SlateStacksView({ rows, getHrResult }: Props) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center backdrop-blur-md">
+          <AuroraMaxPanel className="p-4 text-center">
             <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">Team Stacks Ranked</span>
             <div className="mt-1 font-mono text-3xl font-black text-vouch-cyan">{teamStacks.length}</div>
-          </div>
+          </AuroraMaxPanel>
         </div>
-      </div>
+      </AuroraMaxPanel>
 
       {/* ── Team Stacks Grid ─────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -175,12 +179,12 @@ export default function SlateStacksView({ rows, getHrResult }: Props) {
           const isTopRanked = stack.stackRank === 1;
 
           return (
-            <div
+            <AuroraMaxPanel
               key={stack.team}
-              className={`group relative overflow-hidden rounded-3xl border backdrop-blur-xl transition-all duration-300 ${
+              className={`group relative overflow-hidden transition-all duration-300 ${
                 isTopRanked
-                  ? "border-emerald-400/40 bg-gradient-to-br from-emerald-950/30 via-black/60 to-black hover:border-emerald-400 hover:shadow-[0_0_40px_rgba(52,211,153,0.15)]"
-                  : "border-white/10 bg-gradient-to-br from-zinc-950/80 via-black/60 to-black hover:border-vouch-cyan/40 hover:shadow-[0_0_30px_rgba(79,184,220,0.12)]"
+                  ? "border-emerald-400/40 hover:border-emerald-400 hover:shadow-[0_0_40px_rgba(52,211,153,0.12)]"
+                  : "hover:border-vouch-cyan/40 hover:shadow-[0_0_30px_rgba(79,184,220,0.10)]"
               }`}
             >
               {/* Stack Header */}
@@ -236,9 +240,9 @@ export default function SlateStacksView({ rows, getHrResult }: Props) {
 
                 <div className="space-y-2">
                   {stack.players.map((player, pIdx) => (
-                    <div
+                    <AuroraMaxPanel
                       key={player.stableId}
-                      className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] p-3 transition hover:border-vouch-cyan/30 hover:bg-white/[0.06]"
+                      className="flex items-center justify-between p-3 transition hover:border-vouch-cyan/30"
                     >
                       <div className="flex items-center gap-3">
                         <span className="font-mono text-xs font-bold text-white/30">#{pIdx + 1}</span>
@@ -265,37 +269,38 @@ export default function SlateStacksView({ rows, getHrResult }: Props) {
                           <div className="text-sm font-extrabold text-vouch-cyan">{player.hrScore}</div>
                         </div>
 
-                        <button
+                        <AuroraMaxControl
                           type="button"
                           onClick={() => handleAddSinglePlayer(player)}
                           title="Add single leg to slip"
-                          className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-white/70 transition hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black"
+                          aria-label={`Add ${player.playerName} to slip`}
+                          className="h-8 w-8 justify-center p-0"
                         >
                           <Plus className="h-4 w-4" />
-                        </button>
+                        </AuroraMaxControl>
                       </div>
-                    </div>
+                    </AuroraMaxPanel>
                   ))}
                 </div>
               </div>
 
               {/* Stack Footer Actions */}
-              <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 bg-black/30">
+              <div className="flex items-center justify-between border-t border-white/10 px-6 py-4">
                 <div className="flex items-center gap-2 font-mono text-[10px] text-white/40">
                   <Flame className="h-3.5 w-3.5 text-orange-400" />
                   <span>High Correlation Multi-Leg HR Parlay</span>
                 </div>
 
-                <button
-                  type="button"
+                <AuroraMaxControl
+                  tone="primary"
                   onClick={() => handleAddStackToSlip(stack)}
-                  className="flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/20 px-4 py-2 font-mono text-xs font-bold text-emerald-300 transition duration-200 hover:bg-emerald-400 hover:text-black"
+                  className="gap-2 px-4 py-2"
                 >
                   <Plus className="h-4 w-4" />
                   Add Team Stack to Slip
-                </button>
+                </AuroraMaxControl>
               </div>
-            </div>
+            </AuroraMaxPanel>
           );
         })}
       </div>

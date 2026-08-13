@@ -26,6 +26,7 @@ import {
 import type { RealGameLog } from '../../utils/realGameLogs';
 import type { BvPLog } from '../../utils/bvpSimulated';
 
+import { AuroraMaxPanel } from '../../../../components/aurora-max/AuroraMaxPrimitives';
 const CHART = {
   grid: 'rgba(148, 163, 184, 0.12)',
   axis: 'rgba(148, 163, 184, 0.45)',
@@ -284,13 +285,13 @@ export const BvPSeasonChart: React.FC<{ logs: BvPLog[]; height?: number }> = ({ 
 };
 
 export const GameLogLoading: React.FC = () => (
-  <div className="ve-hr-chart-panel py-8 text-center text-xs font-medium text-white/45">
+  <AuroraMaxPanel className="ve-hr-chart-panel py-8 text-center text-xs font-medium text-white/45">
     Loading real game log from MLB Stats API…
-  </div>
+  </AuroraMaxPanel>
 );
 
 export const GameLogEmpty: React.FC<{ message: string }> = ({ message }) => (
-  <div className="ve-hr-chart-panel py-8 text-center text-xs font-medium text-white/45">{message}</div>
+  <AuroraMaxPanel className="ve-hr-chart-panel py-8 text-center text-xs font-medium text-white/45">{message}</AuroraMaxPanel>
 );
 
 export const SimulatedBadge: React.FC = () => (
