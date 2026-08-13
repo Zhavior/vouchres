@@ -21,7 +21,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown,
+  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown, LayoutTemplate,
 } from 'lucide-react';
 import { loadFeatureLayout, getSidebarFeatures } from '../../lib/featureConfig';
 import { isEagerHrSection, preloadSection } from '../../lib/routePreload';
@@ -49,7 +49,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair, Shield,
+  CalendarDays, Grid3x3, Crown, Crosshair, Shield, LayoutTemplate,
 };
 
 const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>) => {
@@ -398,35 +398,53 @@ function FeedSidebar({
               </button>
             )}
           </div>
-          {ungrouped.length > 0 && (
-            <div className="space-y-1">
-              {ungrouped.map(f => (
+          {FOCUSED_BETA_SHELL_ENABLED ? (
+            <div className="space-y-0.5">
+              {sidebarFeatures.map(f => (
                 <NavItem
                   key={f.id}
                   id={f.id}
                   label={f.label}
                   icon={f.icon}
-                  isActive={f.id === 'brain_picks'
-                    ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
-                    : isSidebarItemActive(activeSection, f.id)}
+                  isActive={isSidebarItemActive(activeSection, f.id)}
                   onNavigate={handleNavigate}
+                  showLiveOnAir={liveGamesActive && f.id === 'live_games'}
                 />
               ))}
             </div>
-          )}
+          ) : (
+            <>
+              {ungrouped.length > 0 && (
+                <div className="space-y-1">
+                  {ungrouped.map(f => (
+                    <NavItem
+                      key={f.id}
+                      id={f.id}
+                      label={f.label}
+                      icon={f.icon}
+                      isActive={f.id === 'brain_picks'
+                        ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
+                        : isSidebarItemActive(activeSection, f.id)}
+                      onNavigate={handleNavigate}
+                    />
+                  ))}
+                </div>
+              )}
 
-          {grouped.map(({ group, items }) => (
-            <SidebarSection
-              key={group}
-              group={group}
-              items={items}
-              activeSection={activeSection}
-              onNavigate={handleNavigate}
-              liveGamesActive={liveGamesActive}
-              collapsed={isCollapsed(group)}
-              onToggle={() => toggleGroup(group)}
-            />
-          ))}
+              {grouped.map(({ group, items }) => (
+                <SidebarSection
+                  key={group}
+                  group={group}
+                  items={items}
+                  activeSection={activeSection}
+                  onNavigate={handleNavigate}
+                  liveGamesActive={liveGamesActive}
+                  collapsed={isCollapsed(group)}
+                  onToggle={() => toggleGroup(group)}
+                />
+              ))}
+            </>
+          )}
         </nav>
       </div>
 
