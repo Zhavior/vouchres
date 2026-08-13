@@ -1,32 +1,35 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-describe('HR Intelligence Aurora Max V2 contract', () => {
-  it('makes V2 the canonical hr_board module without V1 presentation imports', () => {
+function readV2Sources(): string {
+  const dir = 'src/features/hr-intelligence-v2';
+  return readdirSync(dir)
+    .filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'))
+    .map((file) => readFileSync(join(dir, file), 'utf8'))
+    .join('\n');
+}
+
+describe('HR Aurora Max page contract', () => {
+  it('is a separate eager route and does not replace Home Run Intelligence', () => {
     const routes = readFileSync('src/lib/routeModules.ts', 'utf8');
-    const page = readFileSync('src/features/hr-intelligence-v2/HrIntelligenceV2Page.tsx', 'utf8');
-    const css = readFileSync('src/features/hr-intelligence-v2/hr-intelligence-v2.css', 'utf8');
-
-    expect(routes).toContain("import('../features/hr-intelligence-v2/HrIntelligenceV2Page')");
-    expect(routes).not.toContain("import('../features/hr/pages/HomeRunIntelligencePageZ8')");
     const router = readFileSync('src/components/routing/MainViewRouter.tsx', 'utf8');
-    expect(router).toContain("import HrIntelligenceV2Page from '../../features/hr-intelligence-v2/HrIntelligenceV2Page'");
-    expect(router).not.toContain('lazyWithRetry(routeModules.hrBoard)');
-    expect(page).toContain('from \'../../components/aurora-max/AuroraMaxPrimitives\'');
-    expect(page).not.toContain('hr-aurora-max');
-    expect(page).not.toContain('z8-hr-lens');
-    expect(page).not.toContain("from '../components/Columns/HrBoard'");
-    expect(page).not.toContain("from '../components/Spotlight/HrSpotlightDeck'");
-    expect(page).toContain('openParlayAdd({');
-    expect(page).toContain('confirmedCount');
-    expect(page).toContain('previewCount');
-    expect(css).toContain('Primary vertical scroll');
-    expect(css).toContain('overflow-y: visible');
-    expect(css).not.toContain('max-h-[');
-  });
+    const preload = readFileSync('src/lib/routePreload.ts', 'utf8');
+    const page = readFileSync('src/features/hr-intelligence-v2/HrIntelligenceV2Page.tsx', 'utf8');
+    const v2 = readV2Sources();
 
-  it('keeps V1 files available for rollback until deletion phase', () => {
-    const v1 = readFileSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx', 'utf8');
-    expect(v1).toContain('HomeRunIntelligencePageZ8');
+    expect(routes).toContain("import('../features/hr/pages/HomeRunIntelligencePageZ8')");
+    expect(router).toContain('lazyWithRetry(routeModules.hrBoard)');
+    expect(router).toContain("import HrIntelligenceV2Page from '../../features/hr-intelligence-v2/HrIntelligenceV2Page'");
+    expect(router).toContain("case 'hr_aurora_max':");
+    expect(router).toContain('return <HrIntelligenceV2Page onSectionChange={navigateSection} />');
+    expect(preload).toContain('hr_board: routeModules.hrBoard');
+    expect(preload).toContain("hr_aurora_max: () => Promise.resolve()");
+    expect(page).toContain("from '../../components/aurora-max/AuroraMaxPrimitives'");
+    expect(page).not.toContain('hr-aurora-max.css');
+    expect(page).not.toContain("from '../components/Columns/HrBoard'");
+    expect(v2).not.toContain('lazyWithRetry');
+    expect(v2).not.toMatch(/\blazy\(/);
+    expect(v2).not.toMatch(/import\(/);
   });
 });

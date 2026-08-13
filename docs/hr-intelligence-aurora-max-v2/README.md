@@ -2,18 +2,17 @@
 
 Phase 0 discovery artifacts for the ground-up rebuild.
 
-**Branch:** `codex/hr-intelligence-aurora-max-v2`  
+**Home Run Intelligence (`/hr-board`) is not modified and stays the current page.**
+
+New page: sidebar **HR Aurora Max** → `/hr-aurora-max` (eager load, Aurora Max primitives, HR APIs).
+
 ## Phase status
 
 | Phase | Status |
 |---|---|
 | 0 Discovery | Complete |
-| 1 V2 foundation | Implemented (`src/features/hr-intelligence-v2/`) |
-| 2 Free Field Desk | Implemented |
-| 3 Pro workspaces + research | Implemented |
-| 4 Parity | In progress — V1 files retained for rollback |
-| 5 Performance gates | Pending browser torture test |
-| 6 Route cutover | `routeModules.hrBoard` → V2 |
+| 1–3 New page | Shipped as a separate route, not a cutover |
+| 6 Route cutover | Cancelled — V1 remains canonical HR Intelligence |
 | 7 V1 deletion | Not started |
 
 

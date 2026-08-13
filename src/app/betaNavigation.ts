@@ -13,6 +13,7 @@ export type BetaDestinationId = (typeof BETA_PRIMARY_DESTINATIONS)[number]['id']
 const RESEARCH_SECTIONS = new Set([
   'hr_board',
   'daily_hr_watch_new',
+  'hr_aurora_max',
   'daily_players',
   'mlb_stats',
   'research',
@@ -63,6 +64,7 @@ const ACCOUNT_SECTIONS = new Set([
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
   'hr_board',
+  'hr_aurora_max',
   'live_games',
   'results',
   'premium',
@@ -72,6 +74,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
   'hr_board',
+  'hr_aurora_max',
   'live_games',
   'results',
   'premium',

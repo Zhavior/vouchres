@@ -10,7 +10,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown, LayoutTemplate,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { loadFeatureLayout, getSidebarFeatures, FeatureGroup } from '../../lib/featureConfig';
@@ -35,7 +35,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield, LayoutTemplate,
 };
 
 /** HR nav items use Flame per featureConfig. */
@@ -44,7 +44,8 @@ const HR_NAV_IDS = new Set(['hr_board']);
 function isDrawerItemActive(activeSection: string, featureId: string): boolean {
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'hr_aurora_max') return activeSection === 'hr_aurora_max';
+  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research') && activeSection !== 'hr_aurora_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;
 }

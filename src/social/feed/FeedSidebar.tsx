@@ -21,7 +21,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown,
+  Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown, LayoutTemplate,
 } from 'lucide-react';
 import { loadFeatureLayout, getSidebarFeatures } from '../../lib/featureConfig';
 import { preloadSection } from '../../lib/routePreload';
@@ -49,7 +49,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair, Shield,
+  CalendarDays, Grid3x3, Crown, Crosshair, Shield, LayoutTemplate,
 };
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
@@ -77,7 +77,8 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
 function isSidebarItemActive(activeSection: string, featureId: string): boolean {
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'hr_aurora_max') return activeSection === 'hr_aurora_max';
+  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research') && activeSection !== 'hr_aurora_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;
 }

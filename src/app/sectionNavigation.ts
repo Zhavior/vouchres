@@ -13,6 +13,7 @@ export const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
+  'hr_aurora_max',
   'game_research',
   'player_research',
   'top_cappers',
@@ -171,6 +172,13 @@ export function resolveDevSectionFromLocation() {
   }
 
   if (
+    target === 'hr-aurora-max' || target === '/hr-aurora-max' ||
+    target === 'hr_aurora_max' || target === '/hr_aurora_max'
+  ) {
+    return 'hr_aurora_max';
+  }
+
+  if (
     target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
     target === 'hr-board' || target === '/hr-board' ||
     target === 'daily-hr-board' || target === '/daily-hr-board'
@@ -244,7 +252,7 @@ export function resolveDevSectionFromLocation() {
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
   const validSections = new Set([
     'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
-    'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'hr_board', 'hr_aurora_max', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',

@@ -19,10 +19,9 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   vouchedge_intro: routeModules.vouchEdgeTerminal,
   legacy_studio: routeModules.aisLanding,
 
-  // HR Intelligence V2 is statically imported by MainViewRouter.
-  // Do not fetch a second route chunk — that is the V1 failure mode.
-  hr_board: () => Promise.resolve(),
-  daily_hr_watch_new: () => Promise.resolve(),
+  hr_board: routeModules.hrBoard,
+  daily_hr_watch_new: routeModules.hrBoard,
+  hr_aurora_max: () => Promise.resolve(),
 
   brain_picks: routeModules.brainPicks,
   brain_performance: routeModules.brainPerformance,

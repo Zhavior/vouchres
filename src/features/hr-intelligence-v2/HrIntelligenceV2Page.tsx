@@ -16,11 +16,11 @@ import type { HrWatchMode } from '../hr/types/hrWatch';
 import type { HrWatchRow } from '../hr/types/hrWatch';
 import { toHrParlayPickerPlayer } from '../hr/utils/hrDecisionBrief';
 import {
-  clearHrResearchPlayer,
-  isHrResearchHistoryEntry,
-  pushHrResearchPlayer,
-  readHrResearchPlayerId,
-} from '../hr/utils/hrResearchRoute';
+  clearHrAuroraMaxPlayer,
+  isHrAuroraMaxHistoryEntry,
+  pushHrAuroraMaxPlayer,
+  readHrAuroraMaxPlayerId,
+} from './researchRoute';
 import { DISPLAY_TIERS, SOURCE_MODES, type HrWorkspaceId } from './contracts';
 import { BoardEmptyState, BoardErrorState, BoardLoadingState } from './DeskStates';
 import { FieldDesk } from './FieldDesk';
@@ -80,24 +80,24 @@ export default function HrIntelligenceV2Page({ onSectionChange }: Props) {
     });
     setResearchPlayer(player);
     vm.setSelectedPlayer(player);
-    if (player.playerId != null && readHrResearchPlayerId() !== String(player.playerId)) {
-      pushHrResearchPlayer(player.playerId);
+    if (player.playerId != null && readHrAuroraMaxPlayerId() !== String(player.playerId)) {
+      pushHrAuroraMaxPlayer(player.playerId);
     }
   }, [vm]);
 
   const closeResearch = useCallback(() => {
-    if (readHrResearchPlayerId() && isHrResearchHistoryEntry()) {
+    if (readHrAuroraMaxPlayerId() && isHrAuroraMaxHistoryEntry()) {
       window.history.back();
       return;
     }
-    clearHrResearchPlayer();
+    clearHrAuroraMaxPlayer();
     setResearchPlayer(null);
     vm.setSelectedPlayer(null);
   }, [vm]);
 
   useEffect(() => {
     const sync = () => {
-      const playerId = readHrResearchPlayerId();
+      const playerId = readHrAuroraMaxPlayerId();
       if (!playerId) {
         setResearchPlayer(null);
         return;
@@ -113,12 +113,12 @@ export default function HrIntelligenceV2Page({ onSectionChange }: Props) {
   const addToSlip = useCallback((player: HrWatchRow) => {
     if (!onSectionChange) return;
     ProductEvents.slipBuildStarted({
-      entrypoint: 'hr_player_intelligence',
+      entrypoint: 'hr_aurora_max',
       date: vm.date,
       top_player: player.playerName,
       top_player_id: player.playerId == null ? null : String(player.playerId),
     });
-    clearHrResearchPlayer();
+    clearHrAuroraMaxPlayer();
     setResearchPlayer(null);
     vm.setSelectedPlayer(null);
     openParlayAdd({
@@ -152,8 +152,8 @@ export default function HrIntelligenceV2Page({ onSectionChange }: Props) {
           <div className="min-w-0">
             <AuroraMaxProductMark />
             <AuroraMaxCommandHeader
-              eyebrow="Aurora Max · V2"
-              title="HR Intelligence"
+              eyebrow="Aurora Max"
+              title="HR Aurora Max"
               description={vm.isToday ? 'Today’s ranked HR board. Confirmed lineups stay confirmed; projected stays projected.' : `Historical board for ${vm.date}.`}
             />
           </div>

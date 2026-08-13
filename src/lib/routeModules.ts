@@ -27,10 +27,8 @@ export const routeModules = {
   leaderboard: () => import('../components/Leaderboard'),
   subscriberHub: () => import('../components/SubscriberHub'),
 
-  // Rendered eagerly by MainViewRouter. Kept here so preload maps cannot
-  // silently point HR back at the V1 page.
   hrBoard: () =>
-    import('../features/hr-intelligence-v2/HrIntelligenceV2Page'),
+    import('../features/hr/pages/HomeRunIntelligencePageZ8'),
 
   brainPicks: () => import('../features/brain/BrainPicksPage'),
   brainPerformance: () =>
