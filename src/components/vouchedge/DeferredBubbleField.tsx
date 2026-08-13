@@ -37,8 +37,8 @@ export function DeferredBubbleField(props: DeferredBubbleFieldProps) {
       return () => window.cancelIdleCallback(id);
     }
 
-    const id = window.setTimeout(() => setMounted(true), 250);
-    return () => window.clearTimeout(id);
+    const id = globalThis.setTimeout(() => setMounted(true), 250);
+    return () => globalThis.clearTimeout(id);
   }, []);
 
   if (!mounted) return null;
