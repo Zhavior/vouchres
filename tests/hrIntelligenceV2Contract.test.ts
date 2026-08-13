@@ -9,6 +9,9 @@ describe('HR Intelligence Aurora Max V2 contract', () => {
 
     expect(routes).toContain("import('../features/hr-intelligence-v2/HrIntelligenceV2Page')");
     expect(routes).not.toContain("import('../features/hr/pages/HomeRunIntelligencePageZ8')");
+    const router = readFileSync('src/components/routing/MainViewRouter.tsx', 'utf8');
+    expect(router).toContain("import HrIntelligenceV2Page from '../../features/hr-intelligence-v2/HrIntelligenceV2Page'");
+    expect(router).not.toContain('lazyWithRetry(routeModules.hrBoard)');
     expect(page).toContain('from \'../../components/aurora-max/AuroraMaxPrimitives\'');
     expect(page).not.toContain('hr-aurora-max');
     expect(page).not.toContain('z8-hr-lens');

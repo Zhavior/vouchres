@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -16,13 +18,39 @@ vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
   useTogglePlayerVouch: () => ({ mutate: vi.fn(), variables: null }),
 }));
 
-import HomeRunIntelligencePageZ8 from '../src/features/hr/pages/HomeRunIntelligencePageZ8';
+vi.mock('../src/features/hr/hooks/useHrResearch', () => ({
+  useHrResearch: () => ({ research: null, loading: false, error: null }),
+}));
+
+import HrIntelligenceV2Page from '../src/features/hr-intelligence-v2/HrIntelligenceV2Page';
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
 
-describe('HR feature loading', () => {
-  it('renders the core board without starting Pro-only chunk placeholders', () => {
+function readV2Sources(): string {
+  const dir = 'src/features/hr-intelligence-v2';
+  return readdirSync(dir)
+    .filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'))
+    .map((file) => readFileSync(join(dir, file), 'utf8'))
+    .join('\n');
+}
+
+describe('HR Intelligence V2 loading', () => {
+  it('does not split HR into lazy route chunks', () => {
+    const router = readFileSync('src/components/routing/MainViewRouter.tsx', 'utf8');
+    const preload = readFileSync('src/lib/routePreload.ts', 'utf8');
+    const v2 = readV2Sources();
+
+    expect(router).toContain("import HrIntelligenceV2Page from '../../features/hr-intelligence-v2/HrIntelligenceV2Page'");
+    expect(router).not.toContain('lazyWithRetry(routeModules.hrBoard)');
+    expect(router).toContain('return <HrIntelligenceV2Page onSectionChange={navigateSection} />');
+    expect(preload).toContain("hr_board: () => Promise.resolve()");
+    expect(v2).not.toContain('lazyWithRetry');
+    expect(v2).not.toMatch(/\blazy\(/);
+    expect(v2).not.toMatch(/import\(/);
+  });
+
+  it('renders the Field Desk without Pro chunk placeholders', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
@@ -45,7 +73,7 @@ describe('HR feature loading', () => {
       syncing: false,
       error: null,
       refreshError: null,
-      connection: null,
+      connection: { isLastGood: false },
       lastUpdated: null,
       mode: 'confirmed',
       viewMode: 'cards',
@@ -64,11 +92,12 @@ describe('HR feature loading', () => {
       isToday: true,
       getHrResult: vi.fn(),
       hrResultsLoading: false,
-    } as any);
+    } as never);
 
-    render(<HomeRunIntelligencePageZ8 />);
+    render(<HrIntelligenceV2Page />);
 
-    expect(screen.getByRole('heading', { name: /Every bat that can leave the yard/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /HR Intelligence/i })).toBeTruthy();
+    expect(screen.getByTestId('hr-intelligence-v2')).toBeTruthy();
     expect(screen.queryByRole('status', { name: /Loading (Pro|top|most|signal)/i })).toBeNull();
   });
 });

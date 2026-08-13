@@ -152,8 +152,8 @@ export default function HrIntelligenceV2Page({ onSectionChange }: Props) {
           <div className="min-w-0">
             <AuroraMaxProductMark />
             <AuroraMaxCommandHeader
-              eyebrow="Home Run Intelligence"
-              title="HR Field Desk"
+              eyebrow="Aurora Max · V2"
+              title="HR Intelligence"
               description={vm.isToday ? 'Today’s ranked HR board. Confirmed lineups stay confirmed; projected stays projected.' : `Historical board for ${vm.date}.`}
             />
           </div>
