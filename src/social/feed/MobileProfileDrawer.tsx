@@ -27,7 +27,7 @@ import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
 import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
 import { getActiveSport } from '../../sports/registry';
-import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
+import { FOCUSED_BETA_SHELL_ENABLED, isAuroraHqFamilySection, isBetaDestinationActive } from '../../app/betaNavigation';
 import '../../styles/aurora-sidebar.css';
 import '../../styles/shell-surfaces-aurora-max.css';
 import '../../styles/profile-aurora-max.css';
@@ -40,6 +40,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 function isDrawerItemActive(activeSection: string, featureId: string): boolean {
+  if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
   if (featureId === 'hr_max') return activeSection === 'hr_max';

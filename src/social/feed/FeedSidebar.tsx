@@ -36,7 +36,7 @@ import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 import { formatProfileWinRate } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
-import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
+import { FOCUSED_BETA_SHELL_ENABLED, isAuroraHqFamilySection, isBetaDestinationActive } from '../../app/betaNavigation';
 import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
 import '../../styles/aurora-sidebar.css';
 import '../../styles/shell-surfaces-aurora-max.css';
@@ -72,6 +72,7 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
 };
 
 function isSidebarItemActive(activeSection: string, featureId: string): boolean {
+  if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
   if (featureId === 'hr_max') return activeSection === 'hr_max';

@@ -84,6 +84,8 @@ describe('Today decision-first layout', () => {
     expect(source).toContain('aria-label="Refresh today\'s report and HR board"');
     expect(auroraCss).toContain('@media (prefers-reduced-motion: reduce)');
     expect(auroraCss).toContain('.aurora-max-shell');
+    expect(auroraCss).toContain('animation-duration');
+    expect(auroraCss).toContain('transition-duration');
     expect(auroraCss).toContain('.aurora-max-panel');
     expect(auroraCss).toContain('.aurora-max-control');
   });

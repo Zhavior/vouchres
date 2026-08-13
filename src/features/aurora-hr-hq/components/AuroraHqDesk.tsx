@@ -30,11 +30,14 @@ import {
   type DeskSortKey,
 } from '../../hr-max/mapHrWatchToDesk';
 import { AuroraHqCommandBar } from './AuroraHqCommandBar';
+import { AuroraHqHeaderNav } from './AuroraHqHeaderNav';
 import { AuroraHqTierBar } from './AuroraHqTierBar';
 import { AuroraHqSignalCard } from './AuroraHqSignalCard';
 import { AuroraHqSlateQueue } from './AuroraHqSlateQueue';
 import AuroraHqRouteSkeleton from '../AuroraHqRouteSkeleton';
 import '../aurora-hq.css';
+
+export type AuroraHqSurface = 'desk' | 'slate';
 
 /* ─── helpers ────────────────────────────────────────────────────────────── */
 
@@ -153,9 +156,17 @@ function TierColumn({
 
 /* ─── Main desk ──────────────────────────────────────────────────────────── */
 
-export default function AuroraHqDesk() {
+export default function AuroraHqDesk({
+  surface,
+  onNavigate,
+}: {
+  surface: AuroraHqSurface;
+  onNavigate: (section: string) => void;
+}) {
   const vm             = useHrBoardViewModel();
   const { isProMode, toggleProMode } = useUserTier();
+  const activeSection  = surface === 'slate' ? 'aurora_daily_slate' : 'aurora_hr_hq';
+  const isSlatePage    = surface === 'slate';
 
   const [activeId,      setActiveId]      = useState<string | null>(null);
   const [receiptId,     setReceiptId]     = useState<string | null>(null);
@@ -251,11 +262,14 @@ export default function AuroraHqDesk() {
     : 'All signals: confirmed and projected rows stay labeled.';
 
   return (
-    <div className="aurora-hq min-h-full">
+    <div className="aurora-hq min-h-full" data-apex-mode="cognitive-safe">
 
       {/* ── Sticky session header ── */}
       <header className="aurora-hq__session">
-        <AuroraMaxProductMark />
+        <div className="aurora-hq__session-lead">
+          <AuroraMaxProductMark />
+          <AuroraHqHeaderNav activeSection={activeSection} onNavigate={onNavigate} />
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           {/* Date label */}
@@ -265,7 +279,7 @@ export default function AuroraHqDesk() {
           </span>
 
           {/* Feed status */}
-          <span className={`sm:flex hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] ${vm.slate.freshness === 'fresh' ? 'text-[#10b981]' : 'text-white/45'}`}>
+          <span className={`aurora-hq__freshness${vm.slate.freshness === 'fresh' ? ' is-fresh' : ''}`}>
             <CircleDot className="h-2.5 w-2.5" aria-hidden="true" />
             {vm.syncing ? 'Refreshing sources' : vm.slate.freshness === 'fresh' ? 'Sources fresh' : vm.slate.freshness === 'delayed' ? 'Sources delayed' : 'Sources stale'}
           </span>
@@ -284,23 +298,17 @@ export default function AuroraHqDesk() {
       </header>
 
       <main className="aurora-hq__body">
-
-        {/* ── Ambient glow ── */}
-        <div aria-hidden="true" style={{
-          position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '60vw', height: '40vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(16,185,129,0.07) 0%, transparent 70%)',
-          pointerEvents: 'none', zIndex: 0,
-        }} />
-
         {/* ── Command header ── */}
         <div className="aurora-hq__header">
           <p className="aurora-hq__eyebrow">
             <CircleDot className="h-3 w-3" aria-hidden="true" />
             {new Date(vm.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </p>
-          <h1 className="aurora-hq__title">Aurora HQ</h1>
+          <h1 className="aurora-hq__title">{isSlatePage ? 'Daily Slate' : 'Aurora HQ'}</h1>
           <p className="aurora-hq__desc">
-            Next-gen HR Intelligence desk. Missing inputs stay labeled. Nothing here is a guaranteed home run.
+            {isSlatePage
+              ? 'Ranked matchups for this board. Missing inputs stay labeled. Nothing here is a guaranteed home run.'
+              : 'Next-gen HR Intelligence desk. Missing inputs stay labeled. Nothing here is a guaranteed home run.'}
           </p>
 
           {/* Metric strip */}
@@ -389,8 +397,8 @@ export default function AuroraHqDesk() {
           </div>
         ) : null}
 
-        {/* ── 4-Column Tier Board ── */}
-        {visibleRows.length > 0 ? (
+        {/* ── 4-Column Tier Board (Aurora HQ desk only) ── */}
+        {!isSlatePage && visibleRows.length > 0 ? (
           <section className="aurora-hq__board" aria-label="Home run signal tiers">
             {DESK_TIERS.map((tier) => (
               <TierColumn
@@ -406,14 +414,14 @@ export default function AuroraHqDesk() {
           </section>
         ) : null}
 
-        {/* ── Ranked Workspace ── */}
-        {visibleRows.length > 0 ? (
+        {/* ── Daily Slate ranked queue (own Aurora page) ── */}
+        {isSlatePage && visibleRows.length > 0 ? (
           <div className="aurora-hq__workspace-wrap">
             <div className="aurora-hq__workspace-title-row">
               <div>
-                <p className="aurora-hq__workspace-title">Daily slate</p>
+                <p className="aurora-hq__workspace-title">Ranked matchups</p>
                 <p className="aurora-hq__workspace-sub">
-                  {visibleRows.length} ranked matchups · {vm.modeCounts.confirmed} confirmed
+                  {visibleRows.length} rows · {vm.modeCounts.confirmed} confirmed
                 </p>
               </div>
               <div className="aurora-hq__workspace-controls">

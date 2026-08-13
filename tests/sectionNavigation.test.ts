@@ -38,6 +38,11 @@ describe("section navigation", () => {
     ["/daily-hr-board", "hr_max"],
     ["/player_research", "research"],
     ["/player-research", "research"],
+    ["/aurora-hr-hq", "aurora_hr_hq"],
+    ["/aurora_hr_hq", "aurora_hr_hq"],
+    ["/aurora-daily-slate", "aurora_daily_slate"],
+    ["/aurora_daily_slate", "aurora_daily_slate"],
+    ["/daily-slate", "aurora_daily_slate"],
   ])("restores %s directly", (path, expected) => {
     window.location.pathname = path;
     expect(resolveDevSectionFromLocation()).toBe(expected);

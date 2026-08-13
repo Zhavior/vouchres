@@ -1,15 +1,21 @@
-/* Aurora Max — the shared visual contract for public and authenticated routes. */
+/* Aurora Max — shared visual contract. Cognitive-Safe desk (not marketing hero).
+   Lenis skipped: this is an app shell, not a narrative site. */
 :root {
-  --aurora-max-obsidian: #05080d;
-  --aurora-max-panel: rgba(8, 17, 20, 0.82);
-  --aurora-max-panel-strong: rgba(7, 16, 18, 0.94);
+  --aurora-max-obsidian: oklch(17% 0.015 250);
+  --aurora-max-panel: color-mix(in oklab, oklch(20% 0.015 250) 82%, transparent);
+  --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0.015 250) 94%, transparent);
   --aurora-max-line: rgba(157, 215, 175, 0.14);
   --aurora-max-line-strong: rgba(0, 217, 160, 0.32);
   --aurora-max-emerald: #00d9a0;
   --aurora-max-cyan: #4fb8dc;
-  --aurora-max-paper: #f2f0e9;
-  --aurora-max-muted: rgba(226, 232, 227, 0.48);
-  --aurora-max-shadow: 0 28px 70px -48px rgba(0, 0, 0, 0.96);
+  --aurora-max-paper: oklch(90% 0.01 260);
+  --aurora-max-muted: color-mix(in oklab, oklch(90% 0.01 260) 48%, transparent);
+  --aurora-max-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.72);
+  --aurora-max-ease-ground: cubic-bezier(0.22, 1, 0.36, 1);
+  --aurora-max-dur-micro: 180ms;
+  --aurora-max-dur-enter: 220ms;
+  --aurora-max-blur: 18px;
+  --aurora-max-blur-cap: 24px;
 }
 
 .aurora-max-shell {
@@ -26,6 +32,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  contain: paint;
   background-image:
     linear-gradient(rgba(157, 215, 175, 0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(157, 215, 175, 0.018) 1px, transparent 1px);
@@ -163,8 +170,8 @@
 
 .aurora-max-shell :is(.glass-command, .home-feed-header, .home-feed-tabs) {
   border-color: rgba(157, 215, 175, 0.1);
-  background: rgba(5, 11, 13, 0.82);
-  backdrop-filter: blur(18px) saturate(1.08);
+  background: var(--aurora-max-panel-strong);
+  backdrop-filter: blur(var(--aurora-max-blur));
 }
 
 .aurora-max-shell #inner-view-slot :is(h1, h2, h3) {
@@ -173,7 +180,7 @@
 }
 
 .aurora-max-shell #inner-view-slot :is(.text-vouch-emerald, .text-vouch-cyan) {
-  text-shadow: 0 0 22px rgba(0, 217, 160, 0.08);
+  text-shadow: none;
 }
 
 .aurora-max-shell :is(.z8-control, .ve-button-primary, .ve-button-secondary, .aurora-max-control) {
@@ -203,6 +210,7 @@
 }
 
 .aurora-max-panel {
+  contain: layout;
   border: 1px solid var(--aurora-max-line);
   background:
     linear-gradient(135deg, rgba(242, 240, 233, 0.032), transparent 50%),
@@ -222,7 +230,7 @@
   font-size: 0.7rem;
   font-weight: 800;
   color: rgba(242, 240, 233, 0.66);
-  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+  transition: border-color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground), color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground);
 }
 
 .aurora-max-control:hover { border-color: var(--aurora-max-line-strong); color: var(--aurora-max-paper); }
@@ -293,7 +301,7 @@
   place-items: center;
   border: 1px solid rgba(0, 217, 160, 0.42);
   background: rgba(4, 24, 21, 0.76);
-  box-shadow: 0 0 36px -15px rgba(0, 217, 160, 0.9), inset 0 1px rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.07);
   transform: rotate(45deg);
 }
 
@@ -376,7 +384,7 @@
 
 @media (min-width: 768px) {
   .aurora-max-shell :is(.glass-panel-strong, .glass-panel-premium, .aurora-max-panel) {
-    backdrop-filter: blur(16px) saturate(1.08);
+    backdrop-filter: blur(var(--aurora-max-blur));
   }
 }
 
@@ -385,5 +393,8 @@
   .aurora-max-shell *::before,
   .aurora-max-shell *::after {
     scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

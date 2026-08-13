@@ -14,6 +14,7 @@ export const PUBLIC_SECTIONS = new Set([
   'live_games',
   'hr_max',
   'aurora_hr_hq',
+  'aurora_daily_slate',
   'game_research',
   'research',
   'player_research',
@@ -215,6 +216,21 @@ export function resolveDevSectionFromLocation() {
     return 'hr_max';
   }
 
+  if (
+    target === 'aurora-hr-hq' || target === '/aurora-hr-hq' ||
+    target === 'aurora_hr_hq' || target === '/aurora_hr_hq'
+  ) {
+    return 'aurora_hr_hq';
+  }
+
+  if (
+    target === 'aurora-daily-slate' || target === '/aurora-daily-slate' ||
+    target === 'aurora_daily_slate' || target === '/aurora_daily_slate' ||
+    target === 'daily-slate' || target === '/daily-slate'
+  ) {
+    return 'aurora_daily_slate';
+  }
+
   if (target === 'daily-players' || target === '/daily-players') {
     return 'daily_players';
   }
@@ -292,7 +308,7 @@ export function resolveDevSectionFromLocation() {
   }
   const validSections = new Set([
     'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
-    'hr_max', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',

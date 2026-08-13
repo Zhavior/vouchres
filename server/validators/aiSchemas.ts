@@ -48,14 +48,14 @@ export const PlayerResearchDataSchema = z
       slg: StatStringSchema.optional(),
     }),
     advanced: z.object({
-      hardHitPercent: z.coerce.number().finite().min(0).max(100),
-      exitVelocity: z.coerce.number().finite().min(0).max(130),
-      chasePercent: z.coerce.number().finite().min(0).max(100),
+      hardHitPercent: z.coerce.number().finite().min(0).max(100).optional(),
+      exitVelocity: z.coerce.number().finite().min(0).max(130).optional(),
+      chasePercent: z.coerce.number().finite().min(0).max(100).optional(),
       woba: z.coerce.number().finite().min(0).max(1).optional(),
       xwoba: z.coerce.number().finite().min(0).max(1).optional(),
       barrelPercent: z.coerce.number().finite().min(0).max(100).optional(),
       launchAngle: z.coerce.number().finite().min(-90).max(90).optional(),
-    }).passthrough(),
+    }).passthrough().optional().default({}),
     splits: z.object({
       vRHP: PlayerSplitSchema,
       vLHP: PlayerSplitSchema,

@@ -16,6 +16,7 @@ Research before the first pitch — with the evidence behind every score.
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-Billing-635BFF?logo=stripe&logoColor=white)
 ![Status](https://img.shields.io/badge/status-open%20beta-orange)
+![Tests](https://github.com/Zhavior/vouchres/actions/workflows/test.yml/badge.svg)
 
 </div>
 
@@ -193,7 +194,11 @@ npm test             # Vitest
 npm run test:e2e     # Playwright
 npm run build        # Vite client build + esbuild server & cron bundles
 npm run quality      # typecheck + lint + build
+npm run clean:vite   # Clear stale node_modules/.vite and .vite-temp lock/cache files
 ```
+
+> **Troubleshooting Vite/Vitest EPERM errors:** If test runs or dev servers fail with `EPERM: operation not permitted` on `node_modules/.vite-temp` or `.vite`, stale timestamp bundles or permission locks exist from an interrupted process. Run `npm run clean:vite` to clear the cache.
+
 
 ---
 

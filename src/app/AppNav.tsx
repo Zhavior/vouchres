@@ -83,7 +83,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
           active={researchActive}
           icon={Search}
           collapsed={collapsed}
-          onClick={() => onNavigate('aurora_hr_hq')}
+          onClick={() => onNavigate('research')}
         />
         <DockButton
           label="Track Record"

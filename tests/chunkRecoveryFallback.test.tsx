@@ -9,9 +9,9 @@ describe('ChunkRecoveryFallback', () => {
 
     render(<ChunkRecoveryFallback />);
 
-    expect(screen.getByRole('heading', { name: /new version available/i })).toBeTruthy();
-    expect(screen.getByText(/could not load the latest app bundle/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /reload vouchedge/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /we couldn't finish loading this page/i })).toBeTruthy();
+    expect(screen.getByText(/refresh to load the latest version/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /refresh vouchres/i })).toBeTruthy();
 
     reloadSpy.mockRestore();
   });

@@ -182,3 +182,30 @@ root_cause: Express `tsx server.ts` does not reload new routes; `/player_researc
 rule: After adding an Express route, restart the custom server before claiming live 200s. Keep `research` in PUBLIC_SECTIONS if URLs alias to it. Match BvP auto-select on MLB_TEAM_OPTIONS name↔abbr, not `row.team === abbr`. Hub BvP badge is BVP_TRUTH_LABEL, not roster "Live MLB feeds".
 applies_when: Player Research BvP, pitcher-research, /player_research, PUBLIC_SECTIONS, probable SP auto-select
 status: active
+---
+
+id: L021
+date: 2026-08-13
+symptom: Converting HR Command Desk into an ad-hoc 3-column CSS card grid broke single-column virtualization, causing DOM saturation, repaint thrashing, and stutter/chunking on scroll
+root_cause: Overconfident assurance that eager data equals 100% rendering safety. Converting a 1D virtualizer (@tanstack/react-virtual) into a multi-column CSS grid rendered all 30–60+ complex card DOM trees simultaneously without recycling.
+rule: Never replace Aurora Max's proven single-column horizontal virtualized architecture (AuroraMaxRankedWorkspace) with ad-hoc multi-column CSS grids. Never give premature "100% safe" performance assurances without testing DOM node recycling. Strictly adhere to native Aurora Max horizontal telemetry patterns.
+applies_when: HR Command Desk; Aurora Max; ChunkABoard; ChunkACard; list virtualization; CSS multi-column grids; performance assurances
+status: active
+---
+
+id: L022
+date: 2026-08-13
+symptom: Daily Slate stayed stacked under the Aurora HQ tier board so the desk and the ranked queue competed on one page
+root_cause: Agents treated Daily Slate as a workspace section on AuroraHqDesk instead of a peer Aurora route
+rule: When Boyd separates a surface as its own Aurora page under the header, add a session-header tab plus a dedicated section id (aurora_daily_slate). Keep one sidebar Aurora HQ item. Do not leave the extracted surface stacked on the desk.
+applies_when: VouchEdge Aurora HQ; Daily Slate; aurora_hr_hq; aurora_daily_slate; Aurora session header
+status: active
+---
+
+id: L023
+date: 2026-08-13
+symptom: Optional @vercel/analytics lazy chunk failed and AppErrorBoundary replaced the entire Aurora desk with Stability Shield
+root_cause: DeferredAnalytics/SpeedInsights sat inside the root error boundary, so a vendor fetch error looked like an app crash
+rule: Optional telemetry must render inside a swallow-null boundary. A vendor chunk failure must not unmount the product desk.
+applies_when: VouchEdge main.tsx; @vercel/analytics; SpeedInsights; AppErrorBoundary; Stability Shield; Aurora HQ
+status: active

@@ -76,7 +76,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Build & Track
   { id: "live_parlays", label: "My List", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
-  { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
+  { id: "research", label: "Aurora Max", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track", locked: true },
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
   { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },

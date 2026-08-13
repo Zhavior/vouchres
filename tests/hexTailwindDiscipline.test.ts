@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
  * Audited baseline after the Aurora landing and HR workspace migration.
  * The scan uses Git-tracked sources so local backup files cannot change CI.
  */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 74;
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 142;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

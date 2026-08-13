@@ -100,18 +100,26 @@ export function initSentry() {
   initialized = true;
 }
 
-/** Report React render errors captured by AppErrorBoundary. */
+/** Report React render errors captured by AppErrorBoundary or feature ErrorBoundaries. */
 export function captureReactError(
   error: unknown,
-  errorInfo?: { componentStack?: string | null },
+  errorInfo?: {
+    componentStack?: string | null;
+    componentName?: string;
+    fallbackTitle?: string;
+    [key: string]: any;
+  },
 ) {
   if (!initialized) return;
   Sentry.captureException(error, {
     contexts: {
       react: {
         componentStack: errorInfo?.componentStack ?? undefined,
+        componentName: errorInfo?.componentName,
+        fallbackTitle: errorInfo?.fallbackTitle,
       },
     },
+    tags: errorInfo?.componentName ? { component: errorInfo.componentName } : undefined,
   });
 }
 

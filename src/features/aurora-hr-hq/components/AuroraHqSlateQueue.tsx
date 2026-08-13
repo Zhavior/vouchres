@@ -114,60 +114,34 @@ export function AuroraHqSlateQueue({
                 className="aurora-hq__qselect"
               >
                 {/* Matchup */}
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
-                  <span
-                    style={{
-                      display: 'grid',
-                      height: '1.5rem',
-                      width: '1.5rem',
-                      flexShrink: 0,
-                      placeItems: 'center',
-                      border: `1px solid ${active ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                      fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
-                      fontSize: '0.5625rem',
-                      color: active ? '#10b981' : 'rgba(255,255,255,0.2)',
-                    }}
-                  >
+                <span className="aurora-hq__qcell">
+                  <span className={`aurora-hq__qindex${active ? ' is-active' : ''}`}>
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.5625rem', fontWeight: 700, color: '#e9e8e1' }}>
-                      {row.matchupLabel}
-                    </span>
-                    <span style={{ display: 'block', marginTop: '0.1rem', fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>
-                      {row.gameTimeLabel}
-                    </span>
+                  <span className="min-w-0">
+                    <span className="aurora-hq__qmatch">{row.matchupLabel}</span>
+                    <span className="aurora-hq__qmatch-time">{row.gameTimeLabel}</span>
                   </span>
                 </span>
 
-                {/* Player */}
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                <span className="aurora-hq__qcell">
                   <PlayerHeadshot playerId={row.player.id} headshotUrl={row.player.headshot} size={28} />
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.5625rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)' }}>
-                      {row.playerName}
-                    </span>
-                    <span style={{ display: 'block', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>
+                  <span className="min-w-0">
+                    <span className="aurora-hq__qplayer">{row.playerName}</span>
+                    <span className="aurora-hq__qplayer-meta">
                       {row.team}
                       {result === 'hit' ? ' · HR recorded' : result === 'no-hr' ? ' · No HR' : ''}
                     </span>
                   </span>
                 </span>
 
-                {/* HRPI */}
-                <span style={{ fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.875rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: active ? '#b9e8c8' : 'rgba(255,255,255,0.72)' }}>
-                  {row.score}
-                </span>
+                <span className="aurora-hq__qscore">{row.score}</span>
 
-                {/* Lineup badge */}
-                <span className={`aurora-hq__truth aurora-hq__truth--${row.truthState}`} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span className={`aurora-hq__truth aurora-hq__truth--${row.truthState} overflow-hidden text-ellipsis whitespace-nowrap`}>
                   {row.confirmed ? 'Confirmed' : row.lineupLabel}
                 </span>
 
-                {/* Tier */}
-                <span style={{ fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.42)' }}>
-                  {row.displayTier ?? '—'}
-                </span>
+                <span className="aurora-hq__qtier">{row.displayTier ?? '—'}</span>
               </button>
 
               {/* Action buttons */}

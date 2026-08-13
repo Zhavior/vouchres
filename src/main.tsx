@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, useEffect, useState } from 'react';
+import { Component, StrictMode, Suspense, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { AppErrorBoundary } from './components/system/AppErrorBoundary';
@@ -39,6 +39,22 @@ function TodayPerformanceMonitor() {
   }, []);
 
   return null;
+}
+
+class TelemetryBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    console.warn('[telemetry] optional vendor chunk failed; app continues', error, info.componentStack);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
 
 function DeferredSpeedInsights() {
@@ -108,8 +124,10 @@ createRoot(rootEl).render(
       <ChunkRecoveryBootMarker />
       <TodayPerformanceMonitor />
       <App />
-      <DeferredSpeedInsights />
-      <DeferredAnalytics />
+      <TelemetryBoundary>
+        <DeferredSpeedInsights />
+        <DeferredAnalytics />
+      </TelemetryBoundary>
     </AppErrorBoundary>
   </StrictMode>,
 );

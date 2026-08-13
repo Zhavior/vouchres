@@ -8,10 +8,10 @@ export function AuroraMaxProductMark() {
     <div className="flex items-center gap-2.5">
       <div className="relative grid h-8 w-8 place-items-center border border-[#a8d8b6]/35 bg-[#0d2318]">
         <span className="absolute inset-[5px] rotate-45 border border-[#a8d8b6]/65" />
-        <span className="h-1.5 w-1.5 rounded-full bg-[#a8d8b6] shadow-[0_0_12px_rgba(168,216,182,0.7)]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[#a8d8b6]" />
       </div>
       <div>
-        <p className="text-[13px] font-black tracking-[-0.02em] text-[#f2f0e9]">VOUCHEDGE</p>
+        <p className="text-[13px] font-black tracking-[-0.02em] text-[var(--aurora-max-paper)]">VOUCHEDGE</p>
         <p className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-[#a8d8b6]/65">Aurora Max</p>
       </div>
     </div>

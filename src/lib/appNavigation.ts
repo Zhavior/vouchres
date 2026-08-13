@@ -1,5 +1,6 @@
 export type AppSectionId =
   | 'aurora_hr_hq'
+  | 'aurora_daily_slate'
   | 'mlb_stats'
   | 'daily_players'
   | 'live_parlays'
@@ -9,6 +10,7 @@ export type AppSectionId =
 
 const SECTION_HASH: Record<AppSectionId, string> = {
   aurora_hr_hq: '#aurora-hr-hq',
+  aurora_daily_slate: '#aurora-daily-slate',
   mlb_stats: '#mlb-stat-hub',
   daily_players: '#daily-players',
   live_parlays: '#live-parlays',

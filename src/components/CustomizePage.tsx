@@ -154,8 +154,8 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   research: {
     id: "research",
-    label: "Player Research",
-    description: "Search players, stats, and research context.",
+    label: "Aurora Max",
+    description: "Live MLB player stats, Statcast, and game logs.",
     icon: Search,
   },
   board: {

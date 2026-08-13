@@ -3,15 +3,20 @@ export const FOCUSED_BETA_SHELL_ENABLED =
 
 export const BETA_PRIMARY_DESTINATIONS = [
   { id: 'today', label: 'Today', section: 'today' },
-  { id: 'research', label: 'Research', section: 'aurora_hr_hq' },
+  { id: 'research', label: 'Research', section: 'research' },
   { id: 'track_record', label: 'Track Record', section: 'results' },
   { id: 'account', label: 'Account', section: 'profile' },
 ] as const;
 
 export type BetaDestinationId = (typeof BETA_PRIMARY_DESTINATIONS)[number]['id'];
 
+export function isAuroraHqFamilySection(section: string): boolean {
+  return section === 'aurora_hr_hq' || section === 'aurora_daily_slate';
+}
+
 const RESEARCH_SECTIONS = new Set([
   'aurora_hr_hq',
+  'aurora_daily_slate',
   'hr_board',
   'hr_max',
   'daily_hr_watch_new',
@@ -66,6 +71,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
   'hr_max',
   'aurora_hr_hq',
+  'research',
   'live_games',
   'results',
   'premium',
@@ -76,6 +82,8 @@ const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
   'hr_max',
   'aurora_hr_hq',
+  'aurora_daily_slate',
+  'research',
   'live_games',
   'results',
   'premium',

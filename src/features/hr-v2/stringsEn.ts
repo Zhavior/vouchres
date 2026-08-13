@@ -1,0 +1,109 @@
+/**
+ * stringsEn.ts - English Localization Dictionary for HR Intelligence (hr-v2)
+ *
+ * NOTE: This is the first step toward full i18n support. All user-facing copy,
+ * button labels, aria-labels, formatting interpolations, and screen reader announcements
+ * are centralized here so future locales can be added without modifying component logic.
+ */
+
+export const STRINGS_EN = {
+  // Page Header
+  header: {
+    eyebrow: 'Vouch Edge Intelligence Engine',
+    title: 'HR Intelligence Command Desk',
+    subtitle: 'Aurora HQ probability engine & calibrated slate telemetry',
+    badges: {
+      slateUpdated: 'Slate updated',
+      reconnecting: (current: number, max: number) => `RECONNECTING (${current}/${max})`,
+      liveEngine: 'LIVE ENGINE',
+      mlbFeedConnected: 'MLB FEED CONNECTED',
+      updatedPrefix: (timeAgo: string) => `Updated ${timeAgo}`,
+      timeUnavailable: 'Update time unavailable',
+      tooltipLastUpdated: (timeStr: string) => `Last updated: ${timeStr}`,
+      tooltipUnavailable: 'Update time unavailable — waiting for live telemetry timestamp',
+    },
+  },
+
+  // View Options & Toggles
+  views: {
+    groupAriaLabel: 'View mode toggle',
+    card: { label: 'Card', icon: '🎴', ariaLabel: 'Card view' },
+    table: { label: 'Table', icon: '☰', ariaLabel: 'Table view' },
+    kanban: { label: 'Kanban', icon: '📊', ariaLabel: 'Kanban view' },
+  },
+
+  // Tier Filter Tabs
+  tierTabs: {
+    groupAriaLabel: 'Tier Quick Filters',
+    all: { label: 'ALL', icon: '📋' },
+    very_high: { label: 'VERY HIGH', icon: '⚡' },
+    high: { label: 'HIGH', icon: '🔥' },
+    moderate: { label: 'MODERATE', icon: '👁️' },
+  },
+
+  // Search, Sliders & Sort Controls
+  controls: {
+    searchAriaLabel: 'Search player or team',
+    searchPlaceholder: 'Search player or team...',
+    filteringPending: 'Filtering…',
+    sliderLabelFull: 'Min HR Index:',
+    sliderLabelShort: 'Min:',
+    sliderAriaLabel: 'Minimum HR Index threshold',
+    sortLabel: 'Sort:',
+    sortAriaLabel: 'Sort slate by',
+    sortOptions: {
+      score: 'HR Index (Highest)',
+      ev: 'EV% (Highest)',
+      odds: 'Odds (Longest)',
+    },
+    evRankedChip: '⚡ EV RANKED',
+  },
+
+  // State Screens (Loading, Retrying, Error, Empty)
+  states: {
+    loadingAriaLabel: 'Loading slate view...',
+    errorBoundaryFallbackTitle: 'HR Intelligence Command Desk Error',
+    retrying: {
+      title: (current: number, max: number) =>
+        `Connecting to MLB live telemetry (attempt ${current}/${max})...`,
+      fallbackError: 'Retrying feed connection in background.',
+      button: 'Retry Now',
+    },
+    error: {
+      title: (msg: string) => `Failed to load MLB live slate feed. ${msg}`,
+      unknownError: 'Unknown telemetry error.',
+      description: 'All automatic connection attempts exhausted. Please check connection and retry.',
+      button: 'Retry Connection',
+    },
+    empty: {
+      headline: (minScore: number, tierText: string, queryText: string) =>
+        `No players matched your filter criteria (${minScore}+ HR Index${tierText}${queryText}).`,
+      showingZero: 'Showing',
+      ofTotal: (total: number) => `of ${total} total slate players`,
+      filteredOut: (total: number) => `${total} filtered out`,
+      adjustHint: '). Try adjusting the search query or slider.',
+      resetButton: 'Reset Search & Filters',
+    },
+  },
+
+  // Accessibility Announcements (aria-live polite region)
+  liveAnnouncements: {
+    retrying: (current: number, max: number) =>
+      `Connecting to MLB live telemetry, attempt ${current} of ${max}`,
+    error: 'Failed to load MLB live slate feed. Please retry connection.',
+    loaded: (shown: number, total: number, updateMsg: string) =>
+      `MLB slate loaded with ${shown} active players shown of ${total} total. ${updateMsg}.`,
+    loading: 'Loading MLB live slate...',
+  },
+
+  // Relative Time Telemetry Formatting
+  timeAgo: {
+    unavailable: 'Update time unavailable',
+    justNow: 'just now',
+    secondsAgo: (s: number) => `${s}s ago`,
+    minutesAgo: (m: number) => `${m}m ago`,
+    hoursAgo: (h: number) => `${h}h ago`,
+  },
+} as const;
+
+export type FeatureStrings = typeof STRINGS_EN;

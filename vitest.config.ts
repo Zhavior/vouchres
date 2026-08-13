@@ -2,6 +2,10 @@ import { defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
+  // Direct Vitest to use an isolated cache directory (.vitest-cache) instead of
+  // the default node_modules/.vite, eliminating EPERM lockfile collisions on
+  // timestamped temp bundles across concurrent or sandboxed test runs.
+  cacheDir: ".vitest-cache",
   test: {
     globals: true,
     environment: "node",

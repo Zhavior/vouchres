@@ -62,6 +62,7 @@ const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
 const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
 const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
 const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
+const HrIntelligencePageV10 = lazyWithRetry(routeModules.hrV10);
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -223,15 +224,20 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'hr_max':
+    case 'hr_v10':
       return (
         <FadeInMount>
-          <HrAuroraMaxPage />
+          <HrIntelligencePageV10 />
         </FadeInMount>
       );
     case 'aurora_hr_hq':
+    case 'aurora_daily_slate':
       return (
         <FadeInMount>
-          <AuroraHqPage />
+          <AuroraHqPage
+            surface={activeSection === 'aurora_daily_slate' ? 'slate' : 'desk'}
+            onNavigate={navigateSection}
+          />
         </FadeInMount>
       );
     case 'brain_picks':
@@ -329,6 +335,7 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'research':
+    case 'player_research':
       return (
         <LazyRoute>
           <ResearchShell activeLegs={activeLegs} />

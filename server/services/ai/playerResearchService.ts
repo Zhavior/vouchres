@@ -22,10 +22,11 @@ function cleanModelJson(value: string): string {
   return text.trim();
 }
 
-function statNumber(value: unknown, fallback = 0): number {
+function optionalMetric(value: unknown): number | null {
+  if (value == null || value === "" || value === "—") return null;
   const text = typeof value === "string" && value.startsWith(".") ? `0${value}` : value;
   const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function boundedScore(value: unknown, fallback = 50): number {
@@ -34,41 +35,58 @@ function boundedScore(value: unknown, fallback = 50): number {
   return Math.max(10, Math.min(99, Math.round(numeric)));
 }
 
-function localPlayerResearch(player: PlayerResearchData): PlayerResearchResponse {
-  const seasonAvg = statNumber(player.seasonStats.avg, 0.25);
-  const seasonOps = statNumber(player.seasonStats.ops, 0.72);
-  const last10Ops = statNumber(player.splits.last10.ops, seasonOps);
-  const hardHitPercent = statNumber(player.advanced.hardHitPercent, 35);
-  const chasePercent = statNumber(player.advanced.chasePercent, 25);
-  const woba = statNumber(player.advanced.woba, 0);
-  const xwoba = statNumber(player.advanced.xwoba, 0);
+function metricOrUnknown(value: unknown, suffix = ""): string {
+  if (value == null || value === "" || value === "—") return "UNKNOWN";
+  const numeric = Number(typeof value === "string" && value.startsWith(".") ? `0${value}` : value);
+  if (!Number.isFinite(numeric)) return "UNKNOWN";
+  return `${value}${suffix}`;
+}
 
-  const baseScore = Math.round(seasonAvg * 180 + seasonOps * 60 + hardHitPercent * 0.35);
-  const trendBonus = last10Ops > seasonOps ? 6 : -3;
+function localPlayerResearch(player: PlayerResearchData): PlayerResearchResponse {
+  const seasonAvg = optionalMetric(player.seasonStats.avg);
+  const seasonOps = optionalMetric(player.seasonStats.ops);
+  const last10Ops = optionalMetric(player.splits.last10?.ops);
+  const hardHitPercent = optionalMetric(player.advanced?.hardHitPercent);
+  const chasePercent = optionalMetric(player.advanced?.chasePercent);
+  const exitVelocity = optionalMetric(player.advanced?.exitVelocity);
+  const woba = optionalMetric(player.advanced?.woba);
+  const xwoba = optionalMetric(player.advanced?.xwoba);
+
+  const last10OpsLabel = player.splits.last10?.ops ?? "UNKNOWN";
+  const last10Missing = last10Ops == null;
+  const insufficient = seasonOps == null;
+  const trendBonus = last10Missing || seasonOps == null ? 0 : last10Ops > seasonOps ? 6 : last10Ops < seasonOps ? -3 : 0;
   const injuryPenalty = player.injurySeverity === "NONE" ? 0 : player.injurySeverity === "DAY_TO_DAY" ? -14 : -38;
-  const finalScore = boundedScore(baseScore + trendBonus - Math.max(0, chasePercent - 30) * 0.25 + injuryPenalty, 50);
+  const chasePenalty = chasePercent != null && chasePercent > 30 ? (chasePercent - 30) * 0.25 : 0;
+  const baseScore = insufficient
+    ? 50
+    : Math.round((seasonAvg ?? 0) * 180 + seasonOps * 60 + (hardHitPercent ?? 0) * 0.35);
+  const finalScore = insufficient ? 50 : boundedScore(baseScore + trendBonus - chasePenalty + injuryPenalty, 50);
   const riskLevel = finalScore >= 78 ? "LOW" : finalScore >= 62 ? "MEDIUM" : "HIGH";
-  const confidenceBand = finalScore >= 78 ? "Strong" : finalScore >= 62 ? "Moderate" : "Speculative";
+  const confidenceBand = insufficient ? "Speculative" : finalScore >= 78 ? "Strong" : finalScore >= 62 ? "Moderate" : "Speculative";
   const healthy = player.injurySeverity === "NONE";
-  const trendingUp = last10Ops > seasonOps;
+  const trendingUp = !last10Missing && seasonOps != null && last10Ops > seasonOps;
 
   const downsideFactors: string[] = [];
+  if (insufficient) downsideFactors.push("Season OPS is UNKNOWN; this is an insufficient-data score, not a matchup edge.");
   if (!healthy) downsideFactors.push(`Health flag: **${player.injuryStatus}** - reduced workload or late scratch is possible.`);
-  if (!trendingUp) downsideFactors.push(`Recent form is cooling: last-10 OPS (${player.splits.last10.ops}) sits below the season line (${player.seasonStats.ops}).`);
-  if (chasePercent > 30) downsideFactors.push(`Elevated chase rate (${chasePercent}%) can be exploited by sharp sequencing.`);
-  if (xwoba && woba && woba > xwoba) downsideFactors.push(`wOBA (${woba}) is running ahead of xwOBA (${xwoba}); recent output may include variance.`);
+  if (!last10Missing && last10OpsLabel !== "—" && last10OpsLabel !== "UNKNOWN" && !trendingUp) {
+    downsideFactors.push(`Recent form is cooling: last-10 OPS (${last10OpsLabel}) sits below the season line (${player.seasonStats.ops}).`);
+  }
+  if (chasePercent != null && chasePercent > 30) downsideFactors.push(`Elevated chase rate (${chasePercent}%) can be exploited by sharp sequencing.`);
+  if (xwoba != null && woba != null && woba > xwoba) downsideFactors.push(`wOBA (${woba}) is running ahead of xwOBA (${xwoba}); recent output may include variance.`);
   if (downsideFactors.length === 0) downsideFactors.push("No major local statistical red flags in the supplied inputs; baseball variance still applies.");
 
   const report = `### AI Matchup Research - ${player.name}
 > Local research mode. Probability-based analysis for research and entertainment only. Not betting advice.
 
-**Matchup Advantage Score:** \`${finalScore}/99\` · **Confidence:** ${confidenceBand} · **Risk Level:** ${riskLevel}
+**Matchup Advantage Score:** \`${finalScore}/99\`${insufficient ? " (insufficient-data)" : ""} · **Confidence:** ${confidenceBand} · **Risk Level:** ${riskLevel}
 
 #### What the data says
-- **Rolling form:** ${player.splits.last10.ops} OPS over the last 10 vs a ${player.seasonStats.ops} season baseline (${trendingUp ? "trending up" : "trending down"}).
-- **Contact quality:** ${player.advanced.exitVelocity} mph average exit velocity, ${player.advanced.hardHitPercent}% hard-hit rate.
-- **Plate discipline:** ${player.advanced.chasePercent}% chase rate.
-- **Expected vs actual:** wOBA ${woba || "n/a"} / xwOBA ${xwoba || "n/a"}.
+- **Rolling form:** ${metricOrUnknown(last10OpsLabel)} last-10 OPS vs a ${metricOrUnknown(player.seasonStats.ops)} season baseline (${last10Missing || last10OpsLabel === "—" || last10OpsLabel === "UNKNOWN" ? "form UNKNOWN" : trendingUp ? "trending up" : "trending down"}).
+- **Contact quality:** ${metricOrUnknown(exitVelocity, " mph")} average exit velocity, ${metricOrUnknown(hardHitPercent, "%")} hard-hit rate.
+- **Plate discipline:** ${metricOrUnknown(chasePercent, "%")} chase rate.
+- **Expected vs actual:** wOBA ${metricOrUnknown(woba)} / xwOBA ${metricOrUnknown(xwoba)}.
 
 #### Availability
 Status: **${player.injuryStatus}** · estimated workload **${healthy ? "100%" : "~75%"}**.
@@ -90,9 +108,9 @@ export async function generatePlayerResearch(input: PlayerResearchInput): Promis
   const local = localPlayerResearch(player);
   try {
     const prompt = `Conduct a cautious MLB sabermetric research brief for ${player.name} (#${player.number ?? "N/A"}, ${player.team}, ${player.position}).
-Season BA: ${player.seasonStats.avg}; HR: ${player.seasonStats.hr}; OPS: ${player.seasonStats.ops}.
-Splits: vs RHP ${player.splits.vRHP.ops} OPS; vs LHP ${player.splits.vLHP.ops} OPS; Home ${player.splits.home.ops} OPS; Last 10 ${player.splits.last10.ops} OPS.
-Statcast-style inputs: hard-hit ${player.advanced.hardHitPercent}%, exit velocity ${player.advanced.exitVelocity}, chase ${player.advanced.chasePercent}%, wOBA ${player.advanced.woba ?? "n/a"}, xwOBA ${player.advanced.xwoba ?? "n/a"}.
+Season BA: ${metricOrUnknown(player.seasonStats.avg)}; HR: ${metricOrUnknown(player.seasonStats.hr)}; OPS: ${metricOrUnknown(player.seasonStats.ops)}.
+Splits: vs RHP ${metricOrUnknown(player.splits.vRHP.ops)} OPS; vs LHP ${metricOrUnknown(player.splits.vLHP.ops)} OPS; Home ${metricOrUnknown(player.splits.home.ops)} OPS; Last 10 ${metricOrUnknown(player.splits.last10.ops)} OPS.
+Statcast-style inputs: hard-hit ${metricOrUnknown(player.advanced?.hardHitPercent, "%")}, exit velocity ${metricOrUnknown(player.advanced?.exitVelocity, " mph")}, chase ${metricOrUnknown(player.advanced?.chasePercent, "%")}, wOBA ${metricOrUnknown(player.advanced?.woba)}, xwOBA ${metricOrUnknown(player.advanced?.xwoba)}.
 Health: ${player.injuryStatus} (${player.injurySeverity}).
 
 Return strict JSON: {"aiScore": <integer 10 to 99>, "report": "<markdown research brief; no certainty language; not betting advice>"}.`;
