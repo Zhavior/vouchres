@@ -2,7 +2,11 @@ import React, { useMemo } from "react";
 
 import type { HrWatchRow } from "../../../types/hrWatch";
 import type { HrCardResult } from "../../Cards/HrPlayerCard";
-import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
+import {
+  AuroraMaxControl,
+  AuroraMaxFallback,
+  AuroraMaxPanel,
+} from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -252,7 +256,7 @@ function SummaryMetric({
   detail: string;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+    <AuroraMaxPanel className="min-w-0 p-4">
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
         {label}
       </p>
@@ -260,7 +264,7 @@ function SummaryMetric({
         {value}
       </p>
       <p className="mt-1 truncate text-xs text-zinc-400">{detail}</p>
-    </div>
+    </AuroraMaxPanel>
   );
 }
 
@@ -307,17 +311,14 @@ function ExtremeCard({
   };
 
   return (
-    <article
+    <AuroraMaxPanel
+      as="article"
       className={[
-        "group relative overflow-hidden rounded-3xl border bg-zinc-950/75 p-5",
-        "shadow-[0_20px_70px_-35px_rgba(0,0,0,0.95)]",
+        "group relative overflow-hidden p-5",
         "transition duration-300 hover:-translate-y-0.5",
         tone.border,
       ].join(" ")}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-70" />
-      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/[0.025] blur-3xl transition group-hover:bg-white/[0.05]" />
-
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -460,17 +461,17 @@ function ExtremeCard({
           <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
             Truth status: <strong className="text-emerald-300">{readableLabel(String(row.truthStatus))}</strong>
           </span>
-          <button
-            type="button"
+          <AuroraMaxControl
+            tone="primary"
             onClick={handleAddLeg}
-            className="flex items-center gap-1.5 rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 px-3 py-1 font-mono text-xs font-bold text-vouch-cyan transition hover:bg-vouch-cyan hover:text-black"
+            className="gap-1.5 px-3 py-1"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Leg
-          </button>
+          </AuroraMaxControl>
         </div>
       </div>
-    </article>
+    </AuroraMaxPanel>
   );
 }
 
@@ -534,9 +535,7 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
 
   return (
     <section className="hr-matchup-extremes aurora-max-ranked-workspace space-y-4" data-workspace="extremes">
-      <header className="aurora-max-panel relative overflow-hidden border p-4 sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_36%)]" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
+      <AuroraMaxPanel className="relative overflow-hidden p-4 sm:p-6">
 
         <div className="relative">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
@@ -590,7 +589,7 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
             />
           </div>
         </div>
-      </header>
+      </AuroraMaxPanel>
 
       <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
         {extremes.map((result) => (
@@ -598,8 +597,7 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
         ))}
       </div>
 
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.08),transparent_45%)]" />
+      <AuroraMaxPanel className="relative overflow-hidden p-6 sm:p-8">
 
         <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400">
@@ -654,7 +652,7 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
             />
           </div>
         </div>
-      </section>
+      </AuroraMaxPanel>
     </section>
   );
 }

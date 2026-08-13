@@ -686,7 +686,7 @@ export function HrSpreadsheet({
       ) : null}
 
       {visibleGroups.map((group) => (
-        <article key={group.key} className="overflow-hidden border border-white/12 bg-[hsl(var(--ve-bg-panel)/0.88)] shadow-[0_16px_50px_rgba(0,0,0,0.2)]">
+        <article key={group.key} className="aurora-max-panel overflow-hidden border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
           <header className="relative overflow-hidden border-b border-white/[0.14] bg-[linear-gradient(105deg,rgba(0,255,148,0.065),rgba(0,0,0,0.22)_48%,rgba(0,240,255,0.055))] px-3 py-2.5 sm:px-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">

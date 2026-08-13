@@ -11,7 +11,11 @@ import { openParlayAdd } from "../../../../../lib/parlays/parlayAddContract";
 import { toHrParlayPickerPlayer } from "../../../utils/hrDecisionBrief";
 import { PlayerHrTag } from "../../HrHitBadge";
 import { oddsDisplay } from "../../../engine/signalScore";
-import { AuroraMaxFallback } from "../../../../../components/aurora-max/AuroraMaxPrimitives";
+import {
+  AuroraMaxControl,
+  AuroraMaxFallback,
+  AuroraMaxPanel,
+} from "../../../../../components/aurora-max/AuroraMaxPrimitives";
 
 interface Props {
   rows: HrWatchRow[];
@@ -115,7 +119,7 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
   return (
     <section className="hr-projection-matrix aurora-max-ranked-workspace space-y-4" data-workspace="matrix">
       {/* ── Matrix Controls Header ───────────────────────────────── */}
-      <div className="aurora-max-panel flex flex-col gap-4 border p-4 sm:p-6">
+      <AuroraMaxPanel className="flex flex-col gap-4 p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -135,12 +139,12 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
 
           {/* Metric Selector Dropdowns */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-md">
+            <div className="aurora-max-panel flex items-center gap-2 p-2">
               <span className="font-mono text-[10px] uppercase tracking-wider text-vouch-cyan pl-2">Y-Axis:</span>
               <select
                 value={yAxisMetric}
                 onChange={(e) => setYAxisMetric(e.target.value as AxisMetric)}
-                className="rounded-xl border border-white/10 bg-black/70 px-3 py-1.5 font-mono text-xs font-bold text-white outline-none focus:border-vouch-cyan"
+                className="aurora-max-control px-3 py-1.5 font-mono text-xs font-bold normal-case tracking-normal"
               >
                 {AXIS_OPTIONS.map((opt) => (
                   <option key={`y-${opt.id}`} value={opt.id}>
@@ -150,12 +154,12 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-md">
+            <div className="aurora-max-panel flex items-center gap-2 p-2">
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 pl-2">X-Axis:</span>
               <select
                 value={xAxisMetric}
                 onChange={(e) => setXAxisMetric(e.target.value as AxisMetric)}
-                className="rounded-xl border border-white/10 bg-black/70 px-3 py-1.5 font-mono text-xs font-bold text-white outline-none focus:border-vouch-cyan"
+                className="aurora-max-control px-3 py-1.5 font-mono text-xs font-bold normal-case tracking-normal"
               >
                 {AXIS_OPTIONS.map((opt) => (
                   <option key={`x-${opt.id}`} value={opt.id}>
@@ -169,70 +173,69 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
 
         {/* Quadrant Quick Filter Tabs */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <button
+          <AuroraMaxControl
             type="button"
+            tone={selectedQuadrant === "all" ? "primary" : "neutral"}
+            aria-pressed={selectedQuadrant === "all"}
             onClick={() => setSelectedQuadrant("all")}
-            className={`col-span-2 sm:col-span-1 rounded-xl border px-3 py-2 font-mono text-xs font-bold transition-all ${
-              selectedQuadrant === "all"
-                ? "border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan"
-                : "border-white/10 bg-black/30 text-white/60 hover:text-white"
-            }`}
+            className="col-span-2 px-3 py-2 text-xs sm:col-span-1"
           >
             All Hitters ({plotPoints.length})
-          </button>
+          </AuroraMaxControl>
 
-          <button
+          <AuroraMaxControl
             type="button"
+            aria-pressed={selectedQuadrant === "q1"}
             onClick={() => setSelectedQuadrant("q1")}
-            className={`rounded-xl border px-3 py-2 font-mono text-xs font-bold transition-all ${
+            className={
               selectedQuadrant === "q1"
-                ? "border-emerald-400 bg-emerald-400/20 text-emerald-300"
-                : "border-emerald-500/20 bg-emerald-500/5 text-emerald-400/70 hover:text-emerald-300"
-            }`}
+                ? "border-emerald-400/70 px-3 py-2 text-xs text-emerald-300"
+                : "border-emerald-500/25 px-3 py-2 text-xs text-emerald-400/70 hover:text-emerald-300"
+            }
           >
             🔥 Q1: Elite ({quadrantCounts.q1})
-          </button>
+          </AuroraMaxControl>
 
-          <button
+          <AuroraMaxControl
             type="button"
+            tone={selectedQuadrant === "q2" ? "primary" : "neutral"}
+            aria-pressed={selectedQuadrant === "q2"}
             onClick={() => setSelectedQuadrant("q2")}
-            className={`rounded-xl border px-3 py-2 font-mono text-xs font-bold transition-all ${
-              selectedQuadrant === "q2"
-                ? "border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan"
-                : "border-vouch-cyan/20 bg-vouch-cyan/5 text-vouch-cyan/70 hover:text-vouch-cyan"
-            }`}
+            className="px-3 py-2 text-xs"
           >
             ⚡ Q2: Sneaky ({quadrantCounts.q2})
-          </button>
+          </AuroraMaxControl>
 
-          <button
+          <AuroraMaxControl
             type="button"
+            aria-pressed={selectedQuadrant === "q3"}
             onClick={() => setSelectedQuadrant("q3")}
-            className={`rounded-xl border px-3 py-2 font-mono text-xs font-bold transition-all ${
+            className={
               selectedQuadrant === "q3"
-                ? "border-amber-400 bg-amber-400/20 text-amber-300"
-                : "border-amber-500/20 bg-amber-500/5 text-amber-400/70 hover:text-amber-300"
-            }`}
+                ? "border-amber-400/70 px-3 py-2 text-xs text-amber-300"
+                : "border-amber-500/25 px-3 py-2 text-xs text-amber-400/70 hover:text-amber-300"
+            }
           >
             ⚠️ Q3: Traps ({quadrantCounts.q3})
-          </button>
+          </AuroraMaxControl>
 
-          <button
+          <AuroraMaxControl
             type="button"
+            aria-pressed={selectedQuadrant === "q4"}
             onClick={() => setSelectedQuadrant("q4")}
-            className={`rounded-xl border px-3 py-2 font-mono text-xs font-bold transition-all ${
+            className={
               selectedQuadrant === "q4"
-                ? "border-white/40 bg-white/10 text-white"
-                : "border-white/10 bg-black/30 text-white/40 hover:text-white"
-            }`}
+                ? "border-white/40 px-3 py-2 text-xs text-white"
+                : "px-3 py-2 text-xs text-white/50 hover:text-white"
+            }
           >
             ❄️ Q4: Low ({quadrantCounts.q4})
-          </button>
+          </AuroraMaxControl>
         </div>
-      </div>
+      </AuroraMaxPanel>
 
       {/* ── 2D Interactive Matrix Canvas ─────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/60 p-3 sm:p-6 backdrop-blur-xl">
+      <AuroraMaxPanel className="relative overflow-hidden p-3 sm:p-6">
         <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full min-h-[320px] sm:min-h-[420px] rounded-2xl border border-white/10 bg-gradient-to-br from-black via-zinc-950 to-black p-3 sm:p-4 select-none">
           {/* Quadrant Backdrops */}
           <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 opacity-30">
@@ -349,7 +352,7 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
             })}
           </div>
         </div>
-      </div>
+      </AuroraMaxPanel>
 
       {/* ── Candidates List for Selected Quadrant ─────────────────── */}
       <div className="space-y-4">
@@ -359,9 +362,9 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPoints.map(({ row, x, y, quadrant }, idx) => (
-            <div
+            <AuroraMaxPanel
               key={`card-${row.stableId}-${idx}`}
-              className="flex flex-col justify-between rounded-2xl border border-white/10 bg-black/40 p-4 transition duration-200 hover:border-vouch-cyan/40 hover:bg-black/60"
+              className="flex flex-col justify-between p-4 transition duration-200 hover:border-vouch-cyan/40"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -408,15 +411,15 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
                 <span className="font-mono text-[9px] uppercase tracking-wider text-white/40">
                   Quad: <strong className="text-white">{quadrant.toUpperCase()}</strong>
                 </span>
-                <button
-                  type="button"
+                <AuroraMaxControl
+                  tone="primary"
                   onClick={() => handleAddToSlip(row)}
-                  className="flex items-center gap-1 rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-3 py-1 font-mono text-xs font-bold text-vouch-cyan transition hover:bg-vouch-cyan hover:text-black"
+                  className="gap-1 px-3 py-1"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add Leg
-                </button>
+                </AuroraMaxControl>
               </div>
-            </div>
+            </AuroraMaxPanel>
           ))}
         </div>
       </div>

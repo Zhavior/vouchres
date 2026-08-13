@@ -1,15 +1,26 @@
-import { getExperimentVariant } from '../../lib/experiments';
-import React, { Suspense, memo } from 'react';
+import {
+  getExperimentVariant } from '../../lib/experiments';
+import React,
+  { Suspense,
+  memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import HrRouteSkeleton from '../boot/HrRouteSkeleton';
 import FadeInMount from '../system/FadeInMount';
-import { useAppShell } from '../../context/AppShellContext';
+import {
+  useAppShell,
+  useAppPosts,
+  useAppProfile,
+  useAppSavedVouches,
+  useAppSavedSlips,
+  useAppSavedVouchIds
+} from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import { routeModules } from '../../lib/routeModules';
 
+import { useLiveGames } from '../../hooks/queries/useLiveGames';
 const ProAccessGate = lazyWithRetry(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
 );
@@ -103,6 +114,7 @@ export type MainViewRouterProps = {
   isLoggedIn: boolean;
   profileViewUserId: string | null;
   canSeeThemeStore: boolean;
+  activeLegs: Parameters<typeof PlayerResearchHub>[0]['activeLegs'];
 };
 
 function MainViewRouter({
@@ -111,6 +123,7 @@ function MainViewRouter({
   isLoggedIn,
   profileViewUserId,
   canSeeThemeStore: _canSeeThemeStore,
+  activeLegs,
 }: MainViewRouterProps) {
   const onLoginSuccess = useAppCommandStore((state) => state.onLoginSuccess);
 
@@ -313,7 +326,7 @@ function MainViewRouter({
     case 'research':
       return (
         <LazyRoute>
-          <ResearchShell />
+          <ResearchShell activeLegs={activeLegs} />
         </LazyRoute>
       );
     case 'board':
@@ -415,7 +428,11 @@ function TodayDashboardShell({
   navigateSection: (section: string) => void;
   isLoggedIn: boolean;
 }) {
-  const { accountId, liveGames, profile, savedSlips } = useAppShell();
+  const liveGamesQuery = useLiveGames();
+  const liveGames = liveGamesQuery.data?.games ?? [];
+  const { accountId } = useAppShell();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   return (
     <TodayDashboardZ8
       onSectionChange={navigateSection}
@@ -454,7 +471,7 @@ function LegacyPublicBanner({
 }
 
 function LegacyStudioShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
 
   return (
@@ -467,7 +484,11 @@ function LegacyStudioShell({ navigateSection }: { navigateSection: (section: str
 }
 
 function FeedShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { posts, profile, savedVouchIds, savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   const {
     onPostCreated,
     onLikePost,
@@ -511,7 +532,8 @@ function ParlayShell({
   panel: 'build' | 'live';
   navigateSection: (section: string) => void;
 }) {
-  const { savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedSlips = useAppSavedSlips();
   const {
     liveGames,
     onAddLegFromResearch,
@@ -562,7 +584,7 @@ function AiEngineShell({ navigateSection }: { navigateSection: (section: string)
 }
 
 function IntelShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 }
 
@@ -575,7 +597,7 @@ function ProGateShell({
   navigateSection: (section: string) => void;
   children: React.ReactNode;
 }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return (
     <ProAccessGate
       profile={profile}
@@ -594,8 +616,13 @@ function LiveGamesShell({ navigateSection: _navigateSection }: { navigateSection
   );
 }
 
-function ResearchShell() {
-  const { savedVouchIds, activeLegs, onSaveVouch } = useAppShell();
+function ResearchShell({
+  activeLegs,
+}: {
+  activeLegs: Parameters<typeof PlayerResearchHub>[0]['activeLegs'];
+}) {
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
   const { liveGames, onAddLegFromResearch } = useAppCommandStore();
 
   return (
@@ -610,7 +637,8 @@ function ResearchShell() {
 }
 
 function BoardShell() {
-  const { savedVouches, profile } = useAppShell();
+  const savedVouches = useAppSavedVouches();
+  const profile = useAppProfile();
   const { onRemoveVouchFromBoard, onPostCreated } = useAppCommandStore();
 
   return (
@@ -624,12 +652,14 @@ function BoardShell() {
 }
 
 function LeaderboardShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   return <Leaderboard profile={profile} onSectionChange={navigateSection} />;
 }
 
 function ResultsShell() {
-  const { posts, profile, savedSlips } = useAppShell();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   return <ResultsStudio posts={posts} profile={profile} savedParlays={savedSlips} />;
 }
 
@@ -640,7 +670,11 @@ function ProfileShell({
   profileViewUserId: string | null;
   navigateSection?: (section: string) => void;
 }) {
-  const { posts, profile, savedVouchIds, savedSlips, onSaveVouch } = useAppShell();
+  const { onSaveVouch } = useAppShell();
+  const savedVouchIds = useAppSavedVouchIds();
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   const {
     onClearProfileViewUser,
     onUpdateProfile,
@@ -672,13 +706,13 @@ function ProfileShell({
 }
 
 function PremiumShell() {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return <PremiumSubPage profile={profile} onUpdateProfile={onUpdateProfile} />;
 }
 
 function SubscriberShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
 
   return (
@@ -698,7 +732,7 @@ function SubscriberShell({ navigateSection }: { navigateSection: (section: strin
 }
 
 function SettingsShell() {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const { onResetDatabase, onUpdateProfile } = useAppCommandStore();
 
   return (
@@ -712,7 +746,7 @@ function SettingsShell() {
 }
 
 function CustomizeShell({ navigateSection }: { navigateSection: (section: string) => void }) {
-  const { profile } = useAppShell();
+  const profile = useAppProfile();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return (
     <CustomizePage profile={profile} onUpdateProfile={onUpdateProfile} onSectionChange={navigateSection} />

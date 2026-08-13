@@ -7,13 +7,6 @@ import { useProfileStore, selectProfile } from '../stores/profileStore';
 
 export type AppShellState = {
   accountId: string | null;
-  posts: FeedPost[];
-  profile: CreatorProofProfile;
-  savedVouchIds: string[];
-  savedVouches: Vouch[];
-  savedSlips: Parlay[];
-  activeLegs: Leg[];
-  liveGames: import('../types/liveGames').LiveGameCard[];
   onSaveVouch: (vouch: Vouch) => void;
   onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
@@ -50,6 +43,10 @@ export function useAppSavedSlips(): Parlay[] {
 
 export function useAppSavedVouches(): Vouch[] {
   return useVouchesStore(selectSavedVouches);
+}
+
+export function useAppSavedVouchIds(): string[] {
+  return useVouchesStore((state) => state.savedVouches.map((vouch) => vouch.id));
 }
 
 export function useAppProfile(): CreatorProofProfile {

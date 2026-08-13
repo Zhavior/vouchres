@@ -33,7 +33,7 @@ export const MostVouchedPodium: React.FC<MostVouchedPodiumProps> = ({
   ].filter((item) => item.player != null);
 
   return (
-    <section className="w-full min-w-0 max-w-full overflow-hidden space-y-3">
+    <section className="aurora-max-shell w-full min-w-0 max-w-full overflow-hidden space-y-3">
       <div className="flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-amber-400" />
@@ -73,7 +73,7 @@ export const MostVouchedPodium: React.FC<MostVouchedPodiumProps> = ({
               <div className="mt-3 flex items-center gap-3 min-w-0">
                 <div className="relative shrink-0">
                   <div className="flex h-14 w-14 items-end justify-center rounded-xl border border-white/20 bg-black/40 overflow-hidden">
-                    <PlayerHeadshot name={player.playerName} playerId={player.playerId} size={52} priority={isGold} />
+                    <PlayerHeadshot name={player.playerName} playerId={player.playerId} size={52} />
                   </div>
                 </div>
 

@@ -16,6 +16,7 @@ import type { CreatorProofProfile, Parlay } from '../types';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 import { lazyWithRetry } from '../lib/lazyWithRetry';
 
+import type { Leg } from '../types';
 const DeployUpdateBanner = lazyWithRetry(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
@@ -41,6 +42,7 @@ export type AppShellProps = {
   handleUpdateProfile: (profile: Partial<CreatorProofProfile>) => void;
   onConfirmParlayTier: (tier: import('../lib/parlays/parlayMarketCatalog').ParlayMarketTier) => void;
   onSaveParlaySlip: () => void;
+  activeLegs: Leg[];
 };
 
 export function AppShell({
@@ -52,6 +54,7 @@ export function AppShell({
   showGlobalAppChrome,
   profileViewUserId,
   canSeeThemeStore,
+  activeLegs,
   savedSlips,
   profile,
   appShellState,
@@ -79,6 +82,7 @@ export function AppShell({
         isLoggedIn={isLoggedIn}
         profileViewUserId={profileViewUserId}
         canSeeThemeStore={canSeeThemeStore}
+        activeLegs={activeLegs}
       />
     </Suspense>
   );
