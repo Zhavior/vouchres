@@ -36,10 +36,9 @@ describe('routePreload after Z8 retirement', () => {
     expect(todayDashboard).not.toHaveBeenCalled();
   });
 
-  it('treats hr_max and aurora_hr_hq as eager HR sections', () => {
+  it('treats hr_max as the eager HR section', () => {
     expect(isEagerHrSection('hr_intel_v2')).toBe(false);
     expect(isEagerHrSection('hr_max')).toBe(true);
-    expect(isEagerHrSection('aurora_hr_hq')).toBe(true);
     expect(isEagerHrSection('today')).toBe(false);
   });
 

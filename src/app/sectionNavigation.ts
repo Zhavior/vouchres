@@ -13,7 +13,6 @@ export const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_max',
-  'aurora_hr_hq',
   'game_research',
   'player_research',
   'top_cappers',
@@ -57,8 +56,13 @@ export function getSavedActiveSection(): string | null {
   }
 }
 
-/** Retired Z8 / intel-v2 page ids — bookmarks resolve to HR Command Desk. */
-const RETIRED_HR_PAGE_IDS = new Set(['hr_board', 'daily_hr_watch_new', 'hr_intel_v2']);
+/** Retired Z8 / intel-v2 / Aurora Max alias ids — bookmarks resolve to HR Command Desk. */
+const RETIRED_HR_PAGE_IDS = new Set([
+  'hr_board',
+  'daily_hr_watch_new',
+  'hr_intel_v2',
+  'hr_aurora_max',
+]);
 
 export function canonicalizeSection(section: string): string {
   if (RETIRED_HR_PAGE_IDS.has(section)) return 'hr_max';
@@ -188,7 +192,10 @@ export function resolveDevSectionFromLocation() {
     target === 'hr_board' || target === '/hr_board' ||
     target === 'daily_hr_watch_new' || target === '/daily_hr_watch_new' ||
     target === 'hr-intel-v2' || target === '/hr-intel-v2' ||
-    target === 'hr_intel_v2' || target === '/hr_intel_v2'
+    target === 'hr_intel_v2' || target === '/hr_intel_v2' ||
+    target === 'hr-aurora-max' || target === '/hr-aurora-max' ||
+    target === 'hr_aurora_max' || target === '/hr_aurora_max' ||
+    target === 'hr-intelligence-v2' || target === '/hr-intelligence-v2'
   ) {
     const search = window.location.search || '';
     const next = `/hr-max${search}`;
@@ -270,12 +277,12 @@ export function resolveDevSectionFromLocation() {
 
   // General fallback normalization for all valid section route names
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
-  if (clean === 'hr_board' || clean === 'daily_hr_watch_new' || clean === 'hr_intel_v2') {
+  if (clean === 'hr_board' || clean === 'daily_hr_watch_new' || clean === 'hr_intel_v2' || clean === 'hr_aurora_max') {
     return 'hr_max';
   }
   const validSections = new Set([
     'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
-    'hr_max', 'aurora_hr_hq', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'hr_max', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',

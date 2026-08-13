@@ -13,7 +13,6 @@ export type BetaDestinationId = (typeof BETA_PRIMARY_DESTINATIONS)[number]['id']
 const RESEARCH_SECTIONS = new Set([
   'hr_board',
   'hr_max',
-  'aurora_hr_hq',
   'daily_hr_watch_new',
   'daily_players',
   'mlb_stats',

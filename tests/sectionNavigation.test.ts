@@ -32,6 +32,7 @@ describe("section navigation", () => {
     ["/hr-max", "hr_max"],
     ["/hr-command-desk", "hr_max"],
     ["/hr-intel-v2", "hr_max"],
+    ["/hr-aurora-max", "hr_max"],
     ["/hr-board", "hr_max"],
     ["/daily-hr-watch-new", "hr_max"],
     ["/daily-hr-board", "hr_max"],

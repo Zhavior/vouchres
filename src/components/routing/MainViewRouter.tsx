@@ -6,7 +6,6 @@ import React,
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import FadeInMount from '../system/FadeInMount';
 import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
-import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
 import {
   useAppShell,
   useAppPosts,
@@ -226,12 +225,6 @@ function MainViewRouter({
       return (
         <FadeInMount>
           <HrAuroraMaxPage />
-        </FadeInMount>
-      );
-    case 'aurora_hr_hq':
-      return (
-        <FadeInMount>
-          <AuroraHqPage />
         </FadeInMount>
       );
     case 'brain_picks':
