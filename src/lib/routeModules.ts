@@ -28,7 +28,7 @@ export const routeModules = {
   subscriberHub: () => import('../components/SubscriberHub'),
 
   hrBoard: () =>
-    import('../features/hr/pages/HomeRunIntelligencePageZ8'),
+    import('../features/hr-intelligence-v2/HrIntelligenceV2Page'),
 
   brainPicks: () => import('../features/brain/BrainPicksPage'),
   brainPerformance: () =>

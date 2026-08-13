@@ -64,6 +64,7 @@ describe('ParlayOS universal add contract', () => {
   it('routes Today, HR, player, pitcher, and Vouch additions through one contract', () => {
     const files = [
       '../src/components/TodayDashboardZ8.tsx',
+      '../src/features/hr-intelligence-v2/HrIntelligenceV2Page.tsx',
       '../src/features/hr/pages/HomeRunIntelligencePageZ8.tsx',
       '../src/components/PlayerResearchHub.tsx',
       '../src/pages/pro/PitcherMatchupIntelligencePageZ8.tsx',

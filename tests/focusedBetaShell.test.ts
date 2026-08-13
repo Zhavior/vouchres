@@ -47,11 +47,14 @@ describe('focused beta shell', () => {
   });
 
   it('uses the same global lineup counts in the toolbar and slate summary', () => {
-    const page = readFileSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx', 'utf8');
+    const page = readFileSync('src/features/hr-intelligence-v2/HrIntelligenceV2Page.tsx', 'utf8');
+    const v1 = readFileSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx', 'utf8');
     const commandCenter = readFileSync('src/features/hr/components/CommandCenter/HrCommandCenter.tsx', 'utf8');
 
-    expect(page).toContain('confirmedCount={vm.modeCounts?.confirmed ?? 0}');
-    expect(page).toContain('previewCount={vm.modeCounts?.curated ?? 0}');
+    expect(page).toContain('vm.modeCounts?.confirmed');
+    expect(page).toContain('vm.modeCounts?.curated');
+    expect(v1).toContain('confirmedCount={vm.modeCounts?.confirmed ?? 0}');
+    expect(v1).toContain('previewCount={vm.modeCounts?.curated ?? 0}');
     expect(commandCenter).toContain('confirmedCount={props.confirmedCount}');
     expect(commandCenter).toContain('previewCount={props.previewCount}');
     expect(commandCenter).not.toContain('Math.max(0');

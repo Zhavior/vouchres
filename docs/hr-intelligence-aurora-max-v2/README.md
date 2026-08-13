@@ -3,7 +3,19 @@
 Phase 0 discovery artifacts for the ground-up rebuild.
 
 **Branch:** `codex/hr-intelligence-aurora-max-v2`  
-**Status:** Phase 0 complete — no V2 implementation code yet.
+## Phase status
+
+| Phase | Status |
+|---|---|
+| 0 Discovery | Complete |
+| 1 V2 foundation | Implemented (`src/features/hr-intelligence-v2/`) |
+| 2 Free Field Desk | Implemented |
+| 3 Pro workspaces + research | Implemented |
+| 4 Parity | In progress — V1 files retained for rollback |
+| 5 Performance gates | Pending browser torture test |
+| 6 Route cutover | `routeModules.hrBoard` → V2 |
+| 7 V1 deletion | Not started |
+
 
 ## Documents
 

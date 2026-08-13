@@ -14,23 +14,23 @@ Legend:
 
 | Legacy capability | V2 capability | Status | Entitlement | Parity | Perf | Legacy files eligible for deletion (after cutover) |
 |---|---|---|---|---|---|---|
-| Today's HR Board / Research workspace board | Aurora Max Ranked Board (Free + Pro Overview) | DISCOVERED | Free + Pro | — | — | `HomeRunIntelligencePageZ8.tsx`, `HrBoard.tsx`, `HrColumn.tsx`, `OverviewView.tsx` |
-| Free Standard spotlight + signal grid | Free Field Desk: spotlight + ranked queue | DISCOVERED | Free | — | — | `HrSpotlightDeck.tsx`, `HrSignalGrid.tsx` |
-| Pro tier columns / player cards | Aurora Max ranked rows + player identity cells | DISCOVERED | Pro | — | — | `HrPlayerCard.tsx`, `HrOpportunitySummary.tsx` |
-| Command Center / toolbar filters | Shared Max controls: search, source mode, tiers, view | DISCOVERED | Pro | — | — | `HrCommandCenter.tsx`, `HrToolbar.tsx` |
-| Workspace switcher | Shared Max workspace nav | DISCOVERED | Pro | — | — | `WorkspaceSwitcher.tsx`, `WorkspaceRenderer.tsx` |
-| Edge Desk | Pro Edge Desk (model vs market +EV) | DISCOVERED | Pro | — | — | `EdgeDeskView.tsx` |
-| Slate Stacks | Pro Slate Stacks (team combinations) | DISCOVERED | Pro | — | — | `SlateStacksView.tsx` |
-| Projection Matrix | Pro Projection Matrix (decision scatter — honesty-first metrics) | DISCOVERED | Pro | — | — | `ProjectionMatrixView.tsx` |
-| Matchup Extremes | Pro Extremes (outlier signals) | DISCOVERED | Pro | — | — | `MatchupExtremesView.tsx` |
-| Top Signal / Signal Field / Spreadsheet | Pro advanced board presentations | DISCOVERED | Pro | — | — | `HrTopSignalPanel.tsx`, `HrSignalField.tsx`, `HrSpreadsheet.tsx` |
-| Player research overlay | Aurora Max Research Dossier | DISCOVERED | Free open; 12 Layers Sub | — | — | `HrPlayerProfile.tsx`, profile section components, `hr-profile.css` |
-| 12 Layers gate | Keep Pro research gate (subscription-aware) | DISCOVERED | Sub | — | — | `ProResearchGate` wiring inside profile (rebuild gate UX) |
-| Most Vouched / vouch actions | Pro social vouch layer | DISCOVERED | Pro (+ auth for mutate) | — | — | `MostVouched*.tsx` |
-| Live slate pill + HR results grading | Live slate status + results intelligence | DISCOVERED | Free + Pro | — | — | Live chrome in `HrHeader.tsx` / `hr-command.css` (presentation only) |
-| Header / Pro Mode toggle / brand | Max shell header + entitlement controls | DISCOVERED | Free + Pro | — | — | `HrHeader.tsx`, `HrProModeToggle.tsx`, `HrBrandIcon.tsx` |
-| Loading / error / empty / last-good | Shared Max state architecture | DISCOVERED | Free + Pro | — | — | Inline V1 state components on page |
-| HR Aurora CSS overlays | V2-owned Max shell styles (tokens reused) | DISCOVERED | Free + Pro | — | — | `hr-aurora-max.css`, `hr-command.css`, `z8-hr-lens*.css` |
+| Today's HR Board / Research workspace board | Aurora Max Ranked Board (Free + Pro Overview) | ROUTED | Free + Pro | Partial | Pending | `HomeRunIntelligencePageZ8.tsx`, `HrBoard.tsx`, `HrColumn.tsx`, `OverviewView.tsx` |
+| Free Standard spotlight + signal grid | Free Field Desk: spotlight + ranked queue | ROUTED | Free | Partial | Pending | `HrSpotlightDeck.tsx`, `HrSignalGrid.tsx` |
+| Edge Desk | Pro Edge Desk (signed model vs market) | ROUTED | Pro | Partial | Pending | `EdgeDeskView.tsx` |
+| Slate Stacks | Pro Slate Stacks | ROUTED | Pro | Partial | Pending | `SlateStacksView.tsx` |
+| Projection Matrix | Pro Projection Matrix (omit missing axes) | ROUTED | Pro | Partial | Pending | `ProjectionMatrixView.tsx` |
+| Matchup Extremes | Pro Extremes | ROUTED | Pro | Partial | Pending | `MatchupExtremesView.tsx` |
+| Player research overlay | Aurora Max Research Dossier | ROUTED | Free open; 12 Layers Sub | Partial | Pending | `HrPlayerProfile.tsx`, profile section components, `hr-profile.css` |
+| Pro tier columns / player cards | Aurora Max ranked rows + player identity cells | ROUTED | Pro | Partial | Pending | `HrPlayerCard.tsx`, `HrOpportunitySummary.tsx` |
+| Command Center / toolbar filters | Shared Max controls: search, source mode, tiers | ROUTED | Pro | Partial | Pending | `HrCommandCenter.tsx`, `HrToolbar.tsx` |
+| Workspace switcher | Shared Max workspace nav | ROUTED | Pro | Partial | Pending | `WorkspaceSwitcher.tsx`, `WorkspaceRenderer.tsx` |
+| Top Signal / Signal Field / Spreadsheet | Spotlight strip + ranked board (spreadsheet/map not cloned) | INTENTIONAL DIFF | Pro | Partial | Pending | `HrTopSignalPanel.tsx`, `HrSignalField.tsx`, `HrSpreadsheet.tsx` |
+| 12 Layers gate | Subscription-aware layers tab in research overlay | ROUTED | Sub | Partial | Pending | V1 `ProResearchGate` chrome |
+| Most Vouched / vouch actions | Compact vouched strip + spotlight vouch | ROUTED | Pro (+ auth for mutate) | Partial | Pending | `MostVouched*.tsx` |
+| Live slate pill + HR results grading | Live slate badge + row HR/No-HR results | ROUTED | Free + Pro | Partial | Pending | Live chrome in `HrHeader.tsx` / `hr-command.css` |
+| Header / Pro Mode toggle / brand | Max shell header + Standard/Full desk toggle | ROUTED | Free + Pro | Partial | Pending | `HrHeader.tsx`, `HrProModeToggle.tsx`, `HrBrandIcon.tsx` |
+| Loading / error / empty / last-good | Shared Max state architecture | ROUTED | Free + Pro | Partial | Pending | Inline V1 state components on page |
+| HR Aurora CSS overlays | V2-owned Max shell styles (tokens reused) | ROUTED | Free + Pro | Partial | Pending | `hr-aurora-max.css`, `hr-command.css`, `z8-hr-lens*.css` |
 | Orphan IntelligenceWorkspaceView / WorkspaceShell | None (delete) | DISCOVERED | — | n/a | n/a | `IntelligenceWorkspaceView.tsx`, `WorkspaceShell.tsx` |
 | Orphan HrFilters / HrSearch / HrTreemap | None (delete; replaced by toolbar/signal field) | DISCOVERED | — | n/a | n/a | `HrFilters.tsx`, `HrSearch.tsx`, `HrTreemap.tsx` |
 | Unused HR hooks/adapters | None (delete if still unused at cutover) | DISCOVERED | — | n/a | n/a | `useHrEngineBoard.ts`, `useHrBoardFilters.ts`, `useHrBoardSelection.ts`, unused aurora adapters |

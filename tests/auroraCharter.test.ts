@@ -99,5 +99,9 @@ describe('Aurora Master Charter', () => {
     expect(todayDesk).toContain("from '../aurora-max/AuroraMaxPrimitives'");
     expect(todayDesk).toContain('<AuroraMaxEvidenceLadder');
     expect(todayDesk).toContain('<AuroraMaxFallback');
+    const hrV2 = readProjectFile('src/features/hr-intelligence-v2/HrIntelligenceV2Page.tsx');
+    expect(hrV2).toContain("from '../../components/aurora-max/AuroraMaxPrimitives'");
+    expect(hrV2).toContain('<AuroraMaxCommandHeader');
+    expect(hrV2).toContain('<AuroraMaxTruthBadge');
   });
 });
