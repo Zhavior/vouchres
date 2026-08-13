@@ -38,13 +38,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield,
 };
 
-/** HR nav items use Flame per featureConfig. */
-const HR_NAV_IDS = new Set(['hr_board']);
-
 function isDrawerItemActive(activeSection: string, featureId: string): boolean {
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'hr_max') return activeSection === 'hr_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;
 }
@@ -325,7 +322,7 @@ function MobileProfileDrawer({
                   {!collapsed && (
                   <div id={`${sectionId}-items`} className="px-1.5 py-1.5 space-y-0.5">
                     {items.map((item) => {
-                      const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
+                      const resolvedIcon = item.icon;
                       const Icon = ICON_MAP[resolvedIcon] || Settings;
                       const isActive = isDrawerItemActive(activeSection, item.id);
                       return (

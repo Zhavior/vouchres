@@ -70,7 +70,7 @@ export default function ParlayOsLayer({
 
   const handleFindPlayers = useCallback(() => {
     closeSheet();
-    navigateSection?.("hr_board");
+    navigateSection?.("hr_max");
   }, [closeSheet, navigateSection]);
 
   return (

@@ -1,22 +1,16 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import HomeRunIntelligencePageZ8 from '../src/features/hr/pages/HomeRunIntelligencePageZ8';
 
 vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
   useHrBoardViewModel: vi.fn(),
 }));
 
-vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
-  usePlayerVouchSummary: vi.fn(() => ({ data: [] })),
-  usePlayerVouchLeaderboard: vi.fn(() => ({ data: [] })),
-  useTogglePlayerVouch: vi.fn(() => ({ mutate: vi.fn() })),
+vi.mock('../src/lib/parlays/parlayAddContract', () => ({
+  openParlayAdd: vi.fn(),
 }));
 
-vi.mock('../src/features/hr/hooks/useHrResearch', () => ({
-  useHrResearch: vi.fn(() => ({ data: null, isLoading: false })),
-}));
-
+import HrAuroraMaxPage from '../src/features/hr-max/pages/HrAuroraMaxPage';
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
@@ -33,7 +27,7 @@ const defaultSlate = {
   hasGames: false,
 } as const;
 
-describe('HomeRunIntelligencePage honest states', () => {
+describe('HR Command Desk honest states', () => {
   it('shows loading skeleton while board fetch is in flight', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
@@ -63,8 +57,8 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    const { container } = render(<HomeRunIntelligencePageZ8 />);
-    expect(container.querySelector('.animate-pulse')).toBeTruthy();
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByLabelText(/Loading HR Command Desk/i)).toBeTruthy();
   });
 
   it('shows retry error state when board fetch fails', () => {
@@ -97,10 +91,10 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePageZ8 />);
-    expect(screen.getByText(/Failed to load Home Run Intelligence/i)).toBeTruthy();
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByText(/Board unavailable/i)).toBeTruthy();
     expect(screen.getByText(/Upstream timeout/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    fireEvent.click(screen.getByRole('button', { name: /retry board/i }));
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -133,8 +127,8 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePageZ8 />);
-    expect(screen.getByText(/No confirmed lineups posted yet/i)).toBeTruthy();
-    expect(screen.getAllByText(/preview candidates/i).length).toBeGreaterThan(0);
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByText(/Confirmed lineups are not posted yet/i)).toBeTruthy();
+    expect(screen.getByText(/projected research rows/i)).toBeTruthy();
   });
 });

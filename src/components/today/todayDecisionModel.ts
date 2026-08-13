@@ -120,7 +120,7 @@ export function buildTodayDecision({
       title: 'Building today\'s decision brief',
       description: 'VouchEdge is checking the slate, matchup inputs, and your saved research before recommending a next step.',
       ctaLabel: 'Open HR Intelligence',
-      ctaSection: 'hr_board',
+      ctaSection: 'hr_max',
     };
   } else if (pendingSlips > 0) {
     primary = {
@@ -154,7 +154,7 @@ export function buildTodayDecision({
       title: 'Today\'s HR research board is available',
       description: `${availableHrSignals} research signal${availableHrSignals === 1 ? '' : 's'} available on the HR board. Compare the evidence and risks before choosing a player.`,
       ctaLabel: 'Review HR Intelligence',
-      ctaSection: 'hr_board',
+      ctaSection: 'hr_max',
     };
   } else if (hrSignalsLoading && report && report.gameCount > 0) {
     primary = {
@@ -162,7 +162,7 @@ export function buildTodayDecision({
       title: 'Today\'s HR research board is syncing',
       description: 'The slate is available, but VouchEdge is still verifying the player pool. No signal count is shown until the board finishes loading.',
       ctaLabel: 'Open HR Intelligence',
-      ctaSection: 'hr_board',
+      ctaSection: 'hr_max',
     };
   } else if (report && report.gameCount > 0) {
     primary = {
@@ -205,7 +205,7 @@ export function buildTodayDecision({
           label: 'HR research',
           value: `${availableHrSignals} signal${availableHrSignals === 1 ? '' : 's'} available`,
           detail: 'Open the board for player-level evidence and risk.',
-          section: 'hr_board',
+          section: 'hr_max',
         }
       : hrSignalsLoading && report?.gameCount
         ? {
@@ -214,7 +214,7 @@ export function buildTodayDecision({
             label: 'HR research',
             value: 'Board syncing',
             detail: 'Waiting for the canonical player pool before showing a count.',
-            section: 'hr_board',
+            section: 'hr_max',
           }
       : {
           id: 'lineup-status',
@@ -245,7 +245,7 @@ export function buildTodayDecision({
           resumeLabel: 'Start the daily loop',
           resumeTitle: 'Research one decision deeply',
           resumeDetail: 'Compare the evidence, identify the main risk, then decide whether it belongs in a slip.',
-          resumeSection: 'hr_board',
+          resumeSection: 'hr_max',
         };
 
   return {

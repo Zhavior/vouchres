@@ -72,6 +72,10 @@ function isChunkFailureReason(reason: unknown): boolean {
   return CHUNK_FAILURE_RE.test(message);
 }
 
+function isDevHmrChunkNoise(): boolean {
+  return Boolean(import.meta.env.DEV) && import.meta.env.MODE !== "test";
+}
+
 function showChunkFallbackUi(): void {
   if (fallbackHook) {
     fallbackHook();
@@ -127,6 +131,7 @@ function reloadOnceOnChunkFailure(event?: Event): void {
  */
 export function recoverFromChunkFailure(): void {
   if (typeof window === "undefined") return;
+  if (isDevHmrChunkNoise()) return;
   reloadOnceOnChunkFailure();
 }
 
@@ -134,6 +139,7 @@ function onUnhandledRejection(event: PromiseRejectionEvent): void {
   if (!isChunkFailureReason(event.reason)) return;
 
   event.preventDefault();
+  if (isDevHmrChunkNoise()) return;
   reloadOnceOnChunkFailure();
 }
 
@@ -148,7 +154,9 @@ export function initChunkRecovery(): void {
 
   normalizeRecoveryGuard();
 
-  window.addEventListener("vite:preloadError", reloadOnceOnChunkFailure);
+  if (!isDevHmrChunkNoise()) {
+    window.addEventListener("vite:preloadError", reloadOnceOnChunkFailure);
+  }
   window.addEventListener("unhandledrejection", onUnhandledRejection);
 
   if (

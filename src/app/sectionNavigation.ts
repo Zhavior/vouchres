@@ -12,7 +12,8 @@ export const PUBLIC_SECTIONS = new Set([
   'home',
   'daily_players',
   'live_games',
-  'hr_board',
+  'hr_max',
+  'aurora_hr_hq',
   'game_research',
   'player_research',
   'top_cappers',
@@ -56,8 +57,17 @@ export function getSavedActiveSection(): string | null {
   }
 }
 
+/** Retired Z8 / intel-v2 page ids — bookmarks resolve to HR Command Desk. */
+const RETIRED_HR_PAGE_IDS = new Set(['hr_board', 'daily_hr_watch_new', 'hr_intel_v2']);
+
+export function canonicalizeSection(section: string): string {
+  if (RETIRED_HR_PAGE_IDS.has(section)) return 'hr_max';
+  return section;
+}
+
 /** Logged-out users always land on the terminal intro — not Edge Island welcome. */
 export function resolvePublicSection(section: string): string {
+  section = canonicalizeSection(section);
   if (shouldForcePublicLanding()) return 'vouchedge_intro';
   if (hasRealAuthToken()) return section;
   if (section === 'welcome' || section === 'island') return 'vouchedge_intro';
@@ -66,12 +76,13 @@ export function resolvePublicSection(section: string): string {
 
 /** Signed-in users must never land on the public intro terminal. */
 export function resolveAuthenticatedSection(section: string): string {
+  section = canonicalizeSection(section);
   if (shouldForcePublicLanding()) return 'vouchedge_intro';
   if (DEV_BYPASS_AUTH) return section === 'vouchedge_intro' ? SIGNED_IN_HOME : section;
   if (!hasRealAuthToken()) return resolvePublicSection(section);
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
-  if (saved && saved !== 'vouchedge_intro') return saved;
+  if (saved && saved !== 'vouchedge_intro') return canonicalizeSection(saved);
   return SIGNED_IN_HOME;
 }
 
@@ -98,7 +109,7 @@ export function hasRealAuthToken() {
 
 export function saveActiveSection(section: string) {
   try {
-    localStorage.setItem('vouchedge_active_section', section);
+    localStorage.setItem('vouchedge_active_section', canonicalizeSection(section));
   } catch {
     // ignore storage failures
   }
@@ -173,9 +184,26 @@ export function resolveDevSectionFromLocation() {
   if (
     target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
     target === 'hr-board' || target === '/hr-board' ||
-    target === 'daily-hr-board' || target === '/daily-hr-board'
+    target === 'daily-hr-board' || target === '/daily-hr-board' ||
+    target === 'hr_board' || target === '/hr_board' ||
+    target === 'daily_hr_watch_new' || target === '/daily_hr_watch_new' ||
+    target === 'hr-intel-v2' || target === '/hr-intel-v2' ||
+    target === 'hr_intel_v2' || target === '/hr_intel_v2'
   ) {
-    return 'hr_board';
+    const search = window.location.search || '';
+    const next = `/hr-max${search}`;
+    if (`${window.location.pathname}${window.location.search}` !== next) {
+      window.history.replaceState(null, '', next);
+    }
+    return 'hr_max';
+  }
+
+  if (
+    target === 'hr-max' || target === '/hr-max' ||
+    target === 'hr_max' || target === '/hr_max' ||
+    target === 'hr-command-desk' || target === '/hr-command-desk'
+  ) {
+    return 'hr_max';
   }
 
   if (target === 'daily-players' || target === '/daily-players') {
@@ -242,9 +270,12 @@ export function resolveDevSectionFromLocation() {
 
   // General fallback normalization for all valid section route names
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
+  if (clean === 'hr_board' || clean === 'daily_hr_watch_new' || clean === 'hr_intel_v2') {
+    return 'hr_max';
+  }
   const validSections = new Set([
     'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
-    'hr_board', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'hr_max', 'aurora_hr_hq', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',

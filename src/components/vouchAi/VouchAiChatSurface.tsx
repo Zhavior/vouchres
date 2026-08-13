@@ -30,7 +30,7 @@ type Props = {
 
 const ISLAND_PAGE_SHORTCUTS = [
   { label: "V.A.I Smart Picks", section: "ai_engine", icon: Cpu },
-  { label: "HR Board", section: "hr_board", icon: Flame },
+  { label: "HR Intelligence", section: "hr_max", icon: Flame },
   { label: "Parlay Lab", section: "build", icon: Shield },
 ] as const;
 

@@ -1,0 +1,205 @@
+import { ChevronDown, FileCheck2, Shield, Star, X } from 'lucide-react';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
+import { AuroraMaxEyebrow } from '../../../components/aurora-max/AuroraMaxPrimitives';
+import type { IntelV2Row } from '../../hr/presentWatchRow';
+import type { HrResult } from '../../hr/hooks/useHrBoardViewModel';
+
+/** Slide-out research receipt rendered inline under each row. */
+function AuroraHqReceiptDrawer({ row, onClose }: { row: IntelV2Row; onClose: () => void }) {
+  return (
+    <div className="aurora-hq__receipt" role="region" aria-label={`${row.playerName} research receipt`}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.65rem', minWidth: 0 }}>
+          <FileCheck2 className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#10b981' }} aria-hidden="true" />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: '0.625rem', fontWeight: 600, color: '#e7e9e2' }}>
+              Research receipt · {row.playerName}
+            </p>
+            <p style={{ marginTop: '0.2rem', fontSize: '0.5625rem', color: 'rgba(255,255,255,0.35)' }}>
+              {row.receipt.updated} · original conclusion preserved
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={onClose} aria-label="Close receipt" style={{ color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Strike */}
+      <div className="aurora-hq__strike" style={{ marginTop: '0.75rem' }}>
+        <p>{row.strikeLine}</p>
+        <p>{row.hrpiLine}</p>
+      </div>
+
+      <div className="aurora-hq__receipt-grid">
+        {[
+          { label: 'Original conclusion', text: row.reasoningSnapshot },
+          { label: 'Main risk',           text: row.riskSnapshot },
+          { label: 'Sources',             text: row.receipt.sources.join(' · ') },
+          { label: 'Missing inputs',      text: row.receipt.missing },
+          { label: 'Methodology',         text: row.receipt.methodology },
+        ].map(({ label, text }) => (
+          <div key={label} className="aurora-hq__receipt-section">
+            <span className="aurora-hq__receipt-label">{label}</span>
+            <p>{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type Props = {
+  rows: IntelV2Row[];
+  activeId: string | null;
+  savedIds: Set<string>;
+  receiptId: string | null;
+  results: (playerId: string | number | null) => HrResult;
+  onSelect: (id: string) => void;
+  onToggleSaved: (id: string) => void;
+  onToggleReceipt: (id: string) => void;
+};
+
+/**
+ * AuroraHqSlateQueue — ranked matchup table.
+ * Uses content-visibility:auto per row for first-paint performance without adding a library.
+ * New markup, new CSS identifiers — not IntelV2Queue, not HrMaxSlateQueue.
+ */
+export function AuroraHqSlateQueue({
+  rows,
+  activeId,
+  savedIds,
+  receiptId,
+  results,
+  onSelect,
+  onToggleSaved,
+  onToggleReceipt,
+}: Props) {
+  if (rows.length === 0) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)' }} role="status">
+        No ranked matchups — the active filters returned no eligible slate rows.
+      </div>
+    );
+  }
+
+  return (
+    <div className="aurora-hq__workspace" role="list" aria-label="Ranked matchups">
+      {/* Column headers — hidden on mobile, shown at sm */}
+      <div className="aurora-hq__workspace-head-row" role="row" aria-hidden="true">
+        <span>Matchup</span>
+        <span>Research row</span>
+        <span>HRPI</span>
+        <span>Lineup</span>
+        <span>Tier</span>
+        <span style={{ textAlign: 'right' }}>Receipt</span>
+      </div>
+
+      {rows.map((row, index) => {
+        const active      = row.id === activeId;
+        const receiptOpen = receiptId === row.id;
+        const saved       = savedIds.has(row.id);
+        const result      = results(row.playerId);
+
+        return (
+          <div key={row.id} role="listitem">
+            <div className={`aurora-hq__qrow ${active ? 'is-active' : ''}`}>
+              {active ? <span className="aurora-hq__accent" aria-hidden="true" /> : null}
+
+              {/* Main select button */}
+              <button
+                type="button"
+                onClick={() => onSelect(row.id)}
+                aria-pressed={active}
+                className="aurora-hq__qselect"
+              >
+                {/* Matchup */}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'grid',
+                      height: '1.5rem',
+                      width: '1.5rem',
+                      flexShrink: 0,
+                      placeItems: 'center',
+                      border: `1px solid ${active ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                      fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
+                      fontSize: '0.5625rem',
+                      color: active ? '#10b981' : 'rgba(255,255,255,0.2)',
+                    }}
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.5625rem', fontWeight: 700, color: '#e9e8e1' }}>
+                      {row.matchupLabel}
+                    </span>
+                    <span style={{ display: 'block', marginTop: '0.1rem', fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>
+                      {row.gameTimeLabel}
+                    </span>
+                  </span>
+                </span>
+
+                {/* Player */}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                  <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={28} />
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.5625rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)' }}>
+                      {row.playerName}
+                    </span>
+                    <span style={{ display: 'block', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>
+                      {row.team}
+                      {result === 'hit' ? ' · HR recorded' : result === 'no-hr' ? ' · No HR' : ''}
+                    </span>
+                  </span>
+                </span>
+
+                {/* HRPI */}
+                <span style={{ fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.875rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: active ? '#b9e8c8' : 'rgba(255,255,255,0.72)' }}>
+                  {row.score}
+                </span>
+
+                {/* Lineup badge */}
+                <span className={`aurora-hq__truth aurora-hq__truth--${row.truthState}`} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {row.confirmed ? 'Confirmed' : row.lineupLabel}
+                </span>
+
+                {/* Tier */}
+                <span style={{ fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.42)' }}>
+                  {row.displayTier ?? '—'}
+                </span>
+              </button>
+
+              {/* Action buttons */}
+              <span className="aurora-hq__qactions">
+                <button
+                  type="button"
+                  onClick={() => onToggleSaved(row.id)}
+                  aria-label={`${saved ? 'Remove' : 'Queue'} ${row.playerName}`}
+                  className={`aurora-hq__qicon ${saved ? 'is-saved' : ''}`}
+                >
+                  <Star className="h-3 w-3" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggleReceipt(row.id)}
+                  aria-expanded={receiptOpen}
+                  aria-label={`${receiptOpen ? 'Close' : 'Open'} ${row.playerName} receipt`}
+                  className="aurora-hq__receipt-btn"
+                >
+                  <FileCheck2 className="h-3 w-3" aria-hidden="true" />
+                  <ChevronDown className={`h-2.5 w-2.5 transition-transform duration-200 ${receiptOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+              </span>
+            </div>
+
+            {/* Inline receipt drawer */}
+            {receiptOpen ? (
+              <AuroraHqReceiptDrawer row={row} onClose={() => onToggleReceipt(row.id)} />
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

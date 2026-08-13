@@ -24,7 +24,7 @@ import {
   Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair, ChevronDown,
 } from 'lucide-react';
 import { loadFeatureLayout, getSidebarFeatures } from '../../lib/featureConfig';
-import { preloadSection } from '../../lib/routePreload';
+import { isEagerHrSection, preloadSection } from '../../lib/routePreload';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 import { useProfileStore } from '../../stores/profileStore';
@@ -52,9 +52,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   CalendarDays, Grid3x3, Crown, Crosshair, Shield,
 };
 
-/** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
-const HR_NAV_IDS = new Set(['hr_board']);
-
 const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>) => {
   const profile = state.profile;
   return {
@@ -77,7 +74,7 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
 function isSidebarItemActive(activeSection: string, featureId: string): boolean {
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'hr_max') return activeSection === 'hr_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;
 }
@@ -94,16 +91,16 @@ interface NavItemProps {
 }
 
 const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, showLiveOnAir = false }: NavItemProps) {
-  const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
+  const resolvedIcon = icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
   const handleClick = useCallback(() => {
-    preloadSection(id);
+    if (!isEagerHrSection(id)) preloadSection(id);
     onNavigate(id);
   }, [id, onNavigate]);
 
   const handleIntent = useCallback(() => {
-    preloadSection(id);
+    if (!isEagerHrSection(id)) preloadSection(id);
   }, [id]);
 
   return (
@@ -235,7 +232,7 @@ function FeedSidebar({
   }, []);
 
   const handleNavigate = useCallback((id: string) => {
-    preloadSection(id);
+    if (!isEagerHrSection(id)) preloadSection(id);
     onSectionChange(id);
   }, [onSectionChange]);
 

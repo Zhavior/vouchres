@@ -3,7 +3,7 @@ export const FOCUSED_BETA_SHELL_ENABLED =
 
 export const BETA_PRIMARY_DESTINATIONS = [
   { id: 'today', label: 'Today', section: 'today' },
-  { id: 'research', label: 'Research', section: 'hr_board' },
+  { id: 'research', label: 'Research', section: 'hr_max' },
   { id: 'track_record', label: 'Track Record', section: 'results' },
   { id: 'account', label: 'Account', section: 'profile' },
 ] as const;
@@ -12,6 +12,8 @@ export type BetaDestinationId = (typeof BETA_PRIMARY_DESTINATIONS)[number]['id']
 
 const RESEARCH_SECTIONS = new Set([
   'hr_board',
+  'hr_max',
+  'aurora_hr_hq',
   'daily_hr_watch_new',
   'daily_players',
   'mlb_stats',
@@ -62,7 +64,7 @@ const ACCOUNT_SECTIONS = new Set([
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
-  'hr_board',
+  'hr_max',
   'live_games',
   'results',
   'premium',
@@ -71,7 +73,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
-  'hr_board',
+  'hr_max',
   'live_games',
   'results',
   'premium',

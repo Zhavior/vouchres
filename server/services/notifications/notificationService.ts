@@ -117,7 +117,7 @@ export function getPublicVapidKey(): string | null {
 
 function notificationUrl(type: NotificationType, metadata: Record<string, unknown>): string {
   if (type === "HOME_RUN" && metadata.playerId) {
-    return `/hr-board?hrPlayer=${encodeURIComponent(String(metadata.playerId))}`;
+    return `/hr-max?hrPlayer=${encodeURIComponent(String(metadata.playerId))}`;
   }
   if (type === "PARLAY_GRADED" || type === "PARLAY_TAILED" || type === "PARLAY_LEG_SETTLED") {
     return "/notifications";

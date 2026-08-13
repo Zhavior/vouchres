@@ -87,9 +87,9 @@ export function useVouchAiChat({
         explanation =
           "🧠 Swapped over to the **V.A.I Smart Picks Hub**! Access over 850 verified precompiled tickets backed by Statcast velocity models, relative team rest parameters, and local weather coefficients.";
         break;
-      case "hr_board":
+      case "hr_max":
         explanation =
-          "🔥 Jumping to the **HR Board** for today's verified home-run candidates and edge table.";
+          "🔥 Jumping to **HR Intelligence** for today's verified home-run candidates.";
         break;
       case "research":
         explanation =

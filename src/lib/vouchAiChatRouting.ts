@@ -128,8 +128,8 @@ export function routeVouchAiMessage(text: string): VouchAiRouteAction {
   if (lower.includes("hr board") || lower.includes("home run")) {
     return {
       kind: "section_nav",
-      section: "hr_board",
-      responseText: "Jumping to the **HR Board** for today's verified candidates.",
+      section: "hr_max",
+      responseText: "Jumping to **HR Intelligence** for today's verified candidates.",
     };
   }
 

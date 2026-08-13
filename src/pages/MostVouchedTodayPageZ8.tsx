@@ -107,7 +107,7 @@ export function MostVouchedTodayPageZ8({ onNavigate, onAddPlayerToSlip }: MostVo
               {onNavigate && (
                 <button
                   type="button"
-                  onClick={() => onNavigate('hr_board')}
+                  onClick={() => onNavigate('hr_max')}
                   className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-black/40 text-slate-300 hover:border-vouch-cyan hover:text-vouch-cyan transition"
                   title="Back to HR Board"
                 >

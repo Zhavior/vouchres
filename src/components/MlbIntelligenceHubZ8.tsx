@@ -715,7 +715,7 @@ export default function MlbIntelligenceHubZ8({ onSectionChange }: Props) {
             {onSectionChange && (
               <button
                 type="button"
-                onClick={() => onSectionChange('hr_board')}
+                onClick={() => onSectionChange('hr_max')}
                 className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 py-3 text-sm font-black text-vouch-cyan hover:bg-vouch-cyan/15"
               >
                 <HrBrandIcon size="sm" />

@@ -95,6 +95,7 @@ export type AuroraMaxEvidenceItem = {
   value: ReactNode;
   score?: number | null;
   tone?: 'confirmed' | 'neutral' | 'warning' | 'missing';
+  detail?: string;
 };
 
 export function AuroraMaxEvidenceLadder({ items, meta }: { items: readonly AuroraMaxEvidenceItem[]; meta?: ReactNode }) {
@@ -108,14 +109,16 @@ export function AuroraMaxEvidenceLadder({ items, meta }: { items: readonly Auror
         <div className="aurora-max-evidence__rows">
           {items.map((item, index) => {
             const boundedScore = item.score == null ? null : Math.max(0, Math.min(100, item.score));
+            const detail = item.detail?.trim();
             return (
-              <div className="aurora-max-evidence__row" key={`${item.label}-${index}`}>
+              <div className={`aurora-max-evidence__row${detail ? ' aurora-max-evidence__row--detail' : ''}`} key={`${item.label}-${index}`}>
                 <span className="aurora-max-evidence__index">{String(index + 1).padStart(2, '0')}</span>
                 <span className="aurora-max-evidence__label">{item.label}</span>
                 {boundedScore != null ? (
                   <span className="aurora-max-evidence__meter" aria-hidden="true"><span style={{ width: `${Math.max(4, boundedScore)}%` }} /></span>
                 ) : null}
                 <span className={`aurora-max-evidence__value aurora-max-evidence__value--${item.tone ?? 'neutral'}`}>{item.value}</span>
+                {detail ? <p className="aurora-max-evidence__detail">{detail}</p> : null}
               </div>
             );
           })}

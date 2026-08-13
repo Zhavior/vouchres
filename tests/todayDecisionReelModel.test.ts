@@ -100,7 +100,7 @@ describe('buildTodayReelSlides', () => {
     const slides = buildTodayReelSlides({ decision, report: dailyReport, topPlayer: player() });
 
     expect(slides.map((slide) => slide.id)).toEqual(['hr-player', 'decision', 'run-environment', 'pitcher']);
-    expect(slides[0]?.ctaSection).toBe('hr_board');
+    expect(slides[0]?.ctaSection).toBe('hr_max');
     expect(slides[1]?.ctaSection).toBe(decision.ctaSection);
     expect(slides[3]?.visual.type).toBe('signal');
   });

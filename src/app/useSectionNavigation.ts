@@ -36,7 +36,7 @@ export function useSectionNavigation() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     const raw = locationSection
-      ?? (DEV_BYPASS_AUTH ? 'hr_board' : 'vouchedge_intro');
+      ?? (DEV_BYPASS_AUTH ? 'hr_max' : 'vouchedge_intro');
     return resolveAuthenticatedSection(raw);
   });
   const activeSectionRef = useRef(activeSection);

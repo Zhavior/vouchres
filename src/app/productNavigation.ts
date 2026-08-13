@@ -22,9 +22,9 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
     id: 'research',
     label: 'Research',
     description: 'Verified MLB evidence and matchup context',
-    defaultSection: 'hr_board',
+    defaultSection: 'hr_max',
     sections: [
-      'hr_board', 'daily_hr_watch_new', 'daily_players', 'mlb_stats', 'research', 'player_research',
+      'hr_board', 'hr_max', 'aurora_hr_hq', 'daily_hr_watch_new', 'daily_players', 'mlb_stats', 'research', 'player_research',
       'game_research', 'live_games', 'intel', 'player_edge_lab', 'pitcher_matchup',
       'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup', 'hitter_matchup_zones',
       'pro_graphs_lab', 'ai_pilot', 'ai_engine', 'brain_picks', 'brain_performance', 'nba_nfl',

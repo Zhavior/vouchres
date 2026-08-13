@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveDevSectionFromLocation } from "../src/app/sectionNavigation";
 
@@ -28,6 +29,12 @@ describe("section navigation", () => {
     ["/brain_picks", "brain_picks"],
     ["/brain-performance", "brain_performance"],
     ["/brain_performance", "brain_performance"],
+    ["/hr-max", "hr_max"],
+    ["/hr-command-desk", "hr_max"],
+    ["/hr-intel-v2", "hr_max"],
+    ["/hr-board", "hr_max"],
+    ["/daily-hr-watch-new", "hr_max"],
+    ["/daily-hr-board", "hr_max"],
   ])("restores %s directly", (path, expected) => {
     window.location.pathname = path;
     expect(resolveDevSectionFromLocation()).toBe(expected);

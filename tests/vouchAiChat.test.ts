@@ -18,7 +18,7 @@ describe("routeVouchAiMessage", () => {
     const action = routeVouchAiMessage("open hr board");
     expect(action.kind).toBe("section_nav");
     if (action.kind === "section_nav") {
-      expect(action.section).toBe("hr_board");
+      expect(action.section).toBe("hr_max");
     }
   });
 

@@ -19,9 +19,6 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   vouchedge_intro: routeModules.vouchEdgeTerminal,
   legacy_studio: routeModules.aisLanding,
 
-  hr_board: routeModules.hrBoard,
-  daily_hr_watch_new: routeModules.hrBoard,
-
   brain_picks: routeModules.brainPicks,
   brain_performance: routeModules.brainPerformance,
 
@@ -67,15 +64,18 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   most_vouched: routeModules.mostVouchedToday,
 };
 
+/** Statically composed in MainViewRouter — never prefetch or idle-warm these. */
+export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq']);
+
+export function isEagerHrSection(section: string): boolean {
+  return EAGER_HR_SECTIONS.has(section);
+}
+
 const WARM_NEIGHBORS: Record<string, string[]> = {
-  feed: ['today', 'hr_board'],
+  feed: ['today'],
   following: ['feed'],
-  today: ['hr_board'],
-  hr_board: ['daily_players'],
   brain_picks: ['brain_performance'],
   brain_performance: ['brain_picks'],
-  mlb_stats: ['hr_board'],
-  daily_players: ['hr_board'],
   live_parlays: ['build'],
   build: ['live_parlays'],
   ai_engine: ['ai_pilot'],
@@ -86,7 +86,8 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
 
 /** Heavy first-paint routes — do not compete with their own chunk/network work. */
 const HEAVY_ROUTES = new Set([
-  'hr_board',
+  'hr_max',
+  'aurora_hr_hq',
   'daily_players',
   'research',
   'live_games',
@@ -119,6 +120,7 @@ function canWarmRoutes(): boolean {
 }
 
 export function preloadSection(section: string): void {
+  if (isEagerHrSection(section)) return;
   const loader = SECTION_LOADERS[section];
   if (!loader || preloaded.has(section)) return;
   preloaded.add(section);
@@ -146,7 +148,7 @@ export function warmLikelyRoutes(activeSection?: string): void {
       if (activeSection && HEAVY_ROUTES.has(activeSection)) return;
 
       const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
-      const defaults = activeSection === 'today' ? ['hr_board'] : activeSection ? [] : ['today'];
+      const defaults = activeSection ? [] : ['today'];
       const candidates = [...new Set([...neighbors, ...defaults])]
         .filter((section) => section !== activeSection)
         .slice(0, 2);

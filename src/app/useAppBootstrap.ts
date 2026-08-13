@@ -371,7 +371,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn, auth
 
   useEffect(() => {
     if (isLoggedIn) return;
-    if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
+    if (!['hr_max', 'aurora_hr_hq'].includes(activeSection)) return;
     void warmGuestHrBoardCache();
   }, [activeSection, isLoggedIn]);
 

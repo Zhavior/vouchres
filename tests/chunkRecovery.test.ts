@@ -76,4 +76,62 @@ describe("chunkRecovery", () => {
 
     reload.mockRestore();
   });
+
+  it("MODE===test still subscribes to vite:preloadError and reloads once", async () => {
+    const reload = vi.spyOn(window.location, "reload").mockImplementation(() => undefined);
+    const addEventListener = vi.spyOn(window, "addEventListener");
+
+    try {
+      const { initChunkRecovery } = await import("../src/lib/chunkRecovery");
+      initChunkRecovery();
+
+      const preloadHandler = addEventListener.mock.calls.find(
+        ([type]) => type === "vite:preloadError",
+      )?.[1] as EventListener | undefined;
+
+      expect(preloadHandler).toBeTypeOf("function");
+
+      window.dispatchEvent(new Event("vite:preloadError"));
+      expect(reload).toHaveBeenCalledTimes(1);
+
+      if (preloadHandler) {
+        window.removeEventListener("vite:preloadError", preloadHandler);
+      }
+    } finally {
+      addEventListener.mockRestore();
+      reload.mockRestore();
+    }
+  });
+
+  it("DEV (not test) initChunkRecovery does not subscribe to vite:preloadError or auto-reload", async () => {
+    const originalMode = import.meta.env.MODE;
+    const originalDev = import.meta.env.DEV;
+
+    (import.meta.env as { DEV: boolean }).DEV = true;
+    (import.meta.env as { MODE: string }).MODE = "development";
+    vi.resetModules();
+
+    const reload = vi.spyOn(window.location, "reload").mockImplementation(() => undefined);
+    const addEventListener = vi.spyOn(window, "addEventListener");
+
+    try {
+      const { initChunkRecovery, recoverFromChunkFailure } =
+        await import("../src/lib/chunkRecovery");
+
+      initChunkRecovery();
+
+      expect(
+        addEventListener.mock.calls.filter(([type]) => type === "vite:preloadError"),
+      ).toHaveLength(0);
+
+      recoverFromChunkFailure();
+      expect(reload).not.toHaveBeenCalled();
+    } finally {
+      addEventListener.mockRestore();
+      reload.mockRestore();
+      (import.meta.env as { MODE: string }).MODE = originalMode;
+      (import.meta.env as { DEV: boolean }).DEV = originalDev;
+    }
+  });
 });
+

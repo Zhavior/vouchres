@@ -1,11 +1,11 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
-import HrRouteSkeleton from '../components/boot/HrRouteSkeleton';
+import HrMaxRouteSkeleton from '../features/hr-max/HrMaxRouteSkeleton';
 import { TerminalBackground } from '../components/layout/TerminalBackground';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
@@ -72,10 +72,40 @@ export function AppShell({
     warmLikelyRoutes(activeSection);
   }, [isPublicFrontPage, activeSection]);
 
-  const isHrRoute = activeSection === 'hr_board' || activeSection === 'daily_hr_watch_new';
+  const isHrMaxRoute = activeSection === 'hr_max';
+  const isHrRoute = isHrMaxRoute;
+  const [allowParlayOsLayer, setAllowParlayOsLayer] = useState(() => !isHrRoute);
+
+  useEffect(() => {
+    if (!isHrRoute) {
+      setAllowParlayOsLayer(true);
+      return;
+    }
+
+    setAllowParlayOsLayer(false);
+    if (typeof window === 'undefined') return;
+
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setAllowParlayOsLayer(true);
+    };
+    const ric = window.requestIdleCallback;
+    if (typeof ric === 'function') {
+      const idleId = ric(enable, { timeout: 2500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+    const timeoutId = window.setTimeout(enable, 600);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isHrRoute]);
 
   const routeContent = (
-    <Suspense fallback={isHrRoute ? <HrRouteSkeleton /> : <RouteShellSkeleton />}>
+    <Suspense fallback={isHrMaxRoute ? <HrMaxRouteSkeleton /> : <RouteShellSkeleton />}>
       <MainViewRouter
         activeSection={activeSection}
         navigateSection={navigateSection}
@@ -129,7 +159,7 @@ export function AppShell({
                     </>
                   )}
 
-                  {showGlobalAppChrome && isLoggedIn && !isPublicFrontPage && (
+                  {showGlobalAppChrome && isLoggedIn && !isPublicFrontPage && allowParlayOsLayer && (
                     <Suspense fallback={null}>
                       <ParlayOsLayer
                         onConfirmTier={onConfirmParlayTier}

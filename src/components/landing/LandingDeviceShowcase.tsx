@@ -4,10 +4,8 @@ import { Z8_LABEL } from './LandingTokens';
 import PreviewCardStage from '../vouch-studio-darkroom/panels/preview/PreviewCardStage';
 import { cardStyleConfigs } from '../vouch-studio-darkroom/utils/cardStyleConfigs';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';
-import { warmGuestHrBoardCache } from '../../lib/boot/guestHrBoardWarmCache';
 import type { CardLayoutId, CustomPlayerSelection, VouchStudioDarkroomProps } from '../vouch-studio-darkroom/types';
 
-const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePageZ8'));
 const TodayDashboard = lazy(() => import('../TodayDashboardZ8'));
 
 const noop = () => {};
@@ -143,9 +141,46 @@ const SLIDES = ['hr', 'home'] as const;
 type Slide = (typeof SLIDES)[number];
 
 const SLIDE_LABELS: Record<Slide, string> = {
-  hr: 'Home Run Intelligence',
+  hr: 'HR Intelligence',
   home: 'Command Center',
 };
+
+const MOCK_HR_COLUMNS = [
+  { label: 'Elite', tone: 'text-vouch-emerald', names: ['Judge', 'Soto', 'Ohtani'] },
+  { label: 'Strong', tone: 'text-vouch-cyan', names: ['Raleigh', 'Alonso'] },
+  { label: 'Watch', tone: 'text-vouch-amber', names: ['Ozuna', 'Schwarber'] },
+  { label: 'Sleepers', tone: 'text-white/55', names: ['Morel'] },
+] as const;
+
+function MockHrIntelligence() {
+  return (
+    <div className="flex h-full min-h-full flex-col bg-[#05070a] font-z8 text-white">
+      <header className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-vouch-emerald/70">Aurora Max</p>
+          <h3 className="text-[15px] font-black tracking-tight">HR Intelligence</h3>
+        </div>
+        <span className="rounded-full border border-vouch-emerald/25 bg-vouch-emerald/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-vouch-emerald">
+          Live desk
+        </span>
+      </header>
+      <div className="grid flex-1 grid-cols-4 gap-2 p-3">
+        {MOCK_HR_COLUMNS.map((column) => (
+          <div key={column.label} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2">
+            <div className={`text-[9px] font-bold uppercase tracking-wider ${column.tone}`}>{column.label}</div>
+            <div className="mt-2 space-y-1.5">
+              {column.names.map((name) => (
+                <div key={name} className="rounded-md border border-white/[0.05] bg-black/40 px-2 py-1.5 text-[11px] font-semibold text-white/80">
+                  {name}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function MacBookSkeleton() {
   return (
@@ -158,10 +193,6 @@ function MacBookSkeleton() {
 function MacBookFrame() {
   const [active, setActive] = useState<Slide>('hr');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    warmGuestHrBoardCache();
-  }, []);
 
   const startCycle = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -199,7 +230,7 @@ function MacBookFrame() {
                       transition: 'opacity 1s ease-in-out',
                     }}
                   >
-                    <HomeRunIntelligencePage />
+                    <MockHrIntelligence />
                   </div>
                   <div
                     style={{

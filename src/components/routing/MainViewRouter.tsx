@@ -4,8 +4,9 @@ import React,
   { Suspense,
   memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
-import HrRouteSkeleton from '../boot/HrRouteSkeleton';
 import FadeInMount from '../system/FadeInMount';
+import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
+import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
 import {
   useAppShell,
   useAppPosts,
@@ -44,7 +45,6 @@ const SmartAiEngine = lazyWithRetry(routeModules.smartAiEngine);
 const MlbIntelligenceHub = lazyWithRetry(routeModules.brainEdge);
 const Leaderboard = lazyWithRetry(routeModules.leaderboard);
 const SubscriberHub = lazyWithRetry(routeModules.subscriberHub);
-const HomeRunIntelligencePage = lazyWithRetry(routeModules.hrBoard);
 const BrainPicksPage = lazyWithRetry(routeModules.brainPicks);
 const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
 const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
@@ -222,12 +222,17 @@ function MainViewRouter({
           <IntelShell navigateSection={navigateSection} />
         </LazyRoute>
       );
-    case 'daily_hr_watch_new':
-    case 'hr_board':
+    case 'hr_max':
       return (
-        <LazyRoute fallback={<HrRouteSkeleton />}>
-          <HomeRunIntelligencePage onSectionChange={navigateSection} />
-        </LazyRoute>
+        <FadeInMount>
+          <HrAuroraMaxPage />
+        </FadeInMount>
+      );
+    case 'aurora_hr_hq':
+      return (
+        <FadeInMount>
+          <AuroraHqPage />
+        </FadeInMount>
       );
     case 'brain_picks':
       return (

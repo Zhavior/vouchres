@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-const DENSE_ROUTES = new Set(['today', 'hr_board', 'daily_hr_watch_new', 'intel', 'feed', 'live_games']);
+const DENSE_ROUTES = new Set(['today', 'hr_max', 'aurora_hr_hq', 'intel', 'feed', 'live_games']);
 const FOCUSED_ROUTES = new Set(['settings', 'profile', 'premium', 'customize', 'notifications']);
 
 export default function AuroraMaxRouteFrame({ section, children }: { section: string; children: ReactNode }) {
