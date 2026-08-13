@@ -48,6 +48,18 @@ vi.mock("../server/services/mlb/playerEdgeResearchService", () => ({
   getPlayerEdgeResearch: vi.fn(async () => ({ playerId: 592450, warnings: [] })),
 }));
 
+vi.mock("../server/services/mlb/pitcherResearchService", () => ({
+  getPitcherResearch: vi.fn(async () => ({
+    playerId: 675911,
+    season: null,
+    recentGames: [],
+    pitchMix: [],
+    warnings: [],
+    dataSource: "official_mlb",
+    updatedAt: "2026-08-13T00:00:00.000Z",
+  })),
+}));
+
 let server: Server;
 let baseUrl: string;
 
@@ -115,6 +127,27 @@ describe("player registry routes", () => {
       attemptedAt: "2026-08-05T00:00:00.000Z",
       warning: null,
       players: [],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
+
+  it("returns ok envelope for pitcher-research", async () => {
+    const response = await fetch(`${baseUrl}/api/mlb/players/675911/pitcher-research`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      playerId: 675911,
+      season: null,
+      recentGames: [],
+      pitchMix: [],
+      warnings: [],
+      dataSource: "official_mlb",
+      updatedAt: "2026-08-13T00:00:00.000Z",
       meta: {
         requestId: expect.any(String),
         timestamp: expect.any(String),

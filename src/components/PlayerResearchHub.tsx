@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "../lib/motion";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
-  Search, LayoutGrid, Table2, X, Plus, Shield, TrendingUp,
-  Activity, Zap, ChevronRight, BarChart3, Crosshair, Sparkles,
-  AlertTriangle, CheckCircle2, Lock, RefreshCw,
+  Search, LayoutGrid, Table2, Plus, X,
+  ChevronRight, BarChart3, Crosshair,
+  CheckCircle2, RefreshCw, Swords,
 } from "lucide-react";
 
 /* ============================================================================
@@ -23,24 +22,30 @@ import {
 
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
-import StrikeZoneHeatmapMatrix from "./analytics/StrikeZoneHeatmapMatrix";
 import { apiClient } from "../lib/apiClient";
-import { enrichPlayerStats } from "../utils/mlbApi";
-import { openParlayAdd } from "../lib/parlays/parlayAddContract";
-import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
 import {
-  AURORA_ACTIVE,
+  AuroraMaxControl,
+  AuroraMaxEyebrow,
+  AuroraMaxFallback,
+  AuroraMaxPanel,
+  AuroraMaxProductMark,
+  AuroraMaxTruthBadge,
+} from "./aurora-max/AuroraMaxPrimitives";
+import type { StatcastQuality } from "../pages/pro/usePlayerEdgeResearch";
+import { assembleAiPlayerData, formatPct, formatRate, formatVelo, listStatcast } from "./player-research/applyEdgeResearch";
+import { AuroraMaxPlayerDossier, type DetailTab } from "./player-research/AuroraMaxPlayerDossier";
+import { BvpIntelligenceDesk } from "./player-research/bvp/BvpIntelligenceDesk";
+import { BVP_TRUTH_LABEL } from "./player-research/bvp/types";
+import "../styles/player-research-aurora-max.css";
+import {
   AURORA_DISPLAY,
-  AURORA_IDLE,
   AURORA_LABEL,
   AURORA_PAGE,
   AURORA_PAGE_GAP,
   AURORA_PAGE_PAD_X,
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL_PREMIUM,
-  AURORA_SECTION_HEADER,
   AURORA_SURFACE,
-  AURORA_WARNING,
 } from "../theme/auroraTokens";
 
 interface Markets {
@@ -52,35 +57,9 @@ interface Markets {
 }
 
 
-const PLAYER_RESEARCH_PRO_TABS = [
-  'Overview',
-  'Game Log',
-  'Splits',
-  'Statcast',
-  'Matchup',
-  'Markets',
-  'V.A.I Fit',
-] as const;
-
-const PLAYER_RESEARCH_TRUTH_RULES = [
-  'Official IDs only: playerId, teamId, gamePk, gameStartTime.',
-  'No fake odds. Unknown sportsbook prices display as Odds TBD.',
-  'Sourced stats render with truth badges. Missing stats render as Unavailable.',
-  'Model scores are labeled estimates, never guarantees.',
-];
-
-const PLAYER_RESEARCH_PRO_IDEAS = [
-  'Last 10 / 15 / 30 / season game logs',
-  'Hits, total bases, HR, RBI, runs, stolen base trends',
-  'Statcast trend panels for EV, launch angle, barrels, hard-hit, xwOBA',
-  'Pitcher matchup, park, weather, lineup, and game status context',
-  'Banker / Analyst / Hunter / Shark fit panel',
-  'Research receipts and parlay-safe market buttons',
-] as const;
-
-type Mode = "scout" | "compare" | "build";
+type Mode = "scout" | "compare" | "build" | "bvp";
 type ListStyle = "grid" | "table";
-type DetailTab = "overview" | "splits" | "gamelog" | "ai" | "markets";
+type RosterScope = "playing" | "all";
 
 interface BackendRegistryPlayer {
   playerId: number;
@@ -115,6 +94,26 @@ function normalizeHand(value: string | undefined, fallback: "L" | "R" | "S" = "R
 
 function normalizeThrow(value: string | undefined): "L" | "R" {
   return value === "L" || value === "R" ? value : "R";
+}
+
+function isActiveRosterType(rosterType?: string): boolean {
+  return rosterType === "active";
+}
+
+function collectActiveRosterIds(rows: BackendRegistryPlayer[]): Set<string> {
+  const ids = new Set<string>();
+  for (const row of rows) {
+    if (!isActiveRosterType(row.rosterType)) continue;
+    const id = String(row.playerId || row.id);
+    if (id) ids.add(id);
+  }
+  return ids;
+}
+
+function parseCompareNumber(value: string): number | null {
+  if (!value || value === "—" || value === "UNKNOWN") return null;
+  const numeric = Number.parseFloat(value.replace("%", "").replace(" mph", "").replace(/^\./, "0."));
+  return Number.isFinite(numeric) ? numeric : null;
 }
 
 function fallbackPlayerShell(player: BackendRegistryPlayer): MLBPlayer {
@@ -220,13 +219,15 @@ const isSeedPlayerRecord = (player: MLBPlayer) => {
   return MLB_PLAYER_RECORDS.some((seed) => seed.id === player.id);
 };
 
+function sourcedLast10Avg(player: MLBPlayer): string {
+  if (isSeedPlayerRecord(player)) return "—";
+  const avg = player.splits.last10?.avg;
+  return avg && avg !== "—" ? avg : "—";
+}
+
 const getOfficialSeasonStat = (player: MLBPlayer, key: keyof MLBPlayer["seasonStats"]) => {
   if (isSeedPlayerRecord(player)) return "—";
   return player.seasonStats[key] || "—";
-};
-
-const getSeasonStatSourceLabel = (player: MLBPlayer) => {
-  return isSeedPlayerRecord(player) ? "Seed Data" : "MLB API";
 };
 
 const parseOfficialSeasonStat = (player: MLBPlayer, key: keyof MLBPlayer["seasonStats"]) => {
@@ -244,10 +245,13 @@ export default function PlayerResearchHub({
 }: Markets) {
   const [mode, setMode] = useState<Mode>("scout");
   const [listStyle, setListStyle] = useState<ListStyle>("grid");
+  const [rosterScope, setRosterScope] = useState<RosterScope>("playing");
+  const [activeRosterIds, setActiveRosterIds] = useState<Set<string>>(() => new Set());
   const [search, setSearch] = useState("");
   const [teamFilter, setTeamFilter] = useState("ALL");
-  const [quickFilter, setQuickFilter] = useState<"all" | "top5" | "wind" | "confirmed" | "hot">("all");
-  const [sortBy, setSortBy] = useState<"batterScore" | "hr" | "avg" | "ops" | "name">("batterScore");
+  const [positionFilter, setPositionFilter] = useState("ALL");
+  const [sortBy, setSortBy] = useState<"name" | "hr" | "avg" | "ops" | "barrel">("name");
+  const [statcastByPlayer, setStatcastByPlayer] = useState<Record<string, StatcastQuality> | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(48);
   const [selectedPlayer, setSelectedPlayer] = useState<MLBPlayer | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
@@ -289,6 +293,7 @@ export default function PlayerResearchHub({
 
         const mapped = (registryPayload.players || []).map(mapBackendPlayer);
         if (mapped.length > 0) {
+          setActiveRosterIds(collectActiveRosterIds(registryPayload.players || []));
           setAllRegistryPlayers(mapped);
           setRegistryPlayers(mapped);
           setBackendCount(registryPayload.count ?? mapped.length);
@@ -332,6 +337,13 @@ export default function PlayerResearchHub({
       }
     }
     loadRegistry();
+    apiClient
+      .get<{ batters?: Record<string, StatcastQuality> }>("/api/mlb/statcast/batters")
+      .then((payload) => {
+        const batters = payload?.batters;
+        if (batters && typeof batters === "object") setStatcastByPlayer(batters);
+      })
+      .catch(() => undefined);
     return () => controller.abort();
   }, []);
 
@@ -349,6 +361,11 @@ export default function PlayerResearchHub({
           controller.signal
         );
         setRegistryPlayers((payload.players || []).map(mapBackendPlayer));
+        setActiveRosterIds((prev) => {
+          const next = new Set(prev);
+          for (const id of collectActiveRosterIds(payload.players || [])) next.add(id);
+          return next;
+        });
         setRegistryStatus("ready");
         setRegistryError("");
       } catch (error) {
@@ -372,8 +389,16 @@ export default function PlayerResearchHub({
     return ["ALL", ...Array.from(set).sort()];
   }, [players]);
 
+  const positions = useMemo(() => {
+    const set = new Set(players.map((p) => p.position).filter(Boolean));
+    return ["ALL", ...Array.from(set).sort()];
+  }, [players]);
+
   const filtered = useMemo(() => {
     let result = players;
+    if (rosterScope === "playing") {
+      result = result.filter((p) => activeRosterIds.has(p.id));
+    }
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -383,99 +408,117 @@ export default function PlayerResearchHub({
     if (teamFilter !== "ALL") {
       result = result.filter((p) => p.team === teamFilter);
     }
-
-    if (quickFilter === "top5") {
-      result = result.slice(0, 5);
-    } else if (quickFilter === "wind") {
-      result = result.filter((p) => (p.advanced as any)?.weatherBoost || p.scoutingReport?.hotZones?.length);
-    } else if (quickFilter === "confirmed") {
-      result = result.filter((p) => p.injuryStatus?.toLowerCase().includes("active") || (p as any).isStarter);
-    } else if (quickFilter === "hot") {
-      result = result.filter((p) => parseOfficialSeasonStat(p, "hr") >= 15 || p.batterScore >= 80);
+    if (positionFilter !== "ALL") {
+      result = result.filter((p) => p.position === positionFilter);
     }
 
     const sorted = [...result];
     sorted.sort((a, b) => {
+      const playingDelta = Number(activeRosterIds.has(b.id)) - Number(activeRosterIds.has(a.id));
+      if (playingDelta !== 0) return playingDelta;
       if (sortBy === "name") return a.name.localeCompare(b.name);
-      if (sortBy === "batterScore") return b.batterScore - a.batterScore;
       if (sortBy === "hr") return parseOfficialSeasonStat(b, "hr") - parseOfficialSeasonStat(a, "hr");
       if (sortBy === "avg") return parseOfficialSeasonStat(b, "avg") - parseOfficialSeasonStat(a, "avg");
       if (sortBy === "ops") return parseOfficialSeasonStat(b, "ops") - parseOfficialSeasonStat(a, "ops");
+      if (sortBy === "barrel") {
+        const aBarrel = listStatcast(a.id, statcastByPlayer)?.barrelPct ?? Number.NEGATIVE_INFINITY;
+        const bBarrel = listStatcast(b.id, statcastByPlayer)?.barrelPct ?? Number.NEGATIVE_INFINITY;
+        return bBarrel - aBarrel;
+      }
       return 0;
     });
     return sorted;
-  }, [players, search, teamFilter, sortBy, quickFilter]);
+  }, [players, search, teamFilter, positionFilter, sortBy, statcastByPlayer, rosterScope, activeRosterIds]);
 
   useEffect(() => {
     setVisibleLimit(48);
-  }, [search, teamFilter, sortBy, quickFilter, listStyle]);
+  }, [search, teamFilter, positionFilter, sortBy, listStyle, rosterScope]);
 
   const visiblePlayers = useMemo(() => filtered.slice(0, visibleLimit), [filtered, visibleLimit]);
 
   const openDetail = (player: MLBPlayer, tab: DetailTab = "overview") => {
     setSelectedPlayer(player);
     setDetailTab(tab);
-    void enrichPlayerStats(player)
-      .then((enriched) => {
-        setSelectedPlayer((current) => (current?.id === player.id ? enriched : current));
-        setRegistryPlayers((current) =>
-          current.map((row) => (row.id === player.id ? { ...row, ...enriched } : row)),
-        );
-      })
-      .catch(() => undefined);
   };
+
+  const cacheDossier = useCallback((enriched: MLBPlayer) => {
+    setSelectedPlayer((current) => (current?.id === enriched.id ? { ...current, ...enriched } : current));
+    setRegistryPlayers((current) =>
+      current.map((row) => (row.id === enriched.id ? { ...row, seasonStats: enriched.seasonStats, gameLogs: enriched.gameLogs, splits: enriched.splits } : row)),
+    );
+    setAllRegistryPlayers((current) =>
+      current.map((row) => (row.id === enriched.id ? { ...row, seasonStats: enriched.seasonStats, gameLogs: enriched.gameLogs, splits: enriched.splits } : row)),
+    );
+  }, []);
 
   const closeDetail = () => setSelectedPlayer(null);
 
-  const runAIResearch = async (player: MLBPlayer) => {
+  const runAIResearch = async (player: MLBPlayer, research: Parameters<typeof assembleAiPlayerData>[1]) => {
     if (aiReports[player.id]) return;
     setResearching(player.id);
-    // Simulated AI research (the real API call would go to /api/ai/player-research)
-    setTimeout(() => {
+    try {
+      const data = await apiClient.post<{ report?: string; status?: string; aiScore?: number }>(
+        "/api/ai/player-research",
+        { playerData: assembleAiPlayerData(player, research) },
+      );
       setAiReports((prev) => ({
         ...prev,
-        [player.id]: `${player.name} shows ${player.advanced.barrelPercent > 15 ? "elite" : "above-average"} barrel rate (${player.advanced.barrelPercent}%) with ${player.advanced.hardHitPercent}% hard-hit contact. His ${player.splits.vRHP.ops} OPS vs RHP suggests a strong platoon advantage against right-handed pitching. Recent form (${player.splits.last10.ops} OPS over last 10) indicates ${parseFloat(player.splits.last10.ops) > parseOfficialSeasonStat(player, "ops") ? "heating up" : "cooling off"}. Key risk: ${player.scoutingReport.riskFactor} risk factor. Hot zones: ${player.scoutingReport.hotZones.join(", ")}.`,
+        [player.id]: data.report || "AI report returned empty. Official stats above are still the source of truth.",
       }));
+    } catch {
+      setAiReports((prev) => ({
+        ...prev,
+        [player.id]: "AI research is unavailable right now. Season, Statcast, and game logs above are still live from the MLB feed.",
+      }));
+    } finally {
       setResearching(null);
-    }, 1500);
+    }
   };
 
+  const registryTruth = registryStatus === "ready"
+    ? (registryMeta.warming ? "Refreshing roster" : registryMeta.stale ? "Cached roster" : "Live roster")
+    : registryStatus === "loading"
+      ? "Loading roster"
+      : "Fallback roster";
+
   return (
-    <main className={`${AURORA_PAGE} min-h-screen`}>
-      {/* ====== Header ====== */}
-      <header className={`sticky top-0 z-40 ${AURORA_PANEL_PREMIUM} rounded-none border-x-0 border-t-0`}>
-        <div className={`mx-auto flex h-14 max-w-7xl items-center justify-between ${AURORA_PAGE_PAD_X}`}>
-          <div className="flex items-center gap-3">
-            <div className={`${AURORA_SURFACE} flex h-8 w-8 items-center justify-center rounded-lg border-vouch-cyan/30 bg-vouch-cyan/10`}>
-              <Search className="h-4 w-4 text-vouch-cyan" />
+    <main className={`player-research-hub ${AURORA_PAGE} min-h-screen`} data-apex-mode="cognitive-safe">
+      <header className="pr-max-chrome sticky top-0 z-40 border-b border-[var(--aurora-max-line)]">
+        <div className={`mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 py-3 ${AURORA_PAGE_PAD_X}`}>
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <AuroraMaxProductMark />
+            <div className="min-w-0">
+              <AuroraMaxEyebrow>Player desk</AuroraMaxEyebrow>
+              {mode === "bvp" ? (
+                <p className={`${AURORA_LABEL} text-[var(--aurora-max-muted)]`}>
+                  BvP · official MLB Stats API + Savant
+                </p>
+              ) : (
+                <p className={`${AURORA_LABEL} text-[var(--aurora-max-muted)]`}>
+                  {rosterScope === "playing"
+                    ? `${filtered.length} on active roster`
+                    : `${backendCount ?? players.length} in registry`}
+                  {" · "}{registryTruth}
+                  {statcastByPlayer ? " · Statcast connected" : ""}
+                </p>
+              )}
             </div>
-            <span className="text-sm font-bold text-white">Player Research</span>
-            <span className={`${AURORA_LABEL} text-white/40`}>
-              {backendCount ?? players.length} players · {
-                registryStatus === "ready"
-                  ? (registryMeta.warming ? "refreshing registry..." : registryMeta.stale ? "cached snapshot" : "backend registry")
-                  : registryStatus === "loading"
-                  ? "loading registry"
-                  : "fallback records"
-              }
-            </span>
-            {registryError && <span className={`${AURORA_LABEL} hidden text-vouch-amber md:inline`}>{registryError}</span>}
-            <span className={`${AURORA_LABEL} hidden text-vouch-cyan/80 lg:inline`}>
-              Truth Lens · Verified stats · Live pricing feed pending
-            </span>
+            <AuroraMaxTruthBadge state={mode === "bvp" ? "live" : registryStatus === "ready" ? "live" : registryStatus === "loading" ? "projected" : "warning"}>
+              {mode === "bvp" ? BVP_TRUTH_LABEL : registryTruth}
+            </AuroraMaxTruthBadge>
           </div>
-          {/* Mode tabs */}
-          <div className={`${AURORA_SURFACE} flex rounded-lg p-0.5`}>
+          <div className="flex rounded-md border border-[var(--aurora-max-line)] p-0.5">
             {([
               { id: "scout" as Mode, label: "Scout", icon: Crosshair },
               { id: "compare" as Mode, label: "Compare", icon: BarChart3 },
               { id: "build" as Mode, label: "Build", icon: Plus },
+              { id: "bvp" as Mode, label: "BvP", icon: Swords },
             ]).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setMode(t.id)}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-                  mode === t.id ? AURORA_ACTIVE : AURORA_IDLE
+                className={`pr-max-mode-tab flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider ${
+                  mode === t.id ? "is-active" : ""
                 }`}
               >
                 <t.icon className="w-3 h-3" />
@@ -488,76 +531,82 @@ export default function PlayerResearchHub({
 
       <div className={`mx-auto max-w-7xl ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y} ${AURORA_PAGE_GAP} lg:flex-row lg:items-start lg:gap-6 flex flex-col`}>
         {/* Left Sidebar */}
+        {mode !== "bvp" ? (
         <div className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:w-[280px] w-full shrink-0 flex flex-col gap-4 mb-4 lg:mb-0">
-          <div className={`${AURORA_PANEL_PREMIUM} flex flex-col gap-3 p-3`}>
+          <AuroraMaxPanel className="flex flex-col gap-3 p-3">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--aurora-max-muted)]" />
               <input
-                type="text"
-                placeholder="Search players, teams, positions..."
+                type="search"
+                placeholder="Search a player or team"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className={`${AURORA_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
+                className="pr-max-search rounded-md py-2.5 pl-9 pr-3 text-sm placeholder:text-[var(--aurora-max-muted)]"
               />
             </div>
             
             {mode === "scout" && (
               <>
+                <div className="flex w-full rounded-md border border-[var(--aurora-max-line)] p-0.5" role="group" aria-label="Roster list">
+                  <AuroraMaxControl
+                    tone={rosterScope === "playing" ? "primary" : "neutral"}
+                    aria-pressed={rosterScope === "playing"}
+                    className="flex-1 justify-center px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+                    onClick={() => setRosterScope("playing")}
+                  >
+                    Playing today
+                  </AuroraMaxControl>
+                  <AuroraMaxControl
+                    tone={rosterScope === "all" ? "primary" : "neutral"}
+                    aria-pressed={rosterScope === "all"}
+                    className="flex-1 justify-center px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+                    onClick={() => setRosterScope("all")}
+                  >
+                    All players
+                  </AuroraMaxControl>
+                </div>
+                <p className="text-[10px] leading-4 text-[var(--aurora-max-muted)]">
+                  Playing today is the current MLB active roster from the registry. All players keeps those first, then the rest.
+                </p>
                 <select
                   value={teamFilter}
                   onChange={(e) => setTeamFilter(e.target.value)}
-                  className={`${AURORA_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                  className="pr-max-search rounded-md px-3 py-2 text-xs"
                 >
-                  {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All Teams" : t}</option>)}
+                  {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All teams" : t}</option>)}
+                </select>
+                <select
+                  value={positionFilter}
+                  onChange={(e) => setPositionFilter(e.target.value)}
+                  className="pr-max-search rounded-md px-3 py-2 text-xs"
+                >
+                  {positions.map((p) => <option key={p} value={p}>{p === "ALL" ? "All positions" : p}</option>)}
                 </select>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className={`${AURORA_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none w-full`}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="pr-max-search rounded-md px-3 py-2 text-xs"
                 >
-                  <option value="batterScore">Sort: Batter Score</option>
-                  <option value="hr">Sort: Home Runs</option>
-                  <option value="avg">Sort: AVG</option>
-                  <option value="ops">Sort: OPS</option>
                   <option value="name">Sort: Name</option>
+                  <option value="hr">Sort: Home runs (opened)</option>
+                  <option value="avg">Sort: AVG (opened)</option>
+                  <option value="ops">Sort: OPS (opened)</option>
+                  <option value="barrel">Sort: Barrel% (Statcast)</option>
                 </select>
-                <div className={`${AURORA_SURFACE} flex rounded-lg p-0.5 w-full`}>
-                  <button onClick={() => setListStyle("grid")} className={`flex-1 flex justify-center rounded-md p-1.5 transition-all ${listStyle === "grid" ? "text-vouch-cyan" : "text-white/35"}`}>
+                <div className="flex w-full rounded-md border border-[var(--aurora-max-line)] p-0.5">
+                  <button type="button" onClick={() => setListStyle("grid")} className={`flex flex-1 justify-center rounded-md p-1.5 ${listStyle === "grid" ? "text-[var(--aurora-max-emerald)]" : "text-[var(--aurora-max-muted)]"}`}>
                     <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => setListStyle("table")} className={`flex-1 flex justify-center rounded-md p-1.5 transition-all ${listStyle === "table" ? "text-vouch-cyan" : "text-white/35"}`}>
+                  <button type="button" onClick={() => setListStyle("table")} className={`flex flex-1 justify-center rounded-md p-1.5 ${listStyle === "table" ? "text-[var(--aurora-max-emerald)]" : "text-[var(--aurora-max-muted)]"}`}>
                     <Table2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-
-                {/* 1-Tap Smart Filter Pills Bar */}
-                <div className="flex flex-col gap-1.5 pt-2 border-t border-white/5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">1-Tap Smart Filters</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { id: "all", label: "All Slate", icon: LayoutGrid },
-                      { id: "top5", label: "Top 5 Spots", icon: Zap },
-                      { id: "wind", label: "Wind Out", icon: TrendingUp },
-                      { id: "confirmed", label: "Confirmed", icon: CheckCircle2 },
-                      { id: "hot", label: "Hot Streaks", icon: Sparkles },
-                    ].map((f) => (
-                      <button
-                        key={f.id}
-                        onClick={() => setQuickFilter(f.id as any)}
-                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-all ${
-                          quickFilter === f.id
-                            ? "bg-vouch-cyan/20 border border-vouch-cyan text-vouch-cyan shadow-[0_0_10px_rgba(34,211,238,0.2)]"
-                            : "bg-white/[0.03] border border-white/5 text-white/50 hover:text-white hover:bg-white/[0.06]"
-                        }`}
-                      >
-                        <f.icon className="w-3 h-3" /> {f.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-[10px] leading-4 text-[var(--aurora-max-muted)]">
+                  Tap a player for live season, Statcast, and game logs. Missing numbers stay blank.
+                </p>
               </>
             )}
-          </div>
+          </AuroraMaxPanel>
 
           {activeLegs && activeLegs.length > 0 && (
             <div className={`${AURORA_PANEL_PREMIUM} p-3 flex flex-col gap-2`}>
@@ -579,19 +628,23 @@ export default function PlayerResearchHub({
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Main Content */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* ====== SCOUT MODE ====== */}
           {mode === "scout" && (
-            <>
+            <div key="scout" className="pr-max-tab-pane">
               {/* Player list */}
+            {registryError ? (
+              <p className="mb-3 text-xs text-[var(--aurora-max-muted)]">{registryError}</p>
+            ) : null}
             {filtered.length === 0 ? (
-              <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
-                <Search className="mx-auto h-6 w-6 text-white/25" />
-                <p className="mt-3 text-sm font-bold text-white/70">No players found</p>
-                <p className="mt-1 text-xs text-white/40">Try another player, team, or position.</p>
-              </div>
+              rosterScope === "playing" && activeRosterIds.size === 0 ? (
+                <AuroraMaxFallback title="Playing today unavailable" detail="The registry did not mark active-roster players. Open All players for the full list." />
+              ) : (
+                <AuroraMaxFallback title="No players found" detail="Try another player, team, or position." />
+              )
             ) : listStyle === "grid" ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -601,6 +654,7 @@ export default function PlayerResearchHub({
                       <PlayerCard
                         key={p.id}
                         player={p}
+                        statcast={listStatcast(p.id, statcastByPlayer)}
                         onClick={() => openDetail(p)}
                         onAddLeg={hrProp ? () => onAddLegToParlay(p, hrProp) : undefined}
                       />
@@ -612,7 +666,7 @@ export default function PlayerResearchHub({
                     <button
                       type="button"
                       onClick={() => setVisibleLimit((limit) => limit + 48)}
-                      className="rounded-xl border border-white/15 bg-black/35 px-4 py-2 text-xs font-bold text-white/70 hover:border-vouch-cyan/40 hover:text-vouch-cyan"
+                      className="aurora-max-control px-4 py-2 text-xs"
                     >
                       Show more players ({filtered.length - visiblePlayers.length} remaining)
                     </button>
@@ -620,13 +674,14 @@ export default function PlayerResearchHub({
                 ) : null}
               </>
             ) : (
-              <PlayerTable players={visiblePlayers} onRowClick={(p) => openDetail(p)} sortBy={sortBy} />
+              <PlayerTable players={visiblePlayers} statcastByPlayer={statcastByPlayer} onRowClick={(p) => openDetail(p)} />
             )}
-          </>
+            </div>
         )}
 
         {/* ====== COMPARE MODE ====== */}
         {mode === "compare" && (
+          <div key="compare" className="pr-max-tab-pane">
           <CompareView
             players={players}
             compareA={compareA}
@@ -634,174 +689,148 @@ export default function PlayerResearchHub({
             onSelectA={setCompareA}
             onSelectB={setCompareB}
             onAddLeg={onAddLegToParlay}
+            statcastByPlayer={statcastByPlayer}
           />
+          </div>
         )}
 
         {/* ====== BUILD MODE ====== */}
         {mode === "build" && (
+          <div key="build" className="pr-max-tab-pane">
           <BuildView players={players} onAddLeg={onAddLegToParlay} activeLegs={activeLegs} />
+          </div>
+        )}
+
+        {mode === "bvp" && (
+          <div key="bvp" className="pr-max-tab-pane">
+            <BvpIntelligenceDesk players={players} statcastByPlayer={statcastByPlayer} />
+          </div>
         )}
         </div>
       </div>
 
-      {/* ====== Detail Modal ====== */}
-      <AnimatePresence>
-        {selectedPlayer && (
-          <PlayerDetailModal
-            player={selectedPlayer}
-            tab={detailTab}
-            onTabChange={setDetailTab}
-            onClose={closeDetail}
-            onAddLeg={onAddLegToParlay}
-            onSaveVouch={onSaveVouch}
-            aiReport={aiReports[selectedPlayer.id]}
-            researching={researching === selectedPlayer.id}
-            onRunAI={() => runAIResearch(selectedPlayer)}
-          />
-        )}
-      </AnimatePresence>
+      {selectedPlayer ? (
+        <AuroraMaxPlayerDossier
+          player={selectedPlayer}
+          tab={detailTab}
+          onTabChange={setDetailTab}
+          onClose={closeDetail}
+          onAddLeg={onAddLegToParlay}
+          onSaveVouch={onSaveVouch}
+          aiReport={aiReports[selectedPlayer.id]}
+          researching={researching === selectedPlayer.id}
+          onRunAI={(research) => runAIResearch(selectedPlayer, research)}
+          onDossierReady={cacheDossier}
+        />
+      ) : null}
     </main>
   );
 }
 
 /* ============================================================================
-   Player Card — glass card with headshot, team color, batter score
+   Player Card — glass card with headshot and live stats
    ============================================================================ */
-function PlayerCard({ player, onClick, onAddLeg }: { player: MLBPlayer; onClick: () => void; onAddLeg?: () => void }) {
-  const scoreColor = player.batterScore >= 90 ? "#34d399" : player.batterScore >= 75 ? "#fbbf24" : "#f87171";
-  const tierLabel = player.batterScore >= 90 ? "ELITE" : player.batterScore >= 75 ? "STRONG" : "VALID";
-  const injuryColor =
-    player.injurySeverity === "NONE" ? "#34d399" :
-    player.injurySeverity === "DAY_TO_DAY" ? "#fbbf24" : "#f87171";
-
+function PlayerCard({ player, statcast, onClick, onAddLeg }: { player: MLBPlayer; statcast: StatcastQuality | null; onClick: () => void; onAddLeg?: () => void }) {
   const hrProp = player.propositions?.find((p) => /home run|\bhr\b/i.test(`${p.market} ${p.spec}`));
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className="relative rounded-2xl p-4 text-left overflow-hidden transition-all group cursor-pointer flex flex-col justify-between hover:-translate-y-0.5"
-      style={{
-        background: "linear-gradient(160deg, rgba(15,23,42,0.7) 0%, rgba(5,11,18,0.9) 100%)",
-        border: `1px solid ${player.batterScore >= 90 ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.08)"}`,
-      }}
+      className="pr-max-card group flex cursor-pointer flex-col justify-between rounded-md p-3 text-left"
     >
       <div>
-        {/* Top Header: Headshot + Matchup Progress Gauge */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-obsidian-700 border border-white/10 shrink-0">
-            <img src={player.headshot} alt={player.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+        <div className="mb-3 flex items-start gap-3">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-[var(--aurora-max-line)] bg-black/40">
+            <img src={player.headshot} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
           </div>
-          {/* Gauge Meter */}
-          <div className="flex-1 min-w-0 text-right">
-            <div className="flex items-center justify-end gap-1.5 mb-1">
-              <span className="text-[9px] font-black font-mono px-1.5 py-0.5 rounded" style={{ background: `${scoreColor}20`, color: scoreColor }}>
-                {tierLabel}
-              </span>
-              <span className="text-sm font-black font-mono text-white">{player.batterScore}</span>
-            </div>
-            {/* Progress Bar */}
-            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${player.batterScore}%`, background: `linear-gradient(90deg, ${scoreColor}, #22d3ee)` }} />
+          <div className="min-w-0 flex-1">
+            <div className={`${AURORA_DISPLAY} truncate text-sm text-[var(--aurora-max-paper)]`}>{player.name}</div>
+            <div className="truncate font-mono text-[10px] text-[var(--aurora-max-muted)]">
+              {player.team} · {player.position} · B {player.bats}
             </div>
           </div>
         </div>
-
-        {/* Name + Matchup Subtitle */}
-        <div className="text-sm font-black text-white truncate group-hover:text-vouch-cyan transition-colors">{player.name}</div>
-        <div className="text-[10px] text-white/50 truncate font-mono">
-          {player.team} · #{player.number} <span className="text-vouch-cyan">vs RHP Matchup</span>
-        </div>
-
-        {/* Context Badges (Lineup + Weather) */}
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-400/30 text-cyan-200">
-            #2 BATTER
-          </span>
-          <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 flex items-center gap-0.5">
-            +4% WIND OUT
-          </span>
-        </div>
-
-        {/* Stats Row */}
-        <div className="flex items-center gap-1.5 mt-3">
+        <div className="flex items-center gap-1.5">
           {[
             { label: "AVG", value: getOfficialSeasonStat(player, "avg") },
             { label: "HR", value: getOfficialSeasonStat(player, "hr") },
-            { label: "OPS", value: getOfficialSeasonStat(player, "ops") },
+            { label: "Barrel", value: formatPct(statcast?.barrelPct) },
           ].map((s) => (
-            <div key={s.label} className="flex-1 text-center py-1 rounded-lg border border-white/5 bg-white/[0.02]">
-              <div className="text-[7px] text-white/35 font-mono uppercase">{s.label}</div>
-              <div className="text-xs font-bold font-mono text-white/80">{s.value}</div>
+            <div key={s.label} className="pr-max-stat min-w-0 flex-1 rounded-md py-1.5 text-center">
+              <div className="font-mono text-[8px] uppercase tracking-wider text-[var(--aurora-max-muted)]">{s.label}</div>
+              <div className="font-mono text-xs font-bold text-[var(--aurora-max-paper)]">{s.value}</div>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Footer: Injury status & Quick-Add Slip Button */}
-      <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: injuryColor }} />
-          <span className="text-[9px] text-white/40 truncate max-w-[80px]">{player.injuryStatus}</span>
-        </div>
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--aurora-max-line)] pt-2">
+        <span className="truncate text-[10px] text-[var(--aurora-max-muted)]">{player.injuryStatus}</span>
         {onAddLeg && hrProp ? (
-          <button
-            type="button"
+          <span
+            role="button"
+            tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
               onAddLeg();
             }}
-            className="flex items-center gap-1 rounded-lg bg-vouch-emerald px-2.5 py-1 text-[10px] font-black text-black transition hover:bg-vouch-emerald/90 hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,255,148,0.2)]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddLeg();
+              }
+            }}
+            className="aurora-max-control aurora-max-control--primary px-2 py-1 text-[10px] font-bold"
           >
-            <Plus className="w-3 h-3" /> Add to Slip
-          </button>
+            <Plus className="h-3 w-3" /> Slip
+          </span>
         ) : (
-          <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-vouch-cyan group-hover:translate-x-1 transition-all" />
+          <ChevronRight className="h-4 w-4 text-[var(--aurora-max-muted)]" />
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
 /* ============================================================================
    Player Table — sortable table view
    ============================================================================ */
-function PlayerTable({ players, onRowClick, sortBy }: { players: MLBPlayer[]; onRowClick: (p: MLBPlayer) => void; sortBy: string }) {
+function PlayerTable({ players, statcastByPlayer, onRowClick }: { players: MLBPlayer[]; statcastByPlayer: Record<string, StatcastQuality> | null; onRowClick: (p: MLBPlayer) => void }) {
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <table className="w-full text-sm">
+    <div className="pr-max-table overflow-x-auto rounded-md">
+      <table className="w-full min-w-[720px] text-sm">
         <thead>
-          <tr className="border-b border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
-            {["Player", "Team", "AVG", "HR", "RBI", "OPS", "Barrel%", "HardHit%", "Score", ""].map((h) => (
-              <th key={h} className="text-[9px] font-bold text-white/40 uppercase tracking-wider px-3 py-2.5 text-left font-mono">{h}</th>
+          <tr className="border-b border-[var(--aurora-max-line)]">
+            {["Player", "Team", "Pos", "AVG", "HR", "OPS", "Barrel%", "HardHit%", "xwOBA", ""].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-left font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--aurora-max-muted)]">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {players.map((p, i) => {
-            const scoreColor = p.batterScore >= 90 ? "#34d399" : p.batterScore >= 75 ? "#fbbf24" : "#f87171";
+          {players.map((p) => {
+            const sc = listStatcast(p.id, statcastByPlayer);
             return (
               <tr
                 key={p.id}
                 onClick={() => onRowClick(p)}
-                className="border-b border-white/3 cursor-pointer hover:bg-white/[0.03] transition-colors"
+                className="cursor-pointer border-b border-[var(--aurora-max-line)] hover:bg-[rgba(0,217,160,0.04)]"
               >
                 <td className="px-3 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <img src={p.headshot} alt={p.name} className="w-7 h-7 rounded-lg object-cover" loading="lazy" decoding="async" />
-                    <span className="font-bold text-white text-xs">{p.name}</span>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <img src={p.headshot} alt="" className="h-7 w-7 rounded-md object-cover" loading="lazy" decoding="async" />
+                    <span className="truncate text-xs font-bold text-[var(--aurora-max-paper)]">{p.name}</span>
                   </div>
                 </td>
-                <td className="px-3 py-2.5 text-xs text-white/45">{p.team.split(" ").pop()}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "avg")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "hr")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "rbi")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-[var(--ve-accent)]">{getOfficialSeasonStat(p, "ops")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-white/45">{p.advanced.barrelPercent?.toFixed(1)}%</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-white/45">{p.advanced.hardHitPercent?.toFixed(1)}%</td>
-                <td className="px-3 py-2.5">
-                  <span className="text-xs font-bold font-mono" style={{ color: scoreColor }}>{p.batterScore}</span>
-                </td>
-                <td className="px-3 py-2.5"><ChevronRight className="w-3.5 h-3.5 text-white/35" /></td>
+                <td className="px-3 py-2.5 text-xs text-[var(--aurora-max-muted)]">{p.team.split(" ").pop()}</td>
+                <td className="px-3 py-2.5 font-mono text-xs text-[var(--aurora-max-muted)]">{p.position}</td>
+                <td className="px-3 py-2.5 font-mono text-xs">{getOfficialSeasonStat(p, "avg")}</td>
+                <td className="px-3 py-2.5 font-mono text-xs">{getOfficialSeasonStat(p, "hr")}</td>
+                <td className="px-3 py-2.5 font-mono text-xs text-[var(--aurora-max-emerald)]">{getOfficialSeasonStat(p, "ops")}</td>
+                <td className="px-3 py-2.5 font-mono text-xs">{formatPct(sc?.barrelPct)}</td>
+                <td className="px-3 py-2.5 font-mono text-xs">{formatPct(sc?.hardHitPct)}</td>
+                <td className="px-3 py-2.5 font-mono text-xs">{formatRate(sc?.xwoba)}</td>
+                <td className="px-3 py-2.5"><ChevronRight className="h-3.5 w-3.5 text-[var(--aurora-max-muted)]" /></td>
               </tr>
             );
           })}
@@ -856,96 +885,36 @@ function groupTruthMarkets<T extends { prop: { market: string } }>(items: T[]) {
     .filter((entry) => entry.items.length > 0);
 }
 
-function ProTruthLensIntro() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-6 overflow-hidden rounded-[2rem] border border-cyan-400/15 bg-black/30 shadow-2xl shadow-cyan-950/20"
-    >
-      <div className="relative p-5 sm:p-6">
-        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
-
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
-              Player Truth Lens Pro
-            </div>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-black text-white">
-              Research the player before you build the slip.
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-white/45">
-              Built for sourced player truth: official IDs, game context, Statcast availability,
-              market readiness, and V.A.I fit. If VouchEdge cannot source a stat, it should say
-              unavailable — never fake confidence or odds.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/25/70 p-3 text-xs text-white/65 lg:min-w-[260px]">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-white/40">
-              Truth standard
-            </div>
-            <div className="mt-1 font-bold text-white">Verified Analytics · Live Pricing Pending</div>
-            <div className="mt-2 text-white/45">Unknown pricing defaults to Odds TBD. No simulated odds.</div>
-          </div>
-        </div>
-
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-          {PLAYER_RESEARCH_PRO_TABS.map((tab) => (
-            <span
-              key={tab}
-              className="shrink-0 rounded-full border border-white/10 bg-black/25/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white/65"
-            >
-              {tab}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-black/25/50 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
-              Truth rules
-            </div>
-            <div className="mt-3 grid gap-2">
-              {PLAYER_RESEARCH_TRUTH_RULES.map((rule) => (
-                <div key={rule} className="flex gap-2 text-xs text-white/65">
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
-                  <span>{rule}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/25/50 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-sky-300">
-              Pro research layer
-            </div>
-            <div className="mt-3 grid gap-2">
-              {PLAYER_RESEARCH_PRO_IDEAS.map((feature) => (
-                <div key={feature} className="flex gap-2 text-xs text-white/65">
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />
-                  <span>{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddLeg }: {
+function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddLeg, statcastByPlayer }: {
   players: MLBPlayer[];
   compareA: MLBPlayer | null;
   compareB: MLBPlayer | null;
   onSelectA: (p: MLBPlayer) => void;
   onSelectB: (p: MLBPlayer) => void;
   onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
+  statcastByPlayer: Record<string, StatcastQuality> | null;
 }) {
+  const scA = compareA ? listStatcast(compareA.id, statcastByPlayer) : null;
+  const scB = compareB ? listStatcast(compareB.id, statcastByPlayer) : null;
+  const last10A = compareA ? sourcedLast10Avg(compareA) : "—";
+  const last10B = compareB ? sourcedLast10Avg(compareB) : "—";
+  const rows: Array<{ label: string; a: string; b: string; higher: boolean }> = compareA && compareB
+    ? [
+        { label: "AVG", a: getOfficialSeasonStat(compareA, "avg"), b: getOfficialSeasonStat(compareB, "avg"), higher: true },
+        { label: "Home Runs", a: getOfficialSeasonStat(compareA, "hr"), b: getOfficialSeasonStat(compareB, "hr"), higher: true },
+        { label: "OPS", a: getOfficialSeasonStat(compareA, "ops"), b: getOfficialSeasonStat(compareB, "ops"), higher: true },
+        { label: "Barrel %", a: formatPct(scA?.barrelPct), b: formatPct(scB?.barrelPct), higher: true },
+        { label: "Hard Hit %", a: formatPct(scA?.hardHitPct), b: formatPct(scB?.hardHitPct), higher: true },
+        { label: "Exit Velocity", a: formatVelo(scA?.avgExitVelo), b: formatVelo(scB?.avgExitVelo), higher: true },
+        { label: "xwOBA", a: formatRate(scA?.xwoba), b: formatRate(scB?.xwoba), higher: true },
+        ...(last10A !== "—" || last10B !== "—"
+          ? [{ label: "Last 10 AVG", a: last10A, b: last10B, higher: true }]
+          : []),
+      ]
+    : [];
+
   return (
     <div>
-      <ProTruthLensIntro />
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Player A */}
         <CompareSlot label="Player A" player={compareA} players={players} onSelect={onSelectA} accent="#22d3ee" />
@@ -955,33 +924,23 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
 
       {/* Comparison table */}
       {compareA && compareB && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="pr-max-table overflow-hidden rounded-md">
           <div className="grid grid-cols-3 border-b border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
             <div className="p-3 text-[10px] font-bold uppercase tracking-wider text-white/40 font-mono">Stat</div>
             <div className="p-3 text-center text-xs font-bold text-[var(--ve-accent)]">{compareA.name}</div>
             <div className="p-3 text-center text-xs font-bold text-pink-300">{compareB.name}</div>
           </div>
-          {[
-            { label: "Batter Score", a: compareA.batterScore, b: compareB.batterScore, higher: true },
-            { label: "AVG", a: parseOfficialSeasonStat(compareA, "avg"), b: parseOfficialSeasonStat(compareB, "avg"), higher: true },
-            { label: "Home Runs", a: parseOfficialSeasonStat(compareA, "hr"), b: parseOfficialSeasonStat(compareB, "hr"), higher: true },
-            { label: "RBI", a: parseOfficialSeasonStat(compareA, "rbi"), b: parseOfficialSeasonStat(compareB, "rbi"), higher: true },
-            { label: "OPS", a: parseOfficialSeasonStat(compareA, "ops"), b: parseOfficialSeasonStat(compareB, "ops"), higher: true },
-            { label: "Barrel %", a: compareA.advanced.barrelPercent, b: compareB.advanced.barrelPercent, higher: true },
-            { label: "Hard Hit %", a: compareA.advanced.hardHitPercent, b: compareB.advanced.hardHitPercent, higher: true },
-            { label: "Exit Velocity", a: compareA.advanced.exitVelocity, b: compareB.advanced.exitVelocity, higher: true },
-            { label: "OPS vs RHP", a: parseFloat(compareA.splits.vRHP.ops), b: parseFloat(compareB.splits.vRHP.ops), higher: true },
-            { label: "OPS vs LHP", a: parseFloat(compareA.splits.vLHP.ops), b: parseFloat(compareB.splits.vLHP.ops), higher: true },
-            { label: "OPS Last 10", a: parseFloat(compareA.splits.last10.ops), b: parseFloat(compareB.splits.last10.ops), higher: true },
-            { label: "Chase %", a: compareA.advanced.chasePercent, b: compareB.advanced.chasePercent, higher: false },
-          ].map((row) => {
-            const aWins = row.higher ? row.a > row.b : row.a < row.b;
-            const bWins = row.higher ? row.b > row.a : row.b < row.a;
+          {rows.map((row) => {
+            const aNum = parseCompareNumber(row.a);
+            const bNum = parseCompareNumber(row.b);
+            const comparable = aNum != null && bNum != null;
+            const aWins = comparable && (row.higher ? aNum > bNum : aNum < bNum);
+            const bWins = comparable && (row.higher ? bNum > aNum : bNum < aNum);
             return (
               <div key={row.label} className="grid grid-cols-3 border-b border-white/3">
                 <div className="p-2.5 text-[11px] text-white/40 font-mono">{row.label}</div>
-                <div className={`p-2.5 text-center text-sm font-bold font-mono ${aWins ? "text-[var(--ve-accent)]" : "text-white/40"}`}>{typeof row.a === "number" ? row.a.toFixed(row.a % 1 !== 0 ? 3 : 0) : row.a}</div>
-                <div className={`p-2.5 text-center text-sm font-bold font-mono ${bWins ? "text-pink-300" : "text-white/40"}`}>{typeof row.b === "number" ? row.b.toFixed(row.b % 1 !== 0 ? 3 : 0) : row.b}</div>
+                <div className={`p-2.5 text-center text-sm font-bold font-mono ${aWins ? "text-[var(--ve-accent)]" : "text-white/40"}`}>{row.a}</div>
+                <div className={`p-2.5 text-center text-sm font-bold font-mono ${bWins ? "text-pink-300" : "text-white/40"}`}>{row.b}</div>
               </div>
             );
           })}
@@ -1008,7 +967,7 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );
@@ -1132,7 +1091,6 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
 
   return (
     <div>
-      <ProTruthLensIntro />
       <div className={`${AURORA_PANEL_PREMIUM} mb-5 space-y-3 rounded-2xl p-3`}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="text-sm text-white/45">
@@ -1155,7 +1113,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
             <button
               key={f}
               onClick={() => setPropFilter(f)}
-              className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
+              className={`shrink-0 px-2.5 py-1.5 text-[10px] font-bold uppercase rounded-md ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
               style={propFilter === f ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : { background: "rgba(255,255,255,0.03)" }}
             >
               {f}
@@ -1214,7 +1172,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
                       <button
                         onClick={() => onAddLeg(player, prop)}
                         disabled={isActive}
-                        className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded transition-all mt-1 ${isActive ? "bg-emerald-500/15 text-emerald-400" : "text-slate-950"}`}
+                        className={`mt-1 rounded px-2 py-0.5 text-[9px] font-bold uppercase ${isActive ? "bg-emerald-500/15 text-emerald-400" : "text-slate-950"}`}
                         style={!isActive ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
                       >
                         {isActive ? "Added" : "+ Slip"}
@@ -1238,333 +1196,6 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
           Load more markets
         </button>
       )}
-    </div>
-  );
-}
-
-/* ============================================================================
-   Player Detail Modal — 5 tabs
-   ============================================================================ */
-function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSaveVouch, aiReport, researching, onRunAI }: {
-  player: MLBPlayer;
-  tab: DetailTab;
-  onTabChange: (t: DetailTab) => void;
-  onClose: () => void;
-  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
-  onSaveVouch: (vouch: Vouch) => void;
-  aiReport?: string;
-  researching: boolean;
-  onRunAI: () => void;
-}) {
-  const openParlayPicker = (initialFamily: "home_runs" | "hits" | "rbi" | "stolen_base" | "pitcher" = "home_runs") => {
-    const hrProp = player.propositions.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
-    const isPitcher = resolveParlayPlayerRole({ position: player.position }) === "pitcher";
-    openParlayAdd({
-      player,
-      propHint: hrProp
-        ? {
-            id: hrProp.id,
-            market: hrProp.market,
-            odds: hrProp.odds,
-            spec: hrProp.spec,
-            playerId: player.id,
-          }
-        : undefined,
-      initialFamily,
-      isPitcher,
-      source: isPitcher ? "pitcher_research" : "player_research",
-      dataStatus: "unknown",
-    });
-  };
-
-  const tabs: { id: DetailTab; label: string; icon: any }[] = [
-    { id: "overview", label: "Overview", icon: Activity },
-    { id: "splits", label: "Splits", icon: BarChart3 },
-    { id: "gamelog", label: "Game Log", icon: TrendingUp },
-    { id: "ai", label: "AI Report", icon: Sparkles },
-    { id: "markets", label: "Markets", icon: Crosshair },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.95, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-3xl flex flex-col"
-        style={{ background: "rgba(8,12,20,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        {/* Header */}
-        <div className="p-5 border-b border-white/5 flex items-center gap-4">
-          <img src={player.headshot} alt={player.name} className="w-16 h-16 rounded-2xl object-cover" loading="lazy" decoding="async" />
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">{player.name}</h2>
-            <div className="text-xs text-white/40">{player.team} · #{player.number} · {player.position} · B/T: {player.bats}/{player.throws}</div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: player.batterScore >= 90 ? "rgba(52,211,153,0.12)" : "rgba(251,191,36,0.12)", color: player.batterScore >= 90 ? "#34d399" : "#fbbf24" }}>
-                Score: {player.batterScore}
-              </span>
-              <span className="text-[10px] text-white/40">{player.injuryStatus}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => openParlayPicker("home_runs")}
-            className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20"
-          >
-            <Plus className="w-3.5 h-3.5" /> ParlayOS
-          </button>
-          <button onClick={onClose} className="text-white/35 hover:text-white p-2"><X className="w-5 h-5" /></button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-white/5 px-2">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => onTabChange(t.id)}
-              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border-b-2 ${tab === t.id ? "text-[var(--ve-accent)] border-[var(--ve-accent)]" : "text-white/40 border-transparent hover:text-white/65"}`}
-            >
-              <t.icon className="w-3.5 h-3.5" /> {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5">
-          {tab === "overview" && <OverviewTab player={player} onOpenParlay={() => openParlayPicker("home_runs")} />}
-          {tab === "splits" && <SplitsTab player={player} />}
-          {tab === "gamelog" && <GameLogTab player={player} />}
-          {tab === "ai" && <AITab player={player} report={aiReport} researching={researching} onRun={onRunAI} />}
-          {tab === "markets" && <MarketsTab player={player} onAddLeg={onAddLeg} />}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* ============ Overview Tab ============ */
-function OverviewTab({ player, onOpenParlay }: { player: MLBPlayer; onOpenParlay?: () => void }) {
-  const stats = [
-    { label: "AVG", value: getOfficialSeasonStat(player, "avg"), color: "#e2e8f0" },
-    { label: "HR", value: getOfficialSeasonStat(player, "hr"), color: "#fbbf24" },
-    { label: "RBI", value: getOfficialSeasonStat(player, "rbi"), color: "#22d3ee" },
-    { label: "OPS", value: getOfficialSeasonStat(player, "ops"), color: "#34d399" },
-  ];
-  const adv = [
-    { label: "Barrel %", value: player.advanced.barrelPercent?.toFixed(1), max: 25 },
-    { label: "Hard Hit %", value: player.advanced.hardHitPercent?.toFixed(1), max: 60 },
-    { label: "Exit Velo", value: player.advanced.exitVelocity?.toFixed(1), max: 100 },
-    { label: "Launch Angle", value: player.advanced.launchAngle?.toFixed(1), max: 30 },
-    { label: "Chase %", value: player.advanced.chasePercent?.toFixed(1), max: 40 },
-    { label: "xwOBA", value: player.advanced.xwoba?.toFixed(3), max: 0.5 },
-  ];
-
-  return (
-    <div className="space-y-5">
-      {onOpenParlay ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/[0.06] p-3">
-          <p className="text-[11px] text-white/55 flex-1 min-w-[12rem]">
-            Build out your slips directly from research. Open ParlayOS to lock in props for Home Runs, Hits, RBIs, and more.
-          </p>
-          <button
-            type="button"
-            onClick={onOpenParlay}
-            className="flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/15 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/25"
-          >
-            <Plus className="w-3.5 h-3.5" /> Home Runs & props
-          </button>
-        </div>
-      ) : null}
-      {/* Season stats */}
-      <div className="grid grid-cols-4 gap-2">
-        {stats.map((s) => (
-          <div key={s.label} className="text-center p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-            <div className="text-[9px] text-white/35 font-mono uppercase tracking-widest">{s.label}</div>
-            <div className="text-2xl font-bold font-mono mt-1" style={{ color: s.color }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Advanced metrics with bars */}
-      <div>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Advanced Metrics</div>
-        <div className="space-y-2">
-          {adv.map((m) => (
-            <div key={m.label} className="flex items-center gap-3">
-              <div className="w-24 text-[11px] text-white/45 font-mono">{m.label}</div>
-              <div className="flex-1 h-2 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }}>
-                <div className="h-full rounded-full" style={{ width: `${Math.min(100, (parseFloat(String(m.value)) / m.max) * 100)}%`, background: "linear-gradient(90deg, #22d3ee, #2563eb)" }} />
-              </div>
-              <div className="w-16 text-right text-xs font-mono font-bold text-[var(--ve-accent)]">{m.value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 3x3 Strike Zone Collision Heatmap */}
-      <StrikeZoneHeatmapMatrix
-        hitterName={player.name}
-        pitcherName="Opposing Pitcher"
-        pitcherThrows={player.throws ?? "R"}
-        hitterHand={player.bats ?? "R"}
-      />
-
-      {/* Scouting report */}
-      <div>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Scouting Report</div>
-        <div className="space-y-2 text-xs text-white/45 leading-relaxed">
-          <div><span className="text-emerald-400 font-bold">Power:</span> {player.scoutingReport.powerText}</div>
-          <div><span className="text-[var(--ve-accent)] font-bold">Contact:</span> {player.scoutingReport.contactText}</div>
-          <div><span className="text-vouch-emerald font-bold">Discipline:</span> {player.scoutingReport.disciplineText}</div>
-          <div className="pt-2 border-t border-white/5"><span className="text-amber-400 font-bold">Overall:</span> {player.scoutingReport.overallScouting}</div>
-        </div>
-      </div>
-
-      {/* Hot zones + risk */}
-      <div className="flex items-center gap-4">
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-1">Hot Zones</div>
-          <div className="flex flex-wrap gap-1">
-            {player.scoutingReport.hotZones.map((z) => (
-              <span key={z} className="text-[10px] px-2 py-0.5 rounded-md text-emerald-300 font-medium" style={{ background: "rgba(52,211,153,0.08)" }}>{z}</span>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-1">Risk</div>
-          <span className="text-[10px] px-2 py-0.5 rounded-md font-bold" style={{ background: player.scoutingReport.riskFactor === "LOW" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)", color: player.scoutingReport.riskFactor === "LOW" ? "#34d399" : "#fbbf24" }}>{player.scoutingReport.riskFactor}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============ Splits Tab ============ */
-function SplitsTab({ player }: { player: MLBPlayer }) {
-  const splitData = [
-    { label: "vs LHP", data: player.splits.vLHP },
-    { label: "vs RHP", data: player.splits.vRHP },
-    { label: "Home", data: player.splits.home },
-    { label: "Away", data: player.splits.away },
-    { label: "Last 10", data: player.splits.last10 },
-  ];
-  return (
-    <div>
-      <div className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/5">
-              {["Split", "AVG", "OBP", "SLG", "OPS"].map((h) => (
-                <th key={h} className="text-[9px] font-bold text-white/35 uppercase tracking-wider px-3 py-2 text-left font-mono">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {splitData.map((s) => (
-              <tr key={s.label} className="border-b border-white/3">
-                <td className="px-3 py-2 text-xs font-bold text-white/65">{s.label}</td>
-                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.avg}</td>
-                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.obp}</td>
-                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.slg}</td>
-                <td className="px-3 py-2 text-xs font-mono font-bold text-[var(--ve-accent)]">{s.data.ops}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/* ============ Game Log Tab ============ */
-function GameLogTab({ player }: { player: MLBPlayer }) {
-  return (
-    <div className="space-y-2">
-      {player.gameLogs.map((g, i) => (
-        <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="text-[10px] text-white/35 font-mono w-16">{g.date}</div>
-          <div className="text-xs text-white/65 flex-1">vs {g.opponent}</div>
-          <div className="text-[10px] text-white/40 font-mono">{g.result}</div>
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-white/45">{g.ab}AB</span>
-            <span className="text-white/65">{g.h}H</span>
-            {g.hr > 0 && <span className="text-amber-400 font-bold">{g.hr}HR</span>}
-            {g.rbi > 0 && <span className="text-[var(--ve-accent)]">{g.rbi}RBI</span>}
-          </div>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: g.batterScore >= 90 ? "rgba(52,211,153,0.1)" : g.batterScore >= 70 ? "rgba(251,191,36,0.1)" : "rgba(248,113,113,0.1)", color: g.batterScore >= 90 ? "#34d399" : g.batterScore >= 70 ? "#fbbf24" : "#f87171" }}>
-            {g.batterScore}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ============ AI Report Tab ============ */
-function AITab({ player, report, researching, onRun }: { player: MLBPlayer; report?: string; researching: boolean; onRun: () => void }) {
-  if (report) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[var(--ve-accent)]" />
-          <span className="text-xs font-bold text-[var(--ve-accent)] uppercase tracking-wider">AI Research Report</span>
-        </div>
-        <div className="p-4 rounded-xl text-sm text-white/65 leading-relaxed" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
-          {report}
-        </div>
-        <p className="text-[10px] text-white/35">AI-powered predictive analysis for entertainment purposes only. Not financial or betting advice.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <Sparkles className="w-10 h-10 text-[var(--ve-accent)]/40 mb-4" />
-      <p className="text-sm text-white/45 mb-4">Run AI research on {player.name}</p>
-      <button
-        onClick={onRun}
-        disabled={researching}
-        className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 disabled:opacity-50 inline-flex items-center gap-2"
-        style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}
-      >
-        {researching ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Researching...</> : <><Sparkles className="w-3.5 h-3.5" /> Generate Report</>}
-      </button>
-    </div>
-  );
-}
-
-/* ============ Markets Tab ============ */
-function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void }) {
-  return (
-    <div className="space-y-2">
-      {player.propositions.map((prop) => (
-        <div key={prop.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-          <div>
-            <div className="text-sm font-bold text-white">{prop.market}</div>
-            <div className="text-[10px] text-white/40">{prop.spec} · {prop.truthLabel}</div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>
-            <button
-              onClick={() => onAddLeg(player, prop)}
-              className="text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg text-slate-950"
-              style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}
-            >
-              + Add to Slip
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

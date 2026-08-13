@@ -128,3 +128,57 @@ root_cause: useAppSavedVouchIds selected state.savedVouches.map(v => v.id), so z
 rule: Never return a new object/array from a zustand selector. Wrap derived snapshots with useShallow, select a primitive, or subscribe to the store array and derive with useMemo.
 applies_when: zustand useStore selector useSyncExternalStore getSnapshot ProfileShell useAppSavedVouchIds React 19 infinite loop
 status: active
+---
+
+id: L015
+date: 2026-08-13
+symptom: Player Research Compare/Build printed invented Statcast zeros, batterScore 50, and ProTruthLensIntro advertised Splits / V.A.I Fit that do not exist
+root_cause: CompareView read player.advanced and batterScore from empty registry shells (zeros / 50) instead of the Statcast map; Gemini interpolated advanced.hardHitPercent when advanced was {}; missing last-10 OPS was treated as cooling
+rule: Aurora Max player desk must not render advanced zeros or batterScore 50; Compare/Build must use Statcast map + edge-research or UNKNOWN
+applies_when: Player Research hub, Compare, Build, Statcast, edge-research, batterScore, Aurora Max player desk
+status: active
+---
+
+id: L016
+date: 2026-08-13
+symptom: Aurora Max reduced-motion only set scroll-behavior, and Player Research nested a second .aurora-max-shell so the grid overlay painted twice
+root_cause: Shared shell CSS treated reduce-motion as scroll only; route pages copied aurora-max-shell onto main even though AppShell already owns it
+rule: On Aurora Max desks, reduced-motion must zero animation-duration and transition-duration on .aurora-max-shell. Do not nest .aurora-max-shell on a child route — keep the adapter class (player-research-hub) and inherit tokens from AppShell. Animate transform/opacity only; cap backdrop-filter at 18px; skip Lenis on app desks.
+applies_when: Aurora Max CSS; player-research-hub; prefers-reduced-motion; nested aurora-max-shell; 60fps desk motion
+status: active
+---
+
+id: L017
+date: 2026-08-13
+symptom: A Player Research BvP desk could print a 50 matchup rating or Statcast-looking numbers for a pair that has no fixture or live pitcher ID
+root_cause: Mock matchups were treated as live evidence and unknown pairs were filled with default scores
+rule: BvP numbers must come from a typed fixture (dataSource demo_fixture) or live edge-research; unknown pairs are partial/UNKNOWN — never invent matchupRating 50 or batter hitting metrics for P/SP/RP in the batter slot
+applies_when: Player Research BvP mode, batter vs pitcher, position guard, demo fixtures, matchup rating
+status: superseded
+---
+
+id: L018
+date: 2026-08-13
+symptom: BvP "Move to pitcher slot" cleared the batter and landed on an empty matchup; hub chrome still said Live roster / Statcast connected over demo numbers
+root_cause: The CTA set batterId null, and Player Research header used registry/Statcast truth for every mode
+rule: Pitcher-in-batter CTA must restore the last valid batter and fill the pitcher slot. BvP mode chrome must say demo fixture, not live Statcast. Do not advertise a Pitcher Matchup view that does not exist.
+applies_when: Player Research BvP mode, pitcher-in-batter warning, hub truth badge
+status: superseded
+---
+
+id: L019
+date: 2026-08-13
+symptom: BvP chrome still said demo fixture after the desk was wired to MLB Stats API + Savant, and a 50 matchup rating could still be invented when a pair had no live pitcher ID
+root_cause: L017/L018 treated demo fixtures as the truth source. Live BvP uses GET /api/mlb/games/today, edge-research (batterVsPitcher + batter pitchMix), and pitcher-research (season + Savant arsenal). Fields not on those contracts (barrel% allowed, HR/9 vs L/R, run value, BvP hard-hit) must stay UNKNOWN. The pitcher-research route must be registered before /:playerId or the desk 404s.
+rule: BvP numbers come from live edge-research and pitcher-research only — never invent matchupRating 50, batter metrics for P/SP/RP, or demo_fixture chrome. Hub BvP chrome is "official MLB Stats API + Savant" / "Live MLB feeds". Hero number is Career BvP OPS. Pitcher-in-batter CTA restores the last valid batter. Do not advertise a Pitcher Matchup view that does not exist.
+applies_when: Player Research BvP mode, live MLB feeds, pitcher-research route, matchup rating, hub truth badge, position guard
+status: superseded
+---
+
+id: L020
+date: 2026-08-13
+symptom: Live BvP 404ed on pitcher-research, /player_research showed marketing landing, and DET vs Messick auto-picked a Mets CF
+root_cause: Express `tsx server.ts` does not reload new routes; `/player_research` canonicalizes to section `research` which was not in PUBLIC_SECTIONS; slate uses team abbreviations while the registry stores full names
+rule: After adding an Express route, restart the custom server before claiming live 200s. Keep `research` in PUBLIC_SECTIONS if URLs alias to it. Match BvP auto-select on MLB_TEAM_OPTIONS name↔abbr, not `row.team === abbr`. Hub BvP badge is BVP_TRUTH_LABEL, not roster "Live MLB feeds".
+applies_when: Player Research BvP, pitcher-research, /player_research, PUBLIC_SECTIONS, probable SP auto-select
+status: active

@@ -17,6 +17,7 @@ import {
   searchPlayers,
 } from "../services/mlb/playerRegistryService";
 import { getPlayerEdgeResearch } from "../services/mlb/playerEdgeResearchService";
+import { getPitcherResearch } from "../services/mlb/pitcherResearchService";
 
 export const playerRegistryRoutes = Router();
 
@@ -105,6 +106,32 @@ playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", mlbReadLimiter,
         warnings: research.warnings,
         cache: {
           strategy: "player_edge_research_upstream_cache",
+          ttlMs: 60_000,
+          asOf: research.updatedAt,
+        },
+      }),
+    }));
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw registryUnavailable(error);
+  }
+}));
+
+playerRegistryRoutes.get("/mlb/players/:playerId/pitcher-research", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  try {
+    const playerId = positiveInt(req.params.playerId, "playerId");
+    const research = await getPitcherResearch(playerId);
+
+    res.setHeader("Cache-Control", "private, max-age=60, stale-while-revalidate=300");
+    return res.json(apiOkFlat(req, {
+      ...research,
+      meta: buildApiMeta({
+        source: "official_mlb_statsapi_statcast",
+        dataQuality: research.warnings.length > 0 ? "limited" : "official_mlb_player_research",
+        updatedAt: research.updatedAt,
+        warnings: research.warnings,
+        cache: {
+          strategy: "pitcher_research_upstream_cache",
           ttlMs: 60_000,
           asOf: research.updatedAt,
         },

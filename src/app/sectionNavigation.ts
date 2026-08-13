@@ -15,6 +15,7 @@ export const PUBLIC_SECTIONS = new Set([
   'hr_max',
   'aurora_hr_hq',
   'game_research',
+  'research',
   'player_research',
   'top_cappers',
   'subscribers_club',
@@ -220,6 +221,14 @@ export function resolveDevSectionFromLocation() {
 
   if (target === 'mlb-stat-hub' || target === '/mlb-stat-hub' || target === 'mlb-stats' || target === '/mlb-stats') {
     return 'mlb_stats';
+  }
+
+  if (
+    target === 'player-research' || target === '/player-research' ||
+    target === 'player_research' || target === '/player_research' ||
+    target === 'aurora-max' || target === '/aurora-max'
+  ) {
+    return 'research';
   }
 
   if (target === 'intel' || target === '/intel' || target === 'mlb-intelligence' || target === '/mlb-intelligence') {

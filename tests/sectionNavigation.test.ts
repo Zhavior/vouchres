@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resolveDevSectionFromLocation } from "../src/app/sectionNavigation";
+import { PUBLIC_SECTIONS, resolveDevSectionFromLocation } from "../src/app/sectionNavigation";
 
 const storage = new Map<string, string>();
 
@@ -36,8 +36,15 @@ describe("section navigation", () => {
     ["/hr-board", "hr_max"],
     ["/daily-hr-watch-new", "hr_max"],
     ["/daily-hr-board", "hr_max"],
+    ["/player_research", "research"],
+    ["/player-research", "research"],
   ])("restores %s directly", (path, expected) => {
     window.location.pathname = path;
     expect(resolveDevSectionFromLocation()).toBe(expected);
+  });
+
+  it("keeps /player_research reachable while logged out", () => {
+    window.location.pathname = "/player_research";
+    expect(PUBLIC_SECTIONS.has(resolveDevSectionFromLocation()!)).toBe(true);
   });
 });

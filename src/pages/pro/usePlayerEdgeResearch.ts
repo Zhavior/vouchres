@@ -29,13 +29,44 @@ export type BatterVsPitcherRow = {
   sampleSize: number;
 };
 
+export type HitterSeasonLine = {
+  homeRuns: number;
+  atBats: number;
+  plateAppearances: number;
+  avg: number;
+  slg: number;
+  ops: number;
+  hrPerPA: number;
+  gamesPlayed: number;
+  onBasePercentage: number;
+  stolenBases: number;
+  caughtStealing: number;
+};
+
+export type RecentGameLine = {
+  date: string;
+  homeRuns: number;
+  hits: number;
+  atBats: number;
+  strikeOuts: number;
+  stolenBases: number;
+  caughtStealing: number;
+};
+
 export type StatcastQuality = {
   playerId: number;
   pa: number | null;
+  ba?: number | null;
+  xba?: number | null;
+  slg?: number | null;
+  xslg?: number | null;
+  woba?: number | null;
   xwoba: number | null;
   barrelPct: number | null;
   hardHitPct: number | null;
   avgExitVelo: number | null;
+  avgLaunchAngle?: number | null;
+  sweetSpotPct?: number | null;
 };
 
 export type SprayProfile = {
@@ -95,6 +126,8 @@ export type GameWeatherSnapshot = {
 
 export type PlayerEdgeResearchPayload = {
   playerId: number;
+  season: HitterSeasonLine | null;
+  recentGames: RecentGameLine[];
   gameLog: PlayerGameLogRow[];
   batterVsPitcher: BatterVsPitcherRow | null;
   vsOpponent: PlayerGameLogRow[];
@@ -118,6 +151,8 @@ type ResearchState = {
 
 const EMPTY: PlayerEdgeResearchPayload = {
   playerId: 0,
+  season: null,
+  recentGames: [],
   gameLog: [],
   batterVsPitcher: null,
   vsOpponent: [],
