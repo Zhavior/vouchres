@@ -1,0 +1,119 @@
+/* Account Profile — Aurora Max materials. Tokens come from aurora-max.css on .aurora-max-shell. */
+.profile-page,
+.profile-aurora-max {
+  min-width: 0;
+  color: var(--aurora-max-paper);
+  background: transparent;
+  overflow-wrap: break-word;
+}
+
+.profile-aurora-rule {
+  border-color: var(--aurora-max-line);
+}
+
+.profile-aurora-rule-strong {
+  border-color: var(--aurora-max-line-strong);
+}
+
+.profile-aurora-inset,
+.profile-aurora-empty,
+.profile-aurora-day,
+.profile-aurora-tip {
+  min-width: 0;
+  overflow-wrap: break-word;
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(4, 11, 13, 0.62);
+  box-shadow: inset 0 1px rgba(242, 240, 233, 0.045);
+}
+
+.profile-aurora-metric {
+  min-width: 0;
+  overflow-wrap: break-word;
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(4, 11, 13, 0.54);
+  padding: 0.625rem;
+}
+
+.profile-aurora-header {
+  border-bottom: 1px solid var(--aurora-max-line);
+  background: rgba(7, 16, 18, 0.72);
+}
+
+.profile-aurora-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--aurora-max-line);
+}
+
+.profile-aurora-tab-ink {
+  /* Overlay underline on the active tab — stacking stays on the tab button. */
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--aurora-max-emerald);
+}
+
+.profile-aurora-day:hover,
+.profile-aurora-tip {
+  border-color: var(--aurora-max-line-strong);
+}
+
+.profile-aurora-tip {
+  background: var(--aurora-max-panel-strong);
+  box-shadow: var(--aurora-max-shadow), inset 0 1px rgba(242, 240, 233, 0.045);
+}
+
+.profile-aurora-max .aurora-max-panel,
+.profile-aurora-max .profile-aurora-inset,
+.profile-aurora-max .profile-aurora-empty,
+.profile-aurora-max .profile-aurora-day,
+.profile-aurora-max .profile-aurora-metric,
+.profile-aurora-max .profile-aurora-tip {
+  border-radius: 0;
+}
+
+#inner-view-slot .profile-aurora-max .aurora-max-panel {
+  border: 1px solid var(--aurora-max-line) !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(135deg, rgba(242, 240, 233, 0.032), transparent 50%),
+    var(--aurora-max-panel) !important;
+  box-shadow: var(--aurora-max-shadow), inset 0 1px rgba(242, 240, 233, 0.045) !important;
+}
+
+.profile-aurora-max :is(input, textarea, select) {
+  min-width: 0;
+  border-color: var(--aurora-max-line) !important;
+  background: rgba(3, 9, 11, 0.76) !important;
+  color: var(--aurora-max-paper) !important;
+}
+
+.profile-aurora-max :is(input, textarea, select):focus {
+  border-color: var(--aurora-max-line-strong) !important;
+  box-shadow: 0 0 0 3px rgba(0, 217, 160, 0.08) !important;
+}
+
+.profile-aurora-max :is(.rounded-2xl, .rounded-xl, .rounded-lg):not(.rounded-full) {
+  border-radius: 0 !important;
+}
+
+.ve-aurora-mobile-drawer .ve-aurora-mobile-account {
+  border: 1px solid var(--aurora-max-line);
+  background:
+    linear-gradient(135deg, rgba(242, 240, 233, 0.032), transparent 50%),
+    var(--aurora-max-panel);
+  box-shadow: var(--aurora-max-shadow), inset 0 1px rgba(242, 240, 233, 0.045);
+}
+
+.ve-aurora-mobile-drawer .profile-aurora-rule {
+  border-color: var(--aurora-max-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-aurora-max .animate-slide-up,
+  .profile-aurora-max .animate-fade-in,
+  .profile-aurora-max .animate-fadeIn {
+    animation: none !important;
+  }
+}

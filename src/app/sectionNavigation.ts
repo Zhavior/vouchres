@@ -13,6 +13,7 @@ export const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_max',
+  'aurora_hr_hq',
   'game_research',
   'player_research',
   'top_cappers',

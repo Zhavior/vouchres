@@ -4,6 +4,7 @@ import type { HrWatchRow, TruthStatus } from '../hr/types/hrWatch';
 import type { AuroraMaxEvidenceItem, AuroraMaxTruthState } from '../../components/aurora-max/AuroraMaxPrimitives';
 
 export type DeskSortKey = 'hrpi' | 'time' | 'volume';
+export type DeskDisplayTier = 'Elite' | 'Strong' | 'Watch' | 'Sleepers';
 
 export type HrMaxDeskRow = {
   id: string;
@@ -18,6 +19,7 @@ export type HrMaxDeskRow = {
   confirmed: boolean;
   truthState: AuroraMaxTruthState;
   lineupLabel: string;
+  displayTier: DeskDisplayTier | null;
   score: number;
   attention: number | null;
   signal: string;
@@ -167,6 +169,7 @@ export function mapHrWatchToDeskRow(
     confirmed,
     truthState: truthState(row.truthStatus),
     lineupLabel: brief.lineupLabel,
+    displayTier: row.riskTier === 'Blocked' ? null : row.riskTier === 'Core' ? 'Strong' : row.riskTier === 'Deep' ? 'Sleepers' : row.riskTier,
     score: Math.max(0, Math.min(100, Math.round(row.hrScore))),
     attention: row.vouchScore ?? row.dataConfidence,
     signal: signalFor(row),

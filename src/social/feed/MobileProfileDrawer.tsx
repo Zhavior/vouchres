@@ -30,6 +30,7 @@ import { getActiveSport } from '../../sports/registry';
 import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
 import '../../styles/aurora-sidebar.css';
 import '../../styles/shell-surfaces-aurora-max.css';
+import '../../styles/profile-aurora-max.css';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -61,7 +62,7 @@ export function tierMeta(tier: CreatorProofProfile['subscriptionTier']): TierMet
     case 'SELLER_PRO':
       return { label: 'Capper', ring: '#00F0FF', text: 'text-vouch-cyan', chipBg: 'bg-vouch-cyan/10 shadow-[0_0_10px_rgba(0,240,255,0.15)]' };
     default:
-      return { label: 'Basic', ring: 'rgba(255,255,255,0.25)', text: 'text-white/40', chipBg: 'bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]' };
+      return { label: 'Basic', ring: 'rgba(157,215,175,0.35)', text: 'text-[var(--aurora-max-muted)]', chipBg: 'profile-aurora-inset' };
   }
 }
 
@@ -239,7 +240,7 @@ function MobileProfileDrawer({
             transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Aurora brand and account identity — real profile data only */}
-            <div className="border-b border-white/[0.07] px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
+            <div className="profile-aurora-rule border-b px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
               <div className="flex items-center justify-between gap-3 pt-1">
                 <button type="button" onClick={() => go('today')} aria-label="Go to Today" className="min-w-0 rounded-xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
                   <VouchEdgeLogo emeraldMark markClassName="h-10 w-10" />
@@ -258,7 +259,7 @@ function MobileProfileDrawer({
                 </div>
               </div>
 
-              <div className="ve-aurora-mobile-account mt-4 rounded-2xl p-3.5">
+              <div className="ve-aurora-mobile-account aurora-max-panel mt-4 p-3.5">
                 <div className="flex items-center gap-3">
                   <TierAvatar profile={profile} size={48} onClick={() => go('profile')} ariaLabel="Open profile" />
                   <button type="button" onClick={() => go('profile')} className="min-w-0 flex-1 text-left">
@@ -273,7 +274,7 @@ function MobileProfileDrawer({
                   </span>
                 </div>
 
-                <div className="ve-aurora-mobile-proof mt-3 flex items-center gap-4 border-t border-white/[0.07] pt-3 text-xs">
+                <div className="ve-aurora-mobile-proof profile-aurora-rule mt-3 flex items-center gap-4 border-t pt-3 text-xs">
                   <span><strong className="text-white">{profile.totalPicks}</strong> <span className="text-white/40">picks</span></span>
                   <span>
                     {profileHasGradedPicks(profile) ? (
@@ -293,7 +294,7 @@ function MobileProfileDrawer({
                   <button
                     type="button"
                     onClick={() => go('premium')}
-                    className="ve-aurora-mobile-upgrade mt-3 w-full rounded-xl border border-vouch-emerald/15 bg-vouch-emerald/[0.06] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-vouch-emerald"
+                    className="ve-aurora-mobile-upgrade aurora-max-control mt-3 w-full px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em]"
                   >
                     Explore VouchEdge Beta
                   </button>
@@ -304,7 +305,7 @@ function MobileProfileDrawer({
             {/* Nav groups — same registry as the desktop sidebar */}
             <nav className="flex-1 overflow-y-auto px-2 py-3">
               {FOCUSED_BETA_SHELL_ENABLED ? (
-                <div className={`overflow-hidden rounded-2xl border border-white/[0.06] ${AURORA_SIDEBAR_PANEL}`}>
+                <div className={`aurora-max-panel overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
                   <div className="px-1.5 py-1.5 space-y-0.5">
                     {drawerFeatures.map((item) => {
                       const Icon = ICON_MAP[item.icon] || Settings;
@@ -355,7 +356,7 @@ function MobileProfileDrawer({
                 const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
                 const collapsed = isCollapsed(group);
                 return (
-                <div key={group} className={`mb-3 overflow-hidden rounded-2xl border border-white/[0.06] ${AURORA_SIDEBAR_PANEL}`}>
+                <div key={group} className={`aurora-max-panel mb-3 overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
                   <button
                     type="button"
                     aria-expanded={!collapsed}

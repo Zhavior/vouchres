@@ -65,7 +65,7 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
 };
 
 /** Statically composed in MainViewRouter — never prefetch or idle-warm these. */
-export const EAGER_HR_SECTIONS = new Set(['hr_max']);
+export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq']);
 
 export function isEagerHrSection(section: string): boolean {
   return EAGER_HR_SECTIONS.has(section);
@@ -87,6 +87,7 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
 /** Heavy first-paint routes — do not compete with their own chunk/network work. */
 const HEAVY_ROUTES = new Set([
   'hr_max',
+  'aurora_hr_hq',
   'daily_players',
   'research',
   'live_games',

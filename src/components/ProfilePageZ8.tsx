@@ -16,7 +16,9 @@ import { useAuth } from '../lib/useAuth';
 import { useDirectMessages } from '../hooks/useFollowingHub';
 import { useProfileSocialStats, useSocialGraph } from '../hooks/useSocialGraph';
 import { uploadProfileAvatar, uploadProfileHeader } from '../lib/profileAvatarUpload';
-import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X, AURORA_PAGE_PAD_Y, AURORA_PANEL_PREMIUM, AURORA_STAT_CHIP, AURORA_TABULAR } from '../theme/auroraTokens';
+import { AURORA_LABEL, AURORA_PAGE, AURORA_PAGE_GAP, AURORA_PAGE_PAD_X } from '../theme/auroraTokens';
+import { AuroraMaxPanel } from './aurora-max/AuroraMaxPrimitives';
+import '../styles/profile-aurora-max.css';
 import {
   Area,
   AreaChart,
@@ -88,9 +90,9 @@ const TIER_CONFIG: Record<SubscriptionTier, {
     badge: 'EDGE STARTER',
     icon: Shield,
     accent: 'text-white/80',
-    chipClass: 'border-white/12 bg-white/5 text-white/72',
-    panelClass: 'border-white/10 bg-black/25',
-    auraClass: 'from-white/10 via-white/5 to-transparent',
+    chipClass: 'profile-aurora-inset text-[var(--aurora-max-paper)]/72',
+    panelClass: 'aurora-max-panel',
+    auraClass: 'from-[var(--aurora-max-emerald)]/10 via-transparent to-transparent',
     evolutionTitle: 'Built for proof first',
     evolutionText: 'Starter profiles focus on trust, ledger clarity, and visible accountability before cosmetics.',
     perks: ['Public trust record', 'Verified win-rate ledger', 'Core profile identity'],
@@ -383,14 +385,14 @@ export default function ProfilePageZ8({
 
   return (
     <ProfileThemeWrapper themeId={displayedProfile.profileThemeId || displayedProfile.activeTheme || 'cyber-blue'}>
-      <div className={`${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_GAP}`} id="profile-details-view">
+      <div className={`profile-page profile-aurora-max ${AURORA_PAGE} ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_GAP}`} id="profile-details-view">
 
 
         {!isOwnProfile && onClearViewUser ? (
           <button
             type="button"
             onClick={onClearViewUser}
-            className="mb-2 inline-flex min-h-10 items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-4 text-xs font-bold text-vouch-cyan"
+            className="aurora-max-control mb-2 min-h-10 px-4 text-xs font-bold"
           >
             Back to your profile
           </button>
@@ -402,12 +404,12 @@ export default function ProfilePageZ8({
           <div className="lg:col-span-8 space-y-6">
             
             {/* Main card */}
-            <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl overflow-hidden relative transition-all duration-300 ${ activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans' }`} id="profile-primary-card">
+            <AuroraMaxPanel className={`overflow-hidden relative transition-all duration-300 ${ activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans' }`} id="profile-primary-card">
               <div
-                className={`relative h-28 overflow-hidden border-b border-vouch-cyan/15 bg-gradient-to-r ${
+                className={`profile-aurora-header relative h-28 overflow-hidden ${
                   displayedProfile.headerUrl
-                    ? 'from-black/40 to-black/40'
-                    : activeThemeData?.coverBg || 'from-sky-600/25 to-indigo-600/25'
+                    ? ''
+                    : activeThemeData?.coverBg || ''
                 }`}
               >
                 {displayedProfile.headerUrl ? (
@@ -434,7 +436,7 @@ export default function ProfilePageZ8({
                           id="upload-profile-header-btn"
                           onClick={() => headerInputRef.current?.click()}
                           disabled={isUploadingHeader}
-                          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-vouch-cyan/35 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-vouch-cyan backdrop-blur-sm hover:border-vouch-cyan/60 disabled:cursor-wait disabled:opacity-70"
+                          className="aurora-max-control min-h-9 gap-1.5 px-3 text-[10px] font-black uppercase tracking-wider disabled:cursor-wait disabled:opacity-70"
                         >
                           {isUploadingHeader ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                           {isUploadingHeader ? 'Uploading' : 'Upload header'}
@@ -447,7 +449,7 @@ export default function ProfilePageZ8({
                               setHeaderError(null);
                               onUpdateProfile({ headerUrl: '' });
                             }}
-                            className="min-h-9 rounded-full border border-white/15 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-white/70 backdrop-blur-sm hover:border-white/30 hover:text-white"
+                            className="aurora-max-control min-h-9 px-3 text-[10px] font-black uppercase tracking-wider"
                           >
                             Remove
                           </button>
@@ -458,7 +460,7 @@ export default function ProfilePageZ8({
                         type="button"
                         id="locked-profile-header-btn"
                         onClick={() => onSectionChange?.('premium')}
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/15 bg-black/60 px-3 text-[10px] font-black uppercase tracking-wider text-white/65 backdrop-blur-sm hover:border-vouch-emerald/40 hover:text-vouch-emerald"
+                        className="aurora-max-control min-h-9 gap-1.5 px-3 text-[10px] font-black uppercase tracking-wider"
                       >
                         <Lock className="h-3.5 w-3.5" />
                         Gold header
@@ -491,7 +493,7 @@ export default function ProfilePageZ8({
                           type="button"
                           onClick={() => avatarInputRef.current?.click()}
                           disabled={isUploadingAvatar}
-                          className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[hsl(var(--ve-bg-deep))] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
+                          className="aurora-max-control absolute -bottom-1 -right-1 h-9 w-9 p-0 text-[var(--aurora-max-emerald)] disabled:cursor-wait disabled:opacity-70"
                           aria-label="Change profile photo"
                           title="Change profile photo"
                         >
@@ -524,7 +526,7 @@ export default function ProfilePageZ8({
                 </div>
                 
                 {/* Dynamic Followers and Tailing count belt */}
-                <div className="flex items-center justify-center gap-6 mt-2 border-y border-white/10 py-3 w-full max-w-sm">
+                <div className="profile-aurora-rule flex items-center justify-center gap-6 mt-2 border-y py-3 w-full max-w-sm">
                   <div className="flex flex-col items-center">
                     <strong className="text-white/90 text-base font-black">{socialStats.followers}</strong>
                     <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Followers</span>
@@ -547,7 +549,7 @@ export default function ProfilePageZ8({
                           onClick={() => setIsEditing(true)}
                           id="edit-profile-btn"
                           variant="secondary"
-                          className="flex-1 bg-white/10 hover:bg-white/15 text-white font-bold border-none"
+                          className="aurora-max-control flex-1 font-bold"
                         >
                           Edit Profile
                         </VEButton>
@@ -555,7 +557,7 @@ export default function ProfilePageZ8({
                           onClick={() => setShowShareModal(true)}
                           id="share-profile-btn"
                           variant="secondary"
-                          className="flex-1 bg-white/10 hover:bg-white/15 text-white font-bold border-none"
+                          className="aurora-max-control flex-1 font-bold"
                         >
                           Share Profile
                         </VEButton>
@@ -565,14 +567,14 @@ export default function ProfilePageZ8({
                         <VEButton
                           onClick={() => void handleToggleFollow()}
                           variant={isFollowingViewedProfile ? 'secondary' : 'primary'}
-                          className={`flex-1 font-bold ${isFollowingViewedProfile ? 'bg-white/10 text-white border-none' : 'bg-vouch-cyan text-black border-none'}`}
+                          className={`flex-1 font-bold ${isFollowingViewedProfile ? 'aurora-max-control' : 'aurora-max-control aurora-max-control--primary'}`}
                         >
                           {isFollowingViewedProfile ? 'Following' : 'Follow'}
                         </VEButton>
                         <VEButton
                           onClick={() => void handleMessageProfile()}
                           variant="secondary"
-                          className="flex-1 bg-white/10 hover:bg-white/15 text-white font-bold border-none"
+                          className="aurora-max-control flex-1 font-bold"
                         >
                           Message
                         </VEButton>
@@ -582,10 +584,10 @@ export default function ProfilePageZ8({
                 ) : null}
               </div>
 
-              <section className="mx-auto mt-5 w-full max-w-2xl rounded-xl border border-vouch-cyan/20 bg-black/25 p-4 text-left" aria-label="Verified profile record">
+              <section className="aurora-max-panel mx-auto mt-5 w-full max-w-2xl p-4 text-left" aria-label="Verified profile record">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className={`${AURORA_LABEL} text-vouch-cyan`}>Verified record</p>
+                    <p className={`${AURORA_LABEL} text-[var(--aurora-max-emerald)]`}>Verified record</p>
                     <p className="mt-1 text-xs text-white/45">Settled picks only. Pending picks never improve this record.</p>
                   </div>
                   {proofQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin text-vouch-cyan" /> : null}
@@ -593,12 +595,12 @@ export default function ProfilePageZ8({
                 {proof ? (
                   <>
                     <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Record</p><p className="mt-1 text-sm font-black text-white">{proof.record.wins}–{proof.record.losses}{proof.record.pushes ? `–${proof.record.pushes}` : ''}</p></div>
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Win rate</p><p className="mt-1 text-sm font-black text-white">{proof.record.winRate === null ? '—' : `${proof.record.winRate}%`}</p></div>
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Net units</p><p className={`mt-1 text-sm font-black ${proof.record.netUnits >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}`}>{proof.record.netUnits >= 0 ? '+' : ''}{proof.record.netUnits.toFixed(2)}u</p></div>
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"><p className="text-[10px] uppercase tracking-wider text-white/40">Settled</p><p className="mt-1 text-sm font-black text-white">{proof.record.settled}</p></div>
+                      <div className="profile-aurora-metric"><p className="text-[10px] uppercase tracking-wider text-white/40">Record</p><p className="mt-1 text-sm font-black text-[var(--aurora-max-paper)]">{proof.record.wins}–{proof.record.losses}{proof.record.pushes ? `–${proof.record.pushes}` : ''}</p></div>
+                      <div className="profile-aurora-metric"><p className="text-[10px] uppercase tracking-wider text-white/40">Win rate</p><p className="mt-1 text-sm font-black text-[var(--aurora-max-paper)]">{proof.record.winRate === null ? '—' : `${proof.record.winRate}%`}</p></div>
+                      <div className="profile-aurora-metric"><p className="text-[10px] uppercase tracking-wider text-white/40">Net units</p><p className={`mt-1 text-sm font-black ${proof.record.netUnits >= 0 ? 'text-vouch-emerald' : 'text-rose-300'}`}>{proof.record.netUnits >= 0 ? '+' : ''}{proof.record.netUnits.toFixed(2)}u</p></div>
+                      <div className="profile-aurora-metric"><p className="text-[10px] uppercase tracking-wider text-white/40">Settled</p><p className="mt-1 text-sm font-black text-[var(--aurora-max-paper)]">{proof.record.settled}</p></div>
                     </div>
-                    <div className="mt-4 border-t border-white/10 pt-3">
+                    <div className="profile-aurora-rule mt-4 border-t pt-3">
                       <p className="text-[10px] font-black uppercase tracking-wider text-white/45">Recent locked picks</p>
                       {proof.recentSettled.length ? <div className="mt-2 space-y-2">{proof.recentSettled.map((pick) => <div key={pick.id} className="flex items-center justify-between gap-3 text-xs"><span className="min-w-0 truncate text-white/70">{pick.selection}</span><span className={`shrink-0 font-black uppercase ${pick.status === 'won' ? 'text-vouch-emerald' : pick.status === 'lost' ? 'text-rose-300' : 'text-white/45'}`}>{pick.status} · {pick.settledUnits >= 0 ? '+' : ''}{pick.settledUnits.toFixed(2)}u</span></div>)}</div> : <p className="mt-2 text-xs text-white/35">No settled picks yet. This profile will build its record in public.</p>}
                     </div>
@@ -607,14 +609,14 @@ export default function ProfilePageZ8({
               </section>
 
               {isEditing ? (
-                <form onSubmit={handleProfileSave} className="space-y-3.5 rounded-xl border border-slate-850" id="profile-edit-subform">
+                <form onSubmit={handleProfileSave} className="aurora-max-panel space-y-3.5 p-3" id="profile-edit-subform">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Display Name</label>
                     <input 
                       type="text" 
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full text-xs border border-slate-800 rounded-lg text-slate-200 outline-none focus:border-sky-500"
+                      className="w-full text-xs outline-none"
                       maxLength={30}
                       required
                     />
@@ -625,7 +627,7 @@ export default function ProfilePageZ8({
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="w-full text-xs border border-slate-800 rounded-lg text-slate-200 outline-none focus:border-sky-500 h-20 resize-none"
+                      className="h-20 w-full resize-none text-xs outline-none"
                       maxLength={160}
                     />
                   </div>
@@ -633,7 +635,7 @@ export default function ProfilePageZ8({
                   <div className="flex gap-2">
                     <button 
                       type="submit" 
-                      className="bg-sky-500 hover:bg-sky-450 text-slate-950 font-black rounded-lg text-xs flex items-center gap-1 shadow transition-colors"
+                      className="aurora-max-control aurora-max-control--primary text-xs font-black"
                     >
                       <Save className="w-3.5 h-3.5" />
                       Save Changes
@@ -645,7 +647,7 @@ export default function ProfilePageZ8({
                         setBio(profile.bio);
                         setIsEditing(false);
                       }}
-                      className="hover: text-slate-400 hover:text-slate-200 rounded-lg text-xs font-bold font-mono"
+                      className="aurora-max-control text-xs font-bold font-mono"
                     >
                       Cancel
                     </button>
@@ -659,38 +661,38 @@ export default function ProfilePageZ8({
                 </div>
               )}
             </div>
-          </div>
+          </AuroraMaxPanel>
 
           {/* X-Style Profile Tabs */}
-          <div className="flex border-b border-white/10 mt-6" id="profile-tabs">
+          <div className="profile-aurora-tabs mt-6" id="profile-tabs">
             <button
               onClick={() => setActiveTab('posts')}
-              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'posts' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'posts' ? 'text-[var(--aurora-max-paper)]' : 'text-white/40 hover:text-white/70'}`}
             >
               Posts
               {userPosts.length > 0 && <span className="ml-1.5 text-[10px] font-black text-white/30">{userPosts.length}</span>}
               {activeTab === 'posts' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-vouch-cyan rounded-t-full" />
+                <div className="profile-aurora-tab-ink" />
               )}
             </button>
             <button
               onClick={() => setActiveTab('vouches')}
-              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'vouches' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'vouches' ? 'text-[var(--aurora-max-paper)]' : 'text-white/40 hover:text-white/70'}`}
             >
               Vouches
               {userVouches.length > 0 && <span className="ml-1.5 text-[10px] font-black text-white/30">{userVouches.length}</span>}
               {activeTab === 'vouches' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-vouch-cyan rounded-t-full" />
+                <div className="profile-aurora-tab-ink" />
               )}
             </button>
             <button
               onClick={() => setActiveTab('replies')}
-              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'replies' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+              className={`flex-1 pb-3 text-sm font-bold text-center transition-colors relative ${activeTab === 'replies' ? 'text-[var(--aurora-max-paper)]' : 'text-white/40 hover:text-white/70'}`}
             >
               Results
               {userResults.length > 0 && <span className="ml-1.5 text-[10px] font-black text-white/30">{userResults.length}</span>}
               {activeTab === 'replies' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-vouch-emerald rounded-t-full" />
+                <div className="profile-aurora-tab-ink" />
               )}
             </button>
           </div>
@@ -698,7 +700,7 @@ export default function ProfilePageZ8({
           <div className="space-y-4 pt-2" id="user-archived-posts-section">
             {activeTab === 'posts' ? (
               userPosts.length === 0 ? (
-                <div className="text-center rounded-2xl border border-white/5 bg-black/20 py-10 space-y-3">
+                <div className="profile-aurora-empty py-10 text-center space-y-3">
                   <MessageSquare className="w-8 h-8 text-white/20 mx-auto" />
                   <p className="text-xs text-white/40 font-bold uppercase tracking-widest">No Posts Yet</p>
                 </div>
@@ -721,7 +723,7 @@ export default function ProfilePageZ8({
               )
             ) : activeTab === 'vouches' ? (
               userVouches.length === 0 ? (
-                <div className="text-center rounded-2xl border border-white/5 bg-black/20 py-10 space-y-3">
+                <div className="profile-aurora-empty py-10 text-center space-y-3">
                   <ShieldCheck className="w-8 h-8 text-white/20 mx-auto" />
                   <p className="text-xs text-white/40 font-bold uppercase tracking-widest">No Vouches Yet</p>
                   <p className="text-[11px] text-white/25 font-medium">Vouches will appear here once posted from the feed.</p>
@@ -746,7 +748,7 @@ export default function ProfilePageZ8({
             ) : (
               /* Results tab */
               userResults.length === 0 ? (
-                <div className="text-center rounded-2xl border border-white/5 bg-black/20 py-10 space-y-3">
+                <div className="profile-aurora-empty py-10 text-center space-y-3">
                   <ShieldCheck className="w-8 h-8 text-white/20 mx-auto" />
                   <p className="text-xs text-white/40 font-bold uppercase tracking-widest">No Graded Results</p>
                   <p className="text-[11px] text-white/25 font-medium">Settled vouches with outcomes will appear here.</p>
@@ -776,8 +778,8 @@ export default function ProfilePageZ8({
         {/* Right Sidebar: "My Outcomes" Private Calendar Win Rate Card */}
         <div className="lg:col-span-4 space-y-6">
 
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-performance-graphs-card">
-            <div className="flex items-center justify-between border-b border-slate-850">
+          <AuroraMaxPanel className="space-y-4 relative animate-slide-up p-4" id="profile-performance-graphs-card">
+            <div className="profile-aurora-rule flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
                   Performance Graphs
@@ -786,7 +788,7 @@ export default function ProfilePageZ8({
                   Activity from the profile result feed. The verified record above is calculated directly from settled picks.
                 </p>
               </div>
-              <span className="text-[9px] font-mono font-black text-vouch-cyan bg-cyan-950/40 rounded-full border border-cyan-900/40 uppercase">
+              <span className="aurora-max-eyebrow">
                 SETTLED DATA
               </span>
             </div>
@@ -823,7 +825,7 @@ export default function ProfilePageZ8({
 
               if (!hasGraphData) {
                 return (
-                  <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl text-center`}>
+                  <div className="profile-aurora-empty p-4 text-center">
                     <p className="text-xs font-black uppercase tracking-widest text-slate-300">
                       Start tracking picks to unlock your performance graph.
                     </p>
@@ -836,57 +838,57 @@ export default function ProfilePageZ8({
 
               return (
                 <div className="space-y-5">
-                  <div className={`${AURORA_PANEL_PREMIUM} h-[190px]`}>
+                  <div className="profile-aurora-inset h-[190px] p-2">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Profit / Loss</span>
-                      <span className="text-[10px] font-mono text-slate-500">Units by day</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Profit / Loss</span>
+                      <span className="text-[10px] font-mono text-white/35">Units by day</span>
                     </div>
                     <ResponsiveContainer width="100%" height="88%">
                       <AreaChart data={graphRows}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
-                        <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(157,215,175,0.12)" />
+                        <XAxis dataKey="label" tick={{ fill: 'rgba(226,232,227,0.48)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: 'rgba(226,232,227,0.48)', fontSize: 10 }} axisLine={false} tickLine={false} />
                         <Tooltip
-                          contentStyle={{ background: '#020617', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 12, color: '#e2e8f0' }}
+                          contentStyle={{ background: 'var(--aurora-max-panel-strong)', border: '1px solid var(--aurora-max-line)', color: 'var(--aurora-max-paper)' }}
                           formatter={(value) => [`${Number(value).toFixed(2)}U`, 'Profit']}
                         />
-                        <Area type="monotone" dataKey="profit" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.12} strokeWidth={2} />
+                        <Area type="monotone" dataKey="profit" stroke="#00d9a0" fill="#00d9a0" fillOpacity={0.12} strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
 
-                  <div className={`${AURORA_PANEL_PREMIUM} h-[190px]`}>
+                  <div className="profile-aurora-inset h-[190px] p-2">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Win Rate Trend</span>
-                      <span className="text-[10px] font-mono text-slate-500">Settled plays</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Win Rate Trend</span>
+                      <span className="text-[10px] font-mono text-white/35">Settled plays</span>
                     </div>
                     <ResponsiveContainer width="100%" height="88%">
                       <BarChart data={graphRows}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
-                        <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(157,215,175,0.12)" />
+                        <XAxis dataKey="label" tick={{ fill: 'rgba(226,232,227,0.48)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: 'rgba(226,232,227,0.48)', fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 100]} />
                         <Tooltip
-                          contentStyle={{ background: '#020617', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 12, color: '#e2e8f0' }}
+                          contentStyle={{ background: 'var(--aurora-max-panel-strong)', border: '1px solid var(--aurora-max-line)', color: 'var(--aurora-max-paper)' }}
                           formatter={(value) => [`${Number(value).toFixed(0)}%`, 'Win rate']}
                         />
-                        <Bar dataKey="winRate" fill="#10b981" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="winRate" fill="#00d9a0" radius={[0, 0, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               );
             })()}
-          </div>
+          </AuroraMaxPanel>
 
-          <div className={`hidden md:block ${AURORA_PANEL_PREMIUM} rounded-2xl space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
-            <div className="flex items-center justify-between border-b border-slate-850">
+          <AuroraMaxPanel className="hidden md:block space-y-4 relative animate-slide-up p-4" id="profile-my-outcomes-sidemenu-card">
+            <div className="profile-aurora-rule flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />
                 <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
                   Recent Outcomes
                 </h3>
               </div>
-              <span className="text-[9px] font-mono font-black text-emerald-450 bg-emerald-950 rounded-full border border-emerald-900/40 uppercase">
+              <span className="aurora-max-eyebrow">
                 SETTLED RECORD
               </span>
             </div>
@@ -923,13 +925,13 @@ export default function ProfilePageZ8({
                     key={ymd}
                     onMouseEnter={() => setHoveredDayYmd(ymd)}
                     onMouseLeave={() => setHoveredDayYmd(null)}
-                    className={`relative rounded-xl border transition-all duration-200 cursor-pointer ${ hasPlays ? '/60 border-slate-800 hover:border-slate-600 hover:/45 shadow-sm' : '/40 border-slate-900/50 opacity-55 hover:opacity-100 transition-opacity' }`}
+                    className={`profile-aurora-day relative p-2.5 transition-all duration-200 cursor-pointer ${ hasPlays ? '' : 'opacity-55 hover:opacity-100' }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-mono font-bold text-slate-200">{formattedDate}</span>
                         {isToday && (
-                          <span className="text-[8px] font-black uppercase tracking-wider text-sky-400 bg-sky-950 rounded border border-sky-900/50">
+                          <span className="aurora-max-eyebrow">
                             Today
                           </span>
                         )}
@@ -960,8 +962,8 @@ export default function ProfilePageZ8({
 
                     {/* Rich Floating HTML Tooltip relative to container */}
                     {hoveredDayYmd === ymd && (
-                      <div className="absolute left-1/2 -translate-x-1/2 w-[min(280px,calc(100vw-2rem))] lg:left-auto lg:right-0 lg:translate-x-0 lg:w-[280px] top-[102%] z-50 border border-slate-800 rounded-2xl shadow-2xl space-y-3 animate-fadeIn">
-                        <div className="flex justify-between items-center border-b border-slate-850">
+                      <div className="profile-aurora-tip absolute left-1/2 -translate-x-1/2 w-[min(280px,calc(100vw-2rem))] lg:left-auto lg:right-0 lg:translate-x-0 lg:w-[280px] top-[102%] z-50 space-y-3 p-3 animate-fadeIn">
+                        <div className="profile-aurora-rule flex justify-between items-center border-b pb-2">
                           <span className="text-xs font-black text-slate-200 uppercase tracking-wider">{formattedDate} Performance</span>
                           <span className="text-[9px] font-mono text-slate-500">{ymd}</span>
                         </div>
@@ -970,17 +972,17 @@ export default function ProfilePageZ8({
                           <div className="space-y-3">
                             {/* Winrate Stats Grid panel */}
                             <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                              <div className="rounded-md border border-slate-850">
+                              <div className="profile-aurora-metric">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">Winrate</p>
                                 <p className="text-sky-455 font-mono font-bold text-xs mt-0.5 text-sky-400 font-black">
                                   {winRate !== null ? `${winRate.toFixed(0)}%` : '—'}
                                 </p>
                               </div>
-                              <div className="rounded-md border border-slate-850">
+                              <div className="profile-aurora-metric">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">W / L</p>
                                 <p className="text-slate-200 font-mono font-bold text-xs mt-0.5">{wonCount}W - {lostCount}L</p>
                               </div>
-                              <div className="rounded-md border border-slate-850">
+                              <div className="profile-aurora-metric">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">Profit</p>
                                 <p className={`font-mono font-bold text-xs mt-0.5 ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-455'}`}>
                                   {netProfit >= 0 ? '+' : ''}{netProfit.toFixed(1)}U
@@ -992,7 +994,7 @@ export default function ProfilePageZ8({
                             <div className="space-y-1.5 max-h-[140px] overflow-y-auto no-scrollbar">
                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Settled Markets</p>
                               {dayOutcomes.map((item, idx) => (
-                                <div key={idx} className="flex justify-between items-center text-[10px] /40 rounded-lg border border-slate-850">
+                                <div key={idx} className="profile-aurora-inset flex justify-between items-center gap-2 p-2 text-[10px]">
                                   <span className="text-slate-300 font-medium truncate max-w-[140px]">{item.result?.marketName}</span>
                                   <span className={`font-mono font-black rounded text-[9px] ${ item.result?.status === 'WON' ? 'bg-emerald-950/80 text-emerald-400' : 'bg-rose-950/80 text-rose-400' }`}>
                                     {item.result?.status}
@@ -1013,7 +1015,7 @@ export default function ProfilePageZ8({
                 );
               })}
             </div>
-          </div>
+          </AuroraMaxPanel>
         </div>
 
       </div>
@@ -1021,7 +1023,7 @@ export default function ProfilePageZ8({
 
       {/* Profile Share Studio Modal Popup */}
       {showShareModal && (
-        <div className="fixed inset-0 /80 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in" id="profile-share-modal-overlay">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--aurora-max-obsidian)]/80 backdrop-blur-sm animate-fade-in" id="profile-share-modal-overlay">
           <ProfileShareCard profile={profile} onClose={() => setShowShareModal(false)} />
         </div>
       )}

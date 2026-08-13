@@ -2,16 +2,16 @@
 
 .ve-hr-profile,
 .ve-hr-drawer {
-  --ve-hr-panel: #0a0e14;
-  --ve-hr-panel-raised: #0d1219;
-  --ve-hr-shell: #02060e;
-  --ve-hr-tooltip: #111820;
-  --ve-hr-border: rgba(255, 255, 255, 0.08);
-  --ve-hr-border-strong: rgba(255, 255, 255, 0.12);
+  --ve-hr-panel: var(--aurora-max-panel-strong);
+  --ve-hr-panel-raised: var(--aurora-max-panel);
+  --ve-hr-shell: var(--aurora-max-obsidian);
+  --ve-hr-tooltip: var(--aurora-max-panel-strong);
+  --ve-hr-border: var(--aurora-max-line);
+  --ve-hr-border-strong: var(--aurora-max-line-strong);
 }
 
 .ve-hr-profile-backdrop {
-  background: rgba(2, 6, 14, 0.88);
+  background: color-mix(in srgb, var(--aurora-max-obsidian) 88%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -31,7 +31,7 @@
 
 .ve-hr-profile-sidebar {
   border-color: var(--ve-hr-border);
-  background: linear-gradient(165deg, rgba(15, 23, 42, 0.55) 0%, #02060e 72%);
+  background: linear-gradient(165deg, var(--aurora-max-panel) 0%, var(--aurora-max-obsidian) 72%);
 }
 
 .ve-hr-profile-content {
@@ -44,8 +44,8 @@
   border-radius: 0.875rem;
   background:
     radial-gradient(circle at 88% 0%, rgba(79, 184, 220, 0.1), transparent 36%),
-    linear-gradient(145deg, rgba(49, 181, 131, 0.055), rgba(13, 18, 25, 0.96) 55%);
-  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.035);
+    linear-gradient(145deg, rgba(0, 217, 160, 0.055), var(--aurora-max-panel-strong) 55%);
+  box-shadow: inset 0 1px 0 rgba(242, 240, 233, 0.045);
 }
 
 .ve-hr-decision-brief__header {
@@ -206,6 +206,7 @@
   display: flex;
   gap: 0;
   overflow-x: auto;
+  border-color: var(--ve-hr-border);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -215,12 +216,12 @@
 }
 
 .ve-hr-drawer-header {
-  background: #0a0e14;
+  background: var(--aurora-max-obsidian);
 }
 
 .ve-hr-drawer-score {
   border-color: var(--ve-hr-border);
-  background: #0d1219;
+  background: var(--aurora-max-panel-strong);
 }
 
 /* ── Dossier ─────────────────────────────────────────────── */
@@ -240,7 +241,7 @@
   overflow: hidden;
   border-radius: 0.75rem;
   border: 1px solid var(--ve-hr-border);
-  background: #111820;
+  background: var(--aurora-max-panel);
 }
 
 .ve-hr-dossier-matchup-watermark {
@@ -258,7 +259,7 @@
 .ve-hr-dossier-matchup-inner {
   position: relative;
   padding: 1rem 1.125rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 55%);
+  background: linear-gradient(135deg, rgba(242, 240, 233, 0.032) 0%, transparent 55%);
 }
 
 .ve-hr-dossier-market {
@@ -267,7 +268,7 @@
   align-items: stretch;
   border-radius: 0.75rem;
   border: 1px solid var(--ve-hr-border);
-  background: #0d1219;
+  background: var(--aurora-max-panel-strong);
   overflow: hidden;
 }
 
@@ -326,7 +327,7 @@
 .ve-hr-dossier-section {
   border-radius: 0.75rem;
   border: 1px solid var(--ve-hr-border);
-  background: #0d1219;
+  background: var(--aurora-max-panel-strong);
   padding: 1rem 1.125rem;
 }
 
@@ -376,8 +377,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--aurora-max-line);
+  background: var(--aurora-max-obsidian);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.625rem;
   font-weight: 700;
@@ -406,7 +407,7 @@
   gap: 0.35rem 0.65rem;
   padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--ve-hr-border);
-  background: #0a0e14;
+  background: var(--aurora-max-obsidian);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.45);

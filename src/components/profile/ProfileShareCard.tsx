@@ -4,7 +4,9 @@ import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
 import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
-import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_STAT_CHIP } from '../../theme/auroraTokens';
+import { AURORA_LABEL, AURORA_STAT_CHIP } from '../../theme/auroraTokens';
+import { AuroraMaxPanel } from '../aurora-max/AuroraMaxPrimitives';
+import '../../styles/profile-aurora-max.css';
 
 interface ProfileShareCardProps {
   profile: CreatorProofProfile;
@@ -37,8 +39,8 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   };
 
   return (
-    <div className={`${AURORA_PANEL_PREMIUM} max-w-lg w-full mx-auto p-6 space-y-6 text-white relative overflow-hidden select-none`}>
-      <div className="flex justify-between items-center relative z-10 border-b border-white/10 pb-4">
+    <AuroraMaxPanel className="profile-aurora-max max-w-lg w-full mx-auto p-6 space-y-6 text-[var(--aurora-max-paper)] relative overflow-hidden select-none">
+      <div className="profile-aurora-rule flex justify-between items-center relative z-10 border-b pb-4">
         <div>
           <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
             <Share className="w-5 h-5 text-vouch-cyan" />
@@ -49,7 +51,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         {onClose && (
           <button
             onClick={onClose}
-            className={`${AURORA_LABEL} text-white/45 hover:text-white px-2.5 py-1 rounded-lg border border-white/10 bg-black/30 hover:bg-white/5 transition-all`}
+            className={`aurora-max-control ${AURORA_LABEL} px-2.5 py-1`}
           >
             Close
           </button>
@@ -60,7 +62,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         className={`rounded-2xl p-1 ${activeTheme.pageBg || 'bg-gradient-to-b from-[#110c27] to-[#03040c]'}`}
         id="social-share-card-preview"
       >
-        <div className="rounded-xl p-6 bg-black/50 border border-white/8 space-y-4">
+        <div className="profile-aurora-inset p-6 space-y-4">
           <div className="flex justify-between items-start gap-3">
             <div className="flex items-center gap-4 min-w-0">
               <ProfileAvatarBorder
@@ -113,12 +115,12 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
           </div>
 
           {profile.bio && (
-            <div className="border border-white/8 bg-black/30 p-3 rounded-xl text-left">
+            <div className="profile-aurora-inset p-3 text-left">
               <p className="text-xs text-white/65 italic leading-relaxed line-clamp-2">&ldquo;{profile.bio}&rdquo;</p>
             </div>
           )}
 
-          <div className={`flex items-center justify-between ${AURORA_LABEL} text-[10px] text-white/35 border-t border-white/8 pt-3`}>
+          <div className={`profile-aurora-rule flex items-center justify-between ${AURORA_LABEL} text-[10px] text-white/35 border-t pt-3`}>
             <span>Graded picks only</span>
             <span>@{profile.username}</span>
           </div>
@@ -128,7 +130,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
         <button
           onClick={handleCopyDraft}
-          className={`${AURORA_LABEL} border border-white/10 bg-black/35 hover:bg-white/5 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white/70 hover:text-white`}
+          className={`aurora-max-control ${AURORA_LABEL} py-3 px-4 text-[11px] tracking-wider`}
         >
           {copiedDraft ? (
             <>
@@ -144,11 +146,11 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         </button>
         <button
           onClick={handleCopyLink}
-          className={`${AURORA_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 hover:bg-vouch-cyan/25 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-[11px] tracking-wider text-white`}
+          className={`aurora-max-control aurora-max-control--primary ${AURORA_LABEL} py-3 px-4 text-[11px] tracking-wider`}
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4 text-vouch-emerald" />
+              <Check className="w-4 h-4" />
               <span>Link copied</span>
             </>
           ) : (
@@ -159,6 +161,6 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
           )}
         </button>
       </div>
-    </div>
+    </AuroraMaxPanel>
   );
 }

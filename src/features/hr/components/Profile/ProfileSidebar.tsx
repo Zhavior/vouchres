@@ -54,7 +54,7 @@ export default function ProfileSidebar({
   fmtOdds,
 }: Props) {
   return (
-    <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
+    <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
       <button
         onClick={onClose}
         aria-label="Close"

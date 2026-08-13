@@ -92,3 +92,39 @@ root_cause: Project lessons L006 still pointed retired URLs at hr_intel_v2; the 
 rule: hr_intel_v2 / /hr-intel-v2 is removed. Do not recreate src/features/hr-intel-v2. Canonicalize /hr-board, hr_board, daily_hr_watch_new, and /hr-intel-v2 to hr_max. Keep hr_max. Z8 stays deleted.
 applies_when: VouchEdge HR routes; featureConfig; sectionNavigation; hr_max; hr_intel_v2
 status: active
+---
+
+id: L011
+date: 2026-08-13
+symptom: Account Profile still looked like generic white/10 glass because .profile-page was in aurora-max.css adapters but the live page never set that class
+root_cause: Route-frame CSS targets a missing root class; Tailwind border-white/10 on the page also overrides the adapter
+rule: When restyling a focused Aurora Max route, add the adapter class the shell already lists (profile-page, settings-page) and wrap cards in AuroraMaxPanel / --aurora-max-line — do not re-import aurora-max.css
+applies_when: Restyling VouchEdge Profile, Settings, or any route already under .aurora-max-shell + AuroraMaxRouteFrame
+status: active
+---
+
+id: L012
+date: 2026-08-13
+symptom: Iolaus PASS WITH ISSUES because untracked HomeRunIntelligencePageZ8.tsx made existsSync true in retirement contracts
+root_cause: Retired Z8 page left on disk as untracked (plus .backup); contract tests check the filesystem, not git index
+rule: After retiring HomeRunIntelligencePageZ8, delete the page and any .backup from disk. existsSync false is the contract. Untracked copies fail the same as committed ones. Do not restore Z8.
+applies_when: HomeRunIntelligencePageZ8; hrAuroraMaxContract; hrAuroraMaxPageContract; Z8 retirement; untracked leftover
+status: active
+---
+
+id: L013
+date: 2026-08-13
+symptom: Iolaus PASS WITH ISSUES after Z8 retirement because HomeRunIntelligencePageZ8.backup.tsx remained on disk; agents globbed *.tsx.backup only
+root_cause: .gitignore src/**/*.backup*.tsx hides .backup.tsx from Cursor Glob; the live-src suffix is Name.backup.tsx not Name.tsx.backup. existsSync on the wrong suffix is a false all-clear
+rule: When deleting retired Z8/page backups, find on disk (not Cursor Glob) for both Name.backup.tsx and Name.tsx.backup plus Name.backup. Gitignored files still fail existsSync. Do not restore the page.
+applies_when: HomeRunIntelligencePageZ8; .backup.tsx; .tsx.backup; gitignore; Z8 retirement; hrAuroraMaxContract
+status: active
+---
+
+id: L014
+date: 2026-08-13
+symptom: Profile page crashed in DEV with getSnapshot should be cached / Maximum update depth exceeded in ProfileShell (forceStoreRerender → updateStoreInstance)
+root_cause: useAppSavedVouchIds selected state.savedVouches.map(v => v.id), so zustand getSnapshot allocated a new array every call; React 19 useSyncExternalStore Object.is saw a change and looped
+rule: Never return a new object/array from a zustand selector. Wrap derived snapshots with useShallow, select a primitive, or subscribe to the store array and derive with useMemo.
+applies_when: zustand useStore selector useSyncExternalStore getSnapshot ProfileShell useAppSavedVouchIds React 19 infinite loop
+status: active

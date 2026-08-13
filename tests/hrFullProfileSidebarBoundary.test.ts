@@ -17,6 +17,6 @@ describe('HR full profile sidebar boundary', () => {
 
   it('preserves the mobile full-screen dialog behavior', () => {
     expect(profileCss).toContain('@media (min-width: 768px)');
-    expect(profileSource).toContain('className="ve-hr-profile ve-hr-profile-shell fixed inset-0');
+    expect(profileSource).toContain('ve-hr-profile ve-hr-profile-shell fixed inset-0');
   });
 });

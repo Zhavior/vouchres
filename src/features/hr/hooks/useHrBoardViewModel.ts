@@ -87,8 +87,8 @@ export function useHrBoardViewModel() {
     connection,
   } = useDailyHrBoard(date);
   const hrResults = useHrResultsForDate(date);
-  const generatedAt = parseDate(rawBoard?.generatedAt);
-  const loadedAt = parseDate(rawBoard?.loadedAt);
+  const generatedAt = useMemo(() => parseDate(rawBoard?.generatedAt), [rawBoard?.generatedAt]);
+  const loadedAt = useMemo(() => parseDate(rawBoard?.loadedAt), [rawBoard?.loadedAt]);
   const freshnessReference = generatedAt ?? loadedAt;
 
   const freshness = useMemo<BoardFreshness>(() => {

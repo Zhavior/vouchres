@@ -426,7 +426,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
             className="hr-aurora-max ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
-            <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
+            <aside className="ve-hr-profile-sidebar ve-player-intelligence-rail relative flex-shrink-0 overflow-hidden border-b lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
@@ -507,7 +507,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
 
               {/* Nav — mobile horizontal scroll strip */}
               <div
-                className="ve-hr-nav-scroll border-t border-white/10 px-2 lg:hidden"
+                className="ve-hr-nav-scroll border-t px-2 lg:hidden"
               >
                 {NAV.map(n => (
                   <button
@@ -543,7 +543,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
                 with its own ResizeObserver measuring a zero-width box. */}
             <div className="ve-hr-profile-content flex-1 overflow-y-auto">
               {isDesktopProfile ? (
-                <div className="h-full border-l border-white/10">
+                <div className="h-full border-l">
                   <div className="p-6 xl:p-8">{renderContent()}</div>
                 </div>
               ) : (
@@ -587,7 +587,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
               }
             />
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] px-5">
+            <div className="border border-[var(--aurora-max-line)] bg-[var(--aurora-max-panel)] px-5">
               <EvidenceStack items={evidenceItems.length > 0 ? evidenceItems : [{ tone: 'strongest', text: decision.reason }]} />
             </div>
 
