@@ -292,7 +292,7 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
 
               return (
                 <div
-                  key={`node-${row.stableId}-${idx}`}
+                  key={`node-${row.stableId}`}
                   onMouseEnter={() => setHoveredRow(row)}
                   onMouseLeave={() => setHoveredRow(null)}
                   onClick={() => handleAddToSlip(row)}
@@ -363,7 +363,7 @@ export default function ProjectionMatrixView({ rows, getHrResult }: Props) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPoints.map(({ row, x, y, quadrant }, idx) => (
             <AuroraMaxPanel
-              key={`card-${row.stableId}-${idx}`}
+              key={`card-${row.stableId}`}
               className="flex flex-col justify-between p-4 transition duration-200 hover:border-vouch-cyan/40"
             >
               <div className="flex items-start justify-between gap-3">

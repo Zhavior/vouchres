@@ -322,7 +322,7 @@ export default function EdgeDeskView({ rows, getHrResult }: Props) {
 
           return (
             <AuroraMaxPanel
-              key={`${row.stableId}-${idx}`}
+              key={row.stableId}
               className={`group relative flex flex-col justify-between p-5 transition-all duration-300 ${
                 isPrime
                   ? "border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(49,181,131,0.16)]"
