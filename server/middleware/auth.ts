@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "../errors/AppError";
+import { isFounderEmail } from "../../src/lib/founderAccess";
 import { TTLCache } from "../lib/cache";
 import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
 import { isUpstashEnabled, redisDel, redisGet, redisGetJson, redisSet, redisSetJson } from "../lib/upstashRedis";
@@ -256,13 +257,24 @@ function isDiscordBetaExemptRequest(req: AuthedRequest): boolean {
   return DISCORD_BETA_EXEMPT_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
+function isLocalDiscordBetaBypass(): boolean {
+  if (process.env.DISCORD_FORCE_BETA_GATE === "true") return false;
+  const env = process.env.NODE_ENV;
+  return env !== "production" && env !== "test";
+}
+
 function discordBetaAccessError(
   profile: NonNullable<AuthedRequest["user"]>["profile"],
   req: AuthedRequest,
+  email?: string | null,
 ): AppError | null {
-  // Staff must retain operational access to repair Discord connections and
-  // investigate accounts even when their own profile is not beta-linked.
-  if (profile.is_staff || isDiscordBetaExemptRequest(req)) return null;
+  // Local `npm run dev` must not trap on Discord flags. Vite middleware
+  // runs whenever NODE_ENV is not production (often unset). Tests and
+  // production still enforce. Opt back in with DISCORD_FORCE_BETA_GATE=true.
+  if (isLocalDiscordBetaBypass()) return null;
+  // Staff and the product founder retain access even when Discord role
+  // assignment 403s (bots cannot assign roles to the guild owner).
+  if (profile.is_staff || isFounderEmail(email) || isDiscordBetaExemptRequest(req)) return null;
   if (profile.discord_guild_member && profile.discord_beta_access) return null;
   return new AppError({
     status: 403,
@@ -272,6 +284,110 @@ function discordBetaAccessError(
   });
 }
 
+/**
+ * Extracts the Supabase auth token from either the Authorization: Bearer header
+ * or Supabase SSR auth cookies (sb-*-auth-token or multi-chunk cookies).
+ */
+export function extractAuthToken(req: Request): { token: string; source: "bearer" | "cookie" } | null {
+  // 1. Bearer token in Authorization header
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) {
+    const raw = header.slice(7).trim();
+    if (raw) return { token: raw, source: "bearer" };
+  }
+
+  // 2. Supabase SSR cookies from request
+  const cookies = req.cookies;
+  if (cookies && typeof cookies === "object") {
+    const keys = Object.keys(cookies);
+
+    // Single-key cookie: sb-<project-ref>-auth-token or sb-auth-token
+    const singleKey = keys.find((k) => /^sb-.*-auth-token$/.test(k) || k === "sb-auth-token" || k === "supabase-auth-token");
+    if (singleKey) {
+      const rawVal = cookies[singleKey];
+      if (typeof rawVal === "string" && rawVal.trim()) {
+        const val = rawVal.trim();
+        try {
+          if (val.startsWith("{") || val.startsWith("[")) {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed) && typeof parsed[0] === "string") return { token: parsed[0], source: "cookie" };
+            if (typeof parsed.access_token === "string") return { token: parsed.access_token, source: "cookie" };
+          } else if (val.startsWith("base64-")) {
+            const decoded = Buffer.from(val.slice(7), "base64").toString("utf-8");
+            const parsed = JSON.parse(decoded);
+            if (Array.isArray(parsed) && typeof parsed[0] === "string") return { token: parsed[0], source: "cookie" };
+            if (typeof parsed.access_token === "string") return { token: parsed.access_token, source: "cookie" };
+          } else {
+            return { token: val, source: "cookie" };
+          }
+        } catch {
+          return { token: val, source: "cookie" };
+        }
+      }
+    }
+
+    // Multi-chunk cookies: sb-<ref>-auth-token.0, sb-<ref>-auth-token.1 ...
+    const chunkZeroKey = keys.find((k) => /^sb-.*-auth-token\.0$/.test(k));
+    if (chunkZeroKey) {
+      const prefix = chunkZeroKey.slice(0, -2);
+      const chunks: string[] = [];
+      let idx = 0;
+      while (typeof cookies[`${prefix}.${idx}`] === "string") {
+        chunks.push(cookies[`${prefix}.${idx}`]);
+        idx++;
+      }
+      if (chunks.length > 0) {
+        try {
+          const combined = chunks.join("");
+          if (combined.startsWith("base64-")) {
+            const decoded = Buffer.from(combined.slice(7), "base64").toString("utf-8");
+            const parsed = JSON.parse(decoded);
+            if (Array.isArray(parsed) && typeof parsed[0] === "string") return { token: parsed[0], source: "cookie" };
+            if (typeof parsed.access_token === "string") return { token: parsed.access_token, source: "cookie" };
+          } else if (combined.startsWith("{") || combined.startsWith("[")) {
+            const parsed = JSON.parse(combined);
+            if (Array.isArray(parsed) && typeof parsed[0] === "string") return { token: parsed[0], source: "cookie" };
+            if (typeof parsed.access_token === "string") return { token: parsed.access_token, source: "cookie" };
+          }
+        } catch {
+          // ignore chunk parse failure
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Validates CSRF safety when a mutating request relies on cookie authentication.
+ */
+function validateCookieCsrf(req: Request): boolean {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return true;
+
+  // Custom anti-CSRF request header
+  const customHeader = req.headers["x-vouchedge-csrf"] || req.headers["x-requested-with"];
+  if (customHeader) return true;
+
+  // Sec-Fetch-Site protection (same-origin / none)
+  const secFetchSite = req.headers["sec-fetch-site"];
+  if (secFetchSite === "same-origin" || secFetchSite === "none") return true;
+
+  // Origin / Referer check
+  const origin = (req.headers.origin || req.headers.referer) as string | undefined;
+  const host = req.headers.host;
+  if (origin && host) {
+    try {
+      const originHost = new URL(origin).host;
+      if (originHost === host) return true;
+    } catch {
+      // ignore parse error
+    }
+  }
+
+  return false;
+}
+
 function createRequireAuth(options: RequireAuthOptions = {}) {
   return async function requireAuthImpl(
     req: AuthedRequest,
@@ -279,19 +395,26 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
     next: NextFunction,
   ) {
     try {
-      const header = req.headers.authorization;
-      if (!header?.startsWith("Bearer ")) {
+      const authResult = extractAuthToken(req);
+      if (!authResult) {
         console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
         return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
       }
 
-      const token = header.slice(7);
+      const { token, source } = authResult;
+
+      // Anti-CSRF protection for cookie-authenticated mutating requests
+      if (source === "cookie" && !validateCookieCsrf(req)) {
+        console.warn(`[auth] rejected cookie request failed csrf check ${req.method} ${req.originalUrl}`);
+        return next(new AppError({ status: 403, code: "forbidden", message: "Cross-site request forgery validation failed." }));
+      }
+
       const cacheKey = authTokenCacheKey(token);
       const cached = await readAuthSessionCache(cacheKey);
       if (cached) {
         const blocked = authAccessError(cached.profile, options);
         if (blocked) return next(blocked);
-        const betaBlocked = discordBetaAccessError(cached.profile, req);
+        const betaBlocked = discordBetaAccessError(cached.profile, req, cached.email);
         if (betaBlocked) return next(betaBlocked);
         req.user = cached;
         return next();
@@ -355,7 +478,7 @@ function createRequireAuth(options: RequireAuthOptions = {}) {
 
       const blocked = authAccessError(profile, options);
       if (blocked) return next(blocked);
-      const betaBlocked = discordBetaAccessError(profile, req);
+      const betaBlocked = discordBetaAccessError(profile, req, data.user.email);
       if (betaBlocked) return next(betaBlocked);
 
       req.user = {

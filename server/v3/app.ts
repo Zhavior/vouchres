@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { registerV3Routes } from "./routes";
 import appConfig from "../platform/config/appConfig";
 import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
@@ -17,6 +18,7 @@ export function createV3App() {
   app.use(requestContext);
   app.use(routeTiming);
   app.use(helmetMiddleware);
+  app.use(cookieParser());
   app.use("/api/v3/billing/webhook", express.raw({ type: "application/json", limit: "1mb" }));
   app.use(express.json({ limit: "256kb" }));
   app.use("/api", corsMiddleware);

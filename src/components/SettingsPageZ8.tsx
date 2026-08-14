@@ -26,6 +26,7 @@ import { normalizeCapperSettings, type CapperHeroStyle } from '../lib/capperSett
 import { disableBrowserPush, enableBrowserPush } from '../lib/pushNotifications';
 import { VEButton } from './ui/ve';
 import { supabase } from '../lib/supabaseClient';
+import { useAuthSession } from '../lib/authSessionStore';
 import {
   fetchBillingStatus,
   openBillingPortal,
@@ -48,6 +49,14 @@ import {
   AuroraMaxPanel,
   AuroraMaxTruthBadge,
 } from './aurora-max/AuroraMaxPrimitives';
+import {
+  getStoredConsent,
+  saveConsent,
+  revokeConsent,
+  getGlobalPrivacyControl,
+  onConsentChange,
+  type ConsentState,
+} from '../lib/cookieConsent';
 import './billing-settings-aurora-max.css';
 
 const MAX_ACTIVE = 'settings-tab-active';
@@ -183,6 +192,7 @@ export default function SettingsPageZ8({
   profile,
   onUpdateProfile,
 }: SettingsPageProps) {
+  const authSession = useAuthSession();
   const initialCapperSettings = useMemo(() => normalizeCapperSettings(profile.capperSettings), [profile.capperSettings]);
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [displayName, setDisplayName] = useState(profile.displayName || profileName || '');
@@ -264,21 +274,62 @@ export default function SettingsPageZ8({
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  const [discordState, setDiscordState] = useState<ConnectDiscordButtonProfile | null>(null);
+  const [cookieConsentState, setCookieConsentState] = useState<ConsentState | null>(() => getStoredConsent());
+  const [isGpcActive, setIsGpcActive] = useState(false);
+
+  useEffect(() => {
+    setIsGpcActive(getGlobalPrivacyControl());
+    setCookieConsentState(getStoredConsent());
+    return onConsentChange((next) => {
+      setCookieConsentState(next);
+    });
+  }, []);
+
+  const handleToggleCookieCategory = (category: 'functional' | 'analytics', value: boolean) => {
+    const updated = saveConsent(
+      {
+        ...cookieConsentState,
+        [category]: value,
+      },
+      'settings',
+    );
+    setCookieConsentState(updated);
+    showToast('Cookie preferences updated.');
+  };
+
+  const handleResetCookiePreferences = () => {
+    revokeConsent();
+    setCookieConsentState(null);
+    showToast('Cookie preferences reset.');
+  };
+
+  const [discordState, setDiscordState] = useState<ConnectDiscordButtonProfile | null>(() => ({
+    discord_username: profile.discordUsername ?? null,
+    discord_connected_at: profile.discordConnectedAt ?? null,
+    discord_guild_member: Boolean(profile.discordGuildMember),
+    discord_beta_access: Boolean(profile.discordBetaAccess),
+  }));
 
   const refreshDiscordState = useCallback(async () => {
     try {
       const data = await apiClient.get<Record<string, unknown>>('/api/auth/me');
-      setDiscordState({
+      const next = {
         discord_username: (data.discord_username as string | null | undefined) ?? null,
         discord_connected_at: (data.discord_connected_at as string | null | undefined) ?? null,
         discord_guild_member: Boolean(data.discord_guild_member),
         discord_beta_access: Boolean(data.discord_beta_access),
+      };
+      setDiscordState(next);
+      onUpdateProfile({
+        discordUsername: next.discord_username,
+        discordConnectedAt: next.discord_connected_at,
+        discordGuildMember: next.discord_guild_member,
+        discordBetaAccess: next.discord_beta_access,
       });
     } catch (err) {
       console.warn('[Settings] failed to load Discord connection state', err);
     }
-  }, []);
+  }, [onUpdateProfile]);
 
   const refreshBilling = useCallback(async (message?: string, announce = true) => {
     setBillingLoading(true);
@@ -771,12 +822,13 @@ export default function SettingsPageZ8({
                     <ConnectDiscordButton
                       profile={
                         discordState ?? {
-                          discord_username: null,
-                          discord_connected_at: null,
-                          discord_guild_member: false,
-                          discord_beta_access: false,
+                          discord_username: profile.discordUsername ?? null,
+                          discord_connected_at: profile.discordConnectedAt ?? null,
+                          discord_guild_member: Boolean(profile.discordGuildMember),
+                          discord_beta_access: Boolean(profile.discordBetaAccess),
                         }
                       }
+                      email={authSession.session?.user?.email}
                       onVerified={refreshDiscordState}
                     />
                   </Section>
@@ -1428,6 +1480,83 @@ export default function SettingsPageZ8({
             {/* ── PRIVACY ── */}
             {activeTab === 'privacy' && (
               <div className="space-y-6">
+                <Section
+                  title="Cookie & telemetry choices"
+                  subtitle="Manage essential security cookies and optional performance telemetry."
+                >
+                  <div className="space-y-4">
+                    <div className={`flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${MAX_SURFACE}`}>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-white">Consent status</p>
+                          <AuroraMaxTruthBadge
+                            state={cookieConsentState ? 'confirmed' : isGpcActive ? 'projected' : 'missing'}
+                          >
+                            {cookieConsentState
+                              ? 'Active'
+                              : isGpcActive
+                                ? 'GPC Enforced'
+                                : 'Default / Unset'}
+                          </AuroraMaxTruthBadge>
+                        </div>
+                        <p className="text-xs text-white/50">
+                          {cookieConsentState?.consented_at
+                            ? `Last updated on ${formatDate(cookieConsentState.consented_at)}`
+                            : 'First-party essential cookies active.'}
+                        </p>
+                      </div>
+
+                      <VEButton
+                        type="button"
+                        onClick={handleResetCookiePreferences}
+                        variant="ghost"
+                        className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Reset choices
+                      </VEButton>
+                    </div>
+
+                    <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                      <PrefRow
+                        label="Strictly necessary"
+                        detail="Session authentication, CSRF validation, and platform stability. Required for VouchEdge to function."
+                      >
+                        <span className="font-mono text-xs text-[#a8d8b6]/80 bg-[#0d2318] px-2 py-0.5 rounded border border-[#a8d8b6]/30">
+                          Locked On
+                        </span>
+                      </PrefRow>
+
+                      <PrefRow
+                        label="Functional preferences"
+                        detail="Preserves custom layout filters, collapsed states, and draft research slips across browser visits."
+                      >
+                        <Toggle
+                          checked={cookieConsentState?.functional ?? true}
+                          onChange={(v) => handleToggleCookieCategory('functional', v)}
+                        />
+                      </PrefRow>
+
+                      <PrefRow
+                        label="Analytics & performance telemetry"
+                        detail="Anonymized PostHog usage signals and Sentry error diagnostics to improve speed and resolve bugs."
+                      >
+                        <Toggle
+                          checked={Boolean(cookieConsentState?.analytics)}
+                          onChange={(v) => handleToggleCookieCategory('analytics', v)}
+                        />
+                      </PrefRow>
+
+                      <PrefRow
+                        label="Marketing & advertising"
+                        detail="VouchEdge does not use advertising cookies, marketing pixels, or third-party ad networks."
+                      >
+                        <span className="font-mono text-xs text-white/40">Not Used</span>
+                      </PrefRow>
+                    </div>
+                  </div>
+                </Section>
+
                 <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
                   <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${MAX_SURFACE}`}>
                     <div className="min-w-0">

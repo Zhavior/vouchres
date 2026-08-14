@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { supabase } from "./supabaseClient";
-import { hasConsent } from "../components/legal/CookieConsentBanner";
+import { hasConsent } from "./cookieConsent";
 
 /**
  * Sentry integration — error tracking + performance monitoring.

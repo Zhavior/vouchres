@@ -24,6 +24,7 @@
     "verify:ai-parlays": "tsx scripts/verifyAiParlays.ts",
     "verify:entitlements": "tsx scripts/verifyEntitlements.ts",
     "verify:auth-smoke": "tsx scripts/verifyAuthSmoke.ts",
+    "verify:cookies": "tsx scripts/verifyCookieSystem.ts",
     "verify:trustos": "tsx scripts/smokeTrustOs.ts",
     "verify:trustos-db": "node --env-file=.env.local scripts/verifyTrustOsMigration.mjs",
     "migrate:trustos": "node --env-file=.env.local scripts/applyTrustOsMigration.mjs",

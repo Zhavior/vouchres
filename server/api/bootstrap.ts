@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import http from "http";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -28,6 +29,7 @@ export async function createApiApp(httpServer?: http.Server) {
   app.use(requestContext);
   app.use(routeTiming);
   app.use(helmetMiddleware);
+  app.use(cookieParser());
 
   // Raw body for Stripe webhook isolation
   app.use(
