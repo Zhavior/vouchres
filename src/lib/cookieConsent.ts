@@ -85,7 +85,7 @@ export function hasConsent(category: ConsentCategory): boolean {
 
   const stored = getStoredConsent();
   if (!stored) {
-    return category === "essential";
+    return false;
   }
 
   return Boolean(stored[category]);
