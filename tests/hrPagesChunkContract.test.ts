@@ -6,6 +6,7 @@ const HR_FEATURE_DIRS = [
   'src/features/hr-max',
   'src/features/aurora-hr-hq',
   'src/features/hr-v2',
+  'src/features/hr',
 ];
 
 const LAZY_RE = /lazyWithRetry|React\.lazy\s*\(/;
@@ -39,10 +40,12 @@ describe('HR pages production chunk contract', () => {
     expect(router).toContain("import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage'");
     expect(router).toContain("import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage'");
     expect(router).toContain("import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10'");
+    expect(router).toContain("import HomeRunIntelligencePageLegacy from '../../features/hr/pages/HomeRunIntelligencePageLegacy'");
     expect(router).toContain("case 'hr_max':");
     expect(router).toContain("case 'aurora_hr_hq':");
     expect(router).toContain("case 'aurora_daily_slate':");
     expect(router).toContain("case 'hr_v10':");
+    expect(router).toContain("case 'hr_board':");
     expect(router).not.toMatch(/lazyWithRetry\(routeModules\.hrMax\)/);
     expect(router).not.toMatch(/lazyWithRetry\(routeModules\.hrV10\)/);
     expect(router).not.toMatch(/lazyWithRetry\(\(\)\s*=>\s*import\([^)]*HrAuroraMaxPage/);

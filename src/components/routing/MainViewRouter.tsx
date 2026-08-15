@@ -5,6 +5,7 @@ import FadeInMount from '../system/FadeInMount';
 import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
 import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
 import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10';
+import HomeRunIntelligencePageLegacy from '../../features/hr/pages/HomeRunIntelligencePageLegacy';
 import {
   useAppShell,
   useAppPosts,
@@ -221,16 +222,21 @@ function MainViewRouter({
       );
     case 'daily_hr_watch_new':
     case 'hr_board':
+      return (
+        <FadeInMount>
+          <HomeRunIntelligencePageLegacy onSectionChange={navigateSection} />
+        </FadeInMount>
+      );
     case 'hr_max':
       return (
         <FadeInMount>
-          <HrAuroraMaxPage />
+          <HrAuroraMaxPage onNavigate={navigateSection} />
         </FadeInMount>
       );
     case 'hr_v10':
       return (
         <FadeInMount>
-          <HrIntelligencePageV10 />
+          <HrIntelligencePageV10 onNavigate={navigateSection} />
         </FadeInMount>
       );
     case 'aurora_hr_hq':

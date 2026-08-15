@@ -25,10 +25,11 @@ function tierCount(
   tier: (typeof TIER_KEYS)[number],
   tierStats: HrMaxToolbarProps['tierStats'],
 ): number {
-  if (tier === 'Elite') return tierStats.elite;
-  if (tier === 'Strong') return tierStats.strong;
-  if (tier === 'Watch') return tierStats.watch;
-  return tierStats.sleepers;
+  if (!tierStats) return 0;
+  if (tier === 'Elite') return tierStats.elite ?? 0;
+  if (tier === 'Strong') return tierStats.strong ?? 0;
+  if (tier === 'Watch') return tierStats.watch ?? 0;
+  return tierStats.sleepers ?? 0;
 }
 
 export const HrMaxToolbar = React.memo(function HrMaxToolbar({

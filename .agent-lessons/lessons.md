@@ -290,3 +290,12 @@ root_cause: selectedTiers filters the same rows that fed vm.stats; the mobile bl
 rule: Ticket catalyst is the strongest of the first three mapped evidence layers or row.signal — never invent Barrel%, wind, or EDT. Mobile exclusive-tier chips must use poolStats (search-filtered, not tier-filtered).
 applies_when: hr-max tactical ticket; presentHrMaxTicket; onFocusTier; poolStats; HRPI catalyst; mobile tier switcher
 status: active
+---
+
+id: L033
+date: 2026-08-15
+symptom: Using TanStack useWindowVirtualizer for HR Max Cards would freeze the window at scrollY 0 or mount every card on desktop
+root_cause: feed.css at min-width 1181px sets html/body/#root overflow hidden and makes #inner-view-slot the page scroller; body overflow-y scroll is the scroller below that
+rule: Attach Cards useVirtualizer to useFeedScrollRoot() when #inner-view-slot is a constrained overflow pane, else document.body/documentElement. Never useWindowVirtualizer on VouchEdge. Keep mobile inner column max-h. Keep 4×1D virtualizers (L021) and measureElement (L029).
+applies_when: hr-max; HrMaxCardBoard; useWindowVirtualizer; #inner-view-slot; FeedScrollContext; page-scroll virtualization
+status: active

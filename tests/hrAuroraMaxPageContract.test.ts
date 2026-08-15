@@ -15,7 +15,7 @@ describe('HR Command Desk Aurora Max contract', () => {
     expect(router).not.toMatch(/lazyWithRetry\(routeModules\.hrMax\)/);
     expect(router).toContain("case 'hr_max':");
     expect(router).toContain('HrAuroraMaxPage');
-    expect(router).not.toContain('HomeRunIntelligencePage');
+    expect(router).not.toContain('HomeRunIntelligencePageZ8');
     expect(page).not.toContain('HomeRunIntelligencePageZ8');
     expect(desk).not.toContain('HomeRunIntelligencePageZ8');
     expect(desk).not.toContain("from '../../hr/components/Columns/HrBoard'");

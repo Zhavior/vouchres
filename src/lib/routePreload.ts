@@ -66,7 +66,7 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
 };
 
 /** Statically composed in MainViewRouter — never prefetch or idle-warm these. */
-export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'hr_v10']);
+export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'hr_v10', 'hr_board', 'daily_hr_watch_new']);
 
 export function isEagerHrSection(section: string): boolean {
   return EAGER_HR_SECTIONS.has(section);

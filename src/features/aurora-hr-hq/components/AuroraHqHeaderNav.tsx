@@ -1,6 +1,8 @@
 const AURORA_PAGES = [
   { id: 'aurora_hr_hq', label: 'Aurora HQ' },
   { id: 'aurora_daily_slate', label: 'Daily Slate' },
+  { id: 'hr_max', label: 'Command Desk' },
+  { id: 'hr_v10', label: 'HR Intel V10' },
 ] as const;
 
 export function AuroraHqHeaderNav({

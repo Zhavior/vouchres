@@ -25,6 +25,7 @@ import { trackEvent } from '../../../lib/analytics';
 import { STRINGS_EN } from '../stringsEn';
 import { ChunkABoard } from '../components/ChunkABoard';
 import { KanbanView } from '../components/KanbanView';
+import { AuroraHqHeaderNav } from '../../aurora-hr-hq/components/AuroraHqHeaderNav';
 
 import { safeNumber } from '../../../utils/safeNumber';
 
@@ -328,7 +329,7 @@ function BoardSkeleton() {
  *  - `ve_hr_v10_startersOnly` (boolean, default: true) — hides roster-only players until lineups post
  */
 
-export function HrIntelligencePageV10() {
+export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: string) => void } = {}) {
   const {
     data,
     loading,
@@ -634,6 +635,11 @@ export function HrIntelligencePageV10() {
         </div>
 
         <main id="main-content" className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+          {onNavigate && (
+            <div className="mb-4 flex items-center">
+              <AuroraHqHeaderNav activeSection="hr_v10" onNavigate={onNavigate} />
+            </div>
+          )}
           {/* Page Header */}
           <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
             <div>

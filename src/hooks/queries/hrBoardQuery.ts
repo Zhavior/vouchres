@@ -59,7 +59,6 @@ export function hrBoardQueryOptions(date: string) {
     queryFn: ({ signal }) => fetchHrBoard(date, signal),
     initialData: bootSeed,
     initialDataUpdatedAt: bootUpdatedAt,
-    placeholderData: keepPreviousData,
     staleTime,
     gcTime,
     refetchInterval: isToday ? refetchInterval : false,

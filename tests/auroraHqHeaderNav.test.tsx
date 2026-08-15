@@ -13,11 +13,21 @@ describe('AuroraHqHeaderNav', () => {
 
     const desk = getByRole('button', { name: 'Aurora HQ' });
     const slate = getByRole('button', { name: 'Daily Slate' });
+    const max = getByRole('button', { name: 'Command Desk' });
+    const v10 = getByRole('button', { name: 'HR Intel V10' });
     expect(desk.getAttribute('aria-current')).toBe('page');
     expect(slate.getAttribute('aria-current')).toBeNull();
+    expect(max.getAttribute('aria-current')).toBeNull();
+    expect(v10.getAttribute('aria-current')).toBeNull();
 
     fireEvent.click(slate);
     expect(onNavigate).toHaveBeenCalledWith('aurora_daily_slate');
+
+    fireEvent.click(max);
+    expect(onNavigate).toHaveBeenCalledWith('hr_max');
+
+    fireEvent.click(v10);
+    expect(onNavigate).toHaveBeenCalledWith('hr_v10');
 
     rerender(<AuroraHqHeaderNav activeSection="aurora_daily_slate" onNavigate={onNavigate} />);
     expect(getByRole('button', { name: 'Daily Slate' }).getAttribute('aria-current')).toBe('page');

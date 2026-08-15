@@ -19,6 +19,7 @@ const RESEARCH_SECTIONS = new Set([
   'aurora_daily_slate',
   'hr_board',
   'hr_max',
+  'hr_v10',
   'daily_hr_watch_new',
   'daily_players',
   'mlb_stats',

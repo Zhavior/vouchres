@@ -15,6 +15,7 @@ export const PUBLIC_SECTIONS = new Set([
   'hr_board',
   'daily_hr_watch_new',
   'hr_max',
+  'hr_v10',
   'aurora_hr_hq',
   'aurora_daily_slate',
   'game_research',
@@ -204,6 +205,14 @@ export function resolveDevSectionFromLocation() {
     target === 'hr-command-desk' || target === '/hr-command-desk'
   ) {
     return 'hr_max';
+  }
+
+  if (
+    target === 'hr-v10' || target === '/hr-v10' ||
+    target === 'hr_v10' || target === '/hr_v10' ||
+    target === 'hr-intelligence-v10' || target === '/hr-intelligence-v10'
+  ) {
+    return 'hr_v10';
   }
 
   if (

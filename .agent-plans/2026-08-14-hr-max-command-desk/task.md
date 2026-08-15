@@ -1,0 +1,22 @@
+# HR Max Command Desk cockpit Tasks
+
+- `[ ]` **Phase 1 — Zero-CLS cockpit + honest game clock**
+  - `[ ]` Add `gameDate` + `gameStatus` to scored pipeline candidate (`hrPipeline.ts`)
+  - `[ ]` Add `gameDate`, `gameStatus`, `opponentPitcherHand` to compact allowlist
+  - `[ ]` Map `gameStatus`, `lineupSpot` (null if no battingOrder), `pitcherHand` on `HrWatchRow`
+  - `[ ]` `liveGameClock.ts` join `LiveGameCard` by `gamePk`; badge model Final / Live / Scheduled / unavailable
+  - `[ ]` Cockpit CSS grid (status / split / dock). Reduce-motion: no pulse, no glow
+  - `[ ]` Left pane = `HrMaxSpotlight` only; remove 4-up `HrMaxSpotlightDeck` from stacked body
+  - `[ ]` Spotlight: matchup vector from typed fields; existing 5-layer scores; Add to Slip + Research receipt
+  - `[ ]` Queue/table clock badge with reserved width + `tabular-nums`; no `TBD`
+  - `[ ]` Status strip live/final counts from unique joined games
+  - `[ ]` Audit W/L/V from `getHrResult` on Final games only; omit Brier
+  - `[ ]` Fix table subtitle (no Statcast / EV / launch-angle copy)
+  - `[ ]` Quality gate: `rtk tsc` + vitest for clock/mapper/audit; grep desk for `TBD`, Barrel, xwOBA, Statcast, Brier, signature
+- `[x]` **Phase 2 — Poll-diff signal console** — cancelled 2026-08-14: Boyd removed What’s Changed from Today; do not rebuild on hr_max
+- `[ ]` **Phase 3 — Decision dock**
+  - `[ ]` Sticky dock from `savedMap`
+  - `[ ]` Same-team correlation only
+  - `[ ]` JSON / Markdown / CSV of mapped fields; checksum only if receipt-export approved
+  - `[ ]` Grade saved Final rows via `getHrResult`
+  - `[ ]` Quality gate: tsc + tests; Iolaus on HR UI; Chronos diagnose if preview URL is up

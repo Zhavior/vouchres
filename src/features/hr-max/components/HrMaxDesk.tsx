@@ -22,6 +22,7 @@ import { HrMaxToolbar } from './HrMaxToolbar';
 import { HrMaxStatusBar } from './HrMaxStatusBar';
 import { HrMaxSidecar } from './HrMaxSidecar';
 import { HrMaxMainPane } from './HrMaxMainPane';
+import { AuroraHqHeaderNav } from '../../aurora-hr-hq/components/AuroraHqHeaderNav';
 
 export type HrDeskViewMode = 'queue' | 'cards' | 'table';
 
@@ -74,7 +75,7 @@ function savedReducer(state: Record<string, true>, action: SavedAction): Record<
   return { ...state, [action.id]: true };
 }
 
-export default function HrMaxDesk() {
+export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: string) => void } = {}) {
   const vm = useHrBoardViewModel();
   const [viewMode, setViewModeState] = useState<HrDeskViewMode>(getInitialViewMode);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -171,7 +172,10 @@ export default function HrMaxDesk() {
   return (
     <div className="hr-max-desk min-h-full">
       <header className="hr-max-desk__session">
-        <AuroraMaxProductMark />
+        <div className="flex min-w-0 items-center gap-3">
+          <AuroraMaxProductMark />
+          {onNavigate && <AuroraHqHeaderNav activeSection="hr_max" onNavigate={onNavigate} />}
+        </div>
         <div className="flex min-w-0 items-center gap-2">
           <span className="hidden items-center gap-1.5 border-r border-white/[0.07] pr-3 font-mono text-[11px] uppercase tracking-[0.12em] text-white/30 sm:flex">
             {vm.isToday ? 'Today' : vm.date}
