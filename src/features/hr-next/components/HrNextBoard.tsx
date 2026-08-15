@@ -14,6 +14,7 @@ interface HrNextBoardProps {
   groupBy?: GroupByMode;
   activeId?: string | null;
   onSelectActiveId?: (id: string) => void;
+  selectedMatchupIndex?: number;
 }
 
 interface MatchupGroup {
@@ -33,6 +34,7 @@ export function HrNextBoard({
   groupBy,
   activeId: controlledActiveId,
   onSelectActiveId,
+  selectedMatchupIndex = -1,
 }: HrNextBoardProps) {
   const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const [openReceiptId, setOpenReceiptId] = useState<string | null>(null);
@@ -68,13 +70,20 @@ export function HrNextBoard({
     return result;
   }, [items, isMatchupMode]);
 
+  const displayedMatchups = useMemo(() => {
+    if (selectedMatchupIndex >= 0 && selectedMatchupIndex < matchups.length) {
+      return [matchups[selectedMatchupIndex]];
+    }
+    return matchups;
+  }, [matchups, selectedMatchupIndex]);
+
   return (
     <LayoutGroup id="hrnext-board">
       {/* 3D Visual Layer (Phase 5) */}
       <HrNextVisualLayer isVisible={is3DLayerEnabled} />
 
       {isMatchupMode ? (
-        matchups.map((matchup) => (
+        displayedMatchups.map((matchup) => (
           <div key={matchup.header.id} className="bg-[#060a0a]/90 border border-white/10 rounded-xl p-5 mb-6">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/10">
               <h2 className="text-sm font-black uppercase tracking-widest text-white">

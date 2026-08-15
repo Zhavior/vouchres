@@ -1,6 +1,6 @@
 import { Search, Sparkles, Command, Keyboard } from 'lucide-react';
-import { useReducer, useCallback, useState, useRef } from 'react';
-import { useHrNextData } from '../hooks/useHrNextData';
+import { useReducer, useCallback, useState, useRef, useMemo } from 'react';
+import { useHrNextData, type HrNextItem } from '../hooks/useHrNextData';
 import { HrNextBoard } from './HrNextBoard';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { toHrParlayPickerPlayer } from '../../hr/utils/hrDecisionBrief';
@@ -9,6 +9,7 @@ import { HrNextSortMenu } from './HrNextSortMenu';
 import { HrNextResearchView } from './HrNextResearchView';
 import { HrNextTacticalFilters } from './HrNextTacticalFilters';
 import { HrNextKeyboardCheatsheet } from './HrNextKeyboardCheatsheet';
+import { HrNextMatchupSlider, type HrNextMatchupItem } from './HrNextMatchupSlider';
 import { useHrNextKeybindings } from '../hooks/useHrNextKeybindings';
 import { useResearchStore } from '../../../stores/useResearchStore';
 
@@ -35,6 +36,7 @@ export function HrNextShell() {
   const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const [selectedMatchupIndex, setSelectedMatchupIndex] = useState<number>(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
@@ -64,6 +66,52 @@ export function HrNextShell() {
     }
   }, [isDrawerOpen, selectedPlayer?.id, closeDrawer, openDrawer]);
 
+  // Extract live slate matchups for the Matchup Slider
+  const availableMatchups = useMemo<HrNextMatchupItem[]>(() => {
+    const map = new Map<string, HrNextMatchupItem>();
+    const rowItems = items.filter((item): item is Extract<HrNextItem, { type: 'row' }> => item.type === 'row');
+    
+    for (const item of rowItems) {
+      const row = item.row;
+      const team1 = [row.team, row.opponent].sort()[0];
+      const team2 = [row.team, row.opponent].sort()[1];
+      const key = `${team1}_vs_${team2}`;
+      
+      if (!map.has(key)) {
+        const isAway = row.venue && !row.venue.toLowerCase().includes(row.team.toLowerCase());
+        const awayTeam = isAway ? row.team : row.opponent;
+        const homeTeam = isAway ? row.opponent : row.team;
+
+        map.set(key, {
+          id: key,
+          awayTeam: awayTeam || row.team,
+          homeTeam: homeTeam || row.opponent,
+          gameTime: row.gameTime,
+          count: 0,
+        });
+      }
+      map.get(key)!.count += 1;
+    }
+    return Array.from(map.values());
+  }, [items]);
+
+  const handlePrevMatchup = useCallback(() => {
+    if (availableMatchups.length === 0) return;
+    setSelectedMatchupIndex((prev) => {
+      if (prev <= -1) return availableMatchups.length - 1;
+      if (prev === 0) return -1;
+      return prev - 1;
+    });
+  }, [availableMatchups.length]);
+
+  const handleNextMatchup = useCallback(() => {
+    if (availableMatchups.length === 0) return;
+    setSelectedMatchupIndex((prev) => {
+      if (prev >= availableMatchups.length - 1) return -1;
+      return prev + 1;
+    });
+  }, [availableMatchups.length]);
+
   // Wire up Bloomberg / Vim-style keyboard shortcuts
   useHrNextKeybindings({
     items,
@@ -76,6 +124,9 @@ export function HrNextShell() {
     onCloseDrawer: closeDrawer,
     searchInputRef,
     onToggleCheatsheet: () => setCheatsheetOpen(prev => !prev),
+    onPrevMatchup: handlePrevMatchup,
+    onNextMatchup: handleNextMatchup,
+    isMatchupMode: groupBy === 'matchup',
   });
 
   const handleExport = useCallback(() => {
@@ -189,7 +240,10 @@ export function HrNextShell() {
           
           <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
             <button 
-              onClick={() => setGroupBy('tier')}
+              onClick={() => {
+                setGroupBy('tier');
+                setSelectedMatchupIndex(-1);
+              }}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors ${groupBy === 'tier' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/80'}`}
             >
               By Tier
@@ -201,7 +255,10 @@ export function HrNextShell() {
               By Game
             </button>
             <button 
-              onClick={() => setGroupBy('none')}
+              onClick={() => {
+                setGroupBy('none');
+                setSelectedMatchupIndex(-1);
+              }}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors ${groupBy === 'none' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/80'}`}
             >
               Flat Sort
@@ -250,6 +307,19 @@ export function HrNextShell() {
             3D Layer: {is3DLayerEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
+
+        {/* Live Matchup Slider (Magically appears under options/search when By Game is selected) */}
+        {groupBy === 'matchup' && availableMatchups.length > 0 && (
+          <div className="pt-2">
+            <HrNextMatchupSlider
+              matchups={availableMatchups}
+              activeIndex={selectedMatchupIndex}
+              onSelectIndex={setSelectedMatchupIndex}
+              onPrev={handlePrevMatchup}
+              onNext={handleNextMatchup}
+            />
+          </div>
+        )}
       </header>
       
       {/* Responsive Content: Dual-mode layout (Side Dock on >=2xl, Top Bar on <2xl) */}
@@ -277,6 +347,7 @@ export function HrNextShell() {
             groupBy={groupBy}
             activeId={focusedId}
             onSelectActiveId={setFocusedId}
+            selectedMatchupIndex={selectedMatchupIndex}
           />
         </div>
 

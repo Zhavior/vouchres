@@ -12,6 +12,9 @@ interface UseHrNextKeybindingsOptions {
   onCloseDrawer: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   onToggleCheatsheet?: () => void;
+  onPrevMatchup?: () => void;
+  onNextMatchup?: () => void;
+  isMatchupMode?: boolean;
 }
 
 function isEditingText(target: EventTarget | null): boolean {
@@ -33,10 +36,13 @@ export function useHrNextKeybindings({
   onCloseDrawer,
   searchInputRef,
   onToggleCheatsheet,
+  onPrevMatchup,
+  onNextMatchup,
+  isMatchupMode = false,
 }: UseHrNextKeybindingsOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow standard browser shortcuts with Cmd/Ctrl (except single key or quick commands)
+      // Allow standard browser shortcuts with Cmd/Ctrl
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       const isEditing = isEditingText(e.target);
@@ -52,6 +58,20 @@ export function useHrNextKeybindings({
       }
 
       if (isEditing) return;
+
+      // Matchup Slider navigation (Left / Right Arrows or H / L)
+      if (isMatchupMode) {
+        if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'h') {
+          e.preventDefault();
+          onPrevMatchup?.();
+          return;
+        }
+        if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'l') {
+          e.preventDefault();
+          onNextMatchup?.();
+          return;
+        }
+      }
 
       // Extract all row items (ignore headers)
       const rowItems = items.filter((item): item is Extract<HrNextItem, { type: 'row' }> => item.type === 'row');
@@ -133,5 +153,8 @@ export function useHrNextKeybindings({
     onCloseDrawer,
     searchInputRef,
     onToggleCheatsheet,
+    onPrevMatchup,
+    onNextMatchup,
+    isMatchupMode,
   ]);
 }
