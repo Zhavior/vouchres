@@ -1,3 +1,4 @@
+/* eslint-env node */
 /** @type {import('@lhci/cli').Config}
  *
  * Perf floor aligns with scripts/lighthouse-ci.mjs (default 0.58).
