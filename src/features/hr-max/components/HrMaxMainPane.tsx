@@ -23,6 +23,7 @@ export interface HrMaxMainPaneProps {
   onCycleSort: () => void;
   onToggleMode: () => void;
   onExport: () => void;
+  selectedTiers: string[];
 }
 
 export const HrMaxMainPane = React.memo(function HrMaxMainPane({
@@ -41,6 +42,7 @@ export const HrMaxMainPane = React.memo(function HrMaxMainPane({
   onCycleSort,
   onToggleMode,
   onExport,
+  selectedTiers,
 }: HrMaxMainPaneProps) {
   if (rows.length === 0) return null;
 
@@ -101,6 +103,7 @@ export const HrMaxMainPane = React.memo(function HrMaxMainPane({
             onToggleSaved={onToggleSaved}
             onToggleReceipt={onToggleReceipt}
             onAddToSlip={onAddToSlip}
+            selectedTiers={selectedTiers}
           />
         </div>
       </AuroraMaxRankedWorkspace>
@@ -109,8 +112,8 @@ export const HrMaxMainPane = React.memo(function HrMaxMainPane({
 
   return (
     <AuroraMaxRankedWorkspace
-      title="Statcast Telemetry Table"
-      subtitle={`${rows.length} ranked batters with deep exit velocity, launch angle & park factor metrics`}
+        title="HRPI table"
+        subtitle={`${rows.length} ranked batters · HRPI, matchup, lineup, and research signal`}
       controls={Controls}
     >
       <div className="p-2 sm:p-4">

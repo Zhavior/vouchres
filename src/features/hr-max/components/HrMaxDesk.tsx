@@ -221,8 +221,9 @@ export default function HrMaxDesk() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           selectedTiers={vm.selectedTiers}
-          tierStats={vm.stats}
+          tierStats={vm.poolStats}
           onToggleTier={vm.onToggleTier}
+          onFocusTier={vm.onFocusTier}
         />
 
         <HrMaxStatusBar
@@ -253,6 +254,7 @@ export default function HrMaxDesk() {
           onCycleSort={() => setSortKey(cycleSort)}
           onToggleMode={() => vm.setMode(confirmedOnly ? 'all' : 'confirmed')}
           onExport={handleExport}
+          selectedTiers={vm.selectedTiers}
         />
 
         <div className="hr-max-notes mt-6">

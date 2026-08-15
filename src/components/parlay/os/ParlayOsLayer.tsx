@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, Layers3, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronUp, Layers3, Pencil, Plus, Trash2, X } from "lucide-react";
 import {
   selectDraftLegs,
   useParlayCommandStore,
@@ -49,6 +49,16 @@ export default function ParlayOsLayer({
     ? oddsAssessment.combined?.american ?? "—"
     : "TBD";
   const legCount = draftLegs.length;
+  const leadPick =
+    draftLegs[0]?.playerName?.trim() ||
+    draftLegs[0]?.selection?.trim() ||
+    null;
+  const dockLead =
+    legCount === 0
+      ? "My List empty"
+      : leadPick
+        ? (legCount > 1 ? `${leadPick} +${legCount - 1}` : leadPick)
+        : "Open picks";
   const editingLeg = draftLegs.find((leg) => leg.id === editorLegId) ?? null;
 
   useEffect(() => {
@@ -240,23 +250,47 @@ export default function ParlayOsLayer({
               </footer>
             </section>
           ) : (
-            <button
-              type="button"
-              onClick={toggleSheet}
-              className="fixed bottom-20 right-4 z-[90] flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/35 bg-[#050b12]/95 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 sm:h-auto sm:w-auto sm:min-h-12 sm:justify-start sm:gap-2.5 sm:rounded-2xl sm:px-3.5 sm:py-2.5 lg:bottom-6 lg:right-6"
-              aria-label={`Open My List${legCount ? `, ${legCount} legs` : ""}`}
-            >
-              <span className="relative flex items-center justify-center sm:h-8 sm:w-8 sm:rounded-xl sm:border sm:border-cyan-300/20 sm:bg-cyan-300/10">
-                <Layers3 className="h-5 w-5 text-cyan-200 sm:h-4.5 sm:w-4.5" />
-                {legCount > 0 ? (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-black sm:-right-2 sm:-top-2">{legCount}</span>
-                ) : null}
-              </span>
-              <span className="hidden text-left sm:block">
-                <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-white">My List</span>
-                <span className="mt-0.5 hidden text-[9px] text-white/45 sm:block">Open picks</span>
-              </span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={toggleSheet}
+                className="fixed inset-x-3 bottom-[4.5rem] z-[90] flex min-h-12 items-center gap-2.5 rounded-xl border border-cyan-300/35 bg-[#050b12]/95 px-3 py-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden"
+                aria-label={`Open My List${legCount ? `, ${legCount} selected` : ""}`}
+              >
+                <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/10">
+                  <Layers3 className="h-4 w-4 text-cyan-200" />
+                  {legCount > 0 ? (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-black">{legCount}</span>
+                  ) : null}
+                </span>
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block font-mono text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                    {legCount === 1 ? "1 selected" : `${legCount} selected`}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[11px] text-white/65">{dockLead}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-cyan-200">
+                  View slip <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={toggleSheet}
+                className="fixed bottom-6 right-6 z-[90] hidden h-auto min-h-12 w-auto items-center justify-start gap-2.5 rounded-2xl border border-cyan-300/35 bg-[#050b12]/95 px-3.5 py-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.55),0_0_28px_rgba(0,240,255,0.12)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-cyan-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 lg:flex"
+                aria-label={`Open My List${legCount ? `, ${legCount} legs` : ""}`}
+              >
+                <span className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10">
+                  <Layers3 className="h-4 w-4 text-cyan-200" />
+                  {legCount > 0 ? (
+                    <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-black text-black">{legCount}</span>
+                  ) : null}
+                </span>
+                <span className="text-left">
+                  <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-white">My List</span>
+                  <span className="mt-0.5 block text-[9px] text-white/45">Open picks</span>
+                </span>
+              </button>
+            </>
           )}
         </>
       ) : null}

@@ -43,6 +43,15 @@ const DISPLAY_TIER: Record<HrWatchRow['riskTier'], keyof HrBuckets | null> = {
   Blocked: null,
 };
 
+function matchesSearch(row: HrWatchRow, query: string): boolean {
+  if (!query) return true;
+  const haystack = [
+    row.playerName, row.team, row.opponent, row.pitcherName,
+    row.venue, row.reasons?.join(' '), row.oddsLabel,
+  ].join(' ').toLowerCase();
+  return haystack.includes(query);
+}
+
 export function useHrBoardViewModel() {
   const [mode, setModeState] = useState<HrWatchMode>('confirmed');
   const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>(() => {
@@ -61,11 +70,15 @@ export function useHrBoardViewModel() {
     setModeState(next);
   };
 
-  const onToggleTier = (tier: string) => {
+  const onToggleTier = useCallback((tier: string) => {
     setSelectedTiers((current) =>
       current.includes(tier) ? current.filter((item) => item !== tier) : [...current, tier]
     );
-  };
+  }, []);
+
+  const onFocusTier = useCallback((tier: string) => {
+    setSelectedTiers([tier]);
+  }, []);
 
   const [date, setDateState] = useState<string>(todayISO);
   const isToday = date === todayISO();
@@ -143,12 +156,7 @@ export function useHrBoardViewModel() {
     return rows.filter((row) => {
       const tier = DISPLAY_TIER[row.riskTier];
       if (!tier || !selectedTiers.includes(tier)) return false;
-      if (!query) return true;
-      const haystack = [
-        row.playerName, row.team, row.opponent, row.pitcherName, 
-        row.venue, row.reasons?.join(' '), row.oddsLabel
-      ].join(' ').toLowerCase();
-      return haystack.includes(query);
+      return matchesSearch(row, query);
     });
   }, [rows, search, selectedTiers]);
 
@@ -169,6 +177,22 @@ export function useHrBoardViewModel() {
     watch: buckets.Watch.length,
     sleepers: buckets.Sleepers.length,
   }), [buckets, filteredRows.length]);
+
+  const poolStats = useMemo<HrBoardStats>(() => {
+    const query = search.trim().toLowerCase();
+    const counts: HrBoardStats = { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 };
+    for (const row of rows) {
+      if (!matchesSearch(row, query)) continue;
+      const tier = DISPLAY_TIER[row.riskTier];
+      if (!tier) continue;
+      counts.total += 1;
+      if (tier === 'Elite') counts.elite += 1;
+      else if (tier === 'Strong') counts.strong += 1;
+      else if (tier === 'Watch') counts.watch += 1;
+      else counts.sleepers += 1;
+    }
+    return counts;
+  }, [rows, search]);
 
   // Counts across ALL modes regardless of the current filter, so the empty
   // state can explain *why* it's empty (e.g. no confirmed lineups posted yet)
@@ -204,9 +228,9 @@ export function useHrBoardViewModel() {
   }), [board?.counts.totalVisiblePool, board?.disclaimer, board?.note, board?.truthMessage, freshness, generatedAt, loadedAt, rawBoard?.dataQuality, rawBoard?.gameCount, responseWarnings]);
 
   return {
-    buckets, rows: filteredRows, researchRows, stats, selectedPlayer, loading, error, refreshError, mode, viewMode, search, selectedTiers, modeCounts,
+    buckets, rows: filteredRows, researchRows, stats, poolStats, selectedPlayer, loading, error, refreshError, mode, viewMode, search, selectedTiers, modeCounts,
     autoSwitchedToPreview,
-    setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
+    setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, onFocusTier, refresh,
     date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,
     syncing,
     lastUpdated,

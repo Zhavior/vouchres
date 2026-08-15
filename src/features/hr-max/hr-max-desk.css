@@ -2,7 +2,35 @@
 .hr-max-desk {
   min-width: 0;
   overflow-wrap: break-word;
+  overflow-anchor: auto;
   color: var(--aurora-max-paper);
+}
+
+.hr-max-card-board {
+  overflow-anchor: auto;
+  align-items: start;
+}
+
+.hr-max-tier-column__head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(8, 13, 10, 0.94);
+}
+
+.hr-max-tier-column__scroller--inner {
+  overflow-y: auto;
+  max-height: calc(100vh - 16rem);
+  overscroll-behavior: contain;
+}
+
+.hr-max-tier-column__scroller--page {
+  overflow: visible;
+  max-height: none;
+}
+
+.hr-max-tier-column__list {
+  contain: layout style paint;
 }
 
 .hr-max-desk__session {
@@ -24,7 +52,7 @@
   width: 100%;
   max-width: 1240px;
   margin-inline: auto;
-  padding: 1rem 0.75rem 2rem;
+  padding: 1rem 0.75rem 6.5rem;
 }
 
 .hr-max-desk__glow {
@@ -328,5 +356,28 @@
 
   .hr-max-spotlight__evidence {
     padding: 1.25rem;
+  }
+}
+
+.hr-max-ticket {
+  /* Closed ticket is a flex row. Virtualizer rows stay position:absolute (L029). */
+}
+
+.hr-max-pip {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.hr-max-pip--confirmed { background: var(--aurora-max-emerald); }
+.hr-max-pip--neutral { background: #38bdf8; }
+.hr-max-pip--warning { background: #fbbf24; }
+.hr-max-pip--missing { background: rgba(255, 255, 255, 0.22); }
+
+@media (min-width: 1024px) {
+  .hr-max-desk__body {
+    padding-bottom: 2rem;
   }
 }

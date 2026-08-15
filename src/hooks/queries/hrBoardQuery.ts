@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, keepPreviousData } from "@tanstack/react-query";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { claimEarlyHrBoard } from "../../lib/boot/hrBoardEarlyFetch";
 import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
@@ -59,6 +59,7 @@ export function hrBoardQueryOptions(date: string) {
     queryFn: ({ signal }) => fetchHrBoard(date, signal),
     initialData: bootSeed,
     initialDataUpdatedAt: bootUpdatedAt,
+    placeholderData: keepPreviousData,
     staleTime,
     gcTime,
     refetchInterval: isToday ? refetchInterval : false,

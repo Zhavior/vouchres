@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RefreshCw, Search, X, Layers, LayoutGrid, Table } from 'lucide-react';
 import { AuroraMaxControl } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { localISODate } from '../../hr/utils/localDate';
 import type { HrDeskViewMode } from './HrMaxDesk';
+
+const TIER_KEYS = ['Elite', 'Strong', 'Watch', 'Sleepers'] as const;
 
 export interface HrMaxToolbarProps {
   date: string;
@@ -16,6 +18,17 @@ export interface HrMaxToolbarProps {
   selectedTiers: string[];
   tierStats: { elite: number; strong: number; watch: number; sleepers: number };
   onToggleTier: (tier: string) => void;
+  onFocusTier: (tier: string) => void;
+}
+
+function tierCount(
+  tier: (typeof TIER_KEYS)[number],
+  tierStats: HrMaxToolbarProps['tierStats'],
+): number {
+  if (tier === 'Elite') return tierStats.elite;
+  if (tier === 'Strong') return tierStats.strong;
+  if (tier === 'Watch') return tierStats.watch;
+  return tierStats.sleepers;
 }
 
 export const HrMaxToolbar = React.memo(function HrMaxToolbar({
@@ -30,10 +43,23 @@ export const HrMaxToolbar = React.memo(function HrMaxToolbar({
   selectedTiers,
   tierStats,
   onToggleTier,
+  onFocusTier,
 }: HrMaxToolbarProps) {
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) onFocusTier('Elite');
+  }, [onFocusTier]);
+
+  const onTierClick = (tier: (typeof TIER_KEYS)[number]) => {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      onFocusTier(tier);
+      return;
+    }
+    onToggleTier(tier);
+  };
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-y border-white/[0.07] bg-black/20 py-2.5">
-      {/* Controls: Date, Refresh, Search */}
+    <div className="flex flex-col gap-3 border-y border-white/[0.07] bg-black/20 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <label className="sr-only" htmlFor="hr-max-date">Slate date</label>
         <input
@@ -49,7 +75,6 @@ export const HrMaxToolbar = React.memo(function HrMaxToolbar({
           Refresh
         </AuroraMaxControl>
 
-        {/* Instant Search Bar */}
         <div className="relative flex items-center">
           <Search className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-white/35" aria-hidden="true" />
           <input
@@ -72,7 +97,6 @@ export const HrMaxToolbar = React.memo(function HrMaxToolbar({
         </div>
       </div>
 
-      {/* View Mode Switcher Tabs */}
       <div className="flex items-center gap-1.5">
         <AuroraMaxControl
           aria-pressed={viewMode === 'queue'}
@@ -99,37 +123,38 @@ export const HrMaxToolbar = React.memo(function HrMaxToolbar({
           Table
         </AuroraMaxControl>
       </div>
+      </div>
 
-      {/* Tier Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 w-full">
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/40 mr-1">Tiers:</span>
-        {(['Elite', 'Strong', 'Watch', 'Sleepers'] as const).map((tier) => {
-          const isSelected = selectedTiers.includes(tier);
-          const count =
-            tier === 'Elite'
-              ? tierStats.elite
-              : tier === 'Strong'
-                ? tierStats.strong
-                : tier === 'Watch'
-                  ? tierStats.watch
-                  : tierStats.sleepers;
-          return (
-            <button
-              key={tier}
-              type="button"
-              onClick={() => onToggleTier(tier)}
-              aria-pressed={isSelected}
-              className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition ${
-                isSelected
-                  ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] text-[var(--aurora-max-emerald)]'
-                  : 'border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/70'
-              }`}
-            >
-              <span>{tier}</span>
-              <span className="opacity-60 tabular-nums">({count})</span>
-            </button>
-          );
-        })}
+      <div
+        className="sticky top-0 z-20 -mx-1 w-[calc(100%+0.5rem)] bg-[#05070d]/95 py-1.5 backdrop-blur-md md:static md:mx-0 md:w-full md:bg-transparent md:py-0 md:backdrop-blur-none"
+        role="group"
+        aria-label="HRPI tiers"
+      >
+        <div className="flex flex-nowrap items-center gap-1 overflow-x-auto md:flex-wrap md:gap-1.5">
+          <span className="mr-1 hidden font-mono text-[10px] uppercase tracking-[0.12em] text-white/40 md:inline">
+            Tiers:
+          </span>
+          {TIER_KEYS.map((tier) => {
+            const isSelected = selectedTiers.includes(tier);
+            const count = tierCount(tier, tierStats);
+            return (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => onTierClick(tier)}
+                aria-pressed={isSelected}
+                className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition ${
+                  isSelected
+                    ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] text-[var(--aurora-max-emerald)]'
+                    : 'border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/70'
+                }`}
+              >
+                <span>{tier}</span>
+                <span className="tabular-nums opacity-60">({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

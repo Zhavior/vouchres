@@ -19,7 +19,6 @@ import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import { routeModules } from '../../lib/routeModules';
 
-import { useLiveGames } from '../../hooks/queries/useLiveGames';
 const ProAccessGate = lazyWithRetry(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
 );
@@ -444,9 +443,6 @@ function TodayDashboardShell({
   navigateSection: (section: string) => void;
   isLoggedIn: boolean;
 }) {
-  const liveGamesQuery = useLiveGames();
-  const liveGames = liveGamesQuery.data?.games ?? [];
-  const { accountId } = useAppShell();
   const profile = useAppProfile();
   const savedSlips = useAppSavedSlips();
   return (
@@ -455,8 +451,6 @@ function TodayDashboardShell({
       savedSlips={savedSlips}
       profile={profile}
       isLoggedIn={isLoggedIn}
-      accountId={accountId}
-      liveGames={liveGames}
     />
   );
 }

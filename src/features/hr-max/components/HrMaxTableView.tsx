@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Plus, Star } from 'lucide-react';
 import {
   AuroraMaxFallback,
@@ -5,6 +7,7 @@ import {
   AuroraMaxTruthBadge,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import type { HrMaxDeskRow } from '../mapHrWatchToDesk';
+import { estimateTableRowSize } from '../estimateDeskRowSize';
 
 export function HrMaxTableView({
   rows,
@@ -21,6 +24,18 @@ export function HrMaxTableView({
   onToggleSaved: (id: string) => void;
   onAddToSlip: (row: HrMaxDeskRow) => void;
 }) {
+  const parentRef = useRef<HTMLDivElement | null>(null);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: estimateTableRowSize,
+    overscan: 10,
+    getItemKey: (index) => rows[index]?.id ?? index,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
   if (rows.length === 0) {
     return (
       <AuroraMaxFallback
@@ -31,10 +46,15 @@ export function HrMaxTableView({
     );
   }
 
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0]?.start ?? 0 : 0;
+  const paddingBottom = virtualItems.length > 0
+    ? virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0)
+    : 0;
+
   return (
-    <div className="overflow-x-auto border border-white/10 bg-black/40">
+    <div ref={parentRef} className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-16rem)] overscroll-contain border border-white/10 bg-black/40">
       <table className="w-full text-left font-mono text-xs">
-        <thead className="border-b border-white/10 bg-white/[0.03] text-[10px] uppercase tracking-wider text-white/45">
+        <thead className="sticky top-0 z-10 border-b border-white/10 bg-[#0a110d] text-[10px] uppercase tracking-wider text-white/45 shadow-[0_1px_0_rgba(255,255,255,0.06)]">
           <tr>
             <th className="px-3 py-2.5">#</th>
             <th className="px-3 py-2.5">Player</th>
@@ -47,17 +67,23 @@ export function HrMaxTableView({
           </tr>
         </thead>
         <tbody className="divide-y divide-white/[0.06]">
-          {rows.map((row, idx) => {
+          {paddingTop > 0 && (
+            <tr><td style={{ height: `${paddingTop}px` }} colSpan={8} /></tr>
+          )}
+          {virtualItems.map((virtualRow) => {
+            const row = rows[virtualRow.index];
             const active = row.id === activeId;
             const saved = isSaved(row.id);
             return (
               <tr
                 key={row.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
                 onClick={() => onSelect(row.id)}
                 className={`cursor-pointer transition hover:bg-white/[0.03] ${active ? 'bg-[var(--aurora-max-emerald)]/[0.07]' : ''}`}
               >
                 <td className="px-3 py-3 text-white/30 tabular-nums">
-                  {String(idx + 1).padStart(2, '0')}
+                  {String(virtualRow.index + 1).padStart(2, '0')}
                 </td>
                 <td className="px-3 py-3">
                   <span className="font-sans font-bold text-white hover:text-[var(--aurora-max-emerald)]">
@@ -105,6 +131,9 @@ export function HrMaxTableView({
               </tr>
             );
           })}
+          {paddingBottom > 0 && (
+            <tr><td style={{ height: `${paddingBottom}px` }} colSpan={8} /></tr>
+          )}
         </tbody>
       </table>
     </div>

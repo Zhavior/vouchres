@@ -254,3 +254,39 @@ root_cause: Fallback rows used mlbapi_ stub ids; parseHrBoardApiResponse hasPlay
 rule: HR board wire playerId must be a numeric MLB person id (resolveMlbPersonId). Never drop mlbapi_ stubs in hasPlayerIdentity. If /api/mlb/* 500s in a few ms, check outbound Stats API from the Node process and the MLB circuit breaker, not the React page.
 applies_when: HR board empty; hrBoardApiContract; mlbapi_; /api/mlb/hr-board/today 503; sportsFetchJson; circuitBreaker
 status: active
+---
+
+id: L029
+date: 2026-08-14
+symptom: HR Max cards stacked on top of each other so Receipt and other row actions could not be clicked
+root_cause: @tanstack/react-virtual placed rows with position:absolute at estimateSize (160px cards / 56px queue) without measureElement; real cards and open receipt trays are taller, so the next row painted over the controls. HrScrollReveal content-visibility + containIntrinsicSize 160px locked the same fake height.
+rule: Virtualized variable-height rows must set data-index, ref={virtualizer.measureElement}, and remasure when a row expands (receipt). Never pair a virtualizer with containIntrinsicSize or a transform reveal that disagrees with estimateSize. Do not use estimateSize as layout truth.
+applies_when: hr-max; useVirtualizer; HrMaxCardBoard; HrMaxSlateQueue; receipt tray; overlapping click targets
+status: active
+---
+
+id: L030
+date: 2026-08-15
+symptom: Agents rebuilt or planned a What’s Changed / poll-diff feed on Today or hr_max after Boyd asked it gone
+root_cause: The Today page had TodayChangeDigest (“What changed”) and a later cockpit spec re-advertised a signal console
+rule: Do not render What’s Changed on Today. TodayChangeDigest, useTodayChangeDigest, and todayChangeDigestModel are deleted. Do not add HrMaxSignalConsole or a poll-diff strip on hr_max unless Boyd explicitly restores it.
+applies_when: Today dashboard; hr_max Command Desk; What changed; change digest; signal console
+status: active
+---
+
+id: L031
+date: 2026-08-15
+symptom: HR Max virtualizer first-painted rows at a flat 220/72px so an open receipt still overlapped until measureElement ran
+root_cause: estimateSize ignored known state (receiptOpen, evidence count) and treated all rows as the same closed height
+rule: estimateSize must be a function of known desk data (receiptOpen, evidenceCount). measureElement still corrects wrap. Prefer a slightly tall first guess over a short one.
+applies_when: hr-max; estimateDeskRowSize; useVirtualizer estimateSize; receipt tray
+status: active
+---
+
+id: L032
+date: 2026-08-15
+symptom: Exclusive mobile Elite tabs showed (0) on Strong/Watch because chip counts used filtered stats, and ticket "why" copy was specified as invented Statcast (Barrel%/wind)
+root_cause: selectedTiers filters the same rows that fed vm.stats; the mobile blueprint used flavor-text catalysts that are not on HrWatchRow
+rule: Ticket catalyst is the strongest of the first three mapped evidence layers or row.signal — never invent Barrel%, wind, or EDT. Mobile exclusive-tier chips must use poolStats (search-filtered, not tier-filtered).
+applies_when: hr-max tactical ticket; presentHrMaxTicket; onFocusTier; poolStats; HRPI catalyst; mobile tier switcher
+status: active

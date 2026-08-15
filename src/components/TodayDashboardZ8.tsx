@@ -24,15 +24,12 @@ import { buildTodayDecision } from './today/todayDecisionModel';
 import TodayFieldDesk, { type TodayFieldState } from './today/TodayFieldDesk';
 import type { TodayPlayerOption } from './today/TodayPersonalizationPanel';
 import TodayAccountabilityCard from './today/TodayAccountabilityCard';
-import TodayChangeDigest from './today/TodayChangeDigest';
 import { toHrParlayPickerPlayer } from '../features/hr/utils/hrDecisionBrief';
 import type { HrWatchRow } from '../features/hr/types/hrWatch';
 import { openParlayAdd } from '../lib/parlays/parlayAddContract';
 import { useTodayPreferences } from '../hooks/queries/useTodayPreferences';
 import { MLB_TEAM_OPTIONS } from '../lib/mlbTeamOptions';
 import { teamIdByName } from '../lib/teamLogos';
-import { useTodayChangeDigest } from '../hooks/useTodayChangeDigest';
-import type { LiveGameCard } from '../types/liveGames';
 import {
   AuroraMaxCommandHeader,
   AuroraMaxControl,
@@ -52,11 +49,9 @@ interface Props {
   savedSlips?: Parlay[];
   profile?: CreatorProofProfile;
   isLoggedIn?: boolean;
-  accountId?: string | null;
-  liveGames?: LiveGameCard[];
 }
 
-export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isLoggedIn = false, accountId = null, liveGames = [] }: Props) {
+export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isLoggedIn = false }: Props) {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const dailyReportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
@@ -148,14 +143,6 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
             ? 'pregame'
             : 'postgame';
 
-  const changeDigest = useTodayChangeDigest({
-    accountId,
-    report,
-    hrRows: visibleHrRows,
-    liveGames,
-    enabled: isLoggedIn && !isLoading && !isDegraded,
-  });
-
   const refreshToday = () => {
     void Promise.all([dailyReportQuery.refetch(), hrBoardQuery.refresh()]);
   };
@@ -226,13 +213,6 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
           onSave={todayPreferencesQuery.savePreferences}
           onClose={() => setPreferencesOpen(false)}
         /></Suspense> : null}
-
-        <TodayChangeDigest
-          changes={changeDigest.changes}
-          baselineCapturedAt={changeDigest.baselineCapturedAt}
-          onMarkAsChecked={changeDigest.markAsChecked}
-          onOpenSubject={() => onSectionChange('hr_board')}
-        />
 
         <AuroraMaxPanel as="section" id="today-resume-card" className="p-4 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-5">
           <div className="min-w-0">

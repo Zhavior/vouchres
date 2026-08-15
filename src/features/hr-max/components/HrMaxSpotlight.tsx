@@ -6,6 +6,7 @@ import {
   AuroraMaxTruthBadge,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import type { HrMaxDeskRow } from '../mapHrWatchToDesk';
+import { deskMatchupLine } from '../presentHrMaxTicket';
 
 export function HrMaxSpotlight({
   row,
@@ -34,7 +35,7 @@ export function HrMaxSpotlight({
               <AuroraMaxTruthBadge state={row.truthState}>{row.lineupLabel}</AuroraMaxTruthBadge>
               <h2>{row.playerName}</h2>
               <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--aurora-max-emerald)]">
-                {row.team} · {row.matchupLabel} · {row.gameTimeLabel}
+                {deskMatchupLine(row)}
               </p>
             </div>
             <AuroraMaxScoreBadge score={row.score} />
