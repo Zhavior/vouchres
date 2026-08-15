@@ -31,3 +31,18 @@ export function canAccessThemeStore(profile?: AccessProfile | null): boolean {
       normalizedRole === "dev",
   );
 }
+
+export function canAccessHrNext(profile?: AccessProfile | null): boolean {
+  const normalizedRole = String(profile?.role || profile?.userRole || "").toLowerCase();
+  return Boolean(
+    profile?.isAdmin ||
+      profile?.admin ||
+      profile?.isStaff ||
+      profile?.staff ||
+      profile?.isDeveloper ||
+      normalizedRole === "admin" ||
+      normalizedRole === "staff" ||
+      normalizedRole === "developer" ||
+      normalizedRole === "dev",
+  );
+}

@@ -93,8 +93,8 @@ function mockBoard(row: HrWatchRow, gameCount = 12) {
     researchRows: [row],
     slate: {
       gameCount,
-      generatedAt: '2026-08-15T00:00:00Z',
-      loadedAt: '2026-08-15T00:00:00Z',
+      generatedAt: new Date('2026-08-15T00:00:00Z'),
+      loadedAt: new Date('2026-08-15T00:00:00Z'),
       freshness: 'fresh',
       dataQuality: 'official',
       warnings: [],

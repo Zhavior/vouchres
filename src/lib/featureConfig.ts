@@ -92,6 +92,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
   { id: "aurora_hr_hq", label: "Aurora HQ", icon: "Sparkles", enabled: true, order: 20.5, group: "Account", access: "admin" },
   { id: "admin", label: "Admin Ops", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
+  { id: "admin_hr_next", label: "HR Next", icon: "Sparkles", enabled: true, order: 21.5, group: "Account", access: "admin" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 

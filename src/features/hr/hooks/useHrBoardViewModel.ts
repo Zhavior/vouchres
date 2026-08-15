@@ -130,9 +130,14 @@ export function useHrBoardViewModel() {
   // violate the "no fake confirmed lineups" rule if left unlabeled.
   useEffect(() => {
     if (!board || userPickedModeRef.current) return;
-    if (mode === 'confirmed' && board.confirmed.length === 0 && board.curated.length > 0) {
-      setModeState('curated');
-      setAutoSwitchedToPreview(true);
+    if (mode === 'confirmed' && board.confirmed.length === 0) {
+      if (board.curated.length > 0) {
+        setModeState('curated');
+        setAutoSwitchedToPreview(true);
+      } else if (board.all.length > 0) {
+        setModeState('all');
+        setAutoSwitchedToPreview(true);
+      }
     }
   }, [board, mode]);
 

@@ -12,6 +12,7 @@ import { adminRoutes } from "./adminRoutes";
 import { privacyRoutes } from "./privacyRoutes";
 import { postRoutes } from "./postRoutes";
 import { vouchRoutes } from "./vouchRoutes";
+import { hrNextRoutes } from "./hrNextRoutes";
 import { feedRoutes } from "./feedRoutes";
 import { notificationRoutes } from "./notificationRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
@@ -72,6 +73,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", openapiRoutes);
   app.use("/api", coreRoutes);
   app.use("/api", publicRoutes);
+  app.use("/api/hr-next", hrNextRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", postRoutes);
   app.use("/api", vouchRoutes);

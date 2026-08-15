@@ -66,6 +66,7 @@ const ACCOUNT_SECTIONS = new Set([
   'themestore',
   'epic_themes',
   'admin',
+  'admin_hr_next',
 ]);
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
@@ -75,6 +76,7 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'results',
   'premium',
   'admin',
+  'admin_hr_next',
 ]);
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
@@ -87,6 +89,7 @@ const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'settings',
   'admin',
   'aurora_daily_slate',
+  'admin_hr_next',
 ]);
 
 export function isBetaDestinationActive(

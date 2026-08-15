@@ -44,4 +44,9 @@ export interface HrIndexScore {
    * Optional to preserve backwards compatibility with existing mock data that pre-dates this field.
    */
   scoreBasis?: 'confirmed_lineup' | 'roster_baseline';
+  /**
+   * Probability (0-1) produced by the model. 
+   * Required for expected value (EV) calculations.
+   */
+  modelProbability?: number | null;
 }

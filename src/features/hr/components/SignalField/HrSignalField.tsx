@@ -79,7 +79,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
   }, [games, selectedGameKey]);
 
   const selectedGame = games.find((game) => game.key === selectedGameKey) ?? games[0] ?? null;
-  const displayedRows = useMemo(() => selectedGame?.rows.slice(0, 8) ?? [], [selectedGame]);
+  const displayedRows = useMemo(() => selectedGame?.rows ?? [], [selectedGame]);
   const plotted = useMemo(
     () => buildHrSignalPoints(displayedRows, WIDTH, HEIGHT),
     [displayedRows],

@@ -64,6 +64,7 @@ export function hrBoardQueryOptions(date: string) {
     refetchInterval: isToday ? refetchInterval : false,
     refetchOnMount: false,
     refetchOnReconnect: true,
+    placeholderData: keepPreviousData,
     retry: shouldRetryHrBoard,
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
   });

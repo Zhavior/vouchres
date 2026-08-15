@@ -492,14 +492,14 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
   );
 
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
-    if (typeof window === 'undefined') return 'cards';
+    if (typeof window === 'undefined') return 'table';
     try {
       const savedMode = window.localStorage.getItem('vouchedge_hr_view_mode');
       if (savedMode === 'table' || savedMode === 'cards') return savedMode;
       if (savedMode === 'treemap' && HR_MAP_ENABLED) return savedMode;
-      return 'cards';
+      return 'table';
     } catch {
-      return 'cards';
+      return 'table';
     }
   });
 

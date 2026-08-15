@@ -2,8 +2,8 @@
    Lenis skipped: this is an app shell, not a narrative site. */
 :root {
   --aurora-max-obsidian: oklch(17% 0.015 250);
-  --aurora-max-panel: color-mix(in oklab, oklch(20% 0.015 250) 82%, transparent);
-  --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0.015 250) 94%, transparent);
+  --aurora-max-panel: color-mix(in oklab, oklch(20% 0.015 250) 45%, transparent);
+  --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0.015 250) 60%, transparent);
   --aurora-max-line: rgba(157, 215, 175, 0.14);
   --aurora-max-line-strong: rgba(0, 217, 160, 0.32);
   --aurora-max-emerald: #00d9a0;

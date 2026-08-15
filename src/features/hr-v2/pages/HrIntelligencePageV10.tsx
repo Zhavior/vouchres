@@ -12,6 +12,8 @@ import {
   Calendar,
   Layers,
   SlidersHorizontal,
+  Crosshair,
+  Flame,
 } from 'lucide-react';
 import { TierFilterTabs, TierType } from '../components/TierFilterTabs';
 import { HrErrorBoundary } from '../components/HrErrorBoundary';
@@ -39,10 +41,14 @@ import { ChunkABoard, GroupByOption } from '../components/ChunkABoard';
 import { KanbanView } from '../components/KanbanView';
 import { HrStadium3DView } from '../components/HrStadium3DView';
 import { AuroraHqHeaderNav } from '../../aurora-hr-hq/components/AuroraHqHeaderNav';
+import { ChunkAEdgeDesk } from '../components/views/ChunkAEdgeDesk';
+import { ChunkASlateStacks } from '../components/views/ChunkASlateStacks';
+import { ChunkAProjectionMatrix } from '../components/views/ChunkAProjectionMatrix';
+import { ChunkAMatchupExtremes } from '../components/views/ChunkAMatchupExtremes';
 
 import { safeNumber } from '../../../utils/safeNumber';
 
-export type ViewMode = 'card' | 'table' | 'kanban' | '3d';
+export type ViewMode = 'card' | 'table' | 'kanban' | '3d' | 'edge' | 'stacks' | 'matrix' | 'extremes';
 export type SortOption = 'score' | 'ev' | 'odds';
 
 /**
@@ -84,6 +90,30 @@ export const VIEW_OPTIONS: ViewOptionItem[] = [
     icon: Box,
     ariaLabel: STRINGS_EN.views.arena3d.ariaLabel,
   },
+  {
+    key: 'edge',
+    label: 'Edge',
+    icon: Sparkles,
+    ariaLabel: 'View Vegas Edge Desk',
+  },
+  {
+    key: 'stacks',
+    label: 'Stacks',
+    icon: Layers,
+    ariaLabel: 'View Team Stacks',
+  },
+  {
+    key: 'matrix',
+    label: 'Matrix',
+    icon: Crosshair,
+    ariaLabel: 'View Projection Matrix',
+  },
+  {
+    key: 'extremes',
+    label: 'Extremes',
+    icon: Flame,
+    ariaLabel: 'View Matchup Extremes',
+  },
 ];
 
 export interface FilterSlateOptions {
@@ -105,10 +135,10 @@ export interface FilterSlateOptions {
 export { safeNumber };
 
 /**
- * Validator and sanitizer for persisted viewMode ('card' | 'table' | 'kanban' | '3d', default: 'card').
+ * Validator and sanitizer for persisted viewMode ('card' | 'table' | 'kanban' | '3d' | 'edge' | 'stacks' | 'matrix' | 'extremes', default: 'card').
  */
 export function validateViewMode(val: unknown): ViewMode {
-  return val === 'card' || val === 'table' || val === 'kanban' || val === '3d' ? val : 'card';
+  return val === 'card' || val === 'table' || val === 'kanban' || val === '3d' || val === 'edge' || val === 'stacks' || val === 'matrix' || val === 'extremes' ? val : 'card';
 }
 
 /**
@@ -1036,10 +1066,18 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
             <HrStadium3DView items={processedData} />
           ) : viewMode === 'kanban' ? (
             <KanbanView items={processedData} />
+          ) : viewMode === 'edge' ? (
+            <ChunkAEdgeDesk data={processedData} />
+          ) : viewMode === 'stacks' ? (
+            <ChunkASlateStacks data={processedData} />
+          ) : viewMode === 'matrix' ? (
+            <ChunkAProjectionMatrix data={processedData} />
+          ) : viewMode === 'extremes' ? (
+            <ChunkAMatchupExtremes data={processedData} />
           ) : (
             <ChunkABoard
               items={processedData}
-              viewMode={viewMode}
+              viewMode={viewMode as any}
               selectedTier={selectedTier}
               groupBy={groupBy}
               sortBy={sortBy}

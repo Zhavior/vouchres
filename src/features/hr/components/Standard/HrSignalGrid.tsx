@@ -5,7 +5,6 @@ import type { HrWatchRow } from '../../types/hrWatch';
 import { boardScore, oddsDisplay } from '../../engine/signalScore';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 
-const PAGE_SIZE = 12;
 
 interface HrSignalGridProps {
   rows: readonly HrWatchRow[];
@@ -132,8 +131,6 @@ const SimpleSignalCard = React.memo(function SimpleSignalCard({
  * raw matrices, no nested filter layers — the depth lives behind Pro Mode.
  */
 export function HrSignalGrid({ rows, onResearch, onAddToSlip }: HrSignalGridProps) {
-  const [limit, setLimit] = useState(PAGE_SIZE);
-
   // Score once per row, then sort — the comparator never recomputes. Ranking on
   // the same number the card shows keeps the order and the score in agreement.
   const ranked = useMemo(
@@ -143,9 +140,6 @@ export function HrSignalGrid({ rows, onResearch, onAddToSlip }: HrSignalGridProp
         .sort((a, b) => b.score - a.score),
     [rows],
   );
-
-  const visible = ranked.slice(0, limit);
-  const remaining = ranked.length - visible.length;
 
   return (
     <section aria-label="Home run signals" className="space-y-2.5">
@@ -157,20 +151,12 @@ export function HrSignalGrid({ rows, onResearch, onAddToSlip }: HrSignalGridProp
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {visible.map(({ row, score }) => (
-          <SimpleSignalCard key={row.stableId} row={row} score={score} onResearch={onResearch} onAddToSlip={onAddToSlip} />
+        {ranked.map(({ row, score }) => (
+          <div key={row.stableId} style={{ contentVisibility: 'auto', containIntrinsicSize: '200px' }}>
+            <SimpleSignalCard row={row} score={score} onResearch={onResearch} onAddToSlip={onAddToSlip} />
+          </div>
         ))}
       </div>
-
-      {remaining > 0 ? (
-        <button
-          type="button"
-          onClick={() => setLimit((value) => value + PAGE_SIZE)}
-          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-black/25 font-mono text-[10px] font-black uppercase tracking-wider text-white/55 transition hover:border-vouch-cyan/35 hover:text-vouch-cyan"
-        >
-          Show {Math.min(PAGE_SIZE, remaining)} more <ChevronDown className="h-3.5 w-3.5" />
-        </button>
-      ) : null}
     </section>
   );
 }

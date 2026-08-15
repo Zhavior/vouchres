@@ -60,6 +60,7 @@ const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
 const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
 const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
 const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
+const HrNextPage = lazyWithRetry(() => import('../../features/hr-next/pages/HrNextPage'));
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -433,6 +434,14 @@ function MainViewRouter({
           <AuroraHqShell />
         </LazyRoute>
       );
+    case 'admin_hr_next':
+      return (
+        <LazyRoute>
+          <AdminAccessGateShell>
+            <HrNextPage />
+          </AdminAccessGateShell>
+        </LazyRoute>
+      );
     default:
       return (
         <div className="p-8 text-center" id="unknown-view">
@@ -766,6 +775,19 @@ function CustomizeShell({ navigateSection }: { navigateSection: (section: string
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return (
     <CustomizePage profile={profile} onUpdateProfile={onUpdateProfile} onSectionChange={navigateSection} />
+  );
+}
+
+function AdminAccessGateShell({ children }: { children: React.ReactNode }) {
+  const profile = useAppProfile();
+  const AdminAccessGate = React.lazy(() => import('../admin/AdminAccessGate').then(m => ({ default: m.AdminAccessGate })));
+  
+  return (
+    <Suspense fallback={<RouteShellSkeleton />}>
+      <AdminAccessGate profile={profile}>
+        {children}
+      </AdminAccessGate>
+    </Suspense>
   );
 }
 

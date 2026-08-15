@@ -168,6 +168,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
+  const isSidebarCollapsed = useNavUiStore((s) => s.isSidebarCollapsed);
 
   const closeNavigationOverlays = React.useCallback(() => {
     closeMobileDrawer();
@@ -223,7 +224,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
       <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
         isPublicFrontPage ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
-      }`} id="layout-inner-frame">
+      }`} id="layout-inner-frame" style={{ '--ve-sidebar-width': isSidebarCollapsed ? '68px' : '256px' } as React.CSSProperties}>
 
         {!isPublicFrontPage && (
           <DesktopSidebarRail
