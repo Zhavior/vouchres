@@ -317,3 +317,12 @@ root_cause: ve_hr_v10_startersOnly defaults to true and dropped every row whose 
 rule: When confirmed starter count is 0 and the mapped slate has rows, show the projected pool with the Z8 preview banner. Never invent Avg Odds/EV (280 / 55.0); print UNKNOWN when book odds are absent.
 applies_when: HrIntelligencePageV10; resolveStartersOnlyFilter; startersOnly; projection_preview; hr-board/today
 status: active
+---
+
+id: L036
+date: 2026-08-15
+symptom: Original HR Intelligence Pro Mode toggle existed in the header but hr_board never passed onToggleProMode, so Standard spotlight/grid and Pro workspaces were dead code
+root_cause: Aurora Max restyle of HomeRunIntelligencePageLegacy dropped Pro wiring while leaving useProMode, HrProModeToggle, HrSpotlightDeck, HrSignalGrid, and WorkspaceSwitcher unused
+rule: When restoring or editing live hr_board, wire useProMode into HrHeader. Standard mounts spotlight+signal grid; Pro mounts WorkspaceSwitcher plus the original suite. Do not recreate HomeRunIntelligencePageZ8.tsx. Do not inner-lazy the Pro modules on this eager route.
+applies_when: VouchEdge Home Run Intelligence; hr_board; Pro Mode; HrSpotlightDeck; WorkspaceSwitcher
+status: active

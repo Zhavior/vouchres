@@ -38,8 +38,15 @@ import {
 import { toHrParlayPickerPlayer } from '../utils/hrDecisionBrief';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { HrSignalField } from '../components/SignalField/HrSignalField';
+import { HrSpotlightDeck } from '../components/Spotlight/HrSpotlightDeck';
+import { HrSignalGrid } from '../components/Standard/HrSignalGrid';
+import WorkspaceSwitcher from '../components/workspace/WorkspaceSwitcher';
+import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer';
+import type { WorkspaceView } from '../components/workspace/types';
+import { useProMode } from '../hooks/useProMode';
 import { HR_MAP_ENABLED } from '../featureAvailability';
 import { localISODate } from '../utils/localDate';
+import { preloadSection } from '../../../lib/routePreload';
 import {
   clearHrResearchPlayer,
   isHrResearchHistoryEntry,
@@ -235,6 +242,22 @@ function toBoardTier(tier: ToolbarTier): string {
   return tier === 'sleeper' ? 'Sleepers' : tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
+const WORKSPACE_STORAGE_KEY = 'vouchedge_hr_workspace';
+const WORKSPACE_VIEWS: readonly WorkspaceView[] = ['overview', 'edge', 'stacks', 'matrix', 'extremes'];
+
+function readStoredWorkspace(): WorkspaceView {
+  if (typeof window === 'undefined') return 'overview';
+  try {
+    const saved = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
+    if (saved && (WORKSPACE_VIEWS as readonly string[]).includes(saved)) {
+      return saved as WorkspaceView;
+    }
+  } catch {
+    // Session default when storage is blocked.
+  }
+  return 'overview';
+}
+
 export interface HomeRunIntelligencePageLegacyProps {
   onSectionChange?: (section: string) => void;
 }
@@ -245,6 +268,8 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
   const vm = useHrBoardViewModel();
   const profile = useAppProfile();
   const isAdmin = Boolean(profile?.isAdmin || profile?.admin || profile?.isStaff || profile?.staff);
+  const [isProMode, toggleProMode] = useProMode();
+  const [workspace, setWorkspace] = useState<WorkspaceView>(readStoredWorkspace);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -490,10 +515,26 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
     vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
 
+  const handleWorkspaceChange = (view: WorkspaceView) => {
+    setWorkspace(view);
+    try {
+      window.localStorage.setItem(WORKSPACE_STORAGE_KEY, view);
+    } catch {
+      // Keep session state intact even when localStorage is blocked
+    }
+  };
+
+  const handleProIntent = useCallback(() => {
+    preloadSection('player_edge_lab');
+  }, []);
+
+  const addToSlip = onSectionChange ? addPlayerToSlip : undefined;
+
   return (
     <div
       className={`${AURORA_PAGE} ${AURORA_MAX_SHELL} hr-aurora-max min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}
       data-aurora-generation="max"
+      data-hr-desk-mode={isProMode ? 'pro' : 'standard'}
     >
       <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
         {/* ── Admin Desks Quick-Switch Bar (Visible only to Admin / Staff) ──── */}
@@ -545,211 +586,248 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
             onRefresh={handleRefresh}
             isRefreshing={vm.loading}
             lastUpdated={lastUpdated}
-            date={vm.date}
-            isToday={isToday}
-            onDateChange={vm.setDate}
-          />
-          <HrCommandCenter
-            mode={vm.mode}
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
-            onRefresh={handleRefresh}
-            isRefreshing={vm.loading}
-            lastUpdated={lastUpdated}
             lastUpdatedLabel={lastUpdatedLabel}
             date={vm.date}
             isToday={isToday}
             onDateChange={vm.setDate}
-            autoSwitchedToPreview={autoSwitchedToPreview}
-            eliteCount={eliteCount}
-            strongCount={strongCount}
-            watchCount={watchCount}
-            sleeperCount={sleeperCount}
-            totalCount={totalCount}
-            searchValue={vm.search}
-            onSearchChange={vm.setSearch}
-            onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
-            activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
-            onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
-            visibleCount={vm.rows?.length ?? totalCount}
-            rows={(vm.rows ?? []) as unknown[]}
+            gameCount={vm.slate.gameCount}
+            hasGames={vm.slate.hasGames}
+            freshness={vm.slate.freshness}
             confirmedCount={vm.modeCounts?.confirmed ?? 0}
             previewCount={vm.modeCounts?.curated ?? 0}
+            isProMode={isProMode}
+            onToggleProMode={toggleProMode}
+            onProModeIntent={handleProIntent}
           />
+          {isProMode ? (
+            <HrCommandCenter
+              mode={vm.mode}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              onRefresh={handleRefresh}
+              isRefreshing={vm.loading}
+              lastUpdated={lastUpdated}
+              lastUpdatedLabel={lastUpdatedLabel}
+              date={vm.date}
+              isToday={isToday}
+              onDateChange={vm.setDate}
+              autoSwitchedToPreview={autoSwitchedToPreview}
+              eliteCount={eliteCount}
+              strongCount={strongCount}
+              watchCount={watchCount}
+              sleeperCount={sleeperCount}
+              totalCount={totalCount}
+              searchValue={vm.search}
+              onSearchChange={vm.setSearch}
+              onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
+              activeTiers={(vm.selectedTiers ?? []).map(toToolbarTier)}
+              onToggleTier={(tier) => vm.onToggleTier(toBoardTier(tier))}
+              visibleCount={vm.rows?.length ?? totalCount}
+              rows={(vm.rows ?? []) as unknown[]}
+              confirmedCount={vm.modeCounts?.confirmed ?? 0}
+              previewCount={vm.modeCounts?.curated ?? 0}
+            />
+          ) : null}
         </header>
 
-        {/* ── Slate Status Summary Row ───────────────────────────── */}
-        <div className="flex items-center justify-between gap-2 border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] px-3 py-2 font-mono text-[10px] font-bold text-[var(--aurora-max-paper)] sm:hidden shadow-md backdrop-blur-[18px]">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--aurora-max-emerald)]" />
-            <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
-          </div>
-          <span className="text-white/20">•</span>
-          <span className={`inline-flex items-center gap-1 ${freshnessTone.className}`}>
-            {freshnessTone.label}
-          </span>
-          <span className="text-white/20">•</span>
-          <span className="text-[var(--aurora-max-emerald)]">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
-          <span className="text-white/20">•</span>
-          <span className="text-[var(--aurora-max-amber)]">{vm.modeCounts?.curated ?? 0} Preview</span>
-        </div>
-
-        <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
-            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
-              MLB Slate
-            </AuroraMaxEyebrow>
-            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-paper)]">
-              {noGamesToday
-                ? 'No MLB games'
-                : `${vm.slate.gameCount} Game${vm.slate.gameCount === 1 ? '' : 's'} Active`}
-            </p>
-          </div>
-          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
-            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
-              Freshness
-            </AuroraMaxEyebrow>
-            <div className="mt-1">
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}
-              >
-                {freshnessTone.icon}
+        {isProMode ? (
+          <>
+            <div className="flex items-center justify-between gap-2 border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] px-3 py-2 font-mono text-[10px] font-bold text-[var(--aurora-max-paper)] sm:hidden shadow-md backdrop-blur-[18px]">
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--aurora-max-emerald)]" />
+                <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
+              </div>
+              <span className="text-white/20">•</span>
+              <span className={`inline-flex items-center gap-1 ${freshnessTone.className}`}>
                 {freshnessTone.label}
               </span>
+              <span className="text-white/20">•</span>
+              <span className="text-[var(--aurora-max-emerald)]">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
+              <span className="text-white/20">•</span>
+              <span className="text-[var(--aurora-max-amber)]">{vm.modeCounts?.curated ?? 0} Preview</span>
             </div>
-          </div>
-          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
-            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
-              Confirmed Orders
-            </AuroraMaxEyebrow>
-            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-emerald)]">
-              {vm.modeCounts?.confirmed ?? 0} official lineups
-            </p>
-          </div>
-          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
-            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
-              Preview Candidates
-            </AuroraMaxEyebrow>
-            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-amber)]">
-              {vm.modeCounts?.curated ?? 0} projected bats
-            </p>
-          </div>
-        </div>
 
-        {/* ── Main content area ───────────────────────────────────── */}
+            <div className="hidden sm:grid sm:grid-cols-4 gap-3">
+              <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+                <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
+                  MLB Slate
+                </AuroraMaxEyebrow>
+                <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-paper)]">
+                  {noGamesToday
+                    ? 'No MLB games'
+                    : `${vm.slate.gameCount} Game${vm.slate.gameCount === 1 ? '' : 's'} Active`}
+                </p>
+              </div>
+              <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+                <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
+                  Freshness
+                </AuroraMaxEyebrow>
+                <div className="mt-1">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}
+                  >
+                    {freshnessTone.icon}
+                    {freshnessTone.label}
+                  </span>
+                </div>
+              </div>
+              <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+                <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
+                  Confirmed Orders
+                </AuroraMaxEyebrow>
+                <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-emerald)]">
+                  {vm.modeCounts?.confirmed ?? 0} official lineups
+                </p>
+              </div>
+              <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+                <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
+                  Preview Candidates
+                </AuroraMaxEyebrow>
+                <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-amber)]">
+                  {vm.modeCounts?.curated ?? 0} projected bats
+                </p>
+              </div>
+            </div>
+
+            <WorkspaceSwitcher value={workspace} onChange={handleWorkspaceChange} />
+          </>
+        ) : null}
+
         <div className={`flex flex-col ${AURORA_PAGE_GAP}`}>
-          <HrTopSignalPanel
-            player={topPlayer}
-            freshness={vm.slate.freshness}
-            generatedAt={vm.slate.generatedAt}
-            dateLabel={isToday ? 'Today' : vm.date}
-            onResearch={openPlayerProfile}
-            onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-            onTogglePlayerVouch={handleTogglePlayerVouch}
-            onOpenBuild={goToBuild}
-            playerVouchCount={
-              getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.totalVouches ?? 0
-            }
-            playerVouchedByViewer={
-              getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.viewerHasVouched ?? false
-            }
-            playerVouchPending={
-              topPlayer?.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId
-            }
-          />
-
-          <MostVouchedPlayersPanel
-            players={playerVouchLeaderboard.data ?? []}
-            subtitle="The hottest community-backed bats on this slate."
-            onViewFullPage={
-              onSectionChange ? () => onSectionChange('most_vouched_today') : undefined
-            }
-            onSelectPlayer={(playerId) => {
-              const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
-              if (match) openPlayerProfile(match);
-            }}
-            onTogglePlayerVouch={(playerSummary) => {
-              const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
-              if (match) handleTogglePlayerVouch(match);
-            }}
-            onAddToSlip={
-              onSectionChange
-                ? (playerSummary) => {
-                    const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
-                    if (match) addPlayerToSlip(match);
-                  }
-                : undefined
-            }
-            vouchPendingId={pendingPlayerVouchId}
-          />
-
-          {/* Candidates Board / Spreadsheet / Treemap */}
-          <div className="flex-1 pr-1">
-            {vm.loading && !vm.rows?.length ? (
-              <LoadingSkeleton />
-            ) : vm.error ? (
-              <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
-            ) : isAllZero ? (
-              <EmptyState
-                onRetry={handleRefresh}
-                mode={vm.mode}
-                previewCount={vm.modeCounts?.curated ?? 0}
-                onShowPreview={() => vm.setMode('curated')}
+          {vm.loading && !vm.rows?.length ? (
+            <LoadingSkeleton />
+          ) : vm.error ? (
+            <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
+          ) : isAllZero ? (
+            <EmptyState
+              onRetry={handleRefresh}
+              mode={vm.mode}
+              previewCount={vm.modeCounts?.curated ?? 0}
+              onShowPreview={() => vm.setMode('curated')}
+            />
+          ) : !isProMode ? (
+            <>
+              <HrSpotlightDeck
+                rows={vm.rows ?? []}
+                onResearch={openPlayerProfile}
+                onAddToSlip={addToSlip}
               />
-            ) : viewMode === 'table' ? (
-              <HrSpreadsheet
-                rows={(vm.rows ?? []) as any}
+              <HrSignalGrid
+                rows={vm.rows ?? []}
+                onResearch={openPlayerProfile}
+                onAddToSlip={addToSlip}
+              />
+            </>
+          ) : (
+            <WorkspaceRenderer
+              workspace={workspace}
+              rows={vm.rows ?? []}
+              getHrResult={vm.getHrResult}
+            >
+              <HrTopSignalPanel
+                player={topPlayer}
                 freshness={vm.slate.freshness}
                 generatedAt={vm.slate.generatedAt}
-                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
+                dateLabel={isToday ? 'Today' : vm.date}
+                onResearch={openPlayerProfile}
+                onAddToSlip={addToSlip}
                 onTogglePlayerVouch={handleTogglePlayerVouch}
-                playerVouchMap={playerVouchMap}
-                pendingPlayerVouchId={pendingPlayerVouchId}
-                onSelectPlayer={(player) => {
-                  openPlayerProfile(player);
-                }}
+                onOpenBuild={goToBuild}
+                playerVouchCount={
+                  getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.totalVouches ?? 0
+                }
+                playerVouchedByViewer={
+                  getPlayerVouchSummaryFor(topPlayer?.playerId ?? null)?.viewerHasVouched ?? false
+                }
+                playerVouchPending={
+                  topPlayer?.playerId != null && String(topPlayer.playerId) === pendingPlayerVouchId
+                }
               />
-            ) : viewMode === 'treemap' ? (
-              <HrSignalField
-                buckets={vm.buckets}
-                onSelectPlayer={(player) => {
-                  openPlayerProfile(player);
-                }}
-                onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-                getHrResult={vm.getHrResult}
-              />
-            ) : (
-              <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
-                <HrBoard
-                  buckets={vm.buckets}
-                  onSelectPlayer={(player) => {
-                    openPlayerProfile(player);
-                  }}
-                  onViewProfile={(player) => {
-                    openPlayerProfile(player);
-                  }}
-                  onAddToSlip={onSectionChange ? addPlayerToSlip : undefined}
-                  onTogglePlayerVouch={handleTogglePlayerVouch}
-                  getPlayerVouchSummary={getPlayerVouchSummaryFor}
-                  playerVouchPendingId={pendingPlayerVouchId}
-                  getHrResult={vm.getHrResult}
-                />
-              </div>
-            )}
-          </div>
 
-          <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              {vm.mode === 'curated'
-                ? 'Preview mode: No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Lineups are subject to change.'
-                : vm.mode === 'confirmed'
-                  ? 'Confirmed mode: Only players from official batting orders are shown.'
-                  : 'All signals: Confirmed and projected players remain clearly labeled.'}
-            </p>
-            <span className="shrink-0 text-white/55">
-              Learn about our scoring <span className="ml-2">-&gt;</span>
-            </span>
-          </footer>
+              <MostVouchedPlayersPanel
+                players={playerVouchLeaderboard.data ?? []}
+                subtitle="The hottest community-backed bats on this slate."
+                onViewFullPage={
+                  onSectionChange ? () => onSectionChange('most_vouched_today') : undefined
+                }
+                onSelectPlayer={(playerId) => {
+                  const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
+                  if (match) openPlayerProfile(match);
+                }}
+                onTogglePlayerVouch={(playerSummary) => {
+                  const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
+                  if (match) handleTogglePlayerVouch(match);
+                }}
+                onAddToSlip={
+                  onSectionChange
+                    ? (playerSummary) => {
+                        const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
+                        if (match) addPlayerToSlip(match);
+                      }
+                    : undefined
+                }
+                vouchPendingId={pendingPlayerVouchId}
+              />
+
+              <div className="flex-1 pr-1">
+                {viewMode === 'table' ? (
+                  <HrSpreadsheet
+                    rows={(vm.rows ?? []) as any}
+                    freshness={vm.slate.freshness}
+                    generatedAt={vm.slate.generatedAt}
+                    onAddToSlip={addToSlip}
+                    onTogglePlayerVouch={handleTogglePlayerVouch}
+                    playerVouchMap={playerVouchMap}
+                    pendingPlayerVouchId={pendingPlayerVouchId}
+                    onSelectPlayer={(player) => {
+                      openPlayerProfile(player);
+                    }}
+                  />
+                ) : viewMode === 'treemap' ? (
+                  <HrSignalField
+                    buckets={vm.buckets}
+                    onSelectPlayer={(player) => {
+                      openPlayerProfile(player);
+                    }}
+                    onAddToSlip={addToSlip}
+                    getHrResult={vm.getHrResult}
+                  />
+                ) : (
+                  <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
+                    <HrBoard
+                      buckets={vm.buckets}
+                      onSelectPlayer={(player) => {
+                        openPlayerProfile(player);
+                      }}
+                      onViewProfile={(player) => {
+                        openPlayerProfile(player);
+                      }}
+                      onAddToSlip={addToSlip}
+                      onTogglePlayerVouch={handleTogglePlayerVouch}
+                      getPlayerVouchSummary={getPlayerVouchSummaryFor}
+                      playerVouchPendingId={pendingPlayerVouchId}
+                      getHrResult={vm.getHrResult}
+                    />
+                  </div>
+                )}
+              </div>
+            </WorkspaceRenderer>
+          )}
+
+          {isProMode ? (
+            <footer className="flex flex-col gap-2 border-t border-white/[0.08] px-2 py-3 text-[10px] text-white/38 sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                {vm.mode === 'curated'
+                  ? 'Preview mode: No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Lineups are subject to change.'
+                  : vm.mode === 'confirmed'
+                    ? 'Confirmed mode: Only players from official batting orders are shown.'
+                    : 'All signals: Confirmed and projected players remain clearly labeled.'}
+              </p>
+              <span className="shrink-0 text-white/55">
+                Learn about our scoring <span className="ml-2">-&gt;</span>
+              </span>
+            </footer>
+          ) : null}
         </div>
       </div>
 
