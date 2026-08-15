@@ -1,11 +1,12 @@
 import React from 'react';
-import { Plus, Star, TrendingUp } from 'lucide-react';
+import { Plus, Star, TrendingUp, Search } from 'lucide-react';
 import { AuroraMaxPanel } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import { extractCardData } from '../utils/cardUtils';
 import { HrNextReceiptTray } from './HrNextReceiptTray';
+import { useResearchStore } from '../../../stores/useResearchStore';
 
 export interface HrNextCardProps {
   row: HrWatchRow;
@@ -46,6 +47,21 @@ export const HrNextCard = React.memo(function HrNextCard({
   } = extractCardData(row);
 
   const lineupText = confirmed ? 'Confirmed' : lineupLabel;
+  const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
+  const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
+  const openDrawer = useResearchStore((s) => s.openDrawer);
+  const closeDrawer = useResearchStore((s) => s.closeDrawer);
+
+  const isResearched = isDrawerOpen && String(selectedPlayer?.id) === String(row.playerId || row.stableId);
+
+  const handleToggleResearch = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isResearched) {
+      closeDrawer();
+    } else {
+      openDrawer({ id: row.playerId || row.stableId, name: row.playerName });
+    }
+  };
 
   const onTicketActivate = () => {
     onSelect(row.stableId);
@@ -157,8 +173,21 @@ export const HrNextCard = React.memo(function HrNextCard({
           </div>
         </button>
 
-        {/* Card Actions (Save & Slip) */}
+        {/* Card Actions (Save & Slip & Research) */}
         <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={handleToggleResearch}
+            title={isResearched ? "Close Research" : "Open Deep Research"}
+            aria-label={`${isResearched ? 'Close' : 'Open'} Research for ${row.playerName}`}
+            className={`grid h-8 w-8 place-items-center border transition ${
+              isResearched
+                ? 'border-[var(--aurora-max-emerald)] bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] shadow-[0_0_10px_rgba(0,217,160,0.2)]'
+                : 'border-white/10 text-white/40 hover:text-white hover:border-white/20'
+            }`}
+          >
+            <Search className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             onClick={() => onToggleSaved(row.stableId)}

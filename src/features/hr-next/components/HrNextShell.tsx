@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Search, Sparkles } from 'lucide-react';
 import { useReducer, useCallback, useState } from 'react';
 import { useHrNextData } from '../hooks/useHrNextData';
 import { HrNextBoard } from './HrNextBoard';
@@ -6,6 +6,8 @@ import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { toHrParlayPickerPlayer } from '../../hr/utils/hrDecisionBrief';
 import { extractCardData } from '../utils/cardUtils';
 import { HrNextSortMenu } from './HrNextSortMenu';
+import { HrNextResearchView } from './HrNextResearchView';
+import { useResearchStore } from '../../../stores/useResearchStore';
 
 type SavedAction = { type: 'toggle'; id: string };
 function savedReducer(state: Record<string, true>, action: SavedAction): Record<string, true> {
@@ -27,6 +29,10 @@ export function HrNextShell() {
   const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
+
+  const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
+  const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
+  const closeDrawer = useResearchStore((s) => s.closeDrawer);
 
   const toggleSaved = useCallback((id: string) => {
     dispatchSaved({ type: 'toggle', id });
@@ -183,15 +189,53 @@ export function HrNextShell() {
         </div>
       </header>
       
-      <div className="w-full max-w-5xl px-8 py-6 space-y-3">
-        <HrNextBoard 
-          items={items} 
-          savedMap={savedMap} 
-          onToggleSaved={toggleSaved} 
-          onAddToSlip={handleAddToSlip} 
-          is3DLayerEnabled={is3DLayerEnabled} 
-          groupBy={groupBy}
-        />
+      {/* Responsive Content: Dual-mode layout (Side Dock on >=2xl, Top Bar on <2xl) */}
+      <div className="w-full max-w-[1600px] px-8 py-6 flex flex-col 2xl:flex-row gap-8 items-start">
+        {/* Main Board Column */}
+        <div className="flex-1 min-w-0 w-full max-w-5xl space-y-3">
+          {/* Top Bar on compact/narrow screens when player is selected */}
+          {isDrawerOpen && selectedPlayer && (
+            <div className="w-full 2xl:hidden animate-in fade-in slide-in-from-top-4 duration-200">
+              <HrNextResearchView 
+                playerId={selectedPlayer.id}
+                playerName={selectedPlayer.name}
+                mode="topbar"
+                onClose={closeDrawer}
+              />
+            </div>
+          )}
+
+          <HrNextBoard 
+            items={items} 
+            savedMap={savedMap} 
+            onToggleSaved={toggleSaved} 
+            onAddToSlip={handleAddToSlip} 
+            is3DLayerEnabled={is3DLayerEnabled} 
+            groupBy={groupBy}
+          />
+        </div>
+
+        {/* Side Dock on wide screens (>= 1536px / 2xl) */}
+        <aside className="hidden 2xl:block w-[420px] sticky top-28 shrink-0">
+          {isDrawerOpen && selectedPlayer ? (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-200">
+              <HrNextResearchView 
+                playerId={selectedPlayer.id}
+                playerName={selectedPlayer.name}
+                mode="dock"
+                onClose={closeDrawer}
+              />
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/5 bg-[#060a0a]/50 p-6 text-center font-mono text-xs text-white/40 flex flex-col items-center justify-center min-h-[300px] border-dashed">
+              <Sparkles className="w-6 h-6 text-white/20 mb-2" />
+              <p className="font-bold text-white/60 mb-1">Deep Research Telemetry</p>
+              <p className="text-[11px] max-w-[240px]">
+                Click the search icon on any player card to inspect live pitch arsenals, park factors, and odds matrix.
+              </p>
+            </div>
+          )}
+        </aside>
       </div>
     </main>
   );

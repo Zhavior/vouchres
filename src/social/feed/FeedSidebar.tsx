@@ -731,8 +731,16 @@ function FeedSidebar({
           </button>
         </div>
 
-        <button
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => handleNavigate('profile')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleNavigate('profile');
+            }
+          }}
           className={`ve-aurora-profile-card group relative flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 transition-all ${AURORA_SIDEBAR_SURFACE} ${isSidebarCollapsed ? 'justify-center !px-0' : 'text-left'}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName} (P)`}
@@ -802,7 +810,7 @@ function FeedSidebar({
               </button>
             </div>
           )}
-        </button>
+        </div>
 
         {!isSidebarCollapsed && (
           <button
