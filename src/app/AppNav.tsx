@@ -84,7 +84,6 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
           icon={Search}
           collapsed={collapsed}
           onClick={() => onNavigate('hr_board')}
-          onPreload={() => preloadSection('hr_board')}
         />
         <DockButton
           label="Track Record"
@@ -133,7 +132,7 @@ function DockButton({
   active: boolean;
   icon: typeof LayoutDashboard;
   onClick: () => void;
-  onPreload: () => void;
+  onPreload?: () => void;
   centerAction?: boolean;
   collapsed?: boolean;
 }) {

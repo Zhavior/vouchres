@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 // App chrome policy: no top header bar — branding, notifications, and logout
 // live only in FeedSidebar (md+) and MobileProfileDrawer (mobile).
 import FeedSidebar from './FeedSidebar';
@@ -9,6 +9,8 @@ import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
 import { useNavUiStore } from '../../stores/navUiStore';
+import { OptionalChromeBoundary } from '../../components/system/OptionalChromeBoundary';
+import { isEagerHrSection } from '../../lib/routePreload';
 import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 import AuroraMaxRouteFrame from '../../components/layout/AuroraMaxRouteFrame';
@@ -17,6 +19,48 @@ const CmdKPalette = lazy(() => import('./CmdKPalette'));
 const FeedRightRail = lazy(() => import('./FeedRightRail'));
 const MobileProfileDrawer = lazy(() => import('./MobileProfileDrawer'));
 const WorldChatWidget = lazy(() => import('../../components/theEdge/WorldChatWidget'));
+
+function DeferredWorldChat({ defer }: { defer: boolean }) {
+  const [ready, setReady] = useState(() => !defer);
+
+  useEffect(() => {
+    if (!defer) {
+      setReady(true);
+      return;
+    }
+
+    setReady(false);
+    if (typeof window === 'undefined') return;
+
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setReady(true);
+    };
+    const ric = window.requestIdleCallback;
+    if (typeof ric === 'function') {
+      const idleId = ric(enable, { timeout: 2500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+    const timeoutId = window.setTimeout(enable, 600);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [defer]);
+
+  if (!ready) return null;
+
+  return (
+    <OptionalChromeBoundary>
+      <Suspense fallback={null}>
+        <WorldChatWidget />
+      </Suspense>
+    </OptionalChromeBoundary>
+  );
+}
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -212,17 +256,19 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
       )}
 
       {!isPublicFrontPage && cmdKOpen && (
-        <CmdKPalette
-          open={cmdKOpen}
-          onClose={handleCloseCmdK}
-          onNavigate={handleSectionChange}
-        />
+        <OptionalChromeBoundary>
+          <Suspense fallback={null}>
+            <CmdKPalette
+              open={cmdKOpen}
+              onClose={handleCloseCmdK}
+              onNavigate={handleSectionChange}
+            />
+          </Suspense>
+        </OptionalChromeBoundary>
       )}
 
       {!isPublicFrontPage && (
-        <Suspense fallback={null}>
-          <WorldChatWidget />
-        </Suspense>
+        <DeferredWorldChat defer={isEagerHrSection(activeSection)} />
       )}
     </div>
   );

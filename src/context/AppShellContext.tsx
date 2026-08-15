@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { CreatorProofProfile, FeedPost, Leg, Parlay, Vouch } from '../types';
 import { useFeedStore, selectPosts } from '../stores/feedStore';
 import { useSlipsStore, selectSavedSlips } from '../stores/slipsStore';
@@ -45,8 +46,12 @@ export function useAppSavedVouches(): Vouch[] {
   return useVouchesStore(selectSavedVouches);
 }
 
+/** Derived ids — must be useShallow; a fresh .map() array each getSnapshot loops React 19. */
+const selectSavedVouchIds = (state: { savedVouches: Vouch[] }) =>
+  state.savedVouches.map((vouch) => vouch.id);
+
 export function useAppSavedVouchIds(): string[] {
-  return useVouchesStore((state) => state.savedVouches.map((vouch) => vouch.id));
+  return useVouchesStore(useShallow(selectSavedVouchIds));
 }
 
 export function useAppProfile(): CreatorProofProfile {

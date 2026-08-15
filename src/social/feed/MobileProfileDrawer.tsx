@@ -10,7 +10,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut, Crosshair, ChevronDown, LayoutTemplate,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { loadFeatureLayout, getSidebarFeatures, FeatureGroup } from '../../lib/featureConfig';
@@ -27,24 +27,23 @@ import { profileHasGradedPicks } from '../../lib/profileWinRateDisplay';
 import { useSidebarGroupCollapse } from './useSidebarGroupCollapse';
 import VouchEdgeLogo from '../../components/brand/VouchEdgeLogo';
 import { getActiveSport } from '../../sports/registry';
-import { FOCUSED_BETA_SHELL_ENABLED, isBetaDestinationActive } from '../../app/betaNavigation';
+import { FOCUSED_BETA_SHELL_ENABLED, isAuroraHqFamilySection, isBetaDestinationActive } from '../../app/betaNavigation';
 import '../../styles/aurora-sidebar.css';
 import '../../styles/shell-surfaces-aurora-max.css';
+import '../../styles/profile-aurora-max.css';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, Crosshair, Shield, LayoutTemplate,
 };
 
-/** HR nav items use Flame per featureConfig. */
-const HR_NAV_IDS = new Set(['hr_board']);
-
 function isDrawerItemActive(activeSection: string, featureId: string): boolean {
+  if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
+  if (featureId === 'hr_max') return activeSection === 'hr_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;
 }
@@ -64,7 +63,7 @@ export function tierMeta(tier: CreatorProofProfile['subscriptionTier']): TierMet
     case 'SELLER_PRO':
       return { label: 'Capper', ring: '#00F0FF', text: 'text-vouch-cyan', chipBg: 'bg-vouch-cyan/10 shadow-[0_0_10px_rgba(0,240,255,0.15)]' };
     default:
-      return { label: 'Basic', ring: 'rgba(255,255,255,0.25)', text: 'text-white/40', chipBg: 'bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]' };
+      return { label: 'Basic', ring: 'rgba(157,215,175,0.35)', text: 'text-[var(--aurora-max-muted)]', chipBg: 'profile-aurora-inset' };
   }
 }
 
@@ -177,9 +176,9 @@ function MobileProfileDrawer({
   }, [open, onClose]);
 
   const [featureLayout] = useState(() => loadFeatureLayout());
-  const groups = useMemo(() => {
+  const drawerFeatures = useMemo(() => {
     if (!open) return [];
-    const features = getSidebarFeatures(featureLayout, {
+    return getSidebarFeatures(featureLayout, {
       activeSport: getActiveSport(),
       canAccessAdmin: Boolean(profile.isAdmin || profile.admin),
     }).map((feature) => {
@@ -187,12 +186,14 @@ function MobileProfileDrawer({
       const managesPlan = profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
       return { ...feature, label: managesPlan ? 'Plan & Billing' : 'Upgrade' };
     });
+  }, [open, featureLayout, profile.admin, profile.isAdmin, profile.subscriptionTier]);
+  const groups = useMemo(() => {
     const SIDEBAR_GROUPS: FeatureGroup[] = ["Daily", "Pro Labs", "AI", "Build & Track", "Social", "Account"];
     return SIDEBAR_GROUPS.map(group => ({
       group,
-      items: features.filter(f => f.group === group),
+      items: drawerFeatures.filter(f => f.group === group),
     })).filter(g => g.items.length > 0);
-  }, [open, featureLayout, profile.admin, profile.isAdmin, profile.subscriptionTier]);
+  }, [drawerFeatures]);
 
   const sectionIdsByGroup = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -240,7 +241,7 @@ function MobileProfileDrawer({
             transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Aurora brand and account identity — real profile data only */}
-            <div className="border-b border-white/[0.07] px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
+            <div className="profile-aurora-rule border-b px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
               <div className="flex items-center justify-between gap-3 pt-1">
                 <button type="button" onClick={() => go('today')} aria-label="Go to Today" className="min-w-0 rounded-xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan">
                   <VouchEdgeLogo emeraldMark markClassName="h-10 w-10" />
@@ -259,7 +260,7 @@ function MobileProfileDrawer({
                 </div>
               </div>
 
-              <div className="ve-aurora-mobile-account mt-4 rounded-2xl p-3.5">
+              <div className="ve-aurora-mobile-account aurora-max-panel mt-4 p-3.5">
                 <div className="flex items-center gap-3">
                   <TierAvatar profile={profile} size={48} onClick={() => go('profile')} ariaLabel="Open profile" />
                   <button type="button" onClick={() => go('profile')} className="min-w-0 flex-1 text-left">
@@ -274,7 +275,7 @@ function MobileProfileDrawer({
                   </span>
                 </div>
 
-                <div className="ve-aurora-mobile-proof mt-3 flex items-center gap-4 border-t border-white/[0.07] pt-3 text-xs">
+                <div className="ve-aurora-mobile-proof profile-aurora-rule mt-3 flex items-center gap-4 border-t pt-3 text-xs">
                   <span><strong className="text-white">{profile.totalPicks}</strong> <span className="text-white/40">picks</span></span>
                   <span>
                     {profileHasGradedPicks(profile) ? (
@@ -294,7 +295,7 @@ function MobileProfileDrawer({
                   <button
                     type="button"
                     onClick={() => go('premium')}
-                    className="ve-aurora-mobile-upgrade mt-3 w-full rounded-xl border border-vouch-emerald/15 bg-vouch-emerald/[0.06] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-vouch-emerald"
+                    className="ve-aurora-mobile-upgrade aurora-max-control mt-3 w-full px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em]"
                   >
                     Explore VouchEdge Beta
                   </button>
@@ -304,34 +305,17 @@ function MobileProfileDrawer({
 
             {/* Nav groups — same registry as the desktop sidebar */}
             <nav className="flex-1 overflow-y-auto px-2 py-3">
-              {groups.map(({ group, items }) => {
-                const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
-                const collapsed = isCollapsed(group);
-                return (
-                <div key={group} className={`mb-3 overflow-hidden rounded-2xl border border-white/[0.06] ${AURORA_SIDEBAR_PANEL}`}>
-                  <button
-                    type="button"
-                    aria-expanded={!collapsed}
-                    aria-controls={`${sectionId}-items`}
-                    onClick={() => toggleGroup(group)}
-                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 ${AURORA_LABEL} text-[11px] tracking-[0.16em] text-vouch-cyan`}
-                  >
-                    <span>{group}</span>
-                    <ChevronDown
-                      className={`h-3 w-3 shrink-0 text-white/30 transition-transform ${collapsed ? '-rotate-90' : ''}`}
-                      aria-hidden
-                    />
-                  </button>
-                  {!collapsed && (
-                  <div id={`${sectionId}-items`} className="px-1.5 py-1.5 space-y-0.5">
-                    {items.map((item) => {
-                      const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
-                      const Icon = ICON_MAP[resolvedIcon] || Settings;
+              {FOCUSED_BETA_SHELL_ENABLED ? (
+                <div className={`aurora-max-panel overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
+                  <div className="px-1.5 py-1.5 space-y-0.5">
+                    {drawerFeatures.map((item) => {
+                      const Icon = ICON_MAP[item.icon] || Settings;
                       const isActive = isDrawerItemActive(activeSection, item.id);
                       return (
                         <button
                           key={item.id}
                           type="button"
+                          id={`sidebar-link-${item.id}`}
                           onClick={() => go(item.id)}
                           aria-label={item.label}
                           title={item.label}
@@ -358,7 +342,73 @@ function MobileProfileDrawer({
                           >
                             <Icon className="h-3.5 w-3.5" />
                           </span>
-                          <span className="truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                          <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                          {liveGamesActive && item.id === 'live_games' && (
+                            <span className="ml-auto shrink-0">
+                              <SidebarLiveOnAirBadge />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : groups.map(({ group, items }) => {
+                const sectionId = `mobile-drawer-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
+                const collapsed = isCollapsed(group);
+                return (
+                <div key={group} className={`aurora-max-panel mb-3 overflow-hidden ${AURORA_SIDEBAR_PANEL}`}>
+                  <button
+                    type="button"
+                    aria-expanded={!collapsed}
+                    aria-controls={`${sectionId}-items`}
+                    onClick={() => toggleGroup(group)}
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 ${AURORA_LABEL} text-[11px] tracking-[0.16em] text-vouch-cyan`}
+                  >
+                    <span>{group}</span>
+                    <ChevronDown
+                      className={`h-3 w-3 shrink-0 text-white/30 transition-transform ${collapsed ? '-rotate-90' : ''}`}
+                      aria-hidden
+                    />
+                  </button>
+                  {!collapsed && (
+                  <div id={`${sectionId}-items`} className="px-1.5 py-1.5 space-y-0.5">
+                    {items.map((item) => {
+                      const resolvedIcon = item.icon;
+                      const Icon = ICON_MAP[resolvedIcon] || Settings;
+                      const isActive = isDrawerItemActive(activeSection, item.id);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          id={`sidebar-link-${item.id}`}
+                          onClick={() => go(item.id)}
+                          aria-label={item.label}
+                          title={item.label}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={[
+                            've-aurora-nav-item relative flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-all font-z8',
+                            isActive ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
+                          ].join(' ')}
+                          data-active={isActive ? 'true' : 'false'}
+                        >
+                          {isActive && (
+                            <span
+                              aria-hidden
+                              className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-vouch-cyan"
+                            />
+                          )}
+                          <span
+                            className={[
+                              'h-7 w-7 shrink-0 transition-all',
+                              isActive
+                                ? 'flex items-center justify-center bg-vouch-cyan/15 text-vouch-cyan'
+                                : AURORA_SIDEBAR_ICON_BOX,
+                            ].join(' ')}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
                           {liveGamesActive && item.id === 'live_games' && (
                             <span className="ml-auto shrink-0">
                               <SidebarLiveOnAirBadge />

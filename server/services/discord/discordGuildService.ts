@@ -18,9 +18,9 @@ import { captureException } from "../../lib/sentry";
  *   403 = bot lacks "Manage Roles"/"Create Instant Invite" (guilds.join)
  *         permission, or the bot's highest role sits below @Open Beta in
  *         the guild's role hierarchy — Discord refuses role grants above a
- *         bot's own position regardless of permissions. This is an ops
- *         misconfiguration, not a user-fixable error: log loudly, surface
- *         it, and never mark betaAccess true.
+ *         bot's own position regardless of permissions. A 204 on Add Guild
+ *         Member already proves membership; a follow-up role 403 (including
+ *         the guild owner, whom bots cannot modify) is not "not a member."
  *   401  = the user's access_token was rejected. We already proactively
  *         refresh tokens within a 5-minute buffer (discordTokenService),
  *         so a live 401 here means Discord invalidated the grant since our
@@ -66,33 +66,16 @@ export async function interpretGuildMemberResult(result: PutGuildMemberResult, d
     if (roleResult.status === 204) {
       return { kind: "already_member_role_assigned", roleAssigned: true };
     }
-    if (roleResult.status === 403) {
-      console.error("[discord] role assignment forbidden — check bot role hierarchy / Manage Roles permission", {
-        discordUserId,
-        errorCode: roleResult.errorBody?.code,
-        errorMessage: roleResult.errorBody?.message,
-      });
-      // Ops misconfiguration (bot role sits below @Open Beta, or lacks Manage
-      // Roles) — this is never a user-fixable error, so it needs to page
-      // someone rather than sit quietly in stdout. betaAccess is still never
-      // marked true (see guildJoinSucceeded() in discordConnectionService.ts).
-      captureException(new Error("[discord] role assignment forbidden — bot role hierarchy or Manage Roles misconfiguration"), {
-        tags: { service: "discord", discord_failure: "role_assignment_forbidden" },
-        extra: {
-          discordUserId,
-          errorCode: roleResult.errorBody?.code,
-          errorMessage: roleResult.errorBody?.message,
-        },
-      });
-      return { kind: "forbidden", roleAssigned: false, reason: "role_assignment_forbidden" };
-    }
-    console.error("[discord] role assignment failed with unexpected status", {
+    // 204 on Add Guild Member means Discord already has this user in the
+    // server. Role PUT 403s for the guild owner (bots cannot modify owner
+    // roles) and can 403 on hierarchy mistakes. That is not "not a member."
+    console.warn("[discord] already a guild member — recording membership even though role assignment did not succeed", {
       discordUserId,
-      status: roleResult.status,
+      roleStatus: roleResult.status,
       errorCode: roleResult.errorBody?.code,
       errorMessage: roleResult.errorBody?.message,
     });
-    return { kind: "error", roleAssigned: false, reason: `role_assignment_status_${roleResult.status}` };
+    return { kind: "already_member", roleAssigned: false };
   }
 
   if (result.status === 403) {

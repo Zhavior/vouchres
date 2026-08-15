@@ -1,4 +1,4 @@
-import { hasConsent } from "../components/legal/CookieConsentBanner";
+import { hasConsent } from "./cookieConsent";
 
 /**
  * PostHog integration — product analytics.

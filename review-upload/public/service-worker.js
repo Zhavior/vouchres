@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -84,7 +85,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let payload = {};
+  let payload;
   try {
     payload = event.data ? event.data.json() : {};
   } catch {

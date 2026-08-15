@@ -7,6 +7,7 @@ import { parseHrBoardApiResponse } from '../../api/hrBoardApiContract';
 import { claimEarlyHrBoard } from './hrBoardEarlyFetch';
 
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from '../hrBoardSlice';
+import { apiClient } from '../apiClient';
 
 const SESSION_KEY = 'vouchedge_guest_hr_warm_v1';
 const PREVIEW_LIMIT = HR_BOARD_CANONICAL_FETCH_LIMIT;
@@ -53,7 +54,7 @@ export async function warmGuestHrBoardCache(): Promise<void> {
       const board = early
         ? await early
         : parseHrBoardApiResponse(
-            await (await import('../apiClient')).apiClient.get<unknown>(
+            await apiClient.get<unknown>(
               '/api/mlb/hr-board/today',
               { previewLimit: PREVIEW_LIMIT, compact: 1 },
             ),

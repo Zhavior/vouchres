@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import { generatePlayerResearch } from "../server/services/ai/playerResearchService";
 import { PlayerResearchRequestSchema } from "../server/validators/aiSchemas";
 
@@ -44,6 +45,11 @@ describe("PlayerResearchRequestSchema", () => {
     const { seasonStats: _seasonStats, ...missingStats } = playerData;
     expect(PlayerResearchRequestSchema.safeParse({ playerData: missingStats }).success).toBe(false);
   });
+
+  it("accepts official stats without invented Statcast", () => {
+    const { advanced: _advanced, ...withoutAdvanced } = playerData;
+    expect(PlayerResearchRequestSchema.safeParse({ playerData: withoutAdvanced }).success).toBe(true);
+  });
 });
 
 describe("generatePlayerResearch", () => {
@@ -61,5 +67,41 @@ describe("generatePlayerResearch", () => {
     expect(result.report).toContain("Not betting advice");
 
     vi.unstubAllEnvs();
+  });
+
+  it("keeps an insufficient-data score when season OPS is missing", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    const unknownSplit = { avg: "—", obp: "—", slg: "—", ops: "—" };
+    const result = await generatePlayerResearch(PlayerResearchRequestSchema.parse({
+      playerData: {
+        ...playerData,
+        seasonStats: { avg: "—", hr: "—", rbi: "—", ops: "—" },
+        advanced: {},
+        splits: {
+          vRHP: unknownSplit,
+          vLHP: unknownSplit,
+          home: unknownSplit,
+          away: unknownSplit,
+          last10: unknownSplit,
+        },
+      },
+    }));
+
+    expect(result.aiScore).toBe(50);
+    expect(result.report).toContain("insufficient-data");
+    expect(result.report).toContain("UNKNOWN");
+    expect(result.report).not.toContain("cooling");
+
+    vi.unstubAllEnvs();
+  });
+});
+
+describe("player research prompt honesty", () => {
+  it("interpolates Statcast through metricOrUnknown instead of advanced zeros", () => {
+    const src = readFileSync("server/services/ai/playerResearchService.ts", "utf8");
+    expect(src).toContain("metricOrUnknown(player.advanced?.hardHitPercent");
+    expect(src).not.toContain("hard-hit ${player.advanced.hardHitPercent}");
+    expect(src).not.toContain("statNumber(player.seasonStats.avg, 0.25)");
+    expect(src).not.toContain("statNumber(player.seasonStats.ops, 0.72)");
   });
 });

@@ -96,10 +96,9 @@ export async function recordDiscordIdentity(userId: string, params: { discordUse
 }
 
 /**
- * Records the outcome of the guild-join attempt. betaAccess is only ever
- * set true when guildMember is true — enforced here as well as by callers,
- * so a bug upstream can never silently grant access without a verified
- * guild membership + role assignment.
+ * Records the outcome of the guild-join attempt. Membership (204 already
+ * in guild or 201 new join) is enough to set both flags; role assignment
+ * is best-effort and must not clear access for the guild owner.
  */
 export async function recordGuildJoinOutcome(userId: string, params: { guildMember: boolean }): Promise<void> {
   const betaAccess = params.guildMember;

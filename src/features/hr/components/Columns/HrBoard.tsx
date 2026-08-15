@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Check, ChevronDown, Flame, Heart, Plus, Search, ShieldCheck, ShieldQuestion, Zap } from 'lucide-react';
 import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import { useMediaQuery } from '../../../../hooks/useMediaQuery';
@@ -48,7 +49,7 @@ function metric(value: number | null | undefined): string {
   return value == null || !Number.isFinite(value) ? '-' : String(Math.round(value));
 }
 
-function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTogglePlayerVouch, playerVouchSummary, playerVouchPending, result }: {
+export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTogglePlayerVouch, playerVouchSummary, playerVouchPending, result }: {
   player: HrWatchRow;
   tier: TierDefinition;
   onResearch: (player: HrWatchRow) => void;
@@ -168,8 +169,22 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
   getHrResult?: (playerId: string | number | null) => HrCardResult;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const visiblePlayers = expanded ? players : players.slice(0, 2);
   const Icon = tier.icon;
+
+  const shouldVirtualize = expanded && players.length > 2;
+
+  const virtualizer = useVirtualizer({
+    count: shouldVirtualize ? players.length : 0,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 380,
+    overscan: 2,
+    gap: 8,
+    getItemKey: (index) => players[index]?.stableId ?? index,
+  });
+
+  const virtualItems = shouldVirtualize ? virtualizer.getVirtualItems() : [];
 
   return (
     <section className="z8-hr-tier-section min-w-0 overflow-hidden rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]" aria-label={`${tier.shortTitle} signals`}>
@@ -181,25 +196,73 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
         <span className="font-mono text-[9px] font-bold tabular-nums text-white/48">{players.length} player{players.length === 1 ? '' : 's'}</span>
       </header>
 
-      <div className="space-y-2 p-1.5">
-        {visiblePlayers.length > 0 ? visiblePlayers.map((player) => (
-          <CompactPlayerCard
-            key={player.stableId}
-            player={player}
-            tier={tier}
-            onResearch={onResearch}
-            onAddToSlip={onAddToSlip}
-            onTogglePlayerVouch={onTogglePlayerVouch}
-            playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
-            playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
-            result={getHrResult?.(player.playerId) ?? null}
-          />
-        )) : (
+      <div className="p-1.5">
+        {players.length === 0 ? (
           <div className="flex min-h-36 items-center justify-center p-4 text-center">
             <div>
               <Check className="mx-auto h-4 w-4 text-white/18" />
               <p className="mt-2 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-white/30">No players in this tier</p>
             </div>
+          </div>
+        ) : shouldVirtualize ? (
+          <div
+            ref={scrollContainerRef}
+            className="max-h-[720px] overflow-y-auto pr-1 z8-hr-tier-scroll"
+            style={{ position: 'relative' }}
+          >
+            <div
+              style={{
+                position: 'relative',
+                height: `${virtualizer.getTotalSize()}px`,
+                width: '100%',
+              }}
+            >
+              {virtualItems.map((virtualRow) => {
+                const player = players[virtualRow.index];
+                if (!player) return null;
+                return (
+                  <div
+                    key={player.stableId}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <CompactPlayerCard
+                      player={player}
+                      tier={tier}
+                      onResearch={onResearch}
+                      onAddToSlip={onAddToSlip}
+                      onTogglePlayerVouch={onTogglePlayerVouch}
+                      playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
+                      playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
+                      result={getHrResult?.(player.playerId) ?? null}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {visiblePlayers.map((player) => (
+              <CompactPlayerCard
+                key={player.stableId}
+                player={player}
+                tier={tier}
+                onResearch={onResearch}
+                onAddToSlip={onAddToSlip}
+                onTogglePlayerVouch={onTogglePlayerVouch}
+                playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
+                playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
+                result={getHrResult?.(player.playerId) ?? null}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -232,10 +295,6 @@ export function HrBoard({
   const [activeTier, setActiveTier] = useState<TierKey>(firstPopulated);
   const [mobileLimit, setMobileLimit] = useState(MOBILE_PAGE_SIZE);
 
-  // Only the layout actually on screen gets built. Rendering both and hiding
-  // one with `lg:hidden` still mounted every card in the losing branch — on a
-  // full slate that was a second board's worth of headshots and vouch panels
-  // constructed for nobody.
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {

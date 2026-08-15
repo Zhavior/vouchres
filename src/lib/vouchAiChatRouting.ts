@@ -125,11 +125,11 @@ export function routeVouchAiMessage(text: string): VouchAiRouteAction {
     };
   }
 
-  if (lower.includes("hr board") || lower.includes("home run")) {
+  if (lower.includes("hr board") || lower.includes("home run") || lower.includes("hr intelligence")) {
     return {
       kind: "section_nav",
       section: "hr_board",
-      responseText: "Jumping to the **HR Board** for today's verified candidates.",
+      responseText: "Jumping to **HR Intelligence** for today's verified candidates.",
     };
   }
 

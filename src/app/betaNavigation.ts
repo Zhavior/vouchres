@@ -10,8 +10,16 @@ export const BETA_PRIMARY_DESTINATIONS = [
 
 export type BetaDestinationId = (typeof BETA_PRIMARY_DESTINATIONS)[number]['id'];
 
+export function isAuroraHqFamilySection(section: string): boolean {
+  return section === 'aurora_hr_hq' || section === 'aurora_daily_slate';
+}
+
 const RESEARCH_SECTIONS = new Set([
+  'aurora_hr_hq',
+  'aurora_daily_slate',
   'hr_board',
+  'hr_max',
+  'hr_v10',
   'daily_hr_watch_new',
   'daily_players',
   'mlb_stats',
@@ -78,6 +86,7 @@ const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'profile',
   'settings',
   'admin',
+  'aurora_daily_slate',
 ]);
 
 export function isBetaDestinationActive(

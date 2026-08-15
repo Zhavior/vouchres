@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { supabase } from "./supabaseClient";
-import { hasConsent } from "../components/legal/CookieConsentBanner";
+import { hasConsent } from "./cookieConsent";
 
 /**
  * Sentry integration — error tracking + performance monitoring.
@@ -100,18 +100,26 @@ export function initSentry() {
   initialized = true;
 }
 
-/** Report React render errors captured by AppErrorBoundary. */
+/** Report React render errors captured by AppErrorBoundary or feature ErrorBoundaries. */
 export function captureReactError(
   error: unknown,
-  errorInfo?: { componentStack?: string | null },
+  errorInfo?: {
+    componentStack?: string | null;
+    componentName?: string;
+    fallbackTitle?: string;
+    [key: string]: any;
+  },
 ) {
   if (!initialized) return;
   Sentry.captureException(error, {
     contexts: {
       react: {
         componentStack: errorInfo?.componentStack ?? undefined,
+        componentName: errorInfo?.componentName,
+        fallbackTitle: errorInfo?.fallbackTitle,
       },
     },
+    tags: errorInfo?.componentName ? { component: errorInfo.componentName } : undefined,
   });
 }
 

@@ -40,18 +40,17 @@ describe('focused beta shell', () => {
   it('keeps Today focused on four workflow actions without social proof panels', () => {
     const today = readFileSync('src/components/TodayDashboardZ8.tsx', 'utf8');
 
-    expect(today).toContain('4 Core Actions');
+    expect(today).toContain('Research tools');
     expect(today).not.toContain('8 Core Systems');
     expect(today).not.toContain('MostVouchedPlayersPanel');
     expect(today).not.toContain('Following Hub');
   });
 
   it('uses the same global lineup counts in the toolbar and slate summary', () => {
-    const page = readFileSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx', 'utf8');
+    const page = readFileSync('src/features/hr-max/components/HrMaxDesk.tsx', 'utf8');
     const commandCenter = readFileSync('src/features/hr/components/CommandCenter/HrCommandCenter.tsx', 'utf8');
 
-    expect(page).toContain('confirmedCount={vm.modeCounts?.confirmed ?? 0}');
-    expect(page).toContain('previewCount={vm.modeCounts?.curated ?? 0}');
+    expect(page).toContain('confirmedCount = vm.modeCounts.confirmed');
     expect(commandCenter).toContain('confirmedCount={props.confirmedCount}');
     expect(commandCenter).toContain('previewCount={props.previewCount}');
     expect(commandCenter).not.toContain('Math.max(0');

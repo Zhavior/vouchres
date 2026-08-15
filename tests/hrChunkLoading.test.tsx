@@ -6,23 +6,17 @@ vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
   useHrBoardViewModel: vi.fn(),
 }));
 
-vi.mock('../src/features/hr/hooks/useProMode', () => ({
-  useProMode: () => [false, vi.fn()],
+vi.mock('../src/lib/parlays/parlayAddContract', () => ({
+  openParlayAdd: vi.fn(),
 }));
 
-vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
-  usePlayerVouchSummary: () => ({ data: [] }),
-  usePlayerVouchLeaderboard: () => ({ data: [] }),
-  useTogglePlayerVouch: () => ({ mutate: vi.fn(), variables: null }),
-}));
-
-import HomeRunIntelligencePageZ8 from '../src/features/hr/pages/HomeRunIntelligencePageZ8';
+import HrAuroraMaxPage from '../src/features/hr-max/pages/HrAuroraMaxPage';
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
 
 const mockedVm = vi.mocked(useHrBoardViewModel);
 
-describe('HR feature loading', () => {
-  it('renders the core board without starting Pro-only chunk placeholders', () => {
+describe('HR Command Desk loading', () => {
+  it('renders the Aurora Max skeleton without Pro-only chunk placeholders', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
       rows: [],
@@ -66,9 +60,9 @@ describe('HR feature loading', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePageZ8 />);
+    render(<HrAuroraMaxPage />);
 
-    expect(screen.getByRole('heading', { name: /Every bat that can leave the yard/i })).toBeTruthy();
+    expect(screen.getByLabelText(/Loading HR Command Desk/i)).toBeTruthy();
     expect(screen.queryByRole('status', { name: /Loading (Pro|top|most|signal)/i })).toBeNull();
   });
 });

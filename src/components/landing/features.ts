@@ -8,9 +8,9 @@ import {
 export const FEATURES = [
   {
     icon: BarChart3,
-    eyebrow: 'HR Board',
+    eyebrow: 'HR Intelligence',
     title: 'Verified home run intelligence',
-    copy: 'Trust-first HR board with confirmed lineups only. Projected previews are clearly labeled — never sold as confirmed.',
+    copy: 'Trust-first HR Intelligence with confirmed lineups only. Projected previews are clearly labeled — never sold as confirmed.',
     route: 'hr_board',
   },
   {

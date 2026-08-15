@@ -92,4 +92,10 @@ describe('Today decision-first layout', () => {
     expect(source).toContain("React.lazy(() => import('./today/TodayPersonalizationPanel'))");
     expect(source).toContain('<Suspense fallback=');
   });
+
+  it('does not render a What changed digest', () => {
+    expect(source).not.toContain('TodayChangeDigest');
+    expect(source).not.toContain('useTodayChangeDigest');
+    expect(source).not.toContain('What changed');
+  });
 });

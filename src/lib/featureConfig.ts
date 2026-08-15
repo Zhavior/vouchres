@@ -54,11 +54,11 @@ export interface FeatureLayout {
 export const ALL_FEATURES: FeatureConfig[] = [
 
   // Daily — sport-scoped boards and slates
-  { id: "today", label: "Today", icon: "CalendarDays", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS, locked: true },
-  { id: "hr_board", label: "Home Run Intelligence", icon: "Flame", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS, locked: true },
-  { id: "mlb_stats", label: "MLB Stat Hub", icon: "BarChart3", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS, locked: false },
-  { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 5, group: "Daily", sports: ALL_SPORTS, locked: true },
-  { id: "live_games", label: "Live Games", icon: "Tv", enabled: true, order: 6, group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "today",         label: "Today",                 icon: "CalendarDays", enabled: true, order: 2,    group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "hr_board",      label: "Home Run Intelligence", icon: "Flame",        enabled: true, order: 3,    group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "mlb_stats",     label: "MLB Stat Hub",          icon: "BarChart3",    enabled: true, order: 4,    group: "Daily", sports: ALL_SPORTS, locked: false },
+  { id: "daily_players", label: "Daily Players",         icon: "Users",        enabled: true, order: 5,    group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "live_games",    label: "Live Games",            icon: "Tv",           enabled: true, order: 6,    group: "Daily", sports: ALL_SPORTS, locked: true },
 
   // Pro Labs — sport-scoped analytics
   { id: "intel", label: "AI Edge Lab", icon: "Flame", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS, locked: true },
@@ -75,7 +75,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Build & Track
   { id: "live_parlays", label: "My List", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
-  { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
+  { id: "research", label: "Aurora Max", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track", locked: true },
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
   { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },
@@ -90,7 +90,8 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "premium", label: FREE_BETA_ALL_ACCESS ? "Beta Access" : "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
-  { id: "admin", label: "Aurora HQ", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
+  { id: "aurora_hr_hq", label: "Aurora HQ", icon: "Sparkles", enabled: true, order: 20.5, group: "Account", access: "admin" },
+  { id: "admin", label: "Admin Ops", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 

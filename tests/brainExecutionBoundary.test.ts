@@ -7,8 +7,8 @@ const ROOT = resolve(import.meta.dirname, "..");
 describe("ProjectVABrAIns execution boundary", () => {
   it("does not preload Brain pages from non-Brain routes", () => {
     const source = readFileSync(resolve(ROOT, "src/lib/routePreload.ts"), "utf8");
-    expect(source).toContain("hr_board: ['daily_players']");
-    expect(source).not.toMatch(/hr_board:\s*\[[^\]]*brain_/);
+    expect(source).not.toContain("hr_board: ['daily_players']");
+    expect(source).not.toMatch(/hr_max:\s*\[[^\]]*brain_/);
   });
 
   it("keeps runtime Brain API calls inside the two Brain pages", () => {
@@ -24,7 +24,7 @@ describe("ProjectVABrAIns execution boundary", () => {
     const nonBrainEntrypoints = [
       "src/App.tsx",
       "src/app/AuthenticatedApp.tsx",
-      "src/features/hr/pages/HomeRunIntelligencePageZ8.tsx",
+      "src/features/hr-max/pages/HrAuroraMaxPage.tsx",
       "src/components/routing/MainViewRouter.tsx",
     ];
     for (const file of nonBrainEntrypoints) {

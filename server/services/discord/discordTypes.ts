@@ -59,6 +59,16 @@ export class DiscordApiError extends Error {
 export type GuildJoinOutcome =
   | { kind: "joined_new_member"; roleAssigned: true }
   | { kind: "already_member_role_assigned"; roleAssigned: true }
+  | { kind: "already_member"; roleAssigned: false }
   | { kind: "forbidden"; roleAssigned: false; reason: string }
   | { kind: "token_expired"; roleAssigned: false }
   | { kind: "error"; roleAssigned: false; reason: string };
+
+/** True when the join outcome is enough to persist guild membership + Open Beta access. */
+export function isGuildJoinSuccess(outcome: GuildJoinOutcome): boolean {
+  return (
+    outcome.kind === "joined_new_member" ||
+    outcome.kind === "already_member_role_assigned" ||
+    outcome.kind === "already_member"
+  );
+}

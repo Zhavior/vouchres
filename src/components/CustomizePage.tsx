@@ -77,8 +77,14 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   hr_board: {
     id: "hr_board",
     label: "Home Run Intelligence",
-    description: "Home run board, power spots, and matchup context.",
+    description: "Daily HR intelligence board, tier evidence, and player research.",
     icon: Flame,
+  },
+  hr_max: {
+    id: "hr_max",
+    label: "HR Command Desk",
+    description: "Aurora Max command desk for ranked HR research.",
+    icon: Radio,
   },
   mlb_stats: {
     id: "mlb_stats",
@@ -154,8 +160,8 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   research: {
     id: "research",
-    label: "Player Research",
-    description: "Search players, stats, and research context.",
+    label: "Aurora Max",
+    description: "Live MLB player stats, Statcast, and game logs.",
     icon: Search,
   },
   board: {

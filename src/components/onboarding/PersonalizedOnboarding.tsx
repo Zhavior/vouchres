@@ -9,7 +9,7 @@ type Props = {
 const STARTING_POINTS = [
   {
     id: 'hr_board',
-    title: "Research today's HR board",
+    title: "Research today's HR Intelligence",
     description: 'Compare official lineup status, model confidence, and supporting evidence.',
     icon: BarChart3,
   },

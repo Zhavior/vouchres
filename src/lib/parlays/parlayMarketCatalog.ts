@@ -298,7 +298,7 @@ export function inferFamilyFromText(text: string): ParlayMarketFamilyId {
   return "home_runs";
 }
 
-const PITCHER_POSITIONS = new Set(["P", "SP", "RP", "CP", "LHP", "RHP"]);
+export const PITCHER_POSITIONS = new Set(["P", "SP", "RP", "CP", "LHP", "RHP"]);
 
 /** Batter vs pitcher for ParlayOS — avoids false positives from matchup text (e.g. "11 K/9"). */
 export function resolveParlayPlayerRole(input: {

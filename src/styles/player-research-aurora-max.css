@@ -1,0 +1,251 @@
+/* Player Research — Aurora Max desk. Tokens come from aurora-max.css.
+   Cognitive-Safe: opacity/transform only. Lenis skipped (app desk). */
+.player-research-hub {
+  min-width: 0;
+  color: var(--aurora-max-paper);
+  background: transparent;
+  overflow-wrap: break-word;
+}
+
+.player-research-hub .pr-max-search {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(4, 11, 13, 0.62);
+  color: var(--aurora-max-paper);
+  overflow-wrap: break-word;
+}
+
+.player-research-hub .pr-max-search:focus {
+  outline: 2px solid rgba(0, 217, 160, 0.35);
+  outline-offset: 1px;
+}
+
+.player-research-hub .pr-max-chrome {
+  background: var(--aurora-max-panel-strong);
+}
+
+.player-research-hub .aurora-max-panel {
+  backdrop-filter: none;
+}
+
+.player-research-hub .pr-max-card,
+.player-research-hub .pr-max-table,
+.player-research-hub .pr-max-dossier {
+  min-width: 0;
+  overflow-wrap: break-word;
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(7, 15, 17, 0.82);
+  box-shadow: inset 0 1px rgba(242, 240, 233, 0.035);
+}
+
+.player-research-hub .pr-max-card {
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 11.5rem;
+  transition:
+    transform var(--aurora-max-dur-micro) var(--aurora-max-ease-ground),
+    border-color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .player-research-hub .pr-max-card:hover {
+    transform: scale(0.98);
+    border-color: var(--aurora-max-line-strong);
+  }
+}
+
+.player-research-hub .pr-max-card:focus-visible {
+  transform: scale(0.98);
+  border-color: var(--aurora-max-line-strong);
+}
+
+.player-research-hub .pr-max-stat {
+  min-width: 0;
+  overflow-wrap: break-word;
+  border: 1px solid var(--aurora-max-line);
+  background: rgba(4, 11, 13, 0.54);
+}
+
+.player-research-hub .pr-max-mode-tab {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--aurora-max-muted);
+  transition:
+    color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground),
+    border-color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground);
+}
+
+.player-research-hub .pr-max-mode-tab.is-active {
+  border-color: var(--aurora-max-line-strong);
+  color: var(--aurora-max-paper);
+}
+
+.player-research-hub .pr-max-dossier-tab {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  transition:
+    color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground),
+    border-color var(--aurora-max-dur-micro) var(--aurora-max-ease-ground);
+}
+
+@keyframes pr-max-tab-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.player-research-hub .pr-max-tab-pane {
+  animation: pr-max-tab-in var(--aurora-max-dur-micro) var(--aurora-max-ease-ground);
+}
+
+.player-research-hub .pr-max-dossier-scrim {
+  /* Overlay only — documented exception to document-flow flex. */
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 8, 13, 0.72);
+}
+
+.player-research-hub .pr-bvp-desk {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.player-research-hub .pr-bvp-selector-grid,
+.player-research-hub .pr-bvp-cards-grid,
+.player-research-hub .pr-bvp-metric-grid,
+.player-research-hub .pr-bvp-history-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.player-research-hub .pr-bvp-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.player-research-hub .pr-bvp-headshot {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--aurora-max-line);
+  border-radius: 0.375rem;
+  background: rgba(4, 11, 13, 0.54);
+}
+
+.player-research-hub .pr-bvp-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "batter pitcher"
+    "score score";
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.player-research-hub .pr-bvp-hero-batter { grid-area: batter; min-width: 0; }
+.player-research-hub .pr-bvp-hero-pitcher { grid-area: pitcher; min-width: 0; }
+.player-research-hub .pr-bvp-score { grid-area: score; min-width: 0; }
+
+.player-research-hub .pr-bvp-score-ring {
+  --pr-bvp-score: 0;
+  width: 4.75rem;
+  height: 4.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: conic-gradient(var(--aurora-max-cyan) calc(var(--pr-bvp-score) * 1%), var(--aurora-max-line) 0);
+}
+
+.player-research-hub .pr-bvp-score-ring.is-empty {
+  background: var(--aurora-max-line);
+}
+
+.player-research-hub .pr-bvp-score-ring > span {
+  width: 3.55rem;
+  height: 3.55rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--aurora-max-panel-strong);
+  color: var(--aurora-max-paper);
+}
+
+.player-research-hub .pr-bvp-metric {
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  overflow-wrap: break-word;
+  border: 1px solid var(--aurora-max-line);
+  border-radius: 0.375rem;
+  background: rgba(4, 11, 13, 0.54);
+}
+
+.player-research-hub .pr-bvp-bar-track {
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(4, 11, 13, 0.7);
+  border: 1px solid var(--aurora-max-line);
+}
+
+.player-research-hub .pr-bvp-bar-fill {
+  height: 100%;
+  max-width: 100%;
+  background: var(--aurora-max-cyan);
+}
+
+.player-research-hub .pr-bvp-drawer {
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--aurora-max-line);
+  border-radius: 0.375rem;
+}
+
+.player-research-hub .pr-bvp-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .player-research-hub .pr-bvp-selector-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .player-research-hub .pr-bvp-history-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .player-research-hub .pr-bvp-hero-grid {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: "batter score pitcher";
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-research-hub *,
+  .player-research-hub *::before,
+  .player-research-hub *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .player-research-hub .pr-max-tab-pane {
+    animation: none;
+  }
+
+  .player-research-hub .pr-max-card:hover,
+  .player-research-hub .pr-max-card:focus-visible {
+    transform: none;
+  }
+}

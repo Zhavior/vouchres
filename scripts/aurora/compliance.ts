@@ -79,7 +79,10 @@ function readLines(path: string): string[] {
 
 function findZ8Importers(root: string): string[] {
   return listSourceFiles(root)
-    .filter((path) => Z8_TOKEN_IMPORT.test(readFileSync(join(root, path), 'utf8')))
+    .filter((path) => {
+      const fullPath = join(root, path);
+      return existsSync(fullPath) && Z8_TOKEN_IMPORT.test(readFileSync(fullPath, 'utf8'));
+    })
     .sort();
 }
 

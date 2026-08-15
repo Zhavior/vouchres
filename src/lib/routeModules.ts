@@ -27,8 +27,6 @@ export const routeModules = {
   leaderboard: () => import('../components/Leaderboard'),
   subscriberHub: () => import('../components/SubscriberHub'),
 
-  hrBoard: () =>
-    import('../features/hr/pages/HomeRunIntelligencePageZ8'),
 
   brainPicks: () => import('../features/brain/BrainPicksPage'),
   brainPerformance: () =>

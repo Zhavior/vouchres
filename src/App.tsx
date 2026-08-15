@@ -7,6 +7,7 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import { PUBLIC_SECTIONS, shouldForcePublicLanding } from './app/sectionNavigation';
 import { AURORA_MAX_SHELL } from './theme/auroraTokens';
 import { lazyWithRetry } from './lib/lazyWithRetry';
+import { CookieConsentBanner } from './components/legal/CookieConsentBanner';
 
 function isAuthCallbackPath(): boolean {
   if (typeof window === 'undefined') return false;
@@ -112,6 +113,8 @@ export default function App() {
       ) : (
         <MainAppRoutes />
       )}
+      <CookieConsentBanner />
     </QueryClientProvider>
   );
 }
+

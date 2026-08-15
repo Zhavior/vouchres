@@ -17,6 +17,7 @@ import { useVouchesStore, selectSavedVouches, selectSyncVouches } from '../store
 import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
 import { fetchAuthMe } from '../hooks/queries/useAuthMe';
 import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
+import { retryDiscordGuildJoin } from '../lib/discordClient';
 import { mapBackendParlay, mapBackendVouch } from './backendMappers';
 import { normalizeSlipStatus } from '../lib/parlayDisplay';
 import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
@@ -146,7 +147,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn, auth
 
     let cancelled = false;
     void fetchAuthMe()
-      .then((data) => {
+      .then(async (data) => {
         const userId = String(data?.id ?? '');
         if (cancelled || !userId) return;
         setAccountStorageScope(userId);
@@ -160,6 +161,24 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn, auth
         syncProfile(nextProfile);
         syncAnalyticsProfile(userId, nextProfile);
         setAccountId(userId);
+
+        // Stale discord_guild_member=false is common after a 204+role-403
+        // connect. Re-run join now so the Open Beta wall heals without a
+        // Settings retry click.
+        if (
+          nextProfile.discordConnectedAt &&
+          !(nextProfile.discordGuildMember && nextProfile.discordBetaAccess)
+        ) {
+          const healed = await retryDiscordGuildJoin();
+          if (cancelled || healed.ok === false || !healed.guildMember) return;
+          const verified = {
+            ...nextProfile,
+            discordGuildMember: true,
+            discordBetaAccess: true,
+          };
+          syncProfile(verified);
+          syncAnalyticsProfile(userId, verified);
+        }
       })
       .catch(() => {
         // Keep the authenticated shell visible, but never leave the Discord
@@ -371,7 +390,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn, auth
 
   useEffect(() => {
     if (isLoggedIn) return;
-    if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
+    if (activeSection !== 'hr_board' && activeSection !== 'hr_max') return;
     void warmGuestHrBoardCache();
   }, [activeSection, isLoggedIn]);
 

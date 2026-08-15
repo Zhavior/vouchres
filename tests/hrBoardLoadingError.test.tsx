@@ -1,20 +1,14 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import HomeRunIntelligencePageZ8 from '../src/features/hr/pages/HomeRunIntelligencePageZ8';
+import HrAuroraMaxPage from '../src/features/hr-max/pages/HrAuroraMaxPage';
 
 vi.mock('../src/features/hr/hooks/useHrBoardViewModel', () => ({
   useHrBoardViewModel: vi.fn(),
 }));
 
-vi.mock('../src/hooks/queries/usePlayerVouchLayer', () => ({
-  usePlayerVouchSummary: vi.fn(() => ({ data: [] })),
-  usePlayerVouchLeaderboard: vi.fn(() => ({ data: [] })),
-  useTogglePlayerVouch: vi.fn(() => ({ mutate: vi.fn() })),
-}));
-
-vi.mock('../src/features/hr/hooks/useHrResearch', () => ({
-  useHrResearch: vi.fn(() => ({ data: null, isLoading: false })),
+vi.mock('../src/lib/parlays/parlayAddContract', () => ({
+  openParlayAdd: vi.fn(),
 }));
 
 import { useHrBoardViewModel } from '../src/features/hr/hooks/useHrBoardViewModel';
@@ -33,7 +27,7 @@ const defaultSlate = {
   hasGames: false,
 } as const;
 
-describe('HomeRunIntelligencePage honest states', () => {
+describe('HR Command Desk honest states', () => {
   it('shows loading skeleton while board fetch is in flight', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
@@ -43,7 +37,11 @@ describe('HomeRunIntelligencePage honest states', () => {
       stats: { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: true,
+      syncing: false,
       error: null,
+      refreshError: null,
+      connection: null,
+      lastUpdated: null,
       mode: 'confirmed',
       viewMode: 'cards',
       search: '',
@@ -63,8 +61,8 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    const { container } = render(<HomeRunIntelligencePageZ8 />);
-    expect(container.querySelector('.animate-pulse')).toBeTruthy();
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByLabelText(/Loading HR Command Desk/i)).toBeTruthy();
   });
 
   it('shows retry error state when board fetch fails', () => {
@@ -77,7 +75,11 @@ describe('HomeRunIntelligencePage honest states', () => {
       stats: { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: false,
+      syncing: false,
       error: 'Upstream timeout',
+      refreshError: null,
+      connection: null,
+      lastUpdated: null,
       mode: 'confirmed',
       viewMode: 'cards',
       search: '',
@@ -97,28 +99,61 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePageZ8 />);
-    expect(screen.getByText(/Failed to load Home Run Intelligence/i)).toBeTruthy();
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByText(/Board unavailable/i)).toBeTruthy();
     expect(screen.getByText(/Upstream timeout/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Retry board/i }));
     expect(refresh).toHaveBeenCalled();
   });
 
   it('warns when preview mode is active with no confirmed lineups', () => {
     mockedVm.mockReturnValue({
       buckets: { Elite: [], Strong: [], Watch: [], Sleepers: [] },
-      rows: [],
+      rows: [
+        {
+          stableId: 'judge-99',
+          playerName: 'Aaron Judge',
+          playerId: 592450,
+          team: 'NYY',
+          opponent: 'BOS',
+          teamLogoUrl: null,
+          opponentLogoUrl: null,
+          pitcherName: 'Garrett Crochet',
+          venue: 'Yankee Stadium',
+          gamePk: 777,
+          gameTime: '7:05 PM',
+          headshotUrl: null,
+          rank: 1,
+          hrScore: 89,
+          hitterPower: 90,
+          pitcherVulnerability: 80,
+          parkFactor: 70,
+          recentForm: 72,
+          vouchScore: 88,
+          dataConfidence: 84,
+          truthStatus: 'projected',
+          riskTier: 'Elite',
+          oddsLabel: '+210',
+          reasons: ['Projected lineup preview'],
+          warnings: ['Official lineup not confirmed'],
+          sourceMode: 'curated',
+        },
+      ],
       researchRows: [],
       slate: { ...defaultSlate, gameCount: 1, hasGames: true },
-      stats: { total: 0, elite: 0, strong: 0, watch: 0, sleepers: 0 },
+      stats: { total: 1, elite: 1, strong: 0, watch: 0, sleepers: 0 },
       selectedPlayer: null,
       loading: false,
+      syncing: false,
       error: null,
+      refreshError: null,
+      connection: null,
+      lastUpdated: null,
       mode: 'confirmed',
       viewMode: 'cards',
       search: '',
       selectedTiers: ['Elite', 'Strong', 'Watch', 'Sleepers'],
-      modeCounts: { confirmed: 0, curated: 3, all: 3 },
+      modeCounts: { confirmed: 0, curated: 1, all: 1 },
       autoSwitchedToPreview: true,
       setMode: vi.fn(),
       setViewMode: vi.fn(),
@@ -133,8 +168,7 @@ describe('HomeRunIntelligencePage honest states', () => {
       hrResultsLoading: false,
     } as any);
 
-    render(<HomeRunIntelligencePageZ8 />);
-    expect(screen.getByText(/No confirmed lineups posted yet/i)).toBeTruthy();
-    expect(screen.getAllByText(/preview candidates/i).length).toBeGreaterThan(0);
+    render(<HrAuroraMaxPage />);
+    expect(screen.getByText(/Confirmed lineups are not posted yet/i)).toBeTruthy();
   });
 });

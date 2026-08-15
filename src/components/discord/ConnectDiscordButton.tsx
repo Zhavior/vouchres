@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { startDiscordConnect, retryDiscordGuildJoin } from '../../lib/discordClient';
+import { isFounderEmail } from '../../lib/founderAccess';
 import { AURORA_BLURPLE_HEX, AURORA_INTERACTIVE, AURORA_SURFACE } from '../../theme/auroraTokens';
 
 export interface ConnectDiscordButtonProfile {
@@ -13,6 +14,7 @@ export interface ConnectDiscordButtonProfile {
 
 interface ConnectDiscordButtonProps {
   profile: ConnectDiscordButtonProfile;
+  email?: string | null;
   /** Called after a successful retry so the parent can refetch /api/auth/me. */
   onVerified?: () => void;
   className?: string;
@@ -39,10 +41,11 @@ function DiscordMark({ className }: { className?: string }) {
  *   - connected but guild join didn't complete: retry state with a clear
  *     retry action — never a silently "broken" half-connected button.
  */
-export default function ConnectDiscordButton({ profile, onVerified, className }: ConnectDiscordButtonProps) {
+export default function ConnectDiscordButton({ profile, email, onVerified, className }: ConnectDiscordButtonProps) {
   const [connecting, setConnecting] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoRetried = useRef(false);
 
   const handleConnect = async () => {
     setError(null);
@@ -67,16 +70,24 @@ export default function ConnectDiscordButton({ profile, onVerified, className }:
     if (result.guildMember) {
       onVerified?.();
     } else {
-      setError(
-        result.reason === 'guild_join_forbidden' || result.reason === 'role_assignment_forbidden'
-          ? "VouchEdge's Discord bot can't assign roles right now — we've been notified. Try again shortly."
-          : "Still couldn't verify your Discord membership. Try again in a moment.",
-      );
+      setError("Still couldn't verify your Discord membership. Try again in a moment.");
     }
   };
 
-  const isVerified = profile.discord_connected_at && profile.discord_guild_member && profile.discord_beta_access;
-  const isPendingRetry = profile.discord_connected_at && !isVerified;
+  const isVerified = Boolean(
+    (profile.discord_connected_at && profile.discord_guild_member && profile.discord_beta_access) ||
+      (profile.discord_connected_at && isFounderEmail(email)),
+  );
+  const isPendingRetry = Boolean(profile.discord_connected_at && !isVerified);
+
+  useEffect(() => {
+    if (autoRetried.current) return;
+    if (!isPendingRetry) return;
+    autoRetried.current = true;
+    void handleRetry();
+    // Heal once on mount when flags are stale; user can still click Retry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPendingRetry]);
 
   return (
     <div className={className}>

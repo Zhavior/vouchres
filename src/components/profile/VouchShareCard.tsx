@@ -3,6 +3,7 @@ import { Share, Twitter, Copy, Check, Calendar, ArrowUpRight, Zap, Target } from
 import { FeedPost, CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
+import '../../styles/profile-aurora-max.css';
 
 interface VouchShareCardProps {
   post: FeedPost;
@@ -49,12 +50,12 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
   };
 
   return (
-    <div className="bg-ve-graphite/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
+    <div className="aurora-max-panel profile-aurora-max max-w-lg w-full mx-auto space-y-6 p-6 text-[var(--aurora-max-paper)] relative overflow-hidden select-none animate-slide-up">
       {/* Dynamic colored ambient backdrop light */}
       <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 bg-emerald-600`} />
-      <div className={`absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-indigo-600`} />
+      <div className={`absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-[var(--aurora-max-obsidian)]`} />
 
-      <div className="flex justify-between items-center relative z-10 border-b border-slate-800 pb-4">
+      <div className="profile-aurora-rule flex justify-between items-center relative z-10 border-b pb-4">
         <div>
           <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-400 fill-amber-400/20" />
@@ -80,7 +81,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
         style={getThemeVars() as React.CSSProperties}
         id="vouch-slip-share-card-preview"
       >
-        <div className="rounded-[14px] p-6 bg-slate-950/92 border border-white/5 relative z-10 space-y-4">
+        <div className="profile-aurora-inset relative z-10 space-y-4 p-6">
           
           {/* Header row: creator details */}
           <div className="flex justify-between items-start">
@@ -114,7 +115,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold font-mono tracking-wider uppercase">
                   <span>PARLAY CONTEXT ({getLegCount()} LEGS)</span>
-                  <span className="text-indigo-400">{post.parlay.bookie}</span>
+                  <span className="text-[var(--aurora-max-emerald)]">{post.parlay.bookie}</span>
                 </div>
                 <div className="space-y-2">
                   {post.parlay.legs.map((leg, i) => (
@@ -196,7 +197,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
 
         <button
           onClick={handleCopyLink}
-          className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-xs font-bold uppercase tracking-wider shadow-md"
+          className="bg-[var(--aurora-max-emerald)] hover:brightness-110 text-[#02100d] rounded-xl py-3 px-4 flex items-center justify-center gap-2.5 transition-all text-xs font-bold uppercase tracking-wider shadow-md"
         >
           {copied ? (
             <>

@@ -17,6 +17,7 @@
  *   - Confirmed lineups → projectionType = 'Projected'
  */
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
+import { resolveMlbPersonId } from './mlbPersonId';
 import { logoByTeamName } from './teamLogos';
 import type { DailyMlbReport } from '../types/mlb';
 import type { HrBoardResponse, HrBoardRow } from '../types/hrBoard';
@@ -102,7 +103,9 @@ async function fetchPitcherStats(pitcherId: number): Promise<PitcherStats | null
   }
 }
 
-async function fetchHitterStats(playerId: number): Promise<HitterStats | null> {
+async function fetchHitterStats(rawId: unknown, headshot?: string | null): Promise<HitterStats | null> {
+  const playerId = resolveMlbPersonId(rawId, headshot);
+  if (playerId == null) return null;
   if (hitterCache2.has(playerId)) return hitterCache2.get(playerId)!;
   try {
     const res = await fetch(`${BASE}/v1/people/${playerId}/stats?stats=season&group=hitting&season=${SEASON}`);
@@ -199,11 +202,16 @@ async function getHittersByTeam(): Promise<Map<string, any[]>> {
 }
 
 /** Sort by real HR/PA, fall back to PA descending (more playing time = higher lineup). */
+function hitterStatsFromMap(hitter: { id?: unknown; headshot?: string | null }, statsMap: Map<number, HitterStats | null>): HitterStats | null {
+  const id = resolveMlbPersonId(hitter.id, hitter.headshot);
+  return id == null ? null : statsMap.get(id) ?? null;
+}
+
 function sortedLineup(hitters: any[], statsMap: Map<number, HitterStats | null>): any[] {
   return [...hitters]
     .sort((a, b) => {
-      const sa = statsMap.get(a.id)?.hrPerPA ?? 0;
-      const sb = statsMap.get(b.id)?.hrPerPA ?? 0;
+      const sa = hitterStatsFromMap(a, statsMap)?.hrPerPA ?? 0;
+      const sb = hitterStatsFromMap(b, statsMap)?.hrPerPA ?? 0;
       return sb - sa;
     })
     .slice(0, 9);
@@ -220,7 +228,7 @@ function buildRow(
   live: boolean,
   hStats: HitterStats | null,
   pStats: PitcherStats | null
-): HrBoardRow {
+): HrBoardRow | null {
   const { factor: parkFactor, sourced: parkSourced } = getParkFactor(venue);
   const vulnerability = pitcherVulnScore(pStats);
   const powerScore    = hitterPowerScore(hStats);
@@ -259,8 +267,11 @@ function buildRow(
     `${venue} park factor ${parkFactor} (${parkSourced ? 'sourced' : 'neutral — not in table'})`,
   ];
 
+  const playerId = resolveMlbPersonId(hitter.id, hitter.headshot);
+  if (playerId == null) return null;
+
   return {
-    playerId: hitter.id,
+    playerId,
     playerName: hitter.name,
     team: hitter.team,
     teamId: hitter.teamId ?? 0,
@@ -325,27 +336,30 @@ async function buildGameRows(games: RawGame[]) {
     const awayHitters = hbt.get(away.name) ?? [];
 
     // Pre-fetch hitter stats for players in this game
-    const gameHitterIds = [...homeHitters, ...awayHitters].map((h) => h.id);
-    await Promise.allSettled(gameHitterIds.map((id) => fetchHitterStats(id)));
+    const gameHitters = [...homeHitters, ...awayHitters];
+    await Promise.allSettled(gameHitters.map((h) => fetchHitterStats(h.id, h.headshot)));
 
-    // Build stats map for sorting
-    const statsMap = new Map<number, HitterStats | null>(
-      gameHitterIds.map((id) => [id, hitterCache2.get(id) ?? null])
-    );
+    const statsMap = new Map<number, HitterStats | null>();
+    for (const h of gameHitters) {
+      const id = resolveMlbPersonId(h.id, h.headshot);
+      if (id != null) statsMap.set(id, hitterCache2.get(id) ?? null);
+    }
 
     const rows: HrBoardRow[] = [];
     if (ap) {
       const pStats = pitcherCache.get(ap.id) ?? null;
       const lineup = sortedLineup(homeHitters, statsMap);
       lineup.forEach((h, i) => {
-        rows.push(buildRow(h, ap, away.name, i + 1, venue, live, hitterCache2.get(h.id) ?? null, pStats));
+        const row = buildRow(h, ap, away.name, i + 1, venue, live, hitterStatsFromMap(h, statsMap), pStats);
+        if (row) rows.push(row);
       });
     }
     if (hp) {
       const pStats = pitcherCache.get(hp.id) ?? null;
       const lineup = sortedLineup(awayHitters, statsMap);
       lineup.forEach((h, i) => {
-        rows.push(buildRow(h, hp, home.name, i + 1, venue, live, hitterCache2.get(h.id) ?? null, pStats));
+        const row = buildRow(h, hp, home.name, i + 1, venue, live, hitterStatsFromMap(h, statsMap), pStats);
+        if (row) rows.push(row);
       });
     }
     rows.sort((a, b) => b.hrEdge - a.hrEdge);

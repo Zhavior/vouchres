@@ -1,11 +1,11 @@
-import {
-  getExperimentVariant } from '../../lib/experiments';
-import React,
-  { Suspense,
-  memo } from 'react';
+import { getExperimentVariant } from '../../lib/experiments';
+import React, { Suspense, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
-import HrRouteSkeleton from '../boot/HrRouteSkeleton';
 import FadeInMount from '../system/FadeInMount';
+import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
+import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
+import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10';
+import HomeRunIntelligencePageLegacy from '../../features/hr/pages/HomeRunIntelligencePageLegacy';
 import {
   useAppShell,
   useAppPosts,
@@ -20,7 +20,6 @@ import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import { routeModules } from '../../lib/routeModules';
 
-import { useLiveGames } from '../../hooks/queries/useLiveGames';
 const ProAccessGate = lazyWithRetry(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
 );
@@ -44,7 +43,6 @@ const SmartAiEngine = lazyWithRetry(routeModules.smartAiEngine);
 const MlbIntelligenceHub = lazyWithRetry(routeModules.brainEdge);
 const Leaderboard = lazyWithRetry(routeModules.leaderboard);
 const SubscriberHub = lazyWithRetry(routeModules.subscriberHub);
-const HomeRunIntelligencePage = lazyWithRetry(routeModules.hrBoard);
 const BrainPicksPage = lazyWithRetry(routeModules.brainPicks);
 const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
 const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
@@ -225,9 +223,31 @@ function MainViewRouter({
     case 'daily_hr_watch_new':
     case 'hr_board':
       return (
-        <LazyRoute fallback={<HrRouteSkeleton />}>
-          <HomeRunIntelligencePage onSectionChange={navigateSection} />
-        </LazyRoute>
+        <FadeInMount>
+          <HomeRunIntelligencePageLegacy onSectionChange={navigateSection} />
+        </FadeInMount>
+      );
+    case 'hr_max':
+      return (
+        <FadeInMount>
+          <HrAuroraMaxPage onNavigate={navigateSection} />
+        </FadeInMount>
+      );
+    case 'hr_v10':
+      return (
+        <FadeInMount>
+          <HrIntelligencePageV10 onNavigate={navigateSection} />
+        </FadeInMount>
+      );
+    case 'aurora_hr_hq':
+    case 'aurora_daily_slate':
+      return (
+        <FadeInMount>
+          <AuroraHqPage
+            surface={activeSection === 'aurora_daily_slate' ? 'slate' : 'desk'}
+            onNavigate={navigateSection}
+          />
+        </FadeInMount>
       );
     case 'brain_picks':
       return (
@@ -324,6 +344,7 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'research':
+    case 'player_research':
       return (
         <LazyRoute>
           <ResearchShell activeLegs={activeLegs} />
@@ -428,9 +449,6 @@ function TodayDashboardShell({
   navigateSection: (section: string) => void;
   isLoggedIn: boolean;
 }) {
-  const liveGamesQuery = useLiveGames();
-  const liveGames = liveGamesQuery.data?.games ?? [];
-  const { accountId } = useAppShell();
   const profile = useAppProfile();
   const savedSlips = useAppSavedSlips();
   return (
@@ -439,8 +457,6 @@ function TodayDashboardShell({
       savedSlips={savedSlips}
       profile={profile}
       isLoggedIn={isLoggedIn}
-      accountId={accountId}
-      liveGames={liveGames}
     />
   );
 }

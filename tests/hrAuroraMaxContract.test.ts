@@ -1,29 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('Home Run Intelligence Aurora Max contract', () => {
-  it('keeps the core board immediate while deferring Pro-only modules safely', () => {
-    const page = readFileSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx', 'utf8');
-    const header = readFileSync('src/features/hr/components/Header/HrHeader.tsx', 'utf8');
-
-    expect(page).toContain('<HrHeader');
-    expect(page).toContain('hr-aurora-max');
-    expect(page).toContain('lazyWithRetry');
-    expect(page).toContain('<Suspense');
-    expect(page).toContain('const loadHrCommandCenter');
-    expect(page).toContain('const loadWorkspaceRenderer');
-    expect(page).toContain('const loadHrTopSignalPanel');
-    expect(page).toContain('const loadMostVouchedPanel');
-    expect(page).toContain('const loadHrSpreadsheet');
-    expect(page).toContain('const loadHrPlayerProfile');
-    expect(page).toContain('const loadHrSignalField');
-    expect(page).toContain("import { HrBoard } from '../components/Columns/HrBoard'");
-    expect(page).not.toContain("import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter'");
-    expect(page).not.toContain("import WorkspaceRenderer from '../components/workspace/WorkspaceRenderer'");
-    expect(page).not.toContain('auroraTokens');
-    expect(page).not.toContain('deck-reveal');
-    expect(header).toContain('Every bat that can leave the yard');
-    expect(header).not.toContain('auroraTokens');
+  it('retired Z8 page; remaining HR modules stay on Aurora Max workspaces', () => {
+    expect(existsSync('src/features/hr/pages/HomeRunIntelligencePageZ8.tsx')).toBe(false);
   });
 
   it('keeps bulk HR images low-priority and reserves eager loading for focused research', () => {

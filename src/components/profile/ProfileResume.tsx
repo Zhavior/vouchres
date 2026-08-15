@@ -2,7 +2,9 @@ import React from 'react';
 import { Trophy, ShieldCheck } from 'lucide-react';
 import type { Parlay } from '../../types';
 import { ScorePill, RiskBadge, StatusBadge } from '../ui/primitives';
-import { AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_TABULAR } from '../../theme/auroraTokens';
+import { AURORA_LABEL, AURORA_TABULAR } from '../../theme/auroraTokens';
+import { AuroraMaxPanel } from '../aurora-max/AuroraMaxPrimitives';
+import '../../styles/profile-aurora-max.css';
 
 /** Sports-betting "resume" strip from real saved parlays + profile win rate. */
 export default function ProfileResume({ savedParlays = [], winRate }: { savedParlays?: Parlay[]; winRate?: number }) {
@@ -22,7 +24,7 @@ export default function ProfileResume({ savedParlays = [], winRate }: { savedPar
   const riskStyle = savedParlays.length === 0 ? '—' : high > low ? 'Aggressive' : low > high ? 'Conservative' : 'Balanced';
 
   return (
-    <div className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5`}>
+    <AuroraMaxPanel className="profile-aurora-max p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className={`${AURORA_LABEL} text-vouch-cyan/70`}>Performance strip</p>
@@ -39,7 +41,7 @@ export default function ProfileResume({ savedParlays = [], winRate }: { savedPar
         <ScorePill label="ROI" value={roi != null ? `${roi > 0 ? '+' : ''}${roi}%` : '—'} color={roi && roi >= 0 ? '#34d399' : '#f87171'} />
         <ScorePill label="Pending" value={pending} color="#fbbf24" />
         <ScorePill label="Verified" value="0" color="#94a3b8" />
-        <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/50 border border-slate-800 px-2 py-1.5">
+        <div className="profile-aurora-inset flex flex-col items-center justify-center px-2 py-1.5">
           <p className="text-[8px] text-slate-500 font-mono uppercase tracking-wider mb-0.5">Style</p>
           <RiskBadge risk={riskStyle === 'Aggressive' ? 'Risky' : riskStyle === 'Conservative' ? 'Safe' : 'Balanced'} />
         </div>
@@ -47,6 +49,6 @@ export default function ProfileResume({ savedParlays = [], winRate }: { savedPar
       <p className={`${AURORA_TABULAR} text-[10px] text-white/35 mt-3 flex items-center gap-1`}>
         <ShieldCheck className="w-2.5 h-2.5 text-vouch-emerald/70" /> Built from your saved slips. Picks are <span className="text-white/55">Unverified</span> until graded after finals.
       </p>
-    </div>
+    </AuroraMaxPanel>
   );
 }

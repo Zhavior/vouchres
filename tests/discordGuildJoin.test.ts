@@ -8,6 +8,7 @@ vi.mock("../server/services/discord/discordApiClient", () => ({
 }));
 
 import { interpretGuildMemberResult } from "../server/services/discord/discordGuildService";
+import { isGuildJoinSuccess } from "../server/services/discord/discordTypes";
 import type { PutGuildMemberResult } from "../server/services/discord/discordApiClient";
 
 describe("interpretGuildMemberResult — Discord guild join status handling", () => {
@@ -34,13 +35,24 @@ describe("interpretGuildMemberResult — Discord guild join status handling", ()
     expect(putGuildMemberRoleMock).toHaveBeenCalledWith("discord-user-2");
   });
 
-  it("204 (already a member) + role assignment forbidden (bot permission/hierarchy issue)", async () => {
+  it("204 (already a member) + role assignment forbidden — still verified membership", async () => {
     putGuildMemberRoleMock.mockResolvedValue({ status: 403, errorBody: { code: 50013, message: "Missing Permissions" } });
     const result: PutGuildMemberResult = { status: 204, member: null, errorBody: null };
 
     const outcome = await interpretGuildMemberResult(result, "discord-user-3");
 
-    expect(outcome).toEqual({ kind: "forbidden", roleAssigned: false, reason: "role_assignment_forbidden" });
+    expect(outcome).toEqual({ kind: "already_member", roleAssigned: false });
+    expect(isGuildJoinSuccess(outcome)).toBe(true);
+  });
+
+  it("204 (already a member) + role 403 for the guild owner — still verified membership", async () => {
+    putGuildMemberRoleMock.mockResolvedValue({ status: 403, errorBody: { code: 50013, message: "Missing Permissions" } });
+    const result: PutGuildMemberResult = { status: 204, member: null, errorBody: null };
+
+    const outcome = await interpretGuildMemberResult(result, "discord-owner");
+
+    expect(outcome).toEqual({ kind: "already_member", roleAssigned: false });
+    expect(isGuildJoinSuccess(outcome)).toBe(true);
   });
 
   it("403 on the initial join call — forbidden, never marks access granted", async () => {
@@ -60,12 +72,13 @@ describe("interpretGuildMemberResult — Discord guild join status handling", ()
     expect(outcome).toEqual({ kind: "error", roleAssigned: false, reason: "guild_join_status_500" });
   });
 
-  it("unexpected status on the role-assignment follow-up call — error, never marks access granted", async () => {
+  it("unexpected status on the role-assignment follow-up call — membership still verified", async () => {
     putGuildMemberRoleMock.mockResolvedValue({ status: 500, errorBody: { message: "Internal Server Error" } });
     const result: PutGuildMemberResult = { status: 204, member: null, errorBody: null };
 
     const outcome = await interpretGuildMemberResult(result, "discord-user-6");
 
-    expect(outcome).toEqual({ kind: "error", roleAssigned: false, reason: "role_assignment_status_500" });
+    expect(outcome).toEqual({ kind: "already_member", roleAssigned: false });
+    expect(isGuildJoinSuccess(outcome)).toBe(true);
   });
 });

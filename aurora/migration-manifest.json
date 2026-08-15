@@ -16,13 +16,7 @@
       "decision": "What should I research today?",
       "primaryAction": "Open the relevant research surface"
     },
-    {
-      "flow": "HR Board",
-      "path": "src/features/hr/pages/HomeRunIntelligencePageZ8.tsx",
-      "status": "migrating",
-      "decision": "Which current HR candidate deserves deeper research?",
-      "primaryAction": "Open player evidence"
-    },
+
     {
       "flow": "HR player research",
       "path": "src/pages/pro/PlayerEdgeLabPageZ8.tsx",

@@ -6,6 +6,8 @@ dist
 .env.local.*
 .DS_Store
 .vite
+.vite-temp
+.vitest-cache
 .vercel
 
 # Local patch backups - keep outside Vite source tree

@@ -1,5 +1,6 @@
+// @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resolveDevSectionFromLocation } from "../src/app/sectionNavigation";
+import { PUBLIC_SECTIONS, resolveDevSectionFromLocation } from "../src/app/sectionNavigation";
 
 const storage = new Map<string, string>();
 
@@ -28,8 +29,25 @@ describe("section navigation", () => {
     ["/brain_picks", "brain_picks"],
     ["/brain-performance", "brain_performance"],
     ["/brain_performance", "brain_performance"],
+    ["/hr-max", "hr_max"],
+    ["/hr-command-desk", "hr_max"],
+    ["/hr-board", "hr_board"],
+    ["/daily-hr-watch-new", "hr_board"],
+    ["/daily-hr-board", "hr_board"],
+    ["/player_research", "research"],
+    ["/player-research", "research"],
+    ["/aurora-hr-hq", "aurora_hr_hq"],
+    ["/aurora_hr_hq", "aurora_hr_hq"],
+    ["/aurora-daily-slate", "aurora_daily_slate"],
+    ["/aurora_daily_slate", "aurora_daily_slate"],
+    ["/daily-slate", "aurora_daily_slate"],
   ])("restores %s directly", (path, expected) => {
     window.location.pathname = path;
     expect(resolveDevSectionFromLocation()).toBe(expected);
+  });
+
+  it("keeps /player_research reachable while logged out", () => {
+    window.location.pathname = "/player_research";
+    expect(PUBLIC_SECTIONS.has(resolveDevSectionFromLocation()!)).toBe(true);
   });
 });

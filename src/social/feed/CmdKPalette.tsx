@@ -17,18 +17,22 @@ import {
   User, X,
 } from 'lucide-react';
 import { AURORA_ACTIVE, AURORA_IDLE, AURORA_LABEL, AURORA_PANEL } from '../../theme/auroraTokens';
-import { preloadSection } from '../../lib/routePreload';
+import { isEagerHrSection, preloadSection } from '../../lib/routePreload';
 import {
   FOCUSED_BETA_SHELL_ENABLED,
   isFocusedBetaCommandSection,
 } from '../../app/betaNavigation';
 
-/** Likely next destinations — warmed when the palette opens. */
+/** Likely next lazy destinations — warmed when the palette opens. */
 const CMDK_PREFETCH_SECTIONS = [
   'today',
-  'hr_board',
   'results',
 ] as const;
+
+function prefetchLazySection(section: string): void {
+  if (isEagerHrSection(section)) return;
+  preloadSection(section);
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -44,7 +48,10 @@ const ALL_ITEMS: PaletteItem[] = [
   // Ungrouped
   { id: 'today',           label: 'Today',                 group: 'Daily',         icon: LayoutDashboard, keywords: ['today', 'slate', 'dashboard', 'daily'] },
   // Daily
-  { id: 'hr_board',        label: 'Home Run Intelligence', group: 'Daily',         icon: Flame,           keywords: ['hr', 'home run', 'hitter', 'mlb', 'intel'] },
+  { id: 'hr_board',        label: 'Home Run Intelligence', group: 'Daily',         icon: Flame,           keywords: ['hr', 'home run', 'hitter', 'mlb', 'intel', 'board'] },
+  { id: 'hr_max',          label: 'HR Command Desk',       group: 'Daily',         icon: Radio,           keywords: ['hr', 'aurora', 'max', 'command', 'desk', 'research', 'intelligence', 'board'] },
+  { id: 'aurora_hr_hq',    label: 'Aurora HQ',              group: 'Daily',         icon: Sparkles,        keywords: ['aurora', 'hq', 'desk', 'intelligence'] },
+  { id: 'aurora_daily_slate', label: 'Daily Slate',         group: 'Daily',         icon: ClipboardCheck,  keywords: ['daily', 'slate', 'aurora', 'ranked', 'matchups', 'queue'] },
   { id: 'mlb_stats',       label: 'MLB Stat Hub',          group: 'Daily',         icon: Flame,           keywords: ['mlb', 'stat', 'rbi', 'runs', 'sb', 'stolen bases', 'hits', 'strikeouts', 'k', 'hub'] },
   { id: 'daily_players',   label: 'Daily Players',         group: 'Daily',         icon: Users,           keywords: ['players', 'slate', 'daily', 'lineup'] },
   { id: 'live_games',      label: 'Live Games',          group: 'Daily',         icon: Tv,              keywords: ['live', 'games', 'in-play', 'projections'] },
@@ -59,7 +66,7 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'ai_engine',       label: 'V.A.I Research Center', group: 'AI',            icon: Cpu,             keywords: ['ai', 'research', 'vai', 'rooms', 'smart'] },
   // Build & Track
   { id: 'live_parlays',    label: 'ParlayOS',               group: 'Build & Track', icon: Radio,           keywords: ['parlay', 'os', 'live', 'slips'] },
-  { id: 'research',        label: 'Player Research',        group: 'Build & Track', icon: Search,          keywords: ['research', 'player', 'stats', 'search'] },
+  { id: 'research',        label: 'Aurora Max',             group: 'Build & Track', icon: Search,          keywords: ['research', 'player', 'stats', 'search', 'aurora'] },
   { id: 'board',           label: 'Vouch Board',            group: 'Build & Track', icon: ClipboardCheck,  keywords: ['vouch', 'board', 'picks', 'ledger'] },
   { id: 'results',         label: 'Results',                group: 'Build & Track', icon: BarChart3,       keywords: ['results', 'record', 'history', 'wins', 'losses'] },
   // Social
@@ -118,7 +125,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
       setQuery('');
       setCursor(0);
       for (const section of CMDK_PREFETCH_SECTIONS) {
-        preloadSection(section);
+        prefetchLazySection(section);
       }
       requestAnimationFrame(() => inputRef.current?.focus());
       const t1 = setTimeout(() => inputRef.current?.focus(), 50);
@@ -132,7 +139,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
 
   const handleInputFocus = useCallback(() => {
     for (const section of CMDK_PREFETCH_SECTIONS) {
-      preloadSection(section);
+      prefetchLazySection(section);
     }
   }, []);
 
@@ -190,7 +197,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
   useEffect(() => {
     if (!open) return;
     const item = filtered()[cursor];
-    if (item) preloadSection(item.id);
+    if (item) prefetchLazySection(item.id);
   }, [open, cursor, filtered]);
 
   if (!open) return null;
@@ -286,7 +293,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
                         onClick={() => navigate(item.id)}
                         onMouseEnter={() => {
                           setCursor(idx);
-                          preloadSection(item.id);
+                          prefetchLazySection(item.id);
                         }}
                         className={[
                           'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all border border-transparent font-mono',
