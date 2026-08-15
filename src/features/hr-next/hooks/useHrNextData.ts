@@ -10,14 +10,38 @@ const TIER_ORDER = ['Elite', 'Strong', 'Watch', 'Sleepers'] as const;
 
 export type DeskSortKey = 'hrpi' | 'ev' | 'odds' | 'time' | 'volume';
 export type GroupByMode = 'tier' | 'matchup' | 'none';
+export type TacticalFilterTag = 'all' | 'hot' | 'high_ev' | 'wind_out' | 'vulnerable_sp' | 'platoon';
+
+export function matchesTacticalFilter(row: HrWatchRow, tag: TacticalFilterTag): boolean {
+  if (tag === 'all') return true;
+  if (tag === 'hot') {
+    return (row.recentHomeRuns != null && row.recentHomeRuns > 0) || (row.recentForm != null && row.recentForm >= 80);
+  }
+  if (tag === 'high_ev') {
+    const hasEv = row.hrProbability != null && row.impliedProbability != null && row.impliedProbability > 0 &&
+      ((row.hrProbability - row.impliedProbability) / row.impliedProbability) >= 0.05;
+    return hasEv || row.reasons.some(r => r.toLowerCase().includes('ev') || r.toLowerCase().includes('value') || r.toLowerCase().includes('edge'));
+  }
+  if (tag === 'wind_out') {
+    return (row.parkFactor != null && row.parkFactor >= 104) || row.reasons.some(r => r.toLowerCase().includes('wind') || r.toLowerCase().includes('park'));
+  }
+  if (tag === 'vulnerable_sp') {
+    return (row.pitcherVulnerability != null && row.pitcherVulnerability >= 68) || row.reasons.some(r => r.toLowerCase().includes('pitcher') || r.toLowerCase().includes('vulnerable'));
+  }
+  if (tag === 'platoon') {
+    return (row.hitterPower != null && row.hitterPower >= 82) || row.reasons.some(r => r.toLowerCase().includes('power') || r.toLowerCase().includes('platoon') || r.toLowerCase().includes('iso'));
+  }
+  return true;
+}
 
 export function useHrNextData() {
   const vm = useHrBoardViewModel();
   const [sortKey, setSortKey] = useState<DeskSortKey>('hrpi');
   const [groupBy, setGroupBy] = useState<GroupByMode>('tier');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterTag, setFilterTag] = useState<TacticalFilterTag>('all');
 
-  const flatItems = useMemo(() => {
+  const { flatItems, filterCounts, allRawRows } = useMemo(() => {
     // 1. Gather all available rows into a single pool
     let allRows: HrWatchRow[] = [];
     for (const tier of TIER_ORDER) {
@@ -36,7 +60,22 @@ export function useHrNextData() {
       );
     }
 
-    // 3. Sort all rows globally
+    // Compute tactical filter counts across all search-filtered rows
+    const counts: Record<TacticalFilterTag, number> = {
+      all: allRows.length,
+      hot: allRows.filter(r => matchesTacticalFilter(r, 'hot')).length,
+      high_ev: allRows.filter(r => matchesTacticalFilter(r, 'high_ev')).length,
+      wind_out: allRows.filter(r => matchesTacticalFilter(r, 'wind_out')).length,
+      vulnerable_sp: allRows.filter(r => matchesTacticalFilter(r, 'vulnerable_sp')).length,
+      platoon: allRows.filter(r => matchesTacticalFilter(r, 'platoon')).length,
+    };
+
+    // 3. Apply active tactical filter tag
+    if (filterTag !== 'all') {
+      allRows = allRows.filter(r => matchesTacticalFilter(r, filterTag));
+    }
+
+    // 4. Sort all rows globally
     allRows.sort((left, right) => {
       if (sortKey === 'hrpi') return right.hrScore - left.hrScore;
       if (sortKey === 'ev') {
@@ -68,7 +107,7 @@ export function useHrNextData() {
       return getTime(left.gameTime) - getTime(right.gameTime);
     });
 
-    // 4. Grouping
+    // 5. Grouping
     const items: HrNextItem[] = [];
 
     if (groupBy === 'none') {
@@ -90,7 +129,6 @@ export function useHrNextData() {
       // Group by Matchup string (e.g. "NYY @ BOS")
       const matchupMap = new Map<string, HrWatchRow[]>();
       for (const row of allRows) {
-        // Build a consistent matchup string
         const team1 = [row.team, row.opponent].sort()[0];
         const team2 = [row.team, row.opponent].sort()[1];
         const matchStr = `${team1} vs ${team2}`;
@@ -105,11 +143,15 @@ export function useHrNextData() {
       }
     }
 
-    return items;
-  }, [vm.buckets, sortKey, groupBy, searchQuery]);
+    return { flatItems: items, filterCounts: counts, allRawRows: allRows };
+  }, [vm.buckets, sortKey, groupBy, searchQuery, filterTag]);
 
   return {
     items: flatItems,
+    filterCounts,
+    rawRows: allRawRows,
+    filterTag,
+    setFilterTag,
     isLoading: vm.loading,
     error: vm.error,
     refetch: vm.refresh,

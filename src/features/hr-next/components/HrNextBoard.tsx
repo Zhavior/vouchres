@@ -12,6 +12,8 @@ interface HrNextBoardProps {
   onAddToSlip: (row: any) => void;
   is3DLayerEnabled: boolean;
   groupBy?: GroupByMode;
+  activeId?: string | null;
+  onSelectActiveId?: (id: string) => void;
 }
 
 interface MatchupGroup {
@@ -22,9 +24,21 @@ interface MatchupGroup {
   home: Extract<HrNextItem, { type: 'row' }>[];
 }
 
-export function HrNextBoard({ items, savedMap, onToggleSaved, onAddToSlip, is3DLayerEnabled, groupBy }: HrNextBoardProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+export function HrNextBoard({ 
+  items, 
+  savedMap, 
+  onToggleSaved, 
+  onAddToSlip, 
+  is3DLayerEnabled, 
+  groupBy,
+  activeId: controlledActiveId,
+  onSelectActiveId,
+}: HrNextBoardProps) {
+  const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const [openReceiptId, setOpenReceiptId] = useState<string | null>(null);
+
+  const activeId = controlledActiveId !== undefined ? controlledActiveId : internalActiveId;
+  const setActiveId = onSelectActiveId || setInternalActiveId;
 
   const isMatchupMode = groupBy === 'matchup';
 

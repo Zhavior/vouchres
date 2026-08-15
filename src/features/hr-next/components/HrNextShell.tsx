@@ -1,5 +1,5 @@
-import { Search, Sparkles } from 'lucide-react';
-import { useReducer, useCallback, useState } from 'react';
+import { Search, Sparkles, Command, Keyboard } from 'lucide-react';
+import { useReducer, useCallback, useState, useRef } from 'react';
 import { useHrNextData } from '../hooks/useHrNextData';
 import { HrNextBoard } from './HrNextBoard';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -7,6 +7,9 @@ import { toHrParlayPickerPlayer } from '../../hr/utils/hrDecisionBrief';
 import { extractCardData } from '../utils/cardUtils';
 import { HrNextSortMenu } from './HrNextSortMenu';
 import { HrNextResearchView } from './HrNextResearchView';
+import { HrNextTacticalFilters } from './HrNextTacticalFilters';
+import { HrNextKeyboardCheatsheet } from './HrNextKeyboardCheatsheet';
+import { useHrNextKeybindings } from '../hooks/useHrNextKeybindings';
 import { useResearchStore } from '../../../stores/useResearchStore';
 
 type SavedAction = { type: 'toggle'; id: string };
@@ -24,14 +27,19 @@ export function HrNextShell() {
     sortKey, setSortKey,
     groupBy, setGroupBy,
     searchQuery, setSearchQuery,
+    filterTag, setFilterTag, filterCounts,
     mode, setMode
   } = useHrNextData();
   const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
   const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
+  const openDrawer = useResearchStore((s) => s.openDrawer);
   const closeDrawer = useResearchStore((s) => s.closeDrawer);
 
   const toggleSaved = useCallback((id: string) => {
@@ -47,6 +55,28 @@ export function HrNextShell() {
       riskSnapshot: row.warnings[0]?.trim() || 'No specific risk note was supplied. Verify the lineup and market before adding.',
     });
   }, []);
+
+  const handleToggleResearch = useCallback((player: { id: string | number; name: string }) => {
+    if (isDrawerOpen && String(selectedPlayer?.id) === String(player.id)) {
+      closeDrawer();
+    } else {
+      openDrawer(player);
+    }
+  }, [isDrawerOpen, selectedPlayer?.id, closeDrawer, openDrawer]);
+
+  // Wire up Bloomberg / Vim-style keyboard shortcuts
+  useHrNextKeybindings({
+    items,
+    focusedId,
+    setFocusedId,
+    onToggleResearch: handleToggleResearch,
+    onAddToSlip: handleAddToSlip,
+    onToggleSaved: toggleSaved,
+    isDrawerOpen,
+    onCloseDrawer: closeDrawer,
+    searchInputRef,
+    onToggleCheatsheet: () => setCheatsheetOpen(prev => !prev),
+  });
 
   const handleExport = useCallback(() => {
     const savedKeys = Object.keys(savedMap);
@@ -105,23 +135,56 @@ export function HrNextShell() {
 
   return (
     <main className="flex-1 min-w-0 min-h-screen relative z-10 overscroll-none">
-      <header className="sticky top-0 z-30 px-8 py-4 bg-[#080d0d]/95 backdrop-blur-sm border-b border-white/5">
-        <h1 className="text-xl font-bold text-white mb-2">HRNext — Admin Preview</h1>
+      <header className="sticky top-0 z-30 px-8 py-4 bg-[#080d0d]/95 backdrop-blur-md border-b border-white/5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <span>HRNext Terminal</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)] border border-[var(--aurora-max-emerald)]/30">
+              v2.4 TELEMETRY
+            </span>
+          </h1>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCheatsheetOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 text-xs font-mono transition-colors"
+              title="Keyboard Shortcuts (?)"
+            >
+              <Keyboard className="w-3.5 h-3.5 text-[var(--aurora-max-emerald)]" />
+              <span className="hidden sm:inline">Shortcuts</span>
+              <kbd className="text-[9px] bg-black/40 px-1 py-0.2 rounded border border-white/10">?</kbd>
+            </button>
+          </div>
+        </div>
         
         {/* Search Bar */}
-        <div className="relative mb-4 max-w-2xl">
+        <div className="relative max-w-2xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
           <input 
+            ref={searchInputRef}
             type="text" 
-            placeholder="Search player, team, or matchup..."
+            placeholder="Search player, team, or matchup... (Press / to focus)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan transition-all"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan transition-all font-mono"
+          />
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-white/30 bg-black/40 px-1.5 py-0.5 rounded border border-white/5">
+            /
+          </kbd>
+        </div>
+
+        {/* Feature 1: Tactical Filter Chips */}
+        <div className="pt-1">
+          <HrNextTacticalFilters 
+            activeTag={filterTag}
+            onTagChange={setFilterTag}
+            counts={filterCounts}
           />
         </div>
 
         {/* Global Controls */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-white/5">
           <HrNextSortMenu sortKey={sortKey} onSortChange={setSortKey} />
           
           <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
@@ -212,6 +275,8 @@ export function HrNextShell() {
             onAddToSlip={handleAddToSlip} 
             is3DLayerEnabled={is3DLayerEnabled} 
             groupBy={groupBy}
+            activeId={focusedId}
+            onSelectActiveId={setFocusedId}
           />
         </div>
 
@@ -230,13 +295,26 @@ export function HrNextShell() {
             <div className="rounded-2xl border border-white/5 bg-[#060a0a]/50 p-6 text-center font-mono text-xs text-white/40 flex flex-col items-center justify-center min-h-[300px] border-dashed">
               <Sparkles className="w-6 h-6 text-white/20 mb-2" />
               <p className="font-bold text-white/60 mb-1">Deep Research Telemetry</p>
-              <p className="text-[11px] max-w-[240px]">
-                Click the search icon on any player card to inspect live pitch arsenals, park factors, and odds matrix.
+              <p className="text-[11px] max-w-[240px] mb-3">
+                Click the search icon on any player card or press <kbd className="text-white bg-white/10 px-1 py-0.5 rounded">Space</kbd> while browsing.
               </p>
+              <button
+                type="button"
+                onClick={() => setCheatsheetOpen(true)}
+                className="text-[10px] text-vouch-cyan hover:underline"
+              >
+                View Keyboard Shortcuts (?)
+              </button>
             </div>
           )}
         </aside>
       </div>
+
+      {/* Feature 4: Keyboard Shortcuts Cheatsheet Modal */}
+      <HrNextKeyboardCheatsheet
+        isOpen={cheatsheetOpen}
+        onClose={() => setCheatsheetOpen(false)}
+      />
     </main>
   );
 }
