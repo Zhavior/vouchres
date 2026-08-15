@@ -1,5 +1,6 @@
 import { MLBPlayer } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
+import { resolveMlbPersonId } from '../lib/mlbPersonId';
 
 // Cache in-memory for active players roster to avoid duplicate fetches.
 // `rosterPromise` holds the single in-flight fetch so concurrent callers share it
@@ -261,13 +262,8 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
  * Fetches the real-time season hitting stats for a given player and enriches they fields
  */
 export async function enrichPlayerStats(player: MLBPlayer): Promise<MLBPlayer> {
-  // Resolve a numeric MLB person id from registry ids, mlbapi_ stubs, curated keys, or headshot URL.
-  const isApiPlayer = player.id.startsWith('mlbapi_');
-  const rawId = isApiPlayer ? player.id.replace('mlbapi_', '') : null;
-  const numericId = /^\d+$/.test(player.id) ? player.id : null;
-  const headshotId = player.headshot?.match(/\/people\/(\d+)\//)?.[1] ?? null;
-
-  let mlbIdStr = rawId || numericId || headshotId;
+  const resolved = resolveMlbPersonId(player.id, player.headshot);
+  let mlbIdStr = resolved != null ? String(resolved) : null;
   if (!mlbIdStr) {
     const matchMap: Record<string, string> = {
       mlb_ohtani: '660271',

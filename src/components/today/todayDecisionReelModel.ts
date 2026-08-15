@@ -113,7 +113,7 @@ export function buildTodayReelSlides({ decision, report, topPlayer, preferredTea
         ? 'A strong signal is still not a guaranteed outcome.'
         : 'Lineup status is projected and must be confirmed before action.'),
       ctaLabel: 'Research player',
-      ctaSection: 'hr_max',
+      ctaSection: 'hr_board',
       visual: {
         type: 'portrait',
         name: topPlayer.playerName,

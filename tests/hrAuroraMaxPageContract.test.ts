@@ -47,6 +47,8 @@ describe('HR Command Desk Aurora Max contract', () => {
     expect(appNav).not.toContain("preloadSection('hr_max')");
     expect(cmdk).not.toMatch(/CMDK_PREFETCH_SECTIONS = \[[^\]]*hr_max/);
     expect(shell).toContain('allowParlayOsLayer');
-    expect(shell).toContain("activeSection === 'hr_max'");
+    expect(shell).toContain('isEagerHrSection');
+    expect(shell).not.toMatch(/lazyWithRetry\(\(\)\s*=>\s*import\([^)]*MainViewRouter/);
+    expect(shell).toContain("import MainViewRouter from '../components/routing/MainViewRouter'");
   });
 });

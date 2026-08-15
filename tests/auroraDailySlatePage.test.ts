@@ -11,8 +11,8 @@ describe('Aurora Daily Slate page', () => {
     expect(isBetaDestinationActive('aurora_daily_slate', 'research')).toBe(true);
     expect(isFocusedBetaCommandSection('aurora_daily_slate')).toBe(true);
     expect(isFocusedBetaSidebarFeature('aurora_daily_slate')).toBe(false);
-    expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toContain('aurora_hr_hq');
-    expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).not.toContain('aurora_daily_slate');
+    expect(getDefaultLayout().features.map((feature) => feature.id)).toContain('aurora_hr_hq');
+    expect(getDefaultLayout().features.map((feature) => feature.id)).not.toContain('aurora_daily_slate');
   });
 
   it('keeps Daily Slate off the Aurora HQ desk and on its own route', () => {

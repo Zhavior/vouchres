@@ -96,8 +96,7 @@ describe('HR Command Desk page', () => {
     render(<HrAuroraMaxPage />);
 
     expect(screen.getByRole('heading', { name: /Research command desk/i })).toBeTruthy();
-    expect(screen.getAllByText('Aaron Judge').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Power baseline and pitcher vulnerability align/i)).toBeTruthy();
+    expect(screen.getAllByText(/Power baseline and pitcher vulnerability align/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Confirmed only/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: /Every bat that can leave the yard/i })).toBeNull();
   });

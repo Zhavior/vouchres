@@ -8,7 +8,7 @@ Enterprise intelligence desk for Aurora HQ calibrated MLB home run predictions, 
 
 - **Entry Point**: `HrIntelligencePageV10.tsx` (wrapped in `HrErrorBoundary`).
 - **Data Layer**: `useHrSlateFeed.ts` polls every 45s with automatic 2-tier retry telemetry (`isRetrying`, `failureCount`, `isFailed`).
-- **Code-Split Views**: `ChunkABoard` (Card / Table modes) and `KanbanView` are loaded on demand via `lazyWithRetry` and wrapped in `<Suspense fallback={<BoardSkeleton />}>`.
+- **Views**: `ChunkABoard` (Card / Table) and `KanbanView` are static imports on the page — no inner `lazyWithRetry` / `React.lazy` competing with first paint.
 - **Pure Helpers**: `calculateEV`, `filterSlateItem`, `sortSlateItems`, and `safeNumber` (`src/utils/safeNumber.ts`) provide defensive, deterministic data shaping.
 - **Render Performance**: Board containers use `content-visibility: auto` with a dynamic `containIntrinsicSize` estimate so 200–400+ DOM nodes don't cause paint jank on initial load or scroll.
 
@@ -113,7 +113,7 @@ Users can toggle to **Full Roster** via the pill toggle above the board. The cou
 1. Add union member to `ViewMode` in `HrIntelligencePageV10.tsx`.
 2. Add metadata to `STRINGS_EN.views` in `stringsEn.ts` and `VIEW_OPTIONS` array.
 3. Add validation branch in `validateViewMode(val)`.
-4. Add lazy view branch under `<Suspense fallback={<BoardSkeleton />}>`.
+4. Render the view statically in the page (no inner `lazyWithRetry` / `Suspense` split).
 
 ### (c) Adding a Persisted Filter Control
 1. Declare `usePersistedState('ve_hr_v10_<name>', defaultVal, validate<Name>)` in `HrIntelligencePageV10.tsx`.

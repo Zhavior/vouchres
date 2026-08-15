@@ -75,6 +75,7 @@ function isSidebarItemActive(activeSection: string, featureId: string): boolean 
   if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
   if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
   if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
+  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
   if (featureId === 'hr_max') return activeSection === 'hr_max';
   if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
   return activeSection === featureId;

@@ -1,26 +1,26 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
+import { OptionalChromeBoundary } from '../components/system/OptionalChromeBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
-import HrMaxRouteSkeleton from '../features/hr-max/HrMaxRouteSkeleton';
 import { TerminalBackground } from '../components/layout/TerminalBackground';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
 import { AppNav } from './AppNav';
 import HomeFeedLayout from '../social/feed/HomeFeedLayout';
-import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
+import { isEagerHrSection, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 import { lazyWithRetry } from '../lib/lazyWithRetry';
+import MainViewRouter from '../components/routing/MainViewRouter';
 
 import type { Leg } from '../types';
 const DeployUpdateBanner = lazyWithRetry(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
-const MainViewRouter = lazyWithRetry(() => import('../components/routing/MainViewRouter'));
 const ParlayOsLayer = lazyWithRetry(() => import('../components/parlay/os/ParlayOsLayer'));
 
 export type AppShellProps = {
@@ -68,12 +68,10 @@ export function AppShell({
 }: AppShellProps) {
   useEffect(() => {
     if (isPublicFrontPage) return;
-    preloadMainRouter();
     warmLikelyRoutes(activeSection);
   }, [isPublicFrontPage, activeSection]);
 
-  const isHrMaxRoute = activeSection === 'hr_max';
-  const isHrRoute = isHrMaxRoute;
+  const isHrRoute = isEagerHrSection(activeSection);
   const [allowParlayOsLayer, setAllowParlayOsLayer] = useState(() => !isHrRoute);
 
   useEffect(() => {
@@ -104,18 +102,23 @@ export function AppShell({
     };
   }, [isHrRoute]);
 
-  const routeContent = (
-    <Suspense fallback={isHrMaxRoute ? <HrMaxRouteSkeleton /> : <RouteShellSkeleton />}>
-      <MainViewRouter
-        activeSection={activeSection}
-        navigateSection={navigateSection}
-        isLoggedIn={isLoggedIn}
-        profileViewUserId={profileViewUserId}
-        canSeeThemeStore={canSeeThemeStore}
-        activeLegs={activeLegs}
-      />
-    </Suspense>
+  const router = (
+    <MainViewRouter
+      activeSection={activeSection}
+      navigateSection={navigateSection}
+      isLoggedIn={isLoggedIn}
+      profileViewUserId={profileViewUserId}
+      canSeeThemeStore={canSeeThemeStore}
+      activeLegs={activeLegs}
+    />
   );
+  const routeContent = isHrRoute
+    ? router
+    : (
+      <Suspense fallback={<RouteShellSkeleton />}>
+        {router}
+      </Suspense>
+    );
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
@@ -149,9 +152,13 @@ export function AppShell({
 
                   {showGlobalAppChrome && (
                     <>
-                      <Suspense fallback={null}>
-                        <DeployUpdateBanner />
-                      </Suspense>
+                      {allowParlayOsLayer && (
+                        <OptionalChromeBoundary>
+                          <Suspense fallback={null}>
+                            <DeployUpdateBanner />
+                          </Suspense>
+                        </OptionalChromeBoundary>
+                      )}
                       <AppNav
                         activeSection={activeSection}
                         onNavigate={navigateSection}
@@ -160,17 +167,19 @@ export function AppShell({
                   )}
 
                   {showGlobalAppChrome && isLoggedIn && !isPublicFrontPage && allowParlayOsLayer && (
-                    <Suspense fallback={null}>
-                      <ParlayOsLayer
-                        onConfirmTier={onConfirmParlayTier}
-                        onSaveParlay={() => {
-                          onSaveParlaySlip();
-                          navigateSection('build');
-                        }}
-                        navigateSection={navigateSection}
-                        suppressFloatingDock={activeSection === 'build' || activeSection === 'live_parlays'}
-                      />
-                    </Suspense>
+                    <OptionalChromeBoundary>
+                      <Suspense fallback={null}>
+                        <ParlayOsLayer
+                          onConfirmTier={onConfirmParlayTier}
+                          onSaveParlay={() => {
+                            onSaveParlaySlip();
+                            navigateSection('build');
+                          }}
+                          navigateSection={navigateSection}
+                          suppressFloatingDock={activeSection === 'build' || activeSection === 'live_parlays'}
+                        />
+                      </Suspense>
+                    </OptionalChromeBoundary>
                   )}
 
                 </NotificationProvider>

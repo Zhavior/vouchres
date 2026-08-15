@@ -209,3 +209,48 @@ root_cause: DeferredAnalytics/SpeedInsights sat inside the root error boundary, 
 rule: Optional telemetry must render inside a swallow-null boundary. A vendor chunk failure must not unmount the product desk.
 applies_when: VouchEdge main.tsx; @vercel/analytics; SpeedInsights; AppErrorBoundary; Stability Shield; Aurora HQ
 status: active
+---
+
+id: L024
+date: 2026-08-14
+symptom: HR Command Desk and Aurora HQ still waited on a MainViewRouter chunk; hr_v10 kept inner lazyWithRetry for ChunkABoard/KanbanView; AppShell only treated hr_max as an HR route
+root_cause: Eager HR was implemented per-route instead of for the whole HR family, and V10 copied the Z8 inner-split pattern
+rule: Every live HR section (hr_max, aurora_hr_hq, aurora_daily_slate, hr_v10) must be a static import in MainViewRouter, MainViewRouter must be static in AppShell, the id must be in EAGER_HR_SECTIONS, and the feature folder must contain no inner lazyWithRetry/React.lazy. Idle-defer ParlayOs, WorldChat, and DeployUpdateBanner on those routes behind a swallow-null boundary.
+applies_when: Wiring VouchEdge HR routes, AppShell, MainViewRouter, routePreload, or hr-v2 board views
+status: active
+---
+
+id: L025
+date: 2026-08-14
+symptom: Discord Open Beta wall said the guild owner was not a member, and local coding sessions hit the same wall whenever discord_guild_member was stale or false
+root_cause: PUT guild member 204 (already in server) plus role-assign 403 was recorded as not-a-member; Discord never lets a bot assign roles to the guild owner. The UI gate also required both Discord flags and did not skip staff or Vite DEV, unlike requireAuth staff exemption.
+rule: Treat Discord 204 + guild owner_id match as verified membership even when role assignment 403s. Frontend Discord wall must skip guests, staff/admin, and Vite DEV unless VITE_FORCE_DISCORD_BETA_GATE=true. Backend requireAuth must skip NODE_ENV=development unless DISCORD_FORCE_BETA_GATE=true. Never Boolean() Discord flags without preserving current when /api/auth/me omits them.
+applies_when: VouchEdge Discord Open Beta; discord_guild_member; discord_beta_access; AuthenticatedApp Discord verification; requireAuth; guild owner; interpretGuildMemberResult
+status: superseded
+---
+
+id: L026
+date: 2026-08-14
+symptom: Discord Open Beta still said the guild owner was not a member after the owner_id patch
+root_cause: PUT Add Guild Member 204 already means the user is in the server; treating a follow-up role 403 as not-a-member (or requiring GET guild owner_id) fail-closes when owner lookup is null. Settings also kept stale discord_guild_member=false until a manual retry, and the founder email was not exempt on requireAuth.
+rule: Treat Discord 204 (already a member) as verified membership even when role assignment 403s or 500s. Persist both flags, bumpAuthUserEpoch, and auto-retry join on bootstrap. Skip the wall for founder email on UI and requireAuth. Never gate membership on GET /guilds owner_id.
+applies_when: VouchEdge Discord Open Beta; interpretGuildMemberResult; already_member; discord_guild_member; requireAuth; founder email; retry-join
+status: active
+---
+
+id: L027
+date: 2026-08-14
+symptom: HR board fallback fired dozens of statsapi.mlb.com /people/mlbapi_NNNNN/stats 400s
+root_cause: toMLBPlayerStub ids are mlbapi_${numericId}; mlbDirect fetchHitterStats interpolated that stub into the Stats API path, which only accepts numeric person ids
+rule: Resolve mlbapi_ / headshot / numeric ids with resolveMlbPersonId before any Stats API /people/{id} call. Skip the fetch when resolve returns null. Never interpolate roster stub ids into MLB URLs.
+applies_when: mlbDirect; fetchHitterStats; mlbapi_; statsapi.mlb.com; HR board fallback
+status: active
+---
+
+id: L028
+date: 2026-08-14
+symptom: HR board showed no API data after Stats API 400s were fixed; /api/mlb/hr-board/today 503d and fallback rows vanished
+root_cause: Fallback rows used mlbapi_ stub ids; parseHrBoardApiResponse hasPlayerIdentity did Number(playerId) which is NaN so every fallback row was dropped. Backend MLB fetches also 500/503 in milliseconds when Node cannot reach statsapi (sandboxed server / open circuit).
+rule: HR board wire playerId must be a numeric MLB person id (resolveMlbPersonId). Never drop mlbapi_ stubs in hasPlayerIdentity. If /api/mlb/* 500s in a few ms, check outbound Stats API from the Node process and the MLB circuit breaker, not the React page.
+applies_when: HR board empty; hrBoardApiContract; mlbapi_; /api/mlb/hr-board/today 503; sportsFetchJson; circuitBreaker
+status: active

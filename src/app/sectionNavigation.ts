@@ -12,6 +12,8 @@ export const PUBLIC_SECTIONS = new Set([
   'home',
   'daily_players',
   'live_games',
+  'hr_board',
+  'daily_hr_watch_new',
   'hr_max',
   'aurora_hr_hq',
   'aurora_daily_slate',
@@ -59,16 +61,14 @@ export function getSavedActiveSection(): string | null {
   }
 }
 
-/** Retired Z8 / intel-v2 / Aurora Max alias ids — bookmarks resolve to HR Command Desk. */
+/** Retired alias ids */
 const RETIRED_HR_PAGE_IDS = new Set([
-  'hr_board',
-  'daily_hr_watch_new',
   'hr_intel_v2',
   'hr_aurora_max',
 ]);
 
 export function canonicalizeSection(section: string): string {
-  if (RETIRED_HR_PAGE_IDS.has(section)) return 'hr_max';
+  if (RETIRED_HR_PAGE_IDS.has(section)) return 'hr_board';
   return section;
 }
 
@@ -193,19 +193,9 @@ export function resolveDevSectionFromLocation() {
     target === 'hr-board' || target === '/hr-board' ||
     target === 'daily-hr-board' || target === '/daily-hr-board' ||
     target === 'hr_board' || target === '/hr_board' ||
-    target === 'daily_hr_watch_new' || target === '/daily_hr_watch_new' ||
-    target === 'hr-intel-v2' || target === '/hr-intel-v2' ||
-    target === 'hr_intel_v2' || target === '/hr_intel_v2' ||
-    target === 'hr-aurora-max' || target === '/hr-aurora-max' ||
-    target === 'hr_aurora_max' || target === '/hr_aurora_max' ||
-    target === 'hr-intelligence-v2' || target === '/hr-intelligence-v2'
+    target === 'daily_hr_watch_new' || target === '/daily_hr_watch_new'
   ) {
-    const search = window.location.search || '';
-    const next = `/hr-max${search}`;
-    if (`${window.location.pathname}${window.location.search}` !== next) {
-      window.history.replaceState(null, '', next);
-    }
-    return 'hr_max';
+    return 'hr_board';
   }
 
   if (
@@ -303,12 +293,12 @@ export function resolveDevSectionFromLocation() {
 
   // General fallback normalization for all valid section route names
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
-  if (clean === 'hr_board' || clean === 'daily_hr_watch_new' || clean === 'hr_intel_v2' || clean === 'hr_aurora_max') {
-    return 'hr_max';
+  if (clean === 'hr_intel_v2' || clean === 'hr_aurora_max') {
+    return 'hr_board';
   }
   const validSections = new Set([
     'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
-    'hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
+    'hr_board', 'daily_hr_watch_new', 'hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',

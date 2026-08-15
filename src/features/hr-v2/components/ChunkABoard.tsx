@@ -1,12 +1,52 @@
 import React, { useRef, useState, memo } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { ChunkA } from '../api/contracts';
 import { ChunkACard } from './ChunkACard';
 import { CompactHrRow } from './CompactHrRow';
 import { TierSectionHeader } from './TierSectionHeader';
 import { TierType } from './TierFilterTabs';
 import { AuroraMaxRankedWorkspace } from '../../../components/aurora-max/AuroraMaxPrimitives';
+import { HrScrollReveal } from '../../../components/ui/HrScrollReveal';
 import { TIER_VERY_HIGH_MIN, TIER_HIGH_MIN } from '../constants';
+import { useProgressiveRender } from '../../../hooks/useProgressiveRender';
+
+/* ─── ChunkATierSection ───
+ * Extracted as its own component so `useProgressiveRender` is called
+ * unconditionally at the top level — never inside a conditional render.
+ * Wrapped in React.memo so toggling collapse on one tier doesn't
+ * re-render the card lists of other tiers.
+ */
+const ChunkATierSection = memo(function ChunkATierSection({
+  items,
+  viewMode,
+  sortBy,
+}: {
+  items: ChunkA[];
+  viewMode: 'card' | 'table';
+  sortBy: 'score' | 'ev' | 'odds';
+}) {
+  const [visibleItems, sentinelRef] = useProgressiveRender(items, 24, 24);
+
+  return (
+    <div
+      className="flex flex-col gap-3 mt-3"
+      style={{ contain: 'layout style paint' }}
+    >
+      {visibleItems.map((item, index) =>
+        viewMode === 'table' ? (
+          <HrScrollReveal key={item.playerId} index={index} intrinsicHeight={60}>
+            <CompactHrRow data={item} sortBy={sortBy} />
+          </HrScrollReveal>
+        ) : (
+          <HrScrollReveal key={item.playerId} index={index} intrinsicHeight={200}>
+            <ChunkACard data={item} sortBy={sortBy} />
+          </HrScrollReveal>
+        )
+      )}
+      {/* Sentinel — triggers next batch of 24 when it enters viewport */}
+      <div ref={sentinelRef} aria-hidden="true" />
+    </div>
+  );
+});
 
 interface ChunkABoardProps {
   items: ChunkA[];
@@ -40,13 +80,6 @@ export const ChunkABoard = memo(function ChunkABoard({
 
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const rowVirtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => (viewMode === 'table' ? 76 : 190),
-    overscan: 3,
-  });
-
   return (
     <AuroraMaxRankedWorkspace
       title="Home Run Intelligence V10"
@@ -55,6 +88,7 @@ export const ChunkABoard = memo(function ChunkABoard({
       <div
         ref={parentRef}
         className="max-h-[calc(100vh-280px)] min-h-[500px] overflow-y-auto pr-1 mt-6 rounded-2xl scrollbar-thin scrollbar-thumb-white/10"
+        style={{ overscrollBehavior: 'contain' }}
       >
         {selectedTier === 'all' ? (
           <div className="flex flex-col gap-6">
@@ -68,15 +102,7 @@ export const ChunkABoard = memo(function ChunkABoard({
                   onToggleCollapse={() => toggleCollapse('very_high')}
                 />
                 {!collapsedTiers.very_high && (
-                  <div className="flex flex-col gap-3 mt-3">
-                    {veryHighItems.map((item) =>
-                      viewMode === 'table' ? (
-                        <CompactHrRow key={item.playerId} data={item} sortBy={sortBy} />
-                      ) : (
-                        <ChunkACard key={item.playerId} data={item} sortBy={sortBy} />
-                      )
-                    )}
-                  </div>
+                  <ChunkATierSection items={veryHighItems} viewMode={viewMode} sortBy={sortBy} />
                 )}
               </div>
             )}
@@ -91,15 +117,7 @@ export const ChunkABoard = memo(function ChunkABoard({
                   onToggleCollapse={() => toggleCollapse('high')}
                 />
                 {!collapsedTiers.high && (
-                  <div className="flex flex-col gap-3 mt-3">
-                    {highItems.map((item) =>
-                      viewMode === 'table' ? (
-                        <CompactHrRow key={item.playerId} data={item} sortBy={sortBy} />
-                      ) : (
-                        <ChunkACard key={item.playerId} data={item} sortBy={sortBy} />
-                      )
-                    )}
-                  </div>
+                  <ChunkATierSection items={highItems} viewMode={viewMode} sortBy={sortBy} />
                 )}
               </div>
             )}
@@ -114,55 +132,14 @@ export const ChunkABoard = memo(function ChunkABoard({
                   onToggleCollapse={() => toggleCollapse('moderate')}
                 />
                 {!collapsedTiers.moderate && (
-                  <div className="flex flex-col gap-3 mt-3">
-                    {moderateItems.map((item) =>
-                      viewMode === 'table' ? (
-                        <CompactHrRow key={item.playerId} data={item} sortBy={sortBy} />
-                      ) : (
-                        <ChunkACard key={item.playerId} data={item} sortBy={sortBy} />
-                      )
-                    )}
-                  </div>
+                  <ChunkATierSection items={moderateItems} viewMode={viewMode} sortBy={sortBy} />
                 )}
               </div>
             )}
           </div>
         ) : (
-          /* Single Filtered Tier with Virtualization */
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = items[virtualRow.index];
-              if (!item) return null;
-
-              return (
-                <div
-                  key={item.playerId}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: viewMode === 'table' ? '8px' : '16px',
-                  }}
-                >
-                  {viewMode === 'table' ? (
-                    <CompactHrRow data={item} sortBy={sortBy} />
-                  ) : (
-                    <ChunkACard data={item} sortBy={sortBy} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          /* Single Filtered Tier */
+          <ChunkATierSection items={items} viewMode={viewMode} sortBy={sortBy} />
         )}
       </div>
     </AuroraMaxRankedWorkspace>

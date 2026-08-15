@@ -1,12 +1,10 @@
-import {
-  getExperimentVariant } from '../../lib/experiments';
-import React,
-  { Suspense,
-  memo } from 'react';
+import { getExperimentVariant } from '../../lib/experiments';
+import React, { Suspense, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import FadeInMount from '../system/FadeInMount';
 import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
 import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
+import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10';
 import {
   useAppShell,
   useAppPosts,
@@ -62,7 +60,6 @@ const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
 const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
 const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
 const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
-const HrIntelligencePageV10 = lazyWithRetry(routeModules.hrV10);
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -223,7 +220,14 @@ function MainViewRouter({
           <IntelShell navigateSection={navigateSection} />
         </LazyRoute>
       );
+    case 'daily_hr_watch_new':
+    case 'hr_board':
     case 'hr_max':
+      return (
+        <FadeInMount>
+          <HrAuroraMaxPage />
+        </FadeInMount>
+      );
     case 'hr_v10':
       return (
         <FadeInMount>

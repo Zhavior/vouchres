@@ -213,7 +213,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
           gameCount={report?.gameCount ?? null}
           liveGames={decision.liveGames}
           onAddPlayer={addPlayerToSlip}
-          onResearch={() => onSectionChange('hr_max')}
+          onResearch={() => onSectionChange('hr_board')}
         />
 
         {preferencesOpen ? <Suspense fallback={null}><TodayPersonalizationPanel
@@ -231,7 +231,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
           changes={changeDigest.changes}
           baselineCapturedAt={changeDigest.baselineCapturedAt}
           onMarkAsChecked={changeDigest.markAsChecked}
-          onOpenSubject={() => onSectionChange('hr_max')}
+          onOpenSubject={() => onSectionChange('hr_board')}
         />
 
         <AuroraMaxPanel as="section" id="today-resume-card" className="p-4 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-5">
@@ -262,7 +262,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
         >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
-              { icon: Flame, section: 'hr_max', label: 'HR Intelligence', detail: 'Ranked HR evidence' },
+              { icon: Flame, section: 'hr_board', label: 'HR Intelligence', detail: 'Ranked HR evidence' },
               { icon: UserRoundSearch, section: 'research', label: 'Player evidence', detail: 'Source dossiers' },
               { icon: BarChart3, section: 'results', label: 'Track record', detail: 'Projection vs outcome' },
               { icon: Target, section: 'build', label: 'Build decision', detail: 'Start a tracked slip' },
@@ -288,7 +288,7 @@ export default function TodayDashboardZ8({ onSectionChange, savedSlips = [], isL
                 <p className="mt-1 text-[11px] text-white/40">{pendingSlipList[0].legs.length} legs · {pendingSlipList[0].mode === 'REAL' ? 'Tracked' : 'Practice'}</p>
             <AuroraMaxControl tone="primary" onClick={() => onSectionChange('live_parlays')} className="!border-[rgba(0,217,160,0.4)] !bg-[var(--aurora-max-emerald)] !text-[#02100d] mt-3 w-full">Open slip <ArrowRight className="h-3.5 w-3.5" /></AuroraMaxControl>
               </div>
-            ) : <AuroraMaxFallback compact title="No active slip" detail="Research a signal and add it to start a tracked decision." action={<AuroraMaxControl onClick={() => onSectionChange('hr_max')} className="mt-3">Explore signals</AuroraMaxControl>} />}
+            ) : <AuroraMaxFallback compact title="No active slip" detail="Research a signal and add it to start a tracked decision." action={<AuroraMaxControl onClick={() => onSectionChange('hr_board')} className="mt-3">Explore signals</AuroraMaxControl>} />}
           </AuroraMaxPanel>
         </div>
 

@@ -54,7 +54,7 @@ const DEFAULT_WIDGETS: Widget[] = [
     id: "daily-edge-board",
     title: "HR Intelligence",
     subtitle: "HR Intelligence, high-value edges, daily research cards",
-    section: "hr_max",
+    section: "hr_board",
     tag: "HR",
     icon: Flame,
   },
@@ -171,7 +171,7 @@ function SortableWidget({
   } = useSortable({ id: widget.id });
 
   const Icon = widget.icon;
-  const isHrBoard = widget.section === 'hr_max';
+  const isHrBoard = widget.section === 'hr_board' || widget.section === 'hr_max';
 
   const style = {
     transform: CSS.Transform.toString(transform),

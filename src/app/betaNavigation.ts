@@ -3,7 +3,7 @@ export const FOCUSED_BETA_SHELL_ENABLED =
 
 export const BETA_PRIMARY_DESTINATIONS = [
   { id: 'today', label: 'Today', section: 'today' },
-  { id: 'research', label: 'Research', section: 'research' },
+  { id: 'research', label: 'Research', section: 'hr_board' },
   { id: 'track_record', label: 'Track Record', section: 'results' },
   { id: 'account', label: 'Account', section: 'profile' },
 ] as const;
@@ -69,9 +69,7 @@ const ACCOUNT_SECTIONS = new Set([
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
-  'hr_max',
-  'aurora_hr_hq',
-  'research',
+  'hr_board',
   'live_games',
   'results',
   'premium',
@@ -80,16 +78,14 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
-  'hr_max',
-  'aurora_hr_hq',
-  'aurora_daily_slate',
-  'research',
+  'hr_board',
   'live_games',
   'results',
   'premium',
   'profile',
   'settings',
   'admin',
+  'aurora_daily_slate',
 ]);
 
 export function isBetaDestinationActive(

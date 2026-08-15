@@ -1,40 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  Activity,
-  ArrowDownUp,
-  Check,
-  CircleDot,
-  Clock3,
-  Download,
-  FileCheck2,
-  Filter,
-  Menu,
-  RefreshCw,
-  ShieldCheck,
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { Activity, CircleDot, Clock3, FileCheck2, Menu, ShieldCheck } from 'lucide-react';
 import {
   AuroraMaxCommandHeader,
-  AuroraMaxControl,
-  AuroraMaxFallback,
   AuroraMaxMetricStrip,
   AuroraMaxProductMark,
-  AuroraMaxRankedWorkspace,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { localISODate } from '../../hr/utils/localDate';
 import { useHrBoardViewModel } from '../../hr/hooks/useHrBoardViewModel';
 import {
-  SORT_LABELS,
   formatDeskDate,
   mapHrWatchToDeskRow,
   sortDeskRows,
   type DeskSortKey,
   type HrMaxDeskRow,
 } from '../mapHrWatchToDesk';
-import { HrMaxSpotlight } from './HrMaxSpotlight';
-import { HrMaxSlateQueue } from './HrMaxSlateQueue';
-import HrMaxRouteSkeleton from '../HrMaxRouteSkeleton';
+import type { HrWatchRow } from '../../hr/types/hrWatch';
 import '../hr-max-desk.css';
+
+import { HrMaxToolbar } from './HrMaxToolbar';
+import { HrMaxStatusBar } from './HrMaxStatusBar';
+import { HrMaxSidecar } from './HrMaxSidecar';
+import { HrMaxMainPane } from './HrMaxMainPane';
+
+export type HrDeskViewMode = 'queue' | 'cards' | 'table';
 
 function cycleSort(current: DeskSortKey): DeskSortKey {
   if (current === 'hrpi') return 'time';
@@ -62,19 +51,72 @@ function exportReceipts(rows: HrMaxDeskRow[]) {
   URL.revokeObjectURL(url);
 }
 
+const LS_VIEW_MODE_KEY = 've_hr_max_view_mode';
+
+function getInitialViewMode(): HrDeskViewMode {
+  try {
+    const saved = localStorage.getItem(LS_VIEW_MODE_KEY);
+    if (saved === 'queue' || saved === 'cards' || saved === 'table') {
+      return saved;
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+  return 'queue';
+}
+
+type SavedAction = { type: 'toggle'; id: string };
+function savedReducer(state: Record<string, true>, action: SavedAction): Record<string, true> {
+  if (state[action.id]) {
+    const { [action.id]: _, ...rest } = state;
+    return rest;
+  }
+  return { ...state, [action.id]: true };
+}
+
 export default function HrMaxDesk() {
   const vm = useHrBoardViewModel();
+  const [viewMode, setViewModeState] = useState<HrDeskViewMode>(getInitialViewMode);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [receiptId, setReceiptId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<DeskSortKey>('hrpi');
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set());
+  const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
+  
+  const isSaved = useCallback((id: string) => !!savedMap[id], [savedMap]);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
+
+  const setViewMode = useCallback((mode: HrDeskViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(LS_VIEW_MODE_KEY, mode);
+    } catch {
+      // Ignore storage access errors
+    }
+  }, []);
+
+  const handleAddToSlip = useCallback((row: HrMaxDeskRow) => {
+    openParlayAdd({
+      player: row.player,
+      source: 'hr_intelligence',
+      dataStatus: row.dataStatus,
+      reasoningSnapshot: row.reasoningSnapshot,
+      riskSnapshot: row.riskSnapshot,
+    });
+  }, []);
 
   const boardSource = vm.connection?.source ?? null;
   const deskRows = useMemo(
     () => vm.rows.map((row) => mapHrWatchToDeskRow(row, vm.slate.freshness, vm.slate.generatedAt, boardSource)),
     [boardSource, vm.rows, vm.slate.freshness, vm.slate.generatedAt],
   );
+  
+  const handleRawAddToSlip = useCallback((rawRow: HrWatchRow) => {
+    const match = deskRows.find((r) => r.id === rawRow.stableId || r.id === String(rawRow.playerId));
+    if (match) {
+      handleAddToSlip(match);
+    }
+  }, [deskRows, handleAddToSlip]);
+
   const visibleRows = useMemo(() => sortDeskRows(deskRows, sortKey), [deskRows, sortKey]);
   const activeRow = visibleRows.find((row) => row.id === activeId) ?? visibleRows[0] ?? null;
   const confirmedCount = vm.modeCounts.confirmed;
@@ -92,20 +134,19 @@ export default function HrMaxDesk() {
     }
   }, [activeId, activeRow, visibleRows]);
 
-  const selectRow = (id: string) => {
+  const selectRow = useCallback((id: string) => {
     setActiveId(id);
-    setReceiptId(id);
-  };
+    // Pass 3: Decouple Selection — do not auto-open receipt
+  }, []);
+  
+  const toggleReceipt = useCallback((id: string) => {
+    setReceiptId((current) => (current === id ? null : id));
+  }, []);
 
-  const toggleSaved = (id: string) => {
+  const toggleSaved = useCallback((id: string) => {
     const row = deskRows.find((item) => item.id === id);
-    setSavedIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    if (row && !savedIds.has(id)) {
+    dispatchSaved({ type: 'toggle', id });
+    if (row && !savedMap[id]) {
       openParlayAdd({
         player: row.player,
         source: 'hr_intelligence',
@@ -114,14 +155,15 @@ export default function HrMaxDesk() {
         riskSnapshot: row.riskSnapshot,
       });
     }
-  };
+  }, [deskRows, savedMap]);
 
-  const handleExport = () => {
-    const target = savedIds.size > 0 ? visibleRows.filter((row) => savedIds.has(row.id)) : visibleRows;
+  const handleExport = useCallback(() => {
+    const savedKeys = Object.keys(savedMap);
+    const target = savedKeys.length > 0 ? visibleRows.filter((row) => savedMap[row.id]) : visibleRows;
     exportReceipts(target);
     setExportStatus(`${target.length} receipt${target.length === 1 ? '' : 's'} prepared`);
     window.setTimeout(() => setExportStatus(null), 2200);
-  };
+  }, [savedMap, visibleRows]);
 
   const freshnessTone = vm.slate.freshness === 'fresh' ? 'confirmed' : vm.slate.freshness === 'delayed' ? 'live' : 'warning';
   const confirmedOnly = vm.mode === 'confirmed';
@@ -160,98 +202,60 @@ export default function HrMaxDesk() {
           }
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="hr-max-date">Slate date</label>
-          <input
-            id="hr-max-date"
-            type="date"
-            max={localISODate()}
-            value={vm.date}
-            onChange={(event) => vm.setDate(event.target.value)}
-            className="aurora-max-control px-3 py-1.5 font-mono text-xs font-bold normal-case tracking-normal"
-          />
-          <AuroraMaxControl onClick={() => void vm.refresh()} disabled={vm.syncing}>
-            <RefreshCw className={`h-3.5 w-3.5 ${vm.syncing ? 'animate-spin' : ''}`} aria-hidden="true" />
-            Refresh
-          </AuroraMaxControl>
-        </div>
+        <HrMaxSidecar
+          activeRow={activeRow}
+          saved={activeRow ? isSaved(activeRow.id) : false}
+          onToggleSaved={() => activeRow && toggleSaved(activeRow.id)}
+          rawRows={vm.rows}
+          onSpotlightSelect={(r) => selectRow(r.stableId)}
+          onAddToSlip={handleRawAddToSlip}
+        />
 
-        {vm.autoSwitchedToPreview ? (
-          <div className="hr-max-desk__status hr-max-desk__status--warning" role="status">
-            Confirmed lineups are not posted yet. Showing projected research rows, labeled as projected.
-          </div>
-        ) : null}
-        {vm.refreshError ? (
-          <div className="hr-max-desk__status hr-max-desk__status--warning" role="status">{vm.refreshError}</div>
-        ) : null}
-        {exportStatus ? (
-          <div className="hr-max-desk__status" role="status">
-            <Check className="h-3.5 w-3.5" aria-hidden="true" /> {exportStatus}
-          </div>
-        ) : null}
+        <HrMaxToolbar
+          date={vm.date}
+          onDateChange={vm.setDate}
+          search={vm.search}
+          onSearchChange={vm.setSearch}
+          syncing={vm.syncing}
+          onRefresh={() => void vm.refresh()}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          selectedTiers={vm.selectedTiers}
+          tierStats={vm.stats}
+          onToggleTier={vm.onToggleTier}
+        />
 
-        {vm.loading && visibleRows.length === 0 ? <HrMaxRouteSkeleton /> : null}
+        <HrMaxStatusBar
+          autoSwitchedToPreview={vm.autoSwitchedToPreview}
+          refreshError={vm.refreshError}
+          exportStatus={exportStatus}
+          loading={vm.loading}
+          error={vm.error}
+          hasRows={visibleRows.length > 0}
+          confirmedOnly={confirmedOnly}
+          onRetry={() => void vm.refresh()}
+          onShowAll={() => vm.setMode('all')}
+        />
 
-        {vm.error && visibleRows.length === 0 ? (
-          <AuroraMaxFallback
-            title="Board unavailable"
-            detail={vm.error}
-            action={<AuroraMaxControl onClick={() => void vm.refresh()} className="mt-3">Retry board</AuroraMaxControl>}
-          />
-        ) : null}
+        <HrMaxMainPane
+          viewMode={viewMode}
+          rows={visibleRows}
+          activeId={activeId}
+          receiptId={receiptId}
+          confirmedOnly={confirmedOnly}
+          confirmedCount={confirmedCount}
+          sortKey={sortKey}
+          isSaved={isSaved}
+          onSelect={selectRow}
+          onToggleSaved={toggleSaved}
+          onToggleReceipt={toggleReceipt}
+          onAddToSlip={handleAddToSlip}
+          onCycleSort={() => setSortKey(cycleSort)}
+          onToggleMode={() => vm.setMode(confirmedOnly ? 'all' : 'confirmed')}
+          onExport={handleExport}
+        />
 
-        {!vm.loading && !vm.error && visibleRows.length === 0 ? (
-          <AuroraMaxFallback
-            title="No research rows"
-            detail={confirmedOnly
-              ? 'No confirmed-lineup rows are on this slate yet. Switch to all lineups to inspect projected research.'
-              : 'The validated board returned no eligible rows for this date.'}
-            action={confirmedOnly ? (
-              <AuroraMaxControl onClick={() => vm.setMode('all')} className="mt-3">Show all lineups</AuroraMaxControl>
-            ) : undefined}
-          />
-        ) : null}
-
-        {activeRow ? (
-          <>
-            <HrMaxSpotlight row={activeRow} saved={savedIds.has(activeRow.id)} onToggleSaved={() => toggleSaved(activeRow.id)} />
-            <AuroraMaxRankedWorkspace
-              title="Daily slate"
-              subtitle={`${visibleRows.length} ranked matchups · ${confirmedCount} confirmed`}
-              controls={
-                <div className="flex flex-wrap gap-2">
-                  <AuroraMaxControl
-                    aria-pressed={confirmedOnly}
-                    onClick={() => vm.setMode(confirmedOnly ? 'all' : 'confirmed')}
-                  >
-                    <Filter className="h-3.5 w-3.5" aria-hidden="true" />
-                    {confirmedOnly ? 'Confirmed only' : 'All lineups'}
-                  </AuroraMaxControl>
-                  <AuroraMaxControl onClick={() => setSortKey((current) => cycleSort(current))}>
-                    <ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    {SORT_LABELS[sortKey]}
-                  </AuroraMaxControl>
-                  <AuroraMaxControl onClick={handleExport}>
-                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                    Export receipts
-                  </AuroraMaxControl>
-                </div>
-              }
-            >
-              <HrMaxSlateQueue
-                rows={visibleRows}
-                activeId={activeRow.id}
-                savedIds={savedIds}
-                receiptId={receiptId}
-                onSelect={selectRow}
-                onToggleSaved={toggleSaved}
-                onToggleReceipt={(id) => setReceiptId((current) => current === id ? null : id)}
-              />
-            </AuroraMaxRankedWorkspace>
-          </>
-        ) : null}
-
-        <div className="hr-max-notes">
+        <div className="hr-max-notes mt-6">
           <div className="flex items-center gap-2 text-[10px] text-white/35">
             <FileCheck2 className="h-3.5 w-3.5 text-[var(--aurora-max-emerald)]" aria-hidden="true" />
             Every row keeps its research receipt.

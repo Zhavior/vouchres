@@ -112,7 +112,7 @@ function TierColumn({
   onAddToSlip: (id: string) => void;
   getHrResult: ReturnType<typeof useHrBoardViewModel>['getHrResult'];
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const copy    = DESK_TIER_COPY[tier];
   const visible = expanded ? rows : rows.slice(0, PREVIEW_COUNT);
 

@@ -23,7 +23,7 @@ import {
   isFocusedBetaCommandSection,
 } from '../../app/betaNavigation';
 
-/** Likely next lazy destinations — warmed when the palette opens. HR pages are eager. */
+/** Likely next lazy destinations — warmed when the palette opens. */
 const CMDK_PREFETCH_SECTIONS = [
   'today',
   'results',
@@ -48,6 +48,7 @@ const ALL_ITEMS: PaletteItem[] = [
   // Ungrouped
   { id: 'today',           label: 'Today',                 group: 'Daily',         icon: LayoutDashboard, keywords: ['today', 'slate', 'dashboard', 'daily'] },
   // Daily
+  { id: 'hr_board',        label: 'Home Run Intelligence', group: 'Daily',         icon: Flame,           keywords: ['hr', 'home run', 'hitter', 'mlb', 'intel', 'board'] },
   { id: 'hr_max',          label: 'HR Command Desk',       group: 'Daily',         icon: Radio,           keywords: ['hr', 'aurora', 'max', 'command', 'desk', 'research', 'intelligence', 'board'] },
   { id: 'aurora_hr_hq',    label: 'Aurora HQ',              group: 'Daily',         icon: Sparkles,        keywords: ['aurora', 'hq', 'desk', 'intelligence'] },
   { id: 'aurora_daily_slate', label: 'Daily Slate',         group: 'Daily',         icon: ClipboardCheck,  keywords: ['daily', 'slate', 'aurora', 'ranked', 'matchups', 'queue'] },

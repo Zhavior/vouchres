@@ -22,6 +22,7 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   brain_picks: routeModules.brainPicks,
   brain_performance: routeModules.brainPerformance,
 
+
   mlb_stats: routeModules.mlbStats,
   daily_players: routeModules.dailyPlayers,
   live_games: routeModules.liveGames,
@@ -65,7 +66,7 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
 };
 
 /** Statically composed in MainViewRouter — never prefetch or idle-warm these. */
-export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq', 'aurora_daily_slate']);
+export const EAGER_HR_SECTIONS = new Set(['hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'hr_v10']);
 
 export function isEagerHrSection(section: string): boolean {
   return EAGER_HR_SECTIONS.has(section);
@@ -74,6 +75,7 @@ export function isEagerHrSection(section: string): boolean {
 const WARM_NEIGHBORS: Record<string, string[]> = {
   feed: ['today'],
   following: ['feed'],
+  today: [],
   brain_picks: ['brain_performance'],
   brain_performance: ['brain_picks'],
   live_parlays: ['build'],
@@ -86,9 +88,11 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
 
 /** Heavy first-paint routes — do not compete with their own chunk/network work. */
 const HEAVY_ROUTES = new Set([
+  'hr_board',
   'hr_max',
   'aurora_hr_hq',
   'aurora_daily_slate',
+  'hr_v10',
   'daily_players',
   'research',
   'live_games',
@@ -98,8 +102,6 @@ const HEAVY_ROUTES = new Set([
   'live_parlays',
   'build',
 ]);
-
-const MAIN_ROUTER_KEY = '__main_router__';
 
 function scheduleIdle(task: () => void, timeout = 2800): void {
   if (typeof window === 'undefined') return;
@@ -131,21 +133,11 @@ export function preloadSection(section: string): void {
   });
 }
 
-/** Warm the MainViewRouter chunk so route switches don't wait on the router shell. */
-export function preloadMainRouter(): void {
-  if (preloaded.has(MAIN_ROUTER_KEY)) return;
-  preloaded.add(MAIN_ROUTER_KEY);
-  void import('../components/routing/MainViewRouter').catch(() => {
-    preloaded.delete(MAIN_ROUTER_KEY);
-  });
-}
-
 /** Idle-warm likely next routes from the current section (and a small default set). */
 export function warmLikelyRoutes(activeSection?: string): void {
   const run = () => {
     scheduleIdle(() => {
       if (!canWarmRoutes()) return;
-      preloadMainRouter();
       if (activeSection && HEAVY_ROUTES.has(activeSection)) return;
 
       const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];

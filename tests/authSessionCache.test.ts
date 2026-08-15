@@ -180,4 +180,84 @@ describe("requireAuth session cache", () => {
     );
     expect(setupNext.mock.calls[0]?.[0]).toBeUndefined();
   });
+
+  it("skips the Discord beta wall when NODE_ENV is unset (local npm run dev)", async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    delete process.env.NODE_ENV;
+
+    getUser.mockResolvedValue({
+      data: { user: { id: "user-local", email: "local@example.com" } },
+      error: null,
+    });
+    maybeSingle.mockResolvedValue({
+      data: {
+        id: "user-local",
+        username: "local",
+        handle: "local",
+        tier: "free",
+        is_banned: false,
+        is_staff: false,
+        is_demo: false,
+        age_confirmed_at: null,
+        jurisdiction_confirmed_at: null,
+        jurisdiction: null,
+        discord_connected_at: null,
+        discord_guild_member: false,
+        discord_beta_access: false,
+        deletion_scheduled_at: null,
+      },
+      error: null,
+    });
+
+    try {
+      const auth = await import("../server/middleware/auth");
+      auth.resetAuthSessionCacheForTests();
+      const next = vi.fn();
+      await auth.requireAuth(
+        { headers: { authorization: "Bearer tok_local" }, method: "GET", originalUrl: "/api/today/preferences" } as any,
+        {} as any,
+        next,
+      );
+      expect(next.mock.calls[0]?.[0]).toBeUndefined();
+    } finally {
+      process.env.NODE_ENV = previousNodeEnv;
+    }
+  });
+
+  it("skips the Discord beta wall for the founder email even with false flags", async () => {
+    process.env.NODE_ENV = "test";
+    getUser.mockResolvedValue({
+      data: { user: { id: "user-founder", email: "zhavior@gmail.com" } },
+      error: null,
+    });
+    maybeSingle.mockResolvedValue({
+      data: {
+        id: "user-founder",
+        username: "boyd",
+        handle: "boyd",
+        tier: "free",
+        is_banned: false,
+        is_staff: false,
+        is_demo: false,
+        age_confirmed_at: null,
+        jurisdiction_confirmed_at: null,
+        jurisdiction: null,
+        discord_connected_at: "2026-01-01T00:00:00.000Z",
+        discord_guild_member: false,
+        discord_beta_access: false,
+        deletion_scheduled_at: null,
+      },
+      error: null,
+    });
+
+    const auth = await import("../server/middleware/auth");
+    auth.resetAuthSessionCacheForTests();
+    const next = vi.fn();
+    await auth.requireAuth(
+      { headers: { authorization: "Bearer tok_founder" }, method: "GET", originalUrl: "/api/today/preferences" } as any,
+      {} as any,
+      next,
+    );
+    expect(next.mock.calls[0]?.[0]).toBeUndefined();
+  });
 });

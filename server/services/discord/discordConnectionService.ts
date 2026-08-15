@@ -7,7 +7,7 @@ import {
   recordDiscordIdentity,
   recordGuildJoinOutcome,
 } from "../../repositories/discordProfileRepository";
-import type { GuildJoinOutcome } from "./discordTypes";
+import { isGuildJoinSuccess, type GuildJoinOutcome } from "./discordTypes";
 
 export type DiscordConnectionOutcome =
   | { ok: true; guildMember: true; discordUsername: string }
@@ -16,15 +16,17 @@ export type DiscordConnectionOutcome =
   | { ok: false; reason: "exchange_failed" }
   | { ok: false; reason: "identity_lookup_failed" };
 
-function guildJoinSucceeded(outcome: GuildJoinOutcome): boolean {
-  return outcome.kind === "joined_new_member" || outcome.kind === "already_member_role_assigned";
-}
-
 function guildJoinFailureReason(outcome: GuildJoinOutcome): string {
   if (outcome.kind === "forbidden") return outcome.reason;
   if (outcome.kind === "token_expired") return "token_expired";
   if (outcome.kind === "error") return outcome.reason;
   return "unknown";
+}
+
+async function persistJoinOutcome(userId: string, guildMember: boolean): Promise<void> {
+  await recordGuildJoinOutcome(userId, { guildMember });
+  const { bumpAuthUserEpoch } = await import("../../middleware/auth");
+  await bumpAuthUserEpoch(userId);
 }
 
 /**
@@ -81,8 +83,8 @@ export async function completeDiscordConnection(params: { userId: string; code: 
   await recordDiscordIdentity(userId, { discordUserId: discordUser.id, discordUsername });
 
   const outcome = await joinGuildAndAssignOpenBetaRole(userId, discordUser.id);
-  const guildMember = guildJoinSucceeded(outcome);
-  await recordGuildJoinOutcome(userId, { guildMember });
+  const guildMember = isGuildJoinSuccess(outcome);
+  await persistJoinOutcome(userId, guildMember);
 
   if (guildMember) {
     return { ok: true, guildMember: true, discordUsername };
@@ -109,8 +111,8 @@ export async function retryDiscordGuildJoin(userId: string): Promise<RetryGuildJ
   }
 
   const outcome = await joinGuildAndAssignOpenBetaRole(userId, profileState.discordUserId);
-  const guildMember = guildJoinSucceeded(outcome);
-  await recordGuildJoinOutcome(userId, { guildMember });
+  const guildMember = isGuildJoinSuccess(outcome);
+  await persistJoinOutcome(userId, guildMember);
 
   if (guildMember) return { ok: true, guildMember: true };
   return { ok: true, guildMember: false, reason: guildJoinFailureReason(outcome) };

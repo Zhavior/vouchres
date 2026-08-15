@@ -2095,7 +2095,7 @@ export default function DailyPlayersPageZ8({ onSectionChange }: DailyPlayersPage
             {onSectionChange && (
               <button
                 type="button"
-                onClick={() => onSectionChange('hr_max')}
+                onClick={() => onSectionChange('hr_board')}
                 className={`${AURORA_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
               >
                 <HrBrandIcon size="sm" />

@@ -489,7 +489,7 @@ function EmptyBuildSlip({ onSectionChange }: { onSectionChange?: (section: strin
       <div className="flex flex-wrap justify-center gap-2">
         <button
           type="button"
-          onClick={() => onSectionChange?.('hr_max')}
+          onClick={() => onSectionChange?.('hr_board')}
           className="min-h-[2.75rem] rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald hover:bg-vouch-emerald/15"
         >
           Browse HR Signals
@@ -575,7 +575,7 @@ function WatchlistFoundation({ onSectionChange }: { onSectionChange?: (section: 
           {activeTab === 'targets' ? (
             <button
               type="button"
-              onClick={() => onSectionChange?.('hr_max')}
+              onClick={() => onSectionChange?.('hr_board')}
               className="z8-control mt-5 min-h-10 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald"
             >
               Find targets

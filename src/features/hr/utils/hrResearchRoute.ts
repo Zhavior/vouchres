@@ -12,8 +12,8 @@ export function pushHrResearchPlayer(playerId: string | number): void {
   // Section navigation can change React state while leaving /today in the
   // address bar. Make HR Board the owning history entry before adding the
   // profile entry, so closing the profile cannot navigate back to Today.
-  if (currentUrl.pathname.toLowerCase() !== '/hr-max') {
-    currentUrl.pathname = '/hr-max';
+  if (currentUrl.pathname.toLowerCase() !== '/hr-board') {
+    currentUrl.pathname = '/hr-board';
     currentUrl.searchParams.delete(HR_RESEARCH_PLAYER_PARAM);
     window.history.replaceState(window.history.state, '', currentUrl);
   }

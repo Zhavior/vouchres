@@ -39,7 +39,8 @@ export function PlayerHeadshot({ mlbId, name, size = 40 }: PlayerHeadshotProps) 
         alt={name}
         onError={() => setHasError(true)}
         className="w-full h-full object-contain object-[center_20%] scale-95 transition-transform duration-200 group-hover:scale-100"
-        loading="lazy"
+        loading="eager"
+        decoding="async"
       />
     </div>
   );

@@ -11,7 +11,7 @@ export const FEATURES = [
     eyebrow: 'HR Intelligence',
     title: 'Verified home run intelligence',
     copy: 'Trust-first HR Intelligence with confirmed lineups only. Projected previews are clearly labeled — never sold as confirmed.',
-    route: 'hr_max',
+    route: 'hr_board',
   },
   {
     icon: LayoutGrid,

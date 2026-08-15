@@ -13,6 +13,8 @@
  * data should omit EV rather than invent it.
  */
 
+import { resolveMlbPersonId } from '../../../lib/mlbPersonId';
+
 const BASE = 'https://statsapi.mlb.com/api';
 
 export interface RealGameLog {
@@ -60,11 +62,13 @@ const cache = new Map<string, RealGameLog[] | null>();
  * failure so callers can distinguish "no games yet" from "fetch failed."
  */
 export async function fetchRealGameLog(playerId: string | number, season = new Date().getFullYear()): Promise<RealGameLog[] | null> {
-  const key = `${playerId}:${season}`;
+  const mlbId = resolveMlbPersonId(playerId);
+  if (mlbId == null) return null;
+  const key = `${mlbId}:${season}`;
   if (cache.has(key)) return cache.get(key)!;
 
   try {
-    const res = await fetch(`${BASE}/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=${season}`);
+    const res = await fetch(`${BASE}/v1/people/${mlbId}/stats?stats=gameLog&group=hitting&season=${season}`);
     if (!res.ok) { cache.set(key, null); return null; }
     const data = await res.json();
     const splits: any[] = data?.stats?.[0]?.splits ?? [];

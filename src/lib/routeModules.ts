@@ -27,6 +27,7 @@ export const routeModules = {
   leaderboard: () => import('../components/Leaderboard'),
   subscriberHub: () => import('../components/SubscriberHub'),
 
+
   brainPicks: () => import('../features/brain/BrainPicksPage'),
   brainPerformance: () =>
     import('../features/brain/BrainPerformancePage'),
@@ -66,7 +67,6 @@ export const routeModules = {
     import('../pages/MostVouchedTodayPageZ8'),
 
   auroraHq: () => import('../features/admin/AuroraHqShell'),
-  hrV10: () => import('../features/hr-v2/pages/HrIntelligencePageV10').then(m => ({ default: m.HrIntelligencePageV10 })),
 } as const;
 
 export type RouteModuleKey = keyof typeof routeModules;

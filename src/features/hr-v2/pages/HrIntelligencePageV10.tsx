@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { TierFilterTabs, TierType } from '../components/TierFilterTabs';
 import { HrErrorBoundary } from '../components/HrErrorBoundary';
 import { useHrSlateFeed } from '../hooks/useHrSlateFeed';
@@ -21,19 +21,12 @@ import {
 import { AuroraMaxEyebrow } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 import { usePersistedState } from '../../../hooks/usePersistedState';
-import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 import { trackEvent } from '../../../lib/analytics';
 import { STRINGS_EN } from '../stringsEn';
+import { ChunkABoard } from '../components/ChunkABoard';
+import { KanbanView } from '../components/KanbanView';
 
 import { safeNumber } from '../../../utils/safeNumber';
-
-const ChunkABoard = lazyWithRetry(() =>
-  import('../components/ChunkABoard').then((m) => ({ default: m.ChunkABoard }))
-);
-
-const KanbanView = lazyWithRetry(() =>
-  import('../components/KanbanView').then((m) => ({ default: m.KanbanView }))
-);
 
 export type ViewMode = 'card' | 'table' | 'kanban';
 export type SortOption = 'score' | 'ev' | 'odds';
@@ -908,32 +901,23 @@ export function HrIntelligencePageV10() {
               )}
             </div>
           ) : viewMode === 'kanban' ? (
-            <Suspense fallback={<BoardSkeleton />}>
-              {/* content-visibility:auto defers paint of off-screen kanban lanes.
-                  contain-intrinsic-size provides a layout estimate so scroll geometry is stable. */}
-              <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px' }}>
-                <KanbanView items={processedData} />
-              </div>
-            </Suspense>
+            <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px' }}>
+              <KanbanView items={processedData} />
+            </div>
           ) : (
-            <Suspense fallback={<BoardSkeleton />}>
-              {/* content-visibility:auto on the outer container defers paint of off-screen cards/rows.
-                  At 200-400 DOM nodes this prevents jank during initial paint and scroll.
-                  contain-intrinsic-size of 44px * player count gives a realistic scroll height estimate. */}
-              <div
-                style={{
-                  contentVisibility: 'auto',
-                  containIntrinsicSize: `0 ${Math.max(600, processedData.length * 44)}px`,
-                }}
-              >
-                <ChunkABoard
-                  items={processedData}
-                  viewMode={viewMode}
-                  selectedTier={selectedTier}
-                  sortBy={sortBy}
-                />
-              </div>
-            </Suspense>
+            <div
+              style={{
+                contentVisibility: 'auto',
+                containIntrinsicSize: `0 ${Math.max(600, processedData.length * 44)}px`,
+              }}
+            >
+              <ChunkABoard
+                items={processedData}
+                viewMode={viewMode}
+                selectedTier={selectedTier}
+                sortBy={sortBy}
+              />
+            </div>
           )}
 
         </main>

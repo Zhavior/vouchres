@@ -6,10 +6,8 @@ describe('focused beta shell', () => {
   it('limits the default sidebar to the paid MLB workflow', () => {
     expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toEqual([
       'today',
-      'hr_max',
-      'aurora_hr_hq',
+      'hr_board',
       'live_games',
-      'research',
       'results',
       'premium',
     ]);
@@ -43,18 +41,16 @@ describe('focused beta shell', () => {
     const today = readFileSync('src/components/TodayDashboardZ8.tsx', 'utf8');
 
     expect(today).toContain('Research tools');
-    expect(today).toContain("section: 'hr_max'");
-    expect(today).toContain("section: 'research'");
-    expect(today).toContain("section: 'results'");
-    expect(today).toContain("section: 'build'");
     expect(today).not.toContain('8 Core Systems');
     expect(today).not.toContain('MostVouchedPlayersPanel');
     expect(today).not.toContain('Following Hub');
   });
 
   it('uses the same global lineup counts in the toolbar and slate summary', () => {
+    const page = readFileSync('src/features/hr-max/components/HrMaxDesk.tsx', 'utf8');
     const commandCenter = readFileSync('src/features/hr/components/CommandCenter/HrCommandCenter.tsx', 'utf8');
 
+    expect(page).toContain('confirmedCount = vm.modeCounts.confirmed');
     expect(commandCenter).toContain('confirmedCount={props.confirmedCount}');
     expect(commandCenter).toContain('previewCount={props.previewCount}');
     expect(commandCenter).not.toContain('Math.max(0');

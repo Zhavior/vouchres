@@ -46,6 +46,18 @@ describe("HR board API runtime contract", () => {
     expect(board.rows).toEqual([directRow]);
   });
 
+  it("keeps mlbapi_ stub ids from the client Stats API fallback", () => {
+    const stubRow = { playerId: "mlbapi_676130", playerName: "Stub Hitter", headshot: "https://img.mlbstatic.com/mlb-photos/image/upload/v1/people/676130/headshot/67/current" };
+    const board = parseHrBoardApiResponse({
+      ...base,
+      dataQuality: "partial",
+      games: [{ rows: [stubRow] }],
+    });
+
+    expect(board.rows).toHaveLength(1);
+    expect(board.rows[0]?.playerName).toBe("Stub Hitter");
+  });
+
   it("rejects schema drift instead of turning it into an honest-looking empty slate", () => {
     expect(() => parseHrBoardApiResponse({ gameCount: "sixteen", rows: [] })).toThrow(HrBoardContractError);
   });

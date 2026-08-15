@@ -41,7 +41,7 @@ describe('AppNav Instagram-style mobile dock', () => {
     fireEvent.click(container.querySelector('[aria-label="Go to Research"]') as HTMLElement);
     fireEvent.click(container.querySelector('[aria-label="Go to Track Record"]') as HTMLElement);
     expect(onNavigate).toHaveBeenNthCalledWith(1, 'today');
-    expect(onNavigate).toHaveBeenNthCalledWith(2, 'research');
+    expect(onNavigate).toHaveBeenNthCalledWith(2, 'hr_board');
     expect(onNavigate).toHaveBeenNthCalledWith(3, 'results');
 
     const feedCss = readFileSync(resolve(process.cwd(), 'src/styles/legacy/feed.css'), 'utf8');

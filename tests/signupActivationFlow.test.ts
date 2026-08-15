@@ -70,7 +70,7 @@ describe('signup and first-session activation', () => {
   });
 
   it('routes users directly to a working first action', () => {
-    expect(onboardingSource).toContain("id: 'hr_max'");
+    expect(onboardingSource).toContain("id: 'hr_board'");
     expect(onboardingSource).toContain("id: 'live_parlays'");
     expect(onboardingSource).toContain("id: 'profile'");
     expect(routerSource).toContain('navigateSection(section ?? "today")');

@@ -9,7 +9,7 @@ import {
 
 describe('HR player research route state', () => {
   beforeEach(() => {
-    window.history.replaceState(null, '', '/hr-max?mode=confirmed');
+    window.history.replaceState(null, '', '/hr-board?mode=confirmed');
   });
 
   it('adds a shareable player id without removing existing query state', () => {
@@ -25,14 +25,14 @@ describe('HR player research route state', () => {
 
     pushHrResearchPlayer(665742);
 
-    expect(window.location.pathname).toBe('/hr-max');
+    expect(window.location.pathname).toBe('/hr-board');
     expect(readHrResearchPlayerId()).toBe('665742');
     expect(new URLSearchParams(window.location.search).get('mode')).toBe('curated');
     expect(isHrResearchHistoryEntry()).toBe(true);
   });
 
   it('clears only player research state for direct-link close behavior', () => {
-    window.history.replaceState(null, '', '/hr-max?mode=confirmed&hrPlayer=592450');
+    window.history.replaceState(null, '', '/hr-board?mode=confirmed&hrPlayer=592450');
 
     clearHrResearchPlayer();
 

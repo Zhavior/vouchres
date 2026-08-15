@@ -74,6 +74,12 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     description: "Today's slate dashboard and quick jumps.",
     icon: Home,
   },
+  hr_board: {
+    id: "hr_board",
+    label: "Home Run Intelligence",
+    description: "Daily HR intelligence board, tier evidence, and player research.",
+    icon: Flame,
+  },
   hr_max: {
     id: "hr_max",
     label: "HR Command Desk",

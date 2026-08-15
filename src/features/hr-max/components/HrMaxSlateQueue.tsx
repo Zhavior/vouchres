@@ -10,7 +10,7 @@ import { HrMaxReceiptTray } from './HrMaxReceiptTray';
 export function HrMaxSlateQueue({
   rows,
   activeId,
-  savedIds,
+  isSaved,
   receiptId,
   onSelect,
   onToggleSaved,
@@ -18,7 +18,7 @@ export function HrMaxSlateQueue({
 }: {
   rows: HrMaxDeskRow[];
   activeId: string | null;
-  savedIds: Set<string>;
+  isSaved: (id: string) => boolean;
   receiptId: string | null;
   onSelect: (id: string) => void;
   onToggleSaved: (id: string) => void;
@@ -44,7 +44,7 @@ export function HrMaxSlateQueue({
       {rows.map((row, index) => {
         const active = row.id === activeId;
         const receiptOpen = receiptId === row.id;
-        const saved = savedIds.has(row.id);
+        const saved = isSaved(row.id);
         return (
           <div key={row.id}>
             <div className={`hr-max-queue__row ${active ? 'is-active' : ''}`}>

@@ -92,7 +92,7 @@ describe('buildTodayDecision', () => {
       hrSignalCount: 4,
     });
 
-    expect(decision.ctaSection).toBe('hr_max');
+    expect(decision.ctaSection).toBe('hr_board');
     expect(decision.title).toContain('available');
     expect(decision.description).toContain('4 research signals');
     expect(decision.attention[2]?.value).toBe('4 signals available');
@@ -185,7 +185,7 @@ describe('buildTodayDecision', () => {
 
     expect(decision.resumeLabel).toBe('Start the daily loop');
     expect(decision.resumeTitle).toBe('Research one decision deeply');
-    expect(decision.resumeSection).toBe('hr_max');
+    expect(decision.resumeSection).toBe('hr_board');
     expect(decision.resumeDetail.toLowerCase()).not.toContain('saved');
   });
 

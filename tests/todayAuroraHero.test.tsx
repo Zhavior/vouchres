@@ -11,7 +11,7 @@ const decision: TodayDecision = {
   title: 'Today’s HR research board is available',
   description: 'Compare verified evidence and risk before choosing a player.',
   ctaLabel: 'Review HR Intelligence',
-  ctaSection: 'hr_max',
+  ctaSection: 'hr_board',
   attention: [],
   resumeLabel: 'Continue tracking',
   resumeTitle: '1 unresolved slip',
@@ -58,6 +58,6 @@ describe('Today Aurora state-aware hero', () => {
     const { onSectionChange } = renderHero();
     fireEvent.click(screen.getByTestId('today-primary-action'));
     expect(onSectionChange).toHaveBeenCalledOnce();
-    expect(onSectionChange).toHaveBeenCalledWith('hr_max');
+    expect(onSectionChange).toHaveBeenCalledWith('hr_board');
   });
 });

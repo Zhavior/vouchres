@@ -8,6 +8,7 @@ import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
 import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
 import { useAuthSession } from '../lib/authSessionStore';
+import { isDiscordBetaGateOpen } from '../lib/discordBetaAccess';
 import '../index.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
@@ -37,9 +38,10 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
     syncProfile: bootstrap.syncProfile,
   });
 
-  const discordBetaVerified = bootstrap.accountId === null || (
-    bootstrap.profile.discordGuildMember === true && bootstrap.profile.discordBetaAccess === true
-  );
+  const discordBetaVerified = isDiscordBetaGateOpen(bootstrap.profile, {
+    accountId: bootstrap.accountId,
+    email: authSession.session?.user?.email,
+  });
   const canUseAccountSetup = navigation.activeSection === 'settings' || navigation.activeSection === 'profile';
 
   if (bootstrap.authProfileLoading && !canUseAccountSetup) {

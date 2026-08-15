@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { HrBoardResponse } from "../types/hrBoard";
+import { resolveMlbPersonId } from "../lib/mlbPersonId";
 
 const UnknownRecordSchema = z.record(z.string(), z.unknown());
 const RecordArraySchema = z.array(UnknownRecordSchema);
@@ -54,9 +55,11 @@ export class HrBoardContractError extends Error {
 }
 
 function hasPlayerIdentity(row: Record<string, unknown>): boolean {
-  const playerId = Number(row.playerId ?? row.id ?? row.mlbId ?? row.personId);
+  const rawId = row.playerId ?? row.id ?? row.mlbId ?? row.personId;
+  const headshot = typeof row.headshot === "string" ? row.headshot : null;
+  const playerId = resolveMlbPersonId(rawId, headshot);
   const playerName = row.playerName ?? row.name ?? row.player;
-  return Number.isFinite(playerId) && playerId > 0 && typeof playerName === "string" && playerName.trim().length > 0;
+  return playerId != null && typeof playerName === "string" && playerName.trim().length > 0;
 }
 
 function validRows(rows: Array<Record<string, unknown>> | undefined): Array<Record<string, unknown>> {

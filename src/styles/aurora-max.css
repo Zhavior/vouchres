@@ -388,6 +388,13 @@
   }
 }
 
+.aurora-max-shell #inner-view-slot,
+.aurora-max-shell .ve-scroll-pane {
+  scroll-behavior: auto !important;
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-max-shell *,
   .aurora-max-shell *::before,

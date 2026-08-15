@@ -32,7 +32,7 @@ describe("batter research identity honesty", () => {
     expect(src).toContain("overlayLiveRosterIdentity");
     expect(src).not.toContain("generateRealisticGameLogs");
     expect(src).toContain("seasonStats: { avg: '—', hr: '—', rbi: '—', ops: '—'");
-    expect(src).toContain('const numericId = /^\\d+$/.test(player.id)');
+    expect(src).toContain('resolveMlbPersonId');
   });
 
   it("keeps Cognitive-Safe reduced-motion on the player desk", () => {
