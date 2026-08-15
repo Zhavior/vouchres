@@ -92,6 +92,9 @@ const COMPACT_CANDIDATE_FIELDS = [
   "source",
   "rank",
   "isConfirmed",
+  "xslg",
+  "barrelRate",
+  "avgExitVelo",
 ] as const;
 
 function compactCandidateRow(value: unknown): unknown {

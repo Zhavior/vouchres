@@ -18,7 +18,10 @@ import {
   AURORA_PAGE_PAD_Y,
   AURORA_PANEL_PREMIUM,
   AURORA_STAT_CHIP,
+  AURORA_MAX_SHELL,
+  AURORA_MAX_PANEL,
 } from '../../../theme/auroraTokens';
+import { AuroraMaxEyebrow, AuroraMaxControl } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
@@ -47,6 +50,7 @@ import { ProductEvents } from '../../../lib/productEvents';
 import type { HrWatchRow } from '../types/hrWatch';
 import { useAppProfile } from '../../../context/AppShellContext';
 import '../../../styles/z8-hr-lens.css';
+import '../hr-aurora-max.css';
 
 interface MiniStatChipProps {
   label: string;
@@ -488,55 +492,54 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
 
   return (
     <div
-      className={`${AURORA_PAGE} min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}
+      className={`${AURORA_PAGE} ${AURORA_MAX_SHELL} hr-aurora-max min-h-0 min-w-0 w-full max-w-full overflow-x-hidden text-ve-flash space-y-4 ${AURORA_PAGE_PAD_Y}`}
+      data-aurora-generation="max"
     >
       <div className={`mx-auto flex min-h-0 w-full max-w-[1720px] flex-col space-y-4 ${AURORA_PAGE_PAD_X}`}>
         {/* ── Admin Desks Quick-Switch Bar (Visible only to Admin / Staff) ──── */}
         {isAdmin && onSectionChange && (
-          <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/[0.06] p-2.5 sm:px-4">
+          <div className="aurora-max-panel flex flex-wrap items-center justify-between gap-2.5 border border-[var(--aurora-max-line)] bg-[rgba(8,16,15,0.7)] p-2.5 sm:px-4 backdrop-blur-[18px]">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan">
+              <span className="grid h-6 w-6 place-items-center border border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] text-[var(--aurora-max-emerald)]">
                 <Sparkles className="h-3.5 w-3.5" />
               </span>
-              <span className="font-mono text-[10px] font-black uppercase tracking-[0.14em] text-vouch-cyan">
-                Admin HR Lab (Aurora HQ)
-              </span>
+              <div>
+                <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.18em] text-[var(--aurora-max-emerald)]">
+                  ADMIN HR LAB · FLAGSHIP DESKS
+                </AuroraMaxEyebrow>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="flex items-center gap-1.5 rounded-lg border border-vouch-cyan/50 bg-vouch-cyan/20 px-2.5 py-1 font-mono text-[10px] font-bold text-white shadow-[0_0_12px_rgba(79,184,220,0.25)]">
-                <Flame className="h-3 w-3 text-vouch-cyan" />
-                Home Run Intelligence (Main)
-              </span>
-              <button
-                type="button"
+            <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+              <AuroraMaxControl
+                tone="primary"
+                className="!min-h-7 !px-2.5 !text-[10px] font-bold"
+              >
+                <Flame className="h-3 w-3" /> HR Intelligence (Main)
+              </AuroraMaxControl>
+              <AuroraMaxControl
                 onClick={() => onSectionChange('aurora_hr_hq')}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-[10px] font-bold text-white/70 transition hover:border-white/25 hover:bg-black/60 hover:text-white"
+                className="!min-h-7 !px-2.5 !text-[10px]"
               >
-                <Sparkles className="h-3 w-3 text-vouch-cyan" />
-                Aurora HQ (Admin Desks)
-              </button>
-              <button
-                type="button"
+                <Sparkles className="h-3 w-3 text-[var(--aurora-max-emerald)]" /> Aurora HQ
+              </AuroraMaxControl>
+              <AuroraMaxControl
                 onClick={() => onSectionChange('hr_max')}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-[10px] font-bold text-white/70 transition hover:border-white/25 hover:bg-black/60 hover:text-white"
+                className="!min-h-7 !px-2.5 !text-[10px]"
               >
-                <Radio className="h-3 w-3 text-white/50" />
-                Command Desk
-              </button>
-              <button
-                type="button"
+                <Radio className="h-3 w-3 text-[var(--aurora-max-muted)]" /> Command Desk
+              </AuroraMaxControl>
+              <AuroraMaxControl
                 onClick={() => onSectionChange('hr_v10')}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-[10px] font-bold text-white/70 transition hover:border-white/25 hover:bg-black/60 hover:text-white"
+                className="!min-h-7 !px-2.5 !text-[10px]"
               >
-                <Zap className="h-3 w-3 text-white/50" />
-                HR Intel V10
-              </button>
+                <Zap className="h-3 w-3 text-[var(--aurora-max-muted)]" /> HR Intel V10
+              </AuroraMaxControl>
             </div>
           </div>
         )}
 
         {/* ── Top Header & Command Center Bar ──────────────────────────── */}
-        <header className={`${AURORA_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5 space-y-4`}>
+        <header className="aurora-max-panel relative border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-4 sm:p-5 shadow-[var(--aurora-max-shadow)] backdrop-blur-[18px] space-y-4">
           <HrHeader
             mode={vm.mode}
             onRefresh={handleRefresh}
@@ -576,9 +579,9 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
         </header>
 
         {/* ── Slate Status Summary Row ───────────────────────────── */}
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 font-mono text-[10px] font-bold text-slate-200 sm:hidden">
+        <div className="flex items-center justify-between gap-2 border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] px-3 py-2 font-mono text-[10px] font-bold text-[var(--aurora-max-paper)] sm:hidden shadow-md backdrop-blur-[18px]">
           <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-vouch-cyan shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--aurora-max-emerald)]" />
             <span>{noGamesToday ? 'No games' : `${vm.slate.gameCount} Games`}</span>
           </div>
           <span className="text-white/20">•</span>
@@ -586,47 +589,49 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
             {freshnessTone.label}
           </span>
           <span className="text-white/20">•</span>
-          <span className="text-vouch-emerald">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
+          <span className="text-[var(--aurora-max-emerald)]">{vm.modeCounts?.confirmed ?? 0} Confirmed</span>
           <span className="text-white/20">•</span>
-          <span className="text-vouch-amber">{vm.modeCounts?.curated ?? 0} Preview</span>
+          <span className="text-[var(--aurora-max-amber)]">{vm.modeCounts?.curated ?? 0} Preview</span>
         </div>
 
         <div className="hidden sm:grid sm:grid-cols-4 gap-3">
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">
+          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
               MLB Slate
-            </p>
-            <p className="mt-1 text-sm font-black text-white">
+            </AuroraMaxEyebrow>
+            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-paper)]">
               {noGamesToday
                 ? 'No MLB games'
-                : `${vm.slate.gameCount} game${vm.slate.gameCount === 1 ? '' : 's'}`}
+                : `${vm.slate.gameCount} Game${vm.slate.gameCount === 1 ? '' : 's'} Active`}
             </p>
           </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">
+          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
               Freshness
-            </p>
-            <span
-              className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}
-            >
-              {freshnessTone.icon}
-              {freshnessTone.label}
-            </span>
+            </AuroraMaxEyebrow>
+            <div className="mt-1">
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${freshnessTone.className}`}
+              >
+                {freshnessTone.icon}
+                {freshnessTone.label}
+              </span>
+            </div>
           </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">
+          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
               Confirmed Orders
-            </p>
-            <p className="mt-1 text-sm font-black text-white">
-              {vm.modeCounts?.confirmed ?? 0} official
+            </AuroraMaxEyebrow>
+            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-emerald)]">
+              {vm.modeCounts?.confirmed ?? 0} official lineups
             </p>
           </div>
-          <div className={`${AURORA_PANEL_PREMIUM} rounded-xl p-3`}>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/40">
+          <div className="aurora-max-panel border border-[var(--aurora-max-line)] bg-[rgba(5,12,13,0.65)] p-3.5 backdrop-blur-[18px]">
+            <AuroraMaxEyebrow className="!text-[9px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-muted)]">
               Preview Candidates
-            </p>
-            <p className="mt-1 text-sm font-black text-white">
-              {vm.modeCounts?.curated ?? 0} projected
+            </AuroraMaxEyebrow>
+            <p className="mt-1 font-mono text-sm font-black text-[var(--aurora-max-amber)]">
+              {vm.modeCounts?.curated ?? 0} projected bats
             </p>
           </div>
         </div>
@@ -663,6 +668,19 @@ export const HomeRunIntelligencePageLegacy: React.FC<HomeRunIntelligencePageLega
               const match = vm.researchRows.find((row) => String(row.playerId) === playerId);
               if (match) openPlayerProfile(match);
             }}
+            onTogglePlayerVouch={(playerSummary) => {
+              const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
+              if (match) handleTogglePlayerVouch(match);
+            }}
+            onAddToSlip={
+              onSectionChange
+                ? (playerSummary) => {
+                    const match = vm.researchRows.find((row) => String(row.playerId) === String(playerSummary.playerId));
+                    if (match) addPlayerToSlip(match);
+                  }
+                : undefined
+            }
+            vouchPendingId={pendingPlayerVouchId}
           />
 
           {/* Candidates Board / Spreadsheet / Treemap */}

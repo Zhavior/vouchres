@@ -6,6 +6,7 @@ import { SORT_LABELS, type DeskSortKey, type HrMaxDeskRow } from '../mapHrWatchT
 import { HrMaxSlateQueue } from './HrMaxSlateQueue';
 import { HrMaxCardBoard } from './HrMaxCardBoard';
 import { HrMaxTableView } from './HrMaxTableView';
+import { HrMaxGameStacksView } from './HrMaxGameStacksView';
 
 export interface HrMaxMainPaneProps {
   viewMode: HrDeskViewMode;
@@ -110,10 +111,31 @@ export const HrMaxMainPane = React.memo(function HrMaxMainPane({
     );
   }
 
+  if (viewMode === 'games') {
+    return (
+      <AuroraMaxRankedWorkspace
+        title="Game Matchup Stacks"
+        subtitle={`${rows.length} batters organized by game matchup and opposing starting pitchers`}
+        controls={Controls}
+      >
+        <div className="p-2 sm:p-4">
+          <HrMaxGameStacksView
+            rows={rows}
+            activeId={activeId}
+            isSaved={isSaved}
+            onSelect={onSelect}
+            onToggleSaved={onToggleSaved}
+            onAddToSlip={onAddToSlip}
+          />
+        </div>
+      </AuroraMaxRankedWorkspace>
+    );
+  }
+
   return (
     <AuroraMaxRankedWorkspace
-        title="HRPI table"
-        subtitle={`${rows.length} ranked batters · HRPI, matchup, lineup, and research signal`}
+      title="HRPI table"
+      subtitle={`${rows.length} ranked batters · HRPI, matchup, lineup, and research signal`}
       controls={Controls}
     >
       <div className="p-2 sm:p-4">

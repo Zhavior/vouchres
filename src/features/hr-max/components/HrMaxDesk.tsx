@@ -18,16 +18,19 @@ import {
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import '../hr-max-desk.css';
 
+import { HrMaxTelemetryStrip } from './HrMaxTelemetryStrip';
 import { HrMaxToolbar } from './HrMaxToolbar';
 import { HrMaxStatusBar } from './HrMaxStatusBar';
 import { HrMaxSidecar } from './HrMaxSidecar';
 import { HrMaxMainPane } from './HrMaxMainPane';
 import { AuroraHqHeaderNav } from '../../aurora-hr-hq/components/AuroraHqHeaderNav';
 
-export type HrDeskViewMode = 'queue' | 'cards' | 'table';
+export type HrDeskViewMode = 'queue' | 'cards' | 'table' | 'games';
 
 function cycleSort(current: DeskSortKey): DeskSortKey {
-  if (current === 'hrpi') return 'time';
+  if (current === 'hrpi') return 'ev';
+  if (current === 'ev') return 'odds';
+  if (current === 'odds') return 'time';
   if (current === 'time') return 'volume';
   return 'hrpi';
 }
@@ -35,9 +38,12 @@ function cycleSort(current: DeskSortKey): DeskSortKey {
 function exportReceipts(rows: HrMaxDeskRow[]) {
   const payload = rows.map((row) => ({
     player: row.playerName,
+    team: row.team,
     matchup: row.matchupLabel,
     hrpi: row.score,
     lineup: row.lineupLabel,
+    odds: row.bookOddsLabel,
+    evEdge: row.evEdge,
     signal: row.signal,
     read: row.read,
     evidence: row.evidence.map((item) => ({ label: item.label, value: item.value, score: item.score ?? null })),
@@ -57,13 +63,13 @@ const LS_VIEW_MODE_KEY = 've_hr_max_view_mode';
 function getInitialViewMode(): HrDeskViewMode {
   try {
     const saved = localStorage.getItem(LS_VIEW_MODE_KEY);
-    if (saved === 'queue' || saved === 'cards' || saved === 'table') {
+    if (saved === 'queue' || saved === 'cards' || saved === 'table' || saved === 'games') {
       return saved;
     }
   } catch {
     // Ignore storage access errors
   }
-  return 'queue';
+  return 'cards';
 }
 
 type SavedAction = { type: 'toggle'; id: string };
@@ -137,7 +143,6 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
 
   const selectRow = useCallback((id: string) => {
     setActiveId(id);
-    // Pass 3: Decouple Selection — do not auto-open receipt
   }, []);
   
   const toggleReceipt = useCallback((id: string) => {
@@ -206,6 +211,15 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
           }
         />
 
+        {/* Live Telemetry Strip */}
+        <HrMaxTelemetryStrip
+          rows={visibleRows}
+          confirmedCount={confirmedCount}
+          totalCount={vm.stats.total}
+          onSelectPlayer={selectRow}
+        />
+
+        {/* Tactical Spotlight & Radar Sidecar */}
         <HrMaxSidecar
           activeRow={activeRow}
           saved={activeRow ? isSaved(activeRow.id) : false}
@@ -213,8 +227,10 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
           rawRows={vm.rows}
           onSpotlightSelect={(r) => selectRow(r.stableId)}
           onAddToSlip={handleRawAddToSlip}
+          onDeskAddToSlip={handleAddToSlip}
         />
 
+        {/* 4-Mode Toolbar */}
         <HrMaxToolbar
           date={vm.date}
           onDateChange={vm.setDate}
@@ -230,6 +246,7 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
           onFocusTier={vm.onFocusTier}
         />
 
+        {/* Status Bar */}
         <HrMaxStatusBar
           autoSwitchedToPreview={vm.autoSwitchedToPreview}
           refreshError={vm.refreshError}
@@ -242,6 +259,7 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
           onShowAll={() => vm.setMode('all')}
         />
 
+        {/* Main Viewport */}
         <HrMaxMainPane
           viewMode={viewMode}
           rows={visibleRows}
@@ -261,6 +279,7 @@ export default function HrMaxDesk({ onNavigate }: { onNavigate?: (section: strin
           selectedTiers={vm.selectedTiers}
         />
 
+        {/* Verification Footnotes */}
         <div className="hr-max-notes mt-6">
           <div className="flex items-center gap-2 text-[10px] text-white/35">
             <FileCheck2 className="h-3.5 w-3.5 text-[var(--aurora-max-emerald)]" aria-hidden="true" />

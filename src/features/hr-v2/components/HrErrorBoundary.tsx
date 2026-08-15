@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { captureReactError } from '../../../lib/sentry';
 
 interface HrErrorBoundaryProps {
@@ -45,9 +46,9 @@ export class HrErrorBoundary extends Component<HrErrorBoundaryProps, HrErrorBoun
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="p-8 text-center rounded-2xl bg-[#0d121f]/90 border border-red-500/30 text-white shadow-lg flex flex-col items-center justify-center gap-4 my-6">
-          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 text-lg font-bold">
-            ⚠️
+        <div className="p-8 text-center rounded-3xl bg-white/[0.02] backdrop-blur-2xl border border-red-500/30 text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] flex flex-col items-center justify-center gap-4 my-6">
+          <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
+            <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">
@@ -60,7 +61,7 @@ export class HrErrorBoundary extends Component<HrErrorBoundaryProps, HrErrorBoun
           <button
             type="button"
             onClick={this.handleReset}
-            className="px-4 py-2 rounded-xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan/30 text-xs font-bold transition-all shadow-sm"
+            className="px-5 py-2.5 rounded-xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan/30 text-xs font-bold transition-all shadow-sm"
           >
             Reload View Component
           </button>

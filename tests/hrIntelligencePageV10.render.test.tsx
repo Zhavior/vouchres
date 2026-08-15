@@ -233,10 +233,6 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       const sortSelect = screen.getByLabelText(/Sort slate by/i) as HTMLSelectElement;
       expect(sortSelect.value).toBe('ev');
 
-      // Min score slider should be 75
-      const minSlider = screen.getByLabelText(/Minimum HR Index threshold/i) as HTMLInputElement;
-      expect(minSlider.value).toBe('75');
-
       // Changing sort to 'odds' persists to localStorage
       fireEvent.change(sortSelect, { target: { value: 'odds' } });
       expect(JSON.parse(localStorage.getItem('ve_hr_v10_sortBy') || '""')).toBe('odds');
@@ -325,7 +321,7 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       render(<HrIntelligencePageV10 />);
 
       // Filter by moderate tab (empty results)
-      const moderateTab = screen.getByRole('tab', { name: /^👁️ MODERATE/i });
+      const moderateTab = screen.getByRole('tab', { name: /MODERATE/i });
       fireEvent.click(moderateTab);
 
       // Reset button is visible with exact copy
@@ -629,8 +625,9 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       const cardBtn = screen.getByRole('button', { name: /Card view/i });
       const tableBtn = screen.getByRole('button', { name: /Table view/i });
       const kanbanBtn = screen.getByRole('button', { name: /Kanban view/i });
+      const arena3dBtn = screen.getByRole('button', { name: /3D Stadium/i });
 
-      // Focus card button and simulate rapid ArrowRight presses: Card -> Table -> Kanban -> Card -> Table
+      // Focus card button and simulate rapid ArrowRight presses: Card -> Table -> Kanban -> 3D -> Card -> Table
       cardBtn.focus();
       fireEvent.keyDown(cardBtn, { key: 'ArrowRight' });
       expect(tableBtn.getAttribute('aria-pressed')).toBe('true');
@@ -639,6 +636,9 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       expect(kanbanBtn.getAttribute('aria-pressed')).toBe('true');
 
       fireEvent.keyDown(kanbanBtn, { key: 'ArrowRight' });
+      expect(arena3dBtn.getAttribute('aria-pressed')).toBe('true');
+
+      fireEvent.keyDown(arena3dBtn, { key: 'ArrowRight' });
       expect(cardBtn.getAttribute('aria-pressed')).toBe('true');
 
       fireEvent.keyDown(cardBtn, { key: 'ArrowRight' });
@@ -646,9 +646,9 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
 
       // Test Home and End keys
       fireEvent.keyDown(tableBtn, { key: 'End' });
-      expect(kanbanBtn.getAttribute('aria-pressed')).toBe('true');
+      expect(arena3dBtn.getAttribute('aria-pressed')).toBe('true');
 
-      fireEvent.keyDown(kanbanBtn, { key: 'Home' });
+      fireEvent.keyDown(arena3dBtn, { key: 'Home' });
       expect(cardBtn.getAttribute('aria-pressed')).toBe('true');
     });
 
@@ -674,10 +674,6 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       // ViewMode falls back to 'card'
       const cardBtn = screen.getByRole('button', { name: /Card view/i });
       expect(cardBtn.getAttribute('aria-pressed')).toBe('true');
-
-      // Min score slider falls back to default 60
-      const slider = screen.getByLabelText(/Minimum HR Index threshold/i) as HTMLInputElement;
-      expect(slider.value).toBe('60');
 
       // Sort selector falls back to 'score'
       const sortSelect = screen.getByLabelText(/Sort slate by/i) as HTMLSelectElement;

@@ -6,7 +6,8 @@ export interface PlayerIdentity {
   name: string;
   teamId: string;
   teamAbbreviation: string;
-  handedness: PlayerHandedness;
+  /** Omitted when the board payload does not carry bat side. */
+  handedness?: PlayerHandedness;
   /** Jersey number from the active roster entry (e.g. "99"). */
   jerseyNumber?: string;
   /** Abbreviated fielding position from roster entry (e.g. "RF", "2B", "DH"). */

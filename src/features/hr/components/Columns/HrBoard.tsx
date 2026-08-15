@@ -63,9 +63,9 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
   const canAdd = brief.canAddToSlip;
 
   return (
-    <article className={`z8-hr-compact-card relative overflow-hidden border-x border-b ${tier.border} bg-black/40 backdrop-blur-xl transition hover:bg-black/60`}>
+    <article className={`z8-hr-compact-card relative overflow-hidden rounded-xl border ${tier.border} bg-[#09131d]/90 backdrop-blur-xl transition hover:border-white/25 hover:bg-[#0d1c2b] shadow-md my-1.5`}>
       <div className="relative flex min-h-[92px] items-end gap-2.5 border-b border-white/[0.08] px-2.5 pt-2.5">
-        <div className="absolute left-0 top-0 border-b border-r border-white/10 bg-black/45 px-1.5 py-1 font-mono text-sm font-black tabular-nums text-white">
+        <div className="absolute left-0 top-0 rounded-br-lg border-b border-r border-white/10 bg-black/60 px-2 py-1 font-mono text-sm font-black tabular-nums text-white shadow-inner">
           {Math.round(player.hrScore)}
         </div>
         <div className="z8-hr-compact-card__headshot flex h-[76px] w-[76px] shrink-0 items-end justify-center overflow-hidden">
@@ -74,21 +74,21 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
         <div className="min-w-0 flex-1 pb-2.5">
           <p className="text-[14px] font-black leading-tight tracking-[-0.02em] text-white">{player.playerName}</p>
           <p className="mt-1 text-[10px] font-semibold text-white/55">{player.team} vs {player.opponent}</p>
-          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.05em] text-white/55">
+          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.05em] text-white/70">
             {player.truthStatus === 'official' ? <ShieldCheck className="h-2.5 w-2.5 text-[#00ff94]" /> : <ShieldQuestion className="h-2.5 w-2.5 text-amber-200" />}
             {player.truthStatus === 'official' ? 'Confirmed' : player.truthStatus === 'projected' ? 'Projected' : 'Unverified'}
           </div>
         </div>
         {result === 'hit' ? (
-          <span className="absolute right-2 top-2 inline-flex items-center gap-1 border border-orange-300/45 bg-orange-400/15 px-1.5 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] text-orange-200 shadow-[0_0_18px_rgba(251,146,60,.24)]">
-            <Flame className="h-3 w-3" /> HR
+          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-orange-300/45 bg-orange-400/20 px-1.5 py-1 font-mono text-[8px] font-black uppercase tracking-[0.08em] text-orange-200 shadow-[0_0_18px_rgba(251,146,60,.35)]">
+            <Flame className="h-3 w-3 fill-current" /> HR
           </span>
         ) : result === 'no-hr' ? (
-          <span className="absolute right-2 top-2 border border-white/10 bg-black/35 px-1.5 py-1 font-mono text-[8px] font-bold uppercase text-white/35">No HR</span>
+          <span className="absolute right-2 top-2 rounded-md border border-white/10 bg-black/50 px-1.5 py-1 font-mono text-[8px] font-bold uppercase text-white/35">No HR</span>
         ) : null}
       </div>
 
-      <div className="grid grid-cols-3 border-b border-white/[0.08] bg-black/20 py-2">
+      <div className="grid grid-cols-3 border-b border-white/[0.08] bg-black/30 py-2">
         {[
           ['Power', player.hitterPower],
           ['Pitcher vulnerability', player.pitcherVulnerability],
@@ -101,7 +101,7 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
         ))}
       </div>
 
-      <div className="border-b border-white/[0.08] p-2">
+      <div className="border-b border-white/[0.08] p-2 bg-black/15">
         <HrOpportunitySummary player={player} compact />
       </div>
 
@@ -121,7 +121,7 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
           type="button"
           onClick={() => onResearch(player)}
           aria-label={`Research ${player.playerName}`}
-          className="flex min-h-9 items-center justify-center gap-1.5 border border-[#00f0ff]/30 bg-[#00f0ff]/[0.055] px-2 text-[10px] font-black text-white/80 transition hover:border-[#00f0ff]/60 hover:text-[#00f0ff]"
+          className="flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#00f0ff]/30 bg-[#00f0ff]/[0.08] px-2 text-[10px] font-black text-white/80 transition hover:border-[#00f0ff]/60 hover:text-[#00f0ff]"
         >
           <Search className="h-3 w-3" /> Research
         </button>
@@ -131,7 +131,7 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
           disabled={!canAdd}
           title={brief.addToSlipBlockReason ?? 'Add player to slip'}
           aria-label={`Add ${player.playerName} to slip`}
-          className="flex min-h-9 items-center justify-center gap-1 border border-[#00ff94]/30 bg-[#00ff94]/[0.055] px-2 text-[10px] font-black text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
+          className="flex min-h-9 items-center justify-center gap-1 rounded-lg border border-[#00ff94]/30 bg-[#00ff94]/[0.08] px-2 text-[10px] font-black text-[#75ffc5] transition hover:border-[#00ff94]/60 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <Plus className="h-3.5 w-3.5" /> Slip
         </button>
@@ -141,15 +141,15 @@ export function CompactPlayerCard({ player, tier, onResearch, onAddToSlip, onTog
           type="button"
           onClick={() => onTogglePlayerVouch?.(player)}
           disabled={playerVouchPending || !onTogglePlayerVouch}
-          className={`flex min-h-9 w-full items-center justify-center gap-2 border px-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${
+          className={`flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border px-2 text-[10px] font-black uppercase tracking-[0.08em] transition ${
             playerVouchSummary?.viewerHasVouched
-              ? 'border-vouch-emerald/35 bg-vouch-emerald/12 text-vouch-emerald'
-              : 'border-white/10 bg-black/25 text-white/60 hover:text-white'
+              ? 'border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald shadow-[0_0_12px_rgba(49,181,131,0.25)]'
+              : 'border-white/10 bg-black/30 text-white/60 hover:border-white/20 hover:text-white'
           } disabled:cursor-not-allowed disabled:opacity-55`}
         >
           <Heart className={`h-3.5 w-3.5 ${playerVouchSummary?.viewerHasVouched ? 'fill-current' : ''}`} />
           {playerVouchSummary?.viewerHasVouched ? 'Vouched' : 'Vouch'}
-          <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/55">
+          <span className="rounded-full border border-white/10 bg-black/40 px-2 py-0.5 font-mono text-[9px] text-white/60">
             {playerVouchPending ? '...' : playerVouchSummary?.totalVouches ?? 0}
           </span>
         </button>
@@ -187,13 +187,15 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
   const virtualItems = shouldVirtualize ? virtualizer.getVirtualItems() : [];
 
   return (
-    <section className="z8-hr-tier-section min-w-0 overflow-hidden rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]" aria-label={`${tier.shortTitle} signals`}>
-      <header className={`flex items-center justify-between gap-2 border ${tier.border} bg-black/40 backdrop-blur-xl px-2.5 py-2.5 shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
-        <div className={`flex items-center gap-1.5 ${tier.tone}`}>
-          <Icon className="h-3.5 w-3.5" />
-          <h3 className="font-mono text-[11px] font-black uppercase tracking-[0.1em]">{tier.shortTitle}</h3>
+    <section className="z8-hr-tier-section min-w-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-b from-[#0c1827]/90 to-[#071018]/90 shadow-xl backdrop-blur-xl" aria-label={`${tier.shortTitle} signals`}>
+      <header className={`flex items-center justify-between gap-2 border-b ${tier.border} bg-black/50 backdrop-blur-xl px-3 py-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
+        <div className={`flex items-center gap-2 ${tier.tone}`}>
+          <Icon className="h-4 w-4" />
+          <h3 className="font-mono text-xs font-black uppercase tracking-[0.14em]">{tier.shortTitle}</h3>
         </div>
-        <span className="font-mono text-[9px] font-bold tabular-nums text-white/48">{players.length} player{players.length === 1 ? '' : 's'}</span>
+        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[9px] font-bold tabular-nums text-white/60">
+          {players.length} bat{players.length === 1 ? '' : 's'}
+        </span>
       </header>
 
       <div className="p-1.5">
@@ -271,10 +273,10 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-white/[0.08] bg-black/20 py-2.5 font-mono text-[9px] font-black uppercase tracking-[0.08em] text-white/45 transition hover:bg-white/[0.025] hover:text-white/75"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-white/10 bg-black/40 py-2.5 font-mono text-[10px] font-black uppercase tracking-[0.1em] text-white/60 transition hover:bg-black/60 hover:text-white"
         >
-          {expanded ? 'Show top 2' : `Show all ${players.length}`}
-          <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {expanded ? 'Show top 2' : `Show all ${players.length} bats`}
+          <ChevronDown className={`h-3 w-3 text-vouch-cyan transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       ) : null}
     </section>

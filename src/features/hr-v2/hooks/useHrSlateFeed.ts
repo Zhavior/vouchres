@@ -1,29 +1,59 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChunkA } from '../api/contracts';
-import { fetchDailyMlbSlate } from '../api/liveMlbService';
-import { mockChunkAData } from '../api/mockData';
+import { hrBoardQueryOptions, todayISO } from '../../../hooks/queries/hrBoardQuery';
+import { buildBoard } from '../../hr/utils/normalizeHrWatch';
+import { mapHrWatchBoardToChunkA } from '../api/mapHrWatchRowToChunkA';
+import type { ChunkA } from '../api/contracts';
 
-export function useHrSlateFeed() {
-  const query = useQuery<ChunkA[]>({
-    queryKey: ['mlb-live-hr-desk'],
-    queryFn: fetchDailyMlbSlate,
-    initialData: mockChunkAData,
-    refetchInterval: 45000, // 45-second background line/slate updates
-    staleTime: 30000,
-    retry: 2,
-  });
+export interface HrSlateFeedState {
+  data: ChunkA[];
+  loading: boolean;
+  error: Error | null;
+  isRetrying: boolean;
+  isFailed: boolean;
+  failureCount: number;
+  dataUpdatedAt: number;
+  refetch: () => unknown;
+  isLastGood?: boolean;
+  feedSource?: string | null;
+}
+
+/**
+ * Same query key + loader as hr_max / Aurora HQ (`queryKeys.hrBoard`).
+ * Do not fetch statsapi.mlb.com from the browser — that 6s abort + mock fallback
+ * is what made this desk look like it kept disconnecting (L027 / L028).
+ */
+export function useHrSlateFeed(): HrSlateFeedState {
+  const date = todayISO();
+  const query = useQuery(hrBoardQueryOptions(date));
+
+  const updatedAt = query.dataUpdatedAt
+    ? new Date(query.dataUpdatedAt).toISOString()
+    : '';
+
+  const data = useMemo(
+    () => (query.data ? mapHrWatchBoardToChunkA(buildBoard(query.data), updatedAt) : []),
+    [query.data, updatedAt],
+  );
 
   const isRetrying = Boolean(query.fetchStatus === 'fetching' && query.failureCount > 0);
-  const isFailed = Boolean(query.isError && query.fetchStatus !== 'fetching');
+  const isFailed = Boolean(query.isError && !query.data && query.fetchStatus !== 'fetching');
+  const source = typeof query.data?.meta?.source === 'string' ? query.data.meta.source : null;
 
   return {
-    data: query.data ?? [],
-    loading: query.isLoading,
-    error: query.error,
+    data,
+    loading: query.isLoading && !query.data,
+    error: isFailed
+      ? query.error instanceof Error
+        ? query.error
+        : new Error('Home Run Intelligence could not reach its validated data service.')
+      : null,
     isRetrying,
     isFailed,
     failureCount: query.failureCount,
     dataUpdatedAt: query.dataUpdatedAt,
     refetch: query.refetch,
+    isLastGood: source === 'validated_hr_board_last_good',
+    feedSource: source,
   };
 }

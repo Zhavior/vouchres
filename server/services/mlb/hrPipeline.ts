@@ -22,6 +22,7 @@ import { HybridTTLCache } from "../../lib/hybridTTLCache";
 import { getScheduleByDate, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
+import { getSingleYearStatcastBatterMap, StatcastBatterQuality } from "./statcastClient";
 import { NormalizedGame } from "./mlbTypes";
 import { clamp } from "../intelligence/scoring";
 import { getParkFactor } from "./parkFactors";
@@ -471,7 +472,8 @@ function scoreCandidate(
   hitterStats: HitterStats | null,
   pitcherStats: PitcherSeasonStats | null,
   game: GameContext,
-  status: "confirmed" | "projected" | "warning"
+  status: "confirmed" | "projected" | "warning",
+  statcast?: StatcastBatterQuality | null
 ): ScoredHrCandidate {
   const isHome = player.teamId === game.homeTeamId;
   const pitcher = isHome ? game.probablePitchers.away : game.probablePitchers.home;
@@ -777,6 +779,11 @@ function scoreCandidate(
     injuryStatus: player.injuryStatus,
     hrScore,
     estimatedHrProbability,
+    xslg: statcast?.xslg ?? null,
+    barrelRate: statcast?.barrelPct != null && Number.isFinite(statcast.barrelPct)
+      ? Number((statcast.barrelPct / 100).toFixed(3))
+      : null,
+    avgExitVelo: statcast?.avgExitVelo ?? null,
     recentHomeRuns: hitterStats?.recentGames?.length ? recentHr : undefined,
     recentHrGames: hitterStats?.recentGames?.length ? recentHrGames : undefined,
     recentGamesChecked: hitterStats?.recentGames?.length,
@@ -868,6 +875,12 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
       };
     }
 
+    // Pre-warm / retrieve 12-hour cached Baseball Savant Statcast map
+    const statcastMapPromise = getSingleYearStatcastBatterMap().catch((err) => {
+      console.warn("[hrPipeline] statcast map fetch failed:", err instanceof Error ? err.message : String(err));
+      return {} as Record<number, StatcastBatterQuality>;
+    });
+
     // STEP 2: Fetch pitcher stats (only probable pitchers — ~26 calls)
     const pitcherIds = new Set<number>();
     for (const g of gameContexts) {
@@ -903,6 +916,8 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         if (r.status === "fulfilled") hitterStatsMap.set(r.value.id, r.value.stats);
       }
     }
+
+    const statcastMap = await statcastMapPromise;
 
     // STEP 4: Validate + score each candidate
     const seenPlayerIds = new Set<number>();
@@ -950,6 +965,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
       if (!game) continue;
 
       const hitterStats = hitterStatsMap.get(player.playerId) ?? null;
+      const statcast = statcastMap[player.playerId] ?? null;
       const isHome = player.teamId === game.homeTeamId;
       const pitcher = isHome ? game.probablePitchers.away : game.probablePitchers.home;
       const pitcherStats = pitcher ? (pitcherStatsMap.get(pitcher.pitcherId) ?? null) : null;
@@ -973,7 +989,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         seenPlayerIds.add(player.playerId);
 
         // Score only validated confirmed candidates
-        const scored = scoreCandidate(player, hitterStats, pitcherStats, game, validation.status as any);
+        const scored = scoreCandidate(player, hitterStats, pitcherStats, game, validation.status as any, statcast);
         candidates.push(scored);
         continue;
       }
@@ -997,7 +1013,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         if (previewValidation.valid) {
           eligiblePreviewPoolCount++;
           seenProjectedPreviewIds.add(player.playerId);
-          const previewScored = scoreCandidate(player, hitterStats, pitcherStats, game, "projected");
+          const previewScored = scoreCandidate(player, hitterStats, pitcherStats, game, "projected", statcast);
           const previewWarnings = [
             "Official lineup not posted yet. Do not treat as confirmed.",
             ...previewScored.warnings.filter((warning) => !warning.startsWith("Lineup not confirmed yet")),

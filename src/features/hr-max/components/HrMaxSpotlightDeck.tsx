@@ -1,20 +1,23 @@
+import React from 'react';
 import { Plus, Sparkles, Star, TrendingUp, Zap } from 'lucide-react';
 import {
   AuroraMaxPanel,
   AuroraMaxScoreBadge,
   AuroraMaxTruthBadge,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
+import { logoByTeamName } from '../../../lib/teamLogos';
 import { selectSpotlight, type SpotlightPick } from '../../hr/engine/signalScore';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 
-const HIGHLIGHT_STYLES: Record<SpotlightPick['key'], { border: string; bg: string; text: string }> = {
-  top: { border: 'border-amber-400/40', bg: 'bg-amber-400/10', text: 'text-amber-300' },
-  power: { border: 'border-orange-400/40', bg: 'bg-orange-400/10', text: 'text-orange-300' },
-  matchup: { border: 'border-[var(--aurora-max-emerald)]/40', bg: 'bg-[var(--aurora-max-emerald)]/10', text: 'text-[var(--aurora-max-emerald)]' },
-  value: { border: 'border-sky-400/40', bg: 'bg-sky-400/10', text: 'text-sky-300' },
+const HIGHLIGHT_STYLES: Record<SpotlightPick['key'], { border: string; bg: string; text: string; glow: string }> = {
+  top: { border: 'border-amber-400/40', bg: 'bg-amber-400/10', text: 'text-amber-300', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.12)]' },
+  power: { border: 'border-orange-400/40', bg: 'bg-orange-400/10', text: 'text-orange-300', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.12)]' },
+  matchup: { border: 'border-[var(--aurora-max-emerald)]/40', bg: 'bg-[var(--aurora-max-emerald)]/10', text: 'text-[var(--aurora-max-emerald)]', glow: 'shadow-[0_0_20px_rgba(0,217,160,0.12)]' },
+  value: { border: 'border-sky-400/40', bg: 'bg-sky-400/10', text: 'text-sky-300', glow: 'shadow-[0_0_20px_rgba(56,189,248,0.12)]' },
 };
 
-export function HrMaxSpotlightDeck({
+export const HrMaxSpotlightDeck = React.memo(function HrMaxSpotlightDeck({
   rows,
   onSelect,
   onAddToSlip,
@@ -31,10 +34,17 @@ export function HrMaxSpotlightDeck({
       {spotlights.map((pick) => {
         const style = HIGHLIGHT_STYLES[pick.key];
         const { row } = pick;
+        const teamLogo = logoByTeamName(row.team);
+
+        // Subscores
+        const powerScore = typeof row.hitterPower === 'number' && Number.isFinite(row.hitterPower) ? Math.round(row.hitterPower) : null;
+        const pitcherScore = typeof row.pitcherVulnerability === 'number' && Number.isFinite(row.pitcherVulnerability) ? Math.round(row.pitcherVulnerability) : null;
+        const parkScore = typeof (row.parkContext ?? row.parkFactor) === 'number' && Number.isFinite(row.parkContext ?? row.parkFactor) ? Math.round((row.parkContext ?? row.parkFactor)!) : null;
+
         return (
           <AuroraMaxPanel
             key={pick.key}
-            className={`group cursor-pointer border ${style.border} transition hover:bg-white/[0.025]`}
+            className={`group cursor-pointer border ${style.border} ${style.glow} transition-all duration-200 hover:bg-white/[0.03] hover:border-white/30`}
           >
             <div className="p-3" onClick={() => onSelect(row)}>
               {/* Category Header */}
@@ -43,25 +53,59 @@ export function HrMaxSpotlightDeck({
                   <span>{pick.icon}</span>
                   <span>{pick.title}</span>
                 </span>
-                <span className="font-mono text-[9px] font-bold uppercase text-white/40">
+                <span className="font-mono text-[9px] font-bold uppercase text-white/50 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
                   {pick.metricLabel}: {pick.metricValue}
                 </span>
               </div>
 
-              {/* Player Identity */}
-              <div className="mt-2.5 flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <AuroraMaxTruthBadge state={row.truthStatus === 'official' ? 'confirmed' : 'projected'}>
-                    {row.truthStatus === 'official' ? 'Confirmed' : 'Projected'}
-                  </AuroraMaxTruthBadge>
-                  <h4 className="mt-1 truncate text-xs font-bold text-white group-hover:text-[var(--aurora-max-emerald)]">
-                    {row.playerName}
-                  </h4>
-                  <p className="mt-0.5 font-mono text-[9px] text-white/40">
-                    {row.team} vs {row.opponent} · {row.gameTime || 'TBD'}
-                  </p>
+              {/* Player Identity with Headshot */}
+              <div className="mt-2.5 flex items-start justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-black/40">
+                    <PlayerHeadshot name={row.playerName} playerId={row.playerId ? String(row.playerId) : undefined} size={40} />
+                  </div>
+                  <div className="min-w-0">
+                    <AuroraMaxTruthBadge state={row.truthStatus === 'official' ? 'confirmed' : 'projected'}>
+                      {row.truthStatus === 'official' ? 'Confirmed' : 'Projected'}
+                    </AuroraMaxTruthBadge>
+                    <h4 className="mt-0.5 truncate text-xs font-bold text-white group-hover:text-[var(--aurora-max-emerald)] transition-colors">
+                      {row.playerName}
+                    </h4>
+                    <div className="flex items-center gap-1 font-mono text-[9px] text-white/50">
+                      {teamLogo && <img src={teamLogo} alt="" className="h-2.5 w-2.5 object-contain" />}
+                      <span>{row.team} vs {row.opponent}</span>
+                    </div>
+                  </div>
                 </div>
-                <AuroraMaxScoreBadge score={row.hrScore} />
+                <div className="flex flex-col items-end">
+                  <AuroraMaxScoreBadge score={row.hrScore} />
+                  <span className="mt-0.5 font-mono text-[8px] font-bold text-white/30">HRPI</span>
+                </div>
+              </div>
+
+              {/* Mini Layer Bars (Power / Pitcher / Park) */}
+              <div className="mt-2.5 grid grid-cols-3 gap-1.5 pt-2 border-t border-white/[0.06] font-mono text-[8px]">
+                <div className="flex flex-col">
+                  <span className="text-white/40 uppercase">Power</span>
+                  <div className="h-1 w-full bg-white/10 rounded overflow-hidden mt-0.5">
+                    <div style={{ width: `${powerScore ?? 50}%` }} className="h-full bg-orange-400" />
+                  </div>
+                  <span className="text-white/70 font-bold mt-0.5 tabular-nums">{powerScore ?? '—'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white/40 uppercase">Matchup</span>
+                  <div className="h-1 w-full bg-white/10 rounded overflow-hidden mt-0.5">
+                    <div style={{ width: `${pitcherScore ?? 50}%` }} className="h-full bg-[var(--aurora-max-emerald)]" />
+                  </div>
+                  <span className="text-white/70 font-bold mt-0.5 tabular-nums">{pitcherScore ?? '—'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white/40 uppercase">Park</span>
+                  <div className="h-1 w-full bg-white/10 rounded overflow-hidden mt-0.5">
+                    <div style={{ width: `${parkScore ?? 50}%` }} className="h-full bg-sky-400" />
+                  </div>
+                  <span className="text-white/70 font-bold mt-0.5 tabular-nums">{parkScore ?? '—'}</span>
+                </div>
               </div>
 
               {/* Reasons Snapshot */}
@@ -70,7 +114,10 @@ export function HrMaxSpotlightDeck({
               </p>
 
               {/* Action Button */}
-              <div className="mt-2.5 flex items-center justify-end border-t border-white/[0.06] pt-2">
+              <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.06] pt-2">
+                <span className="font-mono text-[9px] text-white/40">
+                  {row.oddsLabel || (row.bookOdds ? `+${row.bookOdds}` : 'Line open')}
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -78,7 +125,7 @@ export function HrMaxSpotlightDeck({
                     onAddToSlip(row);
                   }}
                   title="Add to Parlay Slip"
-                  className="inline-flex h-6 items-center gap-1 border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 px-2 font-mono text-[9px] font-bold uppercase text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/20"
+                  className="inline-flex h-6 items-center gap-1 border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 px-2 font-mono text-[9px] font-bold uppercase text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/25"
                 >
                   <Plus className="h-2.5 w-2.5" /> Add Slip
                 </button>
@@ -89,4 +136,4 @@ export function HrMaxSpotlightDeck({
       })}
     </div>
   );
-}
+});

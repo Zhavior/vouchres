@@ -3,7 +3,7 @@ import type { HrBoardFreshness, HrParlayPickerPlayer } from '../hr/utils/hrDecis
 import type { HrWatchRow, TruthStatus } from '../hr/types/hrWatch';
 import type { AuroraMaxEvidenceItem, AuroraMaxTruthState } from '../../components/aurora-max/AuroraMaxPrimitives';
 
-export type DeskSortKey = 'hrpi' | 'time' | 'volume';
+export type DeskSortKey = 'hrpi' | 'ev' | 'odds' | 'time' | 'volume';
 export type DeskDisplayTier = 'Elite' | 'Strong' | 'Watch' | 'Sleepers';
 
 export type HrMaxDeskRow = {
@@ -36,6 +36,11 @@ export type HrMaxDeskRow = {
   dataStatus: 'official' | 'projected' | 'unknown';
   reasoningSnapshot: string;
   riskSnapshot: string;
+  bookOddsLabel: string | null;
+  evEdge: number | null;
+  hrProbability: number | null;
+  impliedProbability: number | null;
+  raw: HrWatchRow;
 };
 
 function parseTimeValue(gameTime: string | null): number | null {
@@ -156,6 +161,20 @@ export function mapHrWatchToDeskRow(
     } satisfies AuroraMaxEvidenceItem,
   ];
 
+  const hrProb = typeof row.hrProbability === 'number' && Number.isFinite(row.hrProbability) ? row.hrProbability : null;
+  const impliedProb = typeof row.impliedProbability === 'number' && Number.isFinite(row.impliedProbability) ? row.impliedProbability : null;
+  
+  let evEdge: number | null = null;
+  if (hrProb != null && impliedProb != null && impliedProb > 0) {
+    evEdge = Math.round(((hrProb - impliedProb) / impliedProb) * 1000) / 10;
+  }
+
+  const bookOddsLabel = row.oddsLabel?.trim()
+    ? row.oddsLabel.trim()
+    : typeof row.bookOdds === 'number' && Number.isFinite(row.bookOdds)
+      ? `${row.bookOdds > 0 ? '+' : ''}${row.bookOdds}`
+      : null;
+
   return {
     id: row.stableId,
     playerName: row.playerName,
@@ -187,12 +206,23 @@ export function mapHrWatchToDeskRow(
     dataStatus: confirmed ? 'official' : row.truthStatus === 'projected' ? 'projected' : 'unknown',
     reasoningSnapshot: brief.reason,
     riskSnapshot: brief.risk,
+    bookOddsLabel,
+    evEdge,
+    hrProbability: hrProb,
+    impliedProbability: impliedProb,
+    raw: row,
   };
 }
 
 export function sortDeskRows(rows: HrMaxDeskRow[], sortKey: DeskSortKey): HrMaxDeskRow[] {
   return [...rows].sort((left, right) => {
     if (sortKey === 'hrpi') return right.score - left.score;
+    if (sortKey === 'ev') return (right.evEdge ?? -999) - (left.evEdge ?? -999);
+    if (sortKey === 'odds') {
+      const leftOdds = left.raw.bookOdds ?? -9999;
+      const rightOdds = right.raw.bookOdds ?? -9999;
+      return rightOdds - leftOdds;
+    }
     if (sortKey === 'volume') return (right.attention ?? -1) - (left.attention ?? -1);
     const leftTime = left.timeValue ?? Number.POSITIVE_INFINITY;
     const rightTime = right.timeValue ?? Number.POSITIVE_INFINITY;
@@ -215,6 +245,8 @@ export function formatDeskDate(isoDate: string): string {
 
 export const SORT_LABELS: Record<DeskSortKey, string> = {
   hrpi: 'HRPI score',
+  ev: '+EV edge',
+  odds: 'Vegas odds',
   time: 'Game time',
   volume: 'Market attention',
 };

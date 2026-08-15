@@ -5,7 +5,7 @@ interface HrIndexMeterProps {
   label?: string;
 }
 
-export function HrIndexMeter({ score, label = 'HR INDEX' }: HrIndexMeterProps) {
+export function HrIndexMeter({ score, label = 'HRPI' }: HrIndexMeterProps) {
   // Determine tier & color styling based on score
   let tierLabel = 'MODERATE';
   let strokeColor = '#64748b'; // Slate

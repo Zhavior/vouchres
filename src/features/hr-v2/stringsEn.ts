@@ -17,6 +17,8 @@ export const STRINGS_EN = {
       reconnecting: (current: number, max: number) => `RECONNECTING (${current}/${max})`,
       liveEngine: 'LIVE ENGINE',
       mlbFeedConnected: 'MLB FEED CONNECTED',
+      mlbFeedLastGood: 'LAST GOOD BOARD',
+      previewMode: 'PREVIEW MODE',
       updatedPrefix: (timeAgo: string) => `Updated ${timeAgo}`,
       timeUnavailable: 'Update time unavailable',
       tooltipLastUpdated: (timeStr: string) => `Last updated: ${timeStr}`,
@@ -27,18 +29,51 @@ export const STRINGS_EN = {
   // View Options & Toggles
   views: {
     groupAriaLabel: 'View mode toggle',
-    card: { label: 'Card', icon: '🎴', ariaLabel: 'Card view' },
-    table: { label: 'Table', icon: '☰', ariaLabel: 'Table view' },
-    kanban: { label: 'Kanban', icon: '📊', ariaLabel: 'Kanban view' },
+    card: { label: 'Card', icon: 'card', ariaLabel: 'Card view' },
+    table: { label: 'Table', icon: 'table', ariaLabel: 'Table view' },
+    kanban: { label: 'Kanban', icon: 'kanban', ariaLabel: 'Kanban view' },
+    arena3d: { label: '3D Stadium', icon: '3d', ariaLabel: '3D Stadium arena view' },
   },
 
   // Tier Filter Tabs
   tierTabs: {
     groupAriaLabel: 'Tier Quick Filters',
-    all: { label: 'ALL', icon: '📋' },
-    very_high: { label: 'VERY HIGH', icon: '⚡' },
-    high: { label: 'HIGH', icon: '🔥' },
-    moderate: { label: 'MODERATE', icon: '👁️' },
+    all: { label: 'ALL', icon: 'all' },
+    very_high: { label: 'VERY HIGH', icon: 'very_high' },
+    high: { label: 'HIGH', icon: 'high' },
+    moderate: { label: 'MODERATE', icon: 'moderate' },
+  },
+
+  // Grouping Options (Matchup Chronological vs Tiers)
+  grouping: {
+    groupAriaLabel: 'Card grouping mode',
+    label: 'Group By:',
+    matchup: {
+      label: 'Matchup / Teams',
+      ariaLabel: 'Group by game matchups chronologically from earliest to late games',
+      gameTitle: (away: string, home: string) => `${away} @ ${home}`,
+      gameOrderBadge: (index: number, total: number) => `Game ${index} of ${total}`,
+      earliestBadge: 'First Game of Day',
+      liveBadge: 'LIVE GAME',
+      propsCount: (count: number) => `${count} Hitters`,
+      topHrpi: (score: number, name: string) => `Top: ${score} HRPI (${name})`,
+      collapse: 'Collapse Game',
+      expand: 'Expand Game',
+    },
+    tier: {
+      label: 'Confidence Tiers',
+      ariaLabel: 'Group by confidence tiers',
+    },
+    slider: {
+      navAriaLabel: 'Game matchup slider',
+      allGames: 'All Slate',
+      prevGame: 'Previous Game (Left Arrow)',
+      nextGame: 'Next Game (Right Arrow)',
+      gameIndexBadge: (curr: number, total: number) => `Game ${curr} of ${total}`,
+      keyboardHint: 'Arrow Keys (Left/Right) to slide games',
+      jumpToGame: (title: string) => `Slide to ${title}`,
+      liveIndicator: 'LIVE',
+    },
   },
 
   // Search, Sliders & Sort Controls
@@ -46,17 +81,59 @@ export const STRINGS_EN = {
     searchAriaLabel: 'Search player or team',
     searchPlaceholder: 'Search player or team...',
     filteringPending: 'Filtering…',
-    sliderLabelFull: 'Min HR Index:',
-    sliderLabelShort: 'Min:',
-    sliderAriaLabel: 'Minimum HR Index threshold',
     sortLabel: 'Sort:',
     sortAriaLabel: 'Sort slate by',
     sortOptions: {
-      score: 'HR Index (Highest)',
+      score: 'HRPI Score (Highest)',
       ev: 'EV% (Highest)',
       odds: 'Odds (Longest)',
     },
-    evRankedChip: '⚡ EV RANKED',
+    evRankedChip: 'EV RANKED',
+    startersOnly: 'Starters Only',
+    fullRoster: 'Full Roster',
+    previewUntilLineups: 'Preview — lineups pending',
+    startersOnlyAria: 'Switch to full roster view',
+    fullRosterAria: 'Switch to starters-only view',
+    previewUntilLineupsAria:
+      'Official lineups not posted. Showing projected preview. Switch to full roster view',
+    showingProjectedPool: 'projected pool',
+    showingActiveRoster: 'active roster hitters',
+    confirmedStartersCount: (count: number) => `(${count} confirmed starters)`,
+  },
+
+  // 3D Stadium & Trajectory Arena
+  stadium3d: {
+    title: '3D Stadium & Trajectory Arena',
+    subtitle: 'Statcast parabolic launch physics, wind deflection & spatial hit telemetry',
+    cameraPresetsLabel: 'Camera Perspective:',
+    cameraPresets: {
+      flyover: 'Flyover (3D)',
+      plate: 'Behind Plate',
+      outfield: 'Outfield',
+      pressbox: 'Press Box',
+    },
+    legend: {
+      elite: 'Elite HRPI (85+)',
+      high: 'High HRPI (70–84)',
+      moderate: 'Moderate HRPI (<70)',
+      trajectory: 'Flight Trajectory',
+      landingZone: 'Wall Clearance Zone',
+    },
+    dossier: {
+      title: '3D Launch Telemetry',
+      quickAdd: 'Quick Add to Slip',
+      exitVelo: 'Exit Velocity',
+      launchAngle: 'Launch Angle',
+      distance: 'Est. Distance',
+      parkFactor: 'Park Factor',
+      close: 'Close Dossier',
+    },
+    controlsHint: 'Drag to rotate 3D view • Scroll to zoom • Click trajectory to spotlight',
+  },
+
+  previewBanner: {
+    title: 'Preview mode',
+    body: 'Official lineup not posted yet. Showing preview candidates only — do not treat as confirmed.',
   },
 
   // State Screens (Loading, Retrying, Error, Empty)
@@ -76,12 +153,12 @@ export const STRINGS_EN = {
       button: 'Retry Connection',
     },
     empty: {
-      headline: (minScore: number, tierText: string, queryText: string) =>
-        `No players matched your filter criteria (${minScore}+ HR Index${tierText}${queryText}).`,
+      headline: (tierText: string, queryText: string) =>
+        `No players matched your filter criteria (${tierText}${queryText}).`.replace('()', '').replace('(, ', '('),
       showingZero: 'Showing',
       ofTotal: (total: number) => `of ${total} total slate players`,
       filteredOut: (total: number) => `${total} filtered out`,
-      adjustHint: '). Try adjusting the search query or slider.',
+      adjustHint: '). Try adjusting your search query or tier filter.',
       resetButton: 'Reset Search & Filters',
     },
   },

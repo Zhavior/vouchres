@@ -6,6 +6,7 @@ import { renderHook, act } from '@testing-library/react';
 import {
   calculateEV,
   filterSlateItem,
+  resolveStartersOnlyFilter,
   sortSlateItems,
   formatTimeAgo,
   safeNumber,
@@ -134,9 +135,9 @@ describe('HrIntelligencePageV10 — Constants', () => {
     expect(DEFAULT_MIN_SCORE).toBe(60);
   });
 
-  it('defines 3 accessible view options with aria labels', () => {
-    expect(VIEW_OPTIONS).toHaveLength(3);
-    expect(VIEW_OPTIONS.map((v) => v.key)).toEqual(['card', 'table', 'kanban']);
+  it('defines 4 accessible view options with aria labels', () => {
+    expect(VIEW_OPTIONS).toHaveLength(4);
+    expect(VIEW_OPTIONS.map((v) => v.key)).toEqual(['card', 'table', 'kanban', '3d']);
     expect(VIEW_OPTIONS.every((v) => Boolean(v.ariaLabel))).toBe(true);
   });
 });
@@ -301,6 +302,39 @@ describe('HrIntelligencePageV10 — Pure Functions & Defensive Guards', () => {
       expect(
         filterSlateItem(lowItem, { selectedTier: 'all', searchQuery: '', minScore: NaN, startersOnly: false })
       ).toBe(false);
+    });
+
+    it('hides roster rows when startersOnly is applied', () => {
+      const roster = { ...mockItemA, lineupStatus: 'roster' as const };
+      expect(
+        filterSlateItem(roster, { selectedTier: 'all', searchQuery: '', minScore: 50, startersOnly: true }),
+      ).toBe(false);
+      expect(
+        filterSlateItem(mockItemA, { selectedTier: 'all', searchQuery: '', minScore: 50, startersOnly: true }),
+      ).toBe(true);
+    });
+  });
+
+  describe('resolveStartersOnlyFilter', () => {
+    it('does not apply starters-only when official lineups are empty and a projected pool exists', () => {
+      expect(resolveStartersOnlyFilter(true, 0, 75)).toEqual({
+        applyStartersOnly: false,
+        showingProjectedPreview: true,
+      });
+    });
+
+    it('applies starters-only once any confirmed starter exists', () => {
+      expect(resolveStartersOnlyFilter(true, 9, 75)).toEqual({
+        applyStartersOnly: true,
+        showingProjectedPreview: false,
+      });
+    });
+
+    it('stays on full roster when the user turned starters-only off', () => {
+      expect(resolveStartersOnlyFilter(false, 0, 75)).toEqual({
+        applyStartersOnly: false,
+        showingProjectedPreview: false,
+      });
     });
   });
 

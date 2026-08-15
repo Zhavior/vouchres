@@ -3,7 +3,7 @@
  */
 
 /**
- * HR Index Tier Score Thresholds
+ * HRPI Tier Score Thresholds
  */
 export const TIER_VERY_HIGH_MIN = 85;
 export const TIER_HIGH_MIN = 70;

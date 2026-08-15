@@ -57,6 +57,11 @@ export interface HrWatchRow {
   vouchScore: number | null;
   /** Real pipeline data-confidence (0-100), null when the payload omits it. */
   dataConfidence: number | null;
+  /** Statcast expected slugging percentage from API payload */
+  xslg?: number | null;
+  /** Statcast barrel rate (0-1) from API payload */
+  barrelRate?: number | null;
+  raw?: Record<string, unknown>;
   truthStatus: TruthStatus;
   riskTier: RiskTier;
   oddsLabel: string;

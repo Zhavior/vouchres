@@ -1,12 +1,6 @@
 import { Activity, ArrowDownUp, CircleDot, Download, Filter, RefreshCw, Search } from 'lucide-react';
 import type { HrWatchMode } from '../../hr/types/hrWatch';
-import type { DeskSortKey } from '../../hr-max/mapHrWatchToDesk';
-
-const SORT_LABELS: Record<DeskSortKey, string> = {
-  hrpi: 'HRPI score',
-  time: 'Game time',
-  volume: 'Mkt attention',
-};
+import { SORT_LABELS, type DeskSortKey } from '../../hr-max/mapHrWatchToDesk';
 
 const MODE_LABEL: Record<HrWatchMode, string> = {
   confirmed: 'Confirmed only',

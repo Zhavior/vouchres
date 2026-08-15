@@ -197,6 +197,11 @@ export function buildChunkAFromRosterEntry(
 }
 
 /**
+ * @deprecated V10 desk live path is `useHrSlateFeed` → `hrBoardQueryOptions` /
+ * `/api/mlb/hr-board/today`. Do not call this from the browser — a shared 6s
+ * AbortController plus mockChunkAData fallback is what made the board look
+ * disconnected. Kept for unit tests of roster scoring helpers only.
+ *
  * Fetch daily live MLB slate from official Stats API and extract full active rosters
  * for every playing team that day, cross-referenced against confirmed lineups.
  *
