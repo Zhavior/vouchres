@@ -1,11 +1,22 @@
 import React from 'react';
-import { Flame, Heart, Trophy, ArrowRight, Plus } from 'lucide-react';
+import { Flame, Heart, Trophy, Plus, Search } from 'lucide-react';
 import type { PlayerVouchSummary } from '../../../../hooks/queries/usePlayerVouchLayer';
 import PlayerHeadshot from '../../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../../lib/teamLogos';
+import {
+  AuroraMaxEyebrow,
+  AuroraMaxControl,
+} from '../../../../components/aurora-max/AuroraMaxPrimitives';
 
-interface MostVouchedPodiumProps {
-  players: PlayerVouchSummary[];
+export interface MostVouchedPodiumProps {
+  players: Array<PlayerVouchSummary & {
+    rank?: number;
+    hrScore?: number;
+    hitterPower?: number;
+    pitcherVulnerability?: number;
+    parkFactor?: number;
+    primaryReason?: string;
+  }>;
   onSelectPlayer?: (playerId: string) => void;
   onToggleVouch?: (player: PlayerVouchSummary) => void;
   onAddToSlip?: (player: PlayerVouchSummary) => void;
@@ -25,111 +36,157 @@ export const MostVouchedPodium: React.FC<MostVouchedPodiumProps> = ({
   const second = players[1];
   const third = players[2];
 
-  // Reorder for visual podium presentation: 2nd (left), 1st (center elevated), 3rd (right)
   const podiumItems = [
-    { rank: 2, player: second, metal: 'silver', border: 'border-slate-300/40', glow: 'shadow-[0_0_20px_rgba(203,213,225,0.2)]', badgeBg: 'bg-slate-300 text-black', title: 'SILVER' },
-    { rank: 1, player: first, metal: 'gold', border: 'border-amber-400/60', glow: 'shadow-[0_0_30px_rgba(251,191,36,0.35)]', badgeBg: 'bg-gradient-to-r from-amber-300 to-yellow-500 text-black', title: 'GOLD #1' },
-    { rank: 3, player: third, metal: 'bronze', border: 'border-amber-700/50', glow: 'shadow-[0_0_20px_rgba(180,83,9,0.2)]', badgeBg: 'bg-amber-700 text-white', title: 'BRONZE' },
+    {
+      rank: 2,
+      player: second,
+      metal: 'silver',
+      title: '02 // SILVER',
+      borderColor: 'border-[var(--aurora-max-line)]',
+      tagColor: 'text-[var(--aurora-max-paper)] bg-white/10',
+    },
+    {
+      rank: 1,
+      player: first,
+      metal: 'gold',
+      title: '01 // GOLD APEX',
+      borderColor: 'border-[var(--aurora-max-line-strong)]',
+      tagColor: 'text-[#02100d] bg-[var(--aurora-max-emerald)]',
+    },
+    {
+      rank: 3,
+      player: third,
+      metal: 'bronze',
+      title: '03 // BRONZE',
+      borderColor: 'border-[var(--aurora-max-line)]',
+      tagColor: 'text-[var(--aurora-max-amber)] bg-[rgba(217,156,74,0.15)]',
+    },
   ].filter((item) => item.player != null);
 
   return (
-    <section className="aurora-max-shell w-full min-w-0 max-w-full overflow-hidden space-y-3">
-      <div className="flex items-center justify-between gap-2 px-1">
+    <section className="w-full min-w-0 max-w-full space-y-3">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--aurora-max-line)] pb-2 px-1">
         <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-amber-400" />
-          <h2 className="text-sm sm:text-base font-black uppercase tracking-wider text-white">Community Leaders Podium</h2>
+          <span className="grid h-5 w-5 place-items-center border border-[var(--aurora-max-emerald)] text-[var(--aurora-max-emerald)]">
+            <Trophy className="h-3 w-3" />
+          </span>
+          <AuroraMaxEyebrow className="text-[var(--aurora-max-emerald)]">
+            COMMUNITY LEADERS PODIUM · TOP 3 CONSENSUS
+          </AuroraMaxEyebrow>
         </div>
-        <span className="font-mono text-[10px] font-bold uppercase text-vouch-cyan border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 rounded-lg">
-          Live Top 3
+        <span className="font-mono text-[10px] text-[var(--aurora-max-muted)] uppercase">
+          LIVE SLATE VOTES
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end w-full min-w-0 max-w-full">
-        {podiumItems.map(({ rank, player, border, glow, badgeBg, title }) => {
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch w-full min-w-0 max-w-full">
+        {podiumItems.map(({ rank, player, borderColor, tagColor, title }) => {
           if (!player) return null;
           const isGold = rank === 1;
           const logo = logoByTeamName(player.team);
 
           return (
-            <div
+            <article
               key={`${player.playerId}-podium-${rank}`}
-              className={`relative flex flex-col justify-between rounded-2xl border ${border} ${glow} bg-gradient-to-b from-[#0e1927] to-[#070e17] p-4 transition-all duration-300 hover:scale-[1.01] ${
-                isGold ? 'sm:-translate-y-2 border-amber-400/80 bg-gradient-to-b from-[#1a1c12] via-[#0e1927] to-[#070e17]' : ''
+              className={`aurora-max-panel relative flex flex-col justify-between border ${borderColor} bg-[rgba(5,12,13,0.65)] p-4 shadow-[var(--aurora-max-shadow)] backdrop-blur-[18px] ${
+                isGold ? 'bg-[rgba(0,217,160,0.03)]' : ''
               }`}
             >
-              {/* Rank Badge */}
-              <div className="flex items-center justify-between gap-2">
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider ${badgeBg}`}>
-                  {isGold ? <Flame className="h-3 w-3 fill-current" /> : null}
+              {/* Header: Rank + Team */}
+              <div className="flex items-center justify-between gap-2 border-b border-[var(--aurora-max-line)] pb-2.5">
+                <span className={`px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider ${tagColor}`}>
                   {title}
                 </span>
 
-                {logo && (
-                  <img src={logo} alt={player.team ?? ''} className="h-6 w-6 object-contain filter drop-shadow-md" />
-                )}
+                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold text-[var(--aurora-max-muted)]">
+                  {logo && <img src={logo} alt="" className="h-3.5 w-3.5 object-contain" />}
+                  <span className="text-[var(--aurora-max-paper)]">{player.team ?? 'MLB'}</span>
+                  {player.opponent ? <span>vs {player.opponent}</span> : null}
+                </div>
               </div>
 
-              {/* Player Info */}
-              <div className="mt-3 flex items-center gap-3 min-w-0">
+              {/* Player Body */}
+              <div
+                className="mt-3 flex items-start gap-3 cursor-pointer min-w-0 group"
+                onClick={() => onSelectPlayer?.(player.playerId)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectPlayer?.(player.playerId); }}
+              >
                 <div className="relative shrink-0">
-                  <div className="flex h-14 w-14 items-end justify-center rounded-xl border border-white/20 bg-black/40 overflow-hidden">
-                    <PlayerHeadshot name={player.playerName} playerId={player.playerId} size={52} />
+                  <div className="flex h-14 w-14 items-end justify-center border border-[var(--aurora-max-line)] bg-black/40 overflow-hidden group-hover:border-[var(--aurora-max-emerald)] transition">
+                    <PlayerHeadshot name={player.playerName} playerId={player.playerId} size={50} priority={isGold} />
                   </div>
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-base font-black uppercase tracking-tight text-white">{player.playerName}</h3>
-                  <p className="truncate text-xs font-bold text-slate-300">
-                    <span className="text-vouch-cyan">{player.team ?? 'TBD'}</span>
-                    {player.opponent ? ` vs ${player.opponent}` : ''}
-                  </p>
+                  <h3 className="truncate font-z8 text-base font-black uppercase tracking-tight text-[var(--aurora-max-paper)] group-hover:text-[var(--aurora-max-emerald)] transition">
+                    {player.playerName}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-2 font-mono text-[10px]">
+                    <span className="text-[var(--aurora-max-emerald)] font-black">
+                      {Math.round(player.hrScore ?? 80)} HRPI
+                    </span>
+                    <span className="text-[var(--aurora-max-muted)]">·</span>
+                    <span className="text-[var(--aurora-max-muted)]">{player.totalVouches} vouches</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Vouch Score & Actions */}
-              <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+              {/* Primary Catalyst Snippet */}
+              {player.primaryReason && (
+                <div className="mt-3 border-t border-[var(--aurora-max-line)] bg-[rgba(3,8,10,0.5)] p-2">
+                  <p className="font-mono text-[10px] text-[var(--aurora-max-paper)] truncate">
+                    <strong className="text-[var(--aurora-max-emerald)] uppercase text-[9px] mr-1">Catalyst:</strong>
+                    {player.primaryReason}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--aurora-max-line)] pt-2.5 font-mono">
                 <button
                   type="button"
                   onClick={() => onToggleVouch?.(player)}
-                  disabled={vouchPendingId === player.playerId || !onToggleVouch}
-                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 font-mono text-xs font-black transition ${
+                  disabled={vouchPendingId === String(player.playerId) || !onToggleVouch}
+                  className={`flex h-8 items-center gap-1.5 border px-2.5 text-[10px] font-black uppercase tracking-wider transition ${
                     player.viewerHasVouched
-                      ? 'border-vouch-emerald/50 bg-vouch-emerald/20 text-vouch-emerald shadow-[0_0_10px_rgba(0,255,148,0.2)]'
-                      : 'border-white/15 bg-black/40 text-white hover:border-vouch-cyan/40 hover:text-vouch-cyan'
-                  }`}
+                      ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.15)] text-[var(--aurora-max-emerald)]'
+                      : 'border-[var(--aurora-max-line)] bg-black/30 text-[var(--aurora-max-muted)] hover:border-[var(--aurora-max-line-strong)] hover:text-[var(--aurora-max-paper)]'
+                  } disabled:opacity-40`}
+                  title="Vouch for player"
                 >
-                  <Heart className={`h-3.5 w-3.5 ${player.viewerHasVouched ? 'fill-current' : ''}`} />
+                  <Heart className={`h-3 w-3 ${player.viewerHasVouched ? 'fill-current' : ''}`} />
                   <span>{player.totalVouches}</span>
                 </button>
 
                 <div className="flex items-center gap-1.5">
                   {onAddToSlip && (
-                    <button
-                      type="button"
+                    <AuroraMaxControl
+                      tone="primary"
                       onClick={() => onAddToSlip(player)}
-                      title="Add to My List"
-                      className="flex h-8 px-2.5 items-center gap-1 rounded-lg border border-white/15 bg-black/40 text-xs font-bold text-white transition hover:border-vouch-emerald/50 hover:text-vouch-emerald"
+                      className="!min-h-8 !px-2.5 !text-[10px] font-bold"
+                      title="Add to slip"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Slip
-                    </button>
+                      <Plus className="h-3 w-3" /> Slip
+                    </AuroraMaxControl>
                   )}
 
-                  {onSelectPlayer && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectPlayer(player.playerId)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan transition hover:bg-vouch-cyan/30"
-                      title="View Player Dossier"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  )}
+                  <AuroraMaxControl
+                    onClick={() => onSelectPlayer?.(player.playerId)}
+                    className="!min-h-8 !px-2"
+                    title="View Dossier"
+                  >
+                    <Search className="h-3 w-3" />
+                  </AuroraMaxControl>
                 </div>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
     </section>
   );
 };
+
+export default MostVouchedPodium;

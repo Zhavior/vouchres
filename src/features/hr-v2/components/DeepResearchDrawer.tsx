@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Zap, Wind, Users, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { ChunkA, ChunkC } from '../api/contracts';
 import { AuroraMaxControl } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { ParkSprayChart } from './ParkSprayChart';
@@ -24,44 +25,33 @@ export function DeepResearchDrawer({
 
   if (!isOpen) return null;
 
-  // Base price for odds comparison
-  const basePrice = data.odds?.price ?? 250;
-
-  const oddsMatrix = [
-    { book: 'DraftKings', price: basePrice > 0 ? `+${basePrice}` : `${basePrice}`, ev: '+61.7%', isBest: true },
-    { book: 'FanDuel', price: basePrice > 0 ? `+${basePrice - 10}` : `${basePrice - 10}`, ev: '+58.2%', isBest: false },
-    { book: 'BetMGM', price: basePrice > 0 ? `+${basePrice - 15}` : `${basePrice - 15}`, ev: '+56.4%', isBest: false },
-    { book: 'Caesars', price: basePrice > 0 ? `+${basePrice - 20}` : `${basePrice - 20}`, ev: '+54.8%', isBest: false },
-    { book: 'Fanatics', price: basePrice > 0 ? `+${basePrice - 10}` : `${basePrice - 10}`, ev: '+58.2%', isBest: false }
-  ];
+  const boardOdds = data.odds;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
-      {/* Backdrop overlay */}
-      <div 
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" 
-        onClick={onClose} 
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
       />
 
-      {/* Drawer slide-over container */}
-      <div className="relative w-full max-w-lg bg-[#0b0f19] border-l border-white/10 p-6 text-white overflow-y-auto shadow-2xl z-10 animate-in slide-in-from-right duration-300">
+      {/* Drawer Panel */}
+      <div className="relative w-full max-w-lg bg-[#0d121f] border-l border-white/10 p-6 flex flex-col h-full overflow-y-auto shadow-2xl z-10">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+        <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
-              Deep Telemetry Research Desk
+            <span className="text-[10px] font-mono font-bold tracking-wider text-vouch-cyan uppercase">
+              DEEP RESEARCH TELEMETRY
             </span>
-            <h2 className="text-xl font-black text-white mt-0.5">
-              {data.identity.name} <span className="text-white/40 font-normal">({data.identity.teamAbbreviation})</span>
-            </h2>
-            <p className="text-xs text-white/60 mt-0.5">
-              vs {data.opposingPitcherName} ({data.opposingPitcherHandedness}) · {data.opponentTeamId}
+            <h2 className="text-lg font-black text-white">{data.identity?.name || 'Player'}</h2>
+            <p className="text-xs text-white/60">
+              {data.identity?.teamAbbreviation || 'MLB'} vs {data.opponentTeamId || 'OPP'} · Grade {(data.score?.hrIndex ?? 0)} HRPI
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             ✕
           </button>
@@ -72,46 +62,46 @@ export function DeepResearchDrawer({
           <button
             type="button"
             onClick={() => setActiveTab('matchup')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'matchup'
                 ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/40 shadow-sm'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            ⚡ Matchup
+            <Zap className="w-3.5 h-3.5" /> Matchup
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('park')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'park'
                 ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/40 shadow-sm'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            🌬️ Park & Env
+            <Wind className="w-3.5 h-3.5" /> Park & Env
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('bullpen')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'bullpen'
                 ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/40 shadow-sm'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            ⚾ Bullpen & Umps
+            <Users className="w-3.5 h-3.5" /> Bullpen & Umps
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('odds')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'odds'
                 ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/40 shadow-sm'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            💰 Odds Matrix
+            <TrendingUp className="w-3.5 h-3.5" /> Odds Matrix
           </button>
         </div>
 
@@ -129,62 +119,24 @@ export function DeepResearchDrawer({
                 {/* Pitch-Type Matchup Breakdown */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-2">
-                    <span>⚡</span> Pitch-Type Matchup Breakdown
+                    <Zap className="w-3.5 h-3.5" /> Pitch-Type Matchup Breakdown
                   </h3>
                   <div className="space-y-2.5">
-                    <div className="flex justify-between items-center text-xs p-2.5 rounded bg-white/5">
-                      <div>
-                        <p className="font-bold text-white">4-Seam Fastball (96.4 mph)</p>
-                        <p className="text-[10px] text-white/50">48% Pitcher Usage</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold text-vouch-emerald">.642 xSLG</p>
-                        <p className="text-[10px] text-white/50">.310 ISO · Batter</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs p-2.5 rounded bg-white/5">
-                      <div>
-                        <p className="font-bold text-white">Slider (85.1 mph)</p>
-                        <p className="text-[10px] text-white/50">32% Pitcher Usage</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold text-vouch-amber">.480 xSLG</p>
-                        <p className="text-[10px] text-white/50">.195 ISO · Batter</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs p-2.5 rounded bg-white/5">
-                      <div>
-                        <p className="font-bold text-white">Changeup (87.8 mph)</p>
-                        <p className="text-[10px] text-white/50">20% Pitcher Usage</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold text-white/70">.390 xSLG</p>
-                        <p className="text-[10px] text-white/50">.120 ISO · Batter</p>
-                      </div>
-                    </div>
+                    <p className="text-xs text-white/60 p-2.5 rounded bg-white/5">
+                      Pitch-type xSLG is UNKNOWN — not on the HR board payload.
+                    </p>
                   </div>
                 </div>
 
                 {/* Pitcher Fatigue & Platoon Degradation */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-2">
-                    <span>📉</span> Pitcher Fatigue & Order Degradation
+                    <TrendingDown className="w-3.5 h-3.5" /> Pitcher Fatigue & Order Degradation
                   </h3>
                   <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center p-2 rounded bg-white/5">
-                      <span className="text-white/70">1st Time Thru Order (Pitches 1–30)</span>
-                      <span className="font-mono text-vouch-emerald font-bold">.210 wOBA</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 rounded bg-white/5">
-                      <span className="text-white/70">2nd Time Thru Order (Pitches 31–65)</span>
-                      <span className="font-mono text-vouch-amber font-bold">.315 wOBA</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 rounded bg-white/5">
-                      <span className="text-white/70">3rd Time Thru Order (Pitches 66+)</span>
-                      <span className="font-mono text-rose-400 font-bold">.405 wOBA (High Risk)</span>
-                    </div>
+                    <p className="p-2 rounded bg-white/5 text-white/60">
+                      Times-through-order wOBA is UNKNOWN — not on the HR board payload.
+                    </p>
                   </div>
                 </div>
 
@@ -207,33 +159,22 @@ export function DeepResearchDrawer({
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* Stadium Field Graphic */}
                 <ParkSprayChart
-                  stadiumName={`${data.identity.teamAbbreviation} Ballpark`}
-                  windSpeedMph={12}
-                  windDirection="OUT → CF"
+                  stadiumName={
+                    data.gameState?.stadiumId && data.gameState?.stadiumId !== 'unknown'
+                      ? data.gameState.stadiumId
+                      : undefined
+                  }
                 />
 
                 {/* Environment Grid */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-2">
-                    <span>🌬️</span> Microclimate & Air Density
+                    <Wind className="w-3.5 h-3.5" /> Microclimate & Air Density
                   </h3>
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">Air Density Index</span>
-                      <strong className="font-mono text-sm text-vouch-emerald">102.4 ADI (Carry +3.2%)</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">Stadium Elevation</span>
-                      <strong className="font-mono text-sm text-white">52 ft ASL</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">LF Pull Factor</span>
-                      <strong className="font-mono text-sm text-vouch-amber">108 (+8% HR Prob)</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">RF Pull Factor</span>
-                      <strong className="font-mono text-sm text-white/70">98 (-2% HR Prob)</strong>
-                    </div>
+                    <p className="col-span-2 p-2.5 rounded bg-white/5 text-white/60">
+                      Air density, elevation, and pull factors are UNKNOWN — not on the HR board payload.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -245,63 +186,24 @@ export function DeepResearchDrawer({
                 {/* Opposing Bullpen Status */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-2">
-                    <span>⚾</span> {data.opponentTeamId} Bullpen Availability & Fatigue
+                    <Users className="w-3.5 h-3.5" /> {data.opponentTeamId} Bullpen Availability & Fatigue
                   </h3>
                   <div className="space-y-2.5 text-xs">
-                    <div className="flex justify-between items-center p-2.5 rounded bg-white/5 border border-white/5">
-                      <div>
-                        <p className="font-bold text-white">Closer (Righty)</p>
-                        <p className="text-[10px] text-white/50">0.68 HR/9 · 0 pitches L3D</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-vouch-emerald font-bold text-[10px]">
-                        READY
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center p-2.5 rounded bg-white/5 border border-white/5">
-                      <div>
-                        <p className="font-bold text-white">Setup Man (Lefty)</p>
-                        <p className="text-[10px] text-white/50">1.42 HR/9 · 28 pitches yesterday</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-amber-500/15 text-vouch-amber font-bold text-[10px]">
-                        TIRED
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center p-2.5 rounded bg-white/5 border border-white/5">
-                      <div>
-                        <p className="font-bold text-white">Middle Reliever (Righty)</p>
-                        <p className="text-[10px] text-white/50">1.85 HR/9 · 42 pitches L2D</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold text-[10px]">
-                        UNAVAILABLE
-                      </span>
-                    </div>
+                    <p className="p-2.5 rounded bg-white/5 text-white/60">
+                      Bullpen HR/9 and pitch counts are UNKNOWN — not on the HR board payload.
+                    </p>
                   </div>
                 </div>
 
                 {/* Umpire Tendency */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-2">
-                    <span>🎯</span> Home Plate Umpire Tendency
+                    <Target className="w-3.5 h-3.5" /> Home Plate Umpire Tendency
                   </h3>
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">Umpire Profile</span>
-                      <strong className="text-white">Dan Bellino</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">High Strike Zone</span>
-                      <strong className="text-vouch-emerald font-mono">+1.4% (Fewer low walks)</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">HR Factor</span>
-                      <strong className="text-vouch-amber font-mono">1.04 (Neutral/Slight over)</strong>
-                    </div>
-                    <div className="p-2.5 rounded bg-white/5">
-                      <span className="text-[10px] text-white/50 block">Called Strike Accuracy</span>
-                      <strong className="text-white font-mono">94.2%</strong>
-                    </div>
+                    <p className="col-span-2 p-2.5 rounded bg-white/5 text-white/60">
+                      Umpire identity and zone rates are UNKNOWN — not on the HR board payload.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -312,40 +214,27 @@ export function DeepResearchDrawer({
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="p-4 rounded-xl bg-black/40 border border-white/10">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center justify-between">
-                    <span className="flex items-center gap-2"><span>💰</span> Live Line Shopping Matrix</span>
-                    <span className="text-[10px] text-vouch-emerald font-mono font-bold">● LIVE UPDATED</span>
+                    <span className="flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5" /> Live Line Shopping Matrix</span>
+                    <span className="text-[10px] text-white/40 font-mono font-bold">BOARD LINE</span>
                   </h3>
                   
                   <div className="space-y-2 text-xs">
-                    {oddsMatrix.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                          item.isBest 
-                            ? 'bg-emerald-500/10 border-emerald-500/40 shadow-sm' 
-                            : 'bg-white/5 border-white/5'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-white">{item.book}</span>
-                          {item.isBest && (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-vouch-emerald font-mono font-bold text-[9px] uppercase tracking-wider">
-                              Best Market Line
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 font-mono">
-                          <span className="font-bold text-sm text-white">{item.price}</span>
-                          <span className="px-2 py-0.5 rounded bg-black/40 text-vouch-emerald font-bold text-xs">
-                            {item.ev} EV
-                          </span>
-                        </div>
+                    {boardOdds ? (
+                      <div className="flex items-center justify-between p-3 rounded-xl border bg-white/5 border-white/5">
+                        <span className="font-bold text-white">{boardOdds.provider}</span>
+                        <span className="font-mono font-bold text-sm text-white">
+                          {boardOdds.price > 0 ? `+${boardOdds.price}` : `${boardOdds.price}`}
+                        </span>
                       </div>
-                    ))}
+                    ) : (
+                      <p className="p-3 rounded-xl bg-white/5 text-white/60">
+                        Book odds are UNKNOWN — not on this board row.
+                      </p>
+                    )}
                   </div>
 
                   <p className="text-[10px] text-white/40 mt-3 text-right">
-                    Odds synced across major US sportsbooks in real time.
+                    Single board line only — no invented sportsbook matrix.
                   </p>
                 </div>
               </div>

@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { getMlbHeadshotUrl, getPlayerInitials } from '../../../lib/mlbHeadshot';
 
 interface PlayerHeadshotProps {
   mlbId?: string | number | null;
   name: string;
   size?: number; // width/height in px (default 40)
+  priority?: boolean;
 }
 
-export function PlayerHeadshot({ mlbId, name, size = 40 }: PlayerHeadshotProps) {
+export const PlayerHeadshot = memo(function PlayerHeadshot({
+  mlbId,
+  name,
+  size = 40,
+  priority = false,
+}: PlayerHeadshotProps) {
   const [hasError, setHasError] = useState(false);
   const headshotUrl = getMlbHeadshotUrl(mlbId, size * 2);
 
@@ -39,9 +45,9 @@ export function PlayerHeadshot({ mlbId, name, size = 40 }: PlayerHeadshotProps) 
         alt={name}
         onError={() => setHasError(true)}
         className="w-full h-full object-contain object-[center_20%] scale-95 transition-transform duration-200 group-hover:scale-100"
-        loading="eager"
+        loading={priority ? 'eager' : 'lazy'}
         decoding="async"
       />
     </div>
   );
-}
+});

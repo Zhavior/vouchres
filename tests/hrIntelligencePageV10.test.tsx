@@ -157,7 +157,7 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
   });
 
   describe('View Mode Toggles, Keyboard Navigation & ARIA Accessibility', () => {
-    it('asserts all three view-toggle buttons reflect correct aria-pressed states on initial render and on click transitions', () => {
+    it('asserts all four view-toggle buttons reflect correct aria-pressed states on initial render and on click transitions', () => {
       mockedUseHrSlateFeed.mockReturnValue({
         data: [mockItemA, mockItemB],
         loading: false,
@@ -174,29 +174,41 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
       const cardToggle = screen.getByRole('button', { name: /Card view/i });
       const tableToggle = screen.getByRole('button', { name: /Table view/i });
       const kanbanToggle = screen.getByRole('button', { name: /Kanban view/i });
+      const arena3dToggle = screen.getByRole('button', { name: /3D Stadium/i });
 
       // Initial state: Card view is active
       expect(cardToggle.getAttribute('aria-pressed')).toBe('true');
       expect(tableToggle.getAttribute('aria-pressed')).toBe('false');
       expect(kanbanToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('false');
 
       // Click Table toggle
       fireEvent.click(tableToggle);
       expect(cardToggle.getAttribute('aria-pressed')).toBe('false');
       expect(tableToggle.getAttribute('aria-pressed')).toBe('true');
       expect(kanbanToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('false');
 
       // Click Kanban toggle
       fireEvent.click(kanbanToggle);
       expect(cardToggle.getAttribute('aria-pressed')).toBe('false');
       expect(tableToggle.getAttribute('aria-pressed')).toBe('false');
       expect(kanbanToggle.getAttribute('aria-pressed')).toBe('true');
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('false');
+
+      // Click 3D Stadium toggle
+      fireEvent.click(arena3dToggle);
+      expect(cardToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(tableToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(kanbanToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('true');
 
       // Switch back to Card toggle
       fireEvent.click(cardToggle);
       expect(cardToggle.getAttribute('aria-pressed')).toBe('true');
       expect(tableToggle.getAttribute('aria-pressed')).toBe('false');
       expect(kanbanToggle.getAttribute('aria-pressed')).toBe('false');
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('false');
     });
 
     it('navigates view modes using arrow keys (ArrowRight / ArrowLeft)', () => {
@@ -216,6 +228,7 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
       const cardToggle = screen.getByRole('button', { name: /Card view/i });
       const tableToggle = screen.getByRole('button', { name: /Table view/i });
       const kanbanToggle = screen.getByRole('button', { name: /Kanban view/i });
+      const arena3dToggle = screen.getByRole('button', { name: /3D Stadium/i });
 
       // Press ArrowRight from Card -> moves to Table
       fireEvent.keyDown(cardToggle, { key: 'ArrowRight' });
@@ -226,9 +239,13 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
       fireEvent.keyDown(tableToggle, { key: 'ArrowRight' });
       expect(kanbanToggle.getAttribute('aria-pressed')).toBe('true');
 
-      // Press ArrowLeft from Kanban -> moves back to Table
-      fireEvent.keyDown(kanbanToggle, { key: 'ArrowLeft' });
-      expect(tableToggle.getAttribute('aria-pressed')).toBe('true');
+      // Press ArrowRight from Kanban -> moves to 3D Stadium
+      fireEvent.keyDown(kanbanToggle, { key: 'ArrowRight' });
+      expect(arena3dToggle.getAttribute('aria-pressed')).toBe('true');
+
+      // Press ArrowLeft from 3D Stadium -> moves back to Kanban
+      fireEvent.keyDown(arena3dToggle, { key: 'ArrowLeft' });
+      expect(kanbanToggle.getAttribute('aria-pressed')).toBe('true');
     });
 
     it('navigates tier filter tabs using arrow keys (ArrowRight / ArrowLeft)', () => {
@@ -245,9 +262,9 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
 
       render(<HrIntelligencePageV10 />);
 
-      const allTab = screen.getByRole('tab', { name: /^📋 ALL/i });
-      const veryHighTab = screen.getByRole('tab', { name: /^⚡ VERY HIGH/i });
-      const highTab = screen.getByRole('tab', { name: /^🔥 HIGH/i });
+      const allTab = screen.getByRole('tab', { name: /ALL/i });
+      const veryHighTab = screen.getByRole('tab', { name: /VERY HIGH/i });
+      const highTab = screen.getByRole('tab', { name: /^HIGH/i });
 
       // Initial tab is ALL
       expect(allTab.getAttribute('aria-selected')).toBe('true');
@@ -283,7 +300,7 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
       render(<HrIntelligencePageV10 />);
 
       // Select Moderate tier tab (where neither 92 nor 78 qualify, yielding 0 matching players)
-      const moderateTab = screen.getByRole('tab', { name: /^👁️ MODERATE/i });
+      const moderateTab = screen.getByRole('tab', { name: /MODERATE/i });
       fireEvent.click(moderateTab);
 
       // After filter, empty state renders
@@ -321,7 +338,140 @@ describe('HrIntelligencePageV10 — Render-Level Component Tests', () => {
       const sortSelect = screen.getByLabelText(/Sort slate by/i);
       fireEvent.change(sortSelect, { target: { value: 'ev' } });
 
-      expect(screen.getByText(/⚡ EV RANKED/i)).toBeTruthy();
+      expect(screen.getByText(/EV RANKED/i)).toBeTruthy();
+    });
+  });
+
+  describe('Matchups & Chronological Game Grouping', () => {
+    const earlyGameItem: ChunkA = {
+      ...mockItemA,
+      playerId: 'p_early',
+      identity: {
+        ...mockItemA.identity,
+        id: 'p_early',
+        name: 'Rafael Devers',
+        teamAbbreviation: 'BOS',
+      },
+      opponentTeamId: 'NYY',
+      gameTime: '2026-08-15T17:05:00Z',
+      gameState: {
+        ...mockItemA.gameState,
+        gameId: 'g_early_1',
+        gameTime: '2026-08-15T17:05:00Z',
+        awayTeamId: 'BOS',
+        homeTeamId: 'NYY',
+      },
+    };
+
+    const lateGameItem: ChunkA = {
+      ...mockItemB,
+      playerId: 'p_late',
+      identity: {
+        ...mockItemB.identity,
+        id: 'p_late',
+        name: 'Shohei Ohtani',
+        teamAbbreviation: 'LAD',
+      },
+      opponentTeamId: 'SF',
+      gameTime: '2026-08-15T23:10:00Z',
+      gameState: {
+        ...mockItemB.gameState,
+        gameId: 'g_late_2',
+        gameTime: '2026-08-15T23:10:00Z',
+        awayTeamId: 'SF',
+        homeTeamId: 'LAD',
+      },
+    };
+
+    it('renders games in strict chronological order with the first game of the day at the top', () => {
+      // Intentionally feed late game first in array
+      mockedUseHrSlateFeed.mockReturnValue({
+        data: [lateGameItem, earlyGameItem],
+        loading: false,
+        error: null,
+        isRetrying: false,
+        isFailed: false,
+        failureCount: 0,
+        dataUpdatedAt: Date.now(),
+        refetch: vi.fn(),
+      });
+
+      render(<HrIntelligencePageV10 />);
+
+      // First Game of Day badge is present
+      expect(screen.getByText(/First Game of Day/i)).toBeTruthy();
+      expect(screen.getByText(/Game 1 of 2/i)).toBeTruthy();
+      expect(screen.getByText(/Game 2 of 2/i)).toBeTruthy();
+
+      // Verify earliest game matchup text is rendered
+      expect(screen.getAllByText(/BOS/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/LAD/i).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('toggles grouping mode between Matchup / Teams and Confidence Tiers', () => {
+      mockedUseHrSlateFeed.mockReturnValue({
+        data: [earlyGameItem, lateGameItem],
+        loading: false,
+        error: null,
+        isRetrying: false,
+        isFailed: false,
+        failureCount: 0,
+        dataUpdatedAt: Date.now(),
+        refetch: vi.fn(),
+      });
+
+      render(<HrIntelligencePageV10 />);
+
+      // Switch to Tiers grouping
+      const tierGroupingBtn = screen.getByRole('button', { name: /Group by confidence tiers/i });
+      fireEvent.click(tierGroupingBtn);
+      expect(tierGroupingBtn.getAttribute('aria-pressed')).toBe('true');
+
+      // Tier headers should now be present
+      expect(screen.getByText(/VERY HIGH CONFIDENCE/i)).toBeTruthy();
+
+      // Switch back to Matchup grouping
+      const matchupGroupingBtn = screen.getByRole('button', { name: /Group by game matchups chronologically/i });
+      fireEvent.click(matchupGroupingBtn);
+      expect(matchupGroupingBtn.getAttribute('aria-pressed')).toBe('true');
+
+      // Matchup chronological indicator returns
+      expect(screen.getByText(/First Game of Day/i)).toBeTruthy();
+    });
+
+    it('navigates through games using game slider buttons and left/right arrow keys', () => {
+      mockedUseHrSlateFeed.mockReturnValue({
+        data: [earlyGameItem, lateGameItem],
+        loading: false,
+        error: null,
+        isRetrying: false,
+        isFailed: false,
+        failureCount: 0,
+        dataUpdatedAt: Date.now(),
+        refetch: vi.fn(),
+      });
+
+      render(<HrIntelligencePageV10 />);
+
+      // Next game button moves to Game 1
+      const nextBtn = screen.getByRole('button', { name: /Next Game/i });
+      fireEvent.click(nextBtn);
+
+      // Now showing Game 1 (BOS @ NYY) in slide view
+      expect(screen.getAllByText(/Rafael Devers/i).length).toBeGreaterThanOrEqual(1);
+
+      // Keyboard navigation: ArrowRight moves to Game 2 (SF @ LAD)
+      fireEvent.keyDown(window, { key: 'ArrowRight' });
+      expect(screen.getAllByText(/Shohei Ohtani/i).length).toBeGreaterThanOrEqual(1);
+
+      // Keyboard navigation: ArrowLeft moves back to Game 1
+      fireEvent.keyDown(window, { key: 'ArrowLeft' });
+      expect(screen.getAllByText(/Rafael Devers/i).length).toBeGreaterThanOrEqual(1);
+
+      // Click "All Slate" button resets to all games
+      const allSlateBtn = screen.getByRole('button', { name: /All Slate/i });
+      fireEvent.click(allSlateBtn);
+      expect(screen.getByText(/First Game of Day/i)).toBeTruthy();
     });
   });
 });

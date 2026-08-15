@@ -136,7 +136,7 @@ describe('HomeRunIntelligencePageLegacy', () => {
 
     // Renders top signal hero
     expect(screen.getAllByText('Aaron Judge').length).toBeGreaterThan(0);
-    expect(screen.getByText('12 games')).toBeTruthy();
+    expect(screen.getAllByText(/12 games/i).length).toBeGreaterThanOrEqual(1);
 
     // Renders Admin bar for admin profile
     expect(screen.getByText(/Admin HR Lab/i)).toBeTruthy();

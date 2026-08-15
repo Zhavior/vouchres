@@ -11,6 +11,7 @@ export interface HrMaxSidecarProps {
   rawRows: readonly HrWatchRow[];
   onSpotlightSelect: (row: HrWatchRow) => void;
   onAddToSlip: (row: HrWatchRow) => void;
+  onDeskAddToSlip?: (row: HrMaxDeskRow) => void;
 }
 
 export const HrMaxSidecar = React.memo(function HrMaxSidecar({
@@ -20,6 +21,7 @@ export const HrMaxSidecar = React.memo(function HrMaxSidecar({
   rawRows,
   onSpotlightSelect,
   onAddToSlip,
+  onDeskAddToSlip,
 }: HrMaxSidecarProps) {
   return (
     <>
@@ -36,6 +38,7 @@ export const HrMaxSidecar = React.memo(function HrMaxSidecar({
           row={activeRow} 
           saved={saved} 
           onToggleSaved={onToggleSaved} 
+          onAddToSlip={onDeskAddToSlip}
         />
       ) : null}
     </>

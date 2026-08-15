@@ -1,4 +1,5 @@
 import React from 'react';
+import { Wind } from 'lucide-react';
 
 interface ParkSprayChartProps {
   stadiumName?: string;
@@ -13,112 +14,161 @@ interface ParkSprayChartProps {
 }
 
 export function ParkSprayChart({
-  stadiumName = 'Yankee Stadium',
-  windSpeedMph = 12,
-  windDirection = 'OUT → CF',
-  vectors = [
-    { distance: 412, angle: -15, result: 'HR', exitVelocity: 112.4 },
-    { distance: 395, angle: 10, result: 'HR', exitVelocity: 108.2 },
-    { distance: 424, angle: 0, result: 'HR', exitVelocity: 114.6 },
-    { distance: 360, angle: -35, result: '2B', exitVelocity: 101.5 }
-  ]
+  stadiumName,
+  windSpeedMph,
+  windDirection,
+  vectors = [],
 }: ParkSprayChartProps) {
-  // SVG coordinate transformation: Home plate at (150, 260)
+  // 3D Isometric / Perspective coordinate transformation: Home plate at (150, 245)
   const homeX = 150;
-  const homeY = 260;
+  const homeY = 245;
 
-  // Convert distance (ft) and angle (deg) to SVG coordinates
+  // Convert distance (ft) and angle (deg) to 3D projected coordinates
   const getCoordinates = (distance: number, angleDeg: number) => {
-    const scale = 200 / 430; // 430 ft max
+    const scale = 175 / 430; // 430 ft max scale
     const rad = (angleDeg - 90) * (Math.PI / 180);
     const r = distance * scale;
+    // Apply 3D perspective foreshortening along Y axis (0.65 compression)
     const x = homeX + r * Math.cos(rad);
-    const y = homeY + r * Math.sin(rad);
+    const y = homeY + r * Math.sin(rad) * 0.72;
     return { x, y };
   };
 
   return (
-    <div className="relative w-full rounded-2xl bg-black/50 border border-white/10 p-4 flex flex-col items-center">
-      {/* Stadium Header & Wind Badge */}
-      <div className="w-full flex items-center justify-between mb-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
-          {stadiumName} Dimension Grid
-        </span>
-        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-vouch-emerald text-[10px] font-mono font-bold">
-          <span>🌬️</span> {windSpeedMph} mph {windDirection}
+    <div className="relative w-full rounded-2xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-4 flex flex-col items-center shadow-xl">
+      {/* Stadium Header & 3D Environment Badge */}
+      <div className="w-full flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-300">
+            {stadiumName ?? 'Venue UNKNOWN'} 3D Dimension Grid
+          </span>
+        </div>
+        <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold">
+          <Wind className="w-3 h-3 text-emerald-400 shrink-0" />{' '}
+          {windSpeedMph != null && Number.isFinite(windSpeedMph)
+            ? `${windSpeedMph} mph ${windDirection ?? ''}`.trim()
+            : 'Wind UNKNOWN'}
         </span>
       </div>
 
-      {/* SVG Field Canvas */}
-      <div className="relative w-full max-w-[320px] aspect-[4/3]">
-        <svg viewBox="0 0 300 280" className="w-full h-full">
-          {/* Outfield Grass Sector */}
+      {/* 3D Isometric Field Canvas */}
+      <div className="relative w-full max-w-[340px] aspect-[4/3]">
+        <svg viewBox="0 0 300 270" className="w-full h-full">
+          <defs>
+            <radialGradient id="fieldGrass3D" cx="50%" cy="85%" r="75%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.18" />
+              <stop offset="60%" stopColor="#047857" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#064e3b" stopOpacity="0.03" />
+            </radialGradient>
+            <linearGradient id="wall3DGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+
+          {/* 3D Stadium Outer Bowl Shadow */}
+          <ellipse cx="150" cy="150" rx="140" ry="95" fill="rgba(0,0,0,0.5)" />
+
+          {/* Outfield Grass 3D Sector */}
           <path
-            d="M 150 260 L 50 140 A 150 150 0 0 1 250 140 Z"
-            fill="rgba(16, 185, 129, 0.06)"
-            stroke="rgba(255, 255, 255, 0.15)"
+            d="M 150 245 L 45 135 A 145 105 0 0 1 255 135 Z"
+            fill="url(#fieldGrass3D)"
+            stroke="rgba(255, 255, 255, 0.2)"
             strokeWidth="1.5"
           />
 
-          {/* Outfield Fence Distance Markers */}
+          {/* 3D Outfield Wall Heights & Distance Line */}
           <path
-            d="M 50 140 Q 150 70 250 140"
+            d="M 45 135 Q 150 72 255 135"
             fill="none"
-            stroke="rgba(6, 182, 212, 0.4)"
-            strokeWidth="2"
+            stroke="url(#wall3DGrad)"
+            strokeWidth="3"
+          />
+          {/* Wall Depth Extrusion */}
+          <path
+            d="M 45 135 L 45 142 Q 150 79 255 142 L 255 135"
+            fill="none"
+            stroke="rgba(6, 182, 212, 0.3)"
+            strokeWidth="1.5"
+          />
+
+          {/* Concentric Distance Arc Rings (300ft, 375ft, 420ft) */}
+          <path
+            d="M 75 168 Q 150 115 225 168"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.08)"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+          <path
+            d="M 58 150 Q 150 90 242 150"
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.12)"
+            strokeWidth="1"
             strokeDasharray="4 3"
           />
 
-          {/* Infield Diamond */}
+          {/* 3D Infield Dirt Diamond */}
           <polygon
-            points="150,260 120,230 150,200 180,230"
-            fill="rgba(245, 158, 11, 0.1)"
-            stroke="rgba(255, 255, 255, 0.2)"
+            points="150,245 118,218 150,192 182,218"
+            fill="rgba(180, 83, 9, 0.22)"
+            stroke="rgba(255, 255, 255, 0.25)"
             strokeWidth="1"
           />
 
-          {/* Foul Lines */}
-          <line x1="150" y1="260" x2="30" y2="120" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1.5" />
-          <line x1="150" y1="260" x2="270" y2="120" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1.5" />
+          {/* Pitcher's Mound */}
+          <circle cx="150" cy="214" r="3.5" fill="rgba(245, 158, 11, 0.6)" stroke="#ffffff" strokeWidth="0.5" />
+
+          {/* 3D Foul Lines with Flag Poles */}
+          <line x1="150" y1="245" x2="35" y2="125" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" />
+          <line x1="150" y1="245" x2="265" y2="125" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" />
+
+          {/* Foul Pole Verticals */}
+          <line x1="35" y1="125" x2="35" y2="108" stroke="#fbbf24" strokeWidth="2" />
+          <line x1="265" y1="125" x2="265" y2="108" stroke="#fbbf24" strokeWidth="2" />
 
           {/* Distance Text Labels */}
-          <text x="35" y="115" fill="rgba(255,255,255,0.5)" fontSize="8" fontFamily="monospace">318 LF</text>
-          <text x="140" y="65" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="monospace" fontWeight="bold">408 CF</text>
-          <text x="245" y="115" fill="rgba(255,255,255,0.5)" fontSize="8" fontFamily="monospace">314 RF</text>
+          <text x="32" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="monospace" fontWeight="bold">318' LF</text>
+          <text x="135" y="65" fill="#22d3ee" fontSize="9" fontFamily="monospace" fontWeight="bold">408' CF</text>
+          <text x="245" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="monospace" fontWeight="bold">314' RF</text>
 
-          {/* Trajectory Vectors */}
+          {/* 3D Parabolic Trajectory Vectors */}
           {vectors.map((vec, i) => {
             const { x, y } = getCoordinates(vec.distance, vec.angle);
             const isHr = vec.result === 'HR';
+            const apexY = 245 - (245 - y) * 0.7 - 26; // 3D parabolic elevation
             return (
               <g key={i} className="group">
-                {/* Arc Line */}
+                {/* 3D Parabolic Arc Flight Path */}
                 <path
-                  d={`M 150 260 Q ${150 + (x - 150) * 0.4} ${260 + (y - 260) * 0.7 - 20} ${x} ${y}`}
+                  d={`M 150 245 Q ${150 + (x - 150) * 0.45} ${apexY} ${x} ${y}`}
                   fill="none"
-                  stroke={isHr ? '#10b981' : '#f59e0b'}
-                  strokeWidth="1.5"
-                  strokeDasharray={isHr ? 'none' : '2 2'}
-                  opacity="0.8"
+                  stroke={isHr ? '#22d3ee' : '#f59e0b'}
+                  strokeWidth={isHr ? '2' : '1.5'}
+                  strokeDasharray={isHr ? 'none' : '3 2'}
+                  opacity="0.9"
+                  style={{ filter: isHr ? 'drop-shadow(0 0 4px rgba(34, 211, 238, 0.6))' : 'none' }}
                 />
-                {/* Landing Point Dot */}
+                {/* Landing Point Marker */}
                 <circle
                   cx={x}
                   cy={y}
                   r="3.5"
-                  fill={isHr ? '#10b981' : '#f59e0b'}
+                  fill={isHr ? '#22d3ee' : '#f59e0b'}
                   className="transition-transform duration-200 group-hover:scale-150 cursor-pointer"
-                  style={{ filter: isHr ? 'drop-shadow(0 0 4px #10b981)' : 'none' }}
+                  style={{ filter: isHr ? 'drop-shadow(0 0 6px #22d3ee)' : 'none' }}
                 />
                 {/* Hover Tooltip Label */}
                 <text
                   x={x}
-                  y={y - 6}
+                  y={y - 8}
                   fill="#ffffff"
-                  fontSize="7"
+                  fontSize="7.5"
                   fontFamily="monospace"
                   textAnchor="middle"
                   fontWeight="bold"
+                  className="pointer-events-none"
                 >
                   {vec.distance}ft
                 </text>
@@ -126,14 +176,14 @@ export function ParkSprayChart({
             );
           })}
 
-          {/* Home Plate Icon */}
-          <polygon points="148,260 152,260 153,264 150,267 147,264" fill="#ffffff" />
+          {/* Home Plate 3D Marker */}
+          <polygon points="148,245 152,245 153,249 150,252 147,249" fill="#ffffff" />
         </svg>
       </div>
 
-      <div className="w-full flex items-center justify-between text-[9px] font-mono text-white/50 border-t border-white/5 pt-2 mt-1">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-vouch-emerald inline-block" /> Home Run (Cleared Wall)</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-vouch-amber inline-block" /> Extra Base Hit</span>
+      <div className="w-full flex items-center justify-between text-[9px] font-mono text-white/50 border-t border-white/5 pt-2.5 mt-2">
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-vouch-cyan inline-block shadow-[0_0_6px_#22d3ee]" /> Home Run (Cleared 3D Wall)</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-vouch-amber inline-block" /> Extra Base Hit</span>
       </div>
     </div>
   );

@@ -299,3 +299,21 @@ root_cause: feed.css at min-width 1181px sets html/body/#root overflow hidden an
 rule: Attach Cards useVirtualizer to useFeedScrollRoot() when #inner-view-slot is a constrained overflow pane, else document.body/documentElement. Never useWindowVirtualizer on VouchEdge. Keep mobile inner column max-h. Keep 4×1D virtualizers (L021) and measureElement (L029).
 applies_when: hr-max; HrMaxCardBoard; useWindowVirtualizer; #inner-view-slot; FeedScrollContext; page-scroll virtualization
 status: active
+---
+
+id: L034
+date: 2026-08-15
+symptom: HR Intelligence Command Desk V10 kept disconnecting from the MLB API and flashing mock Judge/Ohtani slates
+root_cause: useHrSlateFeed fetched statsapi.mlb.com from the browser with one 6s AbortController covering schedule plus every team roster, then returned mockChunkAData on abort
+rule: hr-v2 / V10 must use hrBoardQueryOptions (queryKeys.hrBoard) and /api/mlb/hr-board/today like hr_max. Never browser-fetch statsapi for the desk. Never use mockChunkAData as the live feed. Map HrWatchRow; show UNKNOWN for xSLG/Barrel/wind when absent.
+applies_when: HR Intelligence Command Desk V10; hr-v2; useHrSlateFeed; mlbLiveService; statsapi.mlb.com; mockChunkAData
+status: active
+---
+
+id: L035
+date: 2026-08-15
+symptom: HR Intelligence V10 looked empty before official lineups posted even though /api/mlb/hr-board/today returned a projection_preview pool
+root_cause: ve_hr_v10_startersOnly defaults to true and dropped every row whose lineupStatus was not confirmed_starter; projected_unconfirmed maps to roster. Snapshot capture and v2 INVALID were the wrong layer.
+rule: When confirmed starter count is 0 and the mapped slate has rows, show the projected pool with the Z8 preview banner. Never invent Avg Odds/EV (280 / 55.0); print UNKNOWN when book odds are absent.
+applies_when: HrIntelligencePageV10; resolveStartersOnlyFilter; startersOnly; projection_preview; hr-board/today
+status: active

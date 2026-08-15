@@ -41,10 +41,8 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 function isDrawerItemActive(activeSection: string, featureId: string): boolean {
   if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
-  if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
-  if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_max') return activeSection === 'hr_max';
-  if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
+  if (featureId === 'hr_board') return activeSection === 'hr_board' || activeSection === 'daily_hr_watch_new';
+  if (featureId === 'brain_picks') return activeSection === 'brain_picks' || activeSection === 'brain_performance';
   return activeSection === featureId;
 }
 

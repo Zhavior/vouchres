@@ -1,11 +1,13 @@
 import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, TrendingUp } from 'lucide-react';
 import {
   AuroraMaxFallback,
   AuroraMaxScoreBadge,
   AuroraMaxTruthBadge,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
+import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrMaxDeskRow } from '../mapHrWatchToDesk';
 import { estimateTableRowSize } from '../estimateDeskRowSize';
 
@@ -61,54 +63,101 @@ export function HrMaxTableView({
             <th className="px-3 py-2.5">Matchup</th>
             <th className="px-3 py-2.5">Time</th>
             <th className="px-3 py-2.5">HRPI</th>
+            <th className="px-3 py-2.5">Market & EV</th>
+            <th className="px-3 py-2.5">Power / Matchup / Park</th>
             <th className="px-3 py-2.5">Lineup</th>
-            <th className="px-3 py-2.5">Signal Read</th>
             <th className="px-3 py-2.5 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/[0.06]">
           {paddingTop > 0 && (
-            <tr><td style={{ height: `${paddingTop}px` }} colSpan={8} /></tr>
+            <tr><td style={{ height: `${paddingTop}px` }} colSpan={9} /></tr>
           )}
           {virtualItems.map((virtualRow) => {
             const row = rows[virtualRow.index];
             const active = row.id === activeId;
             const saved = isSaved(row.id);
+            const teamLogo = logoByTeamName(row.team);
+
+            const powerScore = typeof row.raw.hitterPower === 'number' && Number.isFinite(row.raw.hitterPower) ? Math.round(row.raw.hitterPower) : null;
+            const pitcherScore = typeof row.raw.pitcherVulnerability === 'number' && Number.isFinite(row.raw.pitcherVulnerability) ? Math.round(row.raw.pitcherVulnerability) : null;
+            const parkScore = typeof (row.raw.parkContext ?? row.raw.parkFactor) === 'number' && Number.isFinite(row.raw.parkContext ?? row.raw.parkFactor) ? Math.round((row.raw.parkContext ?? row.raw.parkFactor)!) : null;
+
             return (
               <tr
                 key={row.id}
                 data-index={virtualRow.index}
                 ref={virtualizer.measureElement}
                 onClick={() => onSelect(row.id)}
-                className={`cursor-pointer transition hover:bg-white/[0.03] ${active ? 'bg-[var(--aurora-max-emerald)]/[0.07]' : ''}`}
+                className={`cursor-pointer transition hover:bg-white/[0.03] ${active ? 'bg-[var(--aurora-max-emerald)]/[0.08]' : ''}`}
               >
-                <td className="px-3 py-3 text-white/30 tabular-nums">
+                <td className="px-3 py-2.5 text-white/30 tabular-nums text-[11px]">
                   {String(virtualRow.index + 1).padStart(2, '0')}
                 </td>
-                <td className="px-3 py-3">
-                  <span className="font-sans font-bold text-white hover:text-[var(--aurora-max-emerald)]">
-                    {row.playerName}
-                  </span>
-                  <span className="ml-2 text-[10px] text-white/40">{row.team}</span>
+                <td className="px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full border border-white/10 bg-black/40">
+                      <PlayerHeadshot name={row.playerName} playerId={row.player.id} size={28} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-sans font-bold text-white hover:text-[var(--aurora-max-emerald)] block truncate">
+                        {row.playerName}
+                      </span>
+                      <div className="flex items-center gap-1 text-[10px] text-white/40 font-mono">
+                        {teamLogo && <img src={teamLogo} alt="" className="h-2.5 w-2.5 object-contain" />}
+                        <span>{row.team}</span>
+                      </div>
+                    </div>
+                  </div>
                 </td>
-                <td className="px-3 py-3 text-white/60">
+                <td className="px-3 py-2.5 text-white/60 text-[11px]">
                   {row.matchupLabel}
+                  {row.pitcherName && (
+                    <span className="block text-[9px] text-white/40 truncate">vs {row.pitcherName}</span>
+                  )}
                 </td>
-                <td className="px-3 py-3 text-[11px] text-white/40">
+                <td className="px-3 py-2.5 text-[11px] text-white/40">
                   {row.gameTimeLabel}
                 </td>
-                <td className="px-3 py-3">
+                <td className="px-3 py-2.5">
                   <AuroraMaxScoreBadge score={row.score} />
                 </td>
-                <td className="px-3 py-3">
+                <td className="px-3 py-2.5">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white tabular-nums text-xs">
+                      {row.bookOddsLabel || '—'}
+                    </span>
+                    {row.evEdge != null ? (
+                      <span className={`text-[10px] font-bold tabular-nums ${row.evEdge > 0 ? 'text-[var(--aurora-max-emerald)]' : 'text-white/40'}`}>
+                        {row.evEdge > 0 ? `+${row.evEdge}% EV` : `${row.evEdge}% EV`}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-white/30">Odds pending</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-3 py-2.5">
+                  <div className="flex items-center gap-2 max-w-[140px] text-[9px] font-mono">
+                    <div className="flex-1 flex flex-col gap-0.5">
+                      <div className="flex justify-between text-white/40">
+                        <span>P: {powerScore ?? '—'}</span>
+                        <span>M: {pitcherScore ?? '—'}</span>
+                        <span>K: {parkScore ?? '—'}</span>
+                      </div>
+                      <div className="h-1.5 flex rounded overflow-hidden bg-white/10">
+                        <div style={{ width: `${(powerScore ?? 50) / 3}%` }} className="bg-orange-400" />
+                        <div style={{ width: `${(pitcherScore ?? 50) / 3}%` }} className="bg-[var(--aurora-max-emerald)]" />
+                        <div style={{ width: `${(parkScore ?? 50) / 3}%` }} className="bg-sky-400" />
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-3 py-2.5">
                   <AuroraMaxTruthBadge state={row.truthState}>
                     {row.confirmed ? 'Confirmed' : row.lineupLabel}
                   </AuroraMaxTruthBadge>
                 </td>
-                <td className="max-w-xs truncate px-3 py-3 font-sans text-[11px] text-white/70">
-                  {row.signal}
-                </td>
-                <td className="px-3 py-3 text-right">
+                <td className="px-3 py-2.5 text-right">
                   <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
@@ -116,7 +165,7 @@ export function HrMaxTableView({
                       aria-label={`${saved ? 'Remove' : 'Add'} ${row.playerName} ${saved ? 'from' : 'to'} My List`}
                       className={`grid h-7 w-7 place-items-center border ${saved ? 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)]' : 'border-white/10 text-white/40 hover:text-white'}`}
                     >
-                      <Star className={`h-3 w-3 ${saved ? 'fill-current' : ''}`} />
+                      <Star className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
                     </button>
                     <button
                       type="button"
@@ -132,7 +181,7 @@ export function HrMaxTableView({
             );
           })}
           {paddingBottom > 0 && (
-            <tr><td style={{ height: `${paddingBottom}px` }} colSpan={8} /></tr>
+            <tr><td style={{ height: `${paddingBottom}px` }} colSpan={9} /></tr>
           )}
         </tbody>
       </table>

@@ -10,9 +10,10 @@ export interface MarketOdds {
 }
 
 export interface StatcastSummary {
-  xSLG: number;
-  barrelRate: number;
-  parkFactor: number;
+  /** Absent unless the board payload carries Statcast. Never derive from hrIndex. */
+  xSLG?: number | null;
+  barrelRate?: number | null;
+  parkFactor?: number | null;
 }
 
 /**
@@ -25,7 +26,8 @@ export interface ChunkA {
   opponentTeamId: string;
   opposingPitcherId: string;
   opposingPitcherName: string;
-  opposingPitcherHandedness: 'L' | 'R' | 'S';
+  /** Omitted when the board payload does not carry pitcher hand. */
+  opposingPitcherHandedness?: 'L' | 'R' | 'S';
   gameTime: string; // ISO8601
   gameState: GameState;
   score: HrIndexScore;

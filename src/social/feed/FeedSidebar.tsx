@@ -73,12 +73,17 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
 
 function isSidebarItemActive(activeSection: string, featureId: string): boolean {
   if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
-  if (!FOCUSED_BETA_SHELL_ENABLED) return activeSection === featureId;
-  if (featureId === 'today') return isBetaDestinationActive(activeSection, 'today');
-  if (featureId === 'hr_board') return isBetaDestinationActive(activeSection, 'research');
-  if (featureId === 'hr_max') return activeSection === 'hr_max';
-  if (featureId === 'results') return isBetaDestinationActive(activeSection, 'track_record');
+  if (featureId === 'hr_board') return activeSection === 'hr_board' || activeSection === 'daily_hr_watch_new';
+  if (featureId === 'brain_picks') return activeSection === 'brain_picks' || activeSection === 'brain_performance';
   return activeSection === featureId;
+}
+
+function isEditingText(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) return false;
+  const tag = target.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+  if (target.isContentEditable || target.getAttribute('contenteditable') === 'true') return true;
+  return false;
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -90,9 +95,18 @@ interface NavItemProps {
   isActive: boolean;
   onNavigate: (id: string) => void;
   showLiveOnAir?: boolean;
+  shortcut?: string;
 }
 
-const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, showLiveOnAir = false }: NavItemProps) {
+const NavItem = React.memo(function NavItem({
+  id,
+  label,
+  icon,
+  isActive,
+  onNavigate,
+  showLiveOnAir = false,
+  shortcut,
+}: NavItemProps) {
   const resolvedIcon = icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
@@ -105,6 +119,8 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
     if (!isEagerHrSection(id)) preloadSection(id);
   }, [id]);
 
+  const titleWithShortcut = shortcut ? `${label} (${shortcut})` : label;
+
   return (
     <button
       key={id}
@@ -114,8 +130,9 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       onMouseEnter={handleIntent}
       onFocus={handleIntent}
       id={`sidebar-link-${id}`}
-      aria-label={label}
-      title={label}
+      aria-label={titleWithShortcut}
+      title={titleWithShortcut}
+      aria-keyshortcuts={shortcut}
       aria-current={isActive ? 'page' : undefined}
       className={[
         've-aurora-nav-item group relative flex w-full items-center gap-3 rounded-xl',
@@ -143,11 +160,23 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       <span className="relative z-10 min-w-0 flex-1 truncate text-left text-[12px] font-bold leading-none">
         {label}
       </span>
-      {showLiveOnAir && (
-        <span className="relative z-10 ml-auto shrink-0">
-          <SidebarLiveOnAirBadge />
-        </span>
-      )}
+      <span className="relative z-10 ml-auto flex items-center gap-1.5 shrink-0">
+        {showLiveOnAir && <SidebarLiveOnAirBadge />}
+        {shortcut && (
+          <kbd
+            className={[
+              'pointer-events-none hidden md:inline-flex items-center justify-center',
+              'min-w-[18px] h-[18px] px-1 text-[9px] font-mono font-medium rounded transition-all select-none',
+              isActive
+                ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/25 shadow-[0_0_8px_rgba(0,240,255,0.15)]'
+                : 'bg-white/[0.03] text-white/30 border border-white/[0.06] group-hover:border-white/15 group-hover:text-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+            ].join(' ')}
+            aria-hidden="true"
+          >
+            {shortcut}
+          </kbd>
+        )}
+      </span>
     </button>
   );
 });
@@ -160,6 +189,7 @@ interface SidebarSectionProps {
   liveGamesActive?: boolean;
   collapsed: boolean;
   onToggle: () => void;
+  shortcutMap?: Map<string, string>;
 }
 
 const SidebarSection = React.memo(function SidebarSection({
@@ -170,6 +200,7 @@ const SidebarSection = React.memo(function SidebarSection({
   liveGamesActive = false,
   collapsed,
   onToggle,
+  shortcutMap,
 }: SidebarSectionProps) {
   const sectionId = `sidebar-group-${group.replace(/\s+/g, '-').toLowerCase()}`;
 
@@ -200,6 +231,7 @@ const SidebarSection = React.memo(function SidebarSection({
               isActive={isSidebarItemActive(activeSection, f.id)}
               onNavigate={onNavigate}
               showLiveOnAir={liveGamesActive && f.id === 'live_games'}
+              shortcut={shortcutMap?.get(f.id)}
             />
           ))}
         </div>
@@ -288,6 +320,127 @@ function FeedSidebar({
     () => profile.displayName.split(' ').map(n => n[0]).join(''),
     [profile.displayName],
   );
+
+  const shortcutMap = useMemo(() => {
+    const map = new Map<string, string>();
+    sidebarFeatures.forEach((feature, idx) => {
+      if (idx < 9) {
+        map.set(feature.id, String(idx + 1));
+      }
+    });
+    return map;
+  }, [sidebarFeatures]);
+
+  // ─── Global Keyboard Shortcuts for Sidebar ─────────────────────────────────
+  useEffect(() => {
+    let chordTimer: number | null = null;
+    let pendingChord: string | null = null;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow browser shortcuts (Cmd+C, Cmd+R, Cmd+T, Cmd+W, etc.)
+      if (e.metaKey && e.key.toLowerCase() !== 'k') return;
+      if (e.ctrlKey && !/^[1-9]$/.test(e.key) && e.key.toLowerCase() !== 'k') return;
+
+      // Ignore when typing in input/textarea/select/contenteditable
+      if (isEditingText(e.target)) return;
+
+      const key = e.key;
+
+      // Handle chord continuation (e.g. g then t/h/l/r/u/s/p/c/a)
+      if (pendingChord === 'g') {
+        pendingChord = null;
+        if (chordTimer) window.clearTimeout(chordTimer);
+        const lowerKey = key.toLowerCase();
+        const chordDestinations: Record<string, string> = {
+          t: 'today',
+          h: 'hr_board',
+          l: 'live_games',
+          r: 'results',
+          u: 'premium',
+          b: 'premium',
+          s: 'settings',
+          p: 'profile',
+          c: 'customize',
+          a: 'admin',
+        };
+        const dest = chordDestinations[lowerKey];
+        if (dest) {
+          e.preventDefault();
+          handleNavigate(dest);
+          return;
+        }
+      }
+
+      // Start 'g' chord
+      if (key.toLowerCase() === 'g' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        pendingChord = 'g';
+        if (chordTimer) window.clearTimeout(chordTimer);
+        chordTimer = window.setTimeout(() => {
+          pendingChord = null;
+        }, 800);
+        return;
+      }
+
+      // Quick Search / CmdK
+      if ((key === '/' || key === '?') && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        onOpenCmdK?.();
+        return;
+      }
+
+      // Settings shortcut
+      if ((key.toLowerCase() === 's' || key === ',') && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleNavigate('settings');
+        return;
+      }
+
+      // Profile shortcut
+      if (key.toLowerCase() === 'p' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleNavigate('profile');
+        return;
+      }
+
+      // Customize shortcut
+      if (!FOCUSED_BETA_SHELL_ENABLED && key.toLowerCase() === 'c' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleNavigate('customize');
+        return;
+      }
+
+      // Step Previous / Next ( [ and ] )
+      if ((key === '[' || key === ']') && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (sidebarFeatures.length === 0) return;
+        const currentIndex = sidebarFeatures.findIndex(f => isSidebarItemActive(activeSection, f.id));
+        let nextIndex = 0;
+        if (key === ']') {
+          nextIndex = currentIndex === -1 || currentIndex >= sidebarFeatures.length - 1 ? 0 : currentIndex + 1;
+        } else {
+          nextIndex = currentIndex <= 0 ? sidebarFeatures.length - 1 : currentIndex - 1;
+        }
+        handleNavigate(sidebarFeatures[nextIndex].id);
+        return;
+      }
+
+      // Number keys 1..9 or Alt+1..9 or Ctrl+1..9
+      if (/^[1-9]$/.test(key)) {
+        const num = parseInt(key, 10);
+        if (num >= 1 && num <= sidebarFeatures.length) {
+          e.preventDefault();
+          handleNavigate(sidebarFeatures[num - 1].id);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (chordTimer) window.clearTimeout(chordTimer);
+    };
+  }, [activeSection, handleNavigate, onOpenCmdK, sidebarFeatures]);
 
   const needsFastLivePoll =
     SECTIONS_USING_LIVE_GAMES.has(activeSection) || activeSection === 'today';
@@ -411,6 +564,7 @@ function FeedSidebar({
                   isActive={isSidebarItemActive(activeSection, f.id)}
                   onNavigate={handleNavigate}
                   showLiveOnAir={liveGamesActive && f.id === 'live_games'}
+                  shortcut={shortcutMap.get(f.id)}
                 />
               ))}
             </div>
@@ -424,10 +578,9 @@ function FeedSidebar({
                       id={f.id}
                       label={f.label}
                       icon={f.icon}
-                      isActive={f.id === 'brain_picks'
-                        ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
-                        : isSidebarItemActive(activeSection, f.id)}
+                      isActive={isSidebarItemActive(activeSection, f.id)}
                       onNavigate={handleNavigate}
+                      shortcut={shortcutMap.get(f.id)}
                     />
                   ))}
                 </div>
@@ -443,6 +596,7 @@ function FeedSidebar({
                   liveGamesActive={liveGamesActive}
                   collapsed={isCollapsed(group)}
                   onToggle={() => toggleGroup(group)}
+                  shortcutMap={shortcutMap}
                 />
               ))}
             </>
@@ -468,36 +622,61 @@ function FeedSidebar({
             <button
               onClick={() => handleNavigate('customize')}
               className={[
-                'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all',
+                'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all group',
                 AURORA_LABEL, 'tracking-[0.12em]',
                 activeSection === 'customize' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
               ].join(' ')}
-              aria-label="Customize layout"
+              aria-label="Customize layout (C)"
+              title="Customize layout (C)"
+              aria-keyshortcuts="C"
+              aria-current={activeSection === 'customize' ? 'page' : undefined}
             >
               <Palette className="h-3.5 w-3.5 shrink-0" />
-              <span>Customize</span>
+              <span className="flex items-center gap-1.5">
+                <span>Customize</span>
+                <kbd className={`pointer-events-none hidden md:inline-flex items-center justify-center min-w-[16px] h-[16px] px-0.5 text-[8px] font-mono font-medium rounded transition-all select-none ${
+                  activeSection === 'customize'
+                    ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/25'
+                    : 'bg-white/[0.03] text-white/30 border border-white/[0.06] group-hover:text-white/60'
+                }`}>
+                  C
+                </kbd>
+              </span>
             </button>
           )}
           <button
             onClick={() => handleNavigate('settings')}
             className={[
-              'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all',
+              'flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all group',
               AURORA_LABEL, 'tracking-[0.12em]',
               activeSection === 'settings' ? AURORA_SIDEBAR_ACTIVE : AURORA_SIDEBAR_IDLE,
             ].join(' ')}
-              aria-label="Settings"
-              aria-current={activeSection === 'settings' ? 'page' : undefined}
+            aria-label="Settings (S)"
+            title="Settings (S)"
+            aria-keyshortcuts="S"
+            aria-current={activeSection === 'settings' ? 'page' : undefined}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span>Settings</span>
+            <span className="flex items-center gap-1.5">
+              <span>Settings</span>
+              <kbd className={`pointer-events-none hidden md:inline-flex items-center justify-center min-w-[16px] h-[16px] px-0.5 text-[8px] font-mono font-medium rounded transition-all select-none ${
+                activeSection === 'settings'
+                  ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/25'
+                  : 'bg-white/[0.03] text-white/30 border border-white/[0.06] group-hover:text-white/60'
+              }`}>
+                S
+              </kbd>
+            </span>
           </button>
         </div>
 
         <button
           onClick={() => handleNavigate('profile')}
-          className={`ve-aurora-profile-card relative flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition-all ${AURORA_SIDEBAR_SURFACE}`}
+          className={`ve-aurora-profile-card group relative flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition-all ${AURORA_SIDEBAR_SURFACE}`}
           id="sidebar-profile-footer"
-          aria-label={`View profile of ${profile.displayName}`}
+          aria-label={`View profile of ${profile.displayName} (P)`}
+          title={`Profile · ${profile.displayName} (P)`}
+          aria-keyshortcuts="P"
           aria-current={activeSection === 'profile' ? 'page' : undefined}
           data-active={activeSection === 'profile' ? 'true' : 'false'}
         >
@@ -523,6 +702,13 @@ function FeedSidebar({
               {formatProfileWinRate(profile, { suffix: 'win rate' })}
             </p>
           </div>
+          <kbd className={`pointer-events-none hidden md:inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-mono font-medium rounded transition-all select-none ${
+            activeSection === 'profile'
+              ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/25'
+              : 'bg-white/[0.03] text-white/30 border border-white/[0.06] group-hover:text-white/60'
+          }`}>
+            P
+          </kbd>
         </button>
 
         <button

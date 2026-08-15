@@ -1,4 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import {
+  LayoutGrid,
+  List,
+  Kanban as KanbanIcon,
+  Box,
+  Radio,
+  Wifi,
+  Sparkles,
+  Zap,
+  Activity,
+  Calendar,
+  Layers,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { TierFilterTabs, TierType } from '../components/TierFilterTabs';
 import { HrErrorBoundary } from '../components/HrErrorBoundary';
 import { useHrSlateFeed } from '../hooks/useHrSlateFeed';
@@ -15,21 +29,20 @@ import {
   SORT_DIFF_EPSILON,
   UNRANKED_FALLBACK,
   MAX_RETRY_ATTEMPTS,
-  // ROSTER_FETCH_TIMEOUT_MS is used in mlbLiveService; imported here as a reminder
-  // that the UI poll cycle aligns with the service timeout budget.
 } from '../constants';
 import { AuroraMaxEyebrow } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 import { usePersistedState } from '../../../hooks/usePersistedState';
 import { trackEvent } from '../../../lib/analytics';
 import { STRINGS_EN } from '../stringsEn';
-import { ChunkABoard } from '../components/ChunkABoard';
+import { ChunkABoard, GroupByOption } from '../components/ChunkABoard';
 import { KanbanView } from '../components/KanbanView';
+import { HrStadium3DView } from '../components/HrStadium3DView';
 import { AuroraHqHeaderNav } from '../../aurora-hr-hq/components/AuroraHqHeaderNav';
 
 import { safeNumber } from '../../../utils/safeNumber';
 
-export type ViewMode = 'card' | 'table' | 'kanban';
+export type ViewMode = 'card' | 'table' | 'kanban' | '3d';
 export type SortOption = 'score' | 'ev' | 'odds';
 
 /**
@@ -42,7 +55,7 @@ export type StartersFilterMode = 'starters' | 'all';
 export interface ViewOptionItem {
   key: ViewMode;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   ariaLabel: string;
 }
 
@@ -50,27 +63,33 @@ export const VIEW_OPTIONS: ViewOptionItem[] = [
   {
     key: 'card',
     label: STRINGS_EN.views.card.label,
-    icon: STRINGS_EN.views.card.icon,
+    icon: LayoutGrid,
     ariaLabel: STRINGS_EN.views.card.ariaLabel,
   },
   {
     key: 'table',
     label: STRINGS_EN.views.table.label,
-    icon: STRINGS_EN.views.table.icon,
+    icon: List,
     ariaLabel: STRINGS_EN.views.table.ariaLabel,
   },
   {
     key: 'kanban',
     label: STRINGS_EN.views.kanban.label,
-    icon: STRINGS_EN.views.kanban.icon,
+    icon: KanbanIcon,
     ariaLabel: STRINGS_EN.views.kanban.ariaLabel,
+  },
+  {
+    key: '3d',
+    label: STRINGS_EN.views.arena3d.label,
+    icon: Box,
+    ariaLabel: STRINGS_EN.views.arena3d.ariaLabel,
   },
 ];
 
 export interface FilterSlateOptions {
   selectedTier: TierType;
   searchQuery: string;
-  minScore: number;
+  minScore?: number;
   /**
    * When true, only players with lineupStatus === 'confirmed_starter' are shown.
    * Defaults to true for first-time users so the board surfaces real signal immediately
@@ -86,10 +105,10 @@ export interface FilterSlateOptions {
 export { safeNumber };
 
 /**
- * Validator and sanitizer for persisted viewMode ('card' | 'table' | 'kanban', default: 'card').
+ * Validator and sanitizer for persisted viewMode ('card' | 'table' | 'kanban' | '3d', default: 'card').
  */
 export function validateViewMode(val: unknown): ViewMode {
-  return val === 'card' || val === 'table' || val === 'kanban' ? val : 'card';
+  return val === 'card' || val === 'table' || val === 'kanban' || val === '3d' ? val : 'card';
 }
 
 /**
@@ -106,6 +125,13 @@ export function validateSelectedTier(val: unknown): TierType {
  */
 export function validateSortBy(val: unknown): SortOption {
   return val === 'score' || val === 'ev' || val === 'odds' ? val : 'score';
+}
+
+/**
+ * Validator and sanitizer for persisted groupBy ('matchup' | 'tier', default: 'matchup').
+ */
+export function validateGroupBy(val: unknown): GroupByOption {
+  return val === 'tier' ? 'tier' : 'matchup';
 }
 
 /**
@@ -202,13 +228,37 @@ export function calculateEV(item: ChunkA): number {
 }
 
 /**
- * Pure filter predicate evaluating tier, search query (name/team/opp), min HR Index score,
+ * Pure filter predicate evaluating tier, search query (name/team/opp), optional min score,
  * and the Starters Only toggle.
  *
  * Volume ceiling note (tested 2026-08-13): ~13-15 roster hitters per team, ~230-400+ total
  * on a typical slate. Debounced search + memoized useMemo wrapping this predicate confirm
  * acceptable scroll performance at 400-player scale with content-visibility:auto on card containers.
  */
+export interface StartersFilterResolution {
+  applyStartersOnly: boolean;
+  showingProjectedPreview: boolean;
+}
+
+/**
+ * Same contract as hr_max / Z8 `useHrBoardViewModel`: do not render an empty
+ * confirmed-only desk when the validated board already has a projected pool.
+ * Starters-only still applies once any official lineup row exists.
+ */
+export function resolveStartersOnlyFilter(
+  startersOnly: boolean,
+  confirmedStarterCount: number,
+  slateCount: number,
+): StartersFilterResolution {
+  if (!startersOnly) {
+    return { applyStartersOnly: false, showingProjectedPreview: false };
+  }
+  if (confirmedStarterCount === 0 && slateCount > 0) {
+    return { applyStartersOnly: false, showingProjectedPreview: true };
+  }
+  return { applyStartersOnly: true, showingProjectedPreview: false };
+}
+
 export function filterSlateItem(item: ChunkA, options: FilterSlateOptions): boolean {
   if (!item || !item.score) return false;
   const { selectedTier, searchQuery, minScore, startersOnly } = options;
@@ -216,17 +266,17 @@ export function filterSlateItem(item: ChunkA, options: FilterSlateOptions): bool
   // Starters-only filter: applied first as it's the most selective and cheapest check
   if (startersOnly && item.lineupStatus !== 'confirmed_starter') return false;
 
-  const hrIndex = safeNumber(item.score.hrIndex, 0);
+  const hrpiScore = safeNumber(item.score.hrIndex, 0);
 
   // Tier filter (only applies when not in Kanban, or can pre-filter Kanban)
-  if (selectedTier === 'very_high' && hrIndex < TIER_VERY_HIGH_MIN) return false;
+  if (selectedTier === 'very_high' && hrpiScore < TIER_VERY_HIGH_MIN) return false;
   if (
     selectedTier === 'high' &&
-    (hrIndex < TIER_HIGH_MIN || hrIndex >= TIER_VERY_HIGH_MIN)
+    (hrpiScore < TIER_HIGH_MIN || hrpiScore >= TIER_VERY_HIGH_MIN)
   ) {
     return false;
   }
-  if (selectedTier === 'moderate' && hrIndex >= TIER_HIGH_MIN) return false;
+  if (selectedTier === 'moderate' && hrpiScore >= TIER_HIGH_MIN) return false;
 
   // Search filter (player name, team abbreviation, or opponent)
   const q = typeof searchQuery === 'string' ? searchQuery.toLowerCase().trim() : '';
@@ -240,9 +290,14 @@ export function filterSlateItem(item: ChunkA, options: FilterSlateOptions): bool
     teamAbbr.includes(q) ||
     opponentId.includes(q);
 
-  // HR Index threshold filter (if not specifically selecting a tier)
+  // Score threshold filter (if minScore is explicitly provided)
   const validMinScore = safeNumber(minScore, DEFAULT_MIN_SCORE);
-  const matchesScore = selectedTier !== 'all' ? true : hrIndex >= validMinScore;
+  const matchesScore =
+    selectedTier !== 'all'
+      ? true
+      : minScore !== undefined
+        ? hrpiScore >= validMinScore
+        : true;
 
   return Boolean(matchesQuery && matchesScore);
 }
@@ -276,7 +331,7 @@ export function sortSlateItems(a: ChunkA, b: ChunkA, sortBy: SortOption): number
     return diff;
   }
 
-  // Fallback tie-breaker 1: HR Index descending
+  // Fallback tie-breaker 1: HRPI score descending
   const tieScoreA = safeNumber(a.score?.hrIndex, 0);
   const tieScoreB = safeNumber(b.score?.hrIndex, 0);
   const scoreDiff = tieScoreB - tieScoreA;
@@ -319,7 +374,7 @@ function BoardSkeleton() {
  *
  * Primary enterprise command desk for Aurora HQ probability models and calibrated MLB home run slate telemetry.
  *
- * @dataSource useHrSlateFeed - 45s polling interval with 2-tier background retry telemetry and timestamp tracking.
+ * @dataSource useHrSlateFeed — same `/api/mlb/hr-board/today` query as hr_max / Aurora HQ.
  * @viewModes 'card' (rich statistical cards), 'table' (dense metrics rows), 'kanban' (probability tier lanes).
  * @persistedState Owned keys (prefix `ve_hr_v10_*`):
  *  - `ve_hr_v10_viewMode` ('card' | 'table' | 'kanban')
@@ -339,6 +394,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
     failureCount,
     dataUpdatedAt,
     refetch,
+    isLastGood = false,
   } = useHrSlateFeed();
 
   // =========================================================================
@@ -377,12 +433,12 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
     'all',
     validateSelectedTier
   );
-  const [searchQuery, setSearchQuery] = useState('');
-  const [minScore, setMinScore] = usePersistedState<number>(
-    've_hr_v10_minScore',
-    DEFAULT_MIN_SCORE,
-    validateMinScore
+  const [groupBy, setGroupBy] = usePersistedState<GroupByOption>(
+    've_hr_v10_groupBy',
+    'matchup',
+    validateGroupBy
   );
+  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = usePersistedState<SortOption>(
     've_hr_v10_sortBy',
     'score',
@@ -531,13 +587,6 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
     setSearchQuery(e.target.value);
   }, []);
 
-  const handleMinScoreChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMinScore(Number(e.target.value));
-    },
-    [setMinScore]
-  );
-
   const handleSortChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSortBy(e.target.value as SortOption);
@@ -546,10 +595,9 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
   );
 
   const handleResetFilters = useCallback(() => {
-    setMinScore(DEFAULT_MIN_SCORE);
     setSelectedTier('all');
     setSearchQuery('');
-  }, [setMinScore, setSelectedTier]);
+  }, [setSelectedTier]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -575,6 +623,11 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
     [data]
   );
 
+  const startersFilter = useMemo(
+    () => resolveStartersOnlyFilter(startersOnly, confirmedStarterCount, data.length),
+    [startersOnly, confirmedStarterCount, data.length],
+  );
+
   // Filter & Sort slate dataset
   // Volume ceiling note: tested at ~400 players; debounced search + memoized filter
   // confirm acceptable performance. content-visibility:auto on card containers handles
@@ -585,12 +638,11 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
         filterSlateItem(item, {
           selectedTier,
           searchQuery: debouncedSearchQuery,
-          minScore,
-          startersOnly,
+          startersOnly: startersFilter.applyStartersOnly,
         })
       )
       .sort((a, b) => sortSlateItems(a, b, sortBy));
-  }, [data, selectedTier, debouncedSearchQuery, minScore, sortBy, startersOnly]);
+  }, [data, selectedTier, debouncedSearchQuery, sortBy, startersFilter.applyStartersOnly]);
 
   // Accessible live status message for screen readers
   const liveStatusAnnouncement = useMemo(() => {
@@ -601,9 +653,10 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
       return STRINGS_EN.liveAnnouncements.error;
     }
     if (data.length > 0) {
-      const updateMsg = lastUpdatedTimestamp
-        ? STRINGS_EN.header.badges.updatedPrefix(timeAgoText)
-        : STRINGS_EN.header.badges.timeUnavailable;
+      const updateMsg =
+        lastUpdatedTimestamp && timeAgoText !== STRINGS_EN.timeAgo.unavailable
+          ? STRINGS_EN.header.badges.updatedPrefix(timeAgoText)
+          : STRINGS_EN.header.badges.timeUnavailable;
       return STRINGS_EN.liveAnnouncements.loaded(
         processedData.length,
         data.length,
@@ -640,57 +693,91 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
               <AuroraHqHeaderNav activeSection="hr_v10" onNavigate={onNavigate} />
             </div>
           )}
-          {/* Page Header */}
-          <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
-            <div>
-              <AuroraMaxEyebrow>{STRINGS_EN.header.eyebrow}</AuroraMaxEyebrow>
-              <h1 className="text-3xl font-black tracking-tight mt-1 text-white">
-                {STRINGS_EN.header.title}
-              </h1>
-              <p className="text-white/60 mt-1 text-sm">
-                {STRINGS_EN.header.subtitle}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-              {showUpdatedBadge && (
-                <span className="whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
-                  {STRINGS_EN.header.badges.slateUpdated}
+          {/* Glassmorphic Page Header Hero */}
+          <header className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-2xl p-5 sm:p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] transition-all">
+            {/* Ambient Mesh Glows */}
+            <div className="pointer-events-none absolute -top-24 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute top-1/2 left-1/3 h-40 w-60 -translate-y-1/2 rounded-full bg-blue-600/10 blur-3xl" />
+
+            <div className="relative z-10 flex flex-wrap items-end justify-between gap-5">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-cyan-300 text-xs font-mono font-bold tracking-wider uppercase mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
+                  {STRINGS_EN.header.eyebrow}
+                </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+                  {STRINGS_EN.header.title}
+                </h1>
+                <p className="text-white/60 mt-1.5 text-xs sm:text-sm font-normal leading-relaxed">
+                  {STRINGS_EN.header.subtitle}
+                </p>
+              </div>
+
+              {/* Translucent Live Telemetry & Feed Badges */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                {showUpdatedBadge && (
+                  <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/15 backdrop-blur-md border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {STRINGS_EN.header.badges.slateUpdated}
+                  </span>
+                )}
+                {isRetrying && (
+                  <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 backdrop-blur-md border border-amber-400/40 text-amber-300 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
+                    {STRINGS_EN.header.badges.reconnecting(failureCount, MAX_RETRY_ATTEMPTS)}
+                  </span>
+                )}
+                <span className="whitespace-nowrap flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                  <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                  {STRINGS_EN.header.badges.liveEngine}
                 </span>
-              )}
-              {isRetrying && (
-                <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                  {STRINGS_EN.header.badges.reconnecting(failureCount, MAX_RETRY_ATTEMPTS)}
+                {data.length > 0 && !isFailed && (
+                  <span className="whitespace-nowrap hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 backdrop-blur-md border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
+                    <Wifi className="w-3.5 h-3.5 text-cyan-400" />
+                    {isLastGood
+                      ? STRINGS_EN.header.badges.mlbFeedLastGood
+                      : STRINGS_EN.header.badges.mlbFeedConnected}
+                  </span>
+                )}
+                {startersFilter.showingProjectedPreview && (
+                  <span className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 backdrop-blur-md border border-amber-500/30 text-amber-200 text-xs font-mono font-bold">
+                    {STRINGS_EN.header.badges.previewMode}
+                  </span>
+                )}
+                {/* Honest stale data / last-updated indicator (viewer's local timezone) */}
+                <span
+                  className="whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-md border border-white/10 text-white/70 text-xs font-mono tabular-nums"
+                  title={
+                    lastUpdatedTimestamp
+                      ? STRINGS_EN.header.badges.tooltipLastUpdated(
+                          new Date(lastUpdatedTimestamp).toLocaleTimeString()
+                        )
+                      : STRINGS_EN.header.badges.tooltipUnavailable
+                  }
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+                  {lastUpdatedTimestamp && timeAgoText !== STRINGS_EN.timeAgo.unavailable
+                    ? STRINGS_EN.header.badges.updatedPrefix(timeAgoText)
+                    : STRINGS_EN.header.badges.timeUnavailable}
                 </span>
-              )}
-              <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping motion-reduce:animate-none inline-block" />
-                {STRINGS_EN.header.badges.liveEngine}
-              </span>
-              <span className="whitespace-nowrap hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
-                {STRINGS_EN.header.badges.mlbFeedConnected}
-              </span>
-              {/* Honest stale data / last-updated indicator (viewer's local timezone) */}
-              <span
-                className="whitespace-nowrap inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-mono tabular-nums"
-                title={
-                  lastUpdatedTimestamp
-                    ? STRINGS_EN.header.badges.tooltipLastUpdated(
-                        // Displays in the viewer's local browser timezone by design — this is a live status indicator, not a scheduling feature.
-                        new Date(lastUpdatedTimestamp).toLocaleTimeString()
-                      )
-                    : STRINGS_EN.header.badges.tooltipUnavailable
-                }
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-white/30 inline-block" />
-                {lastUpdatedTimestamp
-                  ? STRINGS_EN.header.badges.updatedPrefix(timeAgoText)
-                  : STRINGS_EN.header.badges.timeUnavailable}
-              </span>
+              </div>
             </div>
           </header>
+
+          {startersFilter.showingProjectedPreview && (
+            <div
+              role="status"
+              className="mb-4 rounded-2xl border border-amber-400/35 bg-amber-500/10 backdrop-blur-xl px-4 py-3 text-amber-100 shadow-lg"
+            >
+              <p className="text-xs font-black uppercase tracking-wider">
+                {STRINGS_EN.previewBanner.title}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-100/80">
+                {STRINGS_EN.previewBanner.body}
+              </p>
+            </div>
+          )}
 
           {/* Tier Filter Quick-Tabs */}
           <div className="mb-4">
@@ -708,27 +795,46 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
               type="button"
               onClick={handleStartersOnlyToggle}
               aria-pressed={startersOnly}
-              aria-label={startersOnly ? 'Switch to full roster view' : 'Switch to starters-only view'}
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold font-mono transition-all focus:outline-none focus:ring-1 focus:ring-vouch-cyan ${
+              aria-label={
+                startersFilter.showingProjectedPreview
+                  ? STRINGS_EN.controls.previewUntilLineupsAria
+                  : startersOnly
+                    ? STRINGS_EN.controls.startersOnlyAria
+                    : STRINGS_EN.controls.fullRosterAria
+              }
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold font-mono transition-all backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
                 startersOnly
-                  ? 'bg-vouch-cyan/20 border-vouch-cyan/40 text-vouch-cyan'
-                  : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'
+                  ? startersFilter.showingProjectedPreview
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                    : 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                  : 'bg-white/[0.03] border-white/10 text-white/60 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full inline-block ${
-                startersOnly ? 'bg-vouch-cyan' : 'bg-white/30'
+                startersOnly
+                  ? startersFilter.showingProjectedPreview
+                    ? 'bg-amber-300'
+                    : 'bg-cyan-400'
+                  : 'bg-white/30'
               }`} />
-              {startersOnly ? '⚾ Starters Only' : '☰ Full Roster'}
+              {startersFilter.showingProjectedPreview
+                ? STRINGS_EN.controls.previewUntilLineups
+                : startersOnly
+                  ? STRINGS_EN.controls.startersOnly
+                  : STRINGS_EN.controls.fullRoster}
             </button>
             <span className="text-xs font-mono text-white/50 tabular-nums">
               Showing{' '}
               <strong className="text-white/80">{processedData.length}</strong>
               {' '}of{' '}
               <strong className="text-white/80">{data.length}</strong>
-              {' '}active roster hitters
-              {startersOnly && confirmedStarterCount < data.length && (
-                <span className="ml-1.5 text-vouch-cyan/70">
-                  ({confirmedStarterCount} confirmed starters)
+              {' '}
+              {startersFilter.showingProjectedPreview
+                ? STRINGS_EN.controls.showingProjectedPool
+                : STRINGS_EN.controls.showingActiveRoster}
+              {startersOnly && (
+                <span className="ml-1.5 text-cyan-300/80 font-bold">
+                  {STRINGS_EN.controls.confirmedStartersCount(confirmedStarterCount)}
                 </span>
               )}
             </span>
@@ -737,17 +843,17 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
           {/* View Switcher & Slate Filtering Controls */}
           <section
             aria-label="Slate filters"
-            className="mb-6 p-3 sm:p-4 rounded-2xl bg-[#0d121f]/90 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 shadow-md"
+            className="mb-6 p-3 sm:p-4 rounded-2xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 shadow-[0_8px_32px_0_rgba(0,0,0,0.24)]"
           >
             {/* Row 1 on mobile: View Toggle + Search Input */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-              {/* 3-Way View Mode Toggle: Card | Table | Kanban with Arrow Key Navigation */}
+              {/* 4-Way View Mode Toggle: Card | Table | Kanban | 3D with Lucide Icons and Translucent Glass */}
               <div
-                className="flex items-center justify-between sm:justify-start gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10 shrink-0"
+                className="flex items-center justify-between sm:justify-start gap-1 bg-black/40 backdrop-blur-xl p-1 rounded-xl border border-white/10 shrink-0"
                 role="group"
                 aria-label={STRINGS_EN.views.groupAriaLabel}
               >
-                {VIEW_OPTIONS.map(({ key, label, icon, ariaLabel }) => {
+                {VIEW_OPTIONS.map(({ key, label, icon: IconComp, ariaLabel }) => {
                   const isActive = viewMode === key;
                   return (
                     <button
@@ -760,13 +866,14 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                       onKeyDown={(e) => handleViewModeKeyDown(e, key)}
                       aria-label={ariaLabel}
                       aria-pressed={isActive}
-                      className={`min-h-[38px] sm:min-h-0 flex-1 sm:flex-none px-3.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus:outline-none focus:ring-1 focus:ring-vouch-cyan ${
+                      className={`min-h-[38px] sm:min-h-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
                         isActive
-                          ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/40 shadow-sm'
-                          : 'text-white/60 hover:text-white'
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                          : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                       }`}
                     >
-                      {icon} {label}
+                      <IconComp className="w-3.5 h-3.5 shrink-0" />
+                      <span>{label}</span>
                     </button>
                   );
                 })}
@@ -783,7 +890,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                   placeholder={STRINGS_EN.controls.searchPlaceholder}
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full pl-3.5 pr-24 py-2 sm:py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-white/60 focus:outline-none focus:border-vouch-cyan/50 transition-colors [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  className="w-full pl-3.5 pr-24 py-2 sm:py-1.5 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/60 focus:bg-white/[0.06] transition-all [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
                 {isFilteringPending && (
                   <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-cyan-300 font-bold flex items-center gap-1 animate-pulse motion-reduce:animate-none">
@@ -794,29 +901,49 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
               </div>
             </div>
 
-            {/* Row 2 on mobile: Slider + Sort By Selector */}
-            <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-4 border-t sm:border-t-0 border-white/5 pt-2.5 sm:pt-0 max-w-full">
-              {/* Min HR Index Slider */}
-              <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono shrink-0">
-                <label htmlFor="min-hr-index-slider" className="text-white/60 cursor-pointer text-[11px] sm:text-xs">
-                  <span className="hidden sm:inline">{STRINGS_EN.controls.sliderLabelFull}</span>
-                  <span className="sm:hidden">{STRINGS_EN.controls.sliderLabelShort}</span>
-                </label>
-                <input
-                  id="min-hr-index-slider"
-                  type="range"
-                  min={SLIDER_MIN_SCORE}
-                  max={SLIDER_MAX_SCORE}
-                  value={minScore}
-                  onChange={handleMinScoreChange}
-                  aria-label={STRINGS_EN.controls.sliderAriaLabel}
-                  aria-valuemin={SLIDER_MIN_SCORE}
-                  aria-valuemax={SLIDER_MAX_SCORE}
-                  aria-valuenow={minScore}
-                  className="accent-vouch-cyan cursor-pointer w-16 sm:w-24"
-                />
-                <span className="font-bold text-vouch-cyan w-6 tabular-nums text-xs">{minScore}+</span>
-              </div>
+            {/* Row 2 on mobile / Right column on desktop: Group By & Sort By Selector */}
+            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3.5 border-t sm:border-t-0 border-white/5 pt-2.5 sm:pt-0 max-w-full">
+              {/* Group By Selector (Matchup / Teams vs Tiers) */}
+              {(viewMode === 'card' || viewMode === 'table') && (
+                <div
+                  className="flex items-center gap-1 bg-black/40 backdrop-blur-xl p-1 rounded-xl border border-white/10 shrink-0"
+                  role="group"
+                  aria-label={STRINGS_EN.grouping.groupAriaLabel}
+                >
+                  <button
+                    id="group-by-matchup-btn"
+                    type="button"
+                    onClick={() => setGroupBy('matchup')}
+                    aria-pressed={groupBy === 'matchup'}
+                    aria-label={STRINGS_EN.grouping.matchup.ariaLabel}
+                    className={`min-h-[30px] flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
+                      groupBy === 'matchup'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">{STRINGS_EN.grouping.matchup.label}</span>
+                    <span className="sm:hidden">Matchups</span>
+                  </button>
+                  <button
+                    id="group-by-tier-btn"
+                    type="button"
+                    onClick={() => setGroupBy('tier')}
+                    aria-pressed={groupBy === 'tier'}
+                    aria-label={STRINGS_EN.grouping.tier.ariaLabel}
+                    className={`min-h-[30px] flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
+                      groupBy === 'tier'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">{STRINGS_EN.grouping.tier.label}</span>
+                    <span className="sm:hidden">Tiers</span>
+                  </button>
+                </div>
+              )}
 
               {/* Sort By Selector with edge viewport truncation safety */}
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs shrink-0 max-w-[50%] sm:max-w-none">
@@ -828,14 +955,14 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                   aria-label={STRINGS_EN.controls.sortAriaLabel}
                   value={sortBy}
                   onChange={handleSortChange}
-                  className="px-2 sm:px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-vouch-cyan/50 transition-colors max-w-full truncate"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-400/60 transition-colors max-w-full truncate"
                 >
-                  <option value="score">{STRINGS_EN.controls.sortOptions.score}</option>
-                  <option value="ev">{STRINGS_EN.controls.sortOptions.ev}</option>
-                  <option value="odds">{STRINGS_EN.controls.sortOptions.odds}</option>
+                  <option value="score" className="bg-slate-900 text-white">{STRINGS_EN.controls.sortOptions.score}</option>
+                  <option value="ev" className="bg-slate-900 text-white">{STRINGS_EN.controls.sortOptions.ev}</option>
+                  <option value="odds" className="bg-slate-900 text-white">{STRINGS_EN.controls.sortOptions.odds}</option>
                 </select>
                 {sortBy === 'ev' && (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-vouch-emerald text-[10px] font-mono font-bold shrink-0">
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-500/15 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
                     {STRINGS_EN.controls.evRankedChip}
                   </span>
                 )}
@@ -885,8 +1012,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
             <div className="p-5 sm:p-8 text-center rounded-2xl bg-black/20 border border-white/10 text-white/70 text-sm flex flex-col items-center justify-center gap-3">
               <p className="font-medium text-white/90">
                 {STRINGS_EN.states.empty.headline(
-                  minScore,
-                  selectedTier !== 'all' ? `, ${selectedTier.replace('_', ' ')} tier` : '',
+                  selectedTier !== 'all' ? `${selectedTier.replace('_', ' ')} tier` : '',
                   searchQuery ? `, "${searchQuery}"` : ''
                 )}
               </p>
@@ -896,7 +1022,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                 <span className="text-vouch-cyan font-bold">{STRINGS_EN.states.empty.filteredOut(data.length)}</span>
                 {STRINGS_EN.states.empty.adjustHint}
               </p>
-              {(minScore !== DEFAULT_MIN_SCORE || selectedTier !== 'all' || searchQuery) && (
+              {(selectedTier !== 'all' || searchQuery) && (
                 <button
                   type="button"
                   onClick={handleResetFilters}
@@ -906,24 +1032,18 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                 </button>
               )}
             </div>
+          ) : viewMode === '3d' ? (
+            <HrStadium3DView items={processedData} />
           ) : viewMode === 'kanban' ? (
-            <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px' }}>
-              <KanbanView items={processedData} />
-            </div>
+            <KanbanView items={processedData} />
           ) : (
-            <div
-              style={{
-                contentVisibility: 'auto',
-                containIntrinsicSize: `0 ${Math.max(600, processedData.length * 44)}px`,
-              }}
-            >
-              <ChunkABoard
-                items={processedData}
-                viewMode={viewMode}
-                selectedTier={selectedTier}
-                sortBy={sortBy}
-              />
-            </div>
+            <ChunkABoard
+              items={processedData}
+              viewMode={viewMode}
+              selectedTier={selectedTier}
+              groupBy={groupBy}
+              sortBy={sortBy}
+            />
           )}
 
         </main>
