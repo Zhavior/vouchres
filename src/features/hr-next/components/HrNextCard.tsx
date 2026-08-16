@@ -81,7 +81,7 @@ export const HrNextCard = React.memo(function HrNextCard({
         className={`group transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full rounded-2xl border ${
           active
             ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_25px_rgba(0,217,160,0.15)]'
-            : 'bg-[#080d0d]/95 border-white/10 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-[#0b1414] shadow-xl'
+            : 'bg-ve-obsidian/95 border-white/10 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-ve-graphite shadow-xl'
         }`}
         style={{
           contentVisibility: 'auto',
@@ -289,7 +289,7 @@ export const HrNextCard = React.memo(function HrNextCard({
       className={`hr-max-ticket group transition-colors duration-150 w-full rounded-xl ${
         active
           ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.15)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_15px_rgba(0,217,160,0.1)]'
-          : 'bg-[#0a1010] border border-white/5 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-[#0f1818]'
+          : 'bg-ve-obsidian border border-white/5 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-ve-graphite'
       }`}
       style={{
         contentVisibility: 'auto',

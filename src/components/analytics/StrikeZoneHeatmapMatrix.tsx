@@ -55,7 +55,7 @@ export default function StrikeZoneHeatmapMatrix({
   }, [hitterZonePower, pitcherZoneVulnerability]);
 
   return (
-    <div className={`rounded-xl border border-white/10 bg-[#080e0e]/90 p-3.5 backdrop-blur-xl shadow-xl space-y-3 font-mono ${className}`}>
+    <div className={`rounded-xl border border-white/10 bg-ve-obsidian/90 p-3.5 backdrop-blur-xl shadow-xl space-y-3 font-mono ${className}`}>
       {/* Header Bar */}
       <div className="flex items-center justify-between gap-2 flex-wrap border-b border-white/5 pb-2.5">
         <div className="flex items-center gap-2 min-w-0">
@@ -98,7 +98,7 @@ export default function StrikeZoneHeatmapMatrix({
       {/* Centered 3x3 Strike Zone */}
       <div className="flex flex-col items-center justify-center pt-1">
         <div className="relative">
-          <div className="grid grid-cols-3 gap-1.5 w-44 h-44 p-2 rounded-xl bg-[#040808] border border-white/20 shadow-inner">
+          <div className="grid grid-cols-3 gap-1.5 w-44 h-44 p-2 rounded-xl bg-black/80 border border-white/20 shadow-inner">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((zone) => {
               const hPower = hitterZonePower[zone] ?? 0.450;
               const pVuln = pitcherZoneVulnerability[zone] ?? 0.450;

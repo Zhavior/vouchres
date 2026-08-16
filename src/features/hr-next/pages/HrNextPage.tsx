@@ -2,7 +2,7 @@ import { HrNextShell } from '../components/HrNextShell';
 
 export function HrNextPage() {
   return (
-    <main className="ve-page-shell flex flex-col h-full w-full bg-[#080d0d] overflow-hidden">
+    <main className="ve-page-shell flex flex-col h-full w-full bg-ve-obsidian overflow-hidden">
       <HrNextShell />
     </main>
   );

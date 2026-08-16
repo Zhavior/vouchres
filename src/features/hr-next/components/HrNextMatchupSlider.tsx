@@ -55,7 +55,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
 
   return (
     <div
-      className="w-full flex items-center gap-2 p-2 rounded-2xl bg-[#060a0a]/90 backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)] select-none font-mono animate-in fade-in slide-in-from-top-2 duration-200"
+      className="w-full flex items-center gap-2 p-2 rounded-2xl bg-ve-obsidian/90 backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)] select-none font-mono animate-in fade-in slide-in-from-top-2 duration-200"
       role="region"
       aria-label="Live Matchups Slider"
     >

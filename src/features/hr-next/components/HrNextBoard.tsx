@@ -87,7 +87,7 @@ export function HrNextBoard({
 
       {isMatchupMode ? (
         displayedMatchups.map((matchup) => (
-          <div key={matchup.header.id} className="bg-[#060a0a]/90 border border-white/10 rounded-xl p-5 mb-6">
+          <div key={matchup.header.id} className="bg-ve-obsidian/90 border border-white/10 rounded-xl p-5 mb-6">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/10">
               <h2 className="text-sm font-black uppercase tracking-widest text-white">
                 {matchup.awayTeam || 'AWAY'} <span className="text-white/40">@</span> {matchup.homeTeam || 'HOME'}

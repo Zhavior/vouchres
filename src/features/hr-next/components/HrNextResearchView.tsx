@@ -129,7 +129,7 @@ export function HrNextResearchView({
 
   return (
     <div
-      className={`relative w-full border border-white/10 bg-[#060a0a]/95 backdrop-blur-2xl shadow-2xl transition-all duration-200 overflow-hidden font-mono ${
+      className={`relative w-full border border-white/10 bg-ve-obsidian/95 backdrop-blur-2xl shadow-2xl transition-all duration-200 overflow-hidden font-mono ${
         isDock
           ? 'rounded-2xl flex flex-col max-h-[calc(100vh-130px)]'
           : 'rounded-xl mb-6'

@@ -224,7 +224,7 @@ export function HrNextShell() {
 
   return (
     <main className="flex-1 min-w-0 min-h-screen relative z-10 overscroll-none">
-      <header className="sticky top-0 z-30 px-8 py-4 bg-[#080d0d]/95 backdrop-blur-md border-b border-white/5 space-y-3">
+      <header className="sticky top-0 z-30 px-8 py-4 bg-ve-obsidian/95 backdrop-blur-md border-b border-white/5 space-y-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <span>HRNext Terminal</span>
@@ -427,7 +427,7 @@ export function HrNextShell() {
               />
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/5 bg-[#060a0a]/50 p-6 text-center font-mono text-xs text-white/40 flex flex-col items-center justify-center min-h-[300px] border-dashed">
+            <div className="rounded-2xl border border-white/5 bg-ve-obsidian/50 p-6 text-center font-mono text-xs text-white/40 flex flex-col items-center justify-center min-h-[300px] border-dashed">
               <Sparkles className="w-6 h-6 text-white/20 mb-2" />
               <p className="font-bold text-white/60 mb-1">Deep Research Telemetry</p>
               <p className="text-[11px] max-w-[240px] mb-3">

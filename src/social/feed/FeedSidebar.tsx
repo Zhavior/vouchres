@@ -189,7 +189,7 @@ const NavItem = React.memo(function NavItem({
         )}
       </span>
       {isSidebarCollapsed && (
-        <div className="fixed left-[76px] z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+        <div className="fixed left-[76px] z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
           {titleWithShortcut}
         </div>
       )}
@@ -523,7 +523,7 @@ function FeedSidebar({
 
         <button
           onClick={onOpenCmdK}
-          className={`ve-aurora-sidebar-search group flex w-full items-center gap-2 rounded-xl transition-all outline-none font-mono ${!isSidebarCollapsed ? `px-3 py-2.5 hover:text-white bg-[#040808]/80 border-white/10 hover:border-[var(--aurora-max-emerald)]/30 text-white/40` : 'justify-center py-2 text-white/40 hover:bg-white/5 hover:text-[var(--aurora-max-emerald)]'}`}
+          className={`ve-aurora-sidebar-search group flex w-full items-center gap-2 rounded-xl transition-all outline-none font-mono ${!isSidebarCollapsed ? `px-3 py-2.5 hover:text-white bg-ve-obsidian/80 border-white/10 hover:border-[var(--aurora-max-emerald)]/30 text-white/40` : 'justify-center py-2 text-white/40 hover:bg-white/5 hover:text-[var(--aurora-max-emerald)]'}`}
           aria-label="Open command palette (⌘K)"
         >
           <Search className={isSidebarCollapsed ? "h-5 w-5 shrink-0" : "h-3.5 w-3.5 shrink-0 text-white/40 group-hover:text-[var(--aurora-max-emerald)]"} />
@@ -532,7 +532,7 @@ function FeedSidebar({
             <Command className="h-2.5 w-2.5" />K
           </span>
           {isSidebarCollapsed && (
-            <div className="fixed left-[76px] z-[9999] bg-[#060a0a]/95 backdrop-blur-md border border-[var(--aurora-max-emerald)]/30 px-3 py-1.5 rounded-md text-xs font-mono text-[var(--aurora-max-emerald)] shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+            <div className="fixed left-[76px] z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-[var(--aurora-max-emerald)]/30 px-3 py-1.5 rounded-md text-xs font-mono text-[var(--aurora-max-emerald)] shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
               Search <kbd className="ml-1 opacity-60">⌘K</kbd>
             </div>
           )}
@@ -667,7 +667,7 @@ function FeedSidebar({
           ) : (
             <div className="group relative flex items-center justify-center w-full h-8">
               <div className={`h-2.5 w-2.5 rounded-full shadow-[0_0_10px_currentColor] animate-pulse ${liveGamesError ? 'bg-rose-400 text-rose-400' : liveGamesLoading ? 'bg-white/40 text-white/40' : 'bg-emerald-400 text-emerald-400'}`} />
-              <div className="fixed left-[76px] z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+              <div className="fixed left-[76px] z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
                 MLB FEED: {liveDataState.toUpperCase()}
               </div>
             </div>
@@ -698,7 +698,7 @@ function FeedSidebar({
                 </kbd>
               </span>
               {isSidebarCollapsed && (
-                <div className="fixed left-[76px] z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+                <div className="fixed left-[76px] z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
                   Customize <kbd className="ml-1 opacity-60">C</kbd>
                 </div>
               )}
@@ -726,7 +726,7 @@ function FeedSidebar({
               </kbd>
             </span>
             {isSidebarCollapsed && (
-              <div className="fixed left-[76px] z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+              <div className="fixed left-[76px] z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
                 Settings <kbd className="ml-1 opacity-60">S</kbd>
               </div>
             )}
@@ -792,7 +792,7 @@ function FeedSidebar({
             </kbd>
           )}
           {isSidebarCollapsed && (
-            <div className="fixed left-[76px] bottom-4 z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 text-xs text-white rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.8)] px-3 py-2 whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto flex flex-col gap-2 text-left min-w-[140px]">
+            <div className="fixed left-[76px] bottom-4 z-[9999] bg-ve-obsidian/95 backdrop-blur-md border border-cyan-500/30 text-xs text-white rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.8)] px-3 py-2 whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100 group-hover:pointer-events-auto flex flex-col gap-2 text-left min-w-[140px]">
               <div className="font-bold flex items-center gap-1.5">
                 {profile.displayName}
                 {profile.verified && <Shield className="h-3 w-3 text-vouch-cyan fill-vouch-cyan/85" />}

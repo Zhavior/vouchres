@@ -23,7 +23,7 @@ export function HrNextKeyboardCheatsheet({ isOpen, onClose }: HrNextKeyboardChea
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150 font-mono">
-      <div className="relative w-full max-w-md rounded-2xl bg-[#060a0a] border border-white/10 p-6 shadow-2xl space-y-4">
+      <div className="relative w-full max-w-md rounded-2xl bg-ve-obsidian border border-white/10 p-6 shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)]">
