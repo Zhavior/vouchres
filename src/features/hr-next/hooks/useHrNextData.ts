@@ -134,20 +134,20 @@ export function useHrNextData() {
         items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
       }
     } else if (groupBy === 'tier') {
-      // If there are multi-HR performers, elevate them to the top tier section
-      const multiHrRows = allRows.filter(r => getHrHitStatus(r).tier === 'multi');
-      const nonMultiRows = allRows.filter(r => getHrHitStatus(r).tier !== 'multi');
+      // Elevate all players who hit an HR today (Bronze 2+ HR & Yellow 1 HR) to the top of the page
+      const todayHrRows = allRows.filter(r => getHrHitStatus(r).tier !== 'none');
+      const otherRows = allRows.filter(r => getHrHitStatus(r).tier === 'none');
 
-      if (multiHrRows.length > 0) {
-        items.push({ type: 'header', tier: '👑 2+ HR Leaders', id: 'header-tier-multi-hr' });
-        for (const row of multiHrRows) {
+      if (todayHrRows.length > 0) {
+        items.push({ type: 'header', tier: "💥 Today's Home Run Hitters", id: 'header-tier-today-hr' });
+        for (const row of todayHrRows) {
           items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
         }
       }
 
       // Group the remaining rows by Tier (using TIER_ORDER)
       for (const tier of TIER_ORDER) {
-        const tierRows = nonMultiRows.filter(r => r.riskTier === tier);
+        const tierRows = otherRows.filter(r => r.riskTier === tier);
         if (tierRows.length > 0) {
           items.push({ type: 'header', tier, id: `header-tier-${tier}` });
           for (const row of tierRows) {
