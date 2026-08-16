@@ -177,7 +177,7 @@ export function extractCardData(row: HrWatchRow) {
     score: Math.max(0, Math.min(100, Math.round(row.hrScore))),
     evEdge,
     bookOddsLabel,
-    recentHrs: row.recentHomeRuns,
+    recentHrs: row.last7DayHomeRuns ?? row.recentHomeRuns,
     hrStatus,
     receipt,
   };

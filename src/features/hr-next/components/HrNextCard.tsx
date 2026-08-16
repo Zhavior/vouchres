@@ -194,8 +194,8 @@ export const HrNextCard = React.memo(function HrNextCard({
                 </span>
               )}
               {recentHrs != null && recentHrs > 0 && !isMultiHr && !isSingleHr && (
-                <span className="text-amber-300/80 font-bold tabular-nums flex items-center gap-0.5">
-                  🔥 {recentHrs} HR
+                <span className="text-amber-300/90 font-bold tabular-nums flex items-center gap-0.5">
+                  🔥 {recentHrs} HR in 7 Days
                 </span>
               )}
             </div>
