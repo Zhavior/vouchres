@@ -7,52 +7,6 @@ export type TicketPip = {
   label: string;
 };
 
-export type HrHitTier = 'none' | 'single' | 'multi';
-
-export interface HrHitStatus {
-  tier: HrHitTier;
-  count: number;
-  badgeLabel: string | null;
-}
-
-/**
- * Strictly returns whether the player hit a Home Run TODAY (in today's game).
- * Does NOT consider historical past multi-game stats.
- */
-export function getHrHitStatus(row: HrWatchRow): HrHitStatus {
-  const rawStats = row.raw as Record<string, any> | undefined;
-  const todayCount = 
-    (typeof (row as any).liveHomeRuns === 'number' ? (row as any).liveHomeRuns : null) ?? 
-    (typeof (row as any).homeRunsToday === 'number' ? (row as any).homeRunsToday : null) ?? 
-    (typeof rawStats?.liveHomeRuns === 'number' ? rawStats.liveHomeRuns : null) ?? 
-    (typeof rawStats?.homeRunsToday === 'number' ? rawStats.homeRunsToday : null) ?? 
-    (typeof rawStats?.hrToday === 'number' ? rawStats.hrToday : null) ?? 
-    (typeof rawStats?.todayHomeRuns === 'number' ? rawStats.todayHomeRuns : null) ?? 
-    (typeof rawStats?.boxscore?.homeRuns === 'number' ? rawStats.boxscore.homeRuns : null) ?? 
-    (typeof rawStats?.gameStats?.homeRuns === 'number' ? rawStats.gameStats.homeRuns : null) ?? 
-    0;
-
-  if (todayCount >= 2) {
-    return {
-      tier: 'multi',
-      count: todayCount,
-      badgeLabel: `${todayCount}x HR TODAY`,
-    };
-  }
-  if (todayCount === 1) {
-    return {
-      tier: 'single',
-      count: 1,
-      badgeLabel: 'HR TODAY',
-    };
-  }
-  return {
-    tier: 'none',
-    count: 0,
-    badgeLabel: null,
-  };
-}
-
 export function formatGameTime(gameTime: string | null): string {
   if (!gameTime?.trim()) return 'Time unavailable';
   const iso = Date.parse(gameTime);
@@ -93,7 +47,6 @@ export function extractCardData(row: HrWatchRow) {
   const confirmed = row.truthStatus === 'official';
   const opponent = row.opponent?.trim() || 'Opponent unavailable';
   const matchupLabel = `${row.team} @ ${opponent} · ${formatGameTime(row.gameTime)}`;
-  const hrStatus = getHrHitStatus(row);
 
   const pips: TicketPip[] = [
     layerLabel('Power', row.hitterPower),
@@ -113,11 +66,7 @@ export function extractCardData(row: HrWatchRow) {
   }
 
   let catalyst = 'Research row';
-  if (hrStatus.tier === 'multi') {
-    catalyst = `👑 Homered ${hrStatus.count}x Today!`;
-  } else if (hrStatus.tier === 'single') {
-    catalyst = '💥 Homered Today!';
-  } else if (bestPip && bestRank > 0) {
+  if (bestPip && bestRank > 0) {
     catalyst = bestPip.label;
   } else if (row.truthStatus === 'blocked') {
     catalyst = 'Blocked — not research-eligible';
@@ -149,7 +98,6 @@ export function extractCardData(row: HrWatchRow) {
   if (row.truthStatus === 'official') sources.push('Official lineup');
   if (row.truthStatus === 'projected') sources.push('Projected lineup');
   if (row.weather != null) sources.push('Weather context on board');
-  if (hrStatus.tier !== 'none') sources.push("Verified Today's MLB Live Boxscore");
 
   const gaps: string[] = [];
   if (row.truthStatus !== 'official') gaps.push('Official batting order is unavailable.');
@@ -177,8 +125,7 @@ export function extractCardData(row: HrWatchRow) {
     score: Math.max(0, Math.min(100, Math.round(row.hrScore))),
     evEdge,
     bookOddsLabel,
-    recentHrs: row.last7DayHomeRuns ?? row.recentHomeRuns,
-    hrStatus,
+    recentHrs: row.recentHomeRuns,
     receipt,
   };
 }
