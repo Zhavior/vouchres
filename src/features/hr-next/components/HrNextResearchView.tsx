@@ -248,10 +248,12 @@ export function HrNextResearchView({
                 />
 
                 {/* Pitch Breakdown Table */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] text-white/50 font-bold uppercase tracking-wider">
-                    <span>Pitch-Type Arsenal Breakdown</span>
-                    <span>xSLG · Whiff</span>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] text-white/50 font-bold uppercase tracking-wider px-1">
+                    <span className="flex items-center gap-1.5">
+                      <Zap className="w-3 h-3 text-[var(--aurora-max-emerald)]" /> Pitch Arsenal Breakdown
+                    </span>
+                    <span>xSLG · Matchup Score</span>
                   </div>
 
                   {research.charts.pitchArsenal && research.charts.pitchArsenal.length > 0 ? (
@@ -259,60 +261,94 @@ export function HrNextResearchView({
                       const usagePct = pitch.pitcherUsage ? Math.round(pitch.pitcherUsage * 100) : 0;
                       const xSlg = pitch.batterExpectedSlugging ?? 0;
                       const isDangerous = xSlg >= 0.550;
+                      const isHighFit = pitch.matchupScore != null && pitch.matchupScore >= 70;
+
+                      const lower = pitch.pitchName.toLowerCase();
+                      let tag = 'PITCH';
+                      let tagColor = 'bg-white/10 text-white/70 border-white/20';
+                      if (lower.includes('4-seam') || lower.includes('fastball')) {
+                        tag = '4FB';
+                        tagColor = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+                      } else if (lower.includes('sinker') || lower.includes('2-seam')) {
+                        tag = 'SI';
+                        tagColor = 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+                      } else if (lower.includes('slider') || lower.includes('sweeper')) {
+                        tag = 'SL';
+                        tagColor = 'bg-purple-500/20 text-purple-300 border-purple-500/40';
+                      } else if (lower.includes('change') || lower.includes('split')) {
+                        tag = 'CH';
+                        tagColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+                      } else if (lower.includes('curve') || lower.includes('knuckle')) {
+                        tag = 'CB';
+                        tagColor = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                      } else if (lower.includes('cutter')) {
+                        tag = 'FC';
+                        tagColor = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+                      }
+
                       return (
                         <div
                           key={idx}
-                          className="p-3 rounded-xl bg-black/40 border border-white/5 hover:border-[var(--aurora-max-emerald)]/30 transition-all space-y-2"
+                          className={`p-3 rounded-xl bg-black/50 border transition-all space-y-2.5 ${
+                            isHighFit
+                              ? 'border-[var(--aurora-max-emerald)]/40 shadow-[0_0_15px_rgba(0,217,160,0.08)]'
+                              : 'border-white/5 hover:border-white/20'
+                          }`}
                         >
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-white">{pitch.pitchName}</span>
-                              <span className="text-[10px] font-mono text-white/40 bg-white/5 px-1.5 py-0.5 rounded">
+                              <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold border ${tagColor}`}>
+                                {tag}
+                              </span>
+                              <span className="font-bold text-white tracking-wide">{pitch.pitchName}</span>
+                              <span className="text-[10px] font-mono text-white/50 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                                 {usagePct}% usage
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`font-mono text-xs font-black ${isDangerous ? 'text-[var(--aurora-max-emerald)]' : 'text-white/80'}`}>
+                            <div className="flex items-center gap-2.5">
+                              <span className={`font-mono text-xs font-black ${isDangerous ? 'text-[var(--aurora-max-emerald)] drop-shadow-[0_0_6px_rgba(0,217,160,0.4)]' : 'text-white/80'}`}>
                                 .{xSlg ? Math.round(xSlg * 1000) : '---'} xSLG
                               </span>
                               {pitch.matchupScore != null && (
                                 <span
-                                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono ${
+                                  className={`px-2 py-0.5 rounded-md text-[9.5px] font-black font-mono tracking-wider ${
                                     pitch.matchupScore > 65
-                                      ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border border-[var(--aurora-max-emerald)]/30'
-                                      : 'bg-white/5 text-white/50'
+                                      ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border border-[var(--aurora-max-emerald)]/40 shadow-[0_0_8px_rgba(0,217,160,0.2)]'
+                                      : 'bg-white/5 text-white/50 border border-white/10'
                                   }`}
                                 >
-                                  {pitch.matchupScore} Score
+                                  {pitch.matchupScore} FIT
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          {/* Visual Usage & xSLG Bar */}
-                          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden flex gap-0.5">
-                            <div 
-                              className="h-full bg-vouch-cyan/80 rounded-full" 
-                              style={{ width: `${Math.min(usagePct, 100)}%` }} 
-                              title={`Usage: ${usagePct}%`}
-                            />
-                            <div 
-                              className="h-full bg-[var(--aurora-max-emerald)] rounded-full" 
-                              style={{ width: `${Math.min((xSlg / 0.8) * 100, 100)}%` }} 
-                              title={`xSLG: ${xSlg}`}
-                            />
+                          {/* Multi-tier Visual Bar */}
+                          <div className="space-y-1">
+                            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden flex gap-1">
+                              <div 
+                                className="h-full bg-vouch-cyan rounded-full transition-all duration-500" 
+                                style={{ width: `${Math.min(usagePct, 100)}%` }} 
+                                title={`Pitcher Usage: ${usagePct}%`}
+                              />
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${isDangerous ? 'bg-[var(--aurora-max-emerald)]' : 'bg-white/40'}`} 
+                                style={{ width: `${Math.min((xSlg / 0.8) * 100, 100)}%` }} 
+                                title={`Hitter xSLG: ${xSlg}`}
+                              />
+                            </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-[9px] text-white/40">
-                            <span>Whiff Rate: <strong className="text-white">{pitch.batterWhiffRate ? `${(pitch.batterWhiffRate * 100).toFixed(0)}%` : '--%'}</strong></span>
-                            <span>Run Value: <strong className={pitch.runValue && pitch.runValue > 0 ? 'text-[var(--aurora-max-emerald)]' : 'text-white/60'}>{pitch.runValue ? `+${pitch.runValue}` : '0'}</strong></span>
+                          <div className="flex items-center justify-between text-[9px] font-mono text-white/40 pt-0.5 border-t border-white/5">
+                            <span>Whiff Rate: <strong className="text-white font-bold">{pitch.batterWhiffRate ? `${(pitch.batterWhiffRate * 100).toFixed(0)}%` : '--%'}</strong></span>
+                            <span>Run Value: <strong className={pitch.runValue && pitch.runValue > 0 ? 'text-[var(--aurora-max-emerald)] font-bold' : 'text-white/60'}>{pitch.runValue ? `+${pitch.runValue}` : '0'}</strong></span>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-xs text-white/50">
-                      Pitch arsenal data actively synchronizing.
+                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/50 text-center">
+                      Pitch arsenal telemetry synchronizing from MLB radar feed.
                     </div>
                   )}
                 </div>
