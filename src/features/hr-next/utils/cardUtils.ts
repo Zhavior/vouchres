@@ -7,6 +7,44 @@ export type TicketPip = {
   label: string;
 };
 
+export type HrHitTier = 'none' | 'single' | 'multi';
+
+export interface HrHitStatus {
+  tier: HrHitTier;
+  count: number;
+  badgeLabel: string | null;
+}
+
+export function getHrHitStatus(row: HrWatchRow): HrHitStatus {
+  const count = 
+    (row as any).liveHomeRuns ?? 
+    (row.raw as any)?.liveHomeRuns ?? 
+    (row.raw as any)?.homeRunsToday ?? 
+    (row.raw as any)?.hrToday ?? 
+    row.recentHomeRuns ?? 
+    0;
+
+  if (count >= 2) {
+    return {
+      tier: 'multi',
+      count,
+      badgeLabel: `${count}x HR`,
+    };
+  }
+  if (count === 1) {
+    return {
+      tier: 'single',
+      count: 1,
+      badgeLabel: '1 HR',
+    };
+  }
+  return {
+    tier: 'none',
+    count: 0,
+    badgeLabel: null,
+  };
+}
+
 export function formatGameTime(gameTime: string | null): string {
   if (!gameTime?.trim()) return 'Time unavailable';
   const iso = Date.parse(gameTime);
@@ -47,6 +85,7 @@ export function extractCardData(row: HrWatchRow) {
   const confirmed = row.truthStatus === 'official';
   const opponent = row.opponent?.trim() || 'Opponent unavailable';
   const matchupLabel = `${row.team} @ ${opponent} · ${formatGameTime(row.gameTime)}`;
+  const hrStatus = getHrHitStatus(row);
 
   const pips: TicketPip[] = [
     layerLabel('Power', row.hitterPower),
@@ -66,7 +105,11 @@ export function extractCardData(row: HrWatchRow) {
   }
 
   let catalyst = 'Research row';
-  if (bestPip && bestRank > 0) {
+  if (hrStatus.tier === 'multi') {
+    catalyst = `💥 ${hrStatus.count}x Home Run Performer`;
+  } else if (hrStatus.tier === 'single') {
+    catalyst = '🔥 Verified Home Run';
+  } else if (bestPip && bestRank > 0) {
     catalyst = bestPip.label;
   } else if (row.truthStatus === 'blocked') {
     catalyst = 'Blocked — not research-eligible';
@@ -98,6 +141,7 @@ export function extractCardData(row: HrWatchRow) {
   if (row.truthStatus === 'official') sources.push('Official lineup');
   if (row.truthStatus === 'projected') sources.push('Projected lineup');
   if (row.weather != null) sources.push('Weather context on board');
+  if (hrStatus.tier !== 'none') sources.push('Verified MLB live boxscore');
 
   const gaps: string[] = [];
   if (row.truthStatus !== 'official') gaps.push('Official batting order is unavailable.');
@@ -126,6 +170,7 @@ export function extractCardData(row: HrWatchRow) {
     evEdge,
     bookOddsLabel,
     recentHrs: row.recentHomeRuns,
+    hrStatus,
     receipt,
   };
 }

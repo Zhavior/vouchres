@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useHrBoardViewModel } from '../../hr/hooks/useHrBoardViewModel';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
+import { getHrHitStatus } from '../utils/cardUtils';
 
 export type HrNextItem = 
   | { type: 'header'; tier: string; id: string }
@@ -15,7 +16,8 @@ export type TacticalFilterTag = 'all' | 'hot' | 'high_ev' | 'wind_out' | 'vulner
 export function matchesTacticalFilter(row: HrWatchRow, tag: TacticalFilterTag): boolean {
   if (tag === 'all') return true;
   if (tag === 'hot') {
-    return (row.recentHomeRuns != null && row.recentHomeRuns > 0) || (row.recentForm != null && row.recentForm >= 80);
+    const hr = getHrHitStatus(row);
+    return hr.tier !== 'none' || (row.recentHomeRuns != null && row.recentHomeRuns > 0) || (row.recentForm != null && row.recentForm >= 80);
   }
   if (tag === 'high_ev') {
     const hasEv = row.hrProbability != null && row.impliedProbability != null && row.impliedProbability > 0 &&
@@ -75,8 +77,25 @@ export function useHrNextData() {
       allRows = allRows.filter(r => matchesTacticalFilter(r, filterTag));
     }
 
-    // 4. Sort all rows globally
+    // 4. Sort all rows globally: Multi-HR (2+ HR Bronze) always top of page, then 1 HR Yellow, then sortKey
     allRows.sort((left, right) => {
+      const leftStatus = getHrHitStatus(left);
+      const rightStatus = getHrHitStatus(right);
+
+      const leftIsMulti = leftStatus.tier === 'multi' ? 1 : 0;
+      const rightIsMulti = rightStatus.tier === 'multi' ? 1 : 0;
+      if (rightIsMulti !== leftIsMulti) return rightIsMulti - leftIsMulti;
+
+      // If both multi-HR, higher HR count goes first
+      if (leftStatus.tier === 'multi' && rightStatus.tier === 'multi' && rightStatus.count !== leftStatus.count) {
+        return rightStatus.count - leftStatus.count;
+      }
+
+      const leftIsSingle = leftStatus.tier === 'single' ? 1 : 0;
+      const rightIsSingle = rightStatus.tier === 'single' ? 1 : 0;
+      if (rightIsSingle !== leftIsSingle) return rightIsSingle - leftIsSingle;
+
+      // Standard sortKey
       if (sortKey === 'hrpi') return right.hrScore - left.hrScore;
       if (sortKey === 'ev') {
         const getEv = (r: HrWatchRow) => (r.hrProbability != null && r.impliedProbability != null && r.impliedProbability > 0) ? ((r.hrProbability - r.impliedProbability) / r.impliedProbability) : -999;
@@ -115,9 +134,20 @@ export function useHrNextData() {
         items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
       }
     } else if (groupBy === 'tier') {
-      // Group by Tier (using TIER_ORDER)
+      // If there are multi-HR performers, elevate them to the top tier section
+      const multiHrRows = allRows.filter(r => getHrHitStatus(r).tier === 'multi');
+      const nonMultiRows = allRows.filter(r => getHrHitStatus(r).tier !== 'multi');
+
+      if (multiHrRows.length > 0) {
+        items.push({ type: 'header', tier: '👑 2+ HR Leaders', id: 'header-tier-multi-hr' });
+        for (const row of multiHrRows) {
+          items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
+        }
+      }
+
+      // Group the remaining rows by Tier (using TIER_ORDER)
       for (const tier of TIER_ORDER) {
-        const tierRows = allRows.filter(r => r.riskTier === tier);
+        const tierRows = nonMultiRows.filter(r => r.riskTier === tier);
         if (tierRows.length > 0) {
           items.push({ type: 'header', tier, id: `header-tier-${tier}` });
           for (const row of tierRows) {
