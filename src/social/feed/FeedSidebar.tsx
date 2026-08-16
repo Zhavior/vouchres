@@ -148,7 +148,7 @@ const NavItem = React.memo(function NavItem({
       {isActive && !isSidebarCollapsed && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-gradient-to-b from-cyan-200 via-vouch-cyan to-vouch-emerald"
+          className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-[var(--aurora-max-emerald)] shadow-[0_0_10px_rgba(0,217,160,0.8)]"
         />
       )}
       <span
@@ -156,17 +156,19 @@ const NavItem = React.memo(function NavItem({
           'relative z-10 shrink-0 transition-all flex items-center justify-center',
           isSidebarCollapsed ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
           isActive && isSidebarCollapsed
-            ? 'text-vouch-cyan bg-cyan-500/10'
+            ? 'text-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.15)] border border-[var(--aurora-max-emerald)]/40 shadow-[0_0_12px_rgba(0,217,160,0.3)]'
             : isActive && !isSidebarCollapsed
-              ? 'border border-vouch-cyan/25 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_18px_rgba(79,184,220,0.12)]'
+              ? 'border border-[var(--aurora-max-emerald)]/40 bg-[rgba(0,217,160,0.15)] text-[var(--aurora-max-emerald)] shadow-[0_0_16px_rgba(0,217,160,0.25)]'
               : isSidebarCollapsed
-                ? 'text-slate-400 group-hover:bg-cyan-500/10 group-hover:text-cyan-300'
-                : `${AURORA_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan`,
+                ? 'text-slate-400 group-hover:bg-[rgba(0,217,160,0.1)] group-hover:text-[var(--aurora-max-emerald)]'
+                : `${AURORA_SIDEBAR_ICON_BOX} group-hover:text-[var(--aurora-max-emerald)]`,
         ].join(' ')}
       >
         <IconComponent className={isSidebarCollapsed ? "h-5 w-5" : "h-6 w-6"} />
       </span>
-      <span className={`relative z-10 min-w-0 flex-1 truncate text-left text-[12px] font-bold leading-none overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? 'opacity-0 max-w-0 pointer-events-none' : 'opacity-100 max-w-[200px]'}`}>
+      <span className={`relative z-10 min-w-0 flex-1 truncate text-left text-[12px] leading-none overflow-hidden transition-all duration-200 ${
+        isActive ? 'text-white font-black' : 'text-white/70 group-hover:text-white font-bold'
+      } ${isSidebarCollapsed ? 'opacity-0 max-w-0 pointer-events-none' : 'opacity-100 max-w-[200px]'}`}>
         {label}
       </span>
       <span className={`relative z-10 ml-auto flex items-center gap-1.5 shrink-0 overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? 'opacity-0 max-w-0 pointer-events-none' : 'opacity-100 max-w-[100px]'}`}>
@@ -177,7 +179,7 @@ const NavItem = React.memo(function NavItem({
               'pointer-events-none hidden md:inline-flex items-center justify-center',
               'min-w-[18px] h-[18px] px-1 text-[9px] font-mono font-medium rounded transition-all select-none',
               isActive
-                ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/25 shadow-[0_0_8px_rgba(0,240,255,0.15)]'
+                ? 'bg-[var(--aurora-max-emerald)]/15 text-[var(--aurora-max-emerald)] border border-[var(--aurora-max-emerald)]/30 shadow-[0_0_8px_rgba(0,217,160,0.2)]'
                 : 'bg-white/[0.03] text-white/30 border border-white/[0.06] group-hover:border-white/15 group-hover:text-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
             ].join(' ')}
             aria-hidden="true"
@@ -506,13 +508,13 @@ function FeedSidebar({
                   V
                 </div>
               )}
-              <div className={`ve-aurora-brand-status absolute bottom-2.5 right-3 flex items-center gap-1.5 overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? 'opacity-0 max-w-0 pointer-events-none' : 'opacity-100 max-w-[200px]'}`}>
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.65)]" />
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30 whitespace-nowrap">Open Beta · Aurora Max</span>
+              <div className={`ve-aurora-brand-status absolute bottom-2.5 right-3 flex items-center gap-1.5 overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? 'opacity-0 max-w-0 pointer-events-none' : 'opacity-100 max-w-[220px]'}`}>
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--aurora-max-emerald)] shadow-[0_0_10px_rgba(0,217,160,0.8)] animate-pulse" />
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/40 whitespace-nowrap">PRO INTELLIGENCE TERMINAL</span>
               </div>
             </button>
             {!isSidebarCollapsed && <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />}
-            <button onClick={toggleSidebar} className={`shrink-0 text-slate-400 hover:bg-cyan-500/10 hover:text-cyan-300 p-1.5 rounded-lg transition-all ${isSidebarCollapsed ? 'mt-2 mx-auto' : 'mt-0.5'}`} aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            <button onClick={toggleSidebar} className={`shrink-0 text-white/40 hover:bg-white/5 hover:text-[var(--aurora-max-emerald)] p-1.5 rounded-lg transition-all ${isSidebarCollapsed ? 'mt-2 mx-auto' : 'mt-0.5'}`} aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
               {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </button>
           </div>
@@ -521,16 +523,16 @@ function FeedSidebar({
 
         <button
           onClick={onOpenCmdK}
-          className={`ve-aurora-sidebar-search group flex w-full items-center gap-2 rounded-xl transition-all outline-none ${!isSidebarCollapsed ? `px-3 py-2.5 hover:text-white ${AURORA_SIDEBAR_SURFACE} ${AURORA_LABEL} tracking-widest text-white/40` : 'justify-center py-2 text-slate-400 hover:bg-cyan-500/10 hover:text-cyan-300'}`}
+          className={`ve-aurora-sidebar-search group flex w-full items-center gap-2 rounded-xl transition-all outline-none font-mono ${!isSidebarCollapsed ? `px-3 py-2.5 hover:text-white bg-[#040808]/80 border-white/10 hover:border-[var(--aurora-max-emerald)]/30 text-white/40` : 'justify-center py-2 text-white/40 hover:bg-white/5 hover:text-[var(--aurora-max-emerald)]'}`}
           aria-label="Open command palette (⌘K)"
         >
-          <Search className={isSidebarCollapsed ? "h-5 w-5 shrink-0" : "h-3.5 w-3.5 shrink-0"} />
-          <span className={`flex-1 text-left overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-[200px]"}`}>Quick search…</span>
-          <span className={`flex items-center gap-0.5 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${AURORA_LABEL} transition-all duration-200 ${isSidebarCollapsed ? "opacity-0 max-w-0 pointer-events-none p-0 overflow-hidden border-none" : "opacity-100 max-w-[50px]"}`}>
-            <Command className="h-2 w-2" />K
+          <Search className={isSidebarCollapsed ? "h-5 w-5 shrink-0" : "h-3.5 w-3.5 shrink-0 text-white/40 group-hover:text-[var(--aurora-max-emerald)]"} />
+          <span className={`flex-1 text-left text-xs overflow-hidden transition-all duration-200 ${isSidebarCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-[200px]"}`}>Quick search…</span>
+          <span className={`flex items-center gap-0.5 bg-black/60 px-1.5 py-0.5 text-[9px] font-bold font-mono tracking-wider text-white/40 rounded border border-white/10 transition-all duration-200 ${isSidebarCollapsed ? "opacity-0 max-w-0 pointer-events-none p-0 overflow-hidden border-none" : "opacity-100 max-w-[50px]"}`}>
+            <Command className="h-2.5 w-2.5" />K
           </span>
           {isSidebarCollapsed && (
-            <div className="fixed left-[76px] z-[9999] bg-[#0c121e]/95 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-md text-xs font-mono text-cyan-200 shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
+            <div className="fixed left-[76px] z-[9999] bg-[#060a0a]/95 backdrop-blur-md border border-[var(--aurora-max-emerald)]/30 px-3 py-1.5 rounded-md text-xs font-mono text-[var(--aurora-max-emerald)] shadow-[0_10px_30px_rgba(0,0,0,0.8)] whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 group-hover:opacity-100">
               Search <kbd className="ml-1 opacity-60">⌘K</kbd>
             </div>
           )}
