@@ -1,5 +1,5 @@
 import { Search, Sparkles, Command, Keyboard } from 'lucide-react';
-import { useReducer, useCallback, useState, useRef, useMemo } from 'react';
+import { useReducer, useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { useHrNextData, type HrNextItem } from '../hooks/useHrNextData';
 import { HrNextBoard } from './HrNextBoard';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
@@ -38,11 +38,31 @@ export function HrNextShell() {
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
   const [selectedMatchupIndex, setSelectedMatchupIndex] = useState<number>(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const topResearchRef = useRef<HTMLDivElement>(null);
 
   const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
   const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
   const openDrawer = useResearchStore((s) => s.openDrawer);
   const closeDrawer = useResearchStore((s) => s.closeDrawer);
+
+  // Auto-scroll up to the research square on phone / mobile (<2xl) screens when opened
+  useEffect(() => {
+    if (isDrawerOpen && selectedPlayer) {
+      if (typeof window !== 'undefined' && window.innerWidth < 1536) {
+        const timer = setTimeout(() => {
+          if (topResearchRef.current) {
+            topResearchRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            });
+          } else {
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+          }
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isDrawerOpen, selectedPlayer?.id]);
 
   const toggleSaved = useCallback((id: string) => {
     dispatchSaved({ type: 'toggle', id });
@@ -328,7 +348,11 @@ export function HrNextShell() {
         <div className="flex-1 min-w-0 w-full max-w-5xl space-y-3">
           {/* Top Bar on compact/narrow screens when player is selected */}
           {isDrawerOpen && selectedPlayer && (
-            <div className="w-full 2xl:hidden animate-in fade-in slide-in-from-top-4 duration-200">
+            <div 
+              ref={topResearchRef}
+              id="hr-next-mobile-research" 
+              className="w-full 2xl:hidden animate-in fade-in slide-in-from-top-4 duration-200 scroll-mt-24"
+            >
               <HrNextResearchView 
                 playerId={selectedPlayer.id}
                 playerName={selectedPlayer.name}
