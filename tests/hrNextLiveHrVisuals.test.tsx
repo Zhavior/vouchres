@@ -44,26 +44,41 @@ function makeMockRow(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
   };
 }
 
-describe('HrNext Live HR Visuals & Tiering', () => {
-  it('correctly classifies 0 HR, 1 HR (single/yellow), and 2+ HR (multi/bronze)', () => {
-    const zeroHr = makeMockRow({ recentHomeRuns: 0 });
-    expect(getHrHitStatus(zeroHr).tier).toBe('none');
-
-    const singleHr = makeMockRow({ recentHomeRuns: 1 });
-    expect(getHrHitStatus(singleHr).tier).toBe('single');
-    expect(getHrHitStatus(singleHr).badgeLabel).toBe('1 HR');
-
-    const multiHr = makeMockRow({ recentHomeRuns: 2 });
-    expect(getHrHitStatus(multiHr).tier).toBe('multi');
-    expect(getHrHitStatus(multiHr).badgeLabel).toBe('2x HR');
-  });
-
-  it('renders Yellow styling and 1 HR badge for single home run', () => {
-    const singleHrRow = makeMockRow({ recentHomeRuns: 1 });
+describe('HrNext Today-Only Live HR Visuals & Tiering', () => {
+  it('does NOT trigger yellow/bronze card for past historical HRs alone', () => {
+    // Player hit 2 HRs in their previous games, but 0 today
+    const pastHrOnly = makeMockRow({ recentHomeRuns: 2 });
+    expect(getHrHitStatus(pastHrOnly).tier).toBe('none');
 
     render(
       <HrNextCard
-        row={singleHrRow}
+        row={pastHrOnly}
+        active={false}
+        saved={false}
+        isReceiptOpen={false}
+        onSelect={vi.fn()}
+        onToggleSaved={vi.fn()}
+        onAddToSlip={vi.fn()}
+      />
+    );
+
+    const card = screen.getByTestId('hr-card-shohei-ohtani');
+    expect(card.getAttribute('data-hr-tier')).toBe('none');
+    expect(card.className).not.toContain('border-amber-400');
+    expect(card.className).not.toContain('border-[#cd7f32]');
+  });
+
+  it('renders Yellow styling and HR TODAY badge when player hits 1 HR today', () => {
+    const singleHrTodayRow = makeMockRow({
+      raw: { liveHomeRuns: 1 },
+    });
+
+    expect(getHrHitStatus(singleHrTodayRow).tier).toBe('single');
+    expect(getHrHitStatus(singleHrTodayRow).badgeLabel).toBe('HR TODAY');
+
+    render(
+      <HrNextCard
+        row={singleHrTodayRow}
         active={false}
         saved={false}
         isReceiptOpen={false}
@@ -76,15 +91,20 @@ describe('HrNext Live HR Visuals & Tiering', () => {
     const card = screen.getByTestId('hr-card-shohei-ohtani');
     expect(card.getAttribute('data-hr-tier')).toBe('single');
     expect(card.className).toContain('border-amber-400');
-    expect(screen.getByText(/1 HR/i)).toBeTruthy();
+    expect(screen.getByText(/HR TODAY/i)).toBeTruthy();
   });
 
-  it('renders Bronze styling and 2x HR badge for multi-home run performers', () => {
-    const multiHrRow = makeMockRow({ recentHomeRuns: 2 });
+  it('renders Bronze styling and 2x HR TODAY badge when player hits 2 HRs today', () => {
+    const multiHrTodayRow = makeMockRow({
+      raw: { homeRunsToday: 2 },
+    });
+
+    expect(getHrHitStatus(multiHrTodayRow).tier).toBe('multi');
+    expect(getHrHitStatus(multiHrTodayRow).badgeLabel).toBe('2x HR TODAY');
 
     render(
       <HrNextCard
-        row={multiHrRow}
+        row={multiHrTodayRow}
         active={false}
         saved={false}
         isReceiptOpen={false}
@@ -97,6 +117,6 @@ describe('HrNext Live HR Visuals & Tiering', () => {
     const card = screen.getByTestId('hr-card-shohei-ohtani');
     expect(card.getAttribute('data-hr-tier')).toBe('multi');
     expect(card.className).toContain('border-[#cd7f32]');
-    expect(screen.getByText(/2x HR/i)).toBeTruthy();
+    expect(screen.getByText(/2x HR TODAY/i)).toBeTruthy();
   });
 });

@@ -15,27 +15,35 @@ export interface HrHitStatus {
   badgeLabel: string | null;
 }
 
+/**
+ * Strictly returns whether the player hit a Home Run TODAY (in today's game).
+ * Does NOT consider historical past multi-game stats.
+ */
 export function getHrHitStatus(row: HrWatchRow): HrHitStatus {
-  const count = 
-    (row as any).liveHomeRuns ?? 
-    (row.raw as any)?.liveHomeRuns ?? 
-    (row.raw as any)?.homeRunsToday ?? 
-    (row.raw as any)?.hrToday ?? 
-    row.recentHomeRuns ?? 
+  const rawStats = row.raw as Record<string, any> | undefined;
+  const todayCount = 
+    (typeof (row as any).liveHomeRuns === 'number' ? (row as any).liveHomeRuns : null) ?? 
+    (typeof (row as any).homeRunsToday === 'number' ? (row as any).homeRunsToday : null) ?? 
+    (typeof rawStats?.liveHomeRuns === 'number' ? rawStats.liveHomeRuns : null) ?? 
+    (typeof rawStats?.homeRunsToday === 'number' ? rawStats.homeRunsToday : null) ?? 
+    (typeof rawStats?.hrToday === 'number' ? rawStats.hrToday : null) ?? 
+    (typeof rawStats?.todayHomeRuns === 'number' ? rawStats.todayHomeRuns : null) ?? 
+    (typeof rawStats?.boxscore?.homeRuns === 'number' ? rawStats.boxscore.homeRuns : null) ?? 
+    (typeof rawStats?.gameStats?.homeRuns === 'number' ? rawStats.gameStats.homeRuns : null) ?? 
     0;
 
-  if (count >= 2) {
+  if (todayCount >= 2) {
     return {
       tier: 'multi',
-      count,
-      badgeLabel: `${count}x HR`,
+      count: todayCount,
+      badgeLabel: `${todayCount}x HR TODAY`,
     };
   }
-  if (count === 1) {
+  if (todayCount === 1) {
     return {
       tier: 'single',
       count: 1,
-      badgeLabel: '1 HR',
+      badgeLabel: 'HR TODAY',
     };
   }
   return {
@@ -106,9 +114,9 @@ export function extractCardData(row: HrWatchRow) {
 
   let catalyst = 'Research row';
   if (hrStatus.tier === 'multi') {
-    catalyst = `💥 ${hrStatus.count}x Home Run Performer`;
+    catalyst = `👑 Homered ${hrStatus.count}x Today!`;
   } else if (hrStatus.tier === 'single') {
-    catalyst = '🔥 Verified Home Run';
+    catalyst = '💥 Homered Today!';
   } else if (bestPip && bestRank > 0) {
     catalyst = bestPip.label;
   } else if (row.truthStatus === 'blocked') {
@@ -141,7 +149,7 @@ export function extractCardData(row: HrWatchRow) {
   if (row.truthStatus === 'official') sources.push('Official lineup');
   if (row.truthStatus === 'projected') sources.push('Projected lineup');
   if (row.weather != null) sources.push('Weather context on board');
-  if (hrStatus.tier !== 'none') sources.push('Verified MLB live boxscore');
+  if (hrStatus.tier !== 'none') sources.push("Verified Today's MLB Live Boxscore");
 
   const gaps: string[] = [];
   if (row.truthStatus !== 'official') gaps.push('Official batting order is unavailable.');
