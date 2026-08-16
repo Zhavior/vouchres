@@ -72,6 +72,10 @@ describe('HR Next Pro Mode Card & 4-Tier Visuals', () => {
     expect(screen.getByText('Shohei Ohtani')).toBeTruthy();
     expect(screen.getByText('Dylan Cease')).toBeTruthy();
     
+    // Tier Badge & HR Intelligence 7Days HR tag
+    expect(screen.getByText(/👑 ELITE/i)).toBeTruthy();
+    expect(screen.getByText(/7Days HR: 3/i)).toBeTruthy();
+
     // Deep Intel Telemetry Metrics
     expect(screen.getByText(/Max Exit Velo/i)).toBeTruthy();
     expect(screen.getByText(/Barrel Rate/i)).toBeTruthy();
@@ -83,5 +87,27 @@ describe('HR Next Pro Mode Card & 4-Tier Visuals', () => {
     // Action Buttons
     expect(screen.getByText(/Deep Intel/i)).toBeTruthy();
     expect(screen.getByText(/Slip/i)).toBeTruthy();
+  });
+
+  it('renders Today HR badge when player has hit HR today', () => {
+    const liveHrRow = {
+      ...mockRow,
+      hasHitHrToday: true,
+    } as unknown as HrWatchRow;
+
+    render(
+      <HrNextCard
+        row={liveHrRow}
+        active={false}
+        saved={false}
+        isReceiptOpen={false}
+        isProMode={true}
+        onSelect={vi.fn()}
+        onToggleSaved={vi.fn()}
+        onAddToSlip={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Today HR/i)).toBeTruthy();
   });
 });

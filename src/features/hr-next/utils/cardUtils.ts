@@ -115,6 +115,13 @@ export function extractCardData(row: HrWatchRow) {
     ? row.parkFactor - 100 
     : 8;
 
+  const hasHitHrToday = Boolean(
+    (row as any).hasHitHrToday ||
+    rawData?.hrResult === 'hit' ||
+    rawData?.hasHitHrToday ||
+    rawData?.liveResult === 'hit'
+  );
+
   // Receipt generation
   const sources = ['Validated HR board'];
   if (row.truthStatus === 'official') sources.push('Official lineup');
@@ -153,6 +160,8 @@ export function extractCardData(row: HrWatchRow) {
     maxExitVelo,
     hardHitRate,
     parkBoostPct,
+    hasHitHrToday,
+    riskTier: row.riskTier || 'Watch',
     receipt,
   };
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Star, TrendingUp, Search, Sparkles, Flame, Wind, Activity } from 'lucide-react';
+import { Plus, Star, TrendingUp, Search, Flame } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
@@ -49,6 +49,8 @@ export const HrNextCard = React.memo(function HrNextCard({
     maxExitVelo,
     hardHitRate,
     parkBoostPct,
+    hasHitHrToday,
+    riskTier,
     receipt,
   } = extractCardData(row);
 
@@ -74,14 +76,41 @@ export const HrNextCard = React.memo(function HrNextCard({
     onToggleReceipt?.(row.stableId);
   };
 
-  // ─── PRO MODE (Expanded 4-Tier Hero Telemetry Card) ──────────────────────
+  // Tier-specific color styling for Pro Mode
+  const tierLower = (riskTier || '').toLowerCase();
+  const isElite = tierLower.includes('elite');
+  const isStrong = tierLower.includes('strong') || tierLower.includes('core');
+  const isWatch = tierLower.includes('watch') || tierLower.includes('value');
+  const isSleeper = !isElite && !isStrong && !isWatch;
+
+  let scoreColorClass = 'text-[var(--aurora-max-emerald)] drop-shadow-[0_0_12px_rgba(0,217,160,0.4)]';
+  let tierBadgeBg = 'bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)] border-[var(--aurora-max-emerald)]/30';
+  let tierBorderHover = 'hover:border-[var(--aurora-max-emerald)]/40';
+
+  if (isElite) {
+    scoreColorClass = 'text-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.45)]';
+    tierBadgeBg = 'bg-amber-400/15 text-amber-300 border-amber-400/35';
+    tierBorderHover = 'hover:border-amber-400/50';
+  } else if (isWatch) {
+    scoreColorClass = 'text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.35)]';
+    tierBadgeBg = 'bg-cyan-400/15 text-cyan-300 border-cyan-400/30';
+    tierBorderHover = 'hover:border-cyan-400/40';
+  } else if (isSleeper) {
+    scoreColorClass = 'text-violet-300 drop-shadow-[0_0_10px_rgba(167,139,250,0.35)]';
+    tierBadgeBg = 'bg-violet-400/15 text-violet-300 border-violet-400/30';
+    tierBorderHover = 'hover:border-violet-400/40';
+  }
+
+  // ─── PRO MODE (Expanded 4-Tier Hero Telemetry Card with HR Intelligence) ───
   if (isProMode) {
     return (
       <div
         className={`group transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full rounded-2xl border ${
-          active
-            ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_25px_rgba(0,217,160,0.15)]'
-            : 'bg-ve-obsidian/95 border-white/10 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-ve-graphite shadow-xl'
+          hasHitHrToday
+            ? 'border-amber-400/70 bg-gradient-to-r from-amber-500/15 via-ve-obsidian to-ve-obsidian ring-1 ring-amber-400/50 shadow-[0_0_30px_rgba(251,191,36,0.2)]'
+            : active
+              ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_25px_rgba(0,217,160,0.15)]'
+              : `bg-ve-obsidian/95 border-white/10 ${tierBorderHover} hover:bg-ve-graphite shadow-xl`
         }`}
         style={{
           contentVisibility: 'auto',
@@ -111,7 +140,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                 )}
               </button>
 
-              {/* Player Info & Matchup */}
+              {/* Player Info, Badges & Matchup */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3
@@ -128,9 +157,23 @@ export const HrNextCard = React.memo(function HrNextCard({
                     ) : null}
                     {row.team}
                   </span>
-                  <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-[var(--aurora-max-emerald)]/80">
-                    {lineupText}
+
+                  {/* Tier Badge */}
+                  <span className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded border ${tierBadgeBg}`}>
+                    {isElite ? '👑 ELITE' : isStrong ? '⚡ STRONG' : isWatch ? '🎯 WATCH' : '🌊 SLEEPER'}
                   </span>
+
+                  {/* HR Intelligence Live & Recent Badges */}
+                  {hasHitHrToday && (
+                    <span className="inline-flex items-center gap-1 rounded border border-rose-500/50 bg-rose-500/20 px-2 py-0.5 font-mono text-[9px] font-black text-rose-300 uppercase shadow-[0_0_12px_rgba(244,63,94,0.4)] animate-pulse">
+                      <Flame className="w-3 h-3 text-rose-400" /> Today HR
+                    </span>
+                  )}
+                  {recentHrs != null && recentHrs > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded border border-amber-500/50 bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] font-black text-amber-300 shadow-sm">
+                      <Flame className="w-3 h-3 text-amber-400" /> 7Days HR: {recentHrs}
+                    </span>
+                  )}
                 </div>
 
                 {/* Matchup & Pitcher Line */}
@@ -139,6 +182,8 @@ export const HrNextCard = React.memo(function HrNextCard({
                   <strong className="text-white font-bold">{pitcherName}</strong>
                   <span className="text-white/30">·</span>
                   <span className="text-white/40 truncate">{matchupLabel.split('·')[1]?.trim() || matchupLabel}</span>
+                  <span className="text-white/30">·</span>
+                  <span className="text-white/50 text-[10px] font-bold uppercase">{lineupText}</span>
                 </p>
 
                 {/* Layer Score Pips */}
@@ -163,7 +208,7 @@ export const HrNextCard = React.memo(function HrNextCard({
 
             {/* Top Right: HRPI Score & Edge Badge */}
             <div className="flex flex-col items-end shrink-0 leading-none">
-              <span className="font-mono text-2xl font-black tabular-nums text-[var(--aurora-max-emerald)] drop-shadow-[0_0_12px_rgba(0,217,160,0.4)]">
+              <span className={`font-mono text-2xl font-black tabular-nums ${scoreColorClass}`}>
                 {score}
               </span>
               <span className="mt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white/40">
@@ -216,9 +261,9 @@ export const HrNextCard = React.memo(function HrNextCard({
                   {bookOddsLabel}
                 </span>
               )}
-              {recentHrs != null && recentHrs > 0 && (
-                <span className="text-amber-300 font-mono text-[10px] font-bold flex items-center gap-1">
-                  🔥 {recentHrs} HR in 7D
+              {hasHitHrToday && (
+                <span className="text-rose-400 font-mono text-[10px] font-black uppercase flex items-center gap-1">
+                  ⚡ HR HIT IN LIVE PLAY
                 </span>
               )}
             </div>
