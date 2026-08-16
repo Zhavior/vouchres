@@ -139,7 +139,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                 {row.playerName}
               </h4>
 
-              {/* Dynamic Live HR Badges */}
+              {/* Dynamic Live Today HR Badges */}
               {isMultiHr && (
                 <span className="px-2 py-0.5 rounded-full bg-[#cd7f32]/30 text-[#f5c394] border border-[#cd7f32] font-black text-[9px] uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-[0_0_12px_rgba(205,127,50,0.5)] shrink-0">
                   👑 {hrStatus.badgeLabel}
@@ -149,6 +149,16 @@ export const HrNextCard = React.memo(function HrNextCard({
               {isSingleHr && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-400/25 text-amber-300 border border-amber-400 font-black text-[9px] uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-[0_0_10px_rgba(251,191,36,0.4)] shrink-0">
                   💥 {hrStatus.badgeLabel}
+                </span>
+              )}
+
+              {/* Recent HR Badge (matching HR Intelligence: player made HR recently) */}
+              {!isMultiHr && !isSingleHr && recentHrs != null && recentHrs > 0 && (
+                <span 
+                  className="px-1.5 py-0.5 rounded-md bg-amber-400/15 text-amber-300 border border-amber-400/30 font-mono font-bold text-[9px] tracking-wider flex items-center gap-1 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.15)]"
+                  title={`Hit ${recentHrs} HR${recentHrs > 1 ? 's' : ''} in last 7 days`}
+                >
+                  🔥 {recentHrs > 1 ? `${recentHrs}x HR` : 'HR'}
                 </span>
               )}
 
