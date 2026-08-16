@@ -152,13 +152,13 @@ export const HrNextCard = React.memo(function HrNextCard({
                 </span>
               )}
 
-              {/* Recent HR Badge (matching HR Intelligence: player made HR recently) */}
+              {/* Recent HR Streak Badge (Past 7 Days) */}
               {!isMultiHr && !isSingleHr && recentHrs != null && recentHrs > 0 && (
                 <span 
-                  className="px-1.5 py-0.5 rounded-md bg-amber-400/15 text-amber-300 border border-amber-400/30 font-mono font-bold text-[9px] tracking-wider flex items-center gap-1 shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.15)]"
-                  title={`Hit ${recentHrs} HR${recentHrs > 1 ? 's' : ''} in last 7 days`}
+                  className="px-1.5 py-0.5 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/25 font-mono font-bold text-[9px] tracking-wider flex items-center gap-1 shrink-0"
+                  title={`Hit ${recentHrs} home run${recentHrs > 1 ? 's' : ''} in the last 7 days`}
                 >
-                  🔥 {recentHrs > 1 ? `${recentHrs}x HR` : 'HR'}
+                  🔥 {recentHrs} in 7D
                 </span>
               )}
 
