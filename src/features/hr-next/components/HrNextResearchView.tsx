@@ -19,6 +19,7 @@ import {
 import { hrResearchQueryOptions } from '../../../hooks/queries/hrResearchQuery';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { ParkSprayChart } from '../../hr-v2/components/ParkSprayChart';
+import StrikeZoneHeatmapMatrix from '../../../components/analytics/StrikeZoneHeatmapMatrix';
 
 export interface HrNextResearchViewProps {
   playerId: string | number;
@@ -48,7 +49,6 @@ export function HrNextResearchView({
   const sprayVectors = useMemo(() => {
     if (!research?.charts?.sprayEvents) return [];
     return research.charts.sprayEvents.slice(0, 10).map((event) => {
-      // Map x/y or use simulated angles based on field coordinates
       const angle = event.launchAngle ? (event.launchAngle - 25) * 1.8 : ((event.x % 60) - 30);
       return {
         distance: event.distance || (event.isHomeRun ? 410 : 340),
@@ -58,6 +58,19 @@ export function HrNextResearchView({
       };
     });
   }, [research?.charts?.sprayEvents]);
+
+  // Transform pitch arsenal array for StrikeZoneHeatmapMatrix
+  const pitchArsenalRecord = useMemo(() => {
+    if (!research?.charts?.pitchArsenal || research.charts.pitchArsenal.length === 0) return undefined;
+    const record: Record<string, { usagePct: number; hitterSlg: number }> = {};
+    for (const p of research.charts.pitchArsenal) {
+      record[p.pitchName] = {
+        usagePct: p.pitcherUsage ? Math.round(p.pitcherUsage * 100) : 30,
+        hitterSlg: p.batterExpectedSlugging ?? 0.500,
+      };
+    }
+    return record;
+  }, [research?.charts?.pitchArsenal]);
 
   return (
     <div
@@ -211,7 +224,7 @@ export function HrNextResearchView({
           <div className="space-y-4">
             {/* TAB 1: PITCH ARSENAL & MATCHUP HEATMAP */}
             {activeTab === 'matchup' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {/* Summary Key Bar */}
                 <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs">
                   <div>
@@ -223,6 +236,16 @@ export function HrNextResearchView({
                     <strong className="text-vouch-cyan">{research.player.bats || 'R'}HB vs {research.matchup.pitcher.throws || 'R'}HP</strong>
                   </div>
                 </div>
+
+                {/* 3x3 Strike Zone Collision Heatmap */}
+                <StrikeZoneHeatmapMatrix
+                  hitterName={playerName}
+                  pitcherName={research.matchup.pitcher.name || 'Opposing Starter'}
+                  pitcherThrows={research.matchup.pitcher.throws || 'R'}
+                  hitterHand={research.player.bats || 'R'}
+                  pitchArsenal={pitchArsenalRecord}
+                  className="border border-white/10"
+                />
 
                 {/* Pitch Breakdown Table */}
                 <div className="space-y-2">

@@ -199,7 +199,8 @@ describe('HrNextResearchView', () => {
     );
 
     // Default tab is Arsenal & Matchup
-    expect(await screen.findByText('4-Seam Fastball')).toBeTruthy();
+    const fastballs = await screen.findAllByText(/4-Seam Fastball/i);
+    expect(fastballs.length).toBeGreaterThan(0);
 
     // Switch to Park & 3D Field tab
     fireEvent.click(screen.getByRole('button', { name: /Park & 3D Field/i }));
