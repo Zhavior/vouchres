@@ -115,11 +115,21 @@ export function useHrNextData() {
         items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
       }
     } else if (groupBy === 'tier') {
-      // Group by Tier (using TIER_ORDER)
+      const normalizeTier = (tier: string | undefined | null): (typeof TIER_ORDER)[number] => {
+        if (!tier) return 'Watch';
+        const lower = tier.toLowerCase();
+        if (lower.includes('elite')) return 'Elite';
+        if (lower.includes('strong') || lower.includes('core')) return 'Strong';
+        if (lower.includes('watch') || lower.includes('value')) return 'Watch';
+        return 'Sleepers';
+      };
+
+      // Group by 4 Tiers (using TIER_ORDER)
       for (const tier of TIER_ORDER) {
-        const tierRows = allRows.filter(r => r.riskTier === tier);
+        const tierRows = allRows.filter(r => normalizeTier(r.riskTier) === tier);
         if (tierRows.length > 0) {
-          items.push({ type: 'header', tier, id: `header-tier-${tier}` });
+          const tierEmoji = tier === 'Elite' ? '👑' : tier === 'Strong' ? '⚡' : tier === 'Watch' ? '🎯' : '🌊';
+          items.push({ type: 'header', tier: `${tierEmoji} ${tier} Tier (${tierRows.length})`, id: `header-tier-${tier}` });
           for (const row of tierRows) {
             items.push({ type: 'row', row, id: `row-${row.stableId ?? row.playerId}` });
           }

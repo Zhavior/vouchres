@@ -34,11 +34,28 @@ export function HrNextShell() {
   const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
+  const [isProMode, setIsProMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hr_next_pro_mode');
+      return saved !== null ? saved === 'true' : true; // Default Pro Mode ON
+    }
+    return true;
+  });
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
   const [selectedMatchupIndex, setSelectedMatchupIndex] = useState<number>(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const topResearchRef = useRef<HTMLDivElement>(null);
+
+  const toggleProMode = useCallback(() => {
+    setIsProMode((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hr_next_pro_mode', String(next));
+      }
+      return next;
+    });
+  }, []);
 
   const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
   const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
@@ -146,6 +163,7 @@ export function HrNextShell() {
     onToggleCheatsheet: () => setCheatsheetOpen(prev => !prev),
     onPrevMatchup: handlePrevMatchup,
     onNextMatchup: handleNextMatchup,
+    onToggleProMode: toggleProMode,
     isMatchupMode: groupBy === 'matchup',
   });
 
@@ -255,7 +273,7 @@ export function HrNextShell() {
         </div>
 
         {/* Global Controls */}
-        <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-white/5">
+        <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-white/5">
           <HrNextSortMenu sortKey={sortKey} onSortChange={setSortKey} />
           
           <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
@@ -284,6 +302,27 @@ export function HrNextShell() {
               Flat Sort
             </button>
           </div>
+
+          {/* Pro Mode Toggle (Active and visible when By Tier is active) */}
+          {groupBy === 'tier' && (
+            <button
+              type="button"
+              onClick={toggleProMode}
+              aria-pressed={isProMode}
+              title="Toggle Pro Mode Hero Cards (Shortcut: P)"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border font-mono text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${
+                isProMode
+                  ? 'bg-[var(--aurora-max-emerald)] text-black border-[var(--aurora-max-emerald)] shadow-[0_0_12px_rgba(0,217,160,0.35)]'
+                  : 'bg-white/5 text-white/50 border-white/10 hover:text-white hover:border-white/20'
+              }`}
+            >
+              <Sparkles className={`w-3 h-3 ${isProMode ? 'text-black fill-black' : 'text-[var(--aurora-max-emerald)]'}`} />
+              <span>Pro Mode: {isProMode ? 'ON' : 'OFF'}</span>
+              <kbd className={`text-[8.5px] px-1 py-0.2 rounded border ${isProMode ? 'bg-black/20 border-black/30 text-black' : 'bg-black/40 border-white/10 text-white/40'}`}>
+                P
+              </kbd>
+            </button>
+          )}
 
           <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
             <button 
@@ -368,6 +407,7 @@ export function HrNextShell() {
             onToggleSaved={toggleSaved} 
             onAddToSlip={handleAddToSlip} 
             is3DLayerEnabled={is3DLayerEnabled} 
+            isProMode={isProMode}
             groupBy={groupBy}
             activeId={focusedId}
             onSelectActiveId={setFocusedId}

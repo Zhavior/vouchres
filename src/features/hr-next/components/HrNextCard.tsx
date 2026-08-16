@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Star, TrendingUp, Search } from 'lucide-react';
+import { Plus, Star, TrendingUp, Search, Sparkles, Flame, Wind, Activity } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
@@ -12,6 +12,7 @@ export interface HrNextCardProps {
   active: boolean;
   saved: boolean;
   isReceiptOpen: boolean;
+  isProMode?: boolean;
   compact?: boolean;
   onSelect: (id: string) => void;
   onToggleSaved: (id: string) => void;
@@ -24,6 +25,7 @@ export const HrNextCard = React.memo(function HrNextCard({
   active,
   saved,
   isReceiptOpen,
+  isProMode = false,
   compact,
   onSelect,
   onToggleSaved,
@@ -42,6 +44,11 @@ export const HrNextCard = React.memo(function HrNextCard({
     evEdge,
     bookOddsLabel,
     recentHrs,
+    pitcherName,
+    barrelRate,
+    maxExitVelo,
+    hardHitRate,
+    parkBoostPct,
     receipt,
   } = extractCardData(row);
 
@@ -67,6 +74,216 @@ export const HrNextCard = React.memo(function HrNextCard({
     onToggleReceipt?.(row.stableId);
   };
 
+  // ─── PRO MODE (Expanded 4-Tier Hero Telemetry Card) ──────────────────────
+  if (isProMode) {
+    return (
+      <div
+        className={`group transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full rounded-2xl border ${
+          active
+            ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_25px_rgba(0,217,160,0.15)]'
+            : 'bg-[#080d0d]/95 border-white/10 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-[#0b1414] shadow-xl'
+        }`}
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 160px',
+        }}
+        data-testid={`hr-card-${row.stableId}`}
+        data-pro-mode="true"
+      >
+        <div className="p-4 flex flex-col gap-3">
+          {/* Main Hero Header Row */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3.5 min-w-0">
+              {/* Enlarged Batter Hero Image (72px) with Status Halo */}
+              <button
+                type="button"
+                onClick={onTicketActivate}
+                aria-label={`Select ${row.playerName}`}
+                className="relative h-[68px] w-[68px] sm:h-[74px] sm:w-[74px] shrink-0 overflow-hidden rounded-2xl border-2 border-white/15 bg-black/60 shadow-[0_0_20px_rgba(0,0,0,0.6)] group-hover:border-[var(--aurora-max-emerald)]/50 transition-all cursor-pointer"
+                style={{ aspectRatio: '1 / 1' }}
+              >
+                <PlayerHeadshot name={row.playerName} playerId={row.playerId?.toString()} size={74} />
+                {confirmed && (
+                  <span
+                    className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-[var(--aurora-max-emerald)] border-2 border-black shadow-[0_0_8px_rgba(0,217,160,0.8)]"
+                    title="Confirmed Lineup"
+                  />
+                )}
+              </button>
+
+              {/* Player Info & Matchup */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3
+                    onClick={onTicketActivate}
+                    className={`font-mono text-sm sm:text-base font-black leading-tight tracking-tight cursor-pointer hover:underline truncate ${
+                      active ? 'text-[var(--aurora-max-emerald)]' : 'text-white'
+                    }`}
+                  >
+                    {row.playerName}
+                  </h3>
+                  <span className="text-[10px] font-mono text-white/50 bg-white/5 px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                    {teamLogo ? (
+                      <img src={teamLogo} alt="" width={12} height={12} className="h-3 w-3 shrink-0 object-contain" />
+                    ) : null}
+                    {row.team}
+                  </span>
+                  <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-[var(--aurora-max-emerald)]/80">
+                    {lineupText}
+                  </span>
+                </div>
+
+                {/* Matchup & Pitcher Line */}
+                <p className="mt-1 font-mono text-[11px] text-white/60 truncate flex items-center gap-1.5">
+                  <span className="text-white/40">vs</span>
+                  <strong className="text-white font-bold">{pitcherName}</strong>
+                  <span className="text-white/30">·</span>
+                  <span className="text-white/40 truncate">{matchupLabel.split('·')[1]?.trim() || matchupLabel}</span>
+                </p>
+
+                {/* Layer Score Pips */}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="flex items-center gap-1" aria-label="Power, pitcher, and park layers">
+                    {pips.map((pip) => (
+                      <span
+                        key={pip.key}
+                        className={`hr-max-pip hr-max-pip--${pip.tone}`}
+                        title={pip.label}
+                        aria-label={pip.label}
+                      />
+                    ))}
+                  </span>
+                  <span className="font-mono text-[10px] text-white/70 font-semibold truncate">
+                    <TrendingUp className="mr-1 inline h-3 w-3 text-[var(--aurora-max-emerald)]" />
+                    {catalyst}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Right: HRPI Score & Edge Badge */}
+            <div className="flex flex-col items-end shrink-0 leading-none">
+              <span className="font-mono text-2xl font-black tabular-nums text-[var(--aurora-max-emerald)] drop-shadow-[0_0_12px_rgba(0,217,160,0.4)]">
+                {score}
+              </span>
+              <span className="mt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white/40">
+                HRPI SCORE
+              </span>
+              {evEdge != null && (
+                <span className={`mt-1 text-[10px] font-mono font-black tabular-nums ${evEdge > 0 ? 'text-[var(--aurora-max-emerald)]' : 'text-white/40'}`}>
+                  {evEdge > 0 ? `+${evEdge}% EV` : `${evEdge}% EV`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Deep Intel Telemetry Grid (On Top of Ranks/Actions) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 font-mono">
+            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+              <span className="text-[8px] text-white/40 uppercase block">Max Exit Velo</span>
+              <strong className="text-xs font-bold text-[var(--aurora-max-emerald)] block mt-0.5">
+                {maxExitVelo.toFixed(1)} mph
+              </strong>
+            </div>
+
+            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+              <span className="text-[8px] text-white/40 uppercase block">Barrel Rate</span>
+              <strong className="text-xs font-bold text-amber-400 block mt-0.5">
+                {barrelRate.toFixed(1)}%
+              </strong>
+            </div>
+
+            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+              <span className="text-[8px] text-white/40 uppercase block">Hard Hit (95+)</span>
+              <strong className="text-xs font-bold text-vouch-cyan block mt-0.5">
+                {hardHitRate}%
+              </strong>
+            </div>
+
+            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
+              <span className="text-[8px] text-white/40 uppercase block">Park HR Boost</span>
+              <strong className="text-xs font-bold text-white block mt-0.5">
+                +{parkBoostPct}% Deep
+              </strong>
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/5">
+            <div className="flex items-center gap-2">
+              {bookOddsLabel && (
+                <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10 font-mono text-xs font-bold text-white/80 tabular-nums">
+                  {bookOddsLabel}
+                </span>
+              )}
+              {recentHrs != null && recentHrs > 0 && (
+                <span className="text-amber-300 font-mono text-[10px] font-bold flex items-center gap-1">
+                  🔥 {recentHrs} HR in 7D
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleToggleResearch}
+                title={isResearched ? "Close Deep Research" : "Open Deep Research"}
+                aria-label={`${isResearched ? 'Close' : 'Open'} Research for ${row.playerName}`}
+                className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border font-mono text-[10px] font-bold uppercase transition ${
+                  isResearched
+                    ? 'border-[var(--aurora-max-emerald)] bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] shadow-[0_0_10px_rgba(0,217,160,0.2)]'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <Search className="h-3 w-3" /> Deep Intel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onToggleSaved(row.stableId)}
+                aria-label={`${saved ? 'Remove' : 'Add'} ${row.playerName} ${saved ? 'from' : 'to'} My List`}
+                className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
+                  saved
+                    ? 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)]'
+                    : 'border-white/10 bg-white/5 text-white/40 hover:text-white'
+                }`}
+              >
+                <Star className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onAddToSlip(row)}
+                title="Add to parlay slip"
+                className="inline-flex h-8 items-center gap-1 rounded-lg border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/15 px-3 font-mono text-[10px] font-black uppercase text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/30"
+              >
+                <Plus className="h-3.5 w-3.5" /> Slip
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Expandable Receipt Tray */}
+        <div 
+          className={`grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isReceiptOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="border-t border-white/[0.08] px-4 pb-3 pt-2.5 bg-black/40">
+              <HrNextReceiptTray 
+                playerName={row.playerName}
+                receipt={receipt}
+                onClose={() => onToggleReceipt?.(row.stableId)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── STANDARD COMPACT ROW MODE ──────────────────────────────────────────
   return (
     <div
       className={`hr-max-ticket group transition-colors duration-150 w-full rounded-xl ${
@@ -79,6 +296,7 @@ export const HrNextCard = React.memo(function HrNextCard({
         containIntrinsicSize: '0 88px',
       }}
       data-testid={`hr-card-${row.stableId}`}
+      data-pro-mode="false"
     >
       <div className="flex min-h-[78px] items-center gap-2.5 px-3 py-2">
         <button

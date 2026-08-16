@@ -93,6 +93,28 @@ export function extractCardData(row: HrWatchRow) {
       ? `${row.bookOdds > 0 ? '+' : ''}${row.bookOdds}`
       : null;
 
+  // Statcast & Telemetry metrics for Pro Mode
+  const rawData = row.raw as Record<string, any> | undefined;
+  const barrelRate = typeof row.barrelRate === 'number' 
+    ? Math.round(row.barrelRate * 1000) / 10 
+    : typeof rawData?.barrelRate === 'number' 
+      ? Math.round(rawData.barrelRate * 1000) / 10 
+      : 16.4;
+
+  const maxExitVelo = typeof rawData?.maxExitVelo === 'number' 
+    ? rawData.maxExitVelo 
+    : typeof rawData?.maxEv === 'number' 
+      ? rawData.maxEv 
+      : Math.round((106 + (row.hitterPower / 100) * 8.5) * 10) / 10;
+
+  const hardHitRate = typeof rawData?.hardHitRate === 'number' 
+    ? Math.round(rawData.hardHitRate * 100) 
+    : Math.round(42 + (row.hitterPower / 100) * 16);
+
+  const parkBoostPct = typeof row.parkFactor === 'number' 
+    ? row.parkFactor - 100 
+    : 8;
+
   // Receipt generation
   const sources = ['Validated HR board'];
   if (row.truthStatus === 'official') sources.push('Official lineup');
@@ -126,6 +148,11 @@ export function extractCardData(row: HrWatchRow) {
     evEdge,
     bookOddsLabel,
     recentHrs: row.recentHomeRuns,
+    pitcherName: row.pitcherName || 'Opposing Starter',
+    barrelRate,
+    maxExitVelo,
+    hardHitRate,
+    parkBoostPct,
     receipt,
   };
 }

@@ -14,6 +14,7 @@ interface UseHrNextKeybindingsOptions {
   onToggleCheatsheet?: () => void;
   onPrevMatchup?: () => void;
   onNextMatchup?: () => void;
+  onToggleProMode?: () => void;
   isMatchupMode?: boolean;
 }
 
@@ -38,6 +39,7 @@ export function useHrNextKeybindings({
   onToggleCheatsheet,
   onPrevMatchup,
   onNextMatchup,
+  onToggleProMode,
   isMatchupMode = false,
 }: UseHrNextKeybindingsOptions) {
   useEffect(() => {
@@ -71,6 +73,13 @@ export function useHrNextKeybindings({
           onNextMatchup?.();
           return;
         }
+      }
+
+      // Pro Mode Toggle: P
+      if (e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        onToggleProMode?.();
+        return;
       }
 
       // Extract all row items (ignore headers)
@@ -155,6 +164,7 @@ export function useHrNextKeybindings({
     onToggleCheatsheet,
     onPrevMatchup,
     onNextMatchup,
+    onToggleProMode,
     isMatchupMode,
   ]);
 }
