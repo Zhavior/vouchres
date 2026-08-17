@@ -3,6 +3,46 @@ import { hasPersistedAuthSession } from '../lib/supabaseClient';
 export const DEV_BYPASS_AUTH =
   import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
+/**
+ * Explicit sign-out latch.
+ *
+ * `DEV_BYPASS_AUTH` fakes an authenticated session so local work doesn't need a
+ * login — but it also made logout a no-op: `isLoggedIn` stayed true, so the app
+ * kept rendering the signed-in shell instead of the public landing. The latch
+ * lets a real logout win over the bypass until the next successful sign-in, and
+ * it survives a reload so the landing sticks.
+ */
+const SIGNED_OUT_KEY = 'vouchedge_signed_out';
+
+export function markSignedOut() {
+  try {
+    localStorage.setItem(SIGNED_OUT_KEY, 'true');
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function clearSignedOutFlag() {
+  try {
+    localStorage.removeItem(SIGNED_OUT_KEY);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function hasSignedOut(): boolean {
+  try {
+    return localStorage.getItem(SIGNED_OUT_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** `DEV_BYPASS_AUTH`, minus the sessions the user explicitly ended. */
+export function devAuthActive(): boolean {
+  return DEV_BYPASS_AUTH && !hasSignedOut();
+}
+
 export const PUBLIC_SECTIONS = new Set([
   'welcome',
   'vouchedge_intro',
@@ -33,6 +73,20 @@ export const PUBLIC_SECTIONS = new Set([
 ]);
 
 export const SIGNED_IN_HOME = 'today';
+
+/**
+ * HR Next is the default landing experience for anyone who can reach it.
+ *
+ * It is a staff-gated surface (`PROTECTED_SECTIONS` + `AdminAccessGate`), so it
+ * can only be the *unconditional* home for users who pass
+ * `canAccessAdminSurfaces`. Everyone else still lands on `today` — routing a
+ * non-staff login straight into the access gate would be a broken sign-in.
+ */
+export const HR_NEXT_HOME = 'admin_hr_next';
+
+export function resolveSignedInHome(canAccessAdmin: boolean): string {
+  return canAccessAdmin ? HR_NEXT_HOME : SIGNED_IN_HOME;
+}
 export const FORCE_PUBLIC_LANDING_PATHS = new Set(['/vouchedge-preview', '/preview/vouchedge']);
 
 export function shouldForcePublicLanding() {
@@ -50,9 +104,10 @@ export const SECTIONS_USING_LIVE_GAMES = new Set([
   'research',
   'game_research',
   'player_research',
+  'today_next',
 ]);
 
-const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next']);
+const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next', 'today_next']);
 
 export function getSavedActiveSection(): string | null {
   try {
@@ -86,7 +141,7 @@ export function resolvePublicSection(section: string): string {
 export function resolveAuthenticatedSection(section: string): string {
   section = canonicalizeSection(section);
   if (shouldForcePublicLanding()) return 'vouchedge_intro';
-  if (DEV_BYPASS_AUTH) return section === 'vouchedge_intro' ? SIGNED_IN_HOME : section;
+  if (devAuthActive()) return section === 'vouchedge_intro' ? SIGNED_IN_HOME : section;
   if (!hasRealAuthToken()) return resolvePublicSection(section);
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
@@ -136,12 +191,12 @@ export function resolveDevSectionFromLocation() {
   const target = hash || pathname;
 
   if (target === '' || target === '/') {
-    return DEV_BYPASS_AUTH || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    return devAuthActive() || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
   }
 
   if (target === 'vouchres/vouchedge' || target === '/vouchres/vouchedge') {
-    const section = DEV_BYPASS_AUTH || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
-    window.history.replaceState(null, '', DEV_BYPASS_AUTH || hasRealAuthToken() ? `/${section}` : '/vouchedge');
+    const section = devAuthActive() || hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    window.history.replaceState(null, '', devAuthActive() || hasRealAuthToken() ? `/${section}` : '/vouchedge');
     return section;
   }
 
@@ -156,7 +211,7 @@ export function resolveDevSectionFromLocation() {
     target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
     target === 'vouchedge' || target === '/vouchedge'
   ) {
-    if (DEV_BYPASS_AUTH || hasRealAuthToken()) {
+    if (devAuthActive() || hasRealAuthToken()) {
       window.history.replaceState(null, '', `/${SIGNED_IN_HOME}`);
       return SIGNED_IN_HOME;
     }
@@ -171,7 +226,7 @@ export function resolveDevSectionFromLocation() {
     target === 'welcome' || target === '/welcome' ||
     target === 'island' || target === '/island'
   ) {
-    if (!DEV_BYPASS_AUTH && !hasRealAuthToken()) {
+    if (!devAuthActive() && !hasRealAuthToken()) {
       window.history.replaceState(null, '', '/');
       return 'vouchedge_intro';
     }
@@ -197,6 +252,14 @@ export function resolveDevSectionFromLocation() {
     target === 'daily_hr_watch_new' || target === '/daily_hr_watch_new'
   ) {
     return 'hr_board';
+  }
+
+  if (
+    target === 'hr-next' || target === '/hr-next' ||
+    target === 'hr_next' || target === '/hr_next' ||
+    target === 'admin-hr-next' || target === '/admin-hr-next'
+  ) {
+    return HR_NEXT_HOME;
   }
 
   if (
@@ -296,7 +359,18 @@ export function resolveDevSectionFromLocation() {
     return 'brain_performance';
   }
 
-  if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {
+  if (
+    target === 'live_games' ||
+    target === '/live_games' ||
+    target === 'live-games' ||
+    target === '/live-games' ||
+    target === 'live_games_next' ||
+    target === '/live_games_next' ||
+    target === 'live-games-next' ||
+    target === '/live-games-next' ||
+    target === 'live-projections' ||
+    target === '/live-projections'
+  ) {
     return 'live_games';
   }
 
@@ -306,7 +380,7 @@ export function resolveDevSectionFromLocation() {
     return 'hr_board';
   }
   const validSections = new Set([
-    'today', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
+    'today', 'today_next', 'feed', 'following', 'build', 'ai_pilot', 'ai_engine', 'intel',
     'hr_board', 'daily_hr_watch_new', 'hr_max', 'aurora_hr_hq', 'aurora_daily_slate', 'brain_picks', 'brain_performance', 'mlb_stats', 'daily_players',
     'live_parlays', 'parlay_proof', 'pro_command_center', 'player_edge_lab',
     'pitcher_matchup_intelligence', 'team_matchup_lab', 'hitter_matchup_zones',

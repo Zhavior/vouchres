@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { markSignedOut } from '../app/sectionNavigation';
 
 export function resetToLandingScreen() {
   localStorage.removeItem('vouchedge_after_auth_destination');
@@ -39,6 +40,9 @@ export async function performAppLogout(onLogoutComplete?: () => void) {
   } finally {
     clearVouchEdgeLocalAuth();
     resetToLandingScreen();
+    // Latch the sign-out *after* the wipe so the dev auth bypass can't resurrect
+    // the signed-in shell on this render or on the next reload.
+    markSignedOut();
     window.history.replaceState(null, '', '/');
     onLogoutComplete?.();
   }
