@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
 import type { useSectionNavigation } from './useSectionNavigation';
-import { queryClient } from '../lib/queryClient';
 import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFetch';
 import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
@@ -116,11 +114,11 @@ export default function AuthenticatedApp({ navigation }: { navigation: Navigatio
     return () => window.clearTimeout(timer);
   }, []);
 
+  // No QueryClientProvider here: App.tsx already mounts one with the same
+  // queryClient above MainAppRoutes, so this was a redundant nested provider.
   return (
-    <QueryClientProvider client={queryClient}>
-      <SocialGraphProvider>
-        <AuthenticatedAppContent navigation={navigation} />
-      </SocialGraphProvider>
-    </QueryClientProvider>
+    <SocialGraphProvider>
+      <AuthenticatedAppContent navigation={navigation} />
+    </SocialGraphProvider>
   );
 }
