@@ -4,7 +4,7 @@ import type { GameMatchup } from '../src/types/matchup';
 import {
   mergeMatchups,
   mergeOfficialLiveUpdates,
-} from '../src/components/LiveGamesProZ8';
+} from '../src/features/live-games-next/utils/liveGameMerge';
 
 function game(id: number, patch: Partial<GameMatchup> = {}): GameMatchup {
   return {

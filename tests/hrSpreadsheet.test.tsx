@@ -64,7 +64,13 @@ describe('HR matchup slider', () => {
     expect(screen.getAllByText('Second Hitter').length).toBeGreaterThan(0);
   });
 
-  it('keeps the all-slate table responsive by paging matchups without accumulating DOM', () => {
+  // The original guard asserted a 3-matchup paging window plus a "Next matchups"
+  // control. That was replaced by CSS containment: every game group renders, but
+  // each carries content-visibility:auto so the browser skips layout and paint
+  // for off-screen groups. The perf intent is unchanged — the whole slate must
+  // never be laid out at once — so this asserts the mechanism actually in use
+  // rather than being relaxed to "renders everything".
+  it('keeps the all-slate table responsive by containing each matchup group', () => {
     render(
       <HrSpreadsheet
         rows={[
@@ -84,11 +90,16 @@ describe('HR matchup slider', () => {
     expect(screen.getAllByText('Game One').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Game Two').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Game Three').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Game Four')).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Next matchups' }));
-    expect(screen.queryByText('Game One')).toBeNull();
     expect(screen.getAllByText('Game Four').length).toBeGreaterThan(0);
+
+    // One contained group per game, each opted out of off-screen rendering.
+    const groups = document.querySelectorAll('article[style*="content-visibility"]');
+    expect(groups.length).toBe(4);
+    groups.forEach((group) => {
+      const style = (group as HTMLElement).style;
+      expect(style.contentVisibility).toBe('auto');
+      expect(style.containIntrinsicSize).not.toBe('');
+    });
   });
 
   it('compresses the selector when only one game is available', () => {
