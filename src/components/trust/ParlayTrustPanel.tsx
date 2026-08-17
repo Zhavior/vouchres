@@ -94,7 +94,7 @@ export default function ParlayTrustPanel({
           locked_at?: string | null;
         }>(`/api/parlays/${encodeURIComponent(pickId)}/audit`),
         apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] }; proof_hash?: string | null; ots_stamped_at?: string | null; has_ots_proof?: boolean } }>(
-          `/api/parlays/${encodeURIComponent(pickId)}`,
+          `/api/v3/parlays/${encodeURIComponent(pickId)}`,
         ).catch(() => null),
       ]);
 
