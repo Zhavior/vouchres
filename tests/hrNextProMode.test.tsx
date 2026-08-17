@@ -73,20 +73,28 @@ describe('HR Next Pro Mode Card & 4-Tier Visuals', () => {
     expect(screen.getByText('Dylan Cease')).toBeTruthy();
     
     // Tier Badge & HR Intelligence 7Days HR tag
-    expect(screen.getByText(/👑 ELITE/i)).toBeTruthy();
+    // Tier label is plain text now — the crown emoji was dropped and the tier
+    // accent colour carries the signal. data-tier is the structural assertion.
+    expect(card.getAttribute('data-tier')).toBe('elite');
+    expect(screen.getAllByText(/^ELITE$/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/7Days HR: 3/i)).toBeTruthy();
 
-    // Deep Intel Telemetry Metrics
-    expect(screen.getByText(/Max Exit Velo/i)).toBeTruthy();
-    expect(screen.getByText(/Barrel Rate/i)).toBeTruthy();
+    // Deep Intel Telemetry Metrics. Labels were retitled to match what the
+    // values actually are — "Avg Exit Velo" (season average from the Statcast
+    // leaderboard, not a max) and "Barrel %" — so assert the current wording.
+    expect(screen.getByText(/Avg Exit Velo/i)).toBeTruthy();
+    expect(screen.getByText(/Barrel %/i)).toBeTruthy();
+    // cardUtils converts the fraction 0.192 to a 19.2 percent before render.
     expect(screen.getByText('19.2%')).toBeTruthy();
-    expect(screen.getByText(/Hard Hit \(95\+\)/i)).toBeTruthy();
-    expect(screen.getByText(/Park HR Boost/i)).toBeTruthy();
-    expect(screen.getByText(/\+12% Deep/i)).toBeTruthy();
+    expect(screen.getByText(/Hard Hit/i)).toBeTruthy();
+    expect(screen.getByText(/Park/i)).toBeTruthy();
+    expect(screen.getByText('+12%')).toBeTruthy();
     
-    // Action Buttons
-    expect(screen.getByText(/Deep Intel/i)).toBeTruthy();
-    expect(screen.getByText(/Slip/i)).toBeTruthy();
+    // Action buttons are icon-only now, so assert their accessible names
+    // rather than visible text — that is the contract screen readers rely on.
+    expect(screen.getByRole('button', { name: /Research for Shohei Ohtani/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Shohei Ohtani to parlay slip/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Shohei Ohtani (to|from) My List/i })).toBeTruthy();
   });
 
   it('renders Today HR badge when player has hit HR today', () => {

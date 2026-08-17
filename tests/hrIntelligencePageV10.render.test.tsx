@@ -627,28 +627,41 @@ describe('HrIntelligencePageV10 — Dedicated Render Test Suite', () => {
       const kanbanBtn = screen.getByRole('button', { name: /Kanban view/i });
       const arena3dBtn = screen.getByRole('button', { name: /3D Stadium/i });
 
-      // Focus card button and simulate rapid ArrowRight presses: Card -> Table -> Kanban -> 3D -> Card -> Table
+      const edgeBtn = screen.getByRole('button', { name: /Vegas Edge Desk/i });
+      const stacksBtn = screen.getByRole('button', { name: /Team Stacks/i });
+      const matrixBtn = screen.getByRole('button', { name: /Projection Matrix/i });
+      const extremesBtn = screen.getByRole('button', { name: /Matchup Extremes/i });
+
+      // Walk the full ring, then wrap: the toggle grew from 4 views to 8
+      // (edge, stacks, matrix, extremes were added), so wrap-around lands on
+      // 'extremes' at the end rather than '3d'.
+      const ring = [
+        cardBtn,
+        tableBtn,
+        kanbanBtn,
+        arena3dBtn,
+        edgeBtn,
+        stacksBtn,
+        matrixBtn,
+        extremesBtn,
+      ];
+
       cardBtn.focus();
-      fireEvent.keyDown(cardBtn, { key: 'ArrowRight' });
-      expect(tableBtn.getAttribute('aria-pressed')).toBe('true');
+      for (let i = 0; i < ring.length; i += 1) {
+        const next = ring[(i + 1) % ring.length];
+        fireEvent.keyDown(ring[i], { key: 'ArrowRight' });
+        expect(next.getAttribute('aria-pressed')).toBe('true');
+      }
 
-      fireEvent.keyDown(tableBtn, { key: 'ArrowRight' });
-      expect(kanbanBtn.getAttribute('aria-pressed')).toBe('true');
-
-      fireEvent.keyDown(kanbanBtn, { key: 'ArrowRight' });
-      expect(arena3dBtn.getAttribute('aria-pressed')).toBe('true');
-
-      fireEvent.keyDown(arena3dBtn, { key: 'ArrowRight' });
-      expect(cardBtn.getAttribute('aria-pressed')).toBe('true');
-
+      // One extra press past the wrap to confirm the ring keeps advancing.
       fireEvent.keyDown(cardBtn, { key: 'ArrowRight' });
       expect(tableBtn.getAttribute('aria-pressed')).toBe('true');
 
       // Test Home and End keys
       fireEvent.keyDown(tableBtn, { key: 'End' });
-      expect(arena3dBtn.getAttribute('aria-pressed')).toBe('true');
+      expect(extremesBtn.getAttribute('aria-pressed')).toBe('true');
 
-      fireEvent.keyDown(arena3dBtn, { key: 'Home' });
+      fireEvent.keyDown(extremesBtn, { key: 'Home' });
       expect(cardBtn.getAttribute('aria-pressed')).toBe('true');
     });
 

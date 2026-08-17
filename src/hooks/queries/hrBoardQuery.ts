@@ -1,4 +1,4 @@
-import { queryOptions, keepPreviousData } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { claimEarlyHrBoard } from "../../lib/boot/hrBoardEarlyFetch";
 import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
@@ -64,7 +64,9 @@ export function hrBoardQueryOptions(date: string) {
     refetchInterval: isToday ? refetchInterval : false,
     refetchOnMount: false,
     refetchOnReconnect: true,
-    placeholderData: keepPreviousData,
+    // No keepPreviousData here: this query is keyed by date, so placeholder data
+    // would serve the previously viewed date's board while a new date loads —
+    // real rows attached to the wrong day. Guarded by hrBoardQueryRace.test.ts.
     retry: shouldRetryHrBoard,
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
   });
