@@ -184,11 +184,16 @@
    Remove mock-dashboard modules and tighten composer/feed.
    ========================================================= */
 
-/* Browser-safe fallback using known visible text containers/classes from this page */
-#inner-view-slot [class*="indicator" i],
-#inner-view-slot [class*="cheat" i],
-#inner-view-slot [class*="sharp" i],
-#inner-view-slot [class*="premium-indicator" i] {
+/* Browser-safe fallback using known visible text containers/classes from this page.
+   Scoped away from the public landing: `.ve-landing-sharp` is a layout class, not a
+   mock-dashboard module, and the substring match was hiding the entire landing page. */
+#inner-view-slot
+  :is(
+    [class*="indicator" i],
+    [class*="cheat" i],
+    [class*="sharp" i],
+    [class*="premium-indicator" i]
+  ):not(.ve-landing-sharp, .ve-landing-sharp *) {
   display: none !important;
 }
 
