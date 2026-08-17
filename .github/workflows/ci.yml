@@ -6,7 +6,7 @@ on:
       - main
       - "cursor/**"
       - "feat/**"
-      - "fix-**"
+      - "fix/**"
       - "hr-**"
       - "premium-**"
   pull_request:
