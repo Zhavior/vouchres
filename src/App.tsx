@@ -1,10 +1,17 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
 import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import AuthCallbackPage from './pages/AuthCallbackPage';
-import { PUBLIC_SECTIONS, shouldForcePublicLanding } from './app/sectionNavigation';
+import {
+  devAuthActive,
+  PUBLIC_SECTIONS,
+  hasRealAuthToken,
+  resolveAuthenticatedSection,
+  resolveDevSectionFromLocation,
+  shouldForcePublicLanding,
+} from './app/sectionNavigation';
 import { AURORA_MAX_SHELL } from './theme/auroraTokens';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 import { CookieConsentBanner } from './components/legal/CookieConsentBanner';
@@ -31,31 +38,50 @@ const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
 
-function RouteFallback() {
-  const [visible, setVisible] = useState(false);
+/**
+ * Start the boot route's chunk during entry evaluation instead of waiting for
+ * React's first render to trip the lazy boundary. This mirrors the routing
+ * decision in MainAppRoutes so only the chunk this refresh actually lands on is
+ * warmed — guests never pay for the authed bundle. The later React.lazy()
+ * import hits the module registry and resolves with no network round trip, so
+ * the Suspense boundary is typically already settled at first commit.
+ */
+function warmBootRouteChunk() {
+  if (typeof window === 'undefined') return;
+  if (isAuthCallbackPath() || isPasswordResetPath()) return;
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(true), 160);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  return (
-    <div
-      className="ve-route-suspense-fallback flex min-h-[45vh] items-center justify-center px-5"
-      role={visible ? 'status' : undefined}
-      aria-live={visible ? 'polite' : undefined}
-      aria-hidden={!visible}
-    >
-      {visible && (
-        <div className="w-full max-w-sm rounded-2xl border border-vouch-cyan/20 bg-black/35 p-6 text-center shadow-[0_0_40px_rgba(0,240,255,0.08)]">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-vouch-cyan" />
-          <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
-            Loading VouchEdge
-          </p>
-        </div>
-      )}
-    </div>
+  // Same resolution useSectionNavigation runs for its initial section.
+  const bootSection = resolveAuthenticatedSection(
+    resolveDevSectionFromLocation() ?? (devAuthActive() ? 'hr_board' : 'vouchedge_intro'),
   );
+  const canRenderLoggedOutRoute = PUBLIC_SECTIONS.has(bootSection) && bootSection !== 'vouchedge_intro';
+  const rendersPublicLanding =
+    isPublicAuthPath() ||
+    ((shouldForcePublicLanding() || !(devAuthActive() || hasRealAuthToken())) &&
+      !LEGACY_LANDING_SECTIONS.has(bootSection) &&
+      !canRenderLoggedOutRoute);
+
+  void (rendersPublicLanding
+    ? import('./pages/VouchEdgeTerminalPage')
+    : import('./app/AuthenticatedApp')
+  ).catch(() => {
+    /* The lazy boundary owns chunk-failure recovery; this warm pass stays silent. */
+  });
+}
+
+warmBootRouteChunk();
+
+/**
+ * Boot Suspense placeholder — deliberately silent.
+ *
+ * The route chunk is warmed during entry evaluation (see below), so this
+ * boundary usually resolves inside a frame or two. Painting a spinner card
+ * here only produced a "Loading VouchEdge" flash that popped in and straight
+ * back out; holding the app's own canvas instead means the refresh reads as
+ * one paint. Reserves height so nothing shifts when the route mounts.
+ */
+function RouteFallback() {
+  return <div className="ve-route-suspense-fallback min-h-[45vh]" aria-hidden="true" />;
 }
 
 function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
