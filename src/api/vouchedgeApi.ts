@@ -23,12 +23,33 @@ import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } fro
 import type { LiveGamesDirectPayload } from "../lib/mlbDirect";
 import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
 import { apiUrl } from "../lib/apiBase";
+import { getAuthToken } from "../lib/supabaseClient";
 import { parseApiErrorBody, unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../lib/hrBoardSlice";
 import { parseHrBoardApiResponse } from "./hrBoardApiContract";
 
 const CLIENT_FETCH_TIMEOUT_MS = 12_000;
+
+/**
+ * Auth headers for this client.
+ *
+ * This client sent no Authorization header and no credentials, while several of
+ * its wrappers target requireAuth routes: explainPick and aiDailyReport
+ * (/api/ai/*), resultLedger (/api/results/ledger) and gradeResult
+ * (/api/results/grade, also requireStaff). Those four currently have no callers,
+ * so the gap is latent rather than a live 401 — but wiring any of them up would
+ * have failed for a non-obvious reason. Attaching the token when one exists
+ * keeps every public endpoint behaving exactly as before.
+ */
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const token = await getAuthToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
 
 export class VouchEdgeHttpError extends Error {
   readonly status: number;
@@ -51,7 +72,11 @@ async function getJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS, sign
   if (signal?.aborted) abortFromCaller();
   else signal?.addEventListener("abort", abortFromCaller, { once: true });
   try {
-    const res = await fetch(apiUrl(url), { signal: controller.signal });
+    const res = await fetch(apiUrl(url), {
+      signal: controller.signal,
+      headers: await authHeaders(),
+      credentials: "include",
+    });
     if (!res.ok) {
       const errorBody = await res.json().catch(() => null);
       const parsed = parseApiErrorBody(errorBody, res.status);
@@ -138,14 +163,24 @@ function normalizeLiveGamesFallback(raw: LiveGamesDirectPayload): LiveGamesPaylo
   };
 }
 
-async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(apiUrl(url), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
-  return unwrapApiPayload<T>(await res.json());
+async function postJson<T>(url: string, body: unknown, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T> {
+  // getJson enforced a 12s deadline; this had none, so a stalled POST hung
+  // forever. Same budget, same auth treatment.
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(apiUrl(url), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+      body: JSON.stringify(body),
+      credentials: "include",
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
+    return unwrapApiPayload<T>(await res.json());
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export const vouchedgeApi = {
