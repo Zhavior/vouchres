@@ -1,0 +1,56 @@
+/**
+ * Global top bar chrome + the shell geometry that goes with it.
+ *
+ * The left rail is gone, so the frame is no longer a two-column grid and the
+ * board routes get the whole width. The bar is a fixed-height row at the top of
+ * a full-height column and `#inner-view-slot` is the scroller beneath it.
+ *
+ * That last part matters beyond tidiness: the document used to be the scroller
+ * while `AppNav` and `resetScrollPane` both read `#inner-view-slot.scrollTop`,
+ * so the mobile dock's scroll-collapse never fired. It also means a route's own
+ * `sticky top-0` header now pins to the top of the pane — directly under the
+ * bar — instead of sliding beneath it and needing a per-route offset.
+ */
+
+:root {
+  --ve-topbar-height: 3.5rem; /* h-14 */
+}
+
+/* The route tabs scroll horizontally on narrow desktops instead of wrapping —
+   a wrapped second row would change the bar's height and shift the board. */
+.ve-topbar-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ve-topbar-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Shell geometry ───────────────────────────────────────────────────────── */
+
+.z8-layout-root:not(.ve-layout-root-public) {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.z8-layout-root:not(.ve-layout-root-public) > .ve-app-topbar {
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+}
+
+#layout-inner-frame.ve-layout-frame {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+#inner-view-slot.ve-scroll-pane {
+  overflow-y: auto;
+  overflow-x: clip;
+  min-height: 0;
+  overscroll-behavior-y: contain;
+}
+
+/* The full-width grid itself lives in z8-premium.css alongside the other
+   `#layout-inner-frame` rules, so there is one place that owns the columns. */

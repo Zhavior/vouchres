@@ -1,7 +1,8 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-// App chrome policy: no top header bar — branding, notifications, and logout
-// live only in FeedSidebar (md+) and MobileProfileDrawer (mobile).
-import FeedSidebar from './FeedSidebar';
+// App chrome policy: one global top bar owns branding, routes, notifications and
+// account. The left navigation rail is retired — the dense board routes need the
+// full desktop width — and the mobile drawer still covers the phone case.
+import AppTopBar from '../../app/AppTopBar';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
 import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
@@ -14,6 +15,7 @@ import { isEagerHrSection } from '../../lib/routePreload';
 import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 import AuroraMaxRouteFrame from '../../components/layout/AuroraMaxRouteFrame';
+import '../../styles/app-topbar.css';
 
 const CmdKPalette = lazy(() => import('./CmdKPalette'));
 const FeedRightRail = lazy(() => import('./FeedRightRail'));
@@ -74,29 +76,6 @@ interface HomeFeedLayoutProps {
   onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
 }
-
-const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
-  activeSection,
-  onSectionChange,
-  onOpenCmdK,
-  onLogoutComplete,
-}: {
-  activeSection: string;
-  onSectionChange: (section: string) => void;
-  onOpenCmdK: () => void;
-  onLogoutComplete?: () => void;
-}) {
-  return (
-    <div className="ve-edge-rail ve-edge-rail-left">
-      <FeedSidebar
-        activeSection={activeSection}
-        onSectionChange={onSectionChange}
-        onOpenCmdK={onOpenCmdK}
-        onLogoutComplete={onLogoutComplete}
-      />
-    </div>
-  );
-});
 
 const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
   activeSection,
@@ -168,7 +147,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
-  const isSidebarCollapsed = useNavUiStore((s) => s.isSidebarCollapsed);
 
   const closeNavigationOverlays = React.useCallback(() => {
     closeMobileDrawer();
@@ -214,7 +192,9 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   // removed: themes may only recolor the accent layer, never structure.
   return (
     <div
-      className="z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip bg-transparent"
+      className={`z8-layout-root font-z8 text-white flex flex-col w-full relative transition-colors duration-500 overflow-x-clip bg-transparent ${
+        isPublicFrontPage ? 've-layout-root-public min-h-screen' : ''
+      }`}
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
@@ -222,18 +202,18 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
         <DeferredBubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
       )}
 
-      <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
-        isPublicFrontPage ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
-      }`} id="layout-inner-frame" style={{ '--ve-sidebar-width': isSidebarCollapsed ? '68px' : '256px' } as React.CSSProperties}>
+      {!isPublicFrontPage && (
+        <AppTopBar
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+          onOpenCmdK={handleOpenCmdK}
+          onLogoutComplete={onAuthLogoutComplete}
+        />
+      )}
 
-        {!isPublicFrontPage && (
-          <DesktopSidebarRail
-            activeSection={activeSection}
-            onSectionChange={handleSectionChange}
-            onOpenCmdK={handleOpenCmdK}
-            onLogoutComplete={onAuthLogoutComplete}
-          />
-        )}
+      <div className={`ve-layout-frame w-full relative transition-all duration-300 z-10 ${
+        isPublicFrontPage ? 've-layout-welcome min-h-screen' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
+      }`} id="layout-inner-frame">
 
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           <FeedScrollProvider scrollRef={scrollPaneRef}>
