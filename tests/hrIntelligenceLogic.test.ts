@@ -135,9 +135,18 @@ describe('HrIntelligencePageV10 — Constants', () => {
     expect(DEFAULT_MIN_SCORE).toBe(60);
   });
 
-  it('defines 4 accessible view options with aria labels', () => {
-    expect(VIEW_OPTIONS).toHaveLength(4);
-    expect(VIEW_OPTIONS.map((v) => v.key)).toEqual(['card', 'table', 'kanban', '3d']);
+  it('defines 8 accessible view options with aria labels', () => {
+    expect(VIEW_OPTIONS).toHaveLength(8);
+    expect(VIEW_OPTIONS.map((v) => v.key)).toEqual([
+      'card',
+      'table',
+      'kanban',
+      '3d',
+      'edge',
+      'stacks',
+      'matrix',
+      'extremes',
+    ]);
     expect(VIEW_OPTIONS.every((v) => Boolean(v.ariaLabel))).toBe(true);
   });
 });

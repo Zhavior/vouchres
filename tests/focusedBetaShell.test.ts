@@ -4,13 +4,23 @@ import { getDefaultLayout, getSidebarFeatures } from '../src/lib/featureConfig';
 
 describe('focused beta shell', () => {
   it('limits the default sidebar to the paid MLB workflow', () => {
+    // hr_board became access: "admin" when HR Intelligence was restricted to
+    // admins and replaced by HR Next, so it is no longer in the default set.
     expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toEqual([
       'today',
-      'hr_board',
       'live_games',
       'results',
       'premium',
     ]);
+  });
+
+  it('exposes the admin-gated HR board only to admins', () => {
+    const layout = getDefaultLayout();
+
+    expect(getSidebarFeatures(layout).map((feature) => feature.id)).not.toContain('hr_board');
+    expect(
+      getSidebarFeatures(layout, { canAccessAdmin: true }).map((feature) => feature.id),
+    ).toContain('hr_board');
   });
 
   it('shows Aurora HQ only when the current profile is an admin', () => {
