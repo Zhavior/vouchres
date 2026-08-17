@@ -31,9 +31,14 @@ export async function createApiApp(httpServer?: http.Server) {
   app.use(helmetMiddleware);
   app.use(cookieParser());
 
-  // Raw body for Stripe webhook isolation
+  // Raw body for Stripe webhook isolation. constructEvent verifies the
+  // signature against the exact bytes Stripe sent, so express.json() must not
+  // reach these paths first. /api/v3/billing/webhook is mounted on this app by
+  // registerV3Routes; its raw-body registration previously existed only in
+  // server/v3/app.ts, which is never deployed. Guarded by
+  // tests/webhookRawBodyCoverage.test.ts.
   app.use(
-    ["/api/billing/webhook", "/api/stripe/webhook"],
+    ["/api/billing/webhook", "/api/stripe/webhook", "/api/v3/billing/webhook"],
     express.raw({ type: "application/json", limit: "1mb" }),
   );
   app.use(express.json({ limit: "256kb" }));
