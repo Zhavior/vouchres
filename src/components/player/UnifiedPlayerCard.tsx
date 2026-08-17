@@ -32,10 +32,10 @@ function tierStyle(score: number): TierStyle {
   if (score >= 92) {
     return {
       label: 'Strong',
-      scoreColor: '#67e8f9',
-      badge: 'border-cyan-300/40 bg-cyan-400/20 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.4)] backdrop-blur-md',
+      scoreColor: '#6ee7b7',
+      badge: 'border-emerald-300/40 bg-emerald-400/20 text-emerald-100 shadow-[0_0_15px_rgba(0,217,160,0.4)] backdrop-blur-md',
       shell: 've-tier-strong backdrop-blur-2xl bg-black/40',
-      barColor: 'linear-gradient(90deg, #0891b2, #06b6d4, #67e8f9)',
+      barColor: 'linear-gradient(90deg, #059669, #10b981, #6ee7b7)',
     };
   }
   if (score >= 85) {

@@ -39,21 +39,21 @@ export default function ParlayOsMobileSlipDock({
       role="region"
       aria-label="Parlay slip actions"
     >
-      <div className="rounded-2xl border border-cyan-400/30 bg-[var(--bg-obsidian)]/98 backdrop-blur-xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
+      <div className="rounded-2xl border border-emerald-400/30 bg-[var(--bg-obsidian)]/98 backdrop-blur-xl shadow-2xl shadow-emerald-500/10 overflow-hidden">
         <button
           type="button"
           onClick={onOpenSlip}
           className="w-full flex items-center gap-3 px-4 py-3 text-left border-b border-white/10 min-h-[3rem]"
         >
           <div className="relative shrink-0">
-            <Layers3 className="w-5 h-5 text-cyan-300" />
-            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 rounded-full bg-cyan-400 text-[9px] font-black text-black flex items-center justify-center px-0.5">
+            <Layers3 className="w-5 h-5 text-emerald-300" />
+            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 rounded-full bg-emerald-400 text-[9px] font-black text-black flex items-center justify-center px-0.5">
               {legCount}
             </span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-white">My List</p>
-            <p className="text-[10px] font-mono text-cyan-200/80">
+            <p className="text-[10px] font-mono text-emerald-200/80">
               {totalOdds} combined · tap to edit legs
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function ParlayOsMobileSlipDock({
             type="button"
             onClick={onLock}
             disabled={!canLock || isSaving || isSharing}
-            className="min-h-[2.75rem] flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/15 text-[10px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/25 disabled:opacity-40"
+            className="min-h-[2.75rem] flex items-center justify-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-500/15 text-[10px] font-bold uppercase tracking-wide text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-40"
           >
             <Lock className="w-3.5 h-3.5" />
             {isSharing ? 'Locking…' : 'Lock'}

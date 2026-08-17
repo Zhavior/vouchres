@@ -75,13 +75,13 @@ const TABS: TierTabConfig[] = [
     label: STRINGS_EN.tierTabs.moderate.label,
     sublabel: '<70 HRPI',
     icon: Activity,
-    tone: 'text-cyan-400/80 hover:text-cyan-300',
-    activeBg: 'bg-cyan-500/15 backdrop-blur-xl',
-    activeBorder: 'border-cyan-400/50',
-    activeGlow: 'shadow-[0_0_24px_rgba(6,182,212,0.3)]',
-    activeBadge: 'bg-cyan-500/30 text-cyan-200 border-cyan-400/40',
-    iconColor: 'text-cyan-400/70',
-    activeIconColor: 'text-cyan-300',
+    tone: 'text-emerald-400/80 hover:text-emerald-300',
+    activeBg: 'bg-emerald-500/15 backdrop-blur-xl',
+    activeBorder: 'border-emerald-400/50',
+    activeGlow: 'shadow-[0_0_24px_rgba(16,185,129,0.3)]',
+    activeBadge: 'bg-emerald-500/30 text-emerald-200 border-emerald-400/40',
+    iconColor: 'text-emerald-400/70',
+    activeIconColor: 'text-emerald-300',
   },
 ];
 
@@ -153,7 +153,7 @@ export const TierFilterTabs = memo(function TierFilterTabs({
           >
             {/* Luminous indicator dot for active tab */}
             {active && (
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#00d9a0]" />
             )}
 
             <IconComponent

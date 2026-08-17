@@ -16,7 +16,7 @@ function ActionButton({
 }) {
   const styles =
     variant === "primary"
-      ? "bg-cyan-500 text-black hover:bg-cyan-400"
+      ? "bg-emerald-500 text-black hover:bg-emerald-400"
       : "border border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]";
 
   return (

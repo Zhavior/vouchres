@@ -36,7 +36,7 @@ const APP_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const APP_ACCENT: Record<string, string> = {
-  ai: 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10',
+  ai: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
   lock: 'text-amber-400 border-amber-500/40 bg-amber-500/10',
   result: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
   success: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',

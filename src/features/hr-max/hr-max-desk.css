@@ -194,7 +194,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   background: rgba(255, 255, 255, 0.02);
   padding: 0 0.75rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.13em;
@@ -376,7 +376,7 @@
 }
 
 .hr-max-pip--confirmed { background: var(--aurora-max-emerald); }
-.hr-max-pip--neutral { background: #38bdf8; }
+.hr-max-pip--neutral { background: #00d9a0; }
 .hr-max-pip--warning { background: #fbbf24; }
 .hr-max-pip--missing { background: rgba(255, 255, 255, 0.22); }
 

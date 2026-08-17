@@ -23,8 +23,8 @@
   position: relative;
   overflow: hidden;
   border-radius: 1rem;
-  border: 1px solid rgba(79, 184, 220, 0.28);
-  background: linear-gradient(145deg, rgba(5, 10, 20, 0.98), rgba(15, 23, 42, 0.92), rgba(79, 184, 220, 0.08));
+  border: 1px solid rgba(0, 217, 160, 0.28);
+  background: linear-gradient(145deg, rgba(5, 10, 20, 0.98), rgba(15, 23, 42, 0.92), rgba(255, 255, 255, 0.044));
   padding: 0.875rem;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
@@ -63,7 +63,7 @@
 }
 
 .ve-live-score-digits {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: clamp(1.75rem, 8vw, 3.5rem);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -99,7 +99,7 @@
 }
 
 .ve-live-game-picker-card[aria-current='true'] {
-  border-color: rgba(56, 189, 248, 0.55);
+  border-color: rgba(0, 217, 160, 0.55);
   background: rgba(14, 165, 233, 0.12);
 }
 
@@ -114,7 +114,7 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0.25rem 0.625rem;
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.08em;

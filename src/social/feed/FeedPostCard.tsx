@@ -36,11 +36,11 @@ import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
 
 const POST_TYPE_META: Record<string, { label: string; color: string }> = {
-  PARLAY:        { label: 'Parlay',     color: '#4FB8DC' },
+  PARLAY:        { label: 'Parlay',     color: '#00D9A0' },
   VOUCH:         { label: 'Pick',       color: '#31B583' },
   AI_PICK:       { label: 'HR Alert',   color: '#D99C4A' },
   RESULT:        { label: 'Result',     color: '#31B583' },
-  RESEARCH_NOTE: { label: 'Lesson',     color: '#4FB8DC' },
+  RESEARCH_NOTE: { label: 'Lesson',     color: '#00D9A0' },
   DISCUSSION:    { label: 'Discussion', color: '#94a3b8' },
 };
 function PostTypeBadge({ post }: { post: FeedPost }) {

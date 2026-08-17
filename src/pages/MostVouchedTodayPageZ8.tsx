@@ -384,17 +384,18 @@ export function MostVouchedTodayPageZ8({
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full min-w-0 max-w-full">
               {filteredPlayers.map((player) => (
-                <MostVouchedCard
-                  key={`${player.playerId}-board`}
-                  player={player}
-                  onSelectPlayer={handleOpenDrawerForPlayerId}
-                  onToggleVouch={handleToggleVouch}
-                  onAddToSlip={handleAddToSlip}
-                  isPending={
-                    toggleVouchMutation.isPending &&
-                    String(toggleVouchMutation.variables?.playerId) === String(player.playerId)
-                  }
-                />
+                <div key={`${player.playerId}-board`} style={{ contentVisibility: 'auto', containIntrinsicSize: '400px' }}>
+                  <MostVouchedCard
+                    player={player}
+                    onSelectPlayer={handleOpenDrawerForPlayerId}
+                    onToggleVouch={handleToggleVouch}
+                    onAddToSlip={handleAddToSlip}
+                    isPending={
+                      toggleVouchMutation.isPending &&
+                      String(toggleVouchMutation.variables?.playerId) === String(player.playerId)
+                    }
+                  />
+                </div>
               ))}
             </div>
           )}

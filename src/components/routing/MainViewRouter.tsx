@@ -48,7 +48,7 @@ const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
 const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
 const MlbStatHubPage = lazyWithRetry(routeModules.mlbStats);
 const DailyPlayersPage = lazyWithRetry(routeModules.dailyPlayers);
-const LiveGamesPro = lazyWithRetry(routeModules.liveGames);
+const LiveGamesPage = lazyWithRetry(routeModules.liveGames);
 const NotificationsPage = lazyWithRetry(routeModules.notifications);
 const PlayerEdgeLabPageZ8 = lazyWithRetry(routeModules.playerEdgeLab);
 const PitcherMatchupIntelligencePageZ8 = lazyWithRetry(routeModules.pitcherMatchup);
@@ -60,6 +60,14 @@ const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
 const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
 const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
 const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
+const HrNextPage = lazyWithRetry(() => import('../../features/hr-next/pages/HrNextPage'));
+const TodayNextPage = lazyWithRetry(() => import('../../features/today-next/pages/TodayNextPage'));
+// Module scope on purpose. Building this inside AdminAccessGateShell creates a
+// new lazy component type every render, so React remounts and re-suspends the
+// whole gated subtree each pass — which takes down every admin-gated route.
+const AdminAccessGate = lazyWithRetry(() =>
+  import('../admin/AdminAccessGate').then((m) => ({ default: m.AdminAccessGate })),
+);
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -340,7 +348,7 @@ function MainViewRouter({
     case 'live_games':
       return (
         <LazyRoute>
-          <LiveGamesShell navigateSection={navigateSection} />
+          <LiveGamesShell />
         </LazyRoute>
       );
     case 'research':
@@ -431,6 +439,28 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <AuroraHqShell />
+        </LazyRoute>
+      );
+    case 'admin_hr_next':
+      return (
+        <LazyRoute>
+          <AdminAccessGateShell>
+            <HrNextPage />
+          </AdminAccessGateShell>
+        </LazyRoute>
+      );
+    case 'live_games_next':
+      return (
+        <LazyRoute>
+          <LiveGamesShell />
+        </LazyRoute>
+      );
+    case 'today_next':
+      return (
+        <LazyRoute>
+          <AdminAccessGateShell>
+            <TodayNextPage navigateSection={navigateSection} />
+          </AdminAccessGateShell>
         </LazyRoute>
       );
     default:
@@ -625,10 +655,13 @@ function ProGateShell({
   );
 }
 
-function LiveGamesShell({ navigateSection: _navigateSection }: { navigateSection: (section: string) => void }) {
-  const onAddLegFromResearch = useAppCommandStore((state) => state.onAddLegFromResearch);
+function LiveGamesShell() {
+  const onAddLegFromResearch = useAppCommandStore(
+    (state) => state.onAddLegFromResearch,
+  );
+
   return (
-    <LiveGamesPro onAddLegToParlay={onAddLegFromResearch} />
+    <LiveGamesPage onAddLegToParlay={onAddLegFromResearch} />
   );
 }
 
@@ -766,6 +799,18 @@ function CustomizeShell({ navigateSection }: { navigateSection: (section: string
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return (
     <CustomizePage profile={profile} onUpdateProfile={onUpdateProfile} onSectionChange={navigateSection} />
+  );
+}
+
+function AdminAccessGateShell({ children }: { children: React.ReactNode }) {
+  const profile = useAppProfile();
+  
+  return (
+    <Suspense fallback={<RouteShellSkeleton />}>
+      <AdminAccessGate profile={profile}>
+        {children}
+      </AdminAccessGate>
+    </Suspense>
   );
 }
 

@@ -29,8 +29,8 @@ export default function PreviewCardStage(props: Props) {
         style={{ transform: `scale(${previewScale})` }}
       >
         <div className="w-full max-w-[620px] bg-ve-graphite border border-white/[0.06] p-3 sm:p-6 rounded-2xl sm:rounded-3xl shadow-2xl space-y-5 relative">
-          <div className="hidden sm:flex absolute top-4 left-4 bg-sky-950/40 border border-sky-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-sky-400 font-black uppercase tracking-wider items-center gap-1">
-            <span className="w-1 h-1 rounded-full bg-sky-400 animate-ping" />
+          <div className="hidden sm:flex absolute top-4 left-4 bg-emerald-950/40 border border-emerald-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-emerald-400 font-black uppercase tracking-wider items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
             Social Feed Post Frame Size (Max-W: 620px)
           </div>
 

@@ -69,7 +69,7 @@ function SignalBar({ label, value }: { label: string; value: number | null }) {
       >
         {value != null && (
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400/80 to-emerald-300/80"
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400/80 to-emerald-300/80"
             style={{ width: `${pct}%` }}
           />
         )}
@@ -110,13 +110,13 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
     <div className="relative">
       <div
         aria-hidden="true"
-        className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(circle_at_30%_20%,rgba(34,211,238,0.18),transparent_60%),radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.14),transparent_55%)] blur-2xl"
+        className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(circle_at_30%_20%,rgba(0,217,160,0.18),transparent_60%),radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.14),transparent_55%)] blur-2xl"
       />
 
       <div className="relative overflow-hidden rounded-[26px] border border-white/12 bg-gradient-to-b from-ve-graphite/95 to-ve-obsidian/95 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent"
+          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent"
         />
 
         <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-3.5">
@@ -206,10 +206,10 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
               </div>
 
               {primaryPlayer ? (
-                <div className="mt-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-4">
+                <div className="mt-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.04] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-100/70">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-100/70">
                         Linked research row
                       </p>
                       <p className="mt-1.5 truncate text-[15px] font-semibold text-white">
@@ -221,7 +221,7 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-mono text-3xl font-bold leading-none text-cyan-200">
+                      <p className="font-mono text-3xl font-bold leading-none text-emerald-200">
                         {Math.round(primaryPlayer.hrScore)}
                       </p>
                       <p className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40">
@@ -274,7 +274,7 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
           <button
             type="button"
             onClick={onOpenPreview}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-cyan-200 transition hover:text-cyan-100"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-emerald-200 transition hover:text-emerald-100"
           >
             See the full evidence
             <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />

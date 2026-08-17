@@ -145,6 +145,10 @@ function readBreakdown(row: UnknownRecord) {
     parkContext: firstNullableNumber(nested, ['parkContext', 'parkScore']),
     parkIndex: firstNullableNumber(row, ['parkFactor', 'parkHrFactor']),
     weather: readWeatherScore(row, nested),
+    // The pipeline names these `handednessEdge` and `lineupVolume`; the board
+    // reads them as the platoon and lineup-context layers.
+    platoon: firstNullableNumber(nested, ['platoon', 'handednessEdge']),
+    lineupContext: firstNullableNumber(nested, ['lineupContext', 'lineupVolume']),
     recentForm:
       firstNullableNumber(nested, ['recentForm', 'recentPower']) ??
       firstNullableNumber(row, ['recentFormScore', 'recentPower']),
@@ -199,6 +203,8 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       parkContext: breakdown.parkContext,
       parkIndex: breakdown.parkIndex,
       weather: breakdown.weather,
+      platoon: breakdown.platoon,
+      lineupContext: breakdown.lineupContext,
       recentForm: breakdown.recentForm,
       vouchScore: breakdown.vouchScore,
       dataConfidence: firstNullableNumber(row, ['dataConfidence']),
@@ -216,6 +222,24 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
         'barrelPercentage',
         'statcastBarrelRate',
       ]),
+      avgExitVelo: firstNullableNumber(row, [
+        'avgExitVelo',
+        'avgExitVelocity',
+        'averageExitVelocity',
+        'statcastAvgExitVelo',
+      ]),
+      hardHitRate: firstNullableNumber(row, [
+        'hardHitRate',
+        'hardHitPct',
+        'hard_hit_percent',
+        'statcastHardHitRate',
+      ]),
+      batSide: firstString(row, ['batSide', 'battingHand', 'batsHand'], '').trim().toUpperCase() || null,
+      pitcherHand: firstString(
+        row,
+        ['opponentPitcherHand', 'pitcherHand', 'pitcherThrows', 'opposingPitcherHand'],
+        '',
+      ).trim().toUpperCase() || null,
       raw: row as Record<string, unknown>,
       truthStatus: truth,
       riskTier: riskTier(hrScore, truth),

@@ -12,17 +12,25 @@ export default function WorldChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const parlayDockOpen = useParlayOsStore((state) => state.sheetOpen);
   const setWorldChatOpen = useNavUiStore((state) => state.setWorldChatOpen);
+  const mobileDrawerOpen = useNavUiStore((state) => state.mobileDrawerOpen);
 
   useEffect(() => {
     if (parlayDockOpen) setIsOpen(false);
   }, [parlayDockOpen]);
+
+  // The mobile sidebar owns the screen while it is open — the chat panel and
+  // its bubble step aside rather than floating over the nav.
+  useEffect(() => {
+    if (mobileDrawerOpen) setIsOpen(false);
+  }, [mobileDrawerOpen]);
 
   useEffect(() => {
     setWorldChatOpen(isOpen);
     return () => setWorldChatOpen(false);
   }, [isOpen, setWorldChatOpen]);
 
-  const hideFab = parlayDockOpen;
+  // Mobile-only: the FAB keeps its desktop visibility classes below.
+  const hideFab = parlayDockOpen || mobileDrawerOpen;
 
   return (
     <>

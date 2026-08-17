@@ -21,31 +21,31 @@ interface VouchCircleFeedCardProps {
 const cardStyleConfigs: any = {
   cyberpunk: {
     bg: 'bg-ve-obsidian border-2 border-[#162540] dark:bg-ve-obsidian',
-    cardBorder: 'border-sky-500/20',
+    cardBorder: 'border-emerald-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(14,165,233,0.08),transparent_55%)]',
-    cornerLight1: 'bg-cyan-500/10',
-    cornerLight2: 'bg-indigo-500/5',
-    orbitStroke: 'stroke-sky-500/30',
-    orbitDashed: 'border-dashed border-sky-500/20',
+    cornerLight1: 'bg-emerald-500/10',
+    cornerLight2: 'bg-emerald-500/5',
+    orbitStroke: 'stroke-emerald-500/30',
+    orbitDashed: 'border-dashed border-emerald-500/20',
     orbitRing: 'border-slate-850/65',
-    hubBg: 'bg-ve-graphite border-2 border-sky-500/30',
-    hubGlow: 'bg-sky-500/10 group-hover:bg-sky-500/25',
-    hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
-    hubText: 'text-sky-400',
-    nodeBorder: 'border-white/10 group-hover:border-sky-450',
-    nodeValueBg: 'bg-ve-obsidian border border-sky-450 text-sky-400',
+    hubBg: 'bg-ve-graphite border-2 border-emerald-500/30',
+    hubGlow: 'bg-emerald-500/10 group-hover:bg-emerald-500/25',
+    hubVeBg: 'from-emerald-600 to-emerald-600 border-emerald-450/40',
+    hubText: 'text-emerald-400',
+    nodeBorder: 'border-white/10 group-hover:border-emerald-450',
+    nodeValueBg: 'bg-ve-obsidian border border-emerald-450 text-emerald-400',
     nodeTagBg: 'bg-black/25 border-slate-850',
     reasonsBg: 'bg-black/30 border border-white/[0.08]',
     headerTitleColor: 'text-[#cbd5e1]',
     headerSubTitleColor: 'text-white/40',
-    brandBadge: 'bg-sky-950/60 border border-sky-900/40 text-sky-400',
-    activeLineColor1: '#0ea5e9',
+    brandBadge: 'bg-emerald-950/60 border border-emerald-900/40 text-emerald-400',
+    activeLineColor1: '#10b981',
     activeLineColor2: '#f97316',
-    ambientPingColor: 'bg-sky-400',
+    ambientPingColor: 'bg-emerald-400',
     labelText: 'Dodger Offense',
     labelText2: 'Yankee Leverage',
     footerUrlColor: 'text-[#cbd5e1]',
-    footerPingColor: 'bg-sky-500',
+    footerPingColor: 'bg-emerald-500',
   },
   luxury: {
     bg: 'bg-ve-obsidian border-2 border-[#332211] dark:bg-ve-obsidian',
@@ -230,7 +230,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
       createdAt: ''
     };
     
-    let gradCss = 'from-blue-950 via-slate-950 to-indigo-950';
+    let gradCss = 'from-emerald-950 via-slate-950 to-emerald-950';
     if (bc.gradient === 'cyber_gold') gradCss = 'from-amber-950 via-stone-900 to-slate-950';
     if (bc.gradient === 'sunset_laser') gradCss = 'from-rose-950 via-slate-900 to-purple-950';
     if (bc.gradient === 'onyx_carbon') gradCss = 'from-zinc-900 via-stone-950 to-neutral-900';
@@ -243,8 +243,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           style={{
             maxWidth: bc.width ? `${Math.min(bc.width, 480)}px` : '440px',
             borderWidth: bc.borderWeight ? `${bc.borderWeight}px` : '2px',
-            borderColor: bc.glowColor || '#38bdf8',
-            boxShadow: bc.glowStrength ? `0 0 ${bc.glowStrength}px ${bc.glowColor || '#38bdf8'}50` : 'none',
+            borderColor: bc.glowColor || '#00d9a0',
+            boxShadow: bc.glowStrength ? `0 0 ${bc.glowStrength}px ${bc.glowColor || '#00d9a0'}50` : 'none',
           }}
         >
           {/* Decals & Matrix Background */}
@@ -265,7 +265,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           {/* Mid Details */}
           <div className="my-5 space-y-3 relative z-10 text-left font-mono">
             <div className="flex items-center gap-1.5">
-              <span className="text-[8px] bg-obsidian-900 px-2 py-0.5 rounded font-black border border-white/10 text-sky-400 uppercase tracking-widest">
+              <span className="text-[8px] bg-obsidian-900 px-2 py-0.5 rounded font-black border border-white/10 text-emerald-400 uppercase tracking-widest">
                 ⚾ MLB MATCHCHECK
               </span>
               <span className="text-[9px] text-white/40 truncate">{v.gameName}</span>
@@ -277,7 +277,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               <p className="text-[12px] font-semibold text-white/65 mt-0.5 italic leading-none">{v.market}</p>
               
               {/* Odds */}
-              <div className="absolute top-1/2 -translate-y-1/2 right-3 p-1.5 bg-sky-950/45 border border-sky-800 text-emerald-400 font-black text-xs rounded-lg">
+              <div className="absolute top-1/2 -translate-y-1/2 right-3 p-1.5 bg-emerald-950/45 border border-emerald-800 text-emerald-400 font-black text-xs rounded-lg">
                 {v.odds}
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               </div>
               <div className="leading-none text-left">
                 <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>
-                  Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-450'}>Edge</span>
+                  Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-450'}>Edge</span>
                 </span>
                 <span className={`text-[8px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>
                   CIRCLE STUDIO GRAPHIC
@@ -354,14 +354,14 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                   {post.displayName}
                 </span>
-                <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
+                <span className="text-[8.5px] text-emerald-400 font-mono tracking-tight block mt-0.5">
                   @{post.username} · {formattedToday}
                 </span>
               </div>
               <img 
                 src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                 alt={post.displayName} 
-                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
+                className="w-7 h-7 rounded-full border border-emerald-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
                 loading="lazy"
                 decoding="async"
@@ -378,7 +378,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 </span>
               )}
               {showWinRate && (
-                <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-450'}`}>
+                <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-450'}`}>
                   🎯 WR: {customWinRate}
                 </span>
               )}
@@ -478,7 +478,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     <h3 className={`text-base font-black truncate uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-white/90'}`}>
                       {ps.player?.name}
                     </h3>
-                    <p className="text-[10px] text-sky-400 font-bold font-mono uppercase truncate mt-0.5">
+                    <p className="text-[10px] text-emerald-400 font-bold font-mono uppercase truncate mt-0.5">
                       {ps.statType}: <span className={cardStyle === 'minimal' ? 'text-slate-900 font-extrabold' : 'text-amber-400 font-extrabold'}>{ps.customVal}</span>
                     </p>
                   </div>
@@ -518,7 +518,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 e.stopPropagation();
                 setActiveSlide(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-emerald-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
               title="Next Slide"
               id={`feed-next-slide-${post.id}`}
             >
@@ -529,7 +529,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           {/* Card 1/2 metadata overlay label */}
           {showSecondCard && (
             <div className="absolute top-14 right-4 bg-obsidian-900/85 rounded-full py-0.5 px-2.5 border border-white/[0.06] text-[8px] font-mono text-white/45 font-bold z-30 shadow flex gap-1 items-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-450" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-450" />
               CARD 1 / 2
             </div>
           )}
@@ -559,7 +559,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               </div>
               <div className="leading-none text-left">
                 <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>
-                  Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-450'}>Insight</span>
+                  Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-450'}>Insight</span>
                 </span>
                 <span className={`text-[8px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>
                   COMPANION METRICS INDEX
@@ -572,14 +572,14 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                   {post.displayName}
                 </span>
-                <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
+                <span className="text-[8.5px] text-emerald-400 font-mono tracking-tight block mt-0.5">
                   @{post.username} · {formattedToday}
                 </span>
               </div>
               <img 
                 src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                 alt={post.displayName} 
-                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
+                className="w-7 h-7 rounded-full border border-emerald-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
                 loading="lazy"
                 decoding="async"
@@ -596,7 +596,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 </span>
               )}
               {showWinRate && (
-                <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-400'}`}>
+                <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'}`}>
                   🎯 WR: {customWinRate}
                 </span>
               )}
@@ -667,7 +667,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                       <div className="bg-black/20 p-2 rounded-lg border border-white/10">
                         <span className="text-white/40 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Statcast Index</span>
                         <div className="grid grid-cols-2 gap-x-1 text-slate-305">
-                          <div>EVel: <span className="font-extrabold text-[#38bdf8]">{player.advanced?.exitVelocity || "92.4"}</span></div>
+                          <div>EVel: <span className="font-extrabold text-[#00d9a0]">{player.advanced?.exitVelocity || "92.4"}</span></div>
                           <div>HHit: <span className="font-extrabold text-rose-400">{player.advanced?.hardHitPercent ? `${player.advanced.hardHitPercent}%` : "51%"}</span></div>
                         </div>
                       </div>
@@ -677,7 +677,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     <div className="grid grid-cols-2 gap-2 font-mono bg-black/15 p-1.5 rounded-lg border border-white/10 text-[9px]">
                       <div className="flex justify-between px-1 border-r border-slate-950">
                         <span className="text-white/40">VAI CONF:</span>
-                        <span className="font-extrabold text-sky-400">{aiConf}%</span>
+                        <span className="font-extrabold text-emerald-400">{aiConf}%</span>
                       </div>
                       <div className="flex justify-between px-1">
                         <span className="text-white/40">STABILITY:</span>
@@ -726,7 +726,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     <div className="grid grid-cols-2 gap-2 text-[8px] font-mono bg-obsidian-900/40 px-1 py-0.5 rounded leading-none">
                       <div className="flex justify-between pr-1.5 border-r border-white/10">
                         <span className="text-white/40">VAI:</span>
-                        <span className="font-bold text-sky-400">{aiConf}%</span>
+                        <span className="font-bold text-emerald-400">{aiConf}%</span>
                       </div>
                       <div className="flex justify-between pl-1.5">
                         <span className="text-white/40">COEF:</span>
@@ -753,15 +753,15 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
 
           {/* User coupon promo */}
           {showCoupon && (
-            <div className={`mt-1 p-1.5 px-2 rounded-xl border flex justify-between items-center text-left ${cardStyle === 'minimal' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : 'bg-sky-500/5 border-sky-500/20 text-[#38bdf8]'}`}>
+            <div className={`mt-1 p-1.5 px-2 rounded-xl border flex justify-between items-center text-left ${cardStyle === 'minimal' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-emerald-500/5 border-emerald-500/20 text-[#00d9a0]'}`}>
               <div className="flex items-center gap-1.5">
                 <span className="text-[12px] leading-none">🎟️</span>
                 <div className="leading-none text-left">
                   <span className={`text-[9px] font-black block ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>{couponText}</span>
-                  <span className="text-[7px] text-sky-430 font-mono uppercase block mt-0.5">USE CODE ON PROFILE SUBSCRIPTION</span>
+                  <span className="text-[7px] text-emerald-430 font-mono uppercase block mt-0.5">USE CODE ON PROFILE SUBSCRIPTION</span>
                 </div>
               </div>
-              <span className="px-2 py-0.5 bg-sky-450 text-slate-950 rounded font-mono font-black text-[9px] uppercase tracking-wide">
+              <span className="px-2 py-0.5 bg-emerald-450 text-slate-950 rounded font-mono font-black text-[9px] uppercase tracking-wide">
                 {couponCode}
               </span>
             </div>
@@ -785,7 +785,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               e.stopPropagation();
               setActiveSlide(0);
             }}
-            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
+            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-emerald-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
             title="Previous Slide"
             id={`feed-prev-slide-${post.id}`}
           >

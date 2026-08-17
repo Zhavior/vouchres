@@ -609,7 +609,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({
         {activeSection === 'layers' && (
           <div className="flex flex-col gap-6">
             <Sec
-              icon={<BarChart2 className="h-4 w-4 text-cyan-400" />}
+              icon={<BarChart2 className="h-4 w-4 text-emerald-400" />}
               title="12-Layer Intelligence"
               sub="Signal strength, model weight, and composite influence"
             />

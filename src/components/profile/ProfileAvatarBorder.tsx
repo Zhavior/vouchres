@@ -19,7 +19,7 @@ export default function ProfileAvatarBorder({
   avatarUrl,
   displayName,
   initials,
-  avatarColor = 'bg-indigo-600',
+  avatarColor = 'bg-emerald-600',
   size = 'md',
   winRate,
   streakCount,
@@ -69,8 +69,8 @@ export default function ProfileAvatarBorder({
   const renderOverlayBadge = () => {
     if (isVerified) {
       return (
-        <span className={`absolute ${badgePosition} bg-slate-950 text-sky-400 p-0.5 rounded-full border border-sky-500/30 flex items-center justify-center shadow-lg z-10`} style={{ width: badgeSize, height: badgeSize }}>
-          <CheckCircle2 className="w-full h-full fill-sky-950" />
+        <span className={`absolute ${badgePosition} bg-slate-950 text-emerald-400 p-0.5 rounded-full border border-emerald-500/30 flex items-center justify-center shadow-lg z-10`} style={{ width: badgeSize, height: badgeSize }}>
+          <CheckCircle2 className="w-full h-full fill-emerald-950" />
         </span>
       );
     }

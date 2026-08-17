@@ -32,7 +32,7 @@ const CHART = {
   axis: 'rgba(148, 163, 184, 0.45)',
   label: 'rgba(148, 163, 184, 0.55)',
   panel: '#0a0e14',
-  cyan: '#22d3ee',
+  cyan: '#00d9a0',
   emerald: '#34d399',
   amber: '#fbbf24',
   rose: '#fb7185',
@@ -268,7 +268,7 @@ export const BvPSeasonChart: React.FC<{ logs: BvPLog[]; height?: number }> = ({ 
             return (
               <div className="rounded-lg border px-3 py-2 text-xs" style={{ background: '#0d1219', borderColor: 'rgba(255,255,255,0.12)' }}>
                 <p className="font-semibold text-white/80">{label} · {row.pa} PA</p>
-                <p className="text-cyan-300">AVG {row.avg}</p>
+                <p className="text-emerald-300">AVG {row.avg}</p>
                 <p className="text-emerald-300">OBP {row.obp}</p>
                 <p className="text-amber-300">SLG {row.slg}{row.hrs > 0 ? ` · ${row.hrs} HR` : ''}</p>
               </div>

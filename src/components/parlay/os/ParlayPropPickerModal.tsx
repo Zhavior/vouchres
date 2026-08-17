@@ -234,11 +234,11 @@ export default function ParlayPropPickerModal({
               <span className="truncate">Launch: <strong className="text-white">{exitVelo}</strong></span>
             </div>
             <div className="flex items-center gap-1.5 text-white/70">
-              <Activity className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+              <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
               <span className="truncate">EV Edge: <strong className="text-emerald-400">{evEdge}</strong></span>
             </div>
             <div className="flex items-center gap-1.5 text-white/70">
-              <Wind className="h-3.5 w-3.5 text-cyan-300 shrink-0" />
+              <Wind className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
               <span className="truncate">{windVector}</span>
             </div>
           </div>
@@ -306,7 +306,7 @@ export default function ParlayPropPickerModal({
                       <span className="font-mono text-xs font-black text-emerald-400">
                         {tierQuote?.label ?? "TBD"}
                       </span>
-                      <span className="font-mono text-[9px] font-bold text-cyan-400">
+                      <span className="font-mono text-[9px] font-bold text-emerald-400">
                         {tierQuote?.source === "live" ? "Live Book" : "Model Price"}
                       </span>
                     </div>
@@ -381,7 +381,7 @@ export default function ParlayPropPickerModal({
           )}
 
           <div className="mt-3 flex items-center gap-2 text-[10px] text-white/35 font-mono">
-            <Layers3 className="w-3.5 h-3.5 text-cyan-500/60" />
+            <Layers3 className="w-3.5 h-3.5 text-emerald-500/60" />
             Selection adds to My List. Review it before locking to the ledger.
           </div>
         </motion.div>

@@ -36,7 +36,7 @@ const TIER_COLORS: Record<StatTier, string> = {
   elite: 'border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald',
   strong: 'border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan',
   watch: 'border-amber-400/40 bg-amber-400/15 text-amber-300',
-  sleeper: 'border-sky-400/40 bg-sky-400/15 text-sky-300',
+  sleeper: 'border-emerald-400/40 bg-emerald-400/15 text-emerald-300',
   fade: 'border-slate-500/40 bg-slate-500/15 text-slate-400',
 };
 
@@ -65,7 +65,7 @@ export const StatHubHeader: React.FC<Props> = ({
       {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className={`${AURORA_ICON_BOX} h-12 w-12 rounded-2xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan shadow-[0_0_15px_rgba(79,184,220,0.25)]`}>
+          <div className={`${AURORA_ICON_BOX} h-12 w-12 rounded-2xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan shadow-[0_0_15px_rgba(0,217,160,0.25)]`}>
             <BarChart3 className="h-6 w-6" />
           </div>
           <div>
@@ -103,7 +103,7 @@ export const StatHubHeader: React.FC<Props> = ({
               onClick={() => onStatType(st)}
               className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-black font-mono uppercase tracking-wider transition ${
                 active
-                  ? 'border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
+                  ? 'border-vouch-cyan bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_12px_rgba(0,217,160,0.2)]'
                   : 'border-white/10 bg-black/40 text-slate-400 hover:border-white/20 hover:text-white'
               }`}
             >

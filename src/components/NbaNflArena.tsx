@@ -378,7 +378,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                         <span className="px-1.5 py-0.5 bg-orange-950/90 text-orange-400 text-[8px] font-mono font-bold uppercase rounded border border-orange-500/40">
                           PROBABILITY VECTORS ACQUIRED
                         </span>
-                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
+                        <span className="px-1.5 py-0.5 bg-emerald-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/40">
                           EST. MARGIN: +5.5
                         </span>
                       </div>
@@ -573,7 +573,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
               </div>
               <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tight text-white leading-none">
                 NFL GRIDIRON HUB <br />
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
                   & REDZONE MODELER
                 </span>
               </h2>
@@ -665,7 +665,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                         <span className="px-1.5 py-0.5 bg-emerald-950/90 text-emerald-400 text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/40">
                           SEPARATION THRESHOLD GAINED
                         </span>
-                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
+                        <span className="px-1.5 py-0.5 bg-emerald-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/40">
                           TD CONVERSION CONFIDENCE: 92%
                         </span>
                       </div>

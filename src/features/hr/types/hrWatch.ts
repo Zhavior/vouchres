@@ -61,6 +61,14 @@ export interface HrWatchRow {
   xslg?: number | null;
   /** Statcast barrel rate (0-1) from API payload */
   barrelRate?: number | null;
+  /** Statcast average exit velocity in mph from API payload */
+  avgExitVelo?: number | null;
+  /** Statcast hard-hit rate (0-1) from API payload */
+  hardHitRate?: number | null;
+  /** Batter handedness published by the pipeline — 'L' | 'R' | 'S', null when unknown. */
+  batSide?: string | null;
+  /** Opposing starter throwing hand — 'L' | 'R', null when the probable is unset. */
+  pitcherHand?: string | null;
   raw?: Record<string, unknown>;
   truthStatus: TruthStatus;
   riskTier: RiskTier;

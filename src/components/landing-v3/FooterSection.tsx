@@ -27,7 +27,7 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
                 type="button"
                 aria-label="GitHub"
                 onClick={() => onNavigate?.("GitHub")}
-                className="rounded-xl border border-white/10 p-3 text-white/60 transition hover:border-cyan-400/30 hover:text-cyan-300"
+                className="rounded-xl border border-white/10 p-3 text-white/60 transition hover:border-emerald-400/30 hover:text-emerald-300"
               >
                 <Github className="h-5 w-5" />
               </button>

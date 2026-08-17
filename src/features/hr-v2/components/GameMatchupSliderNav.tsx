@@ -58,7 +58,7 @@ export const GameMatchupSliderNav = memo(function GameMatchupSliderNav({
           type="button"
           onClick={onPrev}
           aria-label={STRINGS_EN.grouping.slider.prevGame}
-          className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           title={STRINGS_EN.grouping.slider.prevGame}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -73,7 +73,7 @@ export const GameMatchupSliderNav = memo(function GameMatchupSliderNav({
           aria-pressed={isAll}
           className={`min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all ${
             isAll
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
               : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
           }`}
         >
@@ -107,9 +107,9 @@ export const GameMatchupSliderNav = memo(function GameMatchupSliderNav({
               aria-selected={isActive}
               aria-label={STRINGS_EN.grouping.slider.jumpToGame(`${g.awayTeam} @ ${g.homeTeam}`)}
               onClick={() => onSelectIndex(idx)}
-              className={`min-h-[38px] shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+              className={`min-h-[38px] shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 ${
                 isActive
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.3)] font-bold'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.3)] font-bold'
                   : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/70 hover:text-white border border-white/5'
               }`}
             >
@@ -141,7 +141,7 @@ export const GameMatchupSliderNav = memo(function GameMatchupSliderNav({
           type="button"
           onClick={onNext}
           aria-label={STRINGS_EN.grouping.slider.nextGame}
-          className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           title={STRINGS_EN.grouping.slider.nextGame}
         >
           <span className="text-xs font-mono font-bold hidden md:inline">NEXT</span>
@@ -153,7 +153,7 @@ export const GameMatchupSliderNav = memo(function GameMatchupSliderNav({
           className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-[11px] font-mono"
           title={STRINGS_EN.grouping.slider.keyboardHint}
         >
-          <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
+          <Keyboard className="w-3.5 h-3.5 text-emerald-400" />
           <div className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/90 font-bold text-[10px] shadow-sm">
               ←

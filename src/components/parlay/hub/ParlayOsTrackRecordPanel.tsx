@@ -49,7 +49,7 @@ export default function ParlayOsTrackRecordPanel({
           <button
             type="button"
             onClick={() => onSectionChange('results')}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest min-h-[2.75rem] transition-all bg-cyan-500/10 border border-cyan-400/30 text-cyan-300"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest min-h-[2.75rem] transition-all bg-emerald-500/10 border border-emerald-400/30 text-emerald-300"
             aria-label="Open full Results page"
           >
             <TrendingUp className="w-3 h-3" aria-hidden="true" />

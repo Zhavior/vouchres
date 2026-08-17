@@ -63,11 +63,11 @@ export function TierSectionHeader({
       title: 'MODERATE / WATCHLIST',
       scoreRange: '<70 HRPI',
       icon: Activity,
-      iconColor: 'text-cyan-400',
-      borderColor: 'border-cyan-500/30',
-      badgeBg: 'bg-cyan-500/10',
-      badgeText: 'text-cyan-300 border border-cyan-500/20',
-      glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+      iconColor: 'text-emerald-400',
+      borderColor: 'border-emerald-500/30',
+      badgeBg: 'bg-emerald-500/10',
+      badgeText: 'text-emerald-300 border border-emerald-500/20',
+      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
     },
   }[tierName];
 

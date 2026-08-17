@@ -113,8 +113,8 @@ function ParlayProofHoverCard({ proof }: { proof: ClientParlayProof | null }) {
   const previewLegs = proof.legs.slice(0, 3);
 
   return (
-    <div className="w-[320px] rounded-2xl border border-cyan-400/20 bg-[#07131f] p-3 text-left shadow-2xl backdrop-blur-xl">
-      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300/80">Parlay proof</p>
+    <div className="w-[320px] rounded-2xl border border-emerald-400/20 bg-[#07131f] p-3 text-left shadow-2xl backdrop-blur-xl">
+      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300/80">Parlay proof</p>
       <p className="mt-2 line-clamp-2 text-sm font-black text-white">{proof.selection}</p>
       <p className="mt-1 text-[11px] text-white/45">
         by {author} · {proof.legs.length} legs
@@ -131,7 +131,7 @@ function ParlayProofHoverCard({ proof }: { proof: ClientParlayProof | null }) {
           ) : null}
         </div>
       ) : null}
-      <p className="mt-3 text-[10px] text-cyan-200/70">Click to view it. Tail there. No edits on the shared proof.</p>
+      <p className="mt-3 text-[10px] text-emerald-200/70">Click to view it. Tail there. No edits on the shared proof.</p>
     </div>
   );
 }
@@ -145,7 +145,7 @@ function SharedParlayProofCard({ pickId }: { pickId: string }) {
 
   if (isLoading) {
     return (
-      <div className="mt-2 rounded-2xl border border-cyan-400/15 bg-cyan-950/10 p-3 text-xs text-cyan-100/70 font-mono">
+      <div className="mt-2 rounded-2xl border border-emerald-400/15 bg-emerald-950/10 p-3 text-xs text-emerald-100/70 font-mono">
         Loading shared parlay proof...
       </div>
     );
@@ -155,13 +155,13 @@ function SharedParlayProofCard({ pickId }: { pickId: string }) {
     return (
       <a
         href={`/p/${encodeURIComponent(pickId)}`}
-        className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-cyan-400/15 bg-cyan-950/10 p-3 text-left transition hover:border-cyan-300/35"
+        className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-950/10 p-3 text-left transition hover:border-emerald-300/35"
       >
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300/75">Shared parlay</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300/75">Shared parlay</p>
           <p className="mt-1 text-sm text-white/75">Open proof page</p>
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-cyan-200/75" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-emerald-200/75" />
       </a>
     );
   }
@@ -172,17 +172,17 @@ function SharedParlayProofCard({ pickId }: { pickId: string }) {
   return (
     <a
       href={`/p/${encodeURIComponent(pickId)}`}
-      className="mt-2 block rounded-2xl border border-cyan-400/15 bg-cyan-950/10 p-3 transition hover:border-cyan-300/35 hover:bg-cyan-950/20"
+      className="mt-2 block rounded-2xl border border-emerald-400/15 bg-emerald-950/10 p-3 transition hover:border-emerald-300/35 hover:bg-emerald-950/20"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300/75">Shared parlay</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300/75">Shared parlay</p>
           <p className="mt-1 line-clamp-2 text-sm font-black text-white">{proof.selection}</p>
           <p className="mt-1 text-[11px] text-white/50">
             by {author} · {proof.legs.length} legs
           </p>
         </div>
-        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-cyan-200/75" />
+        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-emerald-200/75" />
       </div>
       {previewLegs.length > 0 ? (
         <div className="mt-3 space-y-1.5 border-t border-white/8 pt-3">
@@ -196,7 +196,7 @@ function SharedParlayProofCard({ pickId }: { pickId: string }) {
           ) : null}
         </div>
       ) : null}
-      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/65">
+      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/65">
         Open proof · tail on your profile
       </p>
     </a>
@@ -220,7 +220,7 @@ function ParlayProofInlineLink({ pickId, label }: { pickId: string; label: strin
     >
       <a
         href={`/p/${encodeURIComponent(pickId)}`}
-        className="inline-flex items-center gap-1 font-semibold text-cyan-300 underline decoration-cyan-400/50 underline-offset-2 transition hover:text-cyan-200"
+        className="inline-flex items-center gap-1 font-semibold text-emerald-300 underline decoration-emerald-400/50 underline-offset-2 transition hover:text-emerald-200"
       >
         <span>{label}</span>
         <ExternalLink className="h-3.5 w-3.5 shrink-0" />
@@ -334,7 +334,7 @@ const WorldChatMessageItem = React.memo(function WorldChatMessageItem({
             }
             className="mt-1 block w-full max-w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left transition hover:border-white/15"
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/65">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300/65">
               Replying to @{msg.replyTo.handle}
             </p>
             <p className="mt-1 line-clamp-2 text-xs text-white/55">{msg.replyTo.text}</p>
@@ -343,7 +343,7 @@ const WorldChatMessageItem = React.memo(function WorldChatMessageItem({
 
         {proofIds.length > 0 ? (
           <div className="mt-2 w-full space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/60">
               Shared proof link · open to tail on your own profile
             </p>
             {proofIds.map((pickId) => (
@@ -452,7 +452,7 @@ function SocialProfilePreviewSheet({
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#08111b] p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300/70">SocialOS profile</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300/70">SocialOS profile</p>
             <h3 className="mt-1 text-lg font-black text-white">{profile.displayName}</h3>
             <p className="text-sm text-white/45">@{profile.handle ?? profile.username}</p>
           </div>
@@ -494,7 +494,7 @@ function SocialProfilePreviewSheet({
           <button
             type="button"
             onClick={onOpenFullProfile}
-            className="flex-1 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition hover:border-cyan-300/55"
+            className="flex-1 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-emerald-200 transition hover:border-emerald-300/55"
           >
             Open full profile
           </button>
@@ -1145,7 +1145,7 @@ export default function WorldChatPanel({
           ) : null}
 
           {sharedProofIdsInDraft.length > 0 ? (
-            <div className="mb-2 rounded-xl border border-cyan-400/20 bg-cyan-950/20 px-3 py-1.5 text-[11px] text-cyan-200">
+            <div className="mb-2 rounded-xl border border-emerald-400/20 bg-emerald-950/20 px-3 py-1.5 text-[11px] text-emerald-200">
               Sharing parlay proof link · cards will attach automatically
             </div>
           ) : null}

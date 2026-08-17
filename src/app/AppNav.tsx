@@ -153,7 +153,7 @@ function DockButton({
       <div
         className={`relative flex items-center justify-center transition-all ${
           centerAction
-            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} rounded-xl border ${active ? 'border-vouch-cyan/60 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_15px_rgba(79,184,220,0.25)]' : 'border-white/15 bg-black/40 text-white/55'}`
+            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} rounded-xl border ${active ? 'border-vouch-cyan/60 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_15px_rgba(0,217,160,0.25)]' : 'border-white/15 bg-black/40 text-white/55'}`
             : active ? 'text-vouch-cyan' : 'text-white/45 group-hover:text-white/70'
         }`}
       >
@@ -165,7 +165,7 @@ function DockButton({
         </span>
       ) : null}
       {active && !centerAction && !collapsed ? (
-        <span className="absolute -top-1 h-0.5 w-7 rounded-b-sm bg-gradient-to-r from-vouch-cyan to-vouch-emerald shadow-[0_2px_8px_rgba(79,184,220,0.8)]" aria-hidden="true" />
+        <span className="absolute -top-1 h-0.5 w-7 rounded-b-sm bg-gradient-to-r from-vouch-cyan to-vouch-emerald shadow-[0_2px_8px_rgba(0,217,160,0.8)]" aria-hidden="true" />
       ) : null}
     </button>
   );

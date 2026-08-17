@@ -13,10 +13,10 @@ export function LiveAtBatMatchupCard({
   const pitcher = snapshot?.play?.pitcher;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-cyan-400/20 bg-[linear-gradient(145deg,rgba(8,20,31,0.97),rgba(4,9,16,0.95))] shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
+    <section className="overflow-hidden rounded-3xl border border-emerald-400/20 bg-[linear-gradient(145deg,rgba(8,20,31,0.97),rgba(4,9,16,0.95))] shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
         <div>
-          <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300/70">
+          <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300/70">
             Live Matchup
           </p>
           <p className="mt-1 text-xs text-white/45">
@@ -73,7 +73,7 @@ export function LiveAtBatMatchupCard({
             <button
               type="button"
               onClick={() => onOpenPitcherProfile(pitcher.id as number)}
-              className="mt-4 w-full rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2.5 text-sm font-black text-cyan-300 transition hover:border-cyan-300/50 hover:bg-cyan-400/15"
+              className="mt-4 w-full rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-2.5 text-sm font-black text-emerald-300 transition hover:border-emerald-300/50 hover:bg-emerald-400/15"
             >
               View Pitcher Profile
             </button>
@@ -147,7 +147,7 @@ function PlayerAvatar({
 
   const accentClass =
     accent === "cyan"
-      ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
+      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
       : "border-amber-300/30 bg-amber-300/10 text-amber-200";
 
   if (imageUrl) {

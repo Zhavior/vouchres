@@ -93,9 +93,9 @@ export default function PokemonPlayerCard({
     if (pos.includes('catcher')) {
       return { 
         name: 'WATER', 
-        color: 'from-blue-500 to-indigo-650', 
-        text: 'text-sky-400 bg-sky-950/40 border-sky-500/20', 
-        badge: 'bg-sky-400 text-slate-950 border-sky-300', 
+        color: 'from-emerald-500 to-emerald-650', 
+        text: 'text-emerald-400 bg-emerald-950/40 border-emerald-500/20', 
+        badge: 'bg-emerald-400 text-slate-950 border-emerald-300', 
         icon: '🌊', 
         description: 'Oceanic Focus Commander' 
       };
@@ -161,13 +161,13 @@ export default function PokemonPlayerCard({
     {
       label: 'DEF (Selective Discipline)',
       value: Math.round((45 - activePlayer.advanced.chasePercent) * 2.5 + 50),
-      color: 'bg-blue-500',
+      color: 'bg-emerald-500',
       desc: 'Zone chase-avoidance capability rating.'
     },
     {
       label: 'SPD (Sprint/Reaction speed)',
       value: activePlayer.position.includes('Outfielder') ? 95 : activePlayer.position.includes('Shortstop') ? 90 : activePlayer.position.includes('Third') ? 70 : 60,
-      color: 'bg-sky-500',
+      color: 'bg-emerald-500',
       desc: 'Determined from field position mobility.'
     },
     {
@@ -187,7 +187,7 @@ export default function PokemonPlayerCard({
   // Circle Splits Graph data comparing splits
   const circleSplitsData = [
     { name: 'vs LHP OPS', value: parseFloat(activePlayer.splits.vLHP.ops), color: '#10b981' },
-    { name: 'vs RHP OPS', value: parseFloat(activePlayer.splits.vRHP.ops), color: '#3b82f6' },
+    { name: 'vs RHP OPS', value: parseFloat(activePlayer.splits.vRHP.ops), color: '#10b981' },
     { name: 'Home Splits', value: parseFloat(activePlayer.splits.home.ops), color: '#f59e0b' },
     { name: 'Away Splits', value: parseFloat(activePlayer.splits.away.ops), color: '#8b5cf6' }
   ];
@@ -280,7 +280,7 @@ export default function PokemonPlayerCard({
           {/* Foil Polaroid Illustration */}
           <div className="bg-ve-graphite/95 border border-slate-800 p-2.5 rounded-2xl relative select-none mb-4" id="pokemon-polaroid-box">
             {/* Hologram gradient mesh overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-505/10 to-indigo-505/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-505/10 to-emerald-505/10 pointer-events-none" />
             <div className="border border-slate-800/80 rounded-xl overflow-hidden aspect-[16/10] bg-ve-obsidian relative flex items-center justify-center">
               
               {/* Halftone retro background dots */}
@@ -454,7 +454,7 @@ export default function PokemonPlayerCard({
 
               <div className="text-[9px] font-mono leading-normal text-slate-400 space-y-1 pr-1 shrink-0">
                 <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> LHP: {activePlayer.splits.vLHP.ops}</div>
-                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> RHP: {activePlayer.splits.vRHP.ops}</div>
+                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> RHP: {activePlayer.splits.vRHP.ops}</div>
                 <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Home: {activePlayer.splits.home.ops}</div>
                 <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-violet-500" /> Away: {activePlayer.splits.away.ops}</div>
               </div>
@@ -493,7 +493,7 @@ export default function PokemonPlayerCard({
               </div>
               <div className="h-2 w-full flex bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                 <div className="bg-orange-500 h-full" style={{ width: `${activePlayer.battedBall?.gbPercent ?? 44}%` }} />
-                <div className="bg-blue-500 h-full" style={{ width: `${activePlayer.battedBall?.ldPercent ?? 21}%` }} />
+                <div className="bg-emerald-500 h-full" style={{ width: `${activePlayer.battedBall?.ldPercent ?? 21}%` }} />
                 <div className="bg-emerald-500 h-full" style={{ width: `${activePlayer.battedBall?.fbPercent ?? 35}%` }} />
               </div>
               <div className="flex justify-between text-[8px] text-slate-500 mt-1">
@@ -572,8 +572,8 @@ export default function PokemonPlayerCard({
             </p>
           </div>
 
-          <div className="bg-indigo-950/10 p-3 rounded-2xl border border-indigo-950/30 flex flex-col justify-center">
-            <span className="text-[9px] font-black text-indigo-400 font-mono flex items-center gap-1">
+          <div className="bg-emerald-950/10 p-3 rounded-2xl border border-emerald-950/30 flex flex-col justify-center">
+            <span className="text-[9px] font-black text-emerald-400 font-mono flex items-center gap-1">
               <Info className="w-3.5 h-3.5" />
               SABER DIRECT PLATOON COMBAT MULTIPLIER
             </span>

@@ -23,8 +23,6 @@ interface HrBoardProps {
 
 type TierKey = keyof HrBuckets;
 
-/** Cards rendered per tier before the mobile list asks to be expanded. */
-const MOBILE_PAGE_SIZE = 8;
 
 type TierDefinition = {
   key: TierKey;
@@ -168,23 +166,7 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
   playerVouchPendingId?: string | null;
   getHrResult?: (playerId: string | number | null) => HrCardResult;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const visiblePlayers = expanded ? players : players.slice(0, 2);
   const Icon = tier.icon;
-
-  const shouldVirtualize = expanded && players.length > 2;
-
-  const virtualizer = useVirtualizer({
-    count: shouldVirtualize ? players.length : 0,
-    getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => 380,
-    overscan: 2,
-    gap: 8,
-    getItemKey: (index) => players[index]?.stableId ?? index,
-  });
-
-  const virtualItems = shouldVirtualize ? virtualizer.getVirtualItems() : [];
 
   return (
     <section className="z8-hr-tier-section min-w-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-b from-[#0c1827]/90 to-[#071018]/90 shadow-xl backdrop-blur-xl" aria-label={`${tier.shortTitle} signals`}>
@@ -206,79 +188,25 @@ function DesktopTierColumn({ tier, players, onResearch, onAddToSlip, onTogglePla
               <p className="mt-2 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-white/30">No players in this tier</p>
             </div>
           </div>
-        ) : shouldVirtualize ? (
-          <div
-            ref={scrollContainerRef}
-            className="max-h-[720px] overflow-y-auto pr-1 z8-hr-tier-scroll"
-            style={{ position: 'relative' }}
-          >
-            <div
-              style={{
-                position: 'relative',
-                height: `${virtualizer.getTotalSize()}px`,
-                width: '100%',
-              }}
-            >
-              {virtualItems.map((virtualRow) => {
-                const player = players[virtualRow.index];
-                if (!player) return null;
-                return (
-                  <div
-                    key={player.stableId}
-                    data-index={virtualRow.index}
-                    ref={virtualizer.measureElement}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <CompactPlayerCard
-                      player={player}
-                      tier={tier}
-                      onResearch={onResearch}
-                      onAddToSlip={onAddToSlip}
-                      onTogglePlayerVouch={onTogglePlayerVouch}
-                      playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
-                      playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
-                      result={getHrResult?.(player.playerId) ?? null}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         ) : (
           <div className="space-y-2">
-            {visiblePlayers.map((player) => (
-              <CompactPlayerCard
-                key={player.stableId}
-                player={player}
-                tier={tier}
-                onResearch={onResearch}
-                onAddToSlip={onAddToSlip}
-                onTogglePlayerVouch={onTogglePlayerVouch}
-                playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
-                playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
-                result={getHrResult?.(player.playerId) ?? null}
-              />
+            {players.map((player) => (
+              <div key={player.stableId} style={{ contentVisibility: 'auto', containIntrinsicSize: '380px' }}>
+                <CompactPlayerCard
+                  player={player}
+                  tier={tier}
+                  onResearch={onResearch}
+                  onAddToSlip={onAddToSlip}
+                  onTogglePlayerVouch={onTogglePlayerVouch}
+                  playerVouchSummary={getPlayerVouchSummary?.(player.playerId) ?? null}
+                  playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
+                  result={getHrResult?.(player.playerId) ?? null}
+                />
+              </div>
             ))}
           </div>
         )}
       </div>
-
-      {players.length > 2 ? (
-        <button
-          type="button"
-          onClick={() => setExpanded((value) => !value)}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-white/10 bg-black/40 py-2.5 font-mono text-[10px] font-black uppercase tracking-[0.1em] text-white/60 transition hover:bg-black/60 hover:text-white"
-        >
-          {expanded ? 'Show top 2' : `Show all ${players.length} bats`}
-          <ChevronDown className={`h-3 w-3 text-vouch-cyan transition-transform ${expanded ? 'rotate-180' : ''}`} />
-        </button>
-      ) : null}
     </section>
   );
 }
@@ -295,7 +223,6 @@ export function HrBoard({
 }: HrBoardProps) {
   const firstPopulated = useMemo(() => TIERS.find((tier) => buckets[tier.key].length > 0)?.key ?? 'Elite', [buckets]);
   const [activeTier, setActiveTier] = useState<TierKey>(firstPopulated);
-  const [mobileLimit, setMobileLimit] = useState(MOBILE_PAGE_SIZE);
 
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
@@ -303,13 +230,8 @@ export function HrBoard({
     if (buckets[activeTier].length === 0) setActiveTier(firstPopulated);
   }, [activeTier, buckets, firstPopulated]);
 
-  useEffect(() => {
-    setMobileLimit(MOBILE_PAGE_SIZE);
-  }, [activeTier]);
-
   const active = TIERS.find((tier) => tier.key === activeTier) ?? TIERS[0];
   const players = buckets[activeTier];
-  const visiblePlayers = players.slice(0, mobileLimit);
 
   if (isDesktop) {
     return (
@@ -367,31 +289,21 @@ export function HrBoard({
         </div>
 
         <div className="z8-hr-card-grid" role="tabpanel" aria-label={active.title}>
-          {visiblePlayers.map((player) => (
-            <HrPlayerCard
-              key={player.stableId}
-              player={player}
-              onClick={() => onSelectPlayer(player)}
-              onViewProfile={onViewProfile}
-              onTogglePlayerVouch={onTogglePlayerVouch}
-              playerVouchCount={getPlayerVouchSummary?.(player.playerId)?.totalVouches ?? 0}
-              playerVouchedByViewer={getPlayerVouchSummary?.(player.playerId)?.viewerHasVouched ?? false}
-              playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
-              hrResult={getHrResult?.(player.playerId) ?? null}
-            />
+          {players.map((player) => (
+            <div key={player.stableId} style={{ contentVisibility: 'auto', containIntrinsicSize: '400px' }}>
+              <HrPlayerCard
+                player={player}
+                onClick={() => onSelectPlayer(player)}
+                onViewProfile={onViewProfile}
+                onTogglePlayerVouch={onTogglePlayerVouch}
+                playerVouchCount={getPlayerVouchSummary?.(player.playerId)?.totalVouches ?? 0}
+                playerVouchedByViewer={getPlayerVouchSummary?.(player.playerId)?.viewerHasVouched ?? false}
+                playerVouchPending={player.playerId != null && String(player.playerId) === playerVouchPendingId}
+                hrResult={getHrResult?.(player.playerId) ?? null}
+              />
+            </div>
           ))}
         </div>
-
-        {players.length > visiblePlayers.length ? (
-          <button
-            type="button"
-            onClick={() => setMobileLimit((value) => value + MOBILE_PAGE_SIZE)}
-            className="flex min-h-11 w-full items-center justify-center gap-1.5 border border-white/[0.08] bg-black/20 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-white/45 transition hover:bg-white/[0.025] hover:text-white/75"
-          >
-            Show {Math.min(MOBILE_PAGE_SIZE, players.length - visiblePlayers.length)} more
-            <ChevronDown className="h-3 w-3" />
-          </button>
-        ) : null}
       </div>
     </section>
   );

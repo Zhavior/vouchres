@@ -1,15 +1,15 @@
 /* Aurora Max — shared visual contract. Cognitive-Safe desk (not marketing hero).
    Lenis skipped: this is an app shell, not a narrative site. */
 :root {
-  --aurora-max-obsidian: oklch(17% 0.015 250);
-  --aurora-max-panel: color-mix(in oklab, oklch(20% 0.015 250) 82%, transparent);
-  --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0.015 250) 94%, transparent);
+  --aurora-max-obsidian: oklch(17% 0 0);
+  --aurora-max-panel: color-mix(in oklab, oklch(20% 0 0) 45%, transparent);
+  --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0 0) 60%, transparent);
   --aurora-max-line: rgba(157, 215, 175, 0.14);
   --aurora-max-line-strong: rgba(0, 217, 160, 0.32);
   --aurora-max-emerald: #00d9a0;
-  --aurora-max-cyan: #4fb8dc;
-  --aurora-max-paper: oklch(90% 0.01 260);
-  --aurora-max-muted: color-mix(in oklab, oklch(90% 0.01 260) 48%, transparent);
+  --aurora-max-cyan: #31b583;
+  --aurora-max-paper: oklch(90% 0 0);
+  --aurora-max-muted: color-mix(in oklab, oklch(90% 0 0) 48%, transparent);
   --aurora-max-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.72);
   --aurora-max-ease-ground: cubic-bezier(0.22, 1, 0.36, 1);
   --aurora-max-dur-micro: 180ms;
@@ -23,7 +23,7 @@
   color: var(--aurora-max-paper);
   background:
     radial-gradient(80% 48% at 50% -16%, rgba(0, 217, 160, 0.075), transparent 68%),
-    radial-gradient(48% 34% at 100% 100%, rgba(79, 184, 220, 0.045), transparent 72%),
+    radial-gradient(48% 34% at 100% 100%, rgba(255, 255, 255, 0.0248), transparent 72%),
     var(--aurora-max-obsidian);
 }
 
@@ -61,7 +61,7 @@
   pointer-events: none;
   background:
     radial-gradient(52% 25rem at 14% 0%, rgba(0, 217, 160, 0.045), transparent 74%),
-    radial-gradient(42% 22rem at 92% 8%, rgba(79, 184, 220, 0.035), transparent 72%);
+    radial-gradient(42% 22rem at 92% 8%, rgba(255, 255, 255, 0.0193), transparent 72%);
   content: '';
 }
 
@@ -201,7 +201,7 @@
 }
 
 .aurora-max-eyebrow {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -251,8 +251,8 @@
 .aurora-max-metric:nth-child(2n) { border-right: 0; }
 .aurora-max-metric__icon { display: grid; height: 1.8rem; width: 1.8rem; flex: 0 0 auto; place-items: center; border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.45); }
 .aurora-max-metric > span:last-child { min-width: 0; }
-.aurora-max-metric strong { display: block; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9rem; line-height: 1; text-overflow: ellipsis; white-space: nowrap; color: var(--aurora-max-paper); }
-.aurora-max-metric small { display: block; margin-top: 0.3rem; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.1em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; color: rgba(255, 255, 255, 0.34); }
+.aurora-max-metric strong { display: block; overflow: hidden; font-family: var(--font-mono); font-size: 0.9rem; line-height: 1; text-overflow: ellipsis; white-space: nowrap; color: var(--aurora-max-paper); }
+.aurora-max-metric small { display: block; margin-top: 0.3rem; overflow: hidden; font-family: var(--font-mono); font-size: 0.5rem; font-weight: 800; letter-spacing: 0.1em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; color: rgba(255, 255, 255, 0.34); }
 .aurora-max-metric--confirmed .aurora-max-metric__icon,
 .aurora-max-metric--confirmed strong { color: rgba(160, 239, 202, 0.92); }
 .aurora-max-metric--live .aurora-max-metric__icon,
@@ -267,7 +267,7 @@
   gap: 0.35rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.25rem 0.5rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -306,8 +306,8 @@
 }
 
 .aurora-max-score-badge > div { display: flex; flex-direction: column; align-items: center; transform: rotate(-45deg); }
-.aurora-max-score-badge strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.6rem; font-weight: 900; line-height: 1; color: var(--aurora-max-emerald); }
-.aurora-max-score-badge span { margin-top: 0.2rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.45rem; font-weight: 900; letter-spacing: 0.15em; color: rgba(255, 255, 255, 0.45); }
+.aurora-max-score-badge strong { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 900; line-height: 1; color: var(--aurora-max-emerald); }
+.aurora-max-score-badge span { margin-top: 0.2rem; font-family: var(--font-mono); font-size: 0.45rem; font-weight: 900; letter-spacing: 0.15em; color: rgba(255, 255, 255, 0.45); }
 
 .aurora-max-evidence { border-top: 1px solid rgba(255, 255, 255, 0.075); padding-top: 0.75rem; }
 .aurora-max-evidence__header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
@@ -315,11 +315,11 @@
 .aurora-max-evidence__rows { margin-top: 0.55rem; border-block: 1px solid rgba(255, 255, 255, 0.055); }
 .aurora-max-evidence__row { display: grid; min-height: 2.3rem; grid-template-columns: 1.5rem minmax(5rem, 1fr) minmax(3rem, 0.75fr) auto; align-items: center; gap: 0.65rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 .aurora-max-evidence__row:last-child { border-bottom: 0; }
-.aurora-max-evidence__index { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.55rem; color: rgba(255, 255, 255, 0.2); }
+.aurora-max-evidence__index { font-family: var(--font-mono); font-size: 0.55rem; color: rgba(255, 255, 255, 0.2); }
 .aurora-max-evidence__label { min-width: 0; font-size: 0.68rem; color: rgba(255, 255, 255, 0.52); }
 .aurora-max-evidence__meter { height: 0.22rem; overflow: hidden; background: rgba(255, 255, 255, 0.065); }
 .aurora-max-evidence__meter > span { display: block; height: 100%; background: rgba(0, 217, 160, 0.72); }
-.aurora-max-evidence__value { min-width: 3.7rem; border: 1px solid rgba(255, 255, 255, 0.09); padding: 0.2rem 0.35rem; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.55rem; font-weight: 800; text-transform: uppercase; color: rgba(255, 255, 255, 0.62); }
+.aurora-max-evidence__value { min-width: 3.7rem; border: 1px solid rgba(255, 255, 255, 0.09); padding: 0.2rem 0.35rem; text-align: center; font-family: var(--font-mono); font-size: 0.55rem; font-weight: 800; text-transform: uppercase; color: rgba(255, 255, 255, 0.62); }
 .aurora-max-evidence__value--confirmed { border-color: rgba(0, 217, 160, 0.22); color: rgba(160, 239, 202, 0.88); }
 .aurora-max-evidence__value--warning { border-color: rgba(217, 156, 74, 0.24); color: rgba(240, 201, 143, 0.88); }
 .aurora-max-evidence__value--missing { color: rgba(255, 255, 255, 0.34); }
@@ -351,7 +351,7 @@
 .aurora-max-command-header__meta { flex: 0 0 auto; }
 .aurora-max-command-header--compact { align-items: center; }
 .aurora-max-command-header--compact h1 { margin-top: 0.15rem; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
-.aurora-max-command-header--compact .aurora-max-command-header__description { margin-top: 0.15rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.56rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.aurora-max-command-header--compact .aurora-max-command-header__description { margin-top: 0.15rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .aurora-max-ranked-workspace { min-width: 0; }
 .aurora-max-ranked-workspace__header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 0.75rem; padding-bottom: 0.65rem; }

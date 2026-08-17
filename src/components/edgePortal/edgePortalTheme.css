@@ -2,10 +2,10 @@
   --edge-portal-bg: rgba(3, 7, 18, 0.94);
   --edge-portal-card: rgba(15, 23, 42, 0.72);
   --edge-portal-card-strong: rgba(8, 13, 24, 0.92);
-  --edge-portal-border: rgba(34, 211, 238, 0.18);
+  --edge-portal-border: rgba(0, 217, 160, 0.18);
   --edge-portal-text: #f8fafc;
   --edge-portal-muted: #94a3b8;
-  --edge-portal-accent: #22d3ee;
+  --edge-portal-accent: #00d9a0;
   --edge-portal-pro: #f59e0b;
   --edge-motion-fast: 180ms;
   --edge-motion-base: 320ms;
@@ -16,17 +16,17 @@
 }
 
 .has-active-theme {
-  --edge-portal-accent: var(--theme-accent-color, #22d3ee);
-  --edge-portal-border: var(--theme-border-color, rgba(34, 211, 238, 0.18));
+  --edge-portal-accent: var(--theme-accent-color, #00d9a0);
+  --edge-portal-border: var(--theme-border-color, rgba(0, 217, 160, 0.18));
   --edge-portal-card: var(--theme-card-bg-fallback, rgba(15, 23, 42, 0.72));
 }
 
 .ve-theme-root {
-  --ve-current-accent: #22d3ee;
-  --ve-current-accent-2: #38bdf8;
+  --ve-current-accent: #00d9a0;
+  --ve-current-accent-2: #00d9a0;
   --ve-current-accent-3: #e0f2fe;
   --ve-current-border: rgba(125, 211, 252, 0.28);
-  --ve-current-glow: rgba(34, 211, 238, 0.48);
+  --ve-current-glow: rgba(0, 217, 160, 0.48);
   --ve-theme-rgb: 34, 211, 238;
   isolation: isolate;
 }
@@ -128,7 +128,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 18% 0%, rgba(34, 211, 238, 0.14), transparent 32%),
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.077), transparent 32%),
     radial-gradient(circle at 88% 8%, rgba(16, 185, 129, 0.08), transparent 30%),
     linear-gradient(180deg, #060b14 0%, #07111f 44%, #030712 100%);
 }
@@ -151,7 +151,7 @@
   border: 1px solid rgba(148, 163, 184, 0.14);
   background:
     linear-gradient(145deg, rgba(15, 23, 42, 0.84), rgba(2, 6, 23, 0.72)),
-    radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.12), transparent 36%);
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.066), transparent 36%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 24px 70px rgba(0, 0, 0, 0.32);
@@ -217,7 +217,7 @@
   background: #e0f2fe;
   box-shadow:
     0 0 16px rgba(125, 211, 252, 0.88),
-    0 0 32px rgba(34, 211, 238, 0.36);
+    0 0 32px rgba(0, 217, 160, 0.36);
   opacity: 0.68;
   animation:
     edgeParticleFloat var(--edge-particle-duration) ease-in-out infinite alternate,
@@ -235,7 +235,7 @@
   border: 1px solid rgba(125, 211, 252, 0.12);
   border-radius: 999px;
   pointer-events: none;
-  filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.14));
+  filter: drop-shadow(0 0 20px rgba(0, 217, 160, 0.14));
 }
 
 .edge-orbit-ring-one {
@@ -318,7 +318,7 @@
   height: 116px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), rgba(224, 242, 254, 0.68) 36%, rgba(56, 189, 248, 0.18) 68%, transparent 70%),
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), rgba(224, 242, 254, 0.68) 36%, rgba(255, 255, 255, 0.099) 68%, transparent 70%),
     #dbeafe;
   box-shadow:
     0 0 45px rgba(125, 211, 252, 0.3),
@@ -369,7 +369,7 @@
   border-radius: 999px;
   background:
     radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.72), transparent 22%),
-    linear-gradient(145deg, #07111f, #0e7490 62%, #67e8f9);
+    linear-gradient(145deg, #07111f, #0e7490 62%, #6ee7b7);
   box-shadow: inset 0 0 14px rgba(2, 6, 23, 0.7);
 }
 
@@ -379,7 +379,7 @@
   width: 64px;
   height: 80px;
   border-radius: 24px 24px 18px 18px;
-  background: linear-gradient(160deg, #f8fafc, #cbd5e1 62%, #38bdf8);
+  background: linear-gradient(160deg, #f8fafc, #cbd5e1 62%, #00d9a0);
   box-shadow: inset -10px -8px 18px rgba(15, 23, 42, 0.22);
 }
 
@@ -571,13 +571,13 @@
 /* VouchEdge theme transforms */
 :root,
 [data-vouchedge-theme='ocean'] {
-  --ve-welcome-accent: #22d3ee;
-  --ve-welcome-accent-2: #2563eb;
-  --ve-welcome-soft: rgba(34, 211, 238, 0.16);
+  --ve-welcome-accent: #00d9a0;
+  --ve-welcome-accent-2: #059669;
+  --ve-welcome-soft: rgba(0, 217, 160, 0.16);
   --ve-welcome-card: rgba(15, 23, 42, 0.72);
-  --ve-welcome-border: rgba(34, 211, 238, 0.18);
-  --ve-welcome-hero-1: rgba(34, 211, 238, 0.18);
-  --ve-welcome-hero-2: rgba(59, 130, 246, 0.14);
+  --ve-welcome-border: rgba(0, 217, 160, 0.18);
+  --ve-welcome-hero-1: rgba(0, 217, 160, 0.18);
+  --ve-welcome-hero-2: rgba(16, 185, 129, 0.14);
   --ve-welcome-name: 'Ocean Edge';
 }
 

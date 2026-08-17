@@ -8,6 +8,8 @@ import {
   AuroraMaxTruthBadge,
 } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { formatBoardMetric, formatGameClock } from '../presentHrV10Metric';
+import { useDeepResearch } from '../hooks/useDeepResearch';
+import { DeepResearchPanel } from './DeepResearchPanel';
 
 export interface ChunkACardProps {
   data: ChunkA;
@@ -23,6 +25,10 @@ export const ChunkACard = memo(function ChunkACard({
   // Line Flash state tracking (1.5s flash duration)
   const [prevOdds, setPrevOdds] = useState<number | undefined>(data.odds?.price);
   const [flashClass, setFlashClass] = useState<string>('');
+
+  // Inline Deep Research State
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { chunkC, loading: isLoadingC } = useDeepResearch(data.playerId, isExpanded);
 
   useEffect(() => {
     if (data.odds?.price !== undefined && prevOdds !== undefined && data.odds.price !== prevOdds) {
@@ -64,10 +70,8 @@ export const ChunkACard = memo(function ChunkACard({
   }, [data]);
 
   const handleResearchClick = useCallback(() => {
-    if (onOpenResearch) {
-      onOpenResearch(data);
-    }
-  }, [data, onOpenResearch]);
+    setIsExpanded((prev) => !prev);
+  }, []);
 
   const xSLG = data.statcastSummary?.xSLG;
   const barrelRate = data.statcastSummary?.barrelRate;
@@ -114,7 +118,7 @@ export const ChunkACard = memo(function ChunkACard({
 
   return (
     <div
-      className="relative w-full rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 p-4 transition-all duration-200 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_0_rgba(6,182,212,0.12)] group"
+      className="relative w-full rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 p-4 transition-all duration-200 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_0_rgba(16,185,129,0.12)] group"
       style={{ contain: 'layout style paint' }}
     >
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -282,13 +286,28 @@ export const ChunkACard = memo(function ChunkACard({
             <button
               type="button"
               onClick={handleResearchClick}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm whitespace-nowrap"
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-colors shadow-sm whitespace-nowrap ${
+                isExpanded
+                  ? 'bg-vouch-cyan/20 border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan/30'
+                  : 'bg-white/5 hover:bg-white/15 border-white/10 text-white/80 hover:text-white'
+              }`}
             >
-              <Sparkles className="w-3.5 h-3.5" /> RESEARCH
+              <Sparkles className="w-3.5 h-3.5" /> {isExpanded ? 'CLOSE' : 'RESEARCH'}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Expanded Deep Research Section */}
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-white/10 animate-in fade-in slide-in-from-top-4 duration-300">
+          <DeepResearchPanel
+            data={data}
+            chunkC={chunkC}
+            isLoading={isLoadingC}
+          />
+        </div>
+      )}
     </div>
   );
 });

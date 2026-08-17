@@ -45,7 +45,7 @@ export default function HeroNav({
 
           <button
             onClick={onJoinBeta}
-            className="rounded-xl bg-cyan-400 px-5 py-2 font-semibold text-black transition hover:scale-[1.03]"
+            className="rounded-xl bg-emerald-400 px-5 py-2 font-semibold text-black transition hover:scale-[1.03]"
           >
             Explore
           </button>

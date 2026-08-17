@@ -1386,14 +1386,15 @@ function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "h
       {players.length > 0 ? (
         <div className="grid gap-1.5 p-2">
           {players.map((player, index) => (
-            <DailyStarterRow
-              key={`${side}-${player?.id || player?.playerId || player?.mlbId || getDailyPlayerName(player)}-${index}`}
-              player={player}
-              index={index}
-              team={team}
-              teamAbbr={teamAbbr}
-              search={search}
-            />
+            <div key={`${side}-${player?.id || player?.playerId || player?.mlbId || getDailyPlayerName(player)}-${index}`} style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}>
+              <DailyStarterRow
+                player={player}
+                index={index}
+                team={team}
+                teamAbbr={teamAbbr}
+                search={search}
+              />
+            </div>
           ))}
         </div>
       ) : (

@@ -69,6 +69,9 @@ const COMPACT_CANDIDATE_FIELDS = [
   "parkFactor",
   "hrMultiplier",
   "weatherBoost",
+  // Without the source the client cannot tell a neutral forecast from no
+  // forecast, so it has to treat every compact row's weather as unavailable.
+  "weatherSource",
   "lineupStatus",
   "battingOrder",
   "injuryStatus",
@@ -95,6 +98,12 @@ const COMPACT_CANDIDATE_FIELDS = [
   "xslg",
   "barrelRate",
   "avgExitVelo",
+  "hardHitRate",
+  // The board card prints the platoon matchup that produced the handedness
+  // layer; dropping these from the compact row leaves it with a bare bucket
+  // score that repeats across the slate.
+  "batSide",
+  "opponentPitcherHand",
 ] as const;
 
 function compactCandidateRow(value: unknown): unknown {

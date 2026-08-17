@@ -32,7 +32,7 @@ function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string
       }}
     >
       {/* Premium ambient background accents (no clunky astronaut, pure luxury glow) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[130px] bg-gradient-to-r from-emerald-500/10 via-yellow-500/5 to-indigo-500/15 rounded-full blur-[70px] pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity duration-1000" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[130px] bg-gradient-to-r from-emerald-500/10 via-yellow-500/5 to-emerald-500/15 rounded-full blur-[70px] pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity duration-1000" />
       
       {/* Decorative top badge line */}
       <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-black/30 rounded-full border border-white/[0.085] mb-6 group-hover:border-emerald-500/30 transition-colors">
@@ -126,8 +126,8 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               {/* Fake Interactive Cursor */}
               {simulationStep === 0 && (
                 <div className="absolute right-12 top-6 flex items-center gap-1 text-yellow-400 z-20 pointer-events-none transition-all duration-1000 animate-bounce">
-                  <MousePointer2 className="w-3.5 h-3.5 text-sky-400 fill-sky-400" />
-                  <span className="bg-black/95 border border-sky-400/30 text-[7px] px-1.5 py-0.5 rounded text-sky-300 font-bold uppercase">Click "Publish Slip"</span>
+                  <MousePointer2 className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                  <span className="bg-black/95 border border-emerald-400/30 text-[7px] px-1.5 py-0.5 rounded text-emerald-300 font-bold uppercase">Click "Publish Slip"</span>
                 </div>
               )}
 
@@ -185,8 +185,8 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
         return (
           <div className="w-full h-full flex flex-col justify-between bg-obsidian-900 p-3 text-[10px] font-mono leading-tight">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping" /> V.A.I PREDICTION MATRIX v3.0</span>
-              <span className="text-cyan-400">LOCAL_GPU: LOADED</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" /> V.A.I PREDICTION MATRIX v3.0</span>
+              <span className="text-emerald-400">LOCAL_GPU: LOADED</span>
             </div>
 
             <div className="flex-1 my-2 flex flex-col justify-center space-y-1.5 relative min-h-[90px]">
@@ -194,15 +194,15 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                 <div className="space-y-1 bg-obsidian-900 p-2 rounded-lg border border-white/10">
                   <div className="text-[8px] text-white/45 font-bold uppercase tracking-wider">Step 1: Selecting Research Matchups</div>
                   <div className="grid grid-cols-2 gap-1 text-[8px]">
-                    <div className="bg-cyan-950/30 border border-cyan-800/40 p-1 rounded font-bold text-cyan-300">✓ OHTANI (TOTAL BASES)</div>
+                    <div className="bg-emerald-950/30 border border-emerald-800/40 p-1 rounded font-bold text-emerald-300">✓ OHTANI (TOTAL BASES)</div>
                     <div className="bg-black/25 text-white/40 p-1 rounded">PENDING SELECTION</div>
                   </div>
                 </div>
               ) : simulationStep === 1 ? (
                 <div className="space-y-1">
-                  <div className="text-[8px] text-cyan-300">Step 2: Processing 10,000 Sabermetric Simulations</div>
+                  <div className="text-[8px] text-emerald-300">Step 2: Processing 10,000 Sabermetric Simulations</div>
                   <div className="text-[10px] text-white/65 animate-pulse flex items-center gap-1.5">
-                    <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                    <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
                     <span>COMPUTING SABERMETRIC VECTORS...</span>
                   </div>
                   <div className="bg-storm p-1.5 rounded text-[8px] text-white/40">
@@ -210,18 +210,18 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                   </div>
                 </div>
               ) : simulationStep === 2 ? (
-                <div className="space-y-1 bg-black/30 p-2 rounded-lg border border-cyan-500/30">
-                  <div className="text-cyan-400 text-[8px] font-bold">Step 3: Calculating Edge Index Potential</div>
+                <div className="space-y-1 bg-black/30 p-2 rounded-lg border border-emerald-500/30">
+                  <div className="text-emerald-400 text-[8px] font-bold">Step 3: Calculating Edge Index Potential</div>
                   <div className="flex justify-between items-center bg-obsidian-900 p-1.5 rounded">
                     <span className="text-white/90 font-bold">BETTOR EDGE FOUND</span>
                     <span className="text-[#FFE81F] font-black text-xs">+14.86% EDGE</span>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-1 bg-cyan-950/20 p-2 rounded-lg border border-cyan-500/40">
+                <div className="space-y-1 bg-emerald-950/20 p-2 rounded-lg border border-emerald-500/40">
                   <div className="text-[8px] text-[#FFE81F] font-black uppercase">V.A.I CERTIFIED SMART SLIP RECOMMENDED</div>
                   <div className="text-white/80 text-[9px] leading-tight font-sans">
-                    Weigh confidence score: <span className="text-cyan-400 font-bold">94.2%</span> based on historical ballpark altitude adjustments.
+                    Weigh confidence score: <span className="text-emerald-400 font-bold">94.2%</span> based on historical ballpark altitude adjustments.
                   </div>
                 </div>
               )}
@@ -229,7 +229,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
             <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>ACTIVE MODEL PROCESSOR LOOP</span>
-              <span className="text-cyan-400 font-bold">RUNNING MATRIX</span>
+              <span className="text-emerald-400 font-bold">RUNNING MATRIX</span>
             </div>
           </div>
         );
@@ -329,7 +329,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                 
                 <div className="flex-1 flex flex-col justify-end space-y-1 select-none">
                   <div className="text-[6px] text-white/45 scale-[0.95] origin-bottom-left leading-tight">
-                    <span className="text-sky-400 font-bold">@v_capper:</span> Let's go MLB !
+                    <span className="text-emerald-400 font-bold">@v_capper:</span> Let's go MLB !
                   </div>
                   <div className="text-[6px] text-white/45 scale-[0.95] origin-bottom-left leading-tight">
                     <span className="text-pink-400 font-bold">@bet_babe:</span> Tailed +10U
@@ -564,8 +564,8 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       description: 'Get data-driven estimates for matchups based on historical stats, so you\'re not just going on gut feel. Useful as a second opinion before you post a pick.',
       tag: 'RESEARCH TOOL',
       icon: Sparkles,
-      color: 'from-cyan-400 to-sky-500',
-      accentHexColor: '#38bdf8',
+      color: 'from-emerald-400 to-emerald-500',
+      accentHexColor: '#00d9a0',
       actionText: 'Try the research model',
     },
     {
@@ -574,8 +574,8 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       description: 'Build multi-leg parlays and see combined odds and payout instantly. Switch between decimal and American odds as you go.',
       tag: 'CALCULATOR',
       icon: Sliders,
-      color: 'from-indigo-400 to-purple-500',
-      accentHexColor: '#818cf8',
+      color: 'from-emerald-400 to-purple-500',
+      accentHexColor: '#34d399',
       actionText: 'Open the calculator',
     },
     {
@@ -639,11 +639,11 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           <button 
             type="button"
             onClick={() => onSectionChange('ai_engine')} 
-            className="hover:text-[#38bdf8] transition-colors uppercase font-bold relative group cursor-pointer bg-transparent border-none outline-none"
+            className="hover:text-[#00d9a0] transition-colors uppercase font-bold relative group cursor-pointer bg-transparent border-none outline-none"
             id="navlink-smart-models"
           >
             Smart Models
-            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-sky-400 transition-all group-hover:w-full" />
+            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-emerald-400 transition-all group-hover:w-full" />
           </button>
           <button 
             type="button"
@@ -689,7 +689,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       
       {/* Soft Glow Nebulas */}
       <div className="absolute top-10 left-1/4 w-[450px] h-[450px] bg-gradient-to-tr from-yellow-300/[0.04] via-amber-500/[0.02] to-transparent rounded-full blur-[120px] pointer-events-none z-0" />
-      <div className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-400/[0.04] via-purple-600/[0.02] to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
+      <div className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-emerald-400/[0.04] via-purple-600/[0.02] to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
 
       {/* Cinematic Star Wars Header Container */}
       <section className="relative pt-16 pb-12 px-4 max-w-5xl mx-auto text-center z-10">
@@ -700,7 +700,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           className="flex flex-col items-center"
         >
           {/* Trust Shield Badge - Luxurious Platinum Silver & Gold style */}
-          <span className="inline-flex items-center gap-1.5 bg-obsidian-900/60 border border-white/10 rounded-full px-4 py-1 text-[10px] text-indigo-400 font-mono font-black uppercase tracking-widest mb-8 shadow-[0_0_15px_rgba(99,102,241,0.12)]">
+          <span className="inline-flex items-center gap-1.5 bg-obsidian-900/60 border border-white/10 rounded-full px-4 py-1 text-[10px] text-emerald-400 font-mono font-black uppercase tracking-widest mb-8 shadow-[0_0_15px_rgba(99,102,241,0.12)]">
             <ShieldCheck className="w-3.5 h-3.5 text-vouch-cyan" />
             YOUR PICKS, YOUR RECORD, PUBLICLY VERIFIED
           </span>
@@ -711,7 +711,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           <p className="text-white/45 text-xs sm:text-sm font-sans text-center max-w-2xl mx-auto mt-4 leading-relaxed">
             Every pick you post is timestamped and locked. <span className="text-vouch-cyan">No editing after the fact</span> <span className="text-vouch-cyan">•</span> No deleting losses <span className="text-vouch-cyan">•</span> Your win-rate speaks for itself
           </p>
-          <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent my-6" />
+          <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent my-6" />
         </motion.div>
       </section>
 
@@ -763,7 +763,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                 </h3>
 
                 <p className="text-white/45 text-xs mt-2 max-w-md mx-auto leading-relaxed font-sans">
-                  Your profile is saved. Active theme: <span className="text-sky-400 font-bold uppercase">{profile.activeTheme || 'Default'}</span>.
+                  Your profile is saved. Active theme: <span className="text-emerald-400 font-bold uppercase">{profile.activeTheme || 'Default'}</span>.
                 </p>
 
                 <div className="my-8 max-w-md mx-auto grid grid-cols-2 gap-3.5 text-left text-xs bg-black/30 p-4 rounded-2xl border border-white/10">
@@ -896,7 +896,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                               onClick={() => setFormData({ ...formData, tierPreference: 'SELLER_PRO' })}
                               className={`p-2.5 rounded-xl border text-[11px] cursor-pointer transition-all ${
                                 formData.tierPreference === 'SELLER_PRO' 
-                                  ? 'bg-indigo-950/35 border-indigo-500 text-vouch-cyan/80' 
+                                  ? 'bg-emerald-950/35 border-emerald-500 text-vouch-cyan/80' 
                                   : 'bg-obsidian-900 border-white/10 text-white/40'
                               }`}
                             >
@@ -953,7 +953,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
 
                       <h4 className="text-emerald-400 font-extrabold uppercase text-sm">YOU'RE ALL SET</h4>
                       <p className="text-white/45 text-xs mt-2 leading-relaxed font-sans">
-                        Account created. <span className="text-yellow-400 font-bold">@{formData.username}</span> is on the <span className="text-sky-400 font-bold">{formData.tierPreference}</span> plan.
+                        Account created. <span className="text-yellow-400 font-bold">@{formData.username}</span> is on the <span className="text-emerald-400 font-bold">{formData.tierPreference}</span> plan.
                       </p>
 
                       <button

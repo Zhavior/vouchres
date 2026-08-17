@@ -19,12 +19,12 @@ export default function GoodbyeScreen() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 50% 42%, rgba(79,184,220,0.16), transparent 31%), radial-gradient(circle at 76% 78%, rgba(49,181,131,0.10), transparent 28%), linear-gradient(180deg, rgba(5,10,20,0.25), rgba(0,0,0,0.78))',
+            'radial-gradient(circle at 50% 42%, rgba(0,217,160,0.16), transparent 31%), radial-gradient(circle at 76% 78%, rgba(49,181,131,0.10), transparent 28%), linear-gradient(180deg, rgba(5,10,20,0.25), rgba(0,0,0,0.78))',
         }}
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/55 to-transparent" />
 
-      <div className={`relative w-full max-w-sm overflow-hidden rounded-3xl p-8 text-center shadow-[0_28px_90px_rgba(0,0,0,0.65),0_0_64px_rgba(79,184,220,0.08)] ${AURORA_PANEL_PREMIUM}`}>
+      <div className={`relative w-full max-w-sm overflow-hidden rounded-3xl p-8 text-center shadow-[0_28px_90px_rgba(0,0,0,0.65),0_0_64px_rgba(0,217,160,0.08)] ${AURORA_PANEL_PREMIUM}`}>
         <div className="pointer-events-none absolute inset-x-10 top-0 h-28 rounded-full bg-vouch-cyan/10 blur-3xl" />
         <div className="relative flex justify-center">
           <VouchEdgeLogo showBeta markClassName="h-12 w-12" />

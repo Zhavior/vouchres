@@ -115,7 +115,7 @@ export default function CompanionStudioCard(props: Props) {
                               e.stopPropagation();
                               setActivePreviewCardIndex(0);
                             }}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-emerald-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                             title="Slide back to Circular Card"
                           >
                             <ChevronLeft className="w-5 h-5" />
@@ -134,7 +134,7 @@ export default function CompanionStudioCard(props: Props) {
                               VE
                             </div>
                             <div className="leading-none text-left">
-                              <span className={`text-[10px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-400'}>Edge</span></span>
+                              <span className={`text-[10px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-400'}>Edge</span></span>
                               <span className={`text-[7.5px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>Scout Analytics Slate</span>
                             </div>
                           </div>
@@ -150,7 +150,7 @@ export default function CompanionStudioCard(props: Props) {
                         {(showWinRate || showDailyWinRate || showMonthlyWinRate || showMlbPicks || showUnitsProfit) && (
                           <div className="flex flex-wrap gap-1.5 mt-2.5 justify-start items-center z-10 relative">
                             {showWinRate && (
-                              <span className={`text-[7px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-855 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-400'}`}>
+                              <span className={`text-[7px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-855 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'}`}>
                                 🎯 WR: {customWinRate}
                               </span>
                             )}
@@ -231,7 +231,7 @@ export default function CompanionStudioCard(props: Props) {
                                     </div>
                                     <div className="bg-black/25 p-2 rounded-xl border border-white/[0.06] text-center font-mono">
                                       <span className="text-[5.5px] text-white/40 uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
-                                      <span className="text-sky-400 text-xs font-black block leading-none">{metrics.playRatePercent}%</span>
+                                      <span className="text-emerald-400 text-xs font-black block leading-none">{metrics.playRatePercent}%</span>
                                       <span className="text-[5px] text-slate-650 block mt-1 uppercase">PLATE SECURE</span>
                                     </div>
                                   </div>
@@ -243,7 +243,7 @@ export default function CompanionStudioCard(props: Props) {
                                       <div className="space-y-0.5 text-white/65">
                                         <div className="flex justify-between"><span>vs {metrics.pitcherHand}:</span><strong className="text-white">{metrics.pitcherHand === 'RHP' ? player.splits?.vRHP?.ops || "1.067" : player.splits?.vLHP?.ops || "0.958"} OPS</strong></div>
                                         <div className="flex justify-between"><span>Last 10 OPS:</span><strong className="text-emerald-400">{player.splits?.last10?.ops || "1.150"}</strong></div>
-                                        <div className="flex justify-between"><span>Exit Vel:</span><strong className="text-sky-400">{player.advanced?.exitVelocity || "94.7"} mph</strong></div>
+                                        <div className="flex justify-between"><span>Exit Vel:</span><strong className="text-emerald-400">{player.advanced?.exitVelocity || "94.7"} mph</strong></div>
                                       </div>
                                     </div>
                                     <div className="space-y-1 border-l border-white/[0.06] pl-2">
@@ -251,7 +251,7 @@ export default function CompanionStudioCard(props: Props) {
                                       <div className="space-y-0.5 text-white/65">
                                         <div className="flex justify-between"><span>ERA Baseline:</span><strong className="text-rose-400">{metrics.pitcherEra}</strong></div>
                                         <div className="flex justify-between"><span>Favored Mix:</span><strong className="text-amber-400 truncate max-w-[65px]" title={metrics.pitchTypeFavored}>{metrics.pitchTypeFavored.split('(')[0].replace('vs ', '')}</strong></div>
-                                        <div className="flex justify-between"><span>Launch Target:</span><strong className="text-sky-400">{player.advanced?.launchAngle || "15.2"}°</strong></div>
+                                        <div className="flex justify-between"><span>Launch Target:</span><strong className="text-emerald-400">{player.advanced?.launchAngle || "15.2"}°</strong></div>
                                       </div>
                                     </div>
                                   </div>
@@ -306,7 +306,7 @@ export default function CompanionStudioCard(props: Props) {
                                     <div className="flex gap-2 text-[8px] font-mono bg-black/15 px-2 py-0.5 rounded border border-white/10">
                                       <div>
                                         <span className="text-slate-505">VAI: </span>
-                                        <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-sky-600' : 'text-sky-405'}`}>{aiConf}%</span>
+                                        <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-emerald-600' : 'text-emerald-405'}`}>{aiConf}%</span>
                                       </div>
                                       <div className="border-l border-white/10 pl-2">
                                         <span className="text-slate-505">STB: </span>
@@ -339,7 +339,7 @@ export default function CompanionStudioCard(props: Props) {
 
                         {/* COUPON SPECIAL OFFER ON COMPANION */}
                         {showCoupon && (
-                          <div className={`p-2 rounded-xl border flex justify-between items-center relative overflow-hidden z-10 text-left mt-1.5 ${cardStyle === 'minimal' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : 'bg-sky-500/5 border-sky-500/20 text-[#38bdf8]'}`}>
+                          <div className={`p-2 rounded-xl border flex justify-between items-center relative overflow-hidden z-10 text-left mt-1.5 ${cardStyle === 'minimal' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-emerald-500/5 border-emerald-500/20 text-[#00d9a0]'}`}>
                             <div className="flex items-center gap-1.5 leading-tight">
                               <span className="text-sm">🎟️</span>
                               <div>
@@ -347,7 +347,7 @@ export default function CompanionStudioCard(props: Props) {
                                 <span className={`text-[9px] font-black ${cardStyle === 'minimal' ? 'text-slate-805' : 'text-slate-250'}`}>{couponText}</span>
                               </div>
                             </div>
-                            <div className="bg-sky-500 text-white text-[8.5px] font-mono font-extrabold px-2 py-0.5 rounded border border-sky-450 leading-none">
+                            <div className="bg-emerald-500 text-white text-[8.5px] font-mono font-extrabold px-2 py-0.5 rounded border border-emerald-450 leading-none">
                               CODE: {couponCode}
                             </div>
                           </div>

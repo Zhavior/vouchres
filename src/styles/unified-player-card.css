@@ -48,12 +48,12 @@
 }
 
 .ve-tier-strong {
-  border-color: rgba(34, 211, 238, 0.35);
-  box-shadow: 0 12px 36px rgba(34, 211, 238, 0.08), inset 0 1px 0 rgba(103, 232, 249, 0.1);
+  border-color: rgba(0, 217, 160, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 217, 160, 0.08), inset 0 1px 0 rgba(103, 232, 249, 0.1);
 }
 
 .ve-tier-strong-header {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, #111820 55%, #0a0e14 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.055) 0%, #111820 55%, #0a0e14 100%);
 }
 
 .ve-tier-watch {

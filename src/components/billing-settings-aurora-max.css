@@ -1,11 +1,9 @@
-.billing-aurora-max,
-.settings-aurora-max {
+.billing-aurora-max {
   color: var(--aurora-max-paper);
   background: transparent;
 }
 
-.billing-command-panel,
-.settings-command-header {
+.billing-command-panel {
   border-color: rgba(157, 215, 175, 0.12);
   background:
     linear-gradient(110deg, rgba(0, 217, 160, 0.035), transparent 48%),
@@ -41,7 +39,7 @@
 
 .billing-access-cell span {
   margin-top: 0.25rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   line-height: 1.45;
   color: rgba(242, 240, 233, 0.42);
@@ -69,43 +67,13 @@
   box-shadow: inset 2px 0 rgba(0, 217, 160, 0.68), var(--aurora-max-shadow);
 }
 
-.settings-aurora-max-surface {
-  border: 1px solid rgba(157, 215, 175, 0.12);
-  background: rgba(4, 11, 13, 0.62);
-  box-shadow: inset 0 1px rgba(242, 240, 233, 0.025);
-}
-
-.settings-tab-active {
-  border: 1px solid rgba(0, 217, 160, 0.28);
-  background: rgba(0, 217, 160, 0.09);
-  color: rgba(160, 239, 202, 0.94);
-  box-shadow: inset 2px 0 rgba(0, 217, 160, 0.78);
-}
-
-.settings-tab-idle {
-  border: 1px solid transparent;
-  color: rgba(242, 240, 233, 0.48);
-}
-
-.settings-tab-idle:hover {
-  border-color: rgba(157, 215, 175, 0.12);
-  background: rgba(157, 215, 175, 0.04);
-  color: var(--aurora-max-paper);
-}
-
-.settings-mobile-tab {
-  border-radius: 0 !important;
-}
-
 .billing-aurora-max .aurora-max-panel,
-.settings-aurora-max .aurora-max-panel,
-.billing-aurora-max .aurora-max-control,
-.settings-aurora-max .aurora-max-control {
+.billing-aurora-max .aurora-max-control {
   border-radius: 0 !important;
 }
 
 /* The legacy feed sheet styles every article under the mounted view slot. */
-#inner-view-slot :is(.billing-aurora-max, .settings-aurora-max) .aurora-max-panel {
+#inner-view-slot .billing-aurora-max .aurora-max-panel {
   border: 1px solid rgba(157, 215, 175, 0.12) !important;
   border-radius: 0 !important;
   background: rgba(5, 12, 13, 0.68) !important;
@@ -116,23 +84,11 @@
   box-shadow: inset 2px 0 rgba(0, 217, 160, 0.68), var(--aurora-max-shadow) !important;
 }
 
-.settings-aurora-max :is(.rounded-2xl, .rounded-xl, .rounded-lg),
 .billing-aurora-max :is(.rounded-2xl, .rounded-xl, .rounded-lg) {
   border-radius: 0 !important;
 }
 
-.settings-aurora-max :is(input, textarea, select) {
-  min-width: 0;
-  border-color: rgba(157, 215, 175, 0.13) !important;
-  background: rgba(3, 9, 11, 0.72) !important;
-}
-
-.settings-aurora-max :is(input, textarea, select):focus {
-  border-color: var(--aurora-max-line-strong) !important;
-  box-shadow: 0 0 0 3px rgba(0, 217, 160, 0.08) !important;
-}
-
-.settings-aurora-max [class*='bg-gradient-to-']:not(.rounded-full) {
+.billing-aurora-max [class*='bg-gradient-to-']:not(.rounded-full) {
   background-image: none !important;
   background-color: rgba(7, 16, 18, 0.78) !important;
 }
@@ -145,8 +101,4 @@
 
 @media (max-width: 639px) {
   .billing-plan-workspace { padding: 0.6rem; }
-  .settings-mobile-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
-  .settings-mobile-tab { min-width: 0; width: 100%; justify-content: flex-start; }
-  .settings-mobile-tab:last-child { grid-column: 1 / -1; }
-  .settings-aurora-max .aurora-max-panel { min-width: 0; }
 }

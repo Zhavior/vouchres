@@ -78,7 +78,7 @@ function TeamRow({
           className={[
             "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border p-1.5 text-xs font-semibold tracking-[0.08em]",
             emphasized
-              ? "border-sky-300/30 bg-sky-300/10 text-sky-100"
+              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
               : "border-white/10 bg-white/[0.035] text-white/65",
           ].join(" ")}
         >
@@ -152,12 +152,12 @@ function LiveGameCard({
       className={clsx(
         "group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.05] bg-ve-obsidian/60 p-6 shadow-2xl backdrop-blur-2xl transition-all duration-500",
         featured &&
-          "border-cyan-400/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.08),transparent_65%),#050505/80] shadow-[0_32px_120px_rgba(34,211,238,0.12)]",
+          "border-emerald-400/20 bg-[radial-gradient(circle_at_top,rgba(0,217,160,0.08),transparent_65%),#050505/80] shadow-[0_32px_120px_rgba(0,217,160,0.12)]",
         className
       )}
     >
       {featured && (
-        <div className="absolute right-5 top-5 z-20 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200 backdrop-blur">
+        <div className="absolute right-5 top-5 z-20 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200 backdrop-blur">
           Featured Matchup
         </div>
       )}
@@ -168,7 +168,7 @@ function LiveGameCard({
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-sky-400/[0.06] blur-3xl"
+        className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-emerald-400/[0.06] blur-3xl"
       />
 
       <div className="relative">
@@ -230,7 +230,7 @@ function LiveGameCard({
             </div>
 
             <div className="shrink-0 text-right">
-              <ShieldCheck aria-hidden="true" className="ml-auto h-5 w-5 text-sky-200" strokeWidth={1.8} />
+              <ShieldCheck aria-hidden="true" className="ml-auto h-5 w-5 text-emerald-200" strokeWidth={1.8} />
               <p className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/30">
                 {formatFeedTime(game.feedAsOf)}
               </p>
@@ -295,7 +295,7 @@ export default function LiveSportsIntelligence() {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-20 -z-10 h-[34rem] w-[min(90vw,72rem)] -translate-x-1/2 rounded-full bg-sky-500/[0.045] blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-20 -z-10 h-[34rem] w-[min(90vw,72rem)] -translate-x-1/2 rounded-full bg-emerald-500/[0.045] blur-3xl"
       />
 
       <div className="mx-auto max-w-7xl">
@@ -307,9 +307,9 @@ export default function LiveSportsIntelligence() {
           className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end"
         >
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/15 bg-sky-300/[0.055] px-3 py-1.5">
-              <Radio aria-hidden="true" className="h-3.5 w-3.5 text-sky-300" strokeWidth={2} />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-sky-100/75">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] px-3 py-1.5">
+              <Radio aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" strokeWidth={2} />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-100/75">
                 Live sports intelligence
               </span>
             </div>
@@ -331,7 +331,7 @@ export default function LiveSportsIntelligence() {
 
               return (
                 <div key={signal.label} className="min-w-0 rounded-3xl border border-white/[0.04] bg-ve-obsidian/80 p-5 sm:p-6 shadow-xl backdrop-blur-md">
-                  <Icon aria-hidden="true" className="h-5 w-5 text-sky-400" strokeWidth={2} />
+                  <Icon aria-hidden="true" className="h-5 w-5 text-emerald-400" strokeWidth={2} />
                   <p className="mt-6 truncate font-mono text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                     {signal.value}
                   </p>
@@ -372,8 +372,8 @@ export default function LiveSportsIntelligence() {
           className="mt-5 flex flex-col gap-4 rounded-[1.75rem] border border-white/[0.08] bg-white/[0.022] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
         >
           <div className="flex min-w-0 items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-sky-300/15 bg-sky-300/[0.055]">
-              <TrendingUp aria-hidden="true" className="h-5 w-5 text-sky-200" strokeWidth={1.8} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-300/15 bg-emerald-300/[0.055]">
+              <TrendingUp aria-hidden="true" className="h-5 w-5 text-emerald-200" strokeWidth={1.8} />
             </div>
 
             <div className="min-w-0">
@@ -386,7 +386,7 @@ export default function LiveSportsIntelligence() {
 
           <a
             href="#features"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 text-sm font-medium text-white transition-[transform,background-color,border-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070a10] motion-reduce:transform-none motion-reduce:transition-none"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 text-sm font-medium text-white transition-[transform,background-color,border-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070a10] motion-reduce:transform-none motion-reduce:transition-none"
           >
             Explore today&apos;s matchups
             <ArrowUpRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />

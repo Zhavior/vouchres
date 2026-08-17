@@ -53,10 +53,10 @@ export default function StudioToolbar(props: Props) {
       {/* Top Lightroom Toolbar */}
       <div className="bg-ve-graphite border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shrink-0" />
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <div className="leading-none text-left min-w-0">
             <span className="text-[11px] sm:text-xs font-mono font-black text-white/90 uppercase tracking-widest block truncate">
-              Vouch Editor <span className="text-[9px] text-sky-400 font-extrabold bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-900/30 ml-1">LIVE</span>
+              Vouch Editor <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/30 ml-1">LIVE</span>
             </span>
             <span className="hidden sm:block text-[9.5px] font-mono text-white/40 uppercase mt-1">Creator slate · real-time preview</span>
           </div>
@@ -79,7 +79,7 @@ export default function StudioToolbar(props: Props) {
               setSelectedPlayers(updated);
               triggerToast("🔮 V.A.I Smart Optimize applied: Projections matched with highest historical hit coefficients!");
             }}
-            className="ve-studio-touch-btn flex-1 sm:flex-none px-3 py-2.5 min-h-11 bg-sky-950/60 border border-sky-900/65 text-sky-400 hover:text-sky-300 rounded-xl text-[10px] font-mono font-extrabold uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="ve-studio-touch-btn flex-1 sm:flex-none px-3 py-2.5 min-h-11 bg-emerald-950/60 border border-emerald-900/65 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-mono font-extrabold uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             title="Use AI model to set ideal projections & confidence intervals"
           >
             <Sparkles className="w-4 h-4 shrink-0" />

@@ -36,7 +36,7 @@ export default function ParlayOsTemplatesRow({
               onClick={() => onSelect(template.id)}
               className={`shrink-0 snap-start min-w-[9.5rem] max-w-[11rem] text-left rounded-xl border p-3 transition-all min-h-[4.5rem] ${
                 active
-                  ? "border-cyan-400/50 bg-cyan-500/10"
+                  ? "border-emerald-400/50 bg-emerald-500/10"
                   : "border-white/10 bg-white/[0.03] hover:border-white/25"
               }`}
             >

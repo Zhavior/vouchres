@@ -9,7 +9,7 @@ export default function PickConfirmationBar({ pick }: Props) {
     <section className="rounded-2xl border border-white/10 bg-ve-surface-panel p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
             Pick Confirmation
           </p>
 
@@ -26,7 +26,7 @@ export default function PickConfirmationBar({ pick }: Props) {
 
         <button
           disabled={!pick}
-          className="rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
         >
           Analyze Pick
         </button>

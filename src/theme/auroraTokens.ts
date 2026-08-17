@@ -24,7 +24,7 @@ export const AURORA_ICON_BOX =
   'flex items-center justify-center border border-white/10 bg-black/40 text-vouch-cyan/70';
 
 export const AURORA_ACTIVE =
-  'border-l-[3px] border-l-vouch-cyan border-vouch-cyan/50 bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(79,184,220,0.22),0_0_32px_rgba(79,184,220,0.14)]';
+  'border-l-[3px] border-l-vouch-cyan border-vouch-cyan/50 bg-vouch-cyan/15 text-white shadow-[inset_4px_0_24px_rgba(0,217,160,0.22),0_0_32px_rgba(0,217,160,0.14)]';
 export const AURORA_IDLE =
   'border-l-[3px] border-l-transparent border-white/10 bg-black/30 text-white/45 hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white';
 
@@ -34,9 +34,9 @@ export const AURORA_SIDEBAR_SURFACE = 'z8-sidebar-surface';
 export const AURORA_SIDEBAR_ICON_BOX =
   'z8-sidebar-icon flex items-center justify-center text-vouch-cyan/70';
 export const AURORA_SIDEBAR_ACTIVE =
-  'bg-vouch-cyan/12 text-white shadow-[inset_4px_0_20px_rgba(79,184,220,0.18)]';
+  'bg-vouch-cyan/12 text-white shadow-[inset_4px_0_20px_rgba(0,217,160,0.18)]';
 export const AURORA_SIDEBAR_IDLE =
-  'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(79,184,220,0.1)]';
+  'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(0,217,160,0.1)]';
 
 export const AURORA_LABEL = `${AURORA_FONT_MONO} text-[11px] font-semibold uppercase tracking-[0.08em]`;
 export const AURORA_BADGE_MUTED =
@@ -52,11 +52,11 @@ export const AURORA_DISPLAY = 'z8-display';
 export const AURORA_TABULAR = 'z8-tabular-nums';
 export const AURORA_INTERACTIVE = 'z8-interactive';
 
-export const AURORA_CYAN_HEX = '#4FB8DC';
+export const AURORA_CYAN_HEX = '#00D9A0';
 export const AURORA_EMERALD_HEX = '#31B583';
 export const AURORA_AMBER_HEX = '#D99C4A';
 export const AURORA_CYAN_RGB = '79, 184, 220';
-export const AURORA_AUTH_GRADIENT = `linear-gradient(135deg, ${AURORA_CYAN_HEX}, #2563eb)`;
+export const AURORA_AUTH_GRADIENT = `linear-gradient(135deg, ${AURORA_CYAN_HEX}, #059669)`;
 export const AURORA_AUTH_SHADOW = `0 8px 32px rgba(${AURORA_CYAN_RGB}, 0.22)`;
 export const AURORA_BLURPLE_HEX = '#5865F2';
 

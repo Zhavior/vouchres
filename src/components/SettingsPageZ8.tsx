@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  FileCheck2,
   Globe,
   Loader,
   Lock,
@@ -24,7 +25,6 @@ import { CreatorProofProfile } from '../types';
 import { apiClient } from '../lib/apiClient';
 import { normalizeCapperSettings, type CapperHeroStyle } from '../lib/capperSettings';
 import { disableBrowserPush, enableBrowserPush } from '../lib/pushNotifications';
-import { VEButton } from './ui/ve';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthSession } from '../lib/authSessionStore';
 import {
@@ -42,13 +42,7 @@ import {
   FREE_BETA_HEADLINE,
   PAYMENTS_ENABLED,
 } from '../lib/betaAccess';
-import {
-  AuroraMaxCommandHeader,
-  AuroraMaxControl,
-  AuroraMaxEyebrow,
-  AuroraMaxPanel,
-  AuroraMaxTruthBadge,
-} from './aurora-max/AuroraMaxPrimitives';
+import { AuroraMaxCommandHeader, AuroraMaxTruthBadge } from './aurora-max/AuroraMaxPrimitives';
 import {
   getStoredConsent,
   saveConsent,
@@ -57,16 +51,28 @@ import {
   onConsentChange,
   type ConsentState,
 } from '../lib/cookieConsent';
-import './billing-settings-aurora-max.css';
+import './settings-next.css';
+import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 
-const MAX_ACTIVE = 'settings-tab-active';
-const MAX_IDLE = 'settings-tab-idle';
-const MAX_LABEL = 'aurora-max-eyebrow';
-const MAX_PAGE = 'settings-aurora-max';
-const MAX_PAGE_PAD_X = 'px-3 sm:px-6';
-const MAX_PAGE_PAD_Y = 'py-4 sm:py-5';
-const MAX_PANEL = 'aurora-max-panel';
-const MAX_SURFACE = 'settings-aurora-max-surface';
+/*
+ * Next surface language — the same vocabulary today-next / live-games-next /
+ * hr-next are built from: obsidian panels, emerald accent, mono micro-labels.
+ * Held as constants so a token change lands everywhere at once.
+ */
+const NEXT_PAGE = 'settings-next';
+const NEXT_PAD_X = 'px-4 sm:px-8';
+const NEXT_PAD_Y = 'py-5 sm:py-6';
+const NEXT_PANEL = 'rounded-2xl border border-white/10 bg-ve-obsidian/90';
+const NEXT_SURFACE = 'border border-white/10 bg-black/30';
+const NEXT_LABEL = 'font-mono text-[9px] font-black uppercase tracking-[0.18em]';
+const NEXT_ACTIVE = 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/15 text-[var(--aurora-max-emerald)]';
+const NEXT_IDLE = 'border-white/10 bg-white/5 text-white/45 hover:border-white/25 hover:text-white';
+
+const NEXT_BTN =
+  'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-3 font-mono text-[10px] font-black uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-40';
+const NEXT_BTN_PRIMARY = `${NEXT_BTN} border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/15 text-[var(--aurora-max-emerald)] hover:bg-[var(--aurora-max-emerald)]/30`;
+const NEXT_BTN_GHOST = `${NEXT_BTN} border-white/10 bg-white/5 text-white/75 hover:border-white/25 hover:text-white`;
+const NEXT_BTN_DANGER = `${NEXT_BTN} border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20`;
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -137,33 +143,42 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-        checked ? 'bg-vouch-cyan' : 'bg-white/10'
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--aurora-max-emerald)]/50 ${
+        checked ? 'bg-[var(--aurora-max-emerald)]' : 'bg-white/10'
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-          checked ? 'translate-x-4' : 'translate-x-0'
+        className={`inline-block h-4 w-4 transform rounded-full shadow-sm transition-transform ${
+          checked ? 'translate-x-4 bg-[#02100d]' : 'translate-x-0 bg-white'
         }`}
       />
     </button>
   );
 }
 
-function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  subtitle,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
   return (
-    <AuroraMaxPanel className="mb-4 p-3 sm:mb-6 sm:p-5">
-      <div className="mb-4 border-b border-white/[0.07] pb-3 sm:mb-5">
-        <AuroraMaxEyebrow className="text-white">{title}</AuroraMaxEyebrow>
-        {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
+    <section className={`${NEXT_PANEL} mb-5 p-4 sm:p-5`} aria-label={title}>
+      <div className="mb-4 border-b border-white/[0.07] pb-3">
+        <h2 className={`flex items-center gap-2 ${NEXT_LABEL} text-white`}>
+          {Icon ? <Icon className="h-3.5 w-3.5 text-[var(--aurora-max-emerald)]" aria-hidden="true" /> : null}
+          {title}
+        </h2>
+        {subtitle && <p className="mt-1.5 text-[11px] leading-5 text-white/45">{subtitle}</p>}
       </div>
       {children}
-    </AuroraMaxPanel>
+    </section>
   );
-}
-
-function Divider() {
-  return <hr className="my-8 border-white/5" />;
 }
 
 function PrefRow({
@@ -178,8 +193,8 @@ function PrefRow({
   return (
     <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5 sm:py-3.5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-white/50">{detail}</p>
+        <p className="text-sm font-bold text-white">{label}</p>
+        <p className="mt-0.5 text-[11px] leading-5 text-white/45">{detail}</p>
       </div>
       <div className="shrink-0 self-start sm:self-center">{children}</div>
     </div>
@@ -228,6 +243,9 @@ export default function SettingsPageZ8({
   const [weeklySummary, setWeeklySummary] = useState(() => localStorage.getItem('vouchedge_weekly_summary') !== 'false');
   const [profilePublic, setProfilePublic] = useState(() => localStorage.getItem('vouchedge_profile_public') !== 'false');
   const [reduceMotion, setReduceMotion] = useState(Boolean(profile.reduceMotion));
+  // Global now — see GlobalAmbientBackdrop; this page only drives the toggle.
+  const is3DLayerEnabled = useAmbient3dEnabled();
+  const toggle3DLayer = useAmbient3dStore((state) => state.toggle);
 
   const [checkoutLoading, setCheckoutLoading] = useState<AppTier | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -268,6 +286,14 @@ export default function SettingsPageZ8({
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy & Data', icon: Shield },
   ];
+
+  /* Each section is its own screen under the sticky header, so a tab switch
+     starts at the top rather than mid-form. Same pane AppNav scroll-tracks. */
+  const handleSelectTab = useCallback((id: SettingsTab) => {
+    setActiveTab(id);
+    setBillingPortalError(null);
+    document.getElementById('inner-view-slot')?.scrollTo({ top: 0 });
+  }, []);
 
   const showToast = useCallback((msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
@@ -687,47 +713,114 @@ export default function SettingsPageZ8({
 
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
+  const accountEmail = authSession.session?.user?.email ?? null;
+  /* Header meta is assembled from values already on the page — nothing estimated. */
+  const accountMetaLine = [
+    username ? `@${username}` : displayName || 'Account',
+    `${PLAN_COPY[activeTier].title} · ${activePlanPrice}`,
+    accountEmail ?? 'Session unverified',
+  ].join(' · ');
+
+  const billingSourceLabel = FREE_BETA_ALL_ACCESS
+    ? 'Free beta — no billing source attached'
+    : billingSourceState === 'confirmed'
+      ? 'Stripe status confirmed'
+      : billingSourceState === 'checking'
+        ? 'Checking Stripe…'
+        : 'Unavailable — saved profile tier shown';
+
+  const consentReceiptLabel = cookieConsentState?.consented_at
+    ? `Saved ${formatDate(cookieConsentState.consented_at)}`
+    : isGpcActive
+      ? 'GPC enforced by browser'
+      : 'Unset — essential cookies only';
+
+  /*
+   * The root deliberately carries no `overflow-x-hidden`: that would make this
+   * element its own scroll container and strand the sticky header, which needs
+   * to stick against `#inner-view-slot`. Horizontal bleed is held off by
+   * `min-w-0` here and the max-width body container below.
+   */
   return (
-    <div className={`relative min-h-0 min-w-0 overflow-x-hidden ve-safe-bottom pb-24 md:pb-8 ${MAX_PAGE}`}>
+    <div className={`relative min-h-0 min-w-0 ve-safe-bottom pb-24 md:pb-8 ${NEXT_PAGE}`}>
+
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
-          toast.type === 'ok'
-            ? 'border-white/10 bg-black/80 text-white'
-            : 'border-red-500/40 bg-red-950/80 text-red-200'
-        }`}>
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 font-mono text-[11px] font-bold shadow-2xl backdrop-blur-md sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+            toast.type === 'ok'
+              ? 'border-[var(--aurora-max-emerald)]/30 bg-ve-obsidian/95 text-white'
+              : 'border-rose-500/40 bg-rose-950/80 text-rose-200'
+          }`}
+        >
           {toast.type === 'ok'
-            ? <Check className="h-4 w-4 shrink-0 text-vouch-emerald" />
-            : <Zap className="h-4 w-4 shrink-0 text-red-400" />}
+            ? <Check className="h-4 w-4 shrink-0 text-[var(--aurora-max-emerald)]" />
+            : <Zap className="h-4 w-4 shrink-0 text-rose-400" />}
           {toast.msg}
         </div>
       )}
 
-      {/* Page header */}
-      <div className={`settings-command-header border-b py-4 sm:py-5 ${MAX_PAGE_PAD_X}`}>
+      {/* Sticky command header — identity, plan truth, and the section rail. */}
+      <div className={`sticky top-0 z-30 space-y-3 border-b border-white/5 bg-ve-obsidian/95 py-4 backdrop-blur-md ${NEXT_PAD_X}`}>
         <div className="mx-auto max-w-5xl">
           <AuroraMaxCommandHeader
-            eyebrow={<span className="inline-flex items-center gap-2"><Settings className="h-3.5 w-3.5" /> Settings command desk</span>}
-            title="Account settings"
-            description="Account, creator tools, billing, notifications, and privacy controls."
+            compact
+            eyebrow={
+              <span className="flex items-center gap-2">
+                <Settings className="h-3 w-3" aria-hidden="true" /> Aurora Max
+              </span>
+            }
+            title="Settings Terminal"
+            description={`v1.0 Account · ${accountMetaLine}`}
+            meta={
+            <div className="flex shrink-0 items-center gap-2">
+            <AuroraMaxTruthBadge
+              state={FREE_BETA_ALL_ACCESS || billingSourceState === 'confirmed' ? 'confirmed' : billingSourceState === 'checking' ? 'projected' : 'missing'}
+            >
+              {PLAN_COPY[activeTier].title}
+            </AuroraMaxTruthBadge>
+            {activeTier === 'BASIC' && !FREE_BETA_ALL_ACCESS && (
+              <button
+                type="button"
+                onClick={() => handleSelectTab('billing')}
+                className={`${NEXT_BTN_PRIMARY} ve-touch-target`}
+              >
+                Upgrade <ChevronRight className="h-3 w-3" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => toggle3DLayer()}
+              disabled={reduceMotion}
+              title={reduceMotion ? 'Disabled by the Reduce motion preference' : 'Toggle the ambient field'}
+              className={`px-2.5 py-1 font-mono text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                is3DLayerEnabled && !reduceMotion
+                  ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] hover:bg-[var(--aurora-max-emerald)]/30'
+                  : 'bg-white/10 text-white/50 hover:bg-white/20'
+              }`}
+            >
+              3D: {is3DLayerEnabled && !reduceMotion ? 'ON' : 'OFF'}
+            </button>
+            </div>
+            }
           />
         </div>
-      </div>
 
-      {/* Body */}
-      <div className={`mx-auto max-w-5xl ${MAX_PAGE_PAD_Y} ${MAX_PAGE_PAD_X}`}>
-        {/* Mobile tab bar */}
-        <nav className="mb-5 lg:hidden" aria-label="Settings sections">
-          <div className="settings-mobile-tabs -mx-1 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
+        <nav className="mx-auto max-w-5xl" aria-label="Settings sections">
+          <div className="settings-next-rail -mx-1 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-1 pb-0.5">
             {nav.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
-                onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
-                className={`settings-mobile-tab ve-touch-target snap-start shrink-0 flex items-center gap-2 border px-3.5 py-2 text-xs font-semibold transition-colors ${
+                aria-current={activeTab === id ? 'page' : undefined}
+                onClick={() => handleSelectTab(id)}
+                className={`ve-touch-target flex shrink-0 snap-start items-center gap-2 rounded-lg border px-3 py-2 font-mono text-[10px] font-black uppercase tracking-wider transition ${
                   activeTab === id
-                    ? MAX_ACTIVE
-                    : MAX_IDLE
+                    ? NEXT_ACTIVE
+                    : NEXT_IDLE
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -735,75 +828,21 @@ export default function SettingsPageZ8({
               </button>
             ))}
           </div>
-
-          <AuroraMaxPanel className="mt-3 flex items-center justify-between gap-3 p-3">
-            <div className="min-w-0">
-              <p className={`${MAX_LABEL} text-white/35`}>Current plan</p>
-              <p className="mt-0.5 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-white/50">{activePlanPrice}</p>
-            </div>
-            {activeTier === 'BASIC' && (
-              <AuroraMaxControl
-                tone="primary"
-                onClick={() => setActiveTab('billing')}
-                className="ve-touch-target shrink-0"
-              >
-                Upgrade <ChevronRight className="h-3 w-3" />
-              </AuroraMaxControl>
-            )}
-          </AuroraMaxPanel>
         </nav>
+      </div>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-          {/* Desktop sidebar nav */}
-          <nav className="hidden w-48 shrink-0 lg:block">
-            <ul className="space-y-0.5">
-              {nav.map(({ id, label, icon: Icon }) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
-                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                      activeTab === id
-                        ? `${MAX_ACTIVE} font-medium`
-                        : `${MAX_IDLE}`
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {/* Plan badge */}
-            <AuroraMaxPanel as="aside" className="mt-8 p-3">
-              <p className={`${MAX_LABEL} text-white/35`}>Current plan</p>
-              <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
-              <p className="text-xs text-white/50">{activePlanPrice}</p>
-              {activeTier === 'BASIC' && (
-                <AuroraMaxControl
-                  tone="primary"
-                  onClick={() => setActiveTab('billing')}
-                  className="mt-2.5 w-full"
-                >
-                  Upgrade <ChevronRight className="h-3 w-3" />
-                </AuroraMaxControl>
-              )}
-            </AuroraMaxPanel>
-          </nav>
-
-          {/* ─── Main content ─── */}
-          <div className="min-w-0 flex-1">
+      {/* Body */}
+      <div className={`mx-auto max-w-5xl ${NEXT_PAD_Y} ${NEXT_PAD_X}`}>
+        <div className="min-w-0">
 
             {/* ── ACCOUNT ── */}
             {activeTab === 'account' && (
               <>
                 <form onSubmit={handleProfileSave} className="space-y-6">
                   {/* Avatar + name */}
-                  <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
-                    <div className={`${MAX_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-vouch-cyan to-indigo-600 text-base font-bold text-white">
+                  <Section icon={User} title="Profile" subtitle="This is your public identity on VouchEdge.">
+                    <div className={`${NEXT_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--aurora-max-emerald)]/30 bg-[var(--aurora-max-emerald)]/10 font-mono text-base font-black text-[var(--aurora-max-emerald)]">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -816,6 +855,7 @@ export default function SettingsPageZ8({
 
                   {/* Discord Open Beta connect */}
                   <Section
+                    icon={Sparkles}
                     title="Open Beta access"
                     subtitle="Connect Discord to join the VouchEdge server and unlock the @Open Beta role. This is separate from the plain Discord link under Social links below."
                   >
@@ -834,7 +874,7 @@ export default function SettingsPageZ8({
                   </Section>
 
                   {/* Fields */}
-                  <Section title="General" subtitle="Update your display name, username, and bio.">
+                  <Section icon={User} title="General" subtitle="Update your display name, username, and bio.">
                     <div className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1.5">
@@ -842,13 +882,13 @@ export default function SettingsPageZ8({
                           <input
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
-                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}
                             placeholder="Your name"
                           />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">Username</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${MAX_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-[var(--aurora-max-emerald)]/50 focus-within:ring-1 focus-within:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}>
                             <span className="flex items-center pl-3 text-sm text-white/40">@</span>
                             <input
                               value={username}
@@ -864,7 +904,7 @@ export default function SettingsPageZ8({
                         <input
                           value={customTitle}
                           onChange={(e) => setCustomTitle(e.target.value)}
-                          className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`}
+                          className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}
                           placeholder="e.g. MLB Researcher"
                         />
                       </div>
@@ -875,7 +915,7 @@ export default function SettingsPageZ8({
                           onChange={(e) => setBio(e.target.value)}
                           maxLength={180}
                           rows={3}
-                          className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`}
+                          className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-colors focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}
                           placeholder="Short bio (max 180 chars)"
                         />
                         <p className="text-right text-[10px] text-white/40">{bio.length}/180</p>
@@ -884,7 +924,7 @@ export default function SettingsPageZ8({
                   </Section>
 
                   {/* Socials */}
-                  <Section title="Social links" subtitle="Connect your public profiles and channels.">
+                  <Section icon={Globe} title="Social links" subtitle="Connect your public profiles and channels.">
                     <div className="grid gap-4 sm:grid-cols-2">
                       {[
                         { key: 'twitter', label: 'X (Twitter)', placeholder: '@handle', value: twitter, set: setTwitter },
@@ -896,7 +936,7 @@ export default function SettingsPageZ8({
                           <input
                             value={value}
                             onChange={(e) => set(e.target.value)}
-                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`}
+                            className={`w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}
                             placeholder={placeholder}
                           />
                         </div>
@@ -907,11 +947,7 @@ export default function SettingsPageZ8({
                   <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
                     <button
                       type="submit"
-                      className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:w-auto ${
-                        profileSaved
-                          ? 'bg-vouch-emerald text-black'
-                          : 'bg-vouch-cyan text-black hover:bg-vouch-cyan/90'
-                      }`}
+                      className={`${NEXT_BTN_PRIMARY} ve-touch-target w-full sm:w-auto`}
                     >
                       {profileSaved ? <Check className="h-4 w-4" /> : null}
                       {profileSaved ? 'Saved' : 'Save changes'}
@@ -921,6 +957,7 @@ export default function SettingsPageZ8({
 
                 <div className="mt-10">
                   <Section
+                    icon={Lock}
                     title="Security"
                     subtitle="Update your password. You must be signed in to change it."
                   >
@@ -928,7 +965,7 @@ export default function SettingsPageZ8({
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">New password</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${MAX_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-[var(--aurora-max-emerald)]/50 focus-within:ring-1 focus-within:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}>
                             <input
                               type={showNewPw ? 'text' : 'password'}
                               value={newPassword}
@@ -951,7 +988,7 @@ export default function SettingsPageZ8({
 
                         <div className="space-y-1.5">
                           <label className="text-xs font-medium text-white/60">Confirm password</label>
-                          <div className={`flex rounded-lg focus-within:border-vouch-cyan focus-within:ring-1 focus-within:ring-vouch-cyan/30 ${MAX_SURFACE}`}>
+                          <div className={`flex rounded-lg focus-within:border-[var(--aurora-max-emerald)]/50 focus-within:ring-1 focus-within:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`}>
                             <input
                               type={showConfirmPw ? 'text' : 'password'}
                               value={confirmPassword}
@@ -974,15 +1011,15 @@ export default function SettingsPageZ8({
                       </div>
 
                       {newPassword.length > 0 && newPassword.length < 8 && (
-                        <p className="text-xs text-vouch-amber">
+                        <p className="font-mono text-[11px] text-amber-300">
                           {8 - newPassword.length} more character{8 - newPassword.length !== 1 ? 's' : ''} needed
                         </p>
                       )}
 
                       {passwordError && (
-                        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5">
-                          <Lock className="h-3.5 w-3.5 shrink-0 text-red-400" />
-                          <p className="text-xs text-red-300">{passwordError}</p>
+                        <div className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2.5">
+                          <Lock className="h-3.5 w-3.5 shrink-0 text-rose-400" />
+                          <p className="font-mono text-[11px] text-rose-300">{passwordError}</p>
                         </div>
                       )}
 
@@ -990,7 +1027,7 @@ export default function SettingsPageZ8({
                         <button
                           type="submit"
                           disabled={passwordLoading || newPassword.length < 8 || newPassword !== confirmPassword}
-                          className="ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 transition-all sm:w-auto"
+                          className={`${NEXT_BTN_GHOST} ve-touch-target w-full sm:w-auto`}
                         >
                           {passwordLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                           Update password
@@ -1005,18 +1042,18 @@ export default function SettingsPageZ8({
             {/* ── CAPPER ── */}
             {activeTab === 'capper' && (
               <form onSubmit={handleCapperSave} className="space-y-6">
-                <Section title="Club identity" subtitle="This powers how your subscriber club looks and reads across SocialOS and the club hub.">
-                  <div className={`${MAX_SURFACE} rounded-xl p-4 sm:p-5 mb-4`}>
+                <Section icon={Globe} title="Club identity" subtitle="This powers how your subscriber club looks and reads across SocialOS and the club hub.">
+                  <div className={`${NEXT_SURFACE} rounded-xl p-4 sm:p-5 mb-4`}>
                     <div className={`rounded-2xl border p-4 ${
                       heroStyle === 'emerald'
                         ? 'border-emerald-500/30 bg-emerald-500/10'
                         : heroStyle === 'crimson'
                           ? 'border-rose-500/30 bg-rose-500/10'
-                          : 'border-vouch-cyan/25 bg-vouch-cyan/10'
+                          : 'border-vouch-emerald/25 bg-vouch-emerald/10'
                     }`}>
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className={`${MAX_LABEL} text-white/45`}>{badgeText || 'CREATOR CLUB'}</p>
+                          <p className={`${NEXT_LABEL} text-white/45`}>{badgeText || 'CREATOR CLUB'}</p>
                           <h3 className="mt-1 text-lg font-semibold text-white">{clubName || displayName || 'Your club'}</h3>
                           <p className="mt-1 text-sm text-white/65">{clubTagline || 'Shared parlays, verified wins, and clean subscriber access.'}</p>
                         </div>
@@ -1031,22 +1068,22 @@ export default function SettingsPageZ8({
                   <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Club name</label>
-                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="Zhavior Club" />
+                      <input value={clubName} onChange={(e) => setClubName(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="Zhavior Club" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Badge text</label>
-                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="CREATOR CLUB" />
+                      <input value={badgeText} onChange={(e) => setBadgeText(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="CREATOR CLUB" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Club tagline</label>
-                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="What your club is known for" />
+                    <input value={clubTagline} onChange={(e) => setClubTagline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="What your club is known for" />
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Welcome message</label>
-                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="What a new follower should feel immediately" />
+                    <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="What a new follower should feel immediately" />
                   </div>
 
                   <div className="space-y-1.5">
@@ -1057,10 +1094,10 @@ export default function SettingsPageZ8({
                           key={style}
                           type="button"
                           onClick={() => setHeroStyle(style)}
-                          className={`rounded-xl px-3 py-3 text-left text-sm transition-colors ${
+                          className={`rounded-xl border px-3 py-3 text-left text-sm transition-colors ${
                             heroStyle === style
-                              ? 'border border-vouch-cyan/40 bg-vouch-cyan/10 text-white'
-                              : `${MAX_SURFACE} text-white/60 hover:text-white`
+                              ? 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-white'
+                              : 'border-white/10 bg-black/30 text-white/60 hover:border-white/25 hover:text-white'
                           }`}
                         >
                           <div className="font-semibold capitalize">{style}</div>
@@ -1071,42 +1108,42 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="Offer and conversion" subtitle="This controls the language around why someone should follow your club.">
+                <Section icon={Sparkles} title="Offer and conversion" subtitle="This controls the language around why someone should follow your club.">
                   <div className="grid gap-4 sm:grid-cols-2 mb-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Offer headline</label>
-                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="Free follow during beta" />
+                      <input value={offerHeadline} onChange={(e) => setOfferHeadline(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="Free follow during beta" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-white/60">Primary CTA</label>
-                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="Follow club" />
+                      <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="Follow club" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">Offer summary</label>
-                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="Explain exactly what a follow unlocks" />
+                    <textarea value={offerSummary} onChange={(e) => setOfferSummary(e.target.value)} rows={3} className={`w-full resize-none rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="Explain exactly what a follow unlocks" />
                   </div>
 
                   <div className="space-y-1.5 mb-4">
                     <label className="text-xs font-medium text-white/60">CTA subtext</label>
-                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="Unlock shared parlays and club updates" />
+                    <input value={ctaSubtext} onChange={(e) => setCtaSubtext(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="Unlock shared parlays and club updates" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-white/60">Featured tags</label>
-                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 ${MAX_SURFACE}`} placeholder="MLB, Parlays, Verified" />
+                    <input value={featuredTagsInput} onChange={(e) => setFeaturedTagsInput(e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 ${NEXT_SURFACE}`} placeholder="MLB, Parlays, Verified" />
                     <p className="text-[11px] text-white/40">Comma-separated. We use up to 6 tags across your club previews.</p>
                   </div>
                 </Section>
 
-                <Section title="Products and access" subtitle="These are the actual business products behind your club.">
+                <Section icon={CreditCard} title="Products and access" subtitle="These are the actual business products behind your club.">
                   <div className="grid gap-4 lg:grid-cols-2">
                     {capperProducts.map((product) => {
                       const isSaving = productSavingCode === product.code;
                       const accessScope = product.accessScope ?? {};
                       return (
-                        <div key={product.id} className={`rounded-xl p-4 space-y-4 ${MAX_SURFACE}`}>
+                        <div key={product.id} className={`rounded-xl p-4 space-y-4 ${NEXT_SURFACE}`}>
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-white">{product.name}</p>
@@ -1125,7 +1162,7 @@ export default function SettingsPageZ8({
                               <input
                                 value={product.name}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, name: e.target.value } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                               />
                             </div>
                             <div className="space-y-1.5">
@@ -1133,7 +1170,7 @@ export default function SettingsPageZ8({
                               <select
                                 value={product.pricingModel}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, pricingModel: e.target.value as CapperBusinessProduct['pricingModel'] } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                               >
                                 <option value="free">Free</option>
                                 <option value="waitlist">Waitlist</option>
@@ -1149,7 +1186,7 @@ export default function SettingsPageZ8({
                               value={product.description}
                               onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, description: e.target.value } : entry))}
                               rows={3}
-                              className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                              className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                             />
                           </div>
 
@@ -1161,7 +1198,7 @@ export default function SettingsPageZ8({
                                 min={0}
                                 value={Math.round((product.priceCents ?? 0) / 100)}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, priceCents: Math.max(0, Number(e.target.value) || 0) * 100 } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                               />
                             </div>
                             <div className="space-y-1.5">
@@ -1169,7 +1206,7 @@ export default function SettingsPageZ8({
                               <select
                                 value={product.billingInterval ?? 'month'}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, billingInterval: e.target.value } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                               >
                                 <option value="month">Monthly</option>
                                 <option value="year">Yearly</option>
@@ -1180,7 +1217,7 @@ export default function SettingsPageZ8({
                               <select
                                 value={product.visibility}
                                 onChange={(e) => setCapperProducts((current) => current.map((entry) => entry.code === product.code ? { ...entry, visibility: e.target.value as CapperBusinessProduct['visibility'] } : entry))}
-                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
+                                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25"
                               >
                                 <option value="public">Public</option>
                                 <option value="hidden">Hidden</option>
@@ -1210,7 +1247,7 @@ export default function SettingsPageZ8({
                               type="button"
                               disabled={isSaving}
                               onClick={() => void handleProductUpdate(product, {})}
-                              className="rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50 transition-colors"
+                              className={NEXT_BTN_GHOST}
                             >
                               {isSaving ? 'Saving…' : 'Save product'}
                             </button>
@@ -1221,8 +1258,8 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="Trust and content" subtitle="Decide what proof and club surfaces stay visible to followers.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                <Section icon={Shield} title="Trust and content" subtitle="Decide what proof and club surfaces stay visible to followers.">
+                  <div className={`divide-y divide-white/5 rounded-xl ${NEXT_SURFACE}`}>
                     <PrefRow label="Show verified record" detail="Keep your tracked record visible on the club surface.">
                       <Toggle checked={showVerifiedRecord} onChange={setShowVerifiedRecord} />
                     </PrefRow>
@@ -1241,8 +1278,8 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="Moderation defaults" subtitle="These are the guardrails for how your club should behave as it grows.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                <Section icon={Shield} title="Moderation defaults" subtitle="These are the guardrails for how your club should behave as it grows.">
+                  <div className={`divide-y divide-white/5 rounded-xl ${NEXT_SURFACE}`}>
                     <PrefRow label="Profanity filter" detail="Keep basic bad-word blocking turned on for subscriber chat.">
                       <Toggle checked={profanityFilterEnabled} onChange={setProfanityFilterEnabled} />
                     </PrefRow>
@@ -1258,7 +1295,7 @@ export default function SettingsPageZ8({
                         max={300}
                         value={slowModeSeconds}
                         onChange={(e) => setSlowModeSeconds(Math.min(300, Math.max(0, Number(e.target.value) || 0)))}
-                        className="mt-3 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30 sm:max-w-[160px]"
+                        className="mt-3 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-[var(--aurora-max-emerald)]/50 focus:ring-1 focus:ring-[var(--aurora-max-emerald)]/25 sm:max-w-[160px]"
                       />
                     </div>
                   </div>
@@ -1267,11 +1304,7 @@ export default function SettingsPageZ8({
                 <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
                   <button
                     type="submit"
-                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-all sm:w-auto ${
-                      capperSaved
-                        ? 'bg-vouch-emerald text-black'
-                        : 'bg-vouch-cyan text-black hover:bg-vouch-cyan/90'
-                    }`}
+                    className={`${NEXT_BTN_PRIMARY} ve-touch-target w-full sm:w-auto`}
                   >
                     {capperSaved ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
                     {capperSaved ? 'Saved' : 'Save capper settings'}
@@ -1284,12 +1317,13 @@ export default function SettingsPageZ8({
             {activeTab === 'billing' && (
               <div className="space-y-6">
                 <Section
+                  icon={Zap}
                   title="Subscription"
                   subtitle={FREE_BETA_ALL_ACCESS ? 'Your access during the free open beta.' : 'Manage your plan and payment method.'}
                 >
-                  <div className={`${MAX_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
+                  <div className={`${NEXT_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 mb-4`}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vouch-cyan/15 text-vouch-cyan">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-vouch-emerald/15 text-vouch-emerald">
                         <Zap className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
@@ -1308,19 +1342,21 @@ export default function SettingsPageZ8({
                         {billingModel.billingLabel}
                       </AuroraMaxTruthBadge>
                       {!FREE_BETA_ALL_ACCESS && (
-                        <AuroraMaxControl
+                        <button
+                          type="button"
                           onClick={() => refreshBilling()}
                           disabled={billingLoading}
+                          className={NEXT_BTN_GHOST}
                         >
                           {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                           Refresh
-                        </AuroraMaxControl>
+                        </button>
                       )}
                     </div>
                   </div>
 
                   {FREE_BETA_ALL_ACCESS ? (
-                    <div className={`${MAX_SURFACE} rounded-xl p-4`}>
+                    <div className={`${NEXT_SURFACE} rounded-xl p-4`}>
                       <p className="text-sm font-semibold text-white">{FREE_BETA_HEADLINE}</p>
                       <p className="mt-1 text-2xl font-bold text-white">$0</p>
                       <p className="mt-2 text-xs leading-5 text-white/50">{FREE_BETA_BLURB}</p>
@@ -1335,13 +1371,12 @@ export default function SettingsPageZ8({
                       const isActive = tier === 'BASIC' ? activeTier === 'BASIC' : activeTier !== 'BASIC';
                       const isLoading = checkoutLoading === tier;
                       return (
-                        <AuroraMaxPanel
-                          as="article"
+                        <article
                           key={tier}
-                          className={`relative p-4 transition-colors ${
+                          className={`relative rounded-xl border p-4 transition-colors ${
                             isActive
-                              ? `border-vouch-emerald/30 bg-vouch-emerald/5`
-                              : `${MAX_SURFACE} hover:border-white/20`
+                              ? 'border-[var(--aurora-max-emerald)]/30 bg-[var(--aurora-max-emerald)]/[0.06]'
+                              : 'border-white/10 bg-black/30 hover:border-white/25'
                           }`}
                         >
                           {plan.badge && !isActive && (
@@ -1360,11 +1395,11 @@ export default function SettingsPageZ8({
                           </p>
                           <p className="mt-2 text-xs leading-5 text-white/50">{plan.detail}</p>
 
-                          <AuroraMaxControl
-                            tone={!isActive && tier !== 'BASIC' ? 'primary' : 'neutral'}
+                          <button
+                            type="button"
                             disabled={isActive || isLoading}
                             onClick={() => handleUpgrade(tier)}
-                            className="mt-4 w-full"
+                            className={`${!isActive && tier !== 'BASIC' ? NEXT_BTN_PRIMARY : NEXT_BTN_GHOST} mt-4 w-full`}
                           >
                             {isLoading && <Loader className="h-3 w-3 animate-spin" />}
                             {isActive
@@ -1372,8 +1407,8 @@ export default function SettingsPageZ8({
                               : tier === 'BASIC'
                                 ? 'Downgrade'
                                 : 'Start 7-day free trial'}
-                          </AuroraMaxControl>
-                        </AuroraMaxPanel>
+                          </button>
+                        </article>
                       );
                     })}
                   </div>
@@ -1381,36 +1416,35 @@ export default function SettingsPageZ8({
                 </Section>
 
                 {PAYMENTS_ENABLED && (
-                <Section title="Payment method" subtitle="Stripe manages payment methods, invoices, and cancellation for paid accounts.">
+                <Section icon={CreditCard} title="Payment method" subtitle="Stripe manages payment methods, invoices, and cancellation for paid accounts.">
                   <div className="space-y-3">
                     {billingModel.shouldManageBilling ? (
-                      <VEButton
+                      <button
                         type="button"
                         onClick={handleManageBilling}
                         disabled={portalLoading}
-                        variant="ghost"
-                        className={`ve-touch-target w-full justify-center ${MAX_SURFACE} hover:bg-white/5 text-white/80 sm:w-auto sm:justify-start`}
+                        className={`${NEXT_BTN_GHOST} ve-touch-target w-full sm:w-auto`}
                       >
                         {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                         Manage billing
                         <ExternalLink className="h-3.5 w-3.5 text-white/40" />
-                      </VEButton>
+                      </button>
                     ) : (
                       <p className="text-xs leading-relaxed text-white/45">
                         The billing portal becomes available after a paid subscription is attached to this account.
                       </p>
                     )}
                     {billingPortalError && (
-                      <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-3">
-                        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                      <div className="flex items-start gap-2.5 rounded-lg border border-rose-500/30 bg-rose-950/30 px-4 py-3">
+                        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-red-300">Billing portal unavailable</p>
-                          <p className="mt-0.5 text-xs text-red-400/80">{billingPortalError}</p>
+                          <p className="text-sm font-bold text-white">Billing portal unavailable</p>
+                          <p className="mt-0.5 font-mono text-[11px] leading-4 text-rose-300/80">{billingPortalError}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setBillingPortalError(null)}
-                          className="ml-auto shrink-0 text-red-500/60 hover:text-red-400 transition-colors"
+                          className="ml-auto shrink-0 text-rose-500/60 transition-colors hover:text-rose-400"
                           aria-label="Dismiss"
                         >
                           ×
@@ -1426,8 +1460,8 @@ export default function SettingsPageZ8({
             {/* ── NOTIFICATIONS ── */}
             {activeTab === 'notifications' && (
               <div className="space-y-6">
-                <Section title="Email" subtitle="Control which emails VouchEdge sends to you.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                <Section icon={Mail} title="Email" subtitle="Control which emails VouchEdge sends to you.">
+                  <div className={`divide-y divide-white/5 rounded-xl ${NEXT_SURFACE}`}>
                     <PrefRow label="Account alerts" detail="Security and billing notifications.">
                       <Toggle checked={emailAlerts} onChange={setEmailAlerts} />
                     </PrefRow>
@@ -1437,8 +1471,8 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
-                  <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                <Section icon={Bell} title="In-app" subtitle="Push alerts and real-time updates inside the app.">
+                  <div className={`divide-y divide-white/5 rounded-xl ${NEXT_SURFACE}`}>
                     <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
                       <Toggle checked={pushAlerts} onChange={(value) => { void handlePushAlertsToggle(value); }} />
                     </PrefRow>
@@ -1481,11 +1515,12 @@ export default function SettingsPageZ8({
             {activeTab === 'privacy' && (
               <div className="space-y-6">
                 <Section
+                  icon={Shield}
                   title="Cookie & telemetry choices"
                   subtitle="Manage essential security cookies and optional performance telemetry."
                 >
                   <div className="space-y-4">
-                    <div className={`flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${MAX_SURFACE}`}>
+                    <div className={`flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${NEXT_SURFACE}`}>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-white">Consent status</p>
@@ -1506,18 +1541,17 @@ export default function SettingsPageZ8({
                         </p>
                       </div>
 
-                      <VEButton
+                      <button
                         type="button"
                         onClick={handleResetCookiePreferences}
-                        variant="ghost"
-                        className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
+                        className={`${NEXT_BTN_GHOST} ve-touch-target w-full shrink-0 sm:w-auto`}
                       >
                         <RefreshCw className="h-4 w-4" />
                         Reset choices
-                      </VEButton>
+                      </button>
                     </div>
 
-                    <div className={`divide-y divide-white/5 rounded-xl ${MAX_SURFACE}`}>
+                    <div className={`divide-y divide-white/5 rounded-xl ${NEXT_SURFACE}`}>
                       <PrefRow
                         label="Strictly necessary"
                         detail="Session authentication, CSRF validation, and platform stability. Required for VouchEdge to function."
@@ -1557,69 +1591,87 @@ export default function SettingsPageZ8({
                   </div>
                 </Section>
 
-                <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
-                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${MAX_SURFACE}`}>
+                <Section icon={Download} title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${NEXT_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Data export</p>
                       <p className="mt-0.5 text-xs leading-relaxed text-white/50">Download your picks, parlays, profile, and activity as JSON.</p>
                     </div>
-                    <VEButton
+                    <button
                       type="button"
                       onClick={handleExportData}
                       disabled={privacyLoading === 'export'}
-                      variant="ghost"
-                      className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
+                      className={`${NEXT_BTN_GHOST} ve-touch-target w-full shrink-0 sm:w-auto`}
                     >
                       {privacyLoading === 'export' ? <Loader className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                       Export
-                    </VEButton>
+                    </button>
                   </div>
                 </Section>
 
-                <Section title="Local data" subtitle="Reset preview data stored on this device only.">
-                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${MAX_SURFACE}`}>
+                <Section icon={RefreshCw} title="Local data" subtitle="Reset preview data stored on this device only.">
+                  <div className={`flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 ${NEXT_SURFACE}`}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Reset local data</p>
                       <p className="mt-0.5 text-xs leading-relaxed text-white/50">Clears picks, slips, vouches, and profile previews on this browser.</p>
                     </div>
-                    <VEButton
+                    <button
                       type="button"
                       onClick={handleResetClick}
-                      variant="ghost"
-                      className="ve-touch-target w-full shrink-0 justify-center border-white/10 text-white/80 hover:bg-white/5 sm:w-auto"
+                      className={`${NEXT_BTN_GHOST} ve-touch-target w-full shrink-0 sm:w-auto`}
                     >
                       <RefreshCw className="h-4 w-4" />
                       Reset
-                    </VEButton>
+                    </button>
                   </div>
                 </Section>
 
-                <Section title="Danger zone" subtitle="Irreversible actions for your account.">
-                  <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-4 sm:p-5">
+                <Section icon={Trash2} title="Danger zone" subtitle="Irreversible actions for your account.">
+                  <div className="rounded-xl border border-rose-500/25 bg-rose-950/25 p-4 sm:p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-red-300">Delete account</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-red-400/70">
+                        <p className="text-sm font-bold text-white">Delete account</p>
+                        <p className="mt-0.5 text-[11px] leading-5 text-rose-200/60">
                           Schedules deletion with a 30-day grace period. Active subscriptions will be cancelled. This cannot be undone.
                         </p>
                       </div>
-                      <VEButton
+                      <button
                         type="button"
                         onClick={handleScheduleDeletion}
                         disabled={privacyLoading === 'delete'}
-                        variant="ghost"
-                        className="ve-touch-target w-full shrink-0 justify-center border-red-500/40 text-red-400 hover:bg-red-500/10 sm:w-auto"
+                        className={`${NEXT_BTN_DANGER} ve-touch-target w-full shrink-0 sm:w-auto`}
                       >
                         {privacyLoading === 'delete' ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         Delete account
-                      </VEButton>
+                      </button>
                     </div>
                   </div>
                 </Section>
               </div>
             )}
           </div>
-        </div>
+
+          {/* Receipt — where the values on this page actually came from. */}
+          <section className="mt-5 rounded-2xl border border-white/[0.07] bg-black/30 p-4" aria-label="Account source receipt">
+            <span className={`flex items-center gap-2 ${NEXT_LABEL} text-white/35`}>
+              <FileCheck2 className="h-3 w-3 text-[var(--aurora-max-emerald)]" aria-hidden="true" />
+              Source receipt
+            </span>
+            <div className="mt-2.5 grid gap-3 font-mono sm:grid-cols-3">
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/30">Session</p>
+                <p className="mt-1 truncate text-[10px] leading-4 text-white/50">{accountEmail ?? 'Not signed in'}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/30">Billing source</p>
+                <p className="mt-1 text-[10px] leading-4 text-white/50">{billingSourceLabel}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/30">Cookie consent</p>
+                <p className="mt-1 text-[10px] leading-4 text-white/50">{consentReceiptLabel}</p>
+              </div>
+            </div>
+          </section>
       </div>
     </div>
   );

@@ -75,7 +75,7 @@ export default function ParlayIdentityExplainer({
       <button type="button" className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-label="Close" onClick={onClose} />
       <div className="relative w-full sm:max-w-md rounded-3xl border border-white/10 bg-[var(--bg-obsidian)] p-5 shadow-2xl">
         <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-5 h-5 text-cyan-400" />
+          <AlertTriangle className="w-5 h-5 text-emerald-400" />
           <h2 className="text-lg font-black text-white">Grading identity</h2>
         </div>
         <p className="text-sm text-white/50 mb-4">
@@ -96,7 +96,7 @@ export default function ParlayIdentityExplainer({
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-xl border border-cyan-400/30 bg-cyan-500/10 py-3 text-xs font-bold uppercase tracking-wide text-cyan-200"
+          className="w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 py-3 text-xs font-bold uppercase tracking-wide text-emerald-200"
         >
           Got it
         </button>

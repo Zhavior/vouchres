@@ -98,7 +98,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
               className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
-                <Crown className="w-3.5 h-3.5 text-sky-400" />
+                <Crown className="w-3.5 h-3.5 text-emerald-400" />
                 3. Promotion & Stamp Overlays
               </span>
               <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionPromo ? '[-]' : '[+]'}</span>
@@ -119,7 +119,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showWinRate} 
                           onChange={(e) => setShowWinRate(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         SHOW WIN RATE
                       </label>
@@ -128,7 +128,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                         disabled={!showWinRate}
                         value={customWinRate}
                         onChange={(e) => setCustomWinRate(e.target.value)}
-                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-sky-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-emerald-400 outline-none font-mono" 
                       />
                     </div>
 
@@ -138,7 +138,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showDailyWinRate} 
                           onChange={(e) => setShowDailyWinRate(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         DAILY WIN RATE
                       </label>
@@ -160,7 +160,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showMonthlyWinRate} 
                           onChange={(e) => setShowMonthlyWinRate(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         MONTHLY RATE
                       </label>
@@ -179,7 +179,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showMlbPicks} 
                           onChange={(e) => setShowMlbPicks(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         MLB RUN PICKS
                       </label>
@@ -201,7 +201,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showProBadge} 
                           onChange={(e) => setShowProBadge(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         PRO LEVEL STAMP
                       </label>
@@ -220,7 +220,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showUnitsProfit} 
                           onChange={(e) => setShowUnitsProfit(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         UNITS NET PROFIT
                       </label>
@@ -241,7 +241,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                         type="checkbox" 
                         checked={showBestParlay} 
                         onChange={(e) => setShowBestParlay(e.target.checked)}
-                        className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                        className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                       />
                       BEST PARLAY PICK (HERO STICKER)
                     </label>
@@ -262,7 +262,7 @@ export default function PromoSection(props: VouchStudioDarkroomProps) {
                           type="checkbox" 
                           checked={showCoupon} 
                           onChange={(e) => setShowCoupon(e.target.checked)}
-                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         COUPON CODE
                       </label>

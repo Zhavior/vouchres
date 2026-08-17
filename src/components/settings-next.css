@@ -1,0 +1,52 @@
+/*
+ * Settings — Next surface language.
+ *
+ * Same vocabulary as today-next / live-games-next / hr-next: obsidian panels,
+ * emerald accent, mono micro-labels, square corners. Self-contained so the
+ * page never depends on another feature's stylesheet being loaded first.
+ *
+ * No page background is declared here on purpose. The body's obsidian plus the
+ * particle layer (GlobalAmbientBackdrop, mounted once in AppShell) is the
+ * background every surface renders on, Settings included.
+ */
+.settings-next {
+  position: relative;
+  z-index: 0;
+  color: var(--aurora-max-paper);
+  background: transparent;
+}
+
+/* Sharp corners. Tailwind's rounded-* utilities are spread across ~80 call
+   sites on this page; flattening them here keeps the markup readable and the
+   geometry consistent. `rounded-full` is exempt — the avatar, switches and
+   status pills are meant to be circular. */
+.settings-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
+  border-radius: 0 !important;
+}
+
+.settings-next .aurora-max-truth-badge {
+  border-radius: 0;
+}
+
+/* Section rail — horizontal on every breakpoint, scrollbar suppressed the way
+   the other Next surfaces do it. */
+.settings-next-rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.settings-next-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Field defaults, so the ~30 inputs on this page do not each carry a surface. */
+.settings-next :is(input, textarea, select) {
+  min-width: 0;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.settings-next :is(input, textarea, select):focus {
+  border-color: rgba(0, 217, 160, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 217, 160, 0.1);
+}

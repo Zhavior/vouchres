@@ -10,7 +10,7 @@ const MODES: Array<{ value: HrWatchMode; label: string }> = [
 const TIERS = [
   { key: 'Elite', label: 'Elite', color: 'text-amber-300 border-amber-400/30 bg-amber-400/10' },
   { key: 'Strong', label: 'Strong', color: 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10' },
-  { key: 'Watch', label: 'Watch', color: 'text-blue-300 border-blue-400/30 bg-blue-400/10' },
+  { key: 'Watch', label: 'Watch', color: 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10' },
   { key: 'Sleepers', label: 'Sleepers', color: 'text-violet-300 border-violet-400/30 bg-violet-400/10' },
 ];
 

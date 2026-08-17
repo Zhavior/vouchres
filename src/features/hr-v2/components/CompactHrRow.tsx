@@ -73,7 +73,7 @@ export const CompactHrRow = memo(function CompactHrRow({
         <PlayerHeadshot mlbId={data.identity?.mlbId} name={data.identity?.name || 'Player'} size={40} />
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm text-white group-hover:text-cyan-300 transition-colors">
+            <h3 className="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors">
               {data.identity?.name || 'Unknown Hitter'}
             </h3>
             <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-white/70">
@@ -124,7 +124,7 @@ export const CompactHrRow = memo(function CompactHrRow({
           <span
             className={`px-2.5 py-1 rounded font-bold transition-all ${
               sortBy === 'ev'
-                ? 'bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
+                ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
                 : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
             }`}
           >
@@ -160,7 +160,7 @@ export const CompactHrRow = memo(function CompactHrRow({
         <button
           type="button"
           onClick={handleQuickAdd}
-          className="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 text-cyan-300 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"
+          className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 text-emerald-300 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"
         >
           + SLIP
         </button>

@@ -31,3 +31,33 @@ export function canAccessThemeStore(profile?: AccessProfile | null): boolean {
       normalizedRole === "dev",
   );
 }
+
+export function canAccessHrNext(profile?: AccessProfile | null): boolean {
+  const normalizedRole = String(profile?.role || profile?.userRole || "").toLowerCase();
+  return Boolean(
+    profile?.isAdmin ||
+      profile?.admin ||
+      profile?.isStaff ||
+      profile?.staff ||
+      profile?.isDeveloper ||
+      normalizedRole === "admin" ||
+      normalizedRole === "staff" ||
+      normalizedRole === "developer" ||
+      normalizedRole === "dev",
+  );
+}
+
+/**
+ * Gate for admin-only surfaces — the Next pages (HR Next, Today Next, Live
+ * Games Next), Aurora HQ, Admin Ops, and the signed-in home resolution in
+ * `resolveSignedInHome`.
+ *
+ * Passes automatically on the dev server so local work never requires an
+ * `is_staff` row. `import.meta.env.DEV` is false in any production build, so
+ * deployments still require a real staff flag and the server's own
+ * `requireStaff` middleware is untouched either way.
+ */
+export function canAccessAdminSurfaces(profile?: AccessProfile | null): boolean {
+  if (isDevRuntime()) return true;
+  return canAccessHrNext(profile);
+}

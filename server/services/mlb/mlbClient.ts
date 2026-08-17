@@ -64,13 +64,50 @@ export function resetMlbRequestCount(): void {
  * Throws on upstream failure — never caches an empty slate that looks like
  * "no games today" when the MLB Stats API was actually down.
  */
+/**
+ * The schedule's probablePitcher hydration returns only id / fullName / link —
+ * no `pitchHand`, at any hydrate depth. Every consumer therefore saw throws
+ * "U", which silently flattened downstream handedness math onto a single
+ * bucket. One batched people lookup per schedule fetch fills it in; the call is
+ * inside the schedule cache, so it runs once per TTL, not per read.
+ */
+async function hydrateProbablePitcherHands(games: NormalizedGame[]): Promise<void> {
+  const unknown = new Map<number, NormalizedPitcher[]>();
+  for (const game of games) {
+    for (const pitcher of [game.probablePitchers.away, game.probablePitchers.home]) {
+      if (!pitcher?.pitcherId || pitcher.throws !== "U") continue;
+      const bucket = unknown.get(pitcher.pitcherId);
+      if (bucket) bucket.push(pitcher);
+      else unknown.set(pitcher.pitcherId, [pitcher]);
+    }
+  }
+  if (unknown.size === 0) return;
+
+  try {
+    const ids = Array.from(unknown.keys());
+    const data = await fetchJson<any>(`${BASE}/v1/people?personIds=${ids.join(",")}`);
+    for (const person of data?.people ?? []) {
+      const code = person?.pitchHand?.code;
+      if (code !== "L" && code !== "R") continue;
+      for (const pitcher of unknown.get(person.id) ?? []) {
+        pitcher.throws = code;
+      }
+    }
+  } catch (err) {
+    // A missing hand degrades the handedness layer; it must not lose the slate.
+    console.warn("[mlbClient] probable pitcher hand hydration failed:", (err as Error).message);
+  }
+}
+
 async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> {
   const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
   try {
     const data = await fetchJson<unknown>(url);
     const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
     for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
-    return games.map(normalizeGame);
+    const normalized = games.map(normalizeGame);
+    await hydrateProbablePitcherHands(normalized);
+    return normalized;
   } catch (err) {
     console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);
     throw err;

@@ -24,7 +24,7 @@ export default function StickyActions({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3 w-full lg:w-auto">
               <button
                 onClick={handleSimulateXPost}
-                className="ve-studio-touch-btn min-h-11 py-2.5 px-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-mono uppercase cursor-pointer"
+                className="ve-studio-touch-btn min-h-11 py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-mono uppercase cursor-pointer"
               >
                 <Share2 className="w-4 h-4 text-white shrink-0" />
                 <span className="truncate">Share to X</span>

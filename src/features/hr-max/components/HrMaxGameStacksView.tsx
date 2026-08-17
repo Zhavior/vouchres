@@ -125,7 +125,7 @@ export const HrMaxGameStacksView = React.memo(function HrMaxGameStacksView({
 
               <div className="flex items-center gap-3 text-[10px]">
                 {game.venue && (
-                  <span className="flex items-center gap-1 text-sky-300/80 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                  <span className="flex items-center gap-1 text-emerald-300/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                     <Wind className="h-3 w-3" /> {game.venue}
                   </span>
                 )}

@@ -65,7 +65,7 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
     return (
       <main className="min-h-screen bg-ve-obsidian px-4 py-10 text-slate-100">
         <div className="mx-auto flex min-h-[80vh] max-w-3xl items-center justify-center">
-          <div className="w-full rounded-3xl border border-sky-400/20 bg-slate-950/80 p-6 shadow-[0_0_60px_rgba(14,165,233,0.12)]">
+          <div className="w-full rounded-3xl border border-emerald-400/20 bg-slate-950/80 p-6 shadow-[0_0_60px_rgba(14,165,233,0.12)]">
             <div className="mb-4 inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-200">
               VouchEdge Stability Shield
             </div>
@@ -82,7 +82,7 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="rounded-xl bg-sky-400 px-4 py-2 text-sm font-black text-slate-950 hover:bg-sky-300"
+                className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950 hover:bg-emerald-300"
               >
                 Reload app
               </button>
@@ -90,7 +90,7 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
               <button
                 type="button"
                 onClick={this.handleBackHome}
-                className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-black text-slate-100 hover:border-sky-400/50"
+                className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-black text-slate-100 hover:border-emerald-400/50"
               >
                 {this.props.onBackHome ? 'Back Home' : 'Go to HR Board'}
               </button>

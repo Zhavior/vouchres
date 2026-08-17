@@ -189,7 +189,7 @@ export default function ParlayOsHistoryPanel() {
           <button
             type="button"
             onClick={handleRepairAllSaved}
-            className="shrink-0 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20 min-h-[2.75rem]"
+            className="shrink-0 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-emerald-200 hover:bg-emerald-500/20 min-h-[2.75rem]"
           >
             Repair saved lists
           </button>

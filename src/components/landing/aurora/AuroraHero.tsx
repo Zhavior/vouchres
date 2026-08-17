@@ -65,7 +65,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           <button
             type="button"
             onClick={onJoinBeta}
-            className="min-h-11 whitespace-nowrap rounded-xl bg-cyan-400 px-3.5 text-sm font-black text-[#031017] transition hover:bg-cyan-300 sm:px-4"
+            className="min-h-11 whitespace-nowrap rounded-xl bg-emerald-400 px-3.5 text-sm font-black text-[#031017] transition hover:bg-emerald-300 sm:px-4"
           >
             Join Beta
           </button>
@@ -82,7 +82,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="flex w-full flex-col text-center lg:text-left"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/90">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300/90">
             MLB research workspace
           </p>
 
@@ -99,7 +99,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             <button
               type="button"
               onClick={onJoinBeta}
-              className="group inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-7 text-base font-black text-[#03131a] shadow-[0_0_32px_-6px_rgba(34,211,238,0.55)] transition hover:brightness-110 sm:w-auto"
+              className="group inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-300 to-emerald-300 px-7 text-base font-black text-[#03131a] shadow-[0_0_32px_-6px_rgba(0,217,160,0.55)] transition hover:brightness-110 sm:w-auto"
             >
               Explore Today&apos;s MLB Board
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -107,7 +107,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             <button
               type="button"
               onClick={onViewDemo}
-              className="min-h-14 w-full rounded-2xl border border-white/15 px-6 text-base font-semibold text-white/90 transition hover:border-cyan-300/50 hover:bg-white/[0.05] hover:text-white sm:w-auto"
+              className="min-h-14 w-full rounded-2xl border border-white/15 px-6 text-base font-semibold text-white/90 transition hover:border-emerald-300/50 hover:bg-white/[0.05] hover:text-white sm:w-auto"
             >
               View a Real Research Example
             </button>

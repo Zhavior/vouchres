@@ -70,7 +70,7 @@ function SingleHrCard({
       <div className="flex items-start gap-3">
         <div className="relative shrink-0">
           {headshot ? (
-            <img src={headshot} alt="" className="h-10 w-10 rounded-xl border border-cyan-300/20 object-cover" loading="lazy" />
+            <img src={headshot} alt="" className="h-10 w-10 rounded-xl border border-emerald-300/20 object-cover" loading="lazy" />
           ) : (
             <div className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-900 text-[10px] font-black text-slate-500">
               HR
@@ -91,7 +91,7 @@ function SingleHrCard({
           <p className="mt-1 text-xs text-slate-300">{pick.customSpec}</p>
           <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400 italic">{pick.reason}</p>
           <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-mono">
-            <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-cyan-200">
+            <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-emerald-200">
               Model {hrPct}
             </span>
             <span className="rounded-full border border-slate-700 px-2 py-0.5 text-slate-400">
@@ -265,7 +265,7 @@ export function VaiParlayCommandDeck({
                   subColor = stat.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400';
                 } else if (stat.pending > 0) {
                   sub = 'Live';
-                  subColor = 'text-cyan-400';
+                  subColor = 'text-emerald-400';
                 }
               }
 
@@ -276,7 +276,7 @@ export function VaiParlayCommandDeck({
                   onClick={() => setSelectedYmd(ymd)}
                   className={`relative min-w-[58px] shrink-0 rounded-xl border px-2 py-2 text-center transition ${
                     isSelected
-                      ? 'border-cyan-400/40 bg-cyan-500/10'
+                      ? 'border-emerald-400/40 bg-emerald-500/10'
                       : isCurrentDay
                         ? 'border-amber-400/30 bg-amber-500/5'
                         : 'border-slate-800 bg-slate-950/70 hover:border-slate-600'
@@ -329,7 +329,7 @@ export function VaiParlayCommandDeck({
 
       <section className="space-y-3">
         <header className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-cyan-300" />
+          <Layers className="h-4 w-4 text-emerald-300" />
           <h4 className="text-sm font-black uppercase tracking-wide text-white">2 triple parlays</h4>
         </header>
         <div className="grid gap-2 md:grid-cols-2">

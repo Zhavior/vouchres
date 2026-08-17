@@ -210,13 +210,13 @@ export default function SmartParlaySlipCard({
               <button
                 type="button"
                 onClick={onViewProof}
-                className="inline-flex text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 mt-1 min-h-[2rem]"
+                className="inline-flex text-[10px] font-bold uppercase tracking-wide text-emerald-300 hover:text-emerald-200 mt-1 min-h-[2rem]"
               >
                 View proof
               </button>
             ) : null}
             {slip.slipProgress ? (
-              <p className="text-[10px] text-cyan-300/80 font-mono mt-1 tabular-nums">
+              <p className="text-[10px] text-emerald-300/80 font-mono mt-1 tabular-nums">
                 Live: {slip.slipProgress.label} ({slip.slipProgress.current}/{slip.slipProgress.target})
               </p>
             ) : null}
@@ -252,7 +252,7 @@ export default function SmartParlaySlipCard({
           <button
             type="button"
             onClick={onViewStructure}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/45 transition hover:border-cyan-500/40 hover:text-cyan-300 min-h-[2.75rem]"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/45 transition hover:border-emerald-500/40 hover:text-emerald-300 min-h-[2.75rem]"
           >
             <GitBranch className="h-3 w-3" />
             View Structure

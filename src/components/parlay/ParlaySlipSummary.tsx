@@ -8,7 +8,7 @@ export type BuilderMode = 'safe' | 'balanced' | 'moonshot';
 
 const MODES: { key: BuilderMode; label: string; sub: string; color: string }[] = [
   { key: 'safe', label: 'Safe', sub: '2 legs · shorter odds', color: '#34d399' },
-  { key: 'balanced', label: 'Balanced', sub: '3 legs · mixed', color: '#22d3ee' },
+  { key: 'balanced', label: 'Balanced', sub: '3 legs · mixed', color: '#00d9a0' },
   { key: 'moonshot', label: 'Moonshot', sub: '4+ legs · high risk', color: '#fb923c' },
 ];
 

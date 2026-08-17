@@ -20,7 +20,7 @@ const STATUS_ORDER = ['WON', 'LOST', 'PENDING', 'VOID'] as const;
 const STATUS_COLOR: Record<string, string> = {
   WON: '#34d399',
   LOST: '#f87171',
-  PENDING: '#22d3ee',
+  PENDING: '#00d9a0',
   VOID: '#94a3b8',
 };
 

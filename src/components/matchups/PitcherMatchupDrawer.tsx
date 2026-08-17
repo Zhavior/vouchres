@@ -139,8 +139,8 @@ function StatPill({ label, value }: { label: string; value: string | number | nu
 function EmptyState({ title, detail }: { title: string; detail: string }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.065] via-slate-950/70 to-emerald-950/15 p-7 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/45 to-transparent" />
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-300/20 bg-sky-300/10 text-sky-100">
+      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/45 to-transparent" />
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10 text-emerald-100">
         <Database className="h-5 w-5" />
       </div>
       <div className="mt-4 text-lg font-black text-slate-100">{title}</div>
@@ -523,13 +523,13 @@ export default function PitcherMatchupDrawer({
         aria-modal="true"
         aria-label="Pitcher matchup drawer"
       >
-        <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_18%_0%,rgba(52,211,153,0.18),transparent_34%),radial-gradient(circle_at_92%_6%,rgba(56,189,248,0.14),transparent_32%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(7,7,19,0.98)_52%,rgba(20,12,44,0.96))] p-4 sm:p-5">
+        <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_18%_0%,rgba(52,211,153,0.18),transparent_34%),radial-gradient(circle_at_92%_6%,rgba(0,217,160,0.14),transparent_32%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(7,7,19,0.98)_52%,rgba(20,12,44,0.96))] p-4 sm:p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/55 to-transparent" />
-          <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl" />
 
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="relative rounded-full bg-gradient-to-br from-emerald-300/40 via-sky-300/25 to-violet-300/20 p-1 shadow-[0_0_45px_rgba(52,211,153,0.18)]">
+              <div className="relative rounded-full bg-gradient-to-br from-emerald-300/40 via-emerald-300/25 to-violet-300/20 p-1 shadow-[0_0_45px_rgba(52,211,153,0.18)]">
                 <PlayerHeadshot
                   name={data?.pitcher.name ?? pitcherName ?? 'Pitcher'}
                   playerId={pitcherId}
@@ -615,7 +615,7 @@ export default function PitcherMatchupDrawer({
               {data.warnings.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {data.warnings.map((warning) => (
-                    <span key={warning} className="rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-sky-100">
+                    <span key={warning} className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-emerald-100">
                       {warning}
                     </span>
                   ))}

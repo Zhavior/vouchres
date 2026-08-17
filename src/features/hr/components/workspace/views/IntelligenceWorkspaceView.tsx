@@ -30,7 +30,7 @@ export default function IntelligenceWorkspaceView({ rows }: Props) {
   return (
     <section className="space-y-8">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
           Intelligence Workspace
         </p>
 
@@ -44,10 +44,10 @@ export default function IntelligenceWorkspaceView({ rows }: Props) {
         </p>
       </header>
 
-      <section className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-zinc-950 p-8">
+      <section className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-zinc-950 p-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
               Top Recommendation
             </p>
 

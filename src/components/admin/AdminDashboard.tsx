@@ -136,9 +136,9 @@ const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: LucideIcon }> = [
 ];
 
 const PANEL = `rounded-lg ${AURORA_PANEL_PREMIUM}`;
-const INPUT = 'w-full rounded-md border border-white/10 bg-black/35 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400';
+const INPUT = 'w-full rounded-md border border-white/10 bg-black/35 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400';
 const BUTTON = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45';
-const PRIMARY_BUTTON = `${BUTTON} border-indigo-400/40 bg-indigo-500/20 text-indigo-100 hover:bg-indigo-500/30`;
+const PRIMARY_BUTTON = `${BUTTON} border-emerald-400/40 bg-emerald-500/20 text-emerald-100 hover:bg-emerald-500/30`;
 const DANGER_BUTTON = `${BUTTON} border-rose-400/35 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20`;
 
 function errorMessage(error: unknown) {
@@ -224,7 +224,7 @@ export function AdminDashboard() {
               aria-current={activeTab === id ? 'page' : undefined}
               className={`inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors ${
                 activeTab === id
-                  ? 'border-indigo-400/40 bg-indigo-500/15 text-indigo-100'
+                  ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
                   : 'border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white'
               }`}
             >
@@ -747,7 +747,7 @@ function GradingPanel() {
     <div className="space-y-5">
       <section className={`${PANEL} p-4 sm:p-5`}>
         <div className="flex items-start gap-3">
-          <FileText className="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
+          <FileText className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
           <div>
             <h2 className="text-base font-semibold text-white">Manual pick grading</h2>
             <p className="mt-1 max-w-2xl text-sm text-white/55">Checks pending picks from the past three days. A dry run performs the same checks without writing results.</p>
@@ -874,7 +874,7 @@ function HrResearchLab() {
               <tbody className="divide-y divide-white/5">
                 {research.production.topCandidates.length ? research.production.topCandidates.map((candidate) => <tr key={`${candidate.gamePk}-${candidate.playerName}`}>
                   <td className="px-4 py-3"><p className="font-medium text-white">{candidate.playerName}</p><p className="text-xs text-white/40">{candidate.team}{candidate.opponent ? ` vs ${candidate.opponent}` : ''} · {candidate.riskTier}</p></td>
-                  <td className="px-4 py-3 font-semibold text-indigo-100">{candidate.hrScore}</td>
+                  <td className="px-4 py-3 font-semibold text-emerald-100">{candidate.hrScore}</td>
                   <td className="px-4 py-3">{candidate.estimatedHrProbability == null ? 'Not available' : `${(candidate.estimatedHrProbability * 100).toFixed(1)}%`}</td>
                   <td className="px-4 py-3">{Number.isFinite(candidate.dataConfidence) ? `${Math.round(candidate.dataConfidence * 100)}%` : 'Unknown'}</td>
                   <td className="px-4 py-3"><span className="rounded-full border border-white/10 px-2 py-1 text-xs">{candidate.lineupStatus} · {candidate.dataQuality}</span></td>

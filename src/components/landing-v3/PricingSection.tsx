@@ -25,7 +25,7 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-10 h-72 w-[min(90vw,52rem)] -translate-x-1/2 rounded-full bg-cyan-500/[0.07] blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-10 h-72 w-[min(90vw,52rem)] -translate-x-1/2 rounded-full bg-emerald-500/[0.07] blur-3xl"
       />
 
       <div className="relative mx-auto max-w-4xl px-6">
@@ -36,7 +36,7 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
           transition={{ duration: 0.45 }}
           className="text-center"
         >
-          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
             MLB Research Beta
           </span>
 
@@ -56,13 +56,13 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="mt-10 overflow-hidden rounded-[26px] border border-cyan-300/20 bg-gradient-to-b from-cyan-400/[0.09] to-ve-obsidian/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.8)]"
+          className="mt-10 overflow-hidden rounded-[26px] border border-emerald-300/20 bg-gradient-to-b from-emerald-400/[0.09] to-ve-obsidian/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.8)]"
         >
           <div className="grid gap-8 p-7 sm:p-9 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:items-center">
             <div>
               <div className="flex items-center gap-2">
-                <Sparkles aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-200">
+                <Sparkles aria-hidden="true" className="h-4 w-4 text-emerald-300" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-200">
                   {FREE_BETA_ALL_ACCESS ? "Free open beta" : "VouchEdge Beta"}
                 </span>
               </div>
@@ -84,7 +84,7 @@ export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
               <button
                 type="button"
                 onClick={onJoinBeta}
-                className="group mt-6 flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-6 text-base font-black text-[#03131a] shadow-[0_0_32px_-8px_rgba(34,211,238,0.6)] transition hover:brightness-110"
+                className="group mt-6 flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-300 to-emerald-300 px-6 text-base font-black text-[#03131a] shadow-[0_0_32px_-8px_rgba(0,217,160,0.6)] transition hover:brightness-110"
               >
                 {FREE_BETA_ALL_ACCESS ? "Join the MLB Research Beta" : "Start 7-day free trial"}
                 <ArrowRight

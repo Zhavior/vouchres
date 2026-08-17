@@ -40,8 +40,8 @@ interface HrSpreadsheetProps {
 
 const TIER_STYLES: Record<HrTableTier, string> = {
   Elite: 'border-[#00ff94]/35 bg-[#00ff94]/10 text-[#75ffc5]',
-  Strong: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200',
-  Watch: 'border-sky-300/20 bg-sky-300/[0.07] text-sky-100',
+  Strong: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
+  Watch: 'border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-100',
   Sleeper: 'border-amber-300/25 bg-amber-300/[0.08] text-amber-200',
 };
 
@@ -52,7 +52,6 @@ const TRUTH_STYLES: Record<HrWatchRow['truthStatus'], string> = {
   unknown: 'text-white/55',
 };
 
-const ALL_SLATE_INITIAL_GROUPS = 3;
 
 function numberLabel(value: number | null | undefined): string {
   return value == null || !Number.isFinite(value) ? '-' : String(Math.round(value));
@@ -412,7 +411,6 @@ export function HrSpreadsheet({
   // and every sticky table header at once, making ordinary reverse scrolling
   // look like the page was streaming chunks back in.
   const [selectedGameKey, setSelectedGameKey] = useState<string | null>(null);
-  const [allSlatePageIndex, setAllSlatePageIndex] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
   const matchupRailRef = useRef<HTMLDivElement | null>(null);
   const selectedGameIndex = groups.findIndex((group) => group.key === selectedGameKey);
@@ -423,16 +421,7 @@ export function HrSpreadsheet({
       : groups[0] ?? null;
   const activeGameIndex = activeGroup ? groups.indexOf(activeGroup) : -1;
   const activeGameKey = activeGroup?.key ?? 'all';
-  // "All slate" is an explicit browsing mode, but it must not recreate the
-  // giant one-shot DOM surface that caused reverse-scroll hitching. Page the
-  // matchup groups instead of letting each request accumulate more DOM.
-  const allSlatePageCount = Math.max(1, Math.ceil(groups.length / ALL_SLATE_INITIAL_GROUPS));
-  const allSlatePage = Math.min(allSlatePageIndex, allSlatePageCount - 1);
-  const allSlateStart = allSlatePage * ALL_SLATE_INITIAL_GROUPS;
-  const visibleGroups = activeGroup
-    ? [activeGroup]
-    : groups.slice(allSlateStart, allSlateStart + ALL_SLATE_INITIAL_GROUPS);
-  const allSlateEnd = allSlateStart + visibleGroups.length;
+  const visibleGroups = activeGroup ? [activeGroup] : groups;
   const showMarket = useMemo(() => rows.some(hasMarketData), [rows]);
   // Only the table that is actually on screen gets built. Rendering both and
   // hiding one with `lg:hidden` mounted a second full table — on a 350-row
@@ -582,7 +571,6 @@ export function HrSpreadsheet({
               type="button"
               data-matchup-key="all"
               onClick={() => {
-                setAllSlatePageIndex(0);
                 setSelectedGameKey('all');
               }}
               aria-pressed={activeGameKey === 'all'}
@@ -659,34 +647,9 @@ export function HrSpreadsheet({
         </section>
       ) : null}
 
-      {activeGameKey === 'all' && allSlatePageCount > 1 ? (
-        <div className="flex flex-col items-start gap-2 border border-white/[0.11] bg-black/25 p-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-white/55">
-            Showing matchups {allSlateStart + 1}-{allSlateEnd} of {groups.length} to keep the board responsive.
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={allSlatePage === 0}
-              onClick={() => setAllSlatePageIndex((current) => Math.max(0, current - 1))}
-              className="border border-white/15 bg-black/30 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-white/70 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              Previous matchups
-            </button>
-            <button
-              type="button"
-              disabled={allSlatePage >= allSlatePageCount - 1}
-              onClick={() => setAllSlatePageIndex((current) => Math.min(allSlatePageCount - 1, current + 1))}
-              className="border border-[#00f0ff]/35 bg-[#00f0ff]/[0.07] px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-[#75efff] transition hover:border-[#00f0ff]/65 hover:bg-[#00f0ff]/[0.14] disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              Next matchups
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {visibleGroups.map((group) => (
-        <article key={group.key} className="aurora-max-panel overflow-hidden border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+        <article key={group.key} style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }} className="aurora-max-panel overflow-hidden border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
           <header className="relative overflow-hidden border-b border-white/[0.14] bg-[linear-gradient(105deg,rgba(0,255,148,0.065),rgba(0,0,0,0.22)_48%,rgba(0,240,255,0.055))] px-3 py-2.5 sm:px-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">

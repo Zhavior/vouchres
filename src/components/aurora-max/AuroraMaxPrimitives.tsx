@@ -6,9 +6,9 @@ export type AuroraMaxTruthState = 'confirmed' | 'live' | 'projected' | 'warning'
 export function AuroraMaxProductMark() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="relative grid h-8 w-8 place-items-center border border-[#a8d8b6]/35 bg-[#0d2318]">
+      <div className="relative grid h-8 w-8 place-items-center border border-[#a8d8b6]/35 bg-[rgba(13,35,24,0.9)]">
         <span className="absolute inset-[5px] rotate-45 border border-[#a8d8b6]/65" />
-        <span className="h-1.5 w-1.5 rounded-full bg-[#a8d8b6]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--aurora-max-emerald)]" />
       </div>
       <div>
         <p className="text-[13px] font-black tracking-[-0.02em] text-[var(--aurora-max-paper)]">VOUCHEDGE</p>

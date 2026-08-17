@@ -84,8 +84,8 @@ export default function Hero<TPlayer extends Record<string, unknown>>({
     : [];
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-zinc-950 p-6 shadow-2xl">
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5" />
+    <section className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-zinc-950 p-6 shadow-2xl">
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-emerald-500/5" />
 
       <div className="relative space-y-6">
         <HeroHeader player={player} analysis={analysis} />
@@ -104,7 +104,7 @@ export default function Hero<TPlayer extends Record<string, unknown>>({
             <div className="text-xs uppercase text-zinc-500">
               Confidence
             </div>
-            <div className="mt-2 text-2xl font-bold text-cyan-300">
+            <div className="mt-2 text-2xl font-bold text-emerald-300">
               {formatPercentage(analysis.confidence)}
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function Hero<TPlayer extends Record<string, unknown>>({
             {evidence.map((item) => (
               <div
                 key={item.key}
-                className="rounded-full border border-cyan-500/15 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-200"
+                className="rounded-full border border-emerald-500/15 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-200"
               >
                 {item.label}
               </div>

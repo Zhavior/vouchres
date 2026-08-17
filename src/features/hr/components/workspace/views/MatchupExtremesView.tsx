@@ -141,10 +141,10 @@ const EXTREME_DEFINITIONS: ExtremeDefinition[] = [
 
 const TONE_CLASSES = {
   cyan: {
-    border: "border-cyan-400/20 hover:border-cyan-300/45",
-    glow: "bg-cyan-400/10 text-cyan-200 ring-cyan-300/20",
-    label: "text-cyan-300",
-    value: "text-cyan-100",
+    border: "border-emerald-400/20 hover:border-emerald-300/45",
+    glow: "bg-emerald-400/10 text-emerald-200 ring-emerald-300/20",
+    label: "text-emerald-300",
+    value: "text-emerald-100",
   },
   emerald: {
     border: "border-emerald-400/20 hover:border-emerald-300/45",
@@ -404,7 +404,7 @@ function ExtremeCard({
             <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-600">
               Confidence
             </p>
-            <p className="mt-1 text-xs font-semibold text-cyan-200">
+            <p className="mt-1 text-xs font-semibold text-emerald-200">
               {confidence === null ? "Pending" : `${Math.round(confidence)}%`}
             </p>
           </div>
@@ -600,7 +600,7 @@ export default function MatchupExtremesView({ rows, getHrResult }: Props) {
       <AuroraMaxPanel className="relative overflow-hidden p-6 sm:p-8">
 
         <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
             Today&apos;s read
           </p>
 

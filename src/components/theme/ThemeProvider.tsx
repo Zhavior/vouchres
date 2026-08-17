@@ -48,7 +48,7 @@ function findTheme(themeId: string | null | undefined): VisualTheme | null {
 
 /** Derives the cosmetic-only var set for a theme. Nothing outside THEME_COSMETIC_VARS. */
 function applyThemeAccent(root: HTMLElement, theme: VisualTheme) {
-  // theme.borderColor is a Tailwind class (e.g. "border-cyan-300/30"), not a CSS
+  // theme.borderColor is a Tailwind class (e.g. "border-emerald-300/30"), not a CSS
   // value, so the border/glow vars are derived from the resolved accent instead.
   const { accent, glow } = resolveThemeAccent(theme.accentText);
   const values: Record<(typeof THEME_COSMETIC_VARS)[number], string> = {
@@ -85,10 +85,10 @@ function resolveThemeAccent(accentText: string): { accent: string; glow: string 
   }
   // token -> [accentHex, glowRgba]
   const map: Record<string, [string, string]> = {
-    cyan: ['#22d3ee', 'rgba(34,211,238,0.3)'],
-    sky: ['#7dd3fc', 'rgba(125,211,252,0.3)'],
-    blue: ['#3b82f6', 'rgba(59,130,246,0.3)'],
-    indigo: ['#6366f1', 'rgba(99,102,241,0.3)'],
+    cyan: ['#00d9a0', 'rgba(0,217,160,0.3)'],
+    sky: ['#6ee7b7', 'rgba(125,211,252,0.3)'],
+    blue: ['#10b981', 'rgba(16,185,129,0.3)'],
+    indigo: ['#10b981', 'rgba(99,102,241,0.3)'],
     violet: ['#a78bfa', 'rgba(167,139,250,0.32)'],
     purple: ['#a855f7', 'rgba(168,85,247,0.3)'],
     fuchsia: ['#e879f9', 'rgba(232,121,249,0.3)'],
@@ -110,7 +110,7 @@ function resolveThemeAccent(accentText: string): { accent: string; glow: string 
       return { accent: map[token][0], glow: map[token][1] };
     }
   }
-  return { accent: '#22d3ee', glow: 'rgba(34,211,238,0.3)' };
+  return { accent: '#00d9a0', glow: 'rgba(0,217,160,0.3)' };
 }
 
 interface ThemeProviderProps {
@@ -209,7 +209,7 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   // CSS selectors still consume it; only the cosmetic accent layer varies.
   useEffect(() => {
     const root = document.documentElement;
-    root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
+    root.style.fontFamily = 'var(--font-sans)';
     root.setAttribute('data-vouchedge-system', 'aurora');
     root.setAttribute('data-aurora-generation', 'max');
     root.setAttribute('data-theme', 'z8-premium');

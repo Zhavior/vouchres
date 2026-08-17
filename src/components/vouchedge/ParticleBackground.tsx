@@ -43,7 +43,7 @@ export default function ParticleBackground() {
       {/* Glow orbs */}
       <div
         className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[120px]"
-        style={{ background: "rgba(34,211,238,0.08)" }}
+        style={{ background: "rgba(0,217,160,0.08)" }}
       />
       <div
         className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full blur-[120px]"
@@ -55,10 +55,10 @@ export default function ParticleBackground() {
         className="absolute bottom-0 left-0 right-0 h-[60%]"
         style={{
           backgroundImage: `
-            linear-gradient(45deg, rgba(34,211,238,0.04) 1px, transparent 1px),
-            linear-gradient(-45deg, rgba(34,211,238,0.04) 1px, transparent 1px),
-            linear-gradient(to right, rgba(34,211,238,0.03) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(34,211,238,0.03) 1px, transparent 1px)
+            linear-gradient(45deg, rgba(0,217,160,0.04) 1px, transparent 1px),
+            linear-gradient(-45deg, rgba(0,217,160,0.04) 1px, transparent 1px),
+            linear-gradient(to right, rgba(0,217,160,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,217,160,0.03) 1px, transparent 1px)
           `,
           backgroundSize: "80px 80px, 80px 80px, 40px 40px, 40px 40px",
           transform: "perspective(600px) rotateX(65deg) translateY(20%)",
@@ -79,8 +79,8 @@ export default function ParticleBackground() {
             top: `${d.top}%`,
             width: d.size,
             height: d.size,
-            background: "rgba(34,211,238,0.5)",
-            boxShadow: "0 0 4px rgba(34,211,238,0.6)",
+            background: "rgba(0,217,160,0.5)",
+            boxShadow: "0 0 4px rgba(0,217,160,0.6)",
             animation: `ve-twinkle ${d.duration}s ease-in-out ${d.delay}s infinite`,
           }}
         />
@@ -95,7 +95,7 @@ export default function ParticleBackground() {
             top: `${l.top}%`,
             left: 0,
             width: `${l.width}px`,
-            background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.2), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(0,217,160,0.2), transparent)",
             animation: `ve-line-drift ${l.duration}s linear ${l.delay}s infinite`,
           }}
         />

@@ -51,7 +51,7 @@ export default function HeroScore({ analysis }: Props) {
 
           <defs>
             <linearGradient id="scoreGradient">
-              <stop offset="0%" stopColor="#06b6d4"/>
+              <stop offset="0%" stopColor="#10b981"/>
               <stop offset="100%" stopColor="#f59e0b"/>
             </linearGradient>
           </defs>

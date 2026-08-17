@@ -26,7 +26,7 @@ function legTruthState(status: LegGradeStatus): AuroraMaxTruthState {
 }
 
 function statusColor(token: string): string {
-  if (token === '--ve-accent-cyan') return '#4fb8dc';
+  if (token === '--ve-accent-cyan') return '#00d9a0';
   if (token === '--ve-accent-gold') return '#d99c4a';
   if (token === '--ve-accent-pink' || token === '--ve-accent-violet') return '#00d9a0';
   return `hsl(var(${token}))`;
@@ -121,11 +121,11 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
               <p className={`font-bold text-white truncate ${compact ? "text-xs" : "text-sm"}`}>{displayName}</p>
               <p className="text-[10px] text-white/45 truncate">{leg.marketLabel}</p>
               {leg.gameLabel ? (
-                <p className="text-[9px] text-cyan-300/50 truncate mt-0.5">{leg.gameLabel}</p>
+                <p className="text-[9px] text-emerald-300/50 truncate mt-0.5">{leg.gameLabel}</p>
               ) : null}
             </div>
             <div className="text-right shrink-0 flex flex-col items-end gap-1">
-              <span className="text-sm font-mono font-black text-cyan-300 tabular-nums">{oddsLabel}</span>
+              <span className="text-sm font-mono font-black text-emerald-300 tabular-nums">{oddsLabel}</span>
               {auroraMax ? (
                 <AuroraMaxTruthBadge state={legTruthState(legStatus)}>{legMeta.label}</AuroraMaxTruthBadge>
               ) : (
@@ -138,7 +138,7 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
                   <button
                     type="button"
                     onClick={onEdit}
-                    className="text-[9px] text-cyan-300/70 hover:text-cyan-200 uppercase tracking-wide min-h-[1.5rem]"
+                    className="text-[9px] text-emerald-300/70 hover:text-emerald-200 uppercase tracking-wide min-h-[1.5rem]"
                   >
                     Edit
                   </button>
@@ -157,14 +157,14 @@ const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
           </div>
 
           {progress ? (
-            <div className={`mt-2 bg-black/35 border border-cyan-500/15 p-2 ${auroraMax ? '' : 'rounded-lg'}`}>
-              <div className="flex justify-between text-[9px] font-mono text-cyan-200/80 mb-1">
+            <div className={`mt-2 bg-black/35 border border-emerald-500/15 p-2 ${auroraMax ? '' : 'rounded-lg'}`}>
+              <div className="flex justify-between text-[9px] font-mono text-emerald-200/80 mb-1">
                 <span>{progress.label}</span>
                 <span className="tabular-nums">{progress.current}/{progress.target}</span>
               </div>
               <div className="h-1.5 rounded-full bg-black/50 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-emerald-300 transition-all"
+                  className="h-full bg-gradient-to-r from-emerald-400 via-emerald-400 to-emerald-300 transition-all"
                   style={{ width: `${Math.min(100, (progress.current / progress.target) * 100)}%` }}
                 />
               </div>

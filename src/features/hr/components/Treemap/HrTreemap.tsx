@@ -23,7 +23,7 @@ type MapMode = 'players' | 'teams';
 
 const TIER_COLOR: Record<string, string> = {
   Elite: '#fcd34d',
-  Strong: '#67e8f9',
+  Strong: '#6ee7b7',
   Watch: '#cbd5e1',
   Sleepers: '#c4b5fd',
 };
@@ -106,7 +106,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
     <section className="z8-hr-map overflow-hidden rounded-2xl border border-white/[0.08] bg-[#050a0d] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-label="HR signal map">
       <header className="flex flex-col gap-3 border-b border-white/[0.07] bg-white/[0.025] px-4 py-3 sm:flex-row sm:items-center">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-400">Visual intelligence</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-400">Visual intelligence</p>
           <h2 className="mt-0.5 text-base font-black uppercase tracking-tight text-white">HR Signal Map</h2>
         </div>
 
@@ -115,7 +115,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
             type="button"
             onClick={() => setMapMode('players')}
             aria-pressed={mapMode === 'players'}
-            className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${mapMode === 'players' ? 'bg-cyan-400/15 text-cyan-200 ring-1 ring-cyan-400/30' : 'text-zinc-300 hover:text-white'}`}
+            className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${mapMode === 'players' ? 'bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-400/30' : 'text-zinc-300 hover:text-white'}`}
           >
             <UserRound size={14} /> Players
           </button>
@@ -123,7 +123,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
             type="button"
             onClick={() => setMapMode('teams')}
             aria-pressed={mapMode === 'teams'}
-            className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${mapMode === 'teams' ? 'bg-cyan-400/15 text-cyan-200 ring-1 ring-cyan-400/30' : 'text-zinc-300 hover:text-white'}`}
+            className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${mapMode === 'teams' ? 'bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-400/30' : 'text-zinc-300 hover:text-white'}`}
           >
             <Shield size={14} /> Teams
           </button>
@@ -168,7 +168,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
             </linearGradient>
             <linearGradient id="grad-strong" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.1" />
             </linearGradient>
             <linearGradient id="grad-watch" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#f1f5f9" stopOpacity="0.3" />
@@ -211,7 +211,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
                     rx={8}
                     fill={hasHit ? 'url(#hr-hit-fill)' : '#00f0ff'}
                     fillOpacity={hasHit ? 0.92 : isSelected ? 0.25 : 0.12}
-                    stroke={hasHit ? '#ffedd5' : isSelected ? '#67e8f9' : '#22d3ee'}
+                    stroke={hasHit ? '#ffedd5' : isSelected ? '#6ee7b7' : '#00d9a0'}
                     strokeOpacity={hasHit || isSelected ? 0.95 : 0.5}
                     strokeWidth={hasHit ? 4 : isSelected ? 3 : 1.5}
                     filter={hasHit ? 'url(#hr-hit-glow)' : undefined}
@@ -307,7 +307,7 @@ export const HrTreemap: React.FC<HrTreemapProps> = ({ buckets, onSelectPlayer, g
                   key={row.stableId}
                   type="button"
                   onClick={() => onSelectPlayer(row)}
-                  className={`flex min-h-14 items-center gap-3 rounded-xl border px-3 text-left transition-colors ${isHit ? 'border-orange-300/60 bg-orange-400/15 hover:bg-orange-400/20' : 'border-white/[0.07] bg-black/25 hover:border-cyan-400/35 hover:bg-cyan-400/[0.06]'}`}
+                  className={`flex min-h-14 items-center gap-3 rounded-xl border px-3 text-left transition-colors ${isHit ? 'border-orange-300/60 bg-orange-400/15 hover:bg-orange-400/20' : 'border-white/[0.07] bg-black/25 hover:border-emerald-400/35 hover:bg-emerald-400/[0.06]'}`}
                 >
                   {row.headshotUrl ? <img src={row.headshotUrl} alt="" className="h-11 w-11 rounded-lg bg-white/[0.04] object-contain object-center" /> : null}
                   <span className="min-w-0 flex-1">

@@ -72,7 +72,7 @@ export default function VouchAiChatSurface({
 
   const userBubble = isIsland
     ? "ml-auto border border-vouch-cyan/25 bg-vouch-cyan/10 text-white"
-    : "bg-sky-600 text-white rounded-tr-none shadow shadow-sky-600/20";
+    : "bg-emerald-600 text-white rounded-tr-none shadow shadow-emerald-600/20";
 
   const agentBubble = isIsland
     ? "mr-auto glass-panel glass-border text-white/80"
@@ -83,19 +83,19 @@ export default function VouchAiChatSurface({
 
   const quickBtn = isIsland
     ? "glass-panel glass-border inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-vouch-cyan transition hover:border-vouch-cyan/40 shrink-0 uppercase"
-    : "px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-sky-400 border border-slate-800 hover:border-sky-900 rounded-full shrink-0 flex items-center gap-1 uppercase transition-all text-[9px] font-bold";
+    : "px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 border border-slate-800 hover:border-emerald-900 rounded-full shrink-0 flex items-center gap-1 uppercase transition-all text-[9px] font-bold";
 
   const featureBtn = isIsland
     ? "p-2 glass-panel glass-border rounded-xl text-left transition-colors flex items-center gap-2 group hover:border-vouch-cyan/40"
-    : "p-2 bg-slate-950 hover:bg-sky-950/40 border border-slate-800 hover:border-sky-500/30 rounded-xl text-left transition-colors flex items-center gap-2 group";
+    : "p-2 bg-slate-950 hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/30 rounded-xl text-left transition-colors flex items-center gap-2 group";
 
   const inputClass = isIsland
     ? "glass-panel glass-border min-w-0 flex-1 rounded-2xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/40 focus:outline-none"
-    : "flex-1 bg-slate-950 text-white rounded-xl border border-slate-800 px-3.5 py-2.5 outline-none focus:border-sky-500 font-medium placeholder-slate-500 text-xs";
+    : "flex-1 bg-slate-950 text-white rounded-xl border border-slate-800 px-3.5 py-2.5 outline-none focus:border-emerald-500 font-medium placeholder-slate-500 text-xs";
 
   const sendBtn = isIsland
     ? "grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-vouch-cyan/35 bg-vouch-cyan/15 text-vouch-cyan transition hover:bg-vouch-cyan/25 disabled:opacity-40"
-    : "p-2.5 bg-gradient-to-tr from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl active:scale-90 transition-all font-bold cursor-pointer shrink-0";
+    : "p-2.5 bg-gradient-to-tr from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white rounded-xl active:scale-90 transition-all font-bold cursor-pointer shrink-0";
 
   return (
     <>
@@ -123,14 +123,14 @@ export default function VouchAiChatSurface({
               {m.type === "feature_list" && (
                 <div className={`mt-3.5 grid grid-cols-2 gap-2 pt-2 ${isIsland ? "" : "border-t border-slate-800"}`}>
                   <button type="button" onClick={() => handleExplainFeature("build")} className={featureBtn}>
-                    <Sliders className={`w-4 h-4 shrink-0 ${isIsland ? "text-vouch-cyan" : "text-sky-400"}`} />
-                    <span className={`text-[10px] font-bold ${isIsland ? "text-white/70 group-hover:text-vouch-cyan" : "text-slate-300 group-hover:text-sky-400"}`}>
+                    <Sliders className={`w-4 h-4 shrink-0 ${isIsland ? "text-vouch-cyan" : "text-emerald-400"}`} />
+                    <span className={`text-[10px] font-bold ${isIsland ? "text-white/70 group-hover:text-vouch-cyan" : "text-slate-300 group-hover:text-emerald-400"}`}>
                       Explain Parlay Lab
                     </span>
                   </button>
                   <button type="button" onClick={() => handleExplainFeature("ai_engine")} className={featureBtn}>
-                    <Cpu className={`w-4 h-4 shrink-0 ${isIsland ? "text-vouch-cyan" : "text-indigo-400"}`} />
-                    <span className={`text-[10px] font-bold ${isIsland ? "text-white/70 group-hover:text-vouch-cyan" : "text-slate-300 group-hover:text-indigo-400"}`}>
+                    <Cpu className={`w-4 h-4 shrink-0 ${isIsland ? "text-vouch-cyan" : "text-emerald-400"}`} />
+                    <span className={`text-[10px] font-bold ${isIsland ? "text-white/70 group-hover:text-vouch-cyan" : "text-slate-300 group-hover:text-emerald-400"}`}>
                       Explain V.A.I Picks
                     </span>
                   </button>
@@ -153,7 +153,7 @@ export default function VouchAiChatSurface({
                 <div className={`mt-3.5 space-y-2.5 pt-3.5 ${isIsland ? "" : "border-t border-slate-800"}`}>
                   <div className={`flex justify-between items-center px-2 py-1.5 rounded-lg border ${isIsland ? "glass-panel glass-border" : "bg-slate-950 border-slate-800"}`}>
                     <span className="text-[9px] font-mono tracking-wider text-slate-500 uppercase">To Address</span>
-                    <span className="text-[10px] font-bold text-sky-400 font-mono">{String(m.meta?.target ?? "")}</span>
+                    <span className="text-[10px] font-bold text-emerald-400 font-mono">{String(m.meta?.target ?? "")}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[9px] font-bold uppercase text-slate-500 font-mono">Subject</span>
@@ -162,7 +162,7 @@ export default function VouchAiChatSurface({
                       placeholder="Feedback Subject..."
                       value={emailSubject}
                       onChange={(e) => setEmailSubject(e.target.value)}
-                      className={`w-full text-xs text-white border rounded-lg px-2 py-1.5 outline-none font-medium ${isIsland ? "glass-panel glass-border focus:border-vouch-cyan/40" : "bg-slate-950 border-slate-800 focus:border-sky-500"}`}
+                      className={`w-full text-xs text-white border rounded-lg px-2 py-1.5 outline-none font-medium ${isIsland ? "glass-panel glass-border focus:border-vouch-cyan/40" : "bg-slate-950 border-slate-800 focus:border-emerald-500"}`}
                     />
                   </div>
                   <div className="space-y-1">
@@ -171,14 +171,14 @@ export default function VouchAiChatSurface({
                       placeholder="Enter your bug reports or layout suggestions..."
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
-                      className={`w-full text-[11px] text-white border rounded-lg p-2 outline-none h-20 resize-none font-medium leading-normal ${isIsland ? "glass-panel glass-border focus:border-vouch-cyan/40" : "bg-slate-950 border-slate-800 focus:border-sky-500"}`}
+                      className={`w-full text-[11px] text-white border rounded-lg p-2 outline-none h-20 resize-none font-medium leading-normal ${isIsland ? "glass-panel glass-border focus:border-vouch-cyan/40" : "bg-slate-950 border-slate-800 focus:border-emerald-500"}`}
                     />
                   </div>
                   <button
                     type="button"
                     disabled={isSendingEmail}
                     onClick={() => submitEmailSimulation(m.meta?.target as "vouchedge@gmail.com" | "zhavior@gmail.com")}
-                    className={`w-full py-2 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 transition-all ${isIsland ? "border border-vouch-cyan/35 bg-vouch-cyan/15 text-vouch-cyan" : "bg-gradient-to-r from-sky-500 to-indigo-600"}`}
+                    className={`w-full py-2 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 transition-all ${isIsland ? "border border-vouch-cyan/35 bg-vouch-cyan/15 text-vouch-cyan" : "bg-gradient-to-r from-emerald-500 to-emerald-600"}`}
                   >
                     {isSendingEmail ? (
                       <>
@@ -207,7 +207,7 @@ export default function VouchAiChatSurface({
                   </p>
                   <p className="flex justify-between">
                     <span className="text-slate-500">To:</span>
-                    <span className="text-sky-400 font-semibold">{String(m.meta.target)}</span>
+                    <span className="text-emerald-400 font-semibold">{String(m.meta.target)}</span>
                   </p>
                   <p className="flex justify-between">
                     <span className="text-slate-500">Subject:</span>
@@ -225,12 +225,12 @@ export default function VouchAiChatSurface({
               )}
 
               {m.type === "parlay_analysis" && m.meta && (
-                <div className={`mt-3.5 p-3 rounded-xl flex items-center justify-between font-mono text-[11px] gap-3 ${isIsland ? "glass-panel glass-border" : "bg-indigo-950/50 border border-indigo-900/60"}`}>
+                <div className={`mt-3.5 p-3 rounded-xl flex items-center justify-between font-mono text-[11px] gap-3 ${isIsland ? "glass-panel glass-border" : "bg-emerald-950/50 border border-emerald-900/60"}`}>
                   <div className="space-y-1">
                     <span className="text-slate-500 block uppercase">Parlay Edge Score</span>
-                    <span className="text-base font-black text-indigo-400 block">{String(m.meta.edgeScore)}% SURETY</span>
+                    <span className="text-base font-black text-emerald-400 block">{String(m.meta.edgeScore)}% SURETY</span>
                   </div>
-                  <span className="px-2 py-1 bg-indigo-900/60 border border-indigo-700/40 text-xs font-black text-indigo-300 rounded uppercase">
+                  <span className="px-2 py-1 bg-emerald-900/60 border border-emerald-700/40 text-xs font-black text-emerald-300 rounded uppercase">
                     🎰 {String(m.meta.legsCount)} LEGS RUN
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export default function VouchAiChatSurface({
                       onSectionChange("research");
                       handleExplainFeature("research");
                     }}
-                    className={`mt-1 flex items-center justify-between p-2 rounded-lg text-[11px] font-bold uppercase transition-colors ${isIsland ? "glass-panel glass-border text-vouch-cyan hover:border-vouch-cyan/40" : "border border-slate-800 hover:border-sky-500/30 bg-slate-950 text-slate-300 hover:text-sky-400"}`}
+                    className={`mt-1 flex items-center justify-between p-2 rounded-lg text-[11px] font-bold uppercase transition-colors ${isIsland ? "glass-panel glass-border text-vouch-cyan hover:border-vouch-cyan/40" : "border border-slate-800 hover:border-emerald-500/30 bg-slate-950 text-slate-300 hover:text-emerald-400"}`}
                   >
                     <span>Go to Grounded Search Panel</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export default function VouchAiChatSurface({
       </div>
 
       {showUpgradePrompt && (
-        <div className="mb-3 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 p-4">
+        <div className="mb-3 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
           <div className="font-black text-white">
             🔒 Vouch AI Pro
           </div>
@@ -345,7 +345,7 @@ export default function VouchAiChatSurface({
               ProductEvents.proUpgradeClicked("vouch_ai");
               onSectionChange?.("premium");
             }}
-            className="mt-3 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-black"
+            className="mt-3 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-black text-black"
           >
             Upgrade to Pro
           </button>

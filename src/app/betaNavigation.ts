@@ -66,19 +66,23 @@ const ACCOUNT_SECTIONS = new Set([
   'themestore',
   'epic_themes',
   'admin',
+  'admin_hr_next',
 ]);
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
+  'today_next',
   'hr_board',
   'live_games',
   'results',
   'premium',
   'admin',
+  'admin_hr_next',
 ]);
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
+  'today_next',
   'hr_board',
   'live_games',
   'results',
@@ -87,13 +91,14 @@ const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'settings',
   'admin',
   'aurora_daily_slate',
+  'admin_hr_next',
 ]);
 
 export function isBetaDestinationActive(
   activeSection: string,
   destination: BetaDestinationId,
 ): boolean {
-  if (destination === 'today') return activeSection === 'today' || activeSection === 'welcome';
+  if (destination === 'today') return activeSection === 'today' || activeSection === 'welcome' || activeSection === 'today_next';
   if (destination === 'research') return RESEARCH_SECTIONS.has(activeSection);
   if (destination === 'track_record') return TRACK_RECORD_SECTIONS.has(activeSection);
   return ACCOUNT_SECTIONS.has(activeSection);

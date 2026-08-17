@@ -59,6 +59,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "mlb_stats",     label: "MLB Stat Hub",          icon: "BarChart3",    enabled: true, order: 4,    group: "Daily", sports: ALL_SPORTS, locked: false },
   { id: "daily_players", label: "Daily Players",         icon: "Users",        enabled: true, order: 5,    group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "live_games",    label: "Live Games",            icon: "Tv",           enabled: true, order: 6,    group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "today_next",    label: "Today Next",            icon: "Sparkles",     enabled: true, order: 2.5,  group: "Daily", sports: ALL_SPORTS, access: "admin" },
 
   // Pro Labs — sport-scoped analytics
   { id: "intel", label: "AI Edge Lab", icon: "Flame", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS, locked: true },
@@ -92,6 +93,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
   { id: "aurora_hr_hq", label: "Aurora HQ", icon: "Sparkles", enabled: true, order: 20.5, group: "Account", access: "admin" },
   { id: "admin", label: "Admin Ops", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
+  { id: "admin_hr_next", label: "HR Next", icon: "Sparkles", enabled: true, order: 21.5, group: "Account", access: "admin" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 

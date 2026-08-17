@@ -54,8 +54,8 @@ function deriveTrajectory(item: ChunkA, index: number): TrajectoryData {
 
   if (hrIndex >= TIER_VERY_HIGH_MIN) {
     tier = 'very_high';
-    color = '#22d3ee';
-    glowColor = 'rgba(34, 211, 238, 0.5)';
+    color = '#00d9a0';
+    glowColor = 'rgba(0, 217, 160, 0.5)';
   } else if (hrIndex >= TIER_HIGH_MIN) {
     tier = 'high';
     color = '#10b981';
@@ -369,7 +369,7 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
 
       const drawWallMarker = (p: { x: number; y: number; visible: boolean }, dist: string) => {
         if (!p.visible) return;
-        ctx.fillStyle = 'rgba(6, 182, 212, 0.8)';
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.8)';
         ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center';
         ctx.fillText(dist, p.x, p.y);
@@ -382,7 +382,7 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
       drawWallMarker(wallRF, "314' RF");
 
       // 4. Live 3D Wind Vector Simulation
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.25)';
+      ctx.strokeStyle = 'rgba(0, 217, 160, 0.25)';
       ctx.lineWidth = 1;
       windParticles.forEach((wp) => {
         wp.x += wp.speed * 0.6;
@@ -570,11 +570,11 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
       <div className="relative z-10 p-4 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
         {/* Left Eyebrow & Status */}
         <div className="pointer-events-auto bg-black/60 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 flex items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping inline-block" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
           <span className="text-xs font-mono font-bold text-white tracking-wide">
             {STRINGS_EN.stadium3d.title}
           </span>
-          <span className="text-[10px] font-mono text-cyan-300/80 hidden sm:inline">
+          <span className="text-[10px] font-mono text-emerald-300/80 hidden sm:inline">
             ({trajectories.length} trajectories)
           </span>
         </div>
@@ -617,7 +617,7 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border uppercase tracking-wider ${
                       selectedTrajectory.tier === 'very_high'
-                        ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                         : selectedTrajectory.tier === 'high'
                           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                           : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
@@ -655,7 +655,7 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
               <div className="w-[1px] h-6 bg-white/10" />
               <div>
                 <span className="text-[9px] text-white/40 block">DISTANCE</span>
-                <span className="text-xs font-bold text-cyan-300">
+                <span className="text-xs font-bold text-emerald-300">
                   {selectedTrajectory.distance} ft
                 </span>
               </div>
@@ -674,7 +674,7 @@ export function HrStadium3DView({ items }: HrStadium3DViewProps) {
               onClick={() => handleQuickAdd(selectedTrajectory.item)}
               className="min-h-[44px] px-4 py-2.5 rounded-xl bg-vouch-cyan/20 border border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan/30 text-xs font-bold font-mono transition-all shadow-sm flex items-center justify-center gap-1.5 shrink-0"
             >
-              <Zap className="w-3.5 h-3.5 shrink-0 text-cyan-300" /> {STRINGS_EN.stadium3d.dossier.quickAdd}
+              <Zap className="w-3.5 h-3.5 shrink-0 text-emerald-300" /> {STRINGS_EN.stadium3d.dossier.quickAdd}
             </button>
           </div>
         </div>

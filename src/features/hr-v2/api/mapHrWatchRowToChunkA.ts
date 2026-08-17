@@ -137,6 +137,7 @@ export function mapHrWatchRowToChunkA(row: HrWatchRow, updatedAt: string): Chunk
           odds: now,
         },
       },
+      modelProbability: row.hrProbability ?? null,
     },
     rank: row.rank ?? 0,
     odds: oddsFromRow(row, now),

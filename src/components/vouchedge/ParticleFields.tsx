@@ -8,8 +8,8 @@ interface ParticleProps {
 
 const BUBBLE_COLORS = [
   "rgba(0,240,255,0.36)",
-  "rgba(59,130,246,0.32)",
-  "rgba(34,211,238,0.28)",
+  "rgba(16,185,129,0.32)",
+  "rgba(0,217,160,0.28)",
   "rgba(37,99,235,0.24)",
 ];
 
@@ -311,7 +311,7 @@ export function DiamondSpark({ count = 20, className = "" }: ParticleProps) {
             animationDuration: `${s.duration}s`,
           }}
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" style={{ color: "#22d3ee", width: "100%", height: "100%" }}>
+          <svg viewBox="0 0 24 24" fill="currentColor" style={{ color: "#00d9a0", width: "100%", height: "100%" }}>
             <path d="M12 2L4 12l8 10 8-10z" opacity="0.9" />
             <path d="M12 2L8 12l4 10 4-10z" opacity="0.6" />
           </svg>
@@ -339,7 +339,7 @@ export function PixelRain({ count = 30, className = "" }: ParticleProps) {
         size: 8 + ((i * 5) % 12),
         duration: 6 + ((i * 3) % 8),
         delay: (i * 0.4) % 5,
-        color: ["#22d3ee", "#f472b6", "#a3e635"][i % 3],
+        color: ["#00d9a0", "#f472b6", "#a3e635"][i % 3],
       })),
     [count]
   );
@@ -366,7 +366,7 @@ export function PixelRain({ count = 30, className = "" }: ParticleProps) {
 }
 
 export function MeshFlow({
-  colors = ["#22d3ee", "#a78bfa", "#4ade80", "#fbbf24"],
+  colors = ["#00d9a0", "#a78bfa", "#4ade80", "#fbbf24"],
   className = "",
 }: {
   colors?: string[];
@@ -396,5 +396,5 @@ export function ThemeParticleRouter({ themeId, className = "" }: { themeId: stri
   if (themeId.includes("founder")) return <AuroraField className={className} />;
   if (themeId.includes("4bit") || themeId.includes("arcade")) return <PixelRain count={15} className={className} />;
   if (themeId.includes("8bit")) return <CoinField count={12} className={className} />;
-  return <MeshFlow colors={["#00f0ff", "#3b82f6", "#2563eb", "#22d3ee"]} className={className} />;
+  return <MeshFlow colors={["#00f0ff", "#10b981", "#059669", "#00d9a0"]} className={className} />;
 }

@@ -45,7 +45,7 @@ export default function AdBanner({
       promo: 'Monetize your parlay slips & sell verified tails completely ad-free!',
       badge: 'UNLIMITED PROOF',
       tagline: 'Upgrade above GOLD to get 100% ad-free experience with ledger certificates.',
-      bgColor: 'from-violet-950/40 to-indigo-950/30',
+      bgColor: 'from-violet-950/40 to-emerald-950/30',
       borderColor: 'border-violet-500/30',
       actionText: 'Go Premium Ad-Free ✨',
       link: '#',
@@ -142,7 +142,7 @@ export default function AdBanner({
         <div className="text-center">
           <button 
             onClick={onUpgrade}
-            className="text-[9px] text-slate-550 hover:text-sky-400 transition-colors bg-transparent border-none font-mono tracking-tight"
+            className="text-[9px] text-slate-550 hover:text-emerald-400 transition-colors bg-transparent border-none font-mono tracking-tight"
           >
             Upgrading to GOLD removes sidebar banners
           </button>

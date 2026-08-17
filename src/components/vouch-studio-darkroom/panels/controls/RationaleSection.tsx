@@ -98,7 +98,7 @@ export default function RationaleSection(props: VouchStudioDarkroomProps) {
               className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-3.5 h-3.5 text-sky-400" />
+                <FileText className="w-3.5 h-3.5 text-emerald-400" />
                 4. Analytical Scout Narrative
               </span>
               <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionRationale ? '[-]' : '[+]'}</span>
@@ -113,7 +113,7 @@ export default function RationaleSection(props: VouchStudioDarkroomProps) {
                     onChange={(e) => setReasonsText(e.target.value)}
                     rows={3}
                     placeholder="Detail the primary sabermetric, wind speed, velocity coefficients or pitch leverage indexes..."
-                    className="w-full bg-obsidian-900 border border-white/10 text-white/80 text-xs p-2.5 rounded-xl outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
+                    className="w-full bg-obsidian-900 border border-white/10 text-white/80 text-xs p-2.5 rounded-xl outline-none focus:border-emerald-500/30 resize-none font-medium leading-normal"
                   />
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function RationaleSection(props: VouchStudioDarkroomProps) {
                 }}
                 className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showCharts 
-                    ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
+                    ? 'bg-emerald-950/20 border-emerald-850 text-emerald-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >
@@ -146,7 +146,7 @@ export default function RationaleSection(props: VouchStudioDarkroomProps) {
                 }}
                 className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showLogo 
-                    ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
+                    ? 'bg-emerald-950/20 border-emerald-850 text-emerald-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >
@@ -161,7 +161,7 @@ export default function RationaleSection(props: VouchStudioDarkroomProps) {
                 }}
                 className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showReasons 
-                    ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
+                    ? 'bg-emerald-950/20 border-emerald-850 text-emerald-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >

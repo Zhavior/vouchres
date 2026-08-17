@@ -230,12 +230,12 @@ export default function ProfilePageZ8({
               name: match.name,
               category: match.category,
               badge: match.badge || '💎 AI_MINT',
-              avatarAnimationClass: match.avatarAnimationClass || 'animate-pulse border-sky-400 shadow-md',
+              avatarAnimationClass: match.avatarAnimationClass || 'animate-pulse border-emerald-400 shadow-md',
               cardStyle: match.cardStyle || 'bg-ve-storm border-slate-800',
-              glowColor: match.glowColor || 'from-sky-500 to-indigo-500',
+              glowColor: match.glowColor || 'from-emerald-500 to-emerald-500',
               particleDemo: match.particleDemo || ['✨', '💎'],
               fontFamily: match.fontFamily || 'font-mono',
-              coverBg: match.coverBg || 'from-indigo-650/40 to-slate-950/40',
+              coverBg: match.coverBg || 'from-emerald-650/40 to-slate-950/40',
               customAIPhrase: match.customAIPhrase || '🚀 CUSTOM THEME REVENUE INSTANCE LIVE'
             };
           }
@@ -974,7 +974,7 @@ export default function ProfilePageZ8({
                             <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                               <div className="profile-aurora-metric">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">Winrate</p>
-                                <p className="text-sky-455 font-mono font-bold text-xs mt-0.5 text-sky-400 font-black">
+                                <p className="text-emerald-455 font-mono font-bold text-xs mt-0.5 text-emerald-400 font-black">
                                   {winRate !== null ? `${winRate.toFixed(0)}%` : '—'}
                                 </p>
                               </div>

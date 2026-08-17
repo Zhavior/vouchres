@@ -273,7 +273,7 @@ export default function AuroraHqDesk({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           {/* Date label */}
-          <span style={{ display: 'none', alignItems: 'center', gap: '0.5rem', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', borderRight: '1px solid rgba(255,255,255,0.07)', paddingRight: '0.75rem' }}
+          <span style={{ display: 'none', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', borderRight: '1px solid rgba(255,255,255,0.07)', paddingRight: '0.75rem' }}
             className="sm:flex">
             {vm.isToday ? 'Today' : vm.date}
           </span>

@@ -6,9 +6,9 @@
 
 export const fontFamily = {
   display:
-    '"General Sans", Inter, ui-sans-serif, system-ui, sans-serif',
+    '"Space Grotesk", ui-sans-serif, system-ui, sans-serif',
   body:
-    'Inter, ui-sans-serif, system-ui, sans-serif',
+    '"Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif',
   mono:
     '"JetBrains Mono", ui-monospace, monospace',
 } as const;

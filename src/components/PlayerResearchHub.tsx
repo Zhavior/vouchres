@@ -917,7 +917,7 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
     <div>
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Player A */}
-        <CompareSlot label="Player A" player={compareA} players={players} onSelect={onSelectA} accent="#22d3ee" />
+        <CompareSlot label="Player A" player={compareA} players={players} onSelect={onSelectA} accent="#00d9a0" />
         {/* Player B */}
         <CompareSlot label="Player B" player={compareB} players={players} onSelect={onSelectB} accent="#f472b6" />
       </div>
@@ -957,7 +957,7 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
                       <span className="text-[11px] text-white/45">{prop.market}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>
-                        <button onClick={() => onAddLeg(p, prop)} className="text-[9px] font-bold uppercase px-2 py-1 rounded text-slate-950" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
+                        <button onClick={() => onAddLeg(p, prop)} className="text-[9px] font-bold uppercase px-2 py-1 rounded text-slate-950" style={{ background: "linear-gradient(135deg, #00d9a0, #059669)" }}>
                           Add
                         </button>
                       </div>
@@ -1114,7 +1114,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
               key={f}
               onClick={() => setPropFilter(f)}
               className={`shrink-0 px-2.5 py-1.5 text-[10px] font-bold uppercase rounded-md ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
-              style={propFilter === f ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : { background: "rgba(255,255,255,0.03)" }}
+              style={propFilter === f ? { background: "linear-gradient(135deg, #00d9a0, #059669)" } : { background: "rgba(255,255,255,0.03)" }}
             >
               {f}
             </button>
@@ -1139,7 +1139,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
                   {group}
                 </div>
                 <div className="text-[11px] text-white/40">
@@ -1162,7 +1162,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
                       <div className="text-xs font-bold text-white truncate">{player.name}</div>
                       <div className="text-[10px] text-white/45 truncate">{prop.market}</div>
                       {prop.truthLabel && (
-                        <div className="mt-0.5 truncate text-[9px] uppercase tracking-wider text-cyan-300/75">
+                        <div className="mt-0.5 truncate text-[9px] uppercase tracking-wider text-emerald-300/75">
                           {prop.truthLabel}
                         </div>
                       )}
@@ -1173,7 +1173,7 @@ function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
                         onClick={() => onAddLeg(player, prop)}
                         disabled={isActive}
                         className={`mt-1 rounded px-2 py-0.5 text-[9px] font-bold uppercase ${isActive ? "bg-emerald-500/15 text-emerald-400" : "text-slate-950"}`}
-                        style={!isActive ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
+                        style={!isActive ? { background: "linear-gradient(135deg, #00d9a0, #059669)" } : {}}
                       >
                         {isActive ? "Added" : "+ Slip"}
                       </button>

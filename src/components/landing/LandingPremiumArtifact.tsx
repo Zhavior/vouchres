@@ -237,10 +237,10 @@ export default function LandingPremiumArtifact() {
               <ArtifactSection title="Foundations" subtitle="ground · surfaces · text · accent · semantics">
                 <div className={`grid gap-3 ${isMobileSpec ? 'grid-cols-2' : 'md:grid-cols-4'}`}>
                   {[
-                    ['Ground', '#050A14'],
-                    ['Surface 1', '#0B1220'],
-                    ['Surface 2', '#101A2C'],
-                    ['Surface 3', '#16233A'],
+                    ['Ground', '#08090A'],
+                    ['Surface 1', '#101113'],
+                    ['Surface 2', '#17181B'],
+                    ['Surface 3', '#1F2124'],
                   ].map(([label, hex]) => (
                     <div key={label} className="rounded-2xl border border-white/8 bg-ve-graphite p-4">
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/28">{label}</p>

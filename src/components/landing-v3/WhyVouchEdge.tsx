@@ -40,7 +40,7 @@ export default function WhyVouchEdge() {
           transition={{ duration: 0.45 }}
           className="max-w-2xl"
         >
-          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
             How it works
           </span>
 
@@ -65,7 +65,7 @@ export default function WhyVouchEdge() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.07, duration: 0.35 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-6 transition-colors hover:border-cyan-300/25"
+              className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-6 transition-colors hover:border-emerald-300/25"
             >
               <span
                 aria-hidden="true"
@@ -74,8 +74,8 @@ export default function WhyVouchEdge() {
                 {step}
               </span>
 
-              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/10">
-                <Icon aria-hidden="true" className="h-5 w-5 text-cyan-200" strokeWidth={1.9} />
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400/20 to-emerald-400/10">
+                <Icon aria-hidden="true" className="h-5 w-5 text-emerald-200" strokeWidth={1.9} />
               </div>
 
               <h3 className="relative mt-5 text-lg font-bold text-white">{title}</h3>

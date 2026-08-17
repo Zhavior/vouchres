@@ -62,7 +62,7 @@ export default function PremiumFeatures() {
           transition={{ duration: 0.45 }}
           className="max-w-2xl"
         >
-          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
             Evidence
           </span>
 
@@ -87,11 +87,11 @@ export default function PremiumFeatures() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.04, duration: 0.32 }}
-              className="flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-cyan-300/25"
+              className="flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-emerald-300/25"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/18 to-emerald-400/10">
-                  <Icon aria-hidden="true" className="h-5 w-5 text-cyan-200" strokeWidth={1.9} />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400/18 to-emerald-400/10">
+                  <Icon aria-hidden="true" className="h-5 w-5 text-emerald-200" strokeWidth={1.9} />
                 </div>
                 <h3 className="text-[15px] font-bold tracking-tight text-white">{title}</h3>
               </div>

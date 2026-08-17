@@ -32,9 +32,13 @@ const config: Config = {
         charged: 'var(--border-charged)',
       },
       fontFamily: {
-        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Headers, Slate Alpha, hero titles
+        display: ['Space Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Small labels, table text, nav
+        sans: ['Cabinet Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Odds, HRPI scores, timestamps
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-        z8: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        z8: ['Cabinet Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },

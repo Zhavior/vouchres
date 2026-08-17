@@ -467,6 +467,54 @@ function calculateLivePitcherVulnerability(
   };
 }
 
+/**
+ * Logistic response of a stat against a league reference point, in (0, 1).
+ *
+ * Every published layer score used to be an additive point budget closed with
+ * `clamp(..., 0, 100)`, which saturated: a league-average bat already summed
+ * past 100, so most of the board printed an identical 100 and the Projection
+ * Matrix stacked dozens of rows on one coordinate. A logistic is strictly
+ * increasing in its input and never reaches its bound, so two hitters who
+ * differ on any component get two different scores — no ceiling, no ties.
+ *
+ * `mid` is the value that scores 50; `spread` is the stat distance that moves
+ * the score about 23 points off centre.
+ */
+function logisticUnit(value: number, mid: number, spread: number): number {
+  if (!Number.isFinite(value) || spread <= 0) return 0.5;
+  return 1 / (1 + Math.exp(-(value - mid) / spread));
+}
+
+/** League reference points for the continuous hitter power index. */
+const POWER_COMPONENTS = [
+  { weight: 0.34, mid: 0.032, spread: 0.014 }, // HR per plate appearance
+  { weight: 0.24, mid: 0.165, spread: 0.055 }, // ISO
+  { weight: 0.16, mid: 0.410, spread: 0.075 }, // SLG
+  { weight: 0.18, mid: 18, spread: 9 },        // season HR total
+  { weight: 0.08, mid: 1.2, spread: 1.0 },     // HR in the recent game log
+] as const;
+
+/**
+ * Continuous 0–100 hitter power index. Same five inputs as the legacy additive
+ * score, mapped through `logisticUnit` so the result is strictly monotone in
+ * every one of them and cannot pin at 100.
+ */
+function hitterPowerIndex(args: {
+  hrRate: number;
+  iso: number;
+  slug: number;
+  seasonHR: number;
+  recentHr: number;
+}): number {
+  const values = [args.hrRate, args.iso, args.slug, args.seasonHR, args.recentHr];
+  let unit = 0;
+  for (let i = 0; i < POWER_COMPONENTS.length; i += 1) {
+    const component = POWER_COMPONENTS[i];
+    unit += component.weight * logisticUnit(values[i], component.mid, component.spread);
+  }
+  return unit * 100;
+}
+
 function scoreCandidate(
   player: TodayPlayer,
   hitterStats: HitterStats | null,
@@ -626,7 +674,14 @@ function scoreCandidate(
 
   hrScore = clamp(Math.round(hrScore), 1, 100);
 
-  const hitterPower = clamp(
+  // Published layer score — continuous and tie-free. See `hitterPowerIndex`.
+  const hitterPower = hitterPowerIndex({ hrRate, iso, slug, seasonHR, recentHr });
+
+  // The single-game probability model below was calibrated against the legacy
+  // saturated index, where nearly every qualified bat read 100. Repricing the
+  // board is a separate, calibrated change — the probability term keeps the old
+  // number on purpose so this de-saturation only moves the published sub-score.
+  const legacyPowerForProbability = clamp(
     (hrRate * 1000 * 1.8) +
     (iso * 120) +
     (slug * 35) +
@@ -650,7 +705,13 @@ function scoreCandidate(
     ) ? 70 :
     pitcher?.throws ? 45 : 50;
 
-  const recentForm = clamp(45 + recentHr * 14 + recentHrGames * 8, 0, 100);
+  // Recent form on the same continuous footing — the additive form used to pin
+  // at 100 for anyone with three recent home runs.
+  const recentForm =
+    100 * (
+      0.62 * logisticUnit(recentHr, 1.3, 1.1) +
+      0.38 * logisticUnit(recentHrGames, 1.1, 0.9)
+    );
 
   const penalties = clamp(
     smallSamplePenalty +
@@ -661,13 +722,17 @@ function scoreCandidate(
     100
   );
 
+  // The continuous layers publish one decimal. Rounding them to integers was
+  // itself a tie generator: a 120-row slate only has ~60 usable integers.
+  const oneDecimal = (value: number) => Number(value.toFixed(1));
+
   const scoreBreakdown = {
-    hitterPower: Math.round(hitterPower),
+    hitterPower: oneDecimal(hitterPower),
     pitcherVulnerability: Math.round(pitcherVulnerability),
-    parkContext: Math.round(parkContext),
+    parkContext: oneDecimal(parkContext),
     lineupVolume: Math.round(lineupVolume),
     handednessEdge: Math.round(handednessEdge),
-    recentForm: Math.round(recentForm),
+    recentForm: oneDecimal(recentForm),
     penalties: Math.round(penalties),
   };
 
@@ -690,7 +755,7 @@ function scoreCandidate(
 
   const estimatedHrProbability = Number(clamp(
     baseHrProbability *
-      (0.75 + hitterPower / 160) *
+      (0.75 + legacyPowerForProbability / 160) *
       (0.85 + pitcherVulnerability / 250) *
       hrMultiplier *
       (0.9 + lineupVolume / 500) *
@@ -784,6 +849,11 @@ function scoreCandidate(
       ? Number((statcast.barrelPct / 100).toFixed(3))
       : null,
     avgExitVelo: statcast?.avgExitVelo ?? null,
+    // Published on the same 0–1 footing as barrelRate so the board never has to
+    // guess a hard-hit number from the power layer.
+    hardHitRate: statcast?.hardHitPct != null && Number.isFinite(statcast.hardHitPct)
+      ? Number((statcast.hardHitPct / 100).toFixed(3))
+      : null,
     recentHomeRuns: hitterStats?.recentGames?.length ? recentHr : undefined,
     recentHrGames: hitterStats?.recentGames?.length ? recentHrGames : undefined,
     recentGamesChecked: hitterStats?.recentGames?.length,

@@ -59,7 +59,7 @@ export default function MlbStatHubPage() {
                   onClick={() => hub.setViewTab(tab.id as typeof hub.filters.viewTab)}
                   className={`px-4 py-2 rounded-xl text-xs font-black font-mono uppercase tracking-wider transition ${
                     active
-                      ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.2)]'
+                      ? 'bg-vouch-cyan/20 border border-vouch-cyan/50 text-vouch-cyan shadow-[0_0_12px_rgba(0,217,160,0.2)]'
                       : 'border border-white/10 bg-black/40 text-slate-400 hover:border-white/20 hover:text-white'
                   }`}
                 >

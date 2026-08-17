@@ -1,0 +1,14 @@
+/*
+ * Live Games — canonical surface primitives.
+ * Self-contained so the page never depends on another feature's stylesheet
+ * being loaded first (no unstyled first paint).
+ */
+
+/* Sharp corners — the shared Next geometry (same rule as settings-next /
+   today-next / hr-next). Tailwind's rounded-* utilities are spread across ~25
+   call sites on this surface; flattening them here keeps the markup readable
+   and the geometry consistent. `rounded-full` is exempt — the live pulse dots
+   and team badges are meant to stay round. */
+.live-games-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
+  border-radius: 0 !important;
+}

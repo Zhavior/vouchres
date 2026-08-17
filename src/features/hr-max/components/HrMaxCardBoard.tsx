@@ -14,7 +14,7 @@ import { HrMaxPlayerCard } from './HrMaxPlayerCard';
 
 const TIERS = [
   { key: 'Elite', label: 'Elite', tone: '#00d9a0', desc: 'Highest signal alignment across power & matchup' },
-  { key: 'Strong', label: 'Strong', tone: '#38bdf8', desc: 'Favorable matchup vulnerability and park conditions' },
+  { key: 'Strong', label: 'Strong', tone: '#34d399', desc: 'Favorable matchup vulnerability and park conditions' },
   { key: 'Watch', label: 'Watch', tone: '#a8d8b6', desc: 'Live candidate with elevated situational upside' },
   { key: 'Sleepers', label: 'Sleepers', tone: '#fbbf24', desc: 'Deep value bats with isolated power metrics' },
 ] as const;

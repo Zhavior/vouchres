@@ -147,7 +147,7 @@ export function HrMaxTableView({
                       <div className="h-1.5 flex rounded overflow-hidden bg-white/10">
                         <div style={{ width: `${(powerScore ?? 50) / 3}%` }} className="bg-orange-400" />
                         <div style={{ width: `${(pitcherScore ?? 50) / 3}%` }} className="bg-[var(--aurora-max-emerald)]" />
-                        <div style={{ width: `${(parkScore ?? 50) / 3}%` }} className="bg-sky-400" />
+                        <div style={{ width: `${(parkScore ?? 50) / 3}%` }} className="bg-emerald-400" />
                       </div>
                     </div>
                   </div>
