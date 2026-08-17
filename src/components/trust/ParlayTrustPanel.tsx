@@ -81,7 +81,7 @@ export default function ParlayTrustPanel({
   const [otsStampedAt, setOtsStampedAt] = useState<string | null>(null);
   const [hasOtsProof, setHasOtsProof] = useState(false);
 
-  const loadTrust = useCallback(async () => {
+  const loadTrust = useCallback(async (signal?: AbortSignal) => {
     if (!pickId) return;
     setLoading(true);
     setError(null);
@@ -92,11 +92,15 @@ export default function ParlayTrustPanel({
           created_at?: string | null;
           updated_at?: string | null;
           locked_at?: string | null;
-        }>(`/api/parlays/${encodeURIComponent(pickId)}/audit`),
+        }>(`/api/parlays/${encodeURIComponent(pickId)}/audit`, undefined, signal),
         apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] }; proof_hash?: string | null; ots_stamped_at?: string | null; has_ots_proof?: boolean } }>(
           `/api/v3/parlays/${encodeURIComponent(pickId)}`,
+          undefined,
+          signal,
         ).catch(() => null),
       ]);
+
+      if (signal?.aborted) return;
 
       setEntries(audit.entries ?? []);
       setCreatedAt(audit.created_at ?? null);
@@ -115,16 +119,19 @@ export default function ParlayTrustPanel({
         setMissingLegs([]);
       }
     } catch (err: any) {
+      // Collapsing the panel aborts this load; that is not a failure to show.
+      if (err?.name === "AbortError" || signal?.aborted) return;
       setError(err?.message ?? "Failed to load trust history.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [pickId]);
 
   useEffect(() => {
-    if (expanded) {
-      void loadTrust();
-    }
+    if (!expanded) return;
+    const controller = new AbortController();
+    void loadTrust(controller.signal);
+    return () => controller.abort();
   }, [expanded, loadTrust]);
 
   const handleRepair = async () => {

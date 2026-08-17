@@ -152,6 +152,19 @@ function errorMessage(error: unknown) {
   return apiError?.message || apiError?.error || 'The request could not be completed.';
 }
 
+/**
+ * A rejection caused by our own effect cleanup, not by a failing request.
+ *
+ * Every panel loader below is keyed on a filter or search term, so switching
+ * tabs or typing quickly used to leave an in-flight request that still resolved
+ * and wrote its result — an older response could land after a newer one and win.
+ * Aborting on cleanup makes the newest request authoritative; this predicate
+ * keeps the resulting cancellation from being rendered as an error.
+ */
+function isAbortError(error: unknown): boolean {
+  return (error as { name?: string } | null | undefined)?.name === 'AbortError';
+}
+
 function formatNumber(value: number | null | undefined) {
   return new Intl.NumberFormat('en-US').format(value ?? 0);
 }
@@ -201,21 +214,24 @@ export function AdminDashboard() {
   const [statsError, setStatsError] = useState<string | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const refreshStats = useCallback(async () => {
+  const refreshStats = useCallback(async (signal?: AbortSignal) => {
     setLoadingStats(true);
     try {
-      const nextStats = await apiClient.get<DashboardStats>('/api/admin/stats');
+      const nextStats = await apiClient.get<DashboardStats>('/api/admin/stats', undefined, signal);
       setStats(nextStats);
       setStatsError(null);
     } catch (error) {
+      if (isAbortError(error) || signal?.aborted) return;
       setStatsError(errorMessage(error));
     } finally {
-      setLoadingStats(false);
+      if (!signal?.aborted) setLoadingStats(false);
     }
   }, []);
 
   useEffect(() => {
-    void refreshStats();
+    const controller = new AbortController();
+    void refreshStats(controller.signal);
+    return () => controller.abort();
   }, [refreshStats]);
 
   return (
@@ -407,21 +423,24 @@ function Waitlist() {
   const [batchEmails, setBatchEmails] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const loadSignups = useCallback(async () => {
+  const loadSignups = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const payload = await apiClient.get<{ signups: BetaSignup[] }>('/api/admin/beta', filter === 'all' ? undefined : { state: filter });
+      const payload = await apiClient.get<{ signups: BetaSignup[] }>('/api/admin/beta', filter === 'all' ? undefined : { state: filter }, signal);
       setSignups(payload.signups ?? []);
       setError(null);
     } catch (loadError) {
+      if (isAbortError(loadError) || signal?.aborted) return;
       setError(errorMessage(loadError));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [filter]);
 
   useEffect(() => {
-    void loadSignups();
+    const controller = new AbortController();
+    void loadSignups(controller.signal);
+    return () => controller.abort();
   }, [loadSignups]);
 
   async function issueInvite(email: string) {
@@ -560,21 +579,24 @@ function UsersPanel() {
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
-  const loadUsers = useCallback(async () => {
+  const loadUsers = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const payload = await apiClient.get<{ users: UserProfile[] }>('/api/admin/users', submittedQuery ? { search: submittedQuery, limit: 100 } : { limit: 100 });
+      const payload = await apiClient.get<{ users: UserProfile[] }>('/api/admin/users', submittedQuery ? { search: submittedQuery, limit: 100 } : { limit: 100 }, signal);
       setUsers(payload.users ?? []);
       setError(null);
     } catch (loadError) {
+      if (isAbortError(loadError) || signal?.aborted) return;
       setError(errorMessage(loadError));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [submittedQuery]);
 
   useEffect(() => {
-    void loadUsers();
+    const controller = new AbortController();
+    void loadUsers(controller.signal);
+    return () => controller.abort();
   }, [loadUsers]);
 
   async function updateUser(user: UserProfile, changes: Record<string, boolean>, action: string) {
@@ -668,21 +690,24 @@ function CappersPanel() {
   const [creating, setCreating] = useState(false);
   const [newCapper, setNewCapper] = useState({ id: '', display_name: '', tagline: '', persona: '', is_demo: false });
 
-  const loadCappers = useCallback(async () => {
+  const loadCappers = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const payload = await apiClient.get<{ cappers: Capper[] }>('/api/cappers');
+      const payload = await apiClient.get<{ cappers: Capper[] }>('/api/cappers', undefined, signal);
       setCappers(payload.cappers ?? []);
       setError(null);
     } catch (loadError) {
+      if (isAbortError(loadError) || signal?.aborted) return;
       setError(errorMessage(loadError));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadCappers();
+    const controller = new AbortController();
+    void loadCappers(controller.signal);
+    return () => controller.abort();
   }, [loadCappers]);
 
   async function createCapper(event: FormEvent<HTMLFormElement>) {
@@ -791,21 +816,24 @@ function SystemHealth() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadHealth = useCallback(async () => {
+  const loadHealth = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const payload = await apiClient.get<BackendHealth>('/api/health/backend');
+      const payload = await apiClient.get<BackendHealth>('/api/health/backend', undefined, signal);
       setHealth(payload);
       setError(null);
     } catch (healthError) {
+      if (isAbortError(healthError) || signal?.aborted) return;
       setError(errorMessage(healthError));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadHealth();
+    const controller = new AbortController();
+    void loadHealth(controller.signal);
+    return () => controller.abort();
   }, [loadHealth]);
 
   const configChecks = useMemo(() => health?.config ?? [], [health]);
@@ -838,21 +866,24 @@ function HrResearchLab() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadResearch = useCallback(async () => {
+  const loadResearch = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const payload = await apiClient.get<HrResearchPayload>('/api/admin/hr-research');
+      const payload = await apiClient.get<HrResearchPayload>('/api/admin/hr-research', undefined, signal);
       setResearch(payload);
       setError(null);
     } catch (researchError) {
+      if (isAbortError(researchError) || signal?.aborted) return;
       setError(errorMessage(researchError));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadResearch();
+    const controller = new AbortController();
+    void loadResearch(controller.signal);
+    return () => controller.abort();
   }, [loadResearch]);
 
   return (
