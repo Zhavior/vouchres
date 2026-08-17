@@ -6,8 +6,14 @@ import {
   getProductWorkspace,
 } from '../src/app/productNavigation';
 
-const desktopSidebarSource = readFileSync(
-  new URL('../src/social/feed/FeedSidebar.tsx', import.meta.url),
+// FeedSidebar was retired in da8764be. Desktop navigation is now split across
+// AppTopBar (workspace/feature list) and AppNav (active-destination state).
+const desktopTopBarSource = readFileSync(
+  new URL('../src/app/AppTopBar.tsx', import.meta.url),
+  'utf8',
+);
+const desktopNavSource = readFileSync(
+  new URL('../src/app/AppNav.tsx', import.meta.url),
   'utf8',
 );
 const mobileDrawerSource = readFileSync(
@@ -41,11 +47,11 @@ describe('customer-facing product navigation', () => {
   });
 
   it('drives desktop and mobile navigation from the workspace model without false active states', () => {
-    for (const source of [desktopSidebarSource, mobileDrawerSource]) {
-      expect(source).toContain('getSidebarFeatures');
-      expect(source).toContain('isBetaDestinationActive');
-    }
-    expect(desktopSidebarSource).toContain('isSidebarItemActive(activeSection, f.id)');
+    expect(desktopTopBarSource).toContain('getSidebarFeatures');
+    expect(mobileDrawerSource).toContain('getSidebarFeatures');
+    expect(desktopNavSource).toContain('isBetaDestinationActive');
+    expect(mobileDrawerSource).toContain('isBetaDestinationActive');
+    expect(desktopNavSource).toContain('isBetaDestinationActive(activeSection,');
     expect(mobileDrawerSource).toContain('isDrawerItemActive(activeSection, item.id)');
   });
 });
