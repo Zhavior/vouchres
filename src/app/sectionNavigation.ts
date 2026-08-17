@@ -107,7 +107,7 @@ export const SECTIONS_USING_LIVE_GAMES = new Set([
   'today_next',
 ]);
 
-const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next']);
+const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next', 'hr_board']);
 
 export function getSavedActiveSection(): string | null {
   try {
