@@ -186,10 +186,15 @@ function MainViewRouter({
       );
 
     case 'island':
-    case 'today':
       return (
         <LazyRoute>
           <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
+        </LazyRoute>
+      );
+    case 'today':
+      return (
+        <LazyRoute>
+          <TodayNextPage navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'feed':
