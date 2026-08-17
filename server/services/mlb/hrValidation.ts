@@ -133,6 +133,8 @@ export interface ScoredHrCandidate {
   barrelRate?: number | null;
   /** Statcast average exit velocity (mph) from Savant */
   avgExitVelo?: number | null;
+  /** Statcast hard-hit rate (0-1) from Savant */
+  hardHitRate?: number | null;
 }
 
 import { GameWeather } from "./weatherService";
