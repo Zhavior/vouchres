@@ -38,7 +38,7 @@ export const routeModules = {
     import('../features/mlb-stats/pages/MlbStatHubPage'),
 
   dailyPlayers: () => import('../pages/DailyPlayersPageZ8'),
-  liveGames: () => import('../components/LiveGamesProZ8'),
+  liveGames: () => import('../features/live-games-next/pages/LiveGamesNextPage'),
 
   notifications: () =>
     import('../components/notifications/NotificationsPage'),
