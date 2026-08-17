@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   AlertTriangle,
+  Bot,
   CreditCard,
   FileText,
   FlaskConical,
@@ -13,6 +14,7 @@ import {
   Shield,
   UserCog,
   Users,
+  Wrench,
 } from 'lucide-react';
 import { apiClient, type ApiError } from '../../lib/apiClient';
 import {
@@ -22,8 +24,10 @@ import {
 } from '../../theme/auroraTokens';
 
 const AuroraMax = lazy(() => import('./AuroraMax'));
+const AiJudgeConsole = lazy(() => import('./AiJudgeConsole'));
+const SelfHealPanel = lazy(() => import('./SelfHealPanel'));
 
-type AdminTab = 'overview' | 'aurora-max' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'hr-research' | 'system';
+type AdminTab = 'overview' | 'aurora-max' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'hr-research' | 'ai-judges' | 'system' | 'ops';
 
 interface DashboardStats {
   users: number;
@@ -132,7 +136,9 @@ const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: LucideIcon }> = [
   { id: 'cappers', label: 'Cappers', icon: Shield },
   { id: 'grading', label: 'Grading', icon: FileText },
   { id: 'hr-research', label: 'HR Research Lab', icon: FlaskConical },
+  { id: 'ai-judges', label: 'AI Judge Social', icon: Bot },
   { id: 'system', label: 'System Health', icon: Server },
+  { id: 'ops', label: 'Ops & Self-Heal', icon: Wrench },
 ];
 
 const PANEL = `rounded-lg ${AURORA_PANEL_PREMIUM}`;
@@ -249,7 +255,17 @@ export function AdminDashboard() {
       {activeTab === 'cappers' ? <CappersPanel /> : null}
       {activeTab === 'grading' ? <GradingPanel /> : null}
       {activeTab === 'hr-research' ? <HrResearchLab /> : null}
+      {activeTab === 'ai-judges' ? (
+        <Suspense fallback={<div className={`${PANEL} p-5 text-sm text-white/55`}>Loading AI Judge Social...</div>}>
+          <AiJudgeConsole />
+        </Suspense>
+      ) : null}
       {activeTab === 'system' ? <SystemHealth /> : null}
+      {activeTab === 'ops' ? (
+        <Suspense fallback={<div className={`${PANEL} p-5 text-sm text-white/55`}>Loading Ops & Self-Heal...</div>}>
+          <SelfHealPanel />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

@@ -1187,6 +1187,131 @@ openapiRegistry.registerPath({
   },
 });
 
+// ── Model quality: trust calibration + resolution SLA (staff-only) ─────────
+// Every numeric field is nullable on purpose: the underlying view/table emits
+// NULL for statistics it cannot compute, and the API never substitutes a value.
+
+const TrustCalibrationMetricsSchema = z.object({
+  total_users_with_trust: z.number().nullable(),
+  avg_trust_score: z.number().nullable(),
+  max_trust_score: z.number().nullable(),
+  min_trust_score: z.number().nullable(),
+  trust_score_stddev: z.number().nullable(),
+  total_commits: z.number().nullable(),
+  total_locks: z.number().nullable(),
+  total_grades: z.number().nullable(),
+  total_graded_wins: z.number().nullable(),
+  total_graded_losses: z.number().nullable(),
+  avg_win_rate: z.number().nullable(),
+}).openapi("TrustCalibrationMetrics");
+
+const TrustCalibrationSchema = z.object({
+  ok: z.literal(true),
+  version: z.literal("v3"),
+  calibration: z.object({
+    available: z.boolean(),
+    generatedAt: z.string().datetime(),
+    source: z.literal("trust_calibration_metrics"),
+    metrics: TrustCalibrationMetricsSchema.nullable(),
+    gradedDecided: z.number().nullable(),
+  }),
+  meta: RequestMetaSchema.optional(),
+}).openapi("TrustCalibrationResponse");
+
+const ResolutionSlaWindowSchema = z.object({
+  id: z.string(),
+  window_start: z.string(),
+  window_end: z.string(),
+  sla_target_hours: z.number().nullable(),
+  sla_target_percentage: z.number().nullable(),
+  total_outcomes: z.number().nullable(),
+  sla_met_count: z.number().nullable(),
+  sla_missed_count: z.number().nullable(),
+  sla_percentage: z.number().nullable(),
+  avg_resolution_hours: z.number().nullable(),
+  p50_resolution_hours: z.number().nullable(),
+  p95_resolution_hours: z.number().nullable(),
+  max_resolution_hours: z.number().nullable(),
+  market_breakdown: z.record(z.string(), z.unknown()),
+  created_at: z.string(),
+}).openapi("ResolutionSlaWindow");
+
+const ResolutionSlaSchema = z.object({
+  ok: z.literal(true),
+  version: z.literal("v3"),
+  sla: z.object({
+    available: z.boolean(),
+    generatedAt: z.string().datetime(),
+    source: z.literal("resolution_sla_metrics"),
+    windowCount: z.number(),
+    latest: ResolutionSlaWindowSchema.nullable(),
+    windows: z.array(ResolutionSlaWindowSchema),
+  }),
+  meta: RequestMetaSchema.optional(),
+}).openapi("ResolutionSlaResponse");
+
+openapiRegistry.register("TrustCalibrationResponse", TrustCalibrationSchema);
+openapiRegistry.register("ResolutionSlaResponse", ResolutionSlaSchema);
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/v3/trust/calibration",
+  summary: "System-wide trust calibration metrics (staff-only)",
+  tags: ["Trust"],
+  responses: {
+    200: {
+      description: "Trust calibration snapshot. Absent statistics are null, never zero.",
+      content: { "application/json": { schema: TrustCalibrationSchema } },
+    },
+    401: {
+      description: "Missing or invalid auth",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    403: {
+      description: "Staff access required",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    502: {
+      description: "Calibration view unavailable",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/v3/resolution/sla",
+  summary: "Resolution Engine SLA metrics by window (staff-only)",
+  tags: ["Resolution"],
+  request: {
+    query: z.object({
+      limit: z.coerce.number().int().min(1).max(60).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Recent SLA windows, newest first. Empty when none recorded.",
+      content: { "application/json": { schema: ResolutionSlaSchema } },
+    },
+    400: {
+      description: "Invalid limit",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    401: {
+      description: "Missing or invalid auth",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    403: {
+      description: "Staff access required",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    502: {
+      description: "SLA metrics table unavailable",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
 export function buildOpenApiDocument() {
   const generator = new OpenApiGeneratorV3(openapiRegistry.definitions);
   return generator.generateDocument({

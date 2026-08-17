@@ -17,7 +17,7 @@
 import type { Parlay, Leg } from '../types';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { LOCK_MINUTES } from './parlayLifecycle';
-import type { SportId } from '../sports/registry';
+import { SPORTS, type SportId } from '../sports/registry';
 
 // ─── Market definitions ────────────────────────────────────────────────────────
 
@@ -104,17 +104,22 @@ interface StarterCandidate {
 
 // ─── Lineup fetcher ────────────────────────────────────────────────────────────
 
-const SPORT_LINEUP_ENDPOINT: Record<SportId, string> = {
-  mlb: '/api/mlb/lineup/today',
-  nba: '/api/nba/lineup/today',
-  nfl: '/api/nfl/lineup/today',
-};
-
-/** Pull confirmed starters (with game start time) from the lineup feed. */
+/**
+ * Pull confirmed starters (with game start time) from the lineup feed.
+ *
+ * The endpoint comes from the sport registry rather than a local map so this
+ * can't drift from it. Disabled sports (NBA/NFL) have no backend route yet, and
+ * `safeJsonFetch` would turn that 404 into an empty slate — which reads as
+ * "no edges today" instead of "this sport isn't live". Fail loudly instead.
+ */
 async function fetchConfirmedStarters(
   sport: SportId
 ): Promise<{ hitters: StarterCandidate[]; pitchers: StarterCandidate[] }> {
-  const endpoint = SPORT_LINEUP_ENDPOINT[sport];
+  const config = SPORTS[sport];
+  if (!config?.enabled) {
+    throw new Error(`${config?.label ?? sport.toUpperCase()} is not live yet — no lineup feed exists for it.`);
+  }
+  const endpoint = config.lineupEndpoint;
   const res = await safeJsonFetch<any>(endpoint, {
     fallbackData: { games: [] },
     timeoutMs: 14_000,
