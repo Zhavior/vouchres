@@ -103,18 +103,30 @@ function Field({
 class ViewportResizeObserver implements ResizeObserver {
   private readonly targets = new Set<Element>();
   private readonly callback: () => void;
-  private frame = 0;
+  private pending = 0;
   private timers: number[] = [];
 
   constructor(callback: ResizeObserverCallback) {
     this.callback = () => callback([], this);
   }
 
+  /**
+   * Timers rather than `requestAnimationFrame`, deliberately.
+   *
+   * rAF is exactly what is unavailable in the case this class exists to cover:
+   * a tab the browser is not painting stops running animation frames, and the
+   * resize-observation step rides the same frame lifecycle — which is why the
+   * native observer delivers nothing there either. An rAF-based fallback would
+   * be broken in precisely the situation it is meant to rescue. `setTimeout`
+   * keeps running, so the canvas gets its size whether or not the tab is being
+   * painted, and is correctly sized the moment it becomes visible.
+   */
   private schedule = () => {
-    cancelAnimationFrame(this.frame);
-    this.frame = requestAnimationFrame(() => {
+    if (this.pending !== 0) return;
+    this.pending = window.setTimeout(() => {
+      this.pending = 0;
       if (this.targets.size > 0) this.callback();
-    });
+    }, 0);
   };
 
   observe(target: Element): void {
@@ -123,10 +135,13 @@ class ViewportResizeObserver implements ResizeObserver {
       window.addEventListener('resize', this.schedule);
       window.addEventListener('orientationchange', this.schedule);
     }
-    // The container measures zero on the first layout pass, so re-measure on
-    // the next frame and again once layout has settled.
+    // The container measures zero on the first layout pass, so measure again
+    // once layout has settled.
     this.schedule();
-    this.timers.push(window.setTimeout(this.schedule, 120), window.setTimeout(this.schedule, 400));
+    this.timers.push(
+      window.setTimeout(this.schedule, 120),
+      window.setTimeout(this.schedule, 400),
+    );
   }
 
   unobserve(target: Element): void {
@@ -135,7 +150,8 @@ class ViewportResizeObserver implements ResizeObserver {
 
   disconnect(): void {
     this.targets.clear();
-    cancelAnimationFrame(this.frame);
+    window.clearTimeout(this.pending);
+    this.pending = 0;
     this.timers.forEach((timer) => window.clearTimeout(timer));
     this.timers = [];
     window.removeEventListener('resize', this.schedule);
@@ -183,8 +199,8 @@ function CanvasLifecycle() {
 
     syncSize();
     // The container can still measure zero on the first layout pass, so take a
-    // second reading once layout has settled.
-    const frame = requestAnimationFrame(syncSize);
+    // second reading once layout has settled. Timers rather than rAF, for the
+    // same reason ViewportResizeObserver uses them.
     const settle = window.setTimeout(syncSize, 250);
 
     const handleLost = (event: Event) => {
@@ -212,7 +228,6 @@ function CanvasLifecycle() {
     if (parent) observer?.observe(parent);
 
     return () => {
-      cancelAnimationFrame(frame);
       window.clearTimeout(settle);
       window.removeEventListener('resize', syncSize);
       window.removeEventListener('orientationchange', syncSize);
@@ -322,6 +337,10 @@ export function DecorativeParticleField({
           camera={{ position: [0, 0, 5], fov: 75 }}
           gl={{ alpha: true, antialias: false, failIfMajorPerformanceCaveat: false }}
           dpr={[1, 2]}
+          // Without this the renderer is never configured at all in this frame:
+          // R3F waits for a non-zero measurement and the native observer never
+          // reports one. See ViewportResizeObserver above.
+          resize={{ polyfill: ViewportResizeObserver, debounce: 0, scroll: false }}
           // Hard-stops the render loop while the tab is backgrounded, rather
           // than leaving it to the browser's rAF throttling.
           frameloop={documentVisible ? 'always' : 'never'}

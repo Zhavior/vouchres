@@ -83,7 +83,7 @@ type ProviderProps = {
 
 export function NotificationProvider({ savedSlips = [], onNavigate, children }: ProviderProps) {
   const queryClient = useQueryClient();
-  const { data: appList = [], markAllRead, clearLocal } = useAppNotifications();
+  const { data: appList = [], unreadCount: appUnread, markAllRead, clearLocal } = useAppNotifications();
   const hr = useHrNotificationState(savedSlips);
 
   const [open, setOpen] = useState(false);
@@ -142,7 +142,9 @@ export function NotificationProvider({ savedSlips = [], onNavigate, children }: 
     });
   }, [appList]);
 
-  const appUnread = appList.filter((n) => !n.read).length;
+  // appUnread comes from the hook, which prefers the server's unread total over
+  // counting the rendered page — the list request is capped at 50 rows, so a
+  // local count silently plateaus there.
   const unreadCount = appUnread;
 
   const openPanel = useCallback(() => {

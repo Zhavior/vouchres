@@ -25,7 +25,7 @@ async function fetchPublicProof(pickId: string): Promise<ClientParlayProof | nul
 async function fetchOwnedProof(pickId: string): Promise<ClientParlayProof | null> {
   try {
     const result = await apiClient.get<{ parlay: Record<string, unknown> }>(
-      `/api/parlays/${encodeURIComponent(pickId)}`,
+      `/api/v3/parlays/${encodeURIComponent(pickId)}`,
     );
     if (result?.parlay) return mapOwnedParlayToProof(result.parlay);
   } catch {

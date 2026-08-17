@@ -61,6 +61,7 @@ const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
 const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
 const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
 const HrNextPage = lazyWithRetry(() => import('../../features/hr-next/pages/HrNextPage'));
+const TrustModelQualityPage = lazyWithRetry(() => import('../../features/trust/TrustModelQualityPage'));
 const TodayNextPage = lazyWithRetry(() => import('../../features/today-next/pages/TodayNextPage'));
 // Module scope on purpose. Building this inside AdminAccessGateShell creates a
 // new lazy component type every render, so React remounts and re-suspends the
@@ -456,6 +457,16 @@ function MainViewRouter({
         <LazyRoute>
           <AdminAccessGateShell>
             <HrNextPage />
+          </AdminAccessGateShell>
+        </LazyRoute>
+      );
+    // Staff-only: the endpoints behind this are requireAuth + requireStaff, and
+    // the page has no client-side gate of its own.
+    case 'admin_model_quality':
+      return (
+        <LazyRoute>
+          <AdminAccessGateShell>
+            <TrustModelQualityPage />
           </AdminAccessGateShell>
         </LazyRoute>
       );
