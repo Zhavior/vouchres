@@ -93,19 +93,29 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
   useEffect(() => {
     const scope = SCOPE_MAP[activeRange] ?? 'overall';
+    // Keyed on activeRange: without aborting, switching range twice quickly
+    // could let the first response land after the second and win.
+    const controller = new AbortController();
     setLoading(true);
     apiClient.get<{ entries?: unknown[] }>('/api/leaderboard', {
       scope,
       limit: 50,
       min_picks: 1,
       include_users: true,
-    })
+    }, controller.signal)
       .then((data) => {
+        if (controller.signal.aborted) return;
         const entries: any[] = data.entries ?? [];
         setAllCappers(entries.map(entryToCapper));
       })
-      .catch(() => setAllCappers([]))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setAllCappers([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [activeRange]);
 
   const toggleFollow = (username: string, e: React.MouseEvent) => {
