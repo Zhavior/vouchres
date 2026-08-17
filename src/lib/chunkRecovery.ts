@@ -5,7 +5,7 @@ const CHUNK_RECOVERY_STARTED_AT_KEY = "vouchedge_chunk_recovery_started_at_v2";
 const RECOVERY_GUARD_TTL_MS = 60_000;
 
 const CHUNK_FAILURE_RE =
-  /ChunkLoadError|Loading chunk|Loading CSS chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unexpected token ['"]<['"]|Unexpected token <|MIME type.*text\/html/i;
+  /ChunkLoadError|Loading chunk|Loading CSS chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unexpected token ['"]<['"]|Unexpected token <|MIME type.*text\/html|Outdated Optimize Dep|outdated dependency/i;
 
 let fallbackHook: (() => void) | null = null;
 
@@ -59,21 +59,46 @@ export function isChunkRecoveryPending(): boolean {
   return safeSessionGet(CHUNK_RELOAD_KEY) === "1";
 }
 
-function isChunkFailureReason(reason: unknown): boolean {
-  const message =
-    reason instanceof Error
-      ? reason.message
-      : typeof reason === "string"
-        ? reason
-        : reason && typeof reason === "object" && "message" in reason
-          ? String((reason as { message?: unknown }).message ?? "")
-          : "";
-
-  return CHUNK_FAILURE_RE.test(message);
+function messageOf(reason: unknown): string {
+  return reason instanceof Error
+    ? reason.message
+    : typeof reason === "string"
+      ? reason
+      : reason && typeof reason === "object" && "message" in reason
+        ? String((reason as { message?: unknown }).message ?? "")
+        : "";
 }
 
-function isDevHmrChunkNoise(): boolean {
-  return Boolean(import.meta.env.DEV) && import.meta.env.MODE !== "test";
+function isChunkFailureReason(reason: unknown): boolean {
+  return CHUNK_FAILURE_RE.test(messageOf(reason));
+}
+
+/**
+ * Signatures that can only mean the tab is holding a reference into a
+ * dependency pre-bundle the dev server has since replaced: Vite's own 504 for
+ * an outdated optimized dep, or a failed request naming a file under
+ * `node_modules/.vite/deps`.
+ *
+ * Neither can be produced by an in-flight HMR edit, which is what the blanket
+ * dev block below exists to ignore. A reload is the correct response to both,
+ * because the fresh document fetches the current dep graph.
+ */
+const STALE_OPTIMIZED_DEP_RE =
+  /Outdated Optimize Dep|node_modules\/\.vite\/deps\/|outdated dependency/i;
+
+function isStaleOptimizedDep(reason: unknown): boolean {
+  return STALE_OPTIMIZED_DEP_RE.test(messageOf(reason));
+}
+
+/**
+ * Dev builds swallow chunk failures by default: HMR routinely produces
+ * transient import errors mid-edit, and auto-reloading on those fights the
+ * editor. The exception is an unambiguous stale-dep signature, which HMR
+ * cannot generate — those still recover, behind the same one-reload guard.
+ */
+function isDevHmrChunkNoise(reason?: unknown): boolean {
+  if (!import.meta.env.DEV || import.meta.env.MODE === "test") return false;
+  return !isStaleOptimizedDep(reason);
 }
 
 function showChunkFallbackUi(): void {
@@ -129,9 +154,9 @@ function reloadOnceOnChunkFailure(event?: Event): void {
  *
  * Recovery is intentionally limited to one automatic refresh.
  */
-export function recoverFromChunkFailure(): void {
+export function recoverFromChunkFailure(reason?: unknown): void {
   if (typeof window === "undefined") return;
-  if (isDevHmrChunkNoise()) return;
+  if (isDevHmrChunkNoise(reason)) return;
   reloadOnceOnChunkFailure();
 }
 
@@ -139,7 +164,7 @@ function onUnhandledRejection(event: PromiseRejectionEvent): void {
   if (!isChunkFailureReason(event.reason)) return;
 
   event.preventDefault();
-  if (isDevHmrChunkNoise()) return;
+  if (isDevHmrChunkNoise(event.reason)) return;
   reloadOnceOnChunkFailure();
 }
 
@@ -154,9 +179,13 @@ export function initChunkRecovery(): void {
 
   normalizeRecoveryGuard();
 
-  if (!isDevHmrChunkNoise()) {
-    window.addEventListener("vite:preloadError", reloadOnceOnChunkFailure);
-  }
+  // Registered in every mode. The handler re-checks the payload, so a dev
+  // session still ignores HMR noise but recovers from a stale optimized dep.
+  window.addEventListener("vite:preloadError", (event: Event) => {
+    const payload = (event as Event & { payload?: unknown }).payload;
+    if (isDevHmrChunkNoise(payload)) return;
+    reloadOnceOnChunkFailure(event);
+  });
   window.addEventListener("unhandledrejection", onUnhandledRejection);
 
   if (

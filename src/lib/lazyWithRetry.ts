@@ -25,7 +25,7 @@ export interface LazyWithRetryOptions {
 }
 
 const CHUNK_ERROR_RE =
-  /ChunkLoadError|Loading chunk|Loading CSS chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unexpected token <|MIME type.*text\/html/i;
+  /ChunkLoadError|Loading chunk|Loading CSS chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unexpected token <|MIME type.*text\/html|Outdated Optimize Dep|outdated dependency/i;
 
 export function isLazyChunkError(error: unknown): boolean {
   const message =
@@ -60,7 +60,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       return await importer();
     } catch (error) {
       if (reloadOnFailure && isLazyChunkError(error)) {
-        recoverFromChunkFailure();
+        recoverFromChunkFailure(error);
       }
 
       throw error;
