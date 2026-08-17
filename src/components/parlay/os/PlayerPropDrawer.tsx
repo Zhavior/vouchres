@@ -328,11 +328,11 @@ export function PlayerPropDrawer({
             <span className="truncate">Launch: <strong className="text-white">{player.exitVelocity || '116 mph'}</strong></span>
           </div>
           <div className="flex items-center gap-1.5 text-white/70">
-            <Activity className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+            <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
             <span className="truncate">EV Edge: <strong className="text-emerald-400">{player.evScore || '+18.4%'}</strong></span>
           </div>
           <div className="flex items-center gap-1.5 text-white/70">
-            <Wind className="h-3.5 w-3.5 text-cyan-300 shrink-0" />
+            <Wind className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
             <span className="truncate">{player.windVector || 'Wind 8mph Out'}</span>
           </div>
         </div>
@@ -404,7 +404,7 @@ export function PlayerPropDrawer({
                         ({market.bestBook})
                       </span>
                     </div>
-                    <span className="font-mono text-[9px] font-bold text-cyan-400">
+                    <span className="font-mono text-[9px] font-bold text-emerald-400">
                       {market.evEdge} EV
                     </span>
                   </div>

@@ -184,7 +184,7 @@ export default function MetricsBento({ model }: { model: PlayerResearchModel }) 
                               <XAxis dataKey="game" stroke="#64748b" tickLine={false} />
                               <YAxis stroke="#64748b" tickLine={false} domain={['auto', 'auto']} />
                               <Tooltip contentStyle={{ backgroundColor: '#090d16', borderColor: '#1e293b', borderRadius: '8px', color: '#fff' }} />
-                              <Line type="monotone" dataKey="OPS" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="OPS" stroke="#00d9a0" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -215,7 +215,7 @@ export default function MetricsBento({ model }: { model: PlayerResearchModel }) 
                                   dataKey="value"
                                 >
                                   <Cell fill="#10b981" />
-                                  <Cell fill="#3b82f6" />
+                                  <Cell fill="#10b981" />
                                   <Cell fill="#f59e0b" />
                                   <Cell fill="#8b5cf6" />
                                 </Pie>
@@ -226,7 +226,7 @@ export default function MetricsBento({ model }: { model: PlayerResearchModel }) 
                           
                           <div className="text-[8.5px] font-mono leading-normal text-white/45 space-y-1.5 pr-1 shrink-0">
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LHP: {activePlayer.splits.vLHP.ops}</div>
-                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> RHP: {activePlayer.splits.vRHP.ops}</div>
+                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> RHP: {activePlayer.splits.vRHP.ops}</div>
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Home: {activePlayer.splits.home.ops}</div>
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-violet-500 inline-block" /> Away: {activePlayer.splits.away.ops}</div>
                           </div>

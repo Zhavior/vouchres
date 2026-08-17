@@ -23,40 +23,32 @@
   min-height: 100vh;
   color: rgba(231,236,243,.94);
   background:
-    radial-gradient(90% 55% at 50% -18%, rgba(79,184,220,.08), transparent 62%),
+    radial-gradient(90% 55% at 50% -18%, rgba(255, 255, 255, 0.044), transparent 62%),
     radial-gradient(50% 42% at 100% 100%, rgba(49,181,131,.05), transparent 68%),
-    #050A14;
+    #08090A;
 }
 
 .ve-motion-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.ve-motion-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(79,184,220,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(79,184,220,.055) 1px,transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom,black,transparent 72%); }
+.ve-motion-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(255, 255, 255, 0.0303) 1px,transparent 1px),linear-gradient(90deg,rgba(255, 255, 255, 0.0303) 1px,transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom,black,transparent 72%); }
 .ve-motion-noise { position: absolute; inset: 0; opacity: .035; background-image: var(--background-image-z8-noise); }
-.ve-motion-spotlight { position: absolute; top: -18rem; left: 50%; width: 48rem; height: 34rem; transform: translateX(-50%); border-radius: 999px; background: rgba(79,184,220,.08); filter: blur(72px); }
+.ve-motion-spotlight { position: absolute; top: -18rem; left: 50%; width: 48rem; height: 34rem; transform: translateX(-50%); border-radius: 999px; background: rgba(0,217,160,.08); filter: blur(72px); }
 .ve-motion-orb { display: none; }
 .ve-motion-content { position: relative; z-index: 1; }
 
+/* Routes live under the global top bar, not beside a left rail. The board
+   surfaces take the full width; the feed keeps its right rail. */
 #layout-inner-frame.ve-layout-frame { display: grid; width: 100%; min-width: 0; margin: 0 auto; transition: grid-template-columns 300ms cubic-bezier(0.16, 1, 0.3, 1); }
-#layout-inner-frame.ve-layout-feed { max-width: 1280px; grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr) 308px; }
-#layout-inner-frame.ve-layout-wide { max-width: 1500px; grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); }
+#layout-inner-frame.ve-layout-feed { max-width: none; grid-template-columns: minmax(0,1fr) 308px; }
+#layout-inner-frame.ve-layout-wide { max-width: none; grid-template-columns: minmax(0,1fr); }
 #layout-inner-frame.ve-layout-welcome { display: block; max-width: none; }
 #center-main-content-column, #inner-view-slot { width: 100%; min-width: 0; max-width: 100%; }
 .ve-edge-rail { min-width: 0; }
-.ve-edge-rail-left { grid-column: 1; align-self: start; height: 100dvh; }
-.ve-edge-rail-right { grid-column: 3; }
-#layout-inner-frame #center-main-content-column { grid-column: 2; }
-
-/* Navigation is a compact product map, not a second scroll page. */
-@media (min-width: 1181px) {
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > #z8-feed-sidebar,
-  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > #z8-feed-sidebar {
-    overflow-y: hidden !important;
-    overscroll-behavior: auto;
-  }
-}
+.ve-edge-rail-right { grid-column: 2; }
+#layout-inner-frame #center-main-content-column { grid-column: 1; }
 .page-shell, .page-container, .dashboard-shell, .daily-theater-pro, .daily-players-page, .daily-players-board, .daily-players-content, .results-studio, .profile-page, .settings-page, .live-games-pro, .player-research-hub, .team-matchup-lab, .daily-hr-board { width: 100%; min-width: 0; }
 
 .ve-premium-panel, .ve-card, .ve-card-soft, .ve-card-elevated, .ve-stat-card, .ve-surface-card, .ve-tool-card {
-  border: 1px solid rgba(79,184,220,.14);
+  border: 1px solid rgba(0,217,160,.14);
   background: linear-gradient(135deg,rgba(231,236,243,.045),rgba(231,236,243,.012)),rgba(5,10,20,.72);
   box-shadow: 0 10px 28px rgba(0,0,0,.32), inset 0 1px 0 rgba(231,236,243,.05);
 }
@@ -65,39 +57,37 @@
     backdrop-filter: blur(12px) saturate(1.08);
   }
 }
-.ve-button-primary { border: 1px solid rgba(79,184,220,.48); background: rgba(79,184,220,.13); color: #E7ECF3; }
+.ve-button-primary { border: 1px solid rgba(0,217,160,.48); background: rgba(0,217,160,.13); color: #EFF0F2; }
 .ve-button-secondary { border: 1px solid rgba(231,236,243,.12); background: rgba(5,10,20,.52); color: rgba(231,236,243,.72); }
 .ve-button-primary, .ve-button-secondary { font-family: var(--z8-font-mono); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 
-.ve-edge-island-trigger { border: 1px solid rgba(79,184,220,.38); background: rgba(5,10,20,.82); box-shadow: 0 10px 30px rgba(0,0,0,.48),0 0 20px rgba(79,184,220,.1); backdrop-filter: blur(18px); transition: transform .2s ease,border-color .2s ease,background .2s ease; }
-.ve-edge-island-trigger:hover { transform: translateY(-2px); border-color: rgba(49,181,131,.55); background: rgba(79,184,220,.1); }
-.ve-edge-island-trigger-icon { color: #4FB8DC; }
+.ve-edge-island-trigger { border: 1px solid rgba(0,217,160,.38); background: rgba(5,10,20,.82); box-shadow: 0 10px 30px rgba(0,0,0,.48),0 0 20px rgba(0,217,160,.1); backdrop-filter: blur(18px); transition: transform .2s ease,border-color .2s ease,background .2s ease; }
+.ve-edge-island-trigger:hover { transform: translateY(-2px); border-color: rgba(49,181,131,.55); background: rgba(0,217,160,.1); }
+.ve-edge-island-trigger-icon { color: #00D9A0; }
 
 .home-feed-shell, .feed-main { width: 100%; max-width: 680px; min-width: 0; margin-inline: auto; }
 .home-feed-header, .home-feed-tabs, .feed-composer, .feed-post, .ve-social-stream-command, .ve-real-composer, .ve-vouch-composer {
   border: 1px solid rgba(231,236,243,.08); background: rgba(5,10,20,.6); box-shadow: inset 0 1px 0 rgba(231,236,243,.035); backdrop-filter: blur(14px);
 }
-.feed-post:hover { border-color: rgba(79,184,220,.22); background: rgba(79,184,220,.035); }
+.feed-post:hover { border-color: rgba(0,217,160,.22); background: rgba(0,217,160,.035); }
 .feed-action-btn, .feed-icon-btn { display: inline-flex; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; border-radius: 999px; transition: background .18s ease,color .18s ease; }
-.feed-action-btn:hover, .feed-icon-btn:hover { background: rgba(79,184,220,.1); color: #4FB8DC; }
+.feed-action-btn:hover, .feed-icon-btn:hover { background: rgba(0,217,160,.1); color: #00D9A0; }
 
 .daily-players-page, .daily-players-board, .daily-theater-pro { color: rgba(231,236,243,.92); }
 .daily-matchup-card-pro, .daily-roster-panel-pro, .dp-game-card, .dp-roster-column, .daily-faceoff-header-pro {
-  border: 1px solid rgba(79,184,220,.14); background: rgba(5,10,20,.64); box-shadow: inset 0 1px 0 rgba(231,236,243,.04); backdrop-filter: blur(16px);
+  border: 1px solid rgba(0,217,160,.14); background: rgba(5,10,20,.64); box-shadow: inset 0 1px 0 rgba(231,236,243,.04); backdrop-filter: blur(16px);
 }
 .daily-player-row-pro, .dp-player-row { border-color: rgba(231,236,243,.07); }
-.daily-player-row-pro:hover, .dp-player-row:hover { background: rgba(79,184,220,.055); }
+.daily-player-row-pro:hover, .dp-player-row:hover { background: rgba(0,217,160,.055); }
 
 .ve-terminal-preview-row { background: rgba(5,10,20,.46); }
 
 @media (max-width: 1180px) {
-  :root { --ve-sidebar-width: 72px; }
-  #layout-inner-frame.ve-layout-feed { grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); }
+  #layout-inner-frame.ve-layout-feed { grid-template-columns: minmax(0,1fr); }
   .ve-edge-rail-right { display: none; }
 }
 @media (max-width: 767px) {
   #layout-inner-frame.ve-layout-feed, #layout-inner-frame.ve-layout-wide { display: block; }
-  .ve-edge-rail-left { display: none; }
   .ve-mobile-fab-cluster { right: 1rem; bottom: 1rem; }
   .ve-terminal-page { padding-bottom: 5.75rem; }
   .ve-terminal-header-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/fonts.css";
 @import "./styles/vouchedge-tokens.css";
 @import "./styles/vouchedge-utilities.css";
 @import "./styles/vouchedge-motion.css";
@@ -55,7 +56,7 @@ main {
 }
 
 @theme {
-  --color-primary: #4FB8DC;
+  --color-primary: #00D9A0;
   --color-success: #31B583;
   --color-danger: #D96459;
   --color-warning: #D99C4A;

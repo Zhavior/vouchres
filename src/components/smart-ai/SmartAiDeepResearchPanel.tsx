@@ -101,8 +101,8 @@ const SIGNAL_LABELS: Array<{ key: keyof CandidateScoreBreakdown; label: string }
 
 const TIER_STYLES: Record<string, string> = {
   elite: 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200',
-  strong: 'border-cyan-300/30 bg-cyan-400/10 text-cyan-200',
-  watchlist: 'border-sky-300/25 bg-sky-400/10 text-sky-200',
+  strong: 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200',
+  watchlist: 'border-emerald-300/25 bg-emerald-400/10 text-emerald-200',
   thin: 'border-amber-300/25 bg-amber-400/10 text-amber-200',
   avoid: 'border-rose-300/25 bg-rose-400/10 text-rose-200',
 };
@@ -129,7 +129,7 @@ function SignalBars({ breakdown, maxima }: { breakdown: CandidateScoreBreakdown;
             </div>
             <div className="mt-0.5 h-1 rounded-full bg-slate-800/80">
               <div
-                className="h-1 rounded-full bg-gradient-to-r from-cyan-400/70 to-emerald-400/70"
+                className="h-1 rounded-full bg-gradient-to-r from-emerald-400/70 to-emerald-400/70"
                 style={{ width: `${width}%` }}
               />
             </div>
@@ -278,7 +278,7 @@ export function SmartAiDeepResearchPanel({
       <div className="rounded-3xl border border-slate-800/80 bg-slate-950/80 p-4 space-y-3 shadow-xl shadow-black/20">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300 font-mono">Deep Research Board</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-300 font-mono">Deep Research Board</p>
             <h3 className="mt-1 text-lg font-black text-white tracking-tight">
               Today&apos;s verified candidates
             </h3>
@@ -301,7 +301,7 @@ export function SmartAiDeepResearchPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search player, team, or pitcher..."
-              className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-2.5 pl-10 pr-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-cyan-400/40 focus:outline-none"
+              className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-2.5 pl-10 pr-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-emerald-400/40 focus:outline-none"
               id="deep-research-search"
             />
           </div>
@@ -309,7 +309,7 @@ export function SmartAiDeepResearchPanel({
           <select
             value={lineupFilter}
             onChange={(e) => setLineupFilter(e.target.value as typeof lineupFilter)}
-            className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-xs font-bold text-slate-300 focus:border-cyan-400/40 focus:outline-none"
+            className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-xs font-bold text-slate-300 focus:border-emerald-400/40 focus:outline-none"
             id="deep-research-lineup-filter"
           >
             <option value="all">All lineups</option>
@@ -320,7 +320,7 @@ export function SmartAiDeepResearchPanel({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-xs font-bold text-slate-300 focus:border-cyan-400/40 focus:outline-none"
+            className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-xs font-bold text-slate-300 focus:border-emerald-400/40 focus:outline-none"
             id="deep-research-sort"
           >
             {SORT_OPTIONS.map((option) => (
@@ -335,7 +335,7 @@ export function SmartAiDeepResearchPanel({
       {/* Body */}
       {loading ? (
         <div className="rounded-3xl border border-slate-800/80 bg-slate-950/60 p-12 text-center">
-          <FlaskConical className="mx-auto h-8 w-8 animate-pulse text-cyan-400" />
+          <FlaskConical className="mx-auto h-8 w-8 animate-pulse text-emerald-400" />
           <p className="mt-3 text-sm font-bold text-slate-400">Loading today&apos;s validated board...</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -366,9 +366,9 @@ export function SmartAiDeepResearchPanel({
             return (
               <article
                 key={`${c.playerId}-${c.gamePk}`}
-                className="group relative overflow-hidden rounded-3xl border border-slate-800/80 bg-ve-obsidian/90 p-4 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:border-cyan-300/25"
+                className="group relative overflow-hidden rounded-3xl border border-slate-800/80 bg-ve-obsidian/90 p-4 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:border-emerald-300/25"
               >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/35 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/35 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   {/* Identity */}
@@ -379,7 +379,7 @@ export function SmartAiDeepResearchPanel({
                         alt=""
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        className="h-12 w-12 shrink-0 rounded-2xl border border-cyan-300/20 bg-slate-950 object-cover"
+                        className="h-12 w-12 shrink-0 rounded-2xl border border-emerald-300/20 bg-slate-950 object-cover"
                       />
                     ) : (
                       <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-slate-800 bg-slate-900 text-xs font-black text-slate-500">
@@ -464,7 +464,7 @@ export function SmartAiDeepResearchPanel({
                       <span className="block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-slate-500">
                         Model HR est. — not sportsbook odds
                       </span>
-                      <span className="text-lg font-mono font-black text-cyan-200">
+                      <span className="text-lg font-mono font-black text-emerald-200">
                         {probability ?? '—'}
                       </span>
                     </div>
@@ -473,7 +473,7 @@ export function SmartAiDeepResearchPanel({
                         <button
                           type="button"
                           onClick={() => loadMatchup(c)}
-                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-300 transition hover:border-sky-300/40 hover:text-sky-200"
+                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-300 transition hover:border-emerald-300/40 hover:text-emerald-200"
                         >
                           <History className="h-3.5 w-3.5" />
                           Matchup
@@ -483,7 +483,7 @@ export function SmartAiDeepResearchPanel({
                         <button
                           type="button"
                           onClick={() => onOpenResearch(c)}
-                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-300 transition hover:border-cyan-300/40 hover:text-cyan-200"
+                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-300 transition hover:border-emerald-300/40 hover:text-emerald-200"
                         >
                           <Microscope className="h-3.5 w-3.5" />
                           Research
@@ -502,7 +502,7 @@ export function SmartAiDeepResearchPanel({
                 {c.scoreBreakdown ? (
                   <div className="mt-3 rounded-2xl border border-slate-800/80 bg-slate-950/55 p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] text-cyan-300">
+                      <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] text-emerald-300">
                         Signal Breakdown
                       </span>
                       {typeof c.dataConfidence === 'number' && (
@@ -600,7 +600,7 @@ export function SmartAiDeepResearchPanel({
                               </span>
                             )}
                             {batter.tags.map((tag) => (
-                              <span key={tag} className="rounded-full border border-sky-300/20 bg-sky-400/10 px-2 py-0.5 text-[9px] font-mono font-black uppercase text-sky-200">
+                              <span key={tag} className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono font-black uppercase text-emerald-200">
                                 {tag}
                               </span>
                             ))}
@@ -611,8 +611,8 @@ export function SmartAiDeepResearchPanel({
                   }
 
                   return (
-                    <div className="mt-3 rounded-2xl border border-sky-300/15 bg-sky-400/5 p-3">
-                      <span className="mb-1.5 block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-sky-300">
+                    <div className="mt-3 rounded-2xl border border-emerald-300/15 bg-emerald-400/5 p-3">
+                      <span className="mb-1.5 block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-emerald-300">
                         Matchup History — MLB career data
                       </span>
                       {body}
@@ -648,10 +648,10 @@ export function SmartAiDeepResearchPanel({
               <button
                 type="button"
                 onClick={() => setVisibleCount((count) => Math.min(count + 12, filtered.length))}
-                className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-100 transition hover:border-cyan-200/50 hover:bg-cyan-400/20"
+                className="rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-emerald-100 transition hover:border-emerald-200/50 hover:bg-emerald-400/20"
               >
                 Load more verified candidates
-                <span className="ml-2 text-cyan-200/70">
+                <span className="ml-2 text-emerald-200/70">
                   {visibleCandidates.length}/{filtered.length}
                 </span>
               </button>

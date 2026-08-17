@@ -726,14 +726,14 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
           {/* Glassmorphic Page Header Hero */}
           <header className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-2xl p-5 sm:p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] transition-all">
             {/* Ambient Mesh Glows */}
-            <div className="pointer-events-none absolute -top-24 -left-20 h-72 w-72 rounded-full bg-cyan-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -top-24 -left-20 h-72 w-72 rounded-full bg-emerald-500/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-            <div className="pointer-events-none absolute top-1/2 left-1/3 h-40 w-60 -translate-y-1/2 rounded-full bg-blue-600/10 blur-3xl" />
+            <div className="pointer-events-none absolute top-1/2 left-1/3 h-40 w-60 -translate-y-1/2 rounded-full bg-emerald-600/10 blur-3xl" />
 
             <div className="relative z-10 flex flex-wrap items-end justify-between gap-5">
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-cyan-300 text-xs font-mono font-bold tracking-wider uppercase mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#00d9a0]" />
                   {STRINGS_EN.header.eyebrow}
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
@@ -747,7 +747,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
               {/* Translucent Live Telemetry & Feed Badges */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 {showUpdatedBadge && (
-                  <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/15 backdrop-blur-md border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                  <span className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 backdrop-blur-md border border-emerald-400/40 text-emerald-300 text-xs font-mono font-bold animate-pulse motion-reduce:animate-none shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                     <Sparkles className="w-3.5 h-3.5" />
                     {STRINGS_EN.header.badges.slateUpdated}
                   </span>
@@ -763,8 +763,8 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                   {STRINGS_EN.header.badges.liveEngine}
                 </span>
                 {data.length > 0 && !isFailed && (
-                  <span className="whitespace-nowrap hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 backdrop-blur-md border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
-                    <Wifi className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="whitespace-nowrap hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold">
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
                     {isLastGood
                       ? STRINGS_EN.header.badges.mlbFeedLastGood
                       : STRINGS_EN.header.badges.mlbFeedConnected}
@@ -836,7 +836,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                 startersOnly
                   ? startersFilter.showingProjectedPreview
                     ? 'bg-amber-500/15 border-amber-500/40 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                    : 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                    : 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                   : 'bg-white/[0.03] border-white/10 text-white/60 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
@@ -844,7 +844,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                 startersOnly
                   ? startersFilter.showingProjectedPreview
                     ? 'bg-amber-300'
-                    : 'bg-cyan-400'
+                    : 'bg-emerald-400'
                   : 'bg-white/30'
               }`} />
               {startersFilter.showingProjectedPreview
@@ -863,7 +863,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                 ? STRINGS_EN.controls.showingProjectedPool
                 : STRINGS_EN.controls.showingActiveRoster}
               {startersOnly && (
-                <span className="ml-1.5 text-cyan-300/80 font-bold">
+                <span className="ml-1.5 text-emerald-300/80 font-bold">
                   {STRINGS_EN.controls.confirmedStartersCount(confirmedStarterCount)}
                 </span>
               )}
@@ -898,7 +898,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                       aria-pressed={isActive}
                       className={`min-h-[38px] sm:min-h-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
                         isActive
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
                           : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                       }`}
                     >
@@ -920,11 +920,11 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                   placeholder={STRINGS_EN.controls.searchPlaceholder}
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full pl-3.5 pr-24 py-2 sm:py-1.5 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/60 focus:bg-white/[0.06] transition-all [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  className="w-full pl-3.5 pr-24 py-2 sm:py-1.5 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-400/60 focus:bg-white/[0.06] transition-all [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
                 {isFilteringPending && (
-                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-cyan-300 font-bold flex items-center gap-1 animate-pulse motion-reduce:animate-none">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping motion-reduce:animate-none inline-block" />
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-emerald-300 font-bold flex items-center gap-1 animate-pulse motion-reduce:animate-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping motion-reduce:animate-none inline-block" />
                     {STRINGS_EN.controls.filteringPending}
                   </span>
                 )}
@@ -948,7 +948,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                     aria-label={STRINGS_EN.grouping.matchup.ariaLabel}
                     className={`min-h-[30px] flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
                       groupBy === 'matchup'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                         : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
@@ -964,7 +964,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                     aria-label={STRINGS_EN.grouping.tier.ariaLabel}
                     className={`min-h-[30px] flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-vouch-cyan ${
                       groupBy === 'tier'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                         : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
@@ -985,7 +985,7 @@ export function HrIntelligencePageV10({ onNavigate }: { onNavigate?: (section: s
                   aria-label={STRINGS_EN.controls.sortAriaLabel}
                   value={sortBy}
                   onChange={handleSortChange}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-400/60 transition-colors max-w-full truncate"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-emerald-400/60 transition-colors max-w-full truncate"
                 >
                   <option value="score" className="bg-slate-900 text-white">{STRINGS_EN.controls.sortOptions.score}</option>
                   <option value="ev" className="bg-slate-900 text-white">{STRINGS_EN.controls.sortOptions.ev}</option>

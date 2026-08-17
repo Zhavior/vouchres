@@ -196,12 +196,12 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                       const bg = isAllWins  ? "rgba(52,211,153,0.09)"
                                : isAllLoss  ? "rgba(248,113,113,0.09)"
                                : isMixed    ? "rgba(251,191,36,0.07)"
-                               : hasSlips   ? "rgba(34,211,238,0.05)"
+                               : hasSlips   ? "rgba(0,217,160,0.05)"
                                :              "rgba(255,255,255,0.01)";
 
                       // Border
-                      const borderColor = isSelected   ? "rgba(34,211,238,0.7)"
-                                        : isToday      ? "rgba(34,211,238,0.3)"
+                      const borderColor = isSelected   ? "rgba(0,217,160,0.7)"
+                                        : isToday      ? "rgba(0,217,160,0.3)"
                                         : isAllWins    ? "rgba(52,211,153,0.2)"
                                         : isAllLoss    ? "rgba(248,113,113,0.2)"
                                         : isMixed      ? "rgba(251,191,36,0.15)"
@@ -213,7 +213,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                           onClick={() => hasSlips && setSelectedDate(isSelected ? null : day.date)}
                           className={`results-calendar-day relative flex min-w-0 flex-col items-center gap-0.5 px-0.5 pb-1 pt-1.5 transition-all ${
                             hasSlips ? "cursor-pointer hover:brightness-125" : "cursor-default"
-                          } ${isSelected ? "ring-1 ring-cyan-400" : ""}`}
+                          } ${isSelected ? "ring-1 ring-emerald-400" : ""}`}
                           style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
                           title={hasSettled ? `${day.wins} won, ${day.losses} lost; saved on ${day.date}` : hasSlips ? `Saved on ${day.date}` : undefined}
                         >
@@ -242,15 +242,15 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                               <div className="flex gap-[2px] mt-0.5">
                                 {day.wins    > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
                                 {day.losses  > 0 && <div className="w-1 h-1 rounded-full bg-red-400" />}
-                                {day.pending > 0 && <div className="w-1 h-1 rounded-full bg-cyan-400" />}
+                                {day.pending > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
                               </div>
                             </>
                           ) : hasSlips ? (
                             // Pending-only days — no settled record yet
                             <>
-                              <span className="text-[8px] font-bold leading-none" style={{ color: "#22d3ee" }}>live</span>
+                              <span className="text-[8px] font-bold leading-none" style={{ color: "#00d9a0" }}>live</span>
                               <div className="flex gap-[2px] mt-0.5">
-                                <div className="w-1 h-1 rounded-full bg-cyan-400" />
+                                <div className="w-1 h-1 rounded-full bg-emerald-400" />
                               </div>
                             </>
                           ) : null}

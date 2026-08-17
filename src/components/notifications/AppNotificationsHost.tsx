@@ -9,7 +9,7 @@ const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   ai: Sparkles, lock: Lock, result: Trophy, success: CheckCircle2, info: Info,
 };
 const ACCENT: Record<string, string> = {
-  ai: 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10',
+  ai: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
   lock: 'text-amber-400 border-amber-500/40 bg-amber-500/10',
   result: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
   success: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
@@ -81,12 +81,12 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
       {/* Bell — stacked above the HR bell + AI FAB */}
       <button
         onClick={openPanel}
-        className="fixed bottom-44 md:bottom-40 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-cyan-500/60 transition-colors"
+        className="fixed bottom-44 md:bottom-40 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-emerald-500/60 transition-colors"
         aria-label="App notifications"
       >
-        <Bell className="w-5 h-5 text-cyan-400" />
+        <Bell className="w-5 h-5 text-emerald-400" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-500 text-[10px] font-black text-slate-950 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-[10px] font-black text-slate-950 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
 
@@ -96,7 +96,7 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
           <div className="absolute inset-0 bg-black/50 md:hidden" onClick={() => setOpen(false)} />
           <div className="relative h-full md:h-auto md:w-96 md:max-h-[60vh] bg-ve-obsidian md:border border-slate-800 md:rounded-2xl shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-              <h3 className="text-sm font-black flex items-center gap-2 text-slate-100"><Bell className="w-4 h-4 text-cyan-400" /> Notifications</h3>
+              <h3 className="text-sm font-black flex items-center gap-2 text-slate-100"><Bell className="w-4 h-4 text-emerald-400" /> Notifications</h3>
               <div className="flex items-center gap-2">
                 {list.length > 0 && (
                   <button onClick={() => { void clearLocal(); }} className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider">Clear local</button>

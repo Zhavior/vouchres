@@ -397,7 +397,7 @@ const HitterHeatmapTable: React.FC<{
           <span className="text-xs text-white/40 flex items-center gap-1.5 flex-wrap">
             <span>vs {pitcherName} ({pitcherThrows ?? 'R'})</span>
             {rows[0]?.vsPitcher?.k != null && (isGameLive || isGameFinal) && (
-              <span className="inline-flex items-center gap-0.5 font-mono text-[10px] font-black text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/40">
+              <span className="inline-flex items-center gap-0.5 font-mono text-[10px] font-black text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/40">
                 ⚡ {rows[0].vsPitcher.k} Ks
               </span>
             )}

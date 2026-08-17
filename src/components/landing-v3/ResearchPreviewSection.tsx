@@ -68,7 +68,7 @@ function LayerStat({ label, value }: { label: string; value: number | null }) {
       >
         {value != null && (
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400/80 to-emerald-300/80"
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400/80 to-emerald-300/80"
             style={{ width: `${pct}%` }}
           />
         )}
@@ -156,7 +156,7 @@ export default function ResearchPreviewSection({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-[min(90vw,60rem)] -translate-x-1/2 rounded-full bg-cyan-500/[0.06] blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-[min(90vw,60rem)] -translate-x-1/2 rounded-full bg-emerald-500/[0.06] blur-3xl"
       />
 
       <div className="mx-auto max-w-6xl">
@@ -168,9 +168,9 @@ export default function ResearchPreviewSection({
           className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
         >
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1.5">
-              <Radio aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-100/80">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/[0.06] px-3 py-1.5">
+              <Radio aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100/80">
                 Real research preview
               </span>
             </div>
@@ -327,8 +327,8 @@ export default function ResearchPreviewSection({
               </p>
             </div>
 
-            <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-100/70">
+            <div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.04] p-5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-100/70">
                 Key research signals
               </p>
 
@@ -345,7 +345,7 @@ export default function ResearchPreviewSection({
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-mono text-4xl font-bold leading-none text-cyan-200">
+                      <p className="font-mono text-4xl font-bold leading-none text-emerald-200">
                         {Math.round(primaryPlayer.hrScore)}
                       </p>
                       <p className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40">
@@ -405,7 +405,7 @@ export default function ResearchPreviewSection({
             <button
               type="button"
               onClick={onExploreBoard}
-              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-5 text-sm font-bold text-[#03131a] transition hover:brightness-110"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-emerald-300 px-5 text-sm font-bold text-[#03131a] transition hover:brightness-110"
             >
               Explore Today&apos;s MLB Board
               <ArrowRight aria-hidden="true" className="h-4 w-4" />

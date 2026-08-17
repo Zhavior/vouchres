@@ -534,7 +534,7 @@ export default function AuthModal({
                   { step: '03', title: 'Results stay visible', detail: 'Wins and losses remain in the record' },
                 ].map((item) => (
                   <div key={item.step} className="ve-auth-proof-row">
-                    <span className="font-mono text-[10px] font-bold text-cyan-200/75">{item.step}</span>
+                    <span className="font-mono text-[10px] font-bold text-emerald-200/75">{item.step}</span>
                     <div>
                       <p className="text-sm font-bold text-white/88">{item.title}</p>
                       <p className="mt-0.5 text-xs text-white/36">{item.detail}</p>
@@ -570,8 +570,8 @@ export default function AuthModal({
             </div>
 
             <div className="mb-3 hidden items-center gap-2 lg:flex">
-              <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(125,235,255,0.65)]" />
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-100/45">
+              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(125,235,255,0.65)]" />
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-100/45">
                 Secure account access
               </p>
             </div>
@@ -615,7 +615,7 @@ export default function AuthModal({
             /* ── Check-your-email confirmation ── */
             <div className="px-6 py-6 flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10"
-                style={{ boxShadow: '0 0 24px rgba(79, 184, 220,0.12)' }}>
+                style={{ boxShadow: '0 0 24px rgba(0, 217, 160,0.12)' }}>
                 <MailCheck className="w-8 h-8 text-vouch-cyan" />
               </div>
               <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
@@ -646,7 +646,7 @@ export default function AuthModal({
                   return (
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center border border-vouch-cyan/30 bg-vouch-cyan/10"
-                      style={{ boxShadow: '0 0 24px rgba(79, 184, 220,0.12)' }}
+                      style={{ boxShadow: '0 0 24px rgba(0, 217, 160,0.12)' }}
                     >
                       <Icon className="w-8 h-8 text-vouch-cyan" />
                     </div>
@@ -660,7 +660,7 @@ export default function AuthModal({
                   <span
                     key={i}
                     className="h-1.5 rounded-full transition-all"
-                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#4FB8DC' : 'rgba(255,255,255,0.15)' }}
+                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#00D9A0' : 'rgba(255,255,255,0.15)' }}
                   />
                 ))}
               </div>
@@ -720,8 +720,8 @@ export default function AuthModal({
                       borderColor: 'rgba(255,255,255,0.08)',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(79, 184, 220,0.4)';
-                      e.currentTarget.style.background = 'rgba(79, 184, 220,0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(0, 217, 160,0.4)';
+                      e.currentTarget.style.background = 'rgba(0, 217, 160,0.05)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -766,14 +766,14 @@ export default function AuthModal({
                       onClick={() => setPlan(opt.id)}
                       className="w-full text-left rounded-xl border p-3.5 transition-colors"
                       style={{
-                        background: selected ? 'rgba(79, 184, 220,0.08)' : 'rgba(0,0,0,0.35)',
-                        borderColor: selected ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)',
+                        background: selected ? 'rgba(0, 217, 160,0.08)' : 'rgba(0,0,0,0.35)',
+                        borderColor: selected ? 'rgba(0,217,160,0.5)' : 'rgba(255,255,255,0.08)',
                       }}
                     >
                       <div className="flex items-start gap-3">
                         <div
                           className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ background: selected ? 'rgba(34,211,238,0.16)' : 'rgba(255,255,255,0.05)' }}
+                          style={{ background: selected ? 'rgba(0,217,160,0.16)' : 'rgba(255,255,255,0.05)' }}
                         >
                           <Icon className="w-4 h-4" style={{ color: selected ? AURORA_CYAN_HEX : '#94a3b8' }} />
                         </div>
@@ -864,8 +864,8 @@ export default function AuthModal({
                     key={item.id}
                     className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
                     style={{
-                      background: agreements[item.id] ? 'rgba(79, 184, 220,0.06)' : 'rgba(0,0,0,0.35)',
-                      borderColor: agreements[item.id] ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.08)',
+                      background: agreements[item.id] ? 'rgba(0, 217, 160,0.06)' : 'rgba(0,0,0,0.35)',
+                      borderColor: agreements[item.id] ? 'rgba(0,217,160,0.4)' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     <span
@@ -989,7 +989,7 @@ export default function AuthModal({
               type="button"
               onClick={handleGoogleSignIn}
               disabled={busy || googleBusy || redirectingToCheckout || googleAvailable === false}
-              className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-4 py-3.5 text-sm font-extrabold text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-all hover:border-cyan-100 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 ${AURORA_INTERACTIVE}`}
+              className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-4 py-3.5 text-sm font-extrabold text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-all hover:border-emerald-100 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 ${AURORA_INTERACTIVE}`}
             >
               <span className="absolute inset-0 bg-gradient-to-r from-white via-slate-50 to-white opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center justify-center gap-3">
@@ -1095,7 +1095,7 @@ export default function AuthModal({
                       style={{
                         background:
                           i < passwordStrength
-                            ? ['#f87171', '#fbbf24', '#34d399', '#22d3ee'][passwordStrength - 1]
+                            ? ['#f87171', '#fbbf24', '#34d399', '#00d9a0'][passwordStrength - 1]
                             : 'rgba(255,255,255,0.08)',
                       }}
                     />

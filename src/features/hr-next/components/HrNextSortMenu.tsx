@@ -43,7 +43,7 @@ export function HrNextSortMenu({ sortKey, onSortChange }: HrNextSortMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 rounded-xl bg-obsidian-800/80 px-3 py-2 text-xs font-bold text-white shadow-sm ring-1 ring-white/10 hover:bg-obsidian-800 transition-colors backdrop-blur-md font-z8 tracking-wide"
       >
-        <ActiveIcon className="h-4 w-4 text-vouch-cyan" />
+        <ActiveIcon className="h-4 w-4 text-vouch-emerald" />
         <span>Sort: {activeOption.label}</span>
         <ChevronDown className={`h-3 w-3 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -70,21 +70,21 @@ export function HrNextSortMenu({ sortKey, onSortChange }: HrNextSortMenuProps) {
                       setIsOpen(false);
                     }}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                      isActive ? 'bg-vouch-cyan/10' : 'hover:bg-white/5'
+                      isActive ? 'bg-vouch-emerald/10' : 'hover:bg-white/5'
                     }`}
                   >
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-vouch-cyan/20 text-vouch-cyan' : 'bg-white/5 text-white/50'}`}>
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-vouch-emerald/20 text-vouch-emerald' : 'bg-white/5 text-white/50'}`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`text-xs font-bold font-z8 tracking-wide ${isActive ? 'text-vouch-cyan' : 'text-white'}`}>
+                      <div className={`text-xs font-bold font-z8 tracking-wide ${isActive ? 'text-vouch-emerald' : 'text-white'}`}>
                         {option.label}
                       </div>
                       <div className="truncate text-[10px] text-white/40 font-mono">
                         {option.desc}
                       </div>
                     </div>
-                    {isActive && <Check className="h-4 w-4 text-vouch-cyan shrink-0" />}
+                    {isActive && <Check className="h-4 w-4 text-vouch-emerald shrink-0" />}
                   </button>
                 );
               })}

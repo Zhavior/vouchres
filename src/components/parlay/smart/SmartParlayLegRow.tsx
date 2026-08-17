@@ -32,7 +32,7 @@ export default function SmartParlayLegRow({ leg, legIndex }: { leg: SmartParlayL
           Link
         </span>
       ) : null}
-      <span className="font-mono text-[9px] text-cyan-300/80 shrink-0 tabular-nums">{leg.oddsLabel}</span>
+      <span className="font-mono text-[9px] text-emerald-300/80 shrink-0 tabular-nums">{leg.oddsLabel}</span>
       <span
         className="text-[9px] font-bold shrink-0 uppercase"
         style={{ color: auroraStatusColor(legMeta.token) }}

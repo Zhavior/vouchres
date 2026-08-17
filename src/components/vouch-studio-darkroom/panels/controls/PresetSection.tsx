@@ -98,7 +98,7 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
               className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
                 1. Profiles & Layouts
               </span>
               <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionPreset ? '[-]' : '[+]'}</span>
@@ -111,7 +111,7 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Visual Preset Themes:</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {[
-                      { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', desc: 'Neon cyan & dark cobalt overlays', bg: 'bg-cyan-500' },
+                      { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', desc: 'Neon cyan & dark cobalt overlays', bg: 'bg-emerald-500' },
                       { id: 'luxury', name: '👑 Gold Prestige', desc: 'Obsidian & gold prestige', bg: 'bg-amber-400' },
                       { id: 'crimson', name: '🔥 Crimson Fury', desc: 'Blood red neon & carbon slate', bg: 'bg-red-500' },
                       { id: 'minimal', name: '🏛️ Swiss Minimal', desc: 'High-contrast light editorial', bg: 'bg-slate-300' },
@@ -123,7 +123,7 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                         onClick={() => setCardStyle(styleOpt.id as any)}
                         className={`group py-2.5 px-2.5 min-h-11 rounded-xl border text-left transition-all flex flex-col justify-between ${
                           cardStyle === styleOpt.id 
-                            ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 ring-1 ring-sky-500/20 font-black' 
+                            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 ring-1 ring-emerald-500/20 font-black' 
                             : 'bg-black/30 border-white/10 text-white/40 hover:text-slate-350 hover:bg-black/25'
                         }`}
                       >
@@ -142,7 +142,7 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Blueprint Layout Mode:</label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {[
-                      { id: 'orbit', name: 'ORBIT', desc: 'Circular link map', activeStyle: 'bg-sky-500/10 border-sky-500/40 text-sky-300' },
+                      { id: 'orbit', name: 'ORBIT', desc: 'Circular link map', activeStyle: 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' },
                       { id: 'potd', name: 'SPOTLIGHT', desc: 'Single featured spot', activeStyle: 'bg-amber-500/10 border-amber-500/40 text-amber-300' },
                       { id: 'parlay', name: 'PARLAY', desc: 'Combined multi-ticket', activeStyle: 'bg-purple-500/10 border-purple-500/40 text-purple-300' }
                     ].map(layoutOpt => (
@@ -189,7 +189,7 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                         triggerToast("Stadium background set to: Green Turf Field preset.");
                       }} 
                       className={`text-[9px] font-mono p-1.5 rounded-lg border leading-tight text-left truncate flex items-center gap-1 ${
-                        customCardPhotoLabel === "Green Turf Field" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
+                        customCardPhotoLabel === "Green Turf Field" ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
                       }`}
                     >
                       <span>🌱</span> <span className="truncate">Green Turf Field</span>
@@ -202,14 +202,14 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                         triggerToast("Stadium background set to: Light Beams preset.");
                       }} 
                       className={`text-[9px] font-mono p-1.5 rounded-lg border leading-tight text-left truncate flex items-center gap-1 ${
-                        customCardPhotoLabel === "Stadium Light Beams" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
+                        customCardPhotoLabel === "Stadium Light Beams" ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
                       }`}
                     >
                       <span>🏟️</span> <span className="truncate">Stadium Lights</span>
                     </button>
                   </div>
 
-                  <label className="cursor-pointer bg-obsidian-900 hover:bg-black/30 border border-dashed border-white/10 hover:border-sky-500/20 py-2.5 px-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-center group">
+                  <label className="cursor-pointer bg-obsidian-900 hover:bg-black/30 border border-dashed border-white/10 hover:border-emerald-500/20 py-2.5 px-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-center group">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -230,15 +230,15 @@ export default function PresetSection(props: VouchStudioDarkroomProps) {
                       }}
                     />
                     <div className="flex items-center gap-1.5 justify-center">
-                      <Plus className="w-3 h-3 text-white/40 group-hover:text-sky-400" />
+                      <Plus className="w-3 h-3 text-white/40 group-hover:text-emerald-400" />
                       <span className="text-[8.5px] font-mono font-black text-slate-405 group-hover:text-slate-205 uppercase">Upload Custom Plate File</span>
                     </div>
                   </label>
                   
                   {customCardPhoto && (
-                    <div className="bg-sky-950/20 border border-sky-900/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-[8px] font-mono text-sky-300">
+                    <div className="bg-emerald-950/20 border border-emerald-900/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-[8px] font-mono text-emerald-300">
                       <span className="truncate max-w-[150px]">Current: {customCardPhotoLabel || "Custom Load"}</span>
-                      <span className="text-[7.5px] text-sky-400">Active Overlay</span>
+                      <span className="text-[7.5px] text-emerald-400">Active Overlay</span>
                     </div>
                   )}
                 </div>

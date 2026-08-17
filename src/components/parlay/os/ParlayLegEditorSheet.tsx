@@ -109,7 +109,7 @@ export default function ParlayLegEditorSheet({
       <div className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[var(--bg-obsidian)]/98 shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">Edit Leg</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">Edit Leg</p>
             <p className="text-sm font-bold text-white truncate max-w-[240px]">{leg.playerName ?? leg.selection}</p>
           </div>
           <button
@@ -139,20 +139,20 @@ export default function ParlayLegEditorSheet({
                   type="button"
                   onClick={() => step(-1)}
                   disabled={statTarget <= limits.min}
-                  className="min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-white/15 text-white/70 hover:border-cyan-400/40 disabled:opacity-30"
+                  className="min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-white/15 text-white/70 hover:border-emerald-400/40 disabled:opacity-30"
                   aria-label="Decrease line"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <div className="text-center min-w-[5rem]">
-                  <span className="text-3xl font-black text-cyan-300">{statTarget}</span>
+                  <span className="text-3xl font-black text-emerald-300">{statTarget}</span>
                   <p className="text-[10px] text-white/35 mt-1">{limits.min}–{limits.max}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => step(1)}
                   disabled={statTarget >= limits.max}
-                  className="min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-white/15 text-white/70 hover:border-cyan-400/40 disabled:opacity-30"
+                  className="min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-white/15 text-white/70 hover:border-emerald-400/40 disabled:opacity-30"
                   aria-label="Increase line"
                 >
                   <Plus className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function ParlayLegEditorSheet({
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
               <p className="text-[10px] text-white/40 uppercase tracking-wide">Preview</p>
               <p className="text-sm font-bold text-white mt-1">{preview.leg.selection}</p>
-              <p className="text-[11px] font-mono text-cyan-300 mt-1">Odds {oddsLabel}</p>
+              <p className="text-[11px] font-mono text-emerald-300 mt-1">Odds {oddsLabel}</p>
             </div>
           ) : null}
 
@@ -181,7 +181,7 @@ export default function ParlayLegEditorSheet({
               onChange={(event) => setNote(event.target.value.slice(0, 280))}
               rows={3}
               placeholder="Why this leg belongs in your slip"
-              className="w-full resize-none rounded-xl border border-white/12 bg-black/25 px-3 py-2.5 text-sm leading-5 text-white/80 placeholder:text-white/25 focus:border-cyan-300/40 focus:outline-none"
+              className="w-full resize-none rounded-xl border border-white/12 bg-black/25 px-3 py-2.5 text-sm leading-5 text-white/80 placeholder:text-white/25 focus:border-emerald-300/40 focus:outline-none"
             />
             <p className="text-right font-mono text-[9px] text-white/30">{note.length}/280</p>
           </div>
@@ -217,7 +217,7 @@ export default function ParlayLegEditorSheet({
               <button
                 type="button"
                 onClick={() => onSwapPlayer(leg)}
-                className="w-full min-h-[2.75rem] flex items-center justify-center gap-2 rounded-xl border border-white/15 text-[11px] font-bold uppercase tracking-wide text-white/70 hover:border-cyan-400/40 hover:text-cyan-200"
+                className="w-full min-h-[2.75rem] flex items-center justify-center gap-2 rounded-xl border border-white/15 text-[11px] font-bold uppercase tracking-wide text-white/70 hover:border-emerald-400/40 hover:text-emerald-200"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Change player
@@ -227,7 +227,7 @@ export default function ParlayLegEditorSheet({
               type="button"
               onClick={handleSave}
               disabled={Boolean(preview?.error)}
-              className="w-full min-h-[2.75rem] rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-[11px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-40"
+              className="w-full min-h-[2.75rem] rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-[11px] font-bold uppercase tracking-wide text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-40"
             >
               Save leg
             </button>

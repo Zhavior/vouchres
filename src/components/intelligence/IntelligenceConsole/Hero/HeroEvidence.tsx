@@ -11,7 +11,7 @@ export default function HeroEvidence({ analysis }: Props) {
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-cyan-400">
+      <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-emerald-400">
         Why This Pick
       </h3>
 
@@ -21,7 +21,7 @@ export default function HeroEvidence({ analysis }: Props) {
             key={index}
             className="flex items-start gap-3 text-sm text-zinc-300"
           >
-            <span className="mt-1 text-cyan-400">✓</span>
+            <span className="mt-1 text-emerald-400">✓</span>
             <span>{reason}</span>
           </li>
         ))}

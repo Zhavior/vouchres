@@ -52,7 +52,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           <button
             type="button"
             onClick={onJoinBeta}
-            className="min-h-11 rounded-xl bg-cyan-400 px-4 text-sm font-black text-[#031017] transition hover:bg-cyan-300"
+            className="min-h-11 rounded-xl bg-emerald-400 px-4 text-sm font-black text-[#031017] transition hover:bg-emerald-300"
           >
             Join Beta
           </button>
@@ -72,7 +72,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
 
           <h1 className="mt-8 max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
             Research the game.
-            <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
+            <span className="mt-2 block bg-gradient-to-r from-emerald-300 via-emerald-300 to-emerald-300 bg-clip-text text-transparent">
               Keep the evidence.
             </span>
           </h1>
@@ -85,7 +85,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             <button
               type="button"
               onClick={onJoinBeta}
-              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-7 text-base font-black text-[#031017] transition hover:bg-cyan-300 hover:shadow-[0_0_48px_rgba(34,211,238,0.22)]"
+              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-emerald-400 px-7 text-base font-black text-[#031017] transition hover:bg-emerald-300 hover:shadow-[0_0_48px_rgba(0,217,160,0.22)]"
             >
               Join Open Beta
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -115,7 +115,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
           transition={{ delay: reduceMotion ? 0 : 0.14, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="relative mx-auto w-full max-w-lg"
         >
-          <div className="absolute inset-10 rounded-full bg-cyan-400/15 blur-[90px]" />
+          <div className="absolute inset-10 rounded-full bg-emerald-400/15 blur-[90px]" />
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#07101b]/90 p-7 shadow-[0_32px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
               <VouchEdgeLogo showBeta markClassName="h-12 w-12" />
@@ -128,7 +128,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
                 ['03', 'Keep the result', 'Wins and losses remain part of the record'],
               ].map(([step, title, detail]) => (
                 <div key={step} className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-                  <span className="font-mono text-xs font-bold text-cyan-300">{step}</span>
+                  <span className="font-mono text-xs font-bold text-emerald-300">{step}</span>
                   <span>
                     <span className="block font-semibold text-white">{title}</span>
                     <span className="mt-1 block text-sm leading-6 text-white/42">{detail}</span>

@@ -14,11 +14,11 @@ export default function ResearchNotePostCard({ researchNote }: ResearchNotePostC
     <div className="bg-ve-storm rounded-xl border border-slate-800/80 p-3.5 my-2 flex flex-col gap-3.5 shadow-inner" id="research-note-card">
       <div className="flex items-center justify-between border-b border-slate-800/40 pb-2 flex-wrap gap-2">
         <div className="flex items-center gap-1.5 text-xs">
-          <FileText className="w-4 h-4 text-sky-400" />
+          <FileText className="w-4 h-4 text-emerald-400" />
           <span className="font-bold text-slate-300">Research Insight</span>
         </div>
         {researchNote.gameContext && (
-          <span className="text-[10px] font-mono bg-indigo-950/50 text-indigo-400 border border-indigo-900/60 font-semibold px-2 py-0.5 rounded uppercase">
+          <span className="text-[10px] font-mono bg-emerald-950/50 text-emerald-400 border border-emerald-900/60 font-semibold px-2 py-0.5 rounded uppercase">
             Context: {researchNote.gameContext}
           </span>
         )}
@@ -42,7 +42,7 @@ export default function ResearchNotePostCard({ researchNote }: ResearchNotePostC
           {researchNote.tags.map((tag, idx) => (
             <span
               key={idx}
-              className="text-[10px] bg-slate-900 text-slate-400 hover:text-sky-400 cursor-pointer transition-colors px-2 py-0.5 rounded border border-slate-800/80 font-mono"
+              className="text-[10px] bg-slate-900 text-slate-400 hover:text-emerald-400 cursor-pointer transition-colors px-2 py-0.5 rounded border border-slate-800/80 font-mono"
             >
               {tag.startsWith('#') ? tag : `#${tag}`}
             </span>

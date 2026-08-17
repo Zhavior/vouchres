@@ -5,7 +5,7 @@ const RECORD_STYLES: Record<ParlayOsSnapshot["recordState"], string> = {
   DRAFT: "border-white/20 text-white/50 bg-white/5",
   SAVED: "border-slate-600/50 text-slate-300 bg-slate-900/40",
   COMMITTED: "border-amber-500/40 text-amber-200 bg-amber-950/20",
-  LOCKED: "border-cyan-500/40 text-cyan-200 bg-cyan-950/20",
+  LOCKED: "border-emerald-500/40 text-emerald-200 bg-emerald-950/20",
   ANCHORED: "border-emerald-500/40 text-emerald-200 bg-emerald-950/20",
   ARCHIVED: "border-white/15 text-white/40 bg-black/30",
 };

@@ -118,7 +118,7 @@ export const ChunkACard = memo(function ChunkACard({
 
   return (
     <div
-      className="relative w-full rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 p-4 transition-all duration-200 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_0_rgba(6,182,212,0.12)] group"
+      className="relative w-full rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 p-4 transition-all duration-200 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_0_rgba(16,185,129,0.12)] group"
       style={{ contain: 'layout style paint' }}
     >
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

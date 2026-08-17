@@ -138,7 +138,7 @@ const VsTeamTrendsGraph: React.FC<{
         </div>
         <div>
           <div className="text-[9px] font-bold uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">TB trend</div>
-          <MiniSparkline values={tbSeries} color="#22d3ee" />
+          <MiniSparkline values={tbSeries} color="#00d9a0" />
         </div>
       </div>
 
@@ -164,7 +164,7 @@ const VsTeamTrendsGraph: React.FC<{
               {game.homeRuns || '—'}
             </span>
             <span className="text-right tabular-nums">{game.rbi}</span>
-            <span className="text-right tabular-nums text-cyan-300/90">{game.totalBases}</span>
+            <span className="text-right tabular-nums text-emerald-300/90">{game.totalBases}</span>
           </div>
         ))}
       </div>
@@ -220,7 +220,7 @@ const SprayDirectionField: React.FC<{
 
   return (
     <svg viewBox="0 0 120 90" width="140" height="105" className="opacity-95" aria-hidden>
-      <path d="M60,78 L15,35 Q60,8 105,35 Z" fill="rgba(34,211,238,0.06)" stroke="hsl(var(--ve-border)/0.45)" strokeWidth="1" />
+      <path d="M60,78 L15,35 Q60,8 105,35 Z" fill="rgba(0,217,160,0.06)" stroke="hsl(var(--ve-border)/0.45)" strokeWidth="1" />
       <path d="M60,78 L60,18" stroke="hsl(var(--ve-border)/0.35)" strokeWidth="0.75" strokeDasharray="3 3" />
       <path
         d={`M60,78 L15,35 A55,55 0 0,1 ${60 - 55 * Math.sin(Math.PI * pull)} ${78 - 55 * Math.cos(Math.PI * pull)} Z`}
@@ -236,7 +236,7 @@ const SprayDirectionField: React.FC<{
       />
       <text x="22" y="58" fontSize="8" fill="#f59e0b" fontWeight="700">Pull</text>
       <text x="54" y="24" fontSize="8" fill="#10b981" fontWeight="700">Mid</text>
-      <text x="88" y="58" fontSize="8" fill="#818cf8" fontWeight="700">Oppo</text>
+      <text x="88" y="58" fontSize="8" fill="#34d399" fontWeight="700">Oppo</text>
       <circle cx="60" cy="78" r="3" fill="hsl(var(--ve-text-muted))" />
     </svg>
   );
@@ -278,7 +278,7 @@ const SprayProfileGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Rea
         <div className="min-w-[160px] flex-1 space-y-2.5">
           <ProSignalBar label="Pull %" value={pull} max={60} color="#f59e0b" />
           <ProSignalBar label="Middle %" value={straight} max={60} color={ACCENT.emerald} />
-          <ProSignalBar label="Opposite %" value={oppo} max={60} color="#818cf8" />
+          <ProSignalBar label="Opposite %" value={oppo} max={60} color="#34d399" />
         </div>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">

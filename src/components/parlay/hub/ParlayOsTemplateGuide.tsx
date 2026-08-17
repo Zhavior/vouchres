@@ -7,15 +7,15 @@ export default function ParlayOsTemplateGuide({
   progress: TemplateProgress;
 }) {
   return (
-    <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.04] p-4">
+    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.04] p-4">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/80">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/80">
             Template guide
           </p>
           <p className="text-sm font-bold text-white">{progress.template.label}</p>
         </div>
-        <p className="text-xs font-mono text-cyan-200">
+        <p className="text-xs font-mono text-emerald-200">
           {progress.filledCount}/{progress.totalSlots}
         </p>
       </div>
@@ -36,7 +36,7 @@ export default function ParlayOsTemplateGuide({
         ))}
       </ul>
       <p className="mt-3 text-[10px] text-white/40 leading-relaxed">
-        Add each leg from Player Research — tap <strong className="text-cyan-300/80">+</strong> on the matching prop tier.
+        Add each leg from Player Research — tap <strong className="text-emerald-300/80">+</strong> on the matching prop tier.
         {progress.complete ? " Template complete — review slip before lock." : ""}
       </p>
     </div>

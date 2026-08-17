@@ -57,7 +57,7 @@ export const LANDING_JUDGES = [
 export type LandingJudge = (typeof LANDING_JUDGES)[number];
 
 export const JUDGE_PIXEL_THEME: Record<string, { main: string; glow: string; accent: string; active: number[] }> = {
-  DS: { main: 'bg-sky-300', glow: 'bg-sky-500/25', accent: 'bg-cyan-300/80', active: [1, 2, 5, 6, 9, 10, 13, 14] },
+  DS: { main: 'bg-emerald-300', glow: 'bg-emerald-500/25', accent: 'bg-emerald-300/80', active: [1, 2, 5, 6, 9, 10, 13, 14] },
   PH: { main: 'bg-red-300', glow: 'bg-red-500/25', accent: 'bg-orange-300/80', active: [0, 3, 5, 6, 9, 10, 12, 15] },
   MR: { main: 'bg-violet-300', glow: 'bg-violet-500/25', accent: 'bg-fuchsia-300/80', active: [1, 4, 6, 9, 11, 13, 14] },
   RA: { main: 'bg-amber-300', glow: 'bg-amber-500/25', accent: 'bg-yellow-200/80', active: [0, 1, 2, 4, 8, 12, 13, 14] },

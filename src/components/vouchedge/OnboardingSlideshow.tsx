@@ -35,7 +35,7 @@ const BETA_THEMES: BetaTheme[] = [
   {
     id: "beta-cyber-blue",
     name: "Beta Cyber Blue",
-    colors: ["#050B18", "#00B7FF", "#22D3EE", "#2563EB"],
+    colors: ["#050B18", "#00B7FF", "#00D9A0", "#059669"],
     desc: "VouchEdge core look — dark navy with electric cyan glow.",
   },
   {
@@ -47,7 +47,7 @@ const BETA_THEMES: BetaTheme[] = [
   {
     id: "beta-arcade-neon",
     name: "Beta Arcade Neon",
-    colors: ["#090314", "#f472b6", "#22d3ee", "#a3e635"],
+    colors: ["#090314", "#f472b6", "#00d9a0", "#a3e635"],
     desc: "4-bit arcade — dark purple with cyan/pink/green accents.",
   },
 ];
@@ -55,7 +55,7 @@ const BETA_THEMES: BetaTheme[] = [
 const SLIDES = [
   {
     icon: Sparkles,
-    color: "#22d3ee",
+    color: "#00d9a0",
     title: "Welcome to VouchEdge",
     text: "Build your sports pick reputation with proof, not hype.",
   },
@@ -85,7 +85,7 @@ const SLIDES = [
   },
   {
     icon: Palette,
-    color: "#22d3ee",
+    color: "#00d9a0",
     title: "Choose your beta theme",
     text: "Pick a free beta theme to customize your VouchEdge identity.",
   },
@@ -207,14 +207,14 @@ export default function OnboardingSlideshow({ onComplete, onSkip }: Props) {
             <button
               onClick={next}
               className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg text-slate-950 flex items-center gap-1.5"
-              style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}
+              style={{ background: "linear-gradient(135deg, #00d9a0, #059669)" }}
             >
               Start Beta <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
             <button
               onClick={next}
-              className="text-xs font-bold uppercase tracking-wider text-cyan-300 hover:text-cyan-200 flex items-center gap-1"
+              className="text-xs font-bold uppercase tracking-wider text-emerald-300 hover:text-emerald-200 flex items-center gap-1"
             >
               Next <ArrowRight className="w-3.5 h-3.5" />
             </button>

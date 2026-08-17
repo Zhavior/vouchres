@@ -8,11 +8,11 @@
  * duplicates them verbatim — see the "mirrors" note at each site.
  *
  * Palette (approved 2026-07-19, restrained premium — not neon):
- *   ground     #050A14   near-black navy application background
- *   surface-1  #0B1220   elevated surface (cards, panels)
- *   surface-2  #101A2C   further elevated (nested panels, sheets)
- *   surface-3  #16233A   highest elevation (active/selected surfaces)
- *   accent     #4FB8DC   mineral-cyan — selection, primary action, live focus
+ *   ground     #08090A   near-black navy application background
+ *   surface-1  #101113   elevated surface (cards, panels)
+ *   surface-2  #17181B   further elevated (nested panels, sheets)
+ *   surface-3  #1F2124   highest elevation (active/selected surfaces)
+ *   accent     #00D9A0   mineral-cyan — selection, primary action, live focus
  *   positive   #31B583   muted emerald — won/confirmed/good
  *   caution    #D99C4A   warm amber — projected/stale/review
  *   bronze     #CD7F32   verified seven-day result history
@@ -25,41 +25,42 @@
 
 @theme {
   /* Core surfaces (approved premium navy palette) */
-  --color-ve-obsidian: #050A14;
-  --color-ve-graphite: #0B1220;
-  --color-ve-storm: #101A2C;
-  --color-ve-surface-panel: #16233A;
+  --color-ve-obsidian: #08090A;
+  --color-ve-graphite: #101113;
+  --color-ve-storm: #17181B;
+  --color-ve-surface-panel: #1F2124;
 
   /* Accent & semantic signals */
-  --color-ve-ion: #4FB8DC;
-  --color-ve-flash: #E7ECF3;
+  --color-ve-ion: #00D9A0;
+  --color-ve-flash: #EFF0F2;
   --color-ve-voltage: #31B583;
-  --color-ve-locked: #2b3344;
+  --color-ve-locked: #34363B;
   --color-ve-caution: #D99C4A;
   --color-ve-bronze: #CD7F32;
   --color-ve-negative: #D96459;
   --color-ve-live: #F0536B;
 
   /* Borders */
-  --color-ve-fuse: rgba(231, 236, 243, 0.08);
-  --color-ve-charged: rgba(79, 184, 220, 0.30);
+  --color-ve-fuse: rgba(240, 241, 243, 0.08);
+  --color-ve-charged: rgba(0, 217, 160, 0.30);
 
-  /* Typography */
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  /* Typography — faces declared in ./fonts.css */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Glow — restrained; only the accent glows, and only for selection/focus */
-  --shadow-ve-glow-cyan: 0 0 20px rgba(79, 184, 220, 0.14);
+  --shadow-ve-glow-cyan: 0 0 20px rgba(0, 217, 160, 0.14);
   --shadow-ve-glow-emerald: 0 0 16px rgba(49, 181, 131, 0.12);
 
   /* Z8 / tailwind.config.ts aliases — same palette, no duplicate hex drift */
-  --color-graphite: #0B1220;
-  --color-storm: #101A2C;
-  --color-ion: #4FB8DC;
-  --color-flash: #E7ECF3;
+  --color-graphite: #101113;
+  --color-storm: #17181B;
+  --color-ion: #00D9A0;
+  --color-flash: #EFF0F2;
   --color-voltage: #31B583;
-  --color-locked: #2b3344;
-  --color-surface-panel: #16233A;
+  --color-locked: #34363B;
+  --color-surface-panel: #1F2124;
 }
 
 :root {
@@ -67,16 +68,16 @@
 
   /* Legacy CSS vars consumed by tailwind.config.ts and existing components —
      same approved values, kept under their old names for zero-diff callers. */
-  --bg-obsidian: #050A14;
-  --bg-graphite: #0B1220;
-  --bg-storm: #101A2C;
-  --surface-panel: #16233A;
-  --border-fuse: rgba(231, 236, 243, 0.08);
-  --border-charged: rgba(79, 184, 220, 0.30);
-  --ion-core: #4FB8DC;
-  --lightning-flash: #E7ECF3;
+  --bg-obsidian: #08090A;
+  --bg-graphite: #101113;
+  --bg-storm: #17181B;
+  --surface-panel: #1F2124;
+  --border-fuse: rgba(240, 241, 243, 0.08);
+  --border-charged: rgba(0, 217, 160, 0.30);
+  --ion-core: #00D9A0;
+  --lightning-flash: #EFF0F2;
   --voltage-green: #31B583;
-  --locked-slate: #2b3344;
+  --locked-slate: #34363B;
 
   --ve-ion: var(--ion-core);
   --ve-voltage: var(--voltage-green);

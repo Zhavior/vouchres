@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { hrResearchQueryOptions } from '../../../hooks/queries/hrResearchQuery';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
+import { tierForScore } from '../utils/tierPartition';
 import { ParkSprayChart } from '../../hr-v2/components/ParkSprayChart';
 import StrikeZoneHeatmapMatrix from '../../../components/analytics/StrikeZoneHeatmapMatrix';
 
@@ -131,7 +132,10 @@ export function HrNextResearchView({
     <div
       className={`relative w-full border border-white/10 bg-ve-obsidian/95 backdrop-blur-2xl shadow-2xl transition-all duration-200 overflow-hidden font-mono ${
         isDock
-          ? 'rounded-2xl flex flex-col max-h-[calc(100vh-130px)]'
+          // Height comes from the sticky <aside> that owns the viewport budget,
+          // through the flex chain rather than a fixed vh figure — the header
+          // and tab strip stay pinned and the body below scrolls on its own.
+          ? 'rounded-2xl flex min-h-0 flex-1 flex-col'
           : 'rounded-xl mb-6'
       }`}
       style={{
@@ -152,7 +156,7 @@ export function HrNextResearchView({
                 <Sparkles className="w-2.5 h-2.5" /> DEEP INTEL TELEMETRY
               </span>
               {research?.decision?.verdict && (
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/30">
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-vouch-emerald/20 text-vouch-emerald border border-vouch-emerald/30">
                   {research.decision.verdict.replace('_', ' ')}
                 </span>
               )}
@@ -166,10 +170,13 @@ export function HrNextResearchView({
         <div className="flex items-center gap-3">
           {research?.decision?.hrScore != null && (
             <div className="text-right">
-              <span className="text-sm font-black text-[var(--aurora-max-emerald)] drop-shadow-[0_0_8px_rgba(0,217,160,0.4)]">
+              {/* Tier accent matches the HR card this panel was opened from. */}
+              <span className={`text-sm font-black tabular-nums ${tierForScore(research.decision.hrScore).scoreText}`}>
                 {research.decision.hrScore.toFixed(1)}
               </span>
-              <span className="block text-[8px] text-white/40 tracking-wider">HRPI SCORE</span>
+              <span className="block text-[8px] tracking-wider text-white/40">
+                HRPI · {tierForScore(research.decision.hrScore).label}
+              </span>
             </div>
           )}
           <button
@@ -289,7 +296,7 @@ export function HrNextResearchView({
                     </div>
                     <div className="text-right">
                       <span className="text-[8.5px] text-white/40 uppercase tracking-wider block font-bold">Handedness Advantage</span>
-                      <strong className="text-vouch-cyan text-xs">{research.player.bats || 'R'}HB vs {research.matchup.pitcher.throws || 'R'}HP</strong>
+                      <strong className="text-vouch-emerald text-xs">{research.player.bats || 'R'}HB vs {research.matchup.pitcher.throws || 'R'}HP</strong>
                     </div>
                   </div>
 
@@ -334,7 +341,7 @@ export function HrNextResearchView({
                     let tagColor = 'bg-white/10 text-white/70 border-white/20';
                     if (lower.includes('4-seam') || lower.includes('fastball')) {
                       tag = '4FB';
-                      tagColor = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+                      tagColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
                     } else if (lower.includes('sinker') || lower.includes('2-seam')) {
                       tag = 'SI';
                       tagColor = 'bg-teal-500/20 text-teal-300 border-teal-500/40';
@@ -392,7 +399,7 @@ export function HrNextResearchView({
                         {/* Multi-tier Visual Bar */}
                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden flex gap-0.5">
                           <div 
-                            className="h-full bg-vouch-cyan rounded-full transition-all duration-500" 
+                            className="h-full bg-vouch-emerald rounded-full transition-all duration-500" 
                             style={{ width: `${Math.min(usagePct, 100)}%` }} 
                             title={`Pitcher Usage: ${usagePct}%`}
                           />
@@ -454,7 +461,7 @@ export function HrNextResearchView({
 
                 {/* Weather & Microclimate Breakdown */}
                 <div className="p-3.5 rounded-xl bg-black/40 border border-white/10">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-cyan mb-2.5 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-emerald mb-2.5 flex items-center gap-1.5">
                     <Wind className="w-3.5 h-3.5" /> Atmospheric & Ballpark Microclimate
                   </p>
                   <div className="grid grid-cols-3 gap-2 text-xs">
@@ -504,10 +511,10 @@ export function HrNextResearchView({
 
                     <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-center">
                       <span className="text-[8.5px] text-white/40 uppercase tracking-wider block">Hard Hit (95+)</span>
-                      <strong className="text-sm font-black text-vouch-cyan block mt-0.5">
+                      <strong className="text-sm font-black text-vouch-emerald block mt-0.5">
                         {statcastMetrics.hardHitRate.toFixed(1)}%
                       </strong>
-                      <span className="text-[8px] text-vouch-cyan/80 block mt-0.5">Elite Hard Contact</span>
+                      <span className="text-[8px] text-vouch-emerald/80 block mt-0.5">Elite Hard Contact</span>
                     </div>
 
                     <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-center">
@@ -529,47 +536,47 @@ export function HrNextResearchView({
                       const isHighEv = event.exitVelocity && event.exitVelocity >= 108;
                       const isSweetSpot = event.launchAngle && event.launchAngle >= 20 && event.launchAngle <= 34;
 
+                      // Same palette as the HR cards: solid #0a1010 fills, no
+                      // gradients or glows, spec tier accents.
                       return (
-                        <div 
-                          key={idx} 
-                          className={`p-2.5 rounded-xl bg-black/40 border transition-all space-y-1.5 ${
-                            isHr 
-                              ? 'border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-[0_0_10px_rgba(251,191,36,0.08)]' 
-                              : 'border-white/5 hover:border-white/15'
+                        <div
+                          key={idx}
+                          className={`space-y-1.5 rounded-xl border bg-[#0a1010] p-2.5 transition-colors ${
+                            isHr ? 'border-[#10B981]/35' : 'border-white/5 hover:border-white/15'
                           }`}
                         >
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
-                              <span className={`px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${
-                                isHr 
-                                  ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' 
-                                  : 'bg-white/5 text-white/70 border border-white/10'
+                              <span className={`rounded border px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-wider ${
+                                isHr
+                                  ? 'border-[#10B981]/35 bg-[#10B981]/15 text-[#10B981]'
+                                  : 'border-white/10 bg-[#060a0a] text-white/70'
                               }`}>
                                 {isHr ? '🔥 Home Run' : event.result || 'Hard Barrel'}
                               </span>
                               <span className="text-[10px] text-white/40">{event.date || 'Recent Game'}</span>
                             </div>
-                            <span className="font-mono text-xs font-black text-[var(--aurora-max-emerald)]">
+                            <span className={`font-mono text-xs font-black tabular-nums ${isHr ? 'text-[#10B981]' : 'text-white/70'}`}>
                               {event.distance ? `${event.distance} FT` : '410 FT'}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 text-[9px] font-mono text-white/60 pt-1 border-t border-white/5">
+                          <div className="grid grid-cols-3 gap-2 border-t border-white/5 pt-1 font-mono text-[9px] text-white/60">
                             <div>
-                              <span className="text-white/35 block text-[8px]">EXIT VELO</span>
-                              <strong className={isHighEv ? 'text-[var(--aurora-max-emerald)] font-black' : 'text-white'}>
+                              <span className="block text-[8px] text-white/35">EXIT VELO</span>
+                              <strong className={isHighEv ? 'font-black text-[#10B981]' : 'text-white'}>
                                 {event.exitVelocity ? `${event.exitVelocity} mph` : '108 mph'}
                               </strong>
                             </div>
                             <div>
-                              <span className="text-white/35 block text-[8px]">LAUNCH ANGLE</span>
-                              <strong className={isSweetSpot ? 'text-amber-300 font-black' : 'text-white'}>
+                              <span className="block text-[8px] text-white/35">LAUNCH ANGLE</span>
+                              <strong className={isSweetSpot ? 'font-black text-[#F59E0B]' : 'text-white'}>
                                 {event.launchAngle ? `${event.launchAngle}°` : '26°'}
                               </strong>
                             </div>
                             <div>
-                              <span className="text-white/35 block text-[8px]">PROJECTED APEX</span>
-                              <strong className="text-vouch-cyan font-bold">
+                              <span className="block text-[8px] text-white/35">PROJECTED APEX</span>
+                              <strong className="font-bold text-[#10B981]">
                                 {event.distance ? `${Math.round(event.distance * 0.22)} ft` : '92 ft'}
                               </strong>
                             </div>
@@ -589,7 +596,7 @@ export function HrNextResearchView({
                 <div className="p-3.5 rounded-xl bg-black/40 border border-white/10">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">Starting Pitcher</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-emerald">Starting Pitcher</p>
                       <h4 className="text-sm font-bold text-white">{research.matchup.pitcher.name || 'TBD'} ({research.matchup.pitcher.throws || 'R'}HP)</h4>
                     </div>
                     <span className="px-2 py-1 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30">
@@ -608,7 +615,7 @@ export function HrNextResearchView({
                             </span>
                           </div>
                           <div className="text-right font-mono">
-                            <span className="text-xs text-vouch-cyan block font-bold">{point.fastballVelocity || 96.2} mph Fastball</span>
+                            <span className="text-xs text-vouch-emerald block font-bold">{point.fastballVelocity || 96.2} mph Fastball</span>
                             <span className="text-[9px] text-white/40">Hard Hit Allowed: {point.hardHitRateAllowed ? `${(point.hardHitRateAllowed * 100).toFixed(0)}%` : '42%'}</span>
                           </div>
                         </div>
@@ -702,7 +709,7 @@ export function HrNextResearchView({
             {activeTab === 'timeline' && (
               <div className="space-y-4">
                 <div className="p-3.5 rounded-xl bg-black/40 border border-white/10">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-cyan mb-3 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-emerald mb-3 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" /> Recent 10-Game Production Wave
                   </p>
 
@@ -737,7 +744,7 @@ export function HrNextResearchView({
                       </div>
                       <div className="bg-white/5 p-2 rounded-lg border border-white/5">
                         <span className="text-[8px] text-white/40 uppercase block">Avg Exit Velo</span>
-                        <strong className="text-vouch-cyan text-sm">94.8 mph</strong>
+                        <strong className="text-vouch-emerald text-sm">94.8 mph</strong>
                       </div>
                     </div>
                   )}
@@ -750,7 +757,7 @@ export function HrNextResearchView({
               <div className="space-y-3">
                 {research.decision.summary && (
                   <div className="p-3.5 rounded-xl bg-black/40 border border-white/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-cyan mb-1.5 flex items-center gap-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-vouch-emerald mb-1.5 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" /> AI Engine Decision Rationale
                     </p>
                     <p className="text-xs text-white/80 leading-relaxed font-sans">

@@ -4,17 +4,17 @@
    ========================================================= */
 
 :root {
-  --ve-home-bg: #050A14;
+  --ve-home-bg: #08090A;
   --ve-home-panel: rgba(11, 18, 32, 0.80);
   --ve-home-panel-strong: rgba(11, 18, 32, 0.94);
   --ve-home-card: rgba(5, 10, 20, 0.84);
   --ve-home-card-hover: rgba(11, 18, 32, 0.96);
-  --ve-home-border: rgba(231, 236, 243, 0.10);
-  --ve-home-border-hot: rgba(79, 184, 220, 0.34);
-  --ve-home-text: #E7ECF3;
-  --ve-home-muted: rgba(231, 236, 243, 0.66);
-  --ve-home-faint: rgba(231, 236, 243, 0.42);
-  --ve-home-cyan: #4FB8DC;
+  --ve-home-border: rgba(240, 241, 243, 0.10);
+  --ve-home-border-hot: rgba(0, 217, 160, 0.34);
+  --ve-home-text: #EFF0F2;
+  --ve-home-muted: rgba(240, 241, 243, 0.66);
+  --ve-home-faint: rgba(240, 241, 243, 0.42);
+  --ve-home-cyan: #00D9A0;
   --ve-home-teal: #31B583;
   --ve-home-green: #31B583;
   --ve-home-shadow: 0 14px 48px rgba(0, 0, 0, 0.34);
@@ -24,7 +24,7 @@
 #inner-view-slot .feed-post.z8-feed-card {
   background:
     linear-gradient(145deg, rgba(16, 26, 44, 0.46) 0%, rgba(11, 18, 32, 0.38) 55%, rgba(5, 10, 20, 0.42) 100%) !important;
-  border: 1px solid rgba(79, 184, 220, 0.14) !important;
+  border: 1px solid rgba(0, 217, 160, 0.14) !important;
   border-radius: 1rem !important;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
   color: var(--ve-home-text);
@@ -33,7 +33,7 @@
 #inner-view-slot .feed-post.z8-feed-card:hover {
   background:
     linear-gradient(145deg, rgba(16, 26, 44, 0.52) 0%, rgba(11, 18, 32, 0.44) 55%, rgba(5, 10, 20, 0.48) 100%) !important;
-  border-color: rgba(79, 184, 220, 0.28) !important;
+  border-color: rgba(0, 217, 160, 0.28) !important;
 }
 
 /* Sticky feed top header, tabs, search bars, composer containers */
@@ -50,7 +50,7 @@
   [class*="feedHeader"]
 ) {
   background:
-    radial-gradient(circle at 20% 0%, rgba(79, 184, 220, 0.10), transparent 36%),
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.055), transparent 36%),
     linear-gradient(180deg, rgba(10, 22, 40, 0.94), rgba(2, 6, 23, 0.86)) !important;
   border-color: var(--ve-home-border) !important;
   box-shadow: 0 14px 42px rgba(0, 0, 0, 0.26);
@@ -132,7 +132,7 @@
   [class*="tab"]:hover,
   [class*="filter"]:hover
 ) {
-  border-color: rgba(79, 184, 220, 0.32);
+  border-color: rgba(0, 217, 160, 0.32);
 }
 
 /* Active tabs/pills */
@@ -142,15 +142,15 @@
   [aria-selected="true"],
   [data-state="active"]
 ) {
-  border-color: rgba(79, 184, 220, 0.38) !important;
-  box-shadow: 0 0 0 1px rgba(79, 184, 220, 0.10), 0 12px 28px rgba(0, 0, 0, 0.22);
+  border-color: rgba(0, 217, 160, 0.38) !important;
+  box-shadow: 0 0 0 1px rgba(0, 217, 160, 0.10), 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
 
 /* Avatar treatment: cleaner premium ring */
 #inner-view-slot :is(img[alt*="avatar" i], .avatar, [class*="avatar"], [class*="Avatar"]) {
-  border-color: rgba(79, 184, 220, 0.20) !important;
-  box-shadow: 0 0 0 1px rgba(79, 184, 220, 0.08);
+  border-color: rgba(0, 217, 160, 0.20) !important;
+  box-shadow: 0 0 0 1px rgba(0, 217, 160, 0.08);
 }
 
 /* The infinite scroll loader should match dashboard */
@@ -385,7 +385,7 @@
   border: 1px solid rgba(49, 181, 131, 0.22);
   background:
     radial-gradient(circle at 30% 10%, rgba(255, 255, 255, 0.22), transparent 38%),
-    linear-gradient(135deg, rgba(49, 181, 131, 0.22), rgba(59, 130, 246, 0.16));
+    linear-gradient(135deg, rgba(49, 181, 131, 0.22), rgba(16, 185, 129, 0.16));
   color: hsl(var(--ve-text-primary));
   font-size: 13px;
   font-weight: 1000;
@@ -711,29 +711,28 @@
     overflow: hidden !important;
   }
 
+  /* The frame is the row under the global top bar, so it fills what is left of
+     the column rather than claiming the whole viewport — `100dvh` here would
+     push exactly the bar's height of content off the bottom. */
   #layout-inner-frame.ve-layout-feed,
   #layout-inner-frame.ve-layout-wide {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 100dvh !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     overflow: hidden !important;
     align-items: stretch !important;
   }
 
   /* Side rails do not create the main scroll */
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left,
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right,
-  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right {
+    height: 100% !important;
+    max-height: 100% !important;
     overflow: hidden !important;
   }
 
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > *,
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right > *,
-  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right > * {
+    height: 100% !important;
+    max-height: 100% !important;
     overflow-y: auto !important;
     overscroll-behavior: contain;
   }
@@ -741,16 +740,16 @@
   /* Center column holds the feed scroll viewport */
   #layout-inner-frame.ve-layout-feed #center-main-content-column,
   #layout-inner-frame.ve-layout-wide #center-main-content-column {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+    height: 100% !important;
+    max-height: 100% !important;
     min-height: 0 !important;
     overflow: hidden !important;
   }
 
   /* This is the actual social media scroll area */
   #inner-view-slot {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+    height: 100% !important;
+    max-height: 100% !important;
     min-height: 0 !important;
     overflow-y: scroll !important;
     overscroll-behavior-y: auto;
@@ -763,7 +762,7 @@
 /* Empty feeds need real vertical space so scrolling still feels possible */
 #inner-view-slot:has(.ve-feed-load-state-empty),
 #inner-view-slot:has(.ve-bottom-empty-state) {
-  min-height: 100dvh !important;
+  min-height: 100% !important;
 }
 
 #inner-view-slot:has(.ve-feed-load-state-empty)::after,

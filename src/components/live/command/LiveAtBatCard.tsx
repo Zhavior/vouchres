@@ -49,7 +49,7 @@ export function LiveAtBatCard({
             Batter
           </div>
 
-          <div className="mt-1 text-lg font-black text-cyan-400">
+          <div className="mt-1 text-lg font-black text-emerald-400">
             {batter?.name ?? "Waiting..."}
           </div>
         </div>

@@ -50,7 +50,7 @@ export default function AuroraBackground() {
 
       // Draw subtle telemetry grid lines near bottom
       const gridYStart = height * 0.55;
-      ctx.strokeStyle = "rgba(34, 211, 238, 0.04)";
+      ctx.strokeStyle = "rgba(0, 217, 160, 0.04)";
       ctx.lineWidth = 1;
 
       // Vertical perspective lines
@@ -130,9 +130,9 @@ export default function AuroraBackground() {
         className="absolute inset-[-25%] animate-[pulse_10s_ease-in-out_infinite]"
         style={{
           background: `
-            radial-gradient(circle at 50% 10%, rgba(34,211,238,0.24), transparent 45%),
+            radial-gradient(circle at 50% 10%, rgba(0,217,160,0.24), transparent 45%),
             radial-gradient(circle at 20% 35%, rgba(16,185,129,0.16), transparent 38%),
-            radial-gradient(circle at 80% 30%, rgba(56,189,248,0.18), transparent 40%),
+            radial-gradient(circle at 80% 30%, rgba(0,217,160,0.18), transparent 40%),
             radial-gradient(circle at 50% 70%, rgba(99,102,241,0.12), transparent 50%)
           `,
           filter: "blur(95px)",
@@ -146,10 +146,10 @@ export default function AuroraBackground() {
       />
 
       {/* Futuristic Laser Light Beams */}
-      <div className="absolute left-1/2 top-0 h-96 w-[1200px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.18),transparent_60%)] blur-2xl" />
+      <div className="absolute left-1/2 top-0 h-96 w-[1200px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(0,217,160,0.18),transparent_60%)] blur-2xl" />
 
       {/* Horizon Horizon Accent Line */}
-      <div className="absolute left-1/2 bottom-[20%] h-px w-[160vw] -translate-x-1/2 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <div className="absolute left-1/2 bottom-[20%] h-px w-[160vw] -translate-x-1/2 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
 
       {/* Vignette Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(3,6,10,0.75)_100%)]" />

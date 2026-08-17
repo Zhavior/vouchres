@@ -158,7 +158,7 @@ export function HrTopSignalPanel({
               </span>
             </div>
             <div className="aurora-max-metric">
-              <span className="aurora-max-metric__icon !border-[var(--hr-glass-border)] !bg-[rgba(79,184,220,0.06)]">
+              <span className="aurora-max-metric__icon !border-[var(--hr-glass-border)] !bg-[rgba(0,217,160,0.06)]">
                 <Crosshair className="h-3.5 w-3.5 text-[var(--aurora-max-cyan)]" />
               </span>
               <span>

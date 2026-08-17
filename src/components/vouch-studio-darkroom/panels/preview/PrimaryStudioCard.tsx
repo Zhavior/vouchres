@@ -114,7 +114,7 @@ export default function PrimaryStudioCard(props: Props) {
                               e.stopPropagation();
                               setActivePreviewCardIndex(1);
                             }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-emerald-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                             title="Slide to Analytics Card"
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -133,7 +133,7 @@ export default function PrimaryStudioCard(props: Props) {
                               VE
                             </div>
                             <div className="leading-none text-left">
-                              <span className={`text-[10px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-400'}>Edge</span></span>
+                              <span className={`text-[10px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-400'}>Edge</span></span>
                               <span className={`text-[7.5px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>Analytic Core Certified</span>
                             </div>
                           </div>
@@ -143,14 +143,14 @@ export default function PrimaryStudioCard(props: Props) {
                               <span className={`text-[9px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                                 {profile?.displayName || "Zhavior"}
                               </span>
-                              <span className="text-[8px] text-sky-400 font-mono tracking-tight block mt-0.5">
+                              <span className="text-[8px] text-emerald-400 font-mono tracking-tight block mt-0.5">
                                 @{profile?.username || "zhavior"}
                               </span>
                             </div>
                             <img
                               src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"}
                               alt={profile?.displayName || "Zhavior"}
-                              className="w-6.5 h-6.5 rounded-full border border-sky-500/20 object-cover bg-obsidian-900 shadow-inner"
+                              className="w-6.5 h-6.5 rounded-full border border-emerald-500/20 object-cover bg-obsidian-900 shadow-inner"
                               referrerPolicy="no-referrer"
                               loading="lazy"
                               decoding="async"
@@ -167,7 +167,7 @@ export default function PrimaryStudioCard(props: Props) {
                               </span>
                             )}
                             {showWinRate && (
-                              <span className={`text-[7px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-400'}`}>
+                              <span className={`text-[7px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'}`}>
                                 🎯 WR: {customWinRate}
                               </span>
                             )}
@@ -329,7 +329,7 @@ export default function PrimaryStudioCard(props: Props) {
                             <div className="space-y-1.5 animate-fade-in text-left">
                               <div className="flex justify-between items-center bg-black/20 p-1.5 rounded-lg border border-white/10 px-2">
                                 <span className="text-[7px] font-mono text-slate-505 uppercase tracking-wider">Multi-correlated parlay voucher</span>
-                                <span className="text-[7.5px] font-mono text-vouch-cyan font-bold bg-indigo-950/20 px-1 py-0.2 rounded border border-indigo-900/40 uppercase">PRO SELECTIONS</span>
+                                <span className="text-[7.5px] font-mono text-vouch-cyan font-bold bg-emerald-950/20 px-1 py-0.2 rounded border border-emerald-900/40 uppercase">PRO SELECTIONS</span>
                               </div>
                               <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1">
                                 {selectedPlayers.map((ps, index) => (
@@ -369,7 +369,7 @@ export default function PrimaryStudioCard(props: Props) {
                           <div className={`${cardStyle === 'minimal' ? 'bg-slate-50 border-slate-200' : 'bg-obsidian-900'} rounded-xl border ${activeStyle.cardBorder} p-2 z-10 relative mt-1.5`}>
                             <div className="flex justify-between items-center text-[7px] font-mono text-white/40 uppercase">
                               <span>PERFORMANCE TRACKING INDEX</span>
-                              <span className="text-sky-400 font-bold">Source: VAI Core</span>
+                              <span className="text-emerald-400 font-bold">Source: VAI Core</span>
                             </div>
                             <div className="h-10 w-full mt-1">
                               <svg className="w-full h-full" viewBox="0 0 300 60">

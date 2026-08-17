@@ -39,8 +39,8 @@ export function ParkSprayChart({
       {/* Stadium Header & 3D Environment Badge */}
       <div className="w-full flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-300">
             {stadiumName ?? 'Venue UNKNOWN'} 3D Dimension Grid
           </span>
         </div>
@@ -62,8 +62,8 @@ export function ParkSprayChart({
               <stop offset="100%" stopColor="#064e3b" stopOpacity="0.03" />
             </radialGradient>
             <linearGradient id="wall3DGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.2" />
+              <stop offset="0%" stopColor="#00d9a0" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.2" />
             </linearGradient>
           </defs>
 
@@ -89,7 +89,7 @@ export function ParkSprayChart({
           <path
             d="M 45 135 L 45 142 Q 150 79 255 142 L 255 135"
             fill="none"
-            stroke="rgba(6, 182, 212, 0.3)"
+            stroke="rgba(16, 185, 129, 0.3)"
             strokeWidth="1.5"
           />
 
@@ -129,9 +129,9 @@ export function ParkSprayChart({
           <line x1="265" y1="125" x2="265" y2="108" stroke="#fbbf24" strokeWidth="2" />
 
           {/* Distance Text Labels */}
-          <text x="32" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="monospace" fontWeight="bold">318' LF</text>
-          <text x="135" y="65" fill="#22d3ee" fontSize="9" fontFamily="monospace" fontWeight="bold">408' CF</text>
-          <text x="245" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="monospace" fontWeight="bold">314' RF</text>
+          <text x="32" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="var(--font-mono)" fontWeight="bold">318' LF</text>
+          <text x="135" y="65" fill="#00d9a0" fontSize="9" fontFamily="var(--font-mono)" fontWeight="bold">408' CF</text>
+          <text x="245" y="102" fill="rgba(255,255,255,0.7)" fontSize="8" fontFamily="var(--font-mono)" fontWeight="bold">314' RF</text>
 
           {/* 3D Parabolic Trajectory Vectors */}
           {vectors.map((vec, i) => {
@@ -144,20 +144,20 @@ export function ParkSprayChart({
                 <path
                   d={`M 150 245 Q ${150 + (x - 150) * 0.45} ${apexY} ${x} ${y}`}
                   fill="none"
-                  stroke={isHr ? '#22d3ee' : '#f59e0b'}
+                  stroke={isHr ? '#00d9a0' : '#f59e0b'}
                   strokeWidth={isHr ? '2' : '1.5'}
                   strokeDasharray={isHr ? 'none' : '3 2'}
                   opacity="0.9"
-                  style={{ filter: isHr ? 'drop-shadow(0 0 4px rgba(34, 211, 238, 0.6))' : 'none' }}
+                  style={{ filter: isHr ? 'drop-shadow(0 0 4px rgba(0, 217, 160, 0.6))' : 'none' }}
                 />
                 {/* Landing Point Marker */}
                 <circle
                   cx={x}
                   cy={y}
                   r="3.5"
-                  fill={isHr ? '#22d3ee' : '#f59e0b'}
+                  fill={isHr ? '#00d9a0' : '#f59e0b'}
                   className="transition-transform duration-200 group-hover:scale-150 cursor-pointer"
-                  style={{ filter: isHr ? 'drop-shadow(0 0 6px #22d3ee)' : 'none' }}
+                  style={{ filter: isHr ? 'drop-shadow(0 0 6px #00d9a0)' : 'none' }}
                 />
                 {/* Hover Tooltip Label */}
                 <text
@@ -165,7 +165,7 @@ export function ParkSprayChart({
                   y={y - 8}
                   fill="#ffffff"
                   fontSize="7.5"
-                  fontFamily="monospace"
+                  fontFamily="var(--font-mono)"
                   textAnchor="middle"
                   fontWeight="bold"
                   className="pointer-events-none"
@@ -182,7 +182,7 @@ export function ParkSprayChart({
       </div>
 
       <div className="w-full flex items-center justify-between text-[9px] font-mono text-white/50 border-t border-white/5 pt-2.5 mt-2">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-vouch-cyan inline-block shadow-[0_0_6px_#22d3ee]" /> Home Run (Cleared 3D Wall)</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-vouch-cyan inline-block shadow-[0_0_6px_#00d9a0]" /> Home Run (Cleared 3D Wall)</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-vouch-amber inline-block" /> Extra Base Hit</span>
       </div>
     </div>

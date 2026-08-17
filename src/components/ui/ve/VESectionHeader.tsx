@@ -7,7 +7,7 @@ type VESectionHeaderProps = {
 export function VESectionHeader({ eyebrow, title, subtitle }: VESectionHeaderProps) {
   return (
     <header className="mb-8">
-      <div className="text-xs font-black uppercase tracking-[0.35em] text-cyan-300">
+      <div className="text-xs font-black uppercase tracking-[0.35em] text-emerald-300">
         {eyebrow}
       </div>
       <h1 className="mt-4 text-4xl font-black uppercase tracking-tight md:text-6xl">

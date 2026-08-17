@@ -79,7 +79,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
           </p>
           {totalSlips > 0 && (
             <p className="text-slate-400 font-mono">
-              Share: <span className="text-sky-400 font-bold">{((data.value / totalSlips) * 100).toFixed(1)}%</span>
+              Share: <span className="text-emerald-400 font-bold">{((data.value / totalSlips) * 100).toFixed(1)}%</span>
             </p>
           )}
         </div>
@@ -95,7 +95,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-850/60 pb-3">
         <div className="space-y-0.5">
           <h4 className="font-bold text-xs text-slate-100 uppercase tracking-widest flex items-center gap-1.5">
-            <BarChart3 className="w-4 h-4 text-sky-400" />
+            <BarChart3 className="w-4 h-4 text-emerald-400" />
             VEdge Slip Risk Allocation
           </h4>
           <p className="text-[10.5px] text-slate-400 leading-normal">
@@ -108,7 +108,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
             Demo Mode (Build Slip below to update)
           </span>
         ) : (
-          <span className="text-[9px] bg-sky-950/40 border border-sky-900/60 text-sky-400 font-bold px-2 py-0.5 rounded font-mono uppercase">
+          <span className="text-[9px] bg-emerald-950/40 border border-emerald-900/60 text-emerald-400 font-bold px-2 py-0.5 rounded font-mono uppercase">
             Live Verified Logs
           </span>
         )}

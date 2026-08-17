@@ -12,7 +12,7 @@ interface VerdictPanelProps {
 const COLORS = {
   elite: "text-emerald-400",
   strong: "text-green-400",
-  good: "text-blue-400",
+  good: "text-emerald-400",
   neutral: "text-yellow-400",
   avoid: "text-red-400",
 } as const;

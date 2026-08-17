@@ -333,7 +333,7 @@ function MockHomeFeed() {
 function MockProfilePage() {
   return (
     <div className="flex min-h-full flex-col bg-obsidian-900 font-z8 text-white">
-      <div className="relative h-24 bg-gradient-to-r from-sky-600/25 to-indigo-600/25">
+      <div className="relative h-24 bg-gradient-to-r from-emerald-600/25 to-emerald-600/25">
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
         <div className="absolute -bottom-8 left-4 z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-vouch-cyan/40 bg-obsidian-900 text-lg font-black text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">

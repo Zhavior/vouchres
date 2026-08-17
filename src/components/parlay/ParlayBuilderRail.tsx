@@ -106,10 +106,10 @@ export default function ParlayBuilderRail({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
-        <div className="rounded-2xl border border-dashed border-cyan-400/25 bg-gradient-to-b from-slate-900/80 to-black/70 overflow-hidden">
+        <div className="rounded-2xl border border-dashed border-emerald-400/25 bg-gradient-to-b from-slate-900/80 to-black/70 overflow-hidden">
           <div className="flex items-center gap-1.5 border-b border-dashed border-white/10 px-3 py-2">
-            <Ticket className="h-3.5 w-3.5 text-cyan-400/80" aria-hidden="true" />
-            <span className="font-mono text-[10px] font-bold tracking-wider text-cyan-300/90">DRAFT-SLIP</span>
+            <Ticket className="h-3.5 w-3.5 text-emerald-400/80" aria-hidden="true" />
+            <span className="font-mono text-[10px] font-bold tracking-wider text-emerald-300/90">DRAFT-SLIP</span>
             <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 ml-auto">
               {legs.length} leg{legs.length !== 1 ? "s" : ""}
             </span>

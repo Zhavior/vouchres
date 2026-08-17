@@ -40,8 +40,8 @@ interface HrSpreadsheetProps {
 
 const TIER_STYLES: Record<HrTableTier, string> = {
   Elite: 'border-[#00ff94]/35 bg-[#00ff94]/10 text-[#75ffc5]',
-  Strong: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200',
-  Watch: 'border-sky-300/20 bg-sky-300/[0.07] text-sky-100',
+  Strong: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
+  Watch: 'border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-100',
   Sleeper: 'border-amber-300/25 bg-amber-300/[0.08] text-amber-200',
 };
 

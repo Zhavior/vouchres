@@ -948,7 +948,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
                   batchRepairDraftLegs(liveGames);
                   announce('Attempted identity repair from today\'s slate.');
                 }}
-                className="text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 underline min-h-[2rem]"
+                className="text-[10px] font-bold uppercase tracking-wide text-emerald-300 hover:text-emerald-200 underline min-h-[2rem]"
               >
                 Repair identity
               </button>

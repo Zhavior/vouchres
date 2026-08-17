@@ -168,6 +168,12 @@ export function useHrNextData() {
     lastFetchedAt: vm.lastUpdated,
     mode: vm.mode,
     setMode: vm.setMode,
+    // Surfaced for the control rail's slate date selector — the board view
+    // model already owns the date, the rail just needs to reach it.
+    date: vm.date,
+    setDate: vm.setDate,
+    isToday: vm.isToday,
+    syncing: vm.syncing,
     sortKey,
     setSortKey,
     groupBy,

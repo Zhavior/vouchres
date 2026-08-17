@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { CreatorProofProfile } from '../../types';
-import { canAccessHrNext } from '../../lib/adminDevAccess';
+import { canAccessAdminSurfaces } from '../../lib/adminDevAccess';
 import { Lock } from 'lucide-react';
 import { AURORA_LABEL, AURORA_PANEL_PREMIUM } from '../../theme/auroraTokens';
 
@@ -10,7 +10,7 @@ interface AdminAccessGateProps {
 }
 
 export function AdminAccessGate({ profile, children }: AdminAccessGateProps) {
-  if (canAccessHrNext(profile)) {
+  if (canAccessAdminSurfaces(profile)) {
     return <>{children}</>;
   }
 

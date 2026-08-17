@@ -14,7 +14,7 @@ const HIGHLIGHT_STYLES: Record<SpotlightPick['key'], { border: string; bg: strin
   top: { border: 'border-amber-400/40', bg: 'bg-amber-400/10', text: 'text-amber-300', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.12)]' },
   power: { border: 'border-orange-400/40', bg: 'bg-orange-400/10', text: 'text-orange-300', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.12)]' },
   matchup: { border: 'border-[var(--aurora-max-emerald)]/40', bg: 'bg-[var(--aurora-max-emerald)]/10', text: 'text-[var(--aurora-max-emerald)]', glow: 'shadow-[0_0_20px_rgba(0,217,160,0.12)]' },
-  value: { border: 'border-sky-400/40', bg: 'bg-sky-400/10', text: 'text-sky-300', glow: 'shadow-[0_0_20px_rgba(56,189,248,0.12)]' },
+  value: { border: 'border-emerald-400/40', bg: 'bg-emerald-400/10', text: 'text-emerald-300', glow: 'shadow-[0_0_20px_rgba(0,217,160,0.12)]' },
 };
 
 export const HrMaxSpotlightDeck = React.memo(function HrMaxSpotlightDeck({
@@ -102,7 +102,7 @@ export const HrMaxSpotlightDeck = React.memo(function HrMaxSpotlightDeck({
                 <div className="flex flex-col">
                   <span className="text-white/40 uppercase">Park</span>
                   <div className="h-1 w-full bg-white/10 rounded overflow-hidden mt-0.5">
-                    <div style={{ width: `${parkScore ?? 50}%` }} className="h-full bg-sky-400" />
+                    <div style={{ width: `${parkScore ?? 50}%` }} className="h-full bg-emerald-400" />
                   </div>
                   <span className="text-white/70 font-bold mt-0.5 tabular-nums">{parkScore ?? '—'}</span>
                 </div>

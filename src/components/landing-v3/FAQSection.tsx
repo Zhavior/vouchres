@@ -58,7 +58,7 @@ export default function FAQSection() {
           transition={{ duration: 0.45 }}
           className="max-w-2xl"
         >
-          <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
             FAQ
           </span>
 
@@ -89,7 +89,7 @@ export default function FAQSection() {
                   {faq.question}
                   <span
                     aria-hidden="true"
-                    className="text-lg leading-none text-cyan-300 transition-transform group-open:rotate-45"
+                    className="text-lg leading-none text-emerald-300 transition-transform group-open:rotate-45"
                   >
                     +
                   </span>

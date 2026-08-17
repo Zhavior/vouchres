@@ -116,7 +116,7 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
             href={`/p/${encodeURIComponent(proofPickId)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[9px] font-mono font-black uppercase text-cyan-300 hover:text-cyan-200 flex items-center gap-1 shrink-0"
+            className="text-[9px] font-mono font-black uppercase text-emerald-300 hover:text-emerald-200 flex items-center gap-1 shrink-0"
           >
             <ExternalLink className="w-3 h-3" />
             View proof

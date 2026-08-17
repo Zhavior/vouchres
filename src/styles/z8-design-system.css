@@ -11,18 +11,18 @@
  * would land it after Tailwind's expanded output and break the build).
  */
 @theme {
-  --color-obsidian-900: #050A14;
-  --color-obsidian-800: #0B1220;
-  --color-obsidian-700: #101A2C;
-  --color-obsidian-600: #16233A;
+  --color-obsidian-900: #08090A;
+  --color-obsidian-800: #101113;
+  --color-obsidian-700: #17181B;
+  --color-obsidian-600: #1F2124;
   --color-vouch-emerald: #31B583;
-  --color-vouch-cyan: #4FB8DC;
+  --color-vouch-cyan: #00D9A0;
   --color-vouch-amber: #D99C4A;
   --background-image-glass-gradient: linear-gradient(110deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
   --background-image-vignette: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%);
   --background-image-z8-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-  --z8-font-display: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --z8-font-body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --z8-font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --z8-font-body: "Cabinet Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --z8-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-z8: var(--z8-font-body);
   --spacing-z8-page-x: 0.75rem;
@@ -36,7 +36,7 @@
   background-color: rgba(5, 10, 20, 0.42);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(231, 236, 243, 0.05);
+  border: 1px solid rgba(240, 241, 243, 0.05);
   box-shadow: 
     0 8px 32px 0 rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -54,10 +54,10 @@
 }
 
 @utility glass-border {
-  border: 1px solid rgba(231, 236, 243, 0.1);
+  border: 1px solid rgba(240, 241, 243, 0.1);
   transition: border-color 0.5s;
   &:hover {
-    border-color: rgba(79, 184, 220, 0.3);
+    border-color: rgba(0, 217, 160, 0.3);
   }
 }
 
@@ -66,7 +66,7 @@
   letter-spacing: -0.05em;
   text-transform: uppercase;
   font-size: 10px;
-  color: rgba(231, 236, 243, 0.4);
+  color: rgba(240, 241, 243, 0.4);
 }
 
 @utility font-z8 {
@@ -84,7 +84,7 @@
   backdrop-filter: blur(14px) saturate(1.15);
   box-shadow:
     4px 0 40px rgba(0, 0, 0, 0.45),
-    0 0 32px rgba(79, 184, 220, 0.08);
+    0 0 32px rgba(0, 217, 160, 0.08);
 }
 
 /** Borderless glass panel for sidebar nav groups. */
@@ -93,7 +93,7 @@
   backdrop-filter: blur(20px) saturate(1.15);
   box-shadow:
     0 8px 28px 0 rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(231, 236, 243, 0.04);
+    inset 0 1px 0 rgba(240, 241, 243, 0.04);
 }
 
 /** Borderless inner surface for sidebar controls. */
@@ -102,20 +102,20 @@
   backdrop-filter: blur(12px);
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(231, 236, 243, 0.03);
+    inset 0 1px 0 rgba(240, 241, 243, 0.03);
 }
 
 /** Borderless icon box for sidebar nav items. */
 @utility z8-sidebar-icon {
   background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.04);
+  box-shadow: inset 0 1px 0 rgba(240, 241, 243, 0.04);
 }
 
 /** Sidebar nav scroll pane — thin cyan scrollbar, no x-scroll, soft fade at both scroll edges instead of a hard clip line. */
 @utility z8-sidebar-scroll {
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(79, 184, 220, 0.28) transparent;
+  scrollbar-color: rgba(0, 217, 160, 0.28) transparent;
   mask-image: linear-gradient(
     180deg,
     black 0%,
@@ -126,15 +126,28 @@
 .z8-sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
+
+/* Collapsed icon rail: the scrollbar reserves layout width on the right, which
+   pushed every icon off the rail's centre. The rail is 76px of pure icons —
+   hide the track there so the nav items get the full content box and the icons
+   sit centred. The expanded sidebar keeps its scrollbar. */
+.ve-aurora-sidebar[data-collapsed='true'] .z8-sidebar-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ve-aurora-sidebar[data-collapsed='true'] .z8-sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
 .z8-sidebar-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 .z8-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(79, 184, 220, 0.28);
+  background: rgba(0, 217, 160, 0.28);
   border-radius: 999px;
 }
 .z8-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 184, 220, 0.5);
+  background: rgba(0, 217, 160, 0.5);
 }
 
 /** Sidebar footer dock — one glass slab separating chrome (sync/settings/profile) from the scrolling nav. */
@@ -147,7 +160,7 @@
   backdrop-filter: blur(20px) saturate(1.15);
   box-shadow:
     0 -10px 30px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(79, 184, 220, 0.16);
+    inset 0 1px 0 rgba(0, 217, 160, 0.16);
 }
 
 /** Accent rule — matches HR board header treatment. */
@@ -155,8 +168,8 @@
   height: 2px;
   background: linear-gradient(
     90deg,
-    rgba(79, 184, 220, 0.85) 0%,
-    rgba(79, 184, 220, 0.4) 55%,
+    rgba(0, 217, 160, 0.85) 0%,
+    rgba(0, 217, 160, 0.4) 55%,
     transparent 100%
   );
 }
@@ -165,10 +178,10 @@
 @utility glass-panel-strong {
   background-color: rgba(5, 10, 20, 0.34);
   backdrop-filter: blur(20px) saturate(1.15);
-  border: 1px solid rgba(79, 184, 220, 0.14);
+  border: 1px solid rgba(0, 217, 160, 0.14);
   box-shadow:
     0 8px 28px 0 rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(231, 236, 243, 0.04);
+    inset 0 1px 0 rgba(240, 241, 243, 0.04);
 }
 
 /** Z8 Premium — layered glass, grain overlay, inset rim light. */
@@ -179,10 +192,10 @@
   background:
     linear-gradient(145deg, rgba(16, 26, 44, 0.46) 0%, rgba(11, 18, 32, 0.38) 55%, rgba(5, 10, 20, 0.42) 100%);
   backdrop-filter: blur(24px) saturate(1.18);
-  border: 1px solid rgba(79, 184, 220, 0.2);
+  border: 1px solid rgba(0, 217, 160, 0.2);
   box-shadow:
     0 14px 48px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(231, 236, 243, 0.07),
+    inset 0 1px 0 rgba(240, 241, 243, 0.07),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45);
   &::before {
     content: "";
@@ -201,7 +214,7 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 184, 220, 0.08), transparent 60%);
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.044), transparent 60%);
   }
 }
 
@@ -215,7 +228,7 @@
 /** Stat chip — compact metric cell with tabular numerals. */
 @utility z8-stat-chip {
   border-radius: 0.25rem;
-  border: 1px solid rgba(231, 236, 243, 0.08);
+  border: 1px solid rgba(240, 241, 243, 0.08);
   background: rgba(0, 0, 0, 0.35);
   padding: 0.625rem 0.75rem;
   font-variant-numeric: tabular-nums;
@@ -237,24 +250,24 @@
     box-shadow 160ms ease;
   &:focus-visible {
     box-shadow:
-      0 0 0 2px #050A14,
-      0 0 0 4px rgba(79, 184, 220, 0.9);
+      0 0 0 2px #08090A,
+      0 0 0 4px rgba(0, 217, 160, 0.9);
   }
 }
 
 /** Editorial data surface: no decorative glass or hover movement. */
 @utility z8-data-surface {
-  border: 1px solid rgba(231, 236, 243, 0.1);
+  border: 1px solid rgba(240, 241, 243, 0.1);
   border-radius: 0.25rem;
   background: rgba(8, 13, 10, 0.82);
-  box-shadow: inset 0 1px 0 rgba(231, 236, 243, 0.025);
+  box-shadow: inset 0 1px 0 rgba(240, 241, 243, 0.025);
 }
 
 @utility z8-readable {
   max-width: 75ch;
   font-size: 0.9375rem;
   line-height: 1.65;
-  color: rgba(231, 236, 243, 0.68);
+  color: rgba(240, 241, 243, 0.68);
 }
 
 /** Display typography scale for page titles. */
@@ -264,7 +277,7 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: #E7ECF3;
+  color: #EFF0F2;
   @media (width >= 40rem) {
     font-size: 1.875rem;
   }

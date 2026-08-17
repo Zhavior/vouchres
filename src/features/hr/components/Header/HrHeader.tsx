@@ -104,8 +104,8 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   const freshnessTone = FRESHNESS[freshness] ?? FRESHNESS.fresh;
 
   return (
-    <header className="deck-hero rounded-2xl p-3.5 sm:p-5">
-      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <header className="deck-hero rounded-2xl p-2.5 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-2.5 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-3xl">
           <div className="aurora-max-eyebrow deck-product-mark !text-[9.5px] font-bold sm:!text-xs">
             <Crosshair className="h-3.5 w-3.5 shrink-0 text-vouch-cyan" />
@@ -113,17 +113,21 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
               Home Run Intelligence<span className="hidden sm:inline"> · MLB Signal Deck</span>
             </span>
           </div>
-          <h1 className="mt-2 max-w-2xl text-xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+          <h1 className="mt-1.5 max-w-2xl text-[15px] font-black leading-tight tracking-tight text-white sm:mt-2 sm:text-3xl">
             Every bat that can leave the yard,{' '}
             <span className="text-vouch-emerald">ranked and receipted.</span>
           </h1>
-          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-white/60 sm:text-sm">
+          {/* The positioning line is orientation for a first-time visitor; on a
+              phone it costs a third of the fold, so it starts at sm. */}
+          <p className="mt-1.5 hidden max-w-2xl text-[11px] leading-relaxed text-white/60 sm:block sm:text-sm">
             Power, matchup vulnerability, park factors and official batting orders, scored on one slate and labelled
             confirmed or projected.
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        {/* Phones get one no-wrap control row that scrolls rather than three
+            stacked wrapped rows. */}
+        <div className="deck-hero-controls -mx-2.5 flex shrink-0 items-center gap-2 overflow-x-auto px-2.5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {onToggleProMode ? (
             <HrProModeToggle
               isProMode={isProMode}
@@ -157,7 +161,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
         </div>
       </div>
 
-      <div className="deck-rail mt-4 rounded-xl">
+      <div className="deck-rail mt-2.5 rounded-xl sm:mt-4">
         <RailCell label="MLB slate" value={noGames ? 'No games' : `${gameCount} game${gameCount === 1 ? '' : 's'}`} />
         <RailCell
           label="Freshness"

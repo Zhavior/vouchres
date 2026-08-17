@@ -93,13 +93,13 @@ export default function AuthCallbackPage() {
         className="pointer-events-none absolute inset-0 opacity-80"
         style={{
           background:
-            "radial-gradient(circle at 18% 14%, rgba(79,184,220,0.18), transparent 30%), radial-gradient(circle at 82% 84%, rgba(49,181,131,0.12), transparent 32%), linear-gradient(180deg, rgba(6,12,24,0.15), rgba(0,0,0,0.72))",
+            "radial-gradient(circle at 18% 14%, rgba(0,217,160,0.18), transparent 30%), radial-gradient(circle at 82% 84%, rgba(49,181,131,0.12), transparent 32%), linear-gradient(180deg, rgba(6,12,24,0.15), rgba(0,0,0,0.72))",
         }}
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/55 to-transparent" />
 
       <section
-        className={`relative w-full max-w-md overflow-hidden rounded-3xl p-7 text-center shadow-[0_28px_90px_rgba(0,0,0,0.62),0_0_70px_rgba(79,184,220,0.08)] sm:p-9 ${AURORA_PANEL_PREMIUM}`}
+        className={`relative w-full max-w-md overflow-hidden rounded-3xl p-7 text-center shadow-[0_28px_90px_rgba(0,0,0,0.62),0_0_70px_rgba(0,217,160,0.08)] sm:p-9 ${AURORA_PANEL_PREMIUM}`}
         aria-labelledby="auth-callback-title"
       >
         <div className="pointer-events-none absolute inset-x-10 top-0 h-28 rounded-full bg-vouch-cyan/10 blur-3xl" />

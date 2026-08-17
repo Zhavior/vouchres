@@ -16,7 +16,7 @@ function MetricCard({
   accent = "cyan",
 }: MetricCardProps) {
   const accentClass = {
-    cyan: "text-cyan-400",
+    cyan: "text-emerald-400",
     emerald: "text-emerald-400",
     gold: "text-amber-400",
   }[accent];

@@ -23,7 +23,7 @@
   --hq-ease:            cubic-bezier(0.22, 1, 0.36, 1);
   --hq-dur:             180ms;
   --hq-blur:            16px;
-  --hq-sans:            var(--font-sans, "Geist", ui-sans-serif, system-ui, sans-serif);
+  --hq-sans:           var(--font-sans, "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif);
   --hq-mono:            var(--font-mono, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
 
   min-width: 0;
@@ -138,7 +138,7 @@
   border-radius: 9999px;
   border: 1px solid var(--hq-emerald-border);
   background: var(--hq-emerald-dim);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -190,7 +190,7 @@
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -256,7 +256,7 @@
   padding: 0.4rem 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -299,7 +299,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -357,7 +357,7 @@
 }
 
 .aurora-hq__metric small {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -412,7 +412,7 @@
 }
 
 .aurora-hq__tier-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -421,7 +421,7 @@
 }
 
 .aurora-hq__tier-count {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
@@ -475,7 +475,7 @@
 }
 
 .aurora-hq__column-index {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -499,7 +499,7 @@
 }
 
 .aurora-hq__column-count {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--hq-paper);
@@ -518,7 +518,7 @@
   width: 100%;
   border-top: 1px solid var(--hq-line);
   padding: 0.65rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -591,7 +591,7 @@
 }
 
 .aurora-hq__hrpi-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -600,7 +600,7 @@
 }
 
 .aurora-hq__hrpi-score {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
@@ -612,7 +612,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   line-height: 1.45;
   letter-spacing: 0.02em;
@@ -635,7 +635,7 @@
 }
 
 .aurora-hq__factor-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -644,7 +644,7 @@
 }
 
 .aurora-hq__factor-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 600;
   color: #e7e9e2;
@@ -677,7 +677,7 @@
 }
 
 .aurora-hq__ladder-title {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -693,7 +693,7 @@
 }
 
 .aurora-hq__ladder-index {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   color: rgba(255, 255, 255, 0.2);
@@ -723,7 +723,7 @@
 }
 
 .aurora-hq__ladder-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   font-weight: 700;
   white-space: nowrap;
@@ -755,7 +755,7 @@
 }
 
 .aurora-hq__pro-gate-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -779,7 +779,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -818,7 +818,7 @@
   align-items: center;
   border-bottom: 1px solid var(--hq-line);
   padding: 0 0.75rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -902,7 +902,7 @@
   gap: 0.3rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.25rem 0.5rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -940,7 +940,7 @@
 }
 
 .aurora-hq__receipt-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.4375rem;
   font-weight: 800;
   letter-spacing: 0.14em;

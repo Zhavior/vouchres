@@ -80,7 +80,7 @@ export function CookieConsentBanner() {
       aria-live="polite"
       aria-label="Cookie and Privacy Consent"
     >
-      <AuroraMaxPanel className="p-4 sm:p-5 border border-white/15 bg-black/85 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.8),0_0_24px_rgba(79,184,220,0.12)]">
+      <AuroraMaxPanel className="p-4 sm:p-5 border border-white/15 bg-black/85 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.8),0_0_24px_rgba(0,217,160,0.12)]">
         {!showDetailed ? (
           <div className="space-y-3.5">
             <div className="flex items-center justify-between gap-2">

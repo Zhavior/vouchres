@@ -99,7 +99,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
               className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
-                <Activity className="w-3.5 h-3.5 text-sky-400" />
+                <Activity className="w-3.5 h-3.5 text-emerald-400" />
                 2. Roster & Player Tuning
               </span>
               <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionRoster ? '[-]' : '[+]'}</span>
@@ -216,7 +216,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                             {isActive ? (
                               <span className="text-[7px] text-slate-650 font-mono">SELECTED</span>
                             ) : (
-                              <Plus className="w-3 h-3 text-sky-400 shrink-0" />
+                              <Plus className="w-3 h-3 text-emerald-400 shrink-0" />
                             )}
                           </div>
                         );
@@ -236,7 +236,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                         <div key={ps.player.id} className="bg-obsidian-900 p-3 rounded-xl border border-white/10 space-y-2.5">
                           <div className="flex justify-between items-center border-b border-white/10 pb-1.5">
                             <span className="font-bold text-[10.5px] text-white/80 truncate flex items-center gap-1.5">
-                              <span className="text-[8px] font-mono text-sky-400 bg-sky-950 px-1 py-0.2 rounded border border-sky-900">STAR</span>
+                              <span className="text-[8px] font-mono text-emerald-400 bg-emerald-950 px-1 py-0.2 rounded border border-emerald-900">STAR</span>
                               {ps.player.name}
                             </span>
                             <span className="text-[7.5px] font-mono text-white/40 uppercase">
@@ -277,7 +277,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                             <div className="space-y-1">
                               <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                 <span>VAI CONFID.</span>
-                                <span className="text-sky-400 font-bold">{ps.aiConfidence ?? 85}%</span>
+                                <span className="text-emerald-400 font-bold">{ps.aiConfidence ?? 85}%</span>
                               </div>
                               <input
                                 type="range"
@@ -289,7 +289,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                                   updated[originalIndex].aiConfidence = parseInt(e.target.value);
                                   setSelectedPlayers(updated);
                                 }}
-                                className="w-full accent-sky-500 h-1 bg-black/25 rounded-lg cursor-pointer"
+                                className="w-full accent-emerald-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                               />
                             </div>
 
@@ -327,7 +327,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                                 setSelectedPlayers(updated);
                               }}
                               placeholder="Insights on launch rate, pitch matchup or historical batting averages..."
-                              className="w-full bg-black/25 border border-white/10 text-white/80 text-[10px] p-1.5 rounded-lg outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
+                              className="w-full bg-black/25 border border-white/10 text-white/80 text-[10px] p-1.5 rounded-lg outline-none focus:border-emerald-500/30 resize-none font-medium leading-normal"
                             />
                           </div>
 
@@ -425,7 +425,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                               <div className="space-y-1">
                                 <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                   <span>PLATE SECURITY (PLAY/START RATE)</span>
-                                  <span className="text-sky-400 font-bold">{ps.playRatePercent ?? 95}%</span>
+                                  <span className="text-emerald-400 font-bold">{ps.playRatePercent ?? 95}%</span>
                                 </div>
                                 <input
                                   type="range"
@@ -437,7 +437,7 @@ export default function RosterSection(props: VouchStudioDarkroomProps) {
                                     updated[originalIndex].playRatePercent = parseInt(e.target.value);
                                     setSelectedPlayers(updated);
                                   }}
-                                  className="w-full accent-sky-500 h-1 bg-black/25 rounded-lg cursor-pointer"
+                                  className="w-full accent-emerald-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                                 />
                               </div>
 

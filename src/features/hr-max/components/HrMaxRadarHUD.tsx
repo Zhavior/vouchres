@@ -118,7 +118,7 @@ export const HrMaxRadarHUD = React.memo(function HrMaxRadarHUD({
           {/* Polygon fill gradient */}
           <linearGradient id="radarPolyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--aurora-max-emerald, #00d9a0)" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#00d9a0" stopOpacity="0.25" />
           </linearGradient>
         </defs>
 

@@ -33,11 +33,11 @@ const THEMES: Record<string, SlipVisualTheme> = {
   contact: {
     id: "contact",
     label: "Contact Slip",
-    borderClass: "border-cyan-400/35",
-    shellGradient: "from-cyan-950/35 via-slate-950/90 to-black/85",
-    headerAccent: "text-cyan-300",
-    chipClass: "border-cyan-400/30 bg-cyan-500/10 text-cyan-200",
-    ticketIconClass: "text-cyan-400/90",
+    borderClass: "border-emerald-400/35",
+    shellGradient: "from-emerald-950/35 via-slate-950/90 to-black/85",
+    headerAccent: "text-emerald-300",
+    chipClass: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
+    ticketIconClass: "text-emerald-400/90",
   },
   mixed: {
     id: "mixed",

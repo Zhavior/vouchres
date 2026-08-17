@@ -286,13 +286,13 @@ export default React.memo(function VouchCard({
   const cardTheme = vouch.cardTheme || 'cyber';
 
   let themeBgAndBorder = 'bg-[hsl(var(--ve-surface)/0.84)] border-[hsl(var(--ve-border)/0.34)] hover:border-vouch-cyan/30 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] text-[hsl(var(--ve-text-secondary))] p-4';
-  let glowColor1 = 'bg-cyan-500/5';
-  let glowColor2 = 'bg-indigo-500/5';
-  let avatarBorder = 'border-cyan-400/80 shadow-[0_0_10px_rgba(34,211,238,0.4)]';
-  let oddsBadgeColor = 'text-cyan-400 bg-cyan-950/45 border border-cyan-900/80 shadow-[0_0_10px_rgba(6,182,212,0.1)]';
+  let glowColor1 = 'bg-emerald-500/5';
+  let glowColor2 = 'bg-emerald-500/5';
+  let avatarBorder = 'border-emerald-400/80 shadow-[0_0_10px_rgba(0,217,160,0.4)]';
+  let oddsBadgeColor = 'text-emerald-400 bg-emerald-950/45 border border-emerald-900/80 shadow-[0_0_10px_rgba(16,185,129,0.1)]';
 
   if (isXPreview) {
-    themeBgAndBorder = 'aspect-[1.91/1] p-6 flex flex-col justify-between bg-gradient-to-b from-[#060c1c] to-[#040812] border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.15)] text-slate-200';
+    themeBgAndBorder = 'aspect-[1.91/1] p-6 flex flex-col justify-between bg-gradient-to-b from-[#060c1c] to-[#040812] border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.15)] text-slate-200';
   } else {
     switch (cardTheme) {
       case 'cosmic':
@@ -657,7 +657,7 @@ export default React.memo(function VouchCard({
             <button
               type="button"
               onClick={handleParlayOsClick}
-              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all bg-cyan-500/10 border-cyan-400/35 text-cyan-200 hover:border-cyan-300/55 hover:bg-cyan-500/15"
+              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all bg-emerald-500/10 border-emerald-400/35 text-emerald-200 hover:border-emerald-300/55 hover:bg-emerald-500/15"
               id={`parlayos-action-btn-${vouch.id}`}
             >
               <Layers3 className="w-3.5 h-3.5" />
@@ -736,10 +736,10 @@ export default React.memo(function VouchCard({
       {/* TWITTER INTENT SHARE DIALOG MODAL */}
       {showShareModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in" id="twitter-intent-share-modal">
-          <div className="bg-ve-graphite border border-cyan-500/30 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-[0_0_50px_rgba(6,182,212,0.15)] animate-scale-in text-left">
+          <div className="bg-ve-graphite border border-emerald-500/30 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-[0_0_50px_rgba(16,185,129,0.15)] animate-scale-in text-left">
             <div className="flex justify-between items-center pb-2 border-b border-slate-850">
               <h3 className="font-black text-slate-100 text-sm tracking-wider uppercase flex items-center gap-2">
-                <Twitter className="w-5 h-5 text-sky-400 fill-sky-400" /> Share Verification Preview to X
+                <Twitter className="w-5 h-5 text-emerald-400 fill-emerald-400" /> Share Verification Preview to X
               </h3>
               <button 
                 onClick={() => setShowShareModal(false)}
@@ -755,15 +755,15 @@ export default React.memo(function VouchCard({
             </p>
 
             {/* 16:9 Watermarked Share Preview Card */}
-            <div className="w-full bg-ve-obsidian border border-cyan-500/40 rounded-xl overflow-hidden shadow-inner p-4 flex flex-col justify-between relative" style={{ minHeight: '180px' }}>
+            <div className="w-full bg-ve-obsidian border border-emerald-500/40 rounded-xl overflow-hidden shadow-inner p-4 flex flex-col justify-between relative" style={{ minHeight: '180px' }}>
               <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-60">
-                <span className="text-[7px] bg-cyan-950 font-black text-cyan-400 px-1.5 py-0.2 rounded font-mono border border-cyan-800/40">VERIFIED PRE-LOCK</span>
+                <span className="text-[7px] bg-emerald-950 font-black text-emerald-400 px-1.5 py-0.2 rounded font-mono border border-emerald-800/40">VERIFIED PRE-LOCK</span>
                 <span className="text-[7px] text-slate-400 font-mono">vouchedge.ai</span>
               </div>
 
               {/* Poster info */}
               <div className="flex items-center gap-2 text-left">
-                <div className="w-7 h-7 rounded-full bg-slate-800 border border-cyan-400/80 font-bold text-slate-300 flex items-center justify-center text-xs">
+                <div className="w-7 h-7 rounded-full bg-slate-800 border border-emerald-400/80 font-bold text-slate-300 flex items-center justify-center text-xs">
                   {profile?.displayName?.charAt(0) || 'C'}
                 </div>
                 <div className="leading-tight">
@@ -788,7 +788,7 @@ export default React.memo(function VouchCard({
                     <div><span className="text-purple-400 block font-bold font-mono">AI CONFIDENCE: {aiConfidence}%</span></div>
                   )}
                   {capperConfidence !== null && (
-                    <div><span className="text-cyan-400 block font-bold font-mono">CAPPER COEF: {capperConfidence}%</span></div>
+                    <div><span className="text-emerald-400 block font-bold font-mono">CAPPER COEF: {capperConfidence}%</span></div>
                   )}
                 </div>
               )}
@@ -804,7 +804,7 @@ export default React.memo(function VouchCard({
               <label className="text-[9px] text-slate-500 font-black font-mono uppercase">Proposed Tweet Caption:</label>
               <textarea
                 readOnly
-                className="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 font-mono leading-relaxed outline-none focus:border-cyan-500/50 resize-none h-24"
+                className="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 font-mono leading-relaxed outline-none focus:border-emerald-500/50 resize-none h-24"
                 value={[
                   `🔥 VERIFIED PROOF VOUCH 🔥`,
                   ``,

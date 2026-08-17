@@ -1125,7 +1125,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                     <span className={`inline-flex items-center gap-0.5 font-mono text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
                                       isPitcherFinal(row)
                                         ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
-                                        : 'text-cyan-300 bg-cyan-500/20 border border-cyan-500/40'
+                                        : 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
                                     }`}>
                                       {isPitcherFinal(row) ? '🏁' : '⚡'} {getKsToday(row)} Ks {isPitcherFinal(row) ? '(Final)' : ''}
                                     </span>
@@ -1156,7 +1156,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                                   ? 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40'
                                   : isPitcherLive(row)
                                   ? 'text-rose-300 bg-rose-500/20 border border-rose-500/40 animate-pulse'
-                                  : 'text-cyan-300 bg-cyan-500/15 border border-cyan-500/35'
+                                  : 'text-emerald-300 bg-emerald-500/15 border border-emerald-500/35'
                               }`}>
                                 {isPitcherFinal(row) ? '🏁' : isPitcherLive(row) ? '🔴' : '⚡'} {getKsToday(row)} Ks
                               </span>

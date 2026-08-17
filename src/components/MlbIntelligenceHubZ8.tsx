@@ -271,7 +271,7 @@ const OFFLINE_REPORT: IntelligenceReport = {
 
 function PixelAgentIcon({ code }: { code: string }) {
   const theme: Record<string, { main: string; glow: string; accent: string; active: number[] }> = {
-    DS: { main: 'bg-sky-300', glow: 'bg-sky-500/25', accent: 'bg-cyan-300/80', active: [1, 2, 5, 6, 9, 10, 13, 14] },
+    DS: { main: 'bg-emerald-300', glow: 'bg-emerald-500/25', accent: 'bg-emerald-300/80', active: [1, 2, 5, 6, 9, 10, 13, 14] },
     PH: { main: 'bg-red-300', glow: 'bg-red-500/25', accent: 'bg-orange-300/80', active: [0, 3, 5, 6, 9, 10, 12, 15] },
     MR: { main: 'bg-violet-300', glow: 'bg-violet-500/25', accent: 'bg-fuchsia-300/80', active: [1, 4, 6, 9, 11, 13, 14] },
     RA: { main: 'bg-amber-300', glow: 'bg-amber-500/25', accent: 'bg-yellow-200/80', active: [0, 1, 2, 4, 8, 12, 13, 14] },
@@ -402,7 +402,7 @@ function CandidateCard({
 function availabilityTone(status?: string) {
   const value = String(status ?? '').toLowerCase();
   if (value === 'confirmed') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
-  if (value === 'projected') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
+  if (value === 'projected') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (value === 'avoid') return 'border-red-400/30 bg-red-400/10 text-red-200';
   return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
 }
@@ -412,7 +412,7 @@ function pickTypeTone(pickType?: string) {
   if (value === 'AVOID') return 'border-red-400/30 bg-red-400/10 text-red-200';
   if (value === 'POWER_THREAT') return 'border-orange-400/30 bg-orange-400/10 text-orange-200';
   if (value === 'FORM_PLAY') return 'border-violet-400/30 bg-violet-400/10 text-violet-200';
-  if (value === 'CLEAN_SCREEN') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
+  if (value === 'CLEAN_SCREEN') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (value === 'PREMIUM_EDGE') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   return AURORA_SURFACE + ' text-slate-300';
 }
@@ -473,7 +473,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
     <article className={`rounded-3xl ${AURORA_PANEL_PREMIUM} p-5 shadow-xl shadow-black/20`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className={`${AURORA_LABEL} text-sky-300`}>
+          <div className={`${AURORA_LABEL} text-emerald-300`}>
             {judge.specialty ?? (isRisk ? 'Trap Watch Agent' : 'AI Capper')}
           </div>
           <h3 className={`mt-1 ${AURORA_SECTION_HEADER}`}>{judge.displayName}</h3>

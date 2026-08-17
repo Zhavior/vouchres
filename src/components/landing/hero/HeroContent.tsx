@@ -16,7 +16,7 @@ export default function HeroContent({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <p className="mb-6 text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">
+        <p className="mb-6 text-sm font-semibold uppercase tracking-[0.35em] text-emerald-300">
           VouchEdge
         </p>
 
@@ -34,7 +34,7 @@ export default function HeroContent({
         <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <button
             onClick={onJoinBeta}
-            className="rounded-2xl bg-cyan-400 px-8 py-4 text-lg font-semibold text-black transition duration-300 hover:scale-[1.03] hover:bg-cyan-300"
+            className="rounded-2xl bg-emerald-400 px-8 py-4 text-lg font-semibold text-black transition duration-300 hover:scale-[1.03] hover:bg-emerald-300"
           >
             Explore Today's Games
           </button>

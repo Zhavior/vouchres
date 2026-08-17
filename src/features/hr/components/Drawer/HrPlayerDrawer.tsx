@@ -23,7 +23,7 @@ import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWat
 import { HrStatsTab } from '../Stats/HrStatsTab';
 import { HrOverviewDossier } from '../Profile/HrOverviewDossier';
 const MAX_AMBER_HEX = '#D99C4A';
-const MAX_CYAN_HEX = '#4FB8DC';
+const MAX_CYAN_HEX = '#00D9A0';
 const MAX_EMERALD_HEX = '#31B583';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { useRealGameLog } from '../../hooks/useRealGameLog';

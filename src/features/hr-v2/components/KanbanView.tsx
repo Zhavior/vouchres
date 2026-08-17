@@ -67,7 +67,7 @@ const KanbanCard = memo(function KanbanCard({ data, onOpenResearch }: KanbanCard
             size={36}
           />
           <div className="min-w-0">
-            <h4 className="text-xs font-bold text-white truncate group-hover:text-cyan-300 transition-colors">
+            <h4 className="text-xs font-bold text-white truncate group-hover:text-emerald-300 transition-colors">
               {data.identity?.name || 'Unknown Hitter'}
             </h4>
             <p className="text-[10px] font-mono text-white/50 truncate">
@@ -76,7 +76,7 @@ const KanbanCard = memo(function KanbanCard({ data, onOpenResearch }: KanbanCard
           </div>
         </div>
         <div className="text-right shrink-0">
-          <span className="text-sm font-black font-mono text-cyan-300 block">
+          <span className="text-sm font-black font-mono text-emerald-300 block">
             {hrIndex}
           </span>
           <span className="text-[9px] font-mono text-white/40 block">HRPI</span>
@@ -125,7 +125,7 @@ const KanbanCard = memo(function KanbanCard({ data, onOpenResearch }: KanbanCard
           <button
             type="button"
             onClick={handleQuickAdd}
-            className="px-2 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 text-[10px] font-mono font-bold transition-all shadow-sm active:scale-95"
+            className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 text-[10px] font-mono font-bold transition-all shadow-sm active:scale-95"
           >
             + Slip
           </button>
@@ -213,8 +213,8 @@ export const KanbanView = memo(function KanbanView({ items }: KanbanViewProps) {
         title: 'WATCH / MODERATE',
         icon: Activity,
         range: `${TIER_MODERATE_MIN}–${TIER_HIGH_MIN - 1} HRPI`,
-        glow: 'border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.15)]',
-        headerBg: 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30',
+        glow: 'border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]',
+        headerBg: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30',
         items: items.filter(
           (i) =>
             (i.score?.hrIndex ?? 0) >= TIER_MODERATE_MIN &&

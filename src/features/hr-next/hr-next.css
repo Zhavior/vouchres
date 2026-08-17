@@ -1,0 +1,50 @@
+/*
+ * HR Next — Pro Mode transition.
+ *
+ * The Pro Mode toggle keeps the very same DOM nodes and only swaps class names,
+ * so the change is a transform rather than a re-render. The animation is done in
+ * CSS on purpose: framer-motion's FLIP projection cannot reconcile a wholesale
+ * container-type change (grid <-> flex column) across hundreds of cards and
+ * settles with stuck scale matrices, which visibly distorts the cards.
+ *
+ * Only compositor-friendly properties are animated here — no width/height/top,
+ * so the reflow itself lands in one frame and the paint eases in behind it.
+ */
+.hr-next-card {
+  transition:
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The card's internals cross-fade as the layout swaps between the compact scan
+   row and the dense telemetry block. */
+@keyframes hr-next-card-settle {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hr-next-card > * {
+  animation: hr-next-card-settle 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-next-card,
+  .hr-next-card > * {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Sharp corners — the shared Next geometry (same rule as settings-next /
+   today-next / live-games-next). Tailwind's rounded-* utilities are spread
+   across ~100 call sites on this surface; flattening them here keeps the markup
+   readable and the geometry consistent. `rounded-full` is exempt — the tier
+   dots, avatars and status pills are meant to stay round. */
+.hr-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
+  border-radius: 0 !important;
+}

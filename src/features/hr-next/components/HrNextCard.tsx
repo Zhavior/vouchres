@@ -4,8 +4,15 @@ import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import { extractCardData } from '../utils/cardUtils';
+import { tierForScore, type HrNextTierDef } from '../utils/tierPartition';
 import { HrNextReceiptTray } from './HrNextReceiptTray';
 import { useResearchStore } from '../../../stores/useResearchStore';
+
+/** Render a nullable 0–100 layer score without inventing a value for it. */
+function layerValue(score: number | null | undefined): string {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return 'N/A';
+  return String(Math.max(0, Math.min(100, Math.round(score))));
+}
 
 export interface HrNextCardProps {
   row: HrWatchRow;
@@ -13,6 +20,8 @@ export interface HrNextCardProps {
   saved: boolean;
   isReceiptOpen: boolean;
   isProMode?: boolean;
+  /** HRPI-band tier supplied by the board; derived from the score when absent. */
+  tier?: HrNextTierDef;
   compact?: boolean;
   onSelect: (id: string) => void;
   onToggleSaved: (id: string) => void;
@@ -26,6 +35,7 @@ export const HrNextCard = React.memo(function HrNextCard({
   saved,
   isReceiptOpen,
   isProMode = false,
+  tier,
   compact,
   onSelect,
   onToggleSaved,
@@ -46,9 +56,10 @@ export const HrNextCard = React.memo(function HrNextCard({
     recentHrs,
     pitcherName,
     barrelRate,
-    maxExitVelo,
+    avgExitVelo,
     hardHitRate,
     parkBoostPct,
+    handednessLabel,
     hasHitHrToday,
     riskTier,
     receipt,
@@ -76,62 +87,65 @@ export const HrNextCard = React.memo(function HrNextCard({
     onToggleReceipt?.(row.stableId);
   };
 
-  // Tier-specific color styling for Pro Mode
-  const tierLower = (riskTier || '').toLowerCase();
-  const isElite = tierLower.includes('elite');
-  const isStrong = tierLower.includes('strong') || tierLower.includes('core');
-  const isWatch = tierLower.includes('watch') || tierLower.includes('value');
-  const isSleeper = !isElite && !isStrong && !isWatch;
+  // HRPI-band tier drives every accent so the card always agrees with the
+  // column it sits in. `riskTier` stays available as the pipeline's own label.
+  const activeTier = tier ?? tierForScore(row.hrScore);
+  const scoreColorClass = activeTier.scoreText;
+  const tierBadgeBg = activeTier.badge;
+  const tierBorderHover = activeTier.cardHover;
 
-  let scoreColorClass = 'text-[var(--aurora-max-emerald)] drop-shadow-[0_0_12px_rgba(0,217,160,0.4)]';
-  let tierBadgeBg = 'bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)] border-[var(--aurora-max-emerald)]/30';
-  let tierBorderHover = 'hover:border-[var(--aurora-max-emerald)]/40';
-
-  if (isElite) {
-    scoreColorClass = 'text-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.45)]';
-    tierBadgeBg = 'bg-amber-400/15 text-amber-300 border-amber-400/35';
-    tierBorderHover = 'hover:border-amber-400/50';
-  } else if (isWatch) {
-    scoreColorClass = 'text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.35)]';
-    tierBadgeBg = 'bg-cyan-400/15 text-cyan-300 border-cyan-400/30';
-    tierBorderHover = 'hover:border-cyan-400/40';
-  } else if (isSleeper) {
-    scoreColorClass = 'text-violet-300 drop-shadow-[0_0_10px_rgba(167,139,250,0.35)]';
-    tierBadgeBg = 'bg-violet-400/15 text-violet-300 border-violet-400/30';
-    tierBorderHover = 'hover:border-violet-400/40';
-  }
+  // Statcast telemetry surfaced directly on the Pro card — no drawer required.
+  // Nothing here fabricates a reading: a metric the feed never published prints
+  // N/A rather than a value derived from the power layer.
+  const platoonSplit = layerValue(row.platoon);
+  const exitVeloText = avgExitVelo == null ? 'N/A' : `${avgExitVelo.toFixed(1)} mph`;
+  const barrelRateText = barrelRate == null ? 'N/A' : `${barrelRate.toFixed(1)}%`;
+  const hardHitText = hardHitRate == null ? 'N/A' : `${hardHitRate}%`;
+  const parkBoostText = parkBoostPct == null
+    ? 'N/A'
+    : `${parkBoostPct > 0 ? '+' : ''}${parkBoostPct}%`;
+  // The handedness tile leads with the matchup that produced the layer score,
+  // so identical bucket values stay distinguishable card to card.
+  const handednessValue = handednessLabel ?? (platoonSplit === 'N/A' ? 'N/A' : platoonSplit);
+  const handednessDetail = handednessLabel && platoonSplit !== 'N/A' ? platoonSplit : null;
+  const pitchVulnerability = layerValue(row.pitchMix ?? row.pitcherVulnerability);
+  const pitchVulnerabilityIsProxy = row.pitchMix == null && row.pitcherVulnerability != null;
 
   // ─── PRO MODE (Expanded 4-Tier Hero Telemetry Card with HR Intelligence) ───
   if (isProMode) {
     return (
       <div
-        className={`group transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full rounded-2xl border ${
+        className={`hr-next-card group w-full rounded-2xl border bg-[#050808] ${
           hasHitHrToday
-            ? 'border-amber-400/70 bg-gradient-to-r from-amber-500/15 via-ve-obsidian to-ve-obsidian ring-1 ring-amber-400/50 shadow-[0_0_30px_rgba(251,191,36,0.2)]'
+            ? 'border-amber-400/70 ring-1 ring-amber-400/50'
             : active
-              ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_25px_rgba(0,217,160,0.15)]'
-              : `bg-ve-obsidian/95 border-white/10 ${tierBorderHover} hover:bg-ve-graphite shadow-xl`
+              ? 'border-[var(--aurora-max-emerald)] ring-1 ring-[var(--aurora-max-emerald)]/50'
+              : `${activeTier.proBorder} ${tierBorderHover}`
         }`}
         style={{
           contentVisibility: 'auto',
-          containIntrinsicSize: '0 160px',
+          // `auto` makes the browser remember this card's last-rendered height.
+          // A fixed placeholder under-measures the real card, so scrollHeight
+          // inflates as you scroll and the column never reaches its end.
+          containIntrinsicSize: 'auto 384px',
         }}
         data-testid={`hr-card-${row.stableId}`}
         data-pro-mode="true"
+        data-tier={activeTier.key}
       >
-        <div className="p-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5 p-3">
           {/* Main Hero Header Row */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3.5 min-w-0">
-              {/* Enlarged Batter Hero Image (72px) with Status Halo */}
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="flex min-w-0 items-start gap-2.5">
+              {/* Batter hero image with lineup-status halo */}
               <button
                 type="button"
                 onClick={onTicketActivate}
                 aria-label={`Select ${row.playerName}`}
-                className="relative h-[68px] w-[68px] sm:h-[74px] sm:w-[74px] shrink-0 overflow-hidden rounded-2xl border-2 border-white/15 bg-black/60 shadow-[0_0_20px_rgba(0,0,0,0.6)] group-hover:border-[var(--aurora-max-emerald)]/50 transition-all cursor-pointer"
+                className="relative h-[56px] w-[56px] shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-white/15 bg-black/60 transition-colors group-hover:border-white/25"
                 style={{ aspectRatio: '1 / 1' }}
               >
-                <PlayerHeadshot name={row.playerName} playerId={row.playerId?.toString()} size={74} />
+                <PlayerHeadshot name={row.playerName} playerId={row.playerId?.toString()} size={56} />
                 {confirmed && (
                   <span
                     className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-[var(--aurora-max-emerald)] border-2 border-black shadow-[0_0_8px_rgba(0,217,160,0.8)]"
@@ -158,9 +172,9 @@ export const HrNextCard = React.memo(function HrNextCard({
                     {row.team}
                   </span>
 
-                  {/* Tier Badge */}
-                  <span className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded border ${tierBadgeBg}`}>
-                    {isElite ? '👑 ELITE' : isStrong ? '⚡ STRONG' : isWatch ? '🎯 WATCH' : '🌊 SLEEPER'}
+                  {/* Tier Badge — HRPI band, matching the column it renders in */}
+                  <span className={`rounded border px-2 py-0.5 font-mono text-[9px] font-black uppercase ${tierBadgeBg}`}>
+                    {activeTier.label}
                   </span>
 
                   {/* HR Intelligence Live & Recent Badges */}
@@ -207,12 +221,12 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
 
             {/* Top Right: HRPI Score & Edge Badge */}
-            <div className="flex flex-col items-end shrink-0 leading-none">
-              <span className={`font-mono text-2xl font-black tabular-nums ${scoreColorClass}`}>
+            <div className="flex shrink-0 flex-col items-end leading-none">
+              <span className={`font-mono text-xl font-black tabular-nums ${scoreColorClass}`}>
                 {score}
               </span>
-              <span className="mt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white/40">
-                HRPI SCORE
+              <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-white/40">
+                HRPI
               </span>
               {evEdge != null && (
                 <span className={`mt-1 text-[10px] font-mono font-black tabular-nums ${evEdge > 0 ? 'text-[var(--aurora-max-emerald)]' : 'text-white/40'}`}>
@@ -222,89 +236,133 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
           </div>
 
-          {/* Deep Intel Telemetry Grid (On Top of Ranks/Actions) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 font-mono">
-            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-              <span className="text-[8px] text-white/40 uppercase block">Max Exit Velo</span>
-              <strong className="text-xs font-bold text-[var(--aurora-max-emerald)] block mt-0.5">
-                {maxExitVelo.toFixed(1)} mph
+          {/* Statcast telemetry — exposed inline, no drawer required */}
+          <div className="grid grid-cols-2 gap-1.5 border-t border-white/5 pt-2 font-mono">
+            <div className="rounded-lg border border-white/5 bg-[#0a1010] px-2 py-1.5">
+              <span className="block text-[8px] uppercase tracking-[0.12em] text-white/40">Avg Exit Velo</span>
+              <strong
+                className={`mt-0.5 block text-xs font-bold ${avgExitVelo == null ? 'text-white/35' : 'text-[#10B981]'}`}
+                title="Season average exit velocity from the Statcast leaderboard"
+              >
+                {exitVeloText}
               </strong>
             </div>
 
-            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-              <span className="text-[8px] text-white/40 uppercase block">Barrel Rate</span>
-              <strong className="text-xs font-bold text-amber-400 block mt-0.5">
-                {barrelRate.toFixed(1)}%
+            <div className="rounded-lg border border-white/5 bg-[#0a1010] px-2 py-1.5">
+              <span className="block text-[8px] uppercase tracking-[0.12em] text-white/40">Barrel %</span>
+              <strong
+                className={`mt-0.5 block text-xs font-bold ${barrelRate == null ? 'text-white/35' : 'text-[#F59E0B]'}`}
+                title="Season barrel rate from the Statcast leaderboard"
+              >
+                {barrelRateText}
               </strong>
             </div>
 
-            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-              <span className="text-[8px] text-white/40 uppercase block">Hard Hit (95+)</span>
-              <strong className="text-xs font-bold text-vouch-cyan block mt-0.5">
-                {hardHitRate}%
+            <div className="rounded-lg border border-white/5 bg-[#0a1010] px-2 py-1.5">
+              <span className="block text-[8px] uppercase tracking-[0.12em] text-white/40">Handedness</span>
+              <strong
+                className={`mt-0.5 flex items-baseline gap-1 text-xs font-bold ${handednessValue === 'N/A' ? 'text-white/35' : 'text-[#10B981]'}`}
+                title="Batter hand vs opposing starter hand · platoon layer score (0–100)"
+              >
+                <span className="truncate">{handednessValue}</span>
+                {handednessDetail ? (
+                  <span className="shrink-0 text-[9px] font-semibold tabular-nums text-white/45">
+                    {handednessDetail}
+                  </span>
+                ) : null}
               </strong>
             </div>
 
-            <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-              <span className="text-[8px] text-white/40 uppercase block">Park HR Boost</span>
-              <strong className="text-xs font-bold text-white block mt-0.5">
-                +{parkBoostPct}% Deep
+            <div className="rounded-lg border border-white/5 bg-[#0a1010] px-2 py-1.5">
+              <span className="block text-[8px] uppercase tracking-[0.12em] text-white/40">
+                Pitch Vuln{pitchVulnerabilityIsProxy ? '*' : ''}
+              </span>
+              <strong
+                className={`mt-0.5 block text-xs font-bold ${pitchVulnerability === 'N/A' ? 'text-white/35' : 'text-[#A855F7]'}`}
+                title={
+                  pitchVulnerabilityIsProxy
+                    ? 'Pitch-mix layer unavailable — showing the pitcher vulnerability layer (0–100)'
+                    : 'Primary pitch-mix vulnerability layer score (0–100)'
+                }
+              >
+                {pitchVulnerability}
               </strong>
             </div>
           </div>
 
-          {/* Action Row */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/5">
-            <div className="flex items-center gap-2">
+          {/* Condensed secondary strip */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] text-white/45">
+            <span>
+              Hard Hit{' '}
+              <strong className={`font-bold tabular-nums ${hardHitRate == null ? 'text-white/35' : 'text-white/75'}`}>
+                {hardHitText}
+              </strong>
+            </span>
+            <span>
+              Park{' '}
+              <strong className={`font-bold tabular-nums ${parkBoostPct == null ? 'text-white/35' : 'text-white/75'}`}>
+                {parkBoostText}
+              </strong>
+            </span>
+            <span className="truncate" title="Risk tier published by the pipeline, independent of the HRPI band">
+              Model tier <strong className="font-bold text-white/75">{riskTier}</strong>
+            </span>
+          </div>
+
+          {/* Action row — one tappable row at every width. The row never wraps:
+              the odds / live-HR group is the only flexible member and it
+              truncates, so Deep Intel, Save and Slip stay on the line even at
+              320px. */}
+          <div className="flex flex-nowrap items-center gap-1.5 border-t border-white/5 pt-2">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
               {bookOddsLabel && (
-                <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10 font-mono text-xs font-bold text-white/80 tabular-nums">
+                <span className="min-w-0 truncate rounded-md border border-white/10 bg-[#0a1010] px-1.5 py-1 font-mono text-[10px] font-bold tabular-nums text-white/80">
                   {bookOddsLabel}
                 </span>
               )}
               {hasHitHrToday && (
-                <span className="text-rose-400 font-mono text-[10px] font-black uppercase flex items-center gap-1">
-                  ⚡ HR HIT IN LIVE PLAY
+                <span className="min-w-0 truncate font-mono text-[9px] font-black uppercase text-rose-400">
+                  ⚡ HR live
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleToggleResearch}
-                title={isResearched ? "Close Deep Research" : "Open Deep Research"}
-                aria-label={`${isResearched ? 'Close' : 'Open'} Research for ${row.playerName}`}
-                className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border font-mono text-[10px] font-bold uppercase transition ${
-                  isResearched
-                    ? 'border-[var(--aurora-max-emerald)] bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] shadow-[0_0_10px_rgba(0,217,160,0.2)]'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/20'
-                }`}
-              >
-                <Search className="h-3 w-3" /> Deep Intel
-              </button>
+            <button
+              type="button"
+              onClick={handleToggleResearch}
+              title={isResearched ? 'Close Deep Research' : 'Open Deep Research'}
+              aria-label={`${isResearched ? 'Close' : 'Open'} Research for ${row.playerName}`}
+              className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg border transition-colors ${
+                isResearched
+                  ? 'border-[var(--aurora-max-emerald)] bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)]'
+                  : 'border-white/10 bg-[#0a1010] text-white/50 hover:border-white/25 hover:text-white'
+              }`}
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
 
-              <button
-                type="button"
-                onClick={() => onToggleSaved(row.stableId)}
-                aria-label={`${saved ? 'Remove' : 'Add'} ${row.playerName} ${saved ? 'from' : 'to'} My List`}
-                className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
-                  saved
-                    ? 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)]'
-                    : 'border-white/10 bg-white/5 text-white/40 hover:text-white'
-                }`}
-              >
-                <Star className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
-              </button>
+            <button
+              type="button"
+              onClick={() => onToggleSaved(row.stableId)}
+              aria-label={`${saved ? 'Remove' : 'Add'} ${row.playerName} ${saved ? 'from' : 'to'} My List`}
+              className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg border transition-colors ${
+                saved
+                  ? 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)]'
+                  : 'border-white/10 bg-[#0a1010] text-white/40 hover:text-white'
+              }`}
+            >
+              <Star className={`h-3.5 w-3.5 ${saved ? 'fill-current' : ''}`} />
+            </button>
 
-              <button
-                type="button"
-                onClick={() => onAddToSlip(row)}
-                title="Add to parlay slip"
-                className="inline-flex h-8 items-center gap-1 rounded-lg border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/15 px-3 font-mono text-[10px] font-black uppercase text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/30"
-              >
-                <Plus className="h-3.5 w-3.5" /> Slip
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onAddToSlip(row)}
+              title="Add to parlay slip"
+              aria-label={`Add ${row.playerName} to parlay slip`}
+              className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/15 px-2 font-mono text-[9px] font-black uppercase text-[var(--aurora-max-emerald)] transition-colors hover:bg-[var(--aurora-max-emerald)]/30"
+            >
+              <Plus className="h-3.5 w-3.5" /> Slip
+            </button>
           </div>
         </div>
 
@@ -331,17 +389,18 @@ export const HrNextCard = React.memo(function HrNextCard({
   // ─── STANDARD COMPACT ROW MODE ──────────────────────────────────────────
   return (
     <div
-      className={`hr-max-ticket group transition-colors duration-150 w-full rounded-xl ${
+      className={`hr-max-ticket hr-next-card group w-full rounded-xl border bg-[#070b0b] ${
         active
-          ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.15)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_15px_rgba(0,217,160,0.1)]'
-          : 'bg-ve-obsidian border border-white/5 hover:border-[var(--aurora-max-emerald)]/40 hover:bg-ve-graphite'
+          ? 'border-[var(--aurora-max-emerald)] ring-1 ring-[var(--aurora-max-emerald)]/50'
+          : `border-white/5 ${tierBorderHover}`
       }`}
       style={{
         contentVisibility: 'auto',
-        containIntrinsicSize: '0 88px',
+        containIntrinsicSize: 'auto 88px',
       }}
       data-testid={`hr-card-${row.stableId}`}
       data-pro-mode="false"
+      data-tier={activeTier.key}
     >
       <div className="flex min-h-[78px] items-center gap-2.5 px-3 py-2">
         <button
@@ -425,13 +484,15 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
           </div>
 
-          {/* HRPI Score Display */}
-          <div className="flex shrink-0 flex-col items-end leading-none">
-            <span className="font-mono text-base font-black tabular-nums text-[var(--aurora-max-emerald)] drop-shadow-[0_0_8px_rgba(0,217,160,0.3)]">
+          {/* HRPI Score Badge */}
+          <div
+            className={`flex shrink-0 flex-col items-center justify-center rounded-lg border px-2.5 py-1.5 leading-none ${tierBadgeBg}`}
+          >
+            <span className={`font-mono text-lg font-black tabular-nums ${scoreColorClass}`}>
               {score}
             </span>
-            <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/35">
-              HRPI
+            <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] opacity-70">
+              {activeTier.label}
             </span>
           </div>
         </button>

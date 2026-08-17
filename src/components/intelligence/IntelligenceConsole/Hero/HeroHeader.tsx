@@ -37,7 +37,7 @@ export default function HeroHeader<TPlayer extends Record<string, any>>({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400">
+      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
         {tierLabel(analysis.tier)}
       </p>
 

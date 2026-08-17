@@ -151,8 +151,8 @@ export default function StadiumWindVectorWidget({
             {/* Infield Diamond */}
             <polygon
               points="100,165 140,125 100,85 60,125"
-              fill="rgba(34,211,238,0.04)"
-              stroke="rgba(34,211,238,0.3)"
+              fill="rgba(0,217,160,0.04)"
+              stroke="rgba(0,217,160,0.3)"
               strokeWidth="1.5"
             />
             {/* Base Pads */}

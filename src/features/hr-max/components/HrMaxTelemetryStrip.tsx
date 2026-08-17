@@ -109,11 +109,11 @@ export const HrMaxTelemetryStrip = React.memo(function HrMaxTelemetryStrip({
           )}
 
           {topParkRow && (
-            <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">
-              <Wind className="h-3 w-3 text-sky-400 shrink-0" />
+            <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+              <Wind className="h-3 w-3 text-emerald-400 shrink-0" />
               <span className="text-white/60">Venue Boost:</span>
               <span className="font-bold text-white truncate max-w-[120px]">{topParkRow.venue || topParkRow.matchupLabel}</span>
-              <span className="font-bold text-sky-300 tabular-nums">
+              <span className="font-bold text-emerald-300 tabular-nums">
                 {topParkRow.raw.parkIndex ? `${topParkRow.raw.parkIndex} Index` : `${topParkRow.raw.parkFactor} Score`}
               </span>
             </div>
@@ -127,7 +127,7 @@ export const HrMaxTelemetryStrip = React.memo(function HrMaxTelemetryStrip({
           </span>
           <div className="flex-1 flex h-2 rounded overflow-hidden bg-white/5 border border-white/10" title={`Elite: ${tierDistribution.elite}, Strong: ${tierDistribution.strong}, Watch: ${tierDistribution.watch}, Sleepers: ${tierDistribution.sleepers}`}>
             <div style={{ width: `${tierDistribution.elitePct}%` }} className="bg-[var(--aurora-max-emerald)]" />
-            <div style={{ width: `${tierDistribution.strongPct}%` }} className="bg-sky-400" />
+            <div style={{ width: `${tierDistribution.strongPct}%` }} className="bg-emerald-400" />
             <div style={{ width: `${tierDistribution.watchPct}%` }} className="bg-[#a8d8b6]" />
             <div style={{ width: `${tierDistribution.sleepersPct}%` }} className="bg-amber-400" />
           </div>

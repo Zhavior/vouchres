@@ -14,9 +14,9 @@ export default function DecisionIntelligence() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br from-cyan-500/[0.07] via-white/[0.02] to-transparent p-7 sm:p-10"
+          className="overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br from-emerald-500/[0.07] via-white/[0.02] to-transparent p-7 sm:p-10"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
             <Info aria-hidden="true" className="h-3.5 w-3.5" />
             Confidence
           </span>
@@ -28,7 +28,7 @@ export default function DecisionIntelligence() {
             Confidence is a strength-of-evidence label — not a promise.
           </h2>
 
-          <p className="mt-5 max-w-3xl border-l-2 border-cyan-300/40 pl-4 text-[15px] leading-7 text-white/75 sm:text-base">
+          <p className="mt-5 max-w-3xl border-l-2 border-emerald-300/40 pl-4 text-[15px] leading-7 text-white/75 sm:text-base">
             Confidence represents how strongly the available evidence supports the current
             research conclusion. It is not a guarantee of the outcome.
           </p>

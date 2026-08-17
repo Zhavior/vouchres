@@ -184,14 +184,14 @@ function SortableWidget({
       style={style}
       className={[
         "relative rounded-2xl border border-white/10 bg-slate-950/60 p-3.5 text-left shadow-xl shadow-black/20 transition sm:rounded-3xl sm:p-4",
-        isDragging ? "z-50 scale-[1.02] border-cyan-300/70 bg-cyan-300/10 shadow-cyan-950/40" : "",
-        !isDragging && !editMode ? "hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-cyan-300/10" : "",
-        editMode && !isDragging ? "border-cyan-300/25 bg-cyan-300/[0.06]" : "",
+        isDragging ? "z-50 scale-[1.02] border-emerald-300/70 bg-emerald-300/10 shadow-emerald-950/40" : "",
+        !isDragging && !editMode ? "hover:-translate-y-1 hover:border-emerald-300/40 hover:bg-emerald-300/10" : "",
+        editMode && !isDragging ? "border-emerald-300/25 bg-emerald-300/[0.06]" : "",
       ].join(" ")}
     >
       {editMode && (
         <div className="absolute right-3 top-3 flex items-center gap-2">
-          <span className="hidden rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-cyan-100 sm:inline-flex">
+          <span className="hidden rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-emerald-100 sm:inline-flex">
             Move
           </span>
           <button
@@ -217,7 +217,7 @@ function SortableWidget({
           {isHrBoard ? (
             <HrBrandIcon size="sm" />
           ) : (
-            <div className="rounded-2xl bg-cyan-300/10 p-2.5 text-cyan-200 sm:p-3">
+            <div className="rounded-2xl bg-emerald-300/10 p-2.5 text-emerald-200 sm:p-3">
               <Icon className="h-5 w-5" />
             </div>
           )}
@@ -236,7 +236,7 @@ function SortableWidget({
         )}
 
         {editMode && (
-          <div className="mt-4 text-[11px] font-black uppercase tracking-wide text-cyan-100">
+          <div className="mt-4 text-[11px] font-black uppercase tracking-wide text-emerald-100">
             Hold the handle to move
           </div>
         )}
@@ -300,7 +300,7 @@ export default function IslandWidgetGrid({ onSectionChange }: IslandWidgetGridPr
     <section className="mt-4 rounded-[1.5rem] border border-white/10 bg-slate-900/60 p-3.5 backdrop-blur sm:mt-5 sm:rounded-[2rem] sm:p-5">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
             <Sparkles className="h-3.5 w-3.5" />
             Custom Island
           </div>
@@ -314,7 +314,7 @@ export default function IslandWidgetGrid({ onSectionChange }: IslandWidgetGridPr
           <button
             type="button"
             onClick={() => setEditMode((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-100 transition hover:bg-cyan-300/20"
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-100 transition hover:bg-emerald-300/20"
           >
             <Pencil className="h-3.5 w-3.5" />
             {editMode ? "Done" : "Edit Island"}
@@ -334,7 +334,7 @@ export default function IslandWidgetGrid({ onSectionChange }: IslandWidgetGridPr
       </div>
 
       {editMode && (
-        <div className="mb-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs font-bold leading-5 text-cyan-50">
+        <div className="mb-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-bold leading-5 text-emerald-50">
           Edit mode is on. Use the handle on each widget to drag. Tap Done when your island feels right.
         </div>
       )}

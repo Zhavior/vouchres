@@ -59,6 +59,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "mlb_stats",     label: "MLB Stat Hub",          icon: "BarChart3",    enabled: true, order: 4,    group: "Daily", sports: ALL_SPORTS, locked: false },
   { id: "daily_players", label: "Daily Players",         icon: "Users",        enabled: true, order: 5,    group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "live_games",    label: "Live Games",            icon: "Tv",           enabled: true, order: 6,    group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "today_next",    label: "Today Next",            icon: "Sparkles",     enabled: true, order: 2.5,  group: "Daily", sports: ALL_SPORTS, access: "admin" },
 
   // Pro Labs — sport-scoped analytics
   { id: "intel", label: "AI Edge Lab", icon: "Flame", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS, locked: true },

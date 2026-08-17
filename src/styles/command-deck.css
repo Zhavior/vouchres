@@ -150,9 +150,9 @@
 }
 
 .deck-tab[data-active="true"][data-tone="sky"] {
-  border-color: rgba(56, 189, 248, 0.5);
-  background: rgba(56, 189, 248, 0.1);
-  color: #7dd3fc;
+  border-color: rgba(0, 217, 160, 0.5);
+  background: rgba(0, 217, 160, 0.1);
+  color: #6ee7b7;
 }
 
 .deck-tab[data-active="true"][data-tone="emerald"] {
@@ -193,8 +193,31 @@
 @media (max-width: 640px) {
   .deck-hero::after { top: -9rem; right: -11rem; }
   .deck-hero::before { mask-image: linear-gradient(125deg, black, transparent 78%); }
-  .deck-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .deck-rail-cell { padding: 0.5rem 0.6rem; }
+
+  /* Flatter header on phones. The 2x2 rail and the wrapping control row were
+     between them eating well over half the fold, pushing the actual board
+     below the screen. One scrolling rail strip, one scrolling control row. */
+  .deck-rail {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .deck-rail::-webkit-scrollbar { display: none; }
+  .deck-rail-cell {
+    flex: 0 0 auto;
+    min-width: 8.25rem;
+    padding: 0.4rem 0.6rem;
+    scroll-snap-align: start;
+  }
+
+  .deck-hero-controls {
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .deck-hero-controls::-webkit-scrollbar { display: none; }
+  .deck-hero-controls > * { flex: 0 0 auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

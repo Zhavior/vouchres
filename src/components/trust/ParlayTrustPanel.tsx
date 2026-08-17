@@ -160,7 +160,7 @@ export default function ParlayTrustPanel({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {lockedAt && (
-            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border bg-cyan-950/40 text-cyan-300 border-cyan-800/50 flex items-center gap-1">
+            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border bg-emerald-950/40 text-emerald-300 border-emerald-800/50 flex items-center gap-1">
               <Lock className="w-3 h-3" />
               LOCKED
             </span>
@@ -202,13 +202,13 @@ export default function ParlayTrustPanel({
               </div>
 
               {proofHash && (
-                <div className="rounded-lg border border-cyan-900/40 bg-cyan-950/15 p-2">
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mb-1">Proof hash (SHA-256)</div>
-                  <div className="text-[10px] font-mono text-cyan-200 break-all">{proofHash}</div>
+                <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/15 p-2">
+                  <div className="text-[10px] text-emerald-300/70 uppercase tracking-wider mb-1">Proof hash (SHA-256)</div>
+                  <div className="text-[10px] font-mono text-emerald-200 break-all">{proofHash}</div>
                   {hasOtsProof && (
                     <a
                       href={`/api/proof/parlay/${encodeURIComponent(pickId)}/ots`}
-                      className="inline-flex items-center gap-1 mt-2 text-[10px] font-mono font-black uppercase text-vouch-cyan hover:text-cyan-300"
+                      className="inline-flex items-center gap-1 mt-2 text-[10px] font-mono font-black uppercase text-vouch-cyan hover:text-emerald-300"
                     >
                       <ExternalLink className="w-3 h-3" />
                       Download OpenTimestamp proof
@@ -269,7 +269,7 @@ export default function ParlayTrustPanel({
                 href={`/p/${encodeURIComponent(pickId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[10px] font-mono font-black uppercase text-vouch-cyan hover:text-cyan-300"
+                className="inline-flex items-center gap-1.5 text-[10px] font-mono font-black uppercase text-vouch-cyan hover:text-emerald-300"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 View public proof page

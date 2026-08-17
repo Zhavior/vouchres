@@ -26,7 +26,7 @@ export default function HeroSignals({
         <div className="text-xs uppercase tracking-[0.25em] text-zinc-500">
           Edge
         </div>
-        <div className="mt-2 text-2xl font-bold text-cyan-400">
+        <div className="mt-2 text-2xl font-bold text-emerald-400">
           {value(edge)}
         </div>
       </div>

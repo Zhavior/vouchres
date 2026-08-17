@@ -6,7 +6,7 @@ export function getTeamColors(teamName: string): TeamColorSpec {
         gradient: 'from-vouch-cyan/15 via-black/40 to-black/55', 
         border: 'border-white/10', 
         text: 'text-vouch-cyan', 
-        glow: 'shadow-blue-500/10',
+        glow: 'shadow-emerald-500/10',
         badge: 'bg-black/40 text-vouch-cyan border border-white/10'
       };
     }

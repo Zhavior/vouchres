@@ -6,13 +6,21 @@ export interface HrNextTacticalFiltersProps {
   activeTag: TacticalFilterTag;
   onTagChange: (tag: TacticalFilterTag) => void;
   counts: Record<TacticalFilterTag, number>;
+  /**
+   * `row` is the original horizontal scroller above the board; `column` is the
+   * stacked list the control rail renders. Same model either way — the rail
+   * does not get its own copy of the filter definitions.
+   */
+  orientation?: 'row' | 'column';
 }
 
 export function HrNextTacticalFilters({
   activeTag,
   onTagChange,
   counts,
+  orientation = 'row',
 }: HrNextTacticalFiltersProps) {
+  const isColumn = orientation === 'column';
   const filters: Array<{
     id: TacticalFilterTag;
     label: string;
@@ -59,7 +67,11 @@ export function HrNextTacticalFilters({
 
   return (
     <div
-      className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none font-mono"
+      className={`font-mono ${
+        isColumn
+          ? 'flex flex-col items-stretch gap-1'
+          : 'flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none'
+      }`}
       role="toolbar"
       aria-label="Tactical Filter Slicers"
     >
@@ -73,7 +85,9 @@ export function HrNextTacticalFilters({
             type="button"
             onClick={() => onTagChange(id)}
             aria-pressed={isActive}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
+            className={`group flex items-center gap-1.5 rounded-xl border font-bold transition-all ${
+              isColumn ? 'w-full px-2.5 py-1.5 text-[11px]' : 'whitespace-nowrap px-3 py-1.5 text-xs'
+            } ${
               isActive
                 ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border-[var(--aurora-max-emerald)]/50 shadow-[0_0_12px_rgba(0,217,160,0.2)]'
                 : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
@@ -84,9 +98,11 @@ export function HrNextTacticalFilters({
                 isActive ? 'text-[var(--aurora-max-emerald)]' : 'text-white/40 group-hover:text-white'
               }`}
             />
-            <span>{label}</span>
+            <span className={isColumn ? 'min-w-0 flex-1 truncate text-left' : undefined}>{label}</span>
             <span
               className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono font-black ${
+                isColumn ? 'ml-auto shrink-0 ' : ''
+              }${
                 isActive
                   ? 'bg-[var(--aurora-max-emerald)]/30 text-white'
                   : 'bg-white/5 text-white/40'

@@ -9,7 +9,7 @@
 import React, { useMemo } from 'react';
 import { Lock, TrendingUp, TrendingDown, Minus, BarChart2, Target, Activity, Users } from 'lucide-react';
 const MAX_AMBER_HEX = '#D99C4A';
-const MAX_CYAN_HEX = '#4FB8DC';
+const MAX_CYAN_HEX = '#00D9A0';
 const MAX_EMERALD_HEX = '#31B583';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { useRealGameLog } from '../../hooks/useRealGameLog';
@@ -160,7 +160,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
               {[
                 { label: 'HRs', value: formHRs, color: '#fbbf24' },
                 { label: 'Hits', value: formLogs.reduce((s, g) => s + g.hits, 0), color: '#fff' },
-                { label: 'Avg TB', value: formTB, color: '#22d3ee' },
+                { label: 'Avg TB', value: formTB, color: '#00d9a0' },
                 { label: 'HR Rate', value: `${((formHRs / formLogs.length) * 100).toFixed(0)}%`, color: '#34d399' },
               ].map((s) => (
                 <div key={s.label} className="ve-hr-stat-chip">
@@ -270,7 +270,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                   {
                     label: 'Avg TB',
                     value: +(teamLogs.reduce((s, g) => s + g.totalBases, 0) / teamLogs.length).toFixed(1),
-                    color: '#22d3ee',
+                    color: '#00d9a0',
                   },
                 ].map((s) => (
                   <div key={s.label} className="ve-hr-stat-chip">

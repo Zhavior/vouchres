@@ -52,7 +52,7 @@ export function MatchupSectionHeader({
     <div
       className={`w-full flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 my-3 rounded-2xl bg-white/[0.02] backdrop-blur-2xl border ${
         isFirstGame
-          ? 'border-cyan-500/40 shadow-[0_0_24px_rgba(6,182,212,0.15)]'
+          ? 'border-emerald-500/40 shadow-[0_0_24px_rgba(16,185,129,0.15)]'
           : isLive
             ? 'border-emerald-500/40 shadow-[0_0_24px_rgba(16,185,129,0.15)]'
             : 'border-white/10 hover:border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.25)]'
@@ -71,7 +71,7 @@ export function MatchupSectionHeader({
       {/* Left Block: Matchup Teams, Start Time, Pitchers */}
       <div className="flex items-center gap-3.5 min-w-0">
         <div className="flex flex-col items-center justify-center min-w-[54px] p-2 rounded-xl bg-white/[0.04] border border-white/10 text-center">
-          <Calendar className="w-3.5 h-3.5 text-cyan-400 mb-0.5" />
+          <Calendar className="w-3.5 h-3.5 text-emerald-400 mb-0.5" />
           <span className="text-[10px] font-mono text-white/70 font-bold whitespace-nowrap">
             {formattedTime}
           </span>
@@ -80,8 +80,8 @@ export function MatchupSectionHeader({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {isFirstGame && (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-[10px] font-mono font-bold">
-                <Sparkles className="w-3 h-3 text-cyan-400" />
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-mono font-bold">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
                 {STRINGS_EN.grouping.matchup.earliestBadge}
               </span>
             )}
@@ -120,7 +120,7 @@ export function MatchupSectionHeader({
         {topPlayer && (
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.03] border border-white/10 text-[11px] font-mono">
             <span className="text-white/50">Top:</span>
-            <span className="text-cyan-300 font-bold">{(topPlayer.score?.hrIndex ?? 0)} HRPI</span>
+            <span className="text-emerald-300 font-bold">{(topPlayer.score?.hrIndex ?? 0)} HRPI</span>
             <span className="text-white/80 font-medium truncate max-w-[110px]">
               ({topPlayer.identity?.name || 'Player'})
             </span>

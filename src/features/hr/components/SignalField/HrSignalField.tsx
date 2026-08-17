@@ -35,7 +35,7 @@ const WIDTH = 900;
 const HEIGHT = 500;
 const TIER_ORDER: TierName[] = ['Elite', 'Strong', 'Watch', 'Sleepers'];
 const TIER_COLOR: Record<TierName, string> = {
-  Elite: '#22d3ee',
+  Elite: '#00d9a0',
   Strong: '#34d399',
   Watch: '#fbbf24',
   Sleepers: '#fb923c',
@@ -124,7 +124,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
       <header className="border-b border-white/[0.08] bg-white/[0.02] px-3 py-3 sm:px-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-[8px] font-black uppercase tracking-[0.18em] text-cyan-300">Matchup strip</p>
+            <p className="font-mono text-[8px] font-black uppercase tracking-[0.18em] text-emerald-300">Matchup strip</p>
             <h2 className="mt-0.5 text-base font-black uppercase tracking-[-0.02em] text-white">Ballpark Signal Map</h2>
           </div>
           <div className={`inline-flex items-center gap-2 border px-2.5 py-1.5 font-mono text-[9px] font-black uppercase tracking-[0.1em] ${totalHits > 0 ? 'border-orange-300/45 bg-orange-400/10 text-orange-200' : 'border-emerald-300/25 bg-emerald-400/[0.06] text-emerald-200'}`}>
@@ -143,7 +143,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
                 role="tab"
                 aria-selected={active}
                 onClick={() => setSelectedGameKey(game.key)}
-                className={`min-w-[230px] snap-start border px-3 py-2.5 text-left transition-colors ${active ? 'border-cyan-300/70 bg-cyan-400/[0.08]' : 'border-white/[0.08] bg-black/25 hover:border-white/20'}`}
+                className={`min-w-[230px] snap-start border px-3 py-2.5 text-left transition-colors ${active ? 'border-emerald-300/70 bg-emerald-400/[0.08]' : 'border-white/[0.08] bg-black/25 hover:border-white/20'}`}
               >
                 <span className="flex items-center gap-2">
                   {[game.awayLogoUrl, game.homeLogoUrl].map((logo, index) => logo ? (
@@ -152,7 +152,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
                   <span className="font-mono text-[13px] font-black text-white">{game.awayTeam} @ {game.homeTeam}</span>
                 </span>
                 <span className="mt-2 flex items-center gap-2 font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-white/50">
-                  <Clock3 className="h-3 w-3 text-cyan-300" /> {shortTime(game.gameTime)}
+                  <Clock3 className="h-3 w-3 text-emerald-300" /> {shortTime(game.gameTime)}
                   <span>·</span>
                   <ShieldCheck className="h-3 w-3 text-emerald-300" /> {game.confirmedCount}/{game.rows.length} confirmed
                 </span>
@@ -170,7 +170,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
         <div className="min-w-0 border-b border-white/[0.08] lg:border-b-0 lg:border-r">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.07] px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <Target className="h-3.5 w-3.5 text-cyan-300" />
+              <Target className="h-3.5 w-3.5 text-emerald-300" />
               <span className="font-mono text-[9px] font-black uppercase tracking-[0.12em] text-white">Signal field</span>
             </div>
             <span className="text-[9px] text-white/42">Power vs pitcher vulnerability</span>
@@ -208,14 +208,14 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
                   <React.Fragment key={tick}>
                     <line x1={x} y1="38" x2={x} y2={HEIGHT - 62} stroke="rgba(255,255,255,.10)" strokeDasharray="4 7" />
                     <line x1="76" y1={y} x2={WIDTH - 36} y2={y} stroke="rgba(255,255,255,.10)" strokeDasharray="4 7" />
-                    <text x={x} y={HEIGHT - 39} textAnchor="middle" fill="rgba(255,255,255,.42)" fontSize="10" fontFamily="monospace">{tick}</text>
-                    <text x="60" y={y + 3} textAnchor="end" fill="rgba(255,255,255,.42)" fontSize="10" fontFamily="monospace">{tick}</text>
+                    <text x={x} y={HEIGHT - 39} textAnchor="middle" fill="rgba(255,255,255,.42)" fontSize="10" fontFamily="var(--font-mono)">{tick}</text>
+                    <text x="60" y={y + 3} textAnchor="end" fill="rgba(255,255,255,.42)" fontSize="10" fontFamily="var(--font-mono)">{tick}</text>
                   </React.Fragment>
                 );
               })}
-              <path d="M265 438 L450 263 L635 438 M355 438 L450 350 L545 438 M450 263 L450 438" fill="none" stroke="rgba(34,211,238,.09)" strokeWidth="2" />
-              <text x={WIDTH / 2} y={HEIGHT - 12} textAnchor="middle" fill="rgba(255,255,255,.64)" fontSize="11" fontWeight="800" fontFamily="monospace" letterSpacing="1.5">PITCHER VULNERABILITY</text>
-              <text transform={`translate(19 ${HEIGHT / 2}) rotate(-90)`} textAnchor="middle" fill="rgba(255,255,255,.64)" fontSize="11" fontWeight="800" fontFamily="monospace" letterSpacing="1.5">HITTER POWER</text>
+              <path d="M265 438 L450 263 L635 438 M355 438 L450 350 L545 438 M450 263 L450 438" fill="none" stroke="rgba(0,217,160,.09)" strokeWidth="2" />
+              <text x={WIDTH / 2} y={HEIGHT - 12} textAnchor="middle" fill="rgba(255,255,255,.64)" fontSize="11" fontWeight="800" fontFamily="var(--font-mono)" letterSpacing="1.5">PITCHER VULNERABILITY</text>
+              <text transform={`translate(19 ${HEIGHT / 2}) rotate(-90)`} textAnchor="middle" fill="rgba(255,255,255,.64)" fontSize="11" fontWeight="800" fontFamily="var(--font-mono)" letterSpacing="1.5">HITTER POWER</text>
 
               {plotted.points.map(({ row, x, y, anchorX, anchorY, radius }) => {
                 const tier = tierByPlayer.get(row.stableId) ?? 'Watch';
@@ -254,12 +254,12 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
                     <circle cx={radius - 2} cy={-radius + 3} r="14" fill={hit ? '#f97316' : '#071116'} stroke={hit ? '#fed7aa' : color} strokeWidth="1.5" />
                     <text x={radius - 2} y={-radius + 7} textAnchor="middle" fill="#fff" fontSize="11" fontWeight="900">{Math.round(row.hrScore)}</text>
                     {selected || hit ? (
-                      <text y={radius + 16} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="900" fontFamily="monospace" className="z8-hr-map__svg-label">{row.playerName.toUpperCase()}</text>
+                      <text y={radius + 16} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="900" fontFamily="var(--font-mono)" className="z8-hr-map__svg-label">{row.playerName.toUpperCase()}</text>
                     ) : null}
                     {hit ? (
                       <g transform={`translate(${-Math.min(55, radius)} ${radius + 23})`}>
                         <rect width="110" height="23" rx="4" fill="#fff7ed" />
-                        <text x="55" y="15" textAnchor="middle" fill="#9a3412" fontSize="10" fontWeight="950" fontFamily="monospace">HR CONFIRMED</text>
+                        <text x="55" y="15" textAnchor="middle" fill="#9a3412" fontSize="10" fontWeight="950" fontFamily="var(--font-mono)">HR CONFIRMED</text>
                       </g>
                     ) : null}
                   </g>
@@ -277,7 +277,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
 
         <aside className="bg-gradient-to-b from-white/[0.025] to-transparent p-4" aria-label={`${selectedPlayer.playerName} evidence`}>
           <div className="flex items-start gap-3 border-b border-white/[0.08] pb-3">
-            <div className="flex h-16 w-16 shrink-0 items-end justify-center overflow-hidden rounded-full border border-cyan-300/30 bg-cyan-400/[0.08]">
+            <div className="flex h-16 w-16 shrink-0 items-end justify-center overflow-hidden rounded-full border border-emerald-300/30 bg-emerald-400/[0.08]">
               {selectedPlayer.headshotUrl ? <img src={selectedPlayer.headshotUrl} alt="" className="h-full w-full object-contain object-center" /> : <span className="mb-4 font-black text-white">{initials(selectedPlayer.playerName)}</span>}
             </div>
             <div className="min-w-0 flex-1">
@@ -290,7 +290,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
             </div>
             <div className="text-right">
               <p className="font-mono text-3xl font-black tabular-nums text-white">{Math.round(selectedPlayer.hrScore)}</p>
-              <p className="font-mono text-[7px] font-black uppercase tracking-[0.1em] text-cyan-300">Signal score</p>
+              <p className="font-mono text-[7px] font-black uppercase tracking-[0.1em] text-emerald-300">Signal score</p>
             </div>
           </div>
 
@@ -302,7 +302,7 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
           ) : null}
 
           <div className="mt-4">
-            <p className="font-mono text-[8px] font-black uppercase tracking-[0.13em] text-cyan-300">Why it matters</p>
+            <p className="font-mono text-[8px] font-black uppercase tracking-[0.13em] text-emerald-300">Why it matters</p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-white/72">{selectedBrief?.reason}</p>
           </div>
           <div className="mt-3 border-t border-white/[0.07] pt-3">
@@ -325,12 +325,12 @@ export function HrSignalField({ buckets, onSelectPlayer, onAddToSlip, getHrResul
           </div>
 
           <div className="mt-3 space-y-2 text-[9px] text-white/48">
-            <p className="flex items-center gap-2"><MapPin className="h-3 w-3 text-cyan-300" />{selectedGame.venue || 'Venue unavailable'}</p>
+            <p className="flex items-center gap-2"><MapPin className="h-3 w-3 text-emerald-300" />{selectedGame.venue || 'Venue unavailable'}</p>
             <p className="flex items-center gap-2"><Check className="h-3 w-3 text-emerald-300" />{selectedBrief?.pitcherLabel}</p>
           </div>
 
           <div className="mt-4 grid gap-2">
-            <button type="button" onClick={() => onSelectPlayer(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-cyan-300/40 bg-cyan-400/10 text-[10px] font-black text-cyan-100 transition-colors hover:bg-cyan-400/15">Research player <ArrowRight className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onSelectPlayer(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-emerald-300/40 bg-emerald-400/10 text-[10px] font-black text-emerald-100 transition-colors hover:bg-emerald-400/15">Research player <ArrowRight className="h-3.5 w-3.5" /></button>
             {onAddToSlip ? (
               <button type="button" disabled={!selectedBrief?.canAddToSlip} onClick={() => onAddToSlip(selectedPlayer)} className="inline-flex min-h-10 items-center justify-center gap-2 border border-emerald-300/30 bg-emerald-400/[0.07] text-[10px] font-black text-emerald-100 transition-colors hover:bg-emerald-400/12 disabled:cursor-not-allowed disabled:opacity-40"><Plus className="h-3.5 w-3.5" />Add to My List</button>
             ) : null}

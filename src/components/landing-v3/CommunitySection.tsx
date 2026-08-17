@@ -55,7 +55,7 @@ export default function CommunitySection({
             viewport={{ once: true }}
             transition={{ duration: 0.45 }}
           >
-            <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+            <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
               Public results
             </span>
 
@@ -74,7 +74,7 @@ export default function CommunitySection({
 
             <div className="mt-6 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5">
               <div className="flex items-center gap-2.5">
-                <FileText aria-hidden="true" className="h-4 w-4 text-cyan-200" />
+                <FileText aria-hidden="true" className="h-4 w-4 text-emerald-200" />
                 <h3 className="text-[15px] font-bold text-white">Methodology</h3>
               </div>
               <p className="mt-3 text-[13px] leading-6 text-white/60">
@@ -85,7 +85,7 @@ export default function CommunitySection({
               <button
                 type="button"
                 onClick={onExploreCommunity}
-                className="group mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/15"
+                className="group mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/15"
               >
                 Open beta and track a decision
                 <ArrowRight
@@ -99,7 +99,7 @@ export default function CommunitySection({
           <div className="relative">
             <div
               aria-hidden="true"
-              className="absolute left-[19px] top-3 bottom-3 hidden w-px bg-gradient-to-b from-cyan-300/30 via-white/10 to-transparent sm:block"
+              className="absolute left-[19px] top-3 bottom-3 hidden w-px bg-gradient-to-b from-emerald-300/30 via-white/10 to-transparent sm:block"
             />
             <div className="space-y-3">
               {ledgerFields.map(({ icon: Icon, title, description }, index) => (
@@ -109,10 +109,10 @@ export default function CommunitySection({
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.06, duration: 0.35 }}
-                  className="relative flex gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-cyan-300/25"
+                  className="relative flex gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-emerald-300/25"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-ve-graphite">
-                    <Icon aria-hidden="true" className="h-4.5 w-4.5 text-cyan-200" />
+                    <Icon aria-hidden="true" className="h-4.5 w-4.5 text-emerald-200" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-[15px] font-bold text-white">{title}</h3>

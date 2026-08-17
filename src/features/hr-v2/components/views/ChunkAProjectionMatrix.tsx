@@ -310,7 +310,7 @@ export function ChunkAProjectionMatrix({ data }: Props) {
                       isQ1
                         ? "border-emerald-400 bg-emerald-950 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
                         : quadrant === "q2"
-                        ? "border-vouch-cyan bg-cyan-950 text-vouch-cyan shadow-[0_0_12px_rgba(79,184,220,0.4)]"
+                        ? "border-vouch-cyan bg-emerald-950 text-vouch-cyan shadow-[0_0_12px_rgba(0,217,160,0.4)]"
                         : quadrant === "q3"
                         ? "border-amber-400 bg-amber-950 text-amber-300"
                         : "border-white/30 bg-zinc-900 text-white/70"

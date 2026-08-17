@@ -93,27 +93,44 @@ export function extractCardData(row: HrWatchRow) {
       ? `${row.bookOdds > 0 ? '+' : ''}${row.bookOdds}`
       : null;
 
-  // Statcast & Telemetry metrics for Pro Mode
+  // Statcast & Telemetry metrics for Pro Mode.
+  //
+  // Every value here stays null when the Statcast feed does not carry it. The
+  // previous fallbacks derived exit velocity and hard-hit rate from the power
+  // layer, which made every card on a slate print the same 114.5 mph / 58% —
+  // a synthesized number wearing a measured number's label.
   const rawData = row.raw as Record<string, any> | undefined;
-  const barrelRate = typeof row.barrelRate === 'number' 
-    ? Math.round(row.barrelRate * 1000) / 10 
-    : typeof rawData?.barrelRate === 'number' 
-      ? Math.round(rawData.barrelRate * 1000) / 10 
-      : 16.4;
+  const finite = (value: unknown): number | null =>
+    typeof value === 'number' && Number.isFinite(value) ? value : null;
 
-  const maxExitVelo = typeof rawData?.maxExitVelo === 'number' 
-    ? rawData.maxExitVelo 
-    : typeof rawData?.maxEv === 'number' 
-      ? rawData.maxEv 
-      : Math.round((106 + (row.hitterPower / 100) * 8.5) * 10) / 10;
+  const barrelRateRaw = finite(row.barrelRate) ?? finite(rawData?.barrelRate);
+  const barrelRate = barrelRateRaw == null ? null : Math.round(barrelRateRaw * 1000) / 10;
 
-  const hardHitRate = typeof rawData?.hardHitRate === 'number' 
-    ? Math.round(rawData.hardHitRate * 100) 
-    : Math.round(42 + (row.hitterPower / 100) * 16);
+  // Season average exit velocity from the Statcast leaderboard. The card used
+  // to label this "Exit Velocity" while showing a peak that was never measured.
+  const avgExitVeloRaw = finite(row.avgExitVelo) ?? finite(rawData?.avgExitVelo);
+  const avgExitVelo = avgExitVeloRaw == null ? null : Math.round(avgExitVeloRaw * 10) / 10;
 
-  const parkBoostPct = typeof row.parkFactor === 'number' 
-    ? row.parkFactor - 100 
-    : 8;
+  const hardHitRaw = finite(row.hardHitRate) ?? finite(rawData?.hardHitRate);
+  const hardHitRate = hardHitRaw == null ? null : Math.round(hardHitRaw * 100);
+
+  // `parkIndex` is the raw venue HR index centred on 100; `parkFactor` carries
+  // the same index when the payload omits the explicit field.
+  const parkIndex = finite(row.parkIndex) ?? finite(row.parkFactor);
+  const parkBoostPct = parkIndex == null ? null : Math.round(parkIndex - 100);
+
+  // Handedness is a real matchup, not a lone bucket score: the pipeline's
+  // `handednessEdge` only has four values, so 45 repeats across most of a
+  // slate. Pair it with the bat side / throwing hand that produced it.
+  const batSide = typeof row.batSide === 'string' && row.batSide.trim() ? row.batSide.trim().toUpperCase() : null;
+  const pitcherHand = typeof row.pitcherHand === 'string' && row.pitcherHand.trim()
+    ? row.pitcherHand.trim().toUpperCase()
+    : null;
+  const handednessLabel = batSide && pitcherHand
+    ? `${batSide} vs ${pitcherHand}`
+    : batSide
+      ? `${batSide} vs —`
+      : null;
 
   const hasHitHrToday = Boolean(
     (row as any).hasHitHrToday ||
@@ -157,9 +174,12 @@ export function extractCardData(row: HrWatchRow) {
     recentHrs: row.recentHomeRuns,
     pitcherName: row.pitcherName || 'Opposing Starter',
     barrelRate,
-    maxExitVelo,
+    avgExitVelo,
     hardHitRate,
     parkBoostPct,
+    batSide,
+    pitcherHand,
+    handednessLabel,
     hasHitHrToday,
     riskTier: row.riskTier || 'Watch',
     receipt,

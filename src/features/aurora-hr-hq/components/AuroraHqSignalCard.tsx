@@ -118,7 +118,7 @@ export function AuroraHqSignalCard({ row, result, isProMode, onResearch, onAddTo
           <span className="aurora-hq__hrpi-label">HRPI</span>
           <span className="aurora-hq__hrpi-score">{row.score}</span>
           {outcome ? (
-            <span style={{ fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '0.4375rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fdba74' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.4375rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fdba74' }}>
               {outcome}
             </span>
           ) : null}

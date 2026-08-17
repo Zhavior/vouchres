@@ -4,7 +4,7 @@ import { buildHrLensSignal } from '../../engine/hrLensModel';
 const STATE_STYLE = {
   hot: 'border-orange-300/35 bg-orange-400/10 text-orange-200',
   'due-watch': 'border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100',
-  building: 'border-cyan-300/30 bg-cyan-400/[0.08] text-cyan-100',
+  building: 'border-emerald-300/30 bg-emerald-400/[0.08] text-emerald-100',
   'insufficient-data': 'border-white/12 bg-white/[0.04] text-white/55',
 } as const;
 

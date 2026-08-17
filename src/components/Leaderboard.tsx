@@ -43,7 +43,7 @@ interface Capper {
   avatarUrl?: string;
 }
 
-const AVATAR_COLORS = ['bg-indigo-600','bg-teal-600','bg-pink-600','bg-violet-600','bg-orange-600','bg-rose-600','bg-amber-600','bg-sky-600','bg-cyan-600','bg-emerald-600'];
+const AVATAR_COLORS = ['bg-emerald-600','bg-teal-600','bg-pink-600','bg-violet-600','bg-orange-600','bg-rose-600','bg-amber-600','bg-emerald-600','bg-emerald-600','bg-emerald-600'];
 const SCOPE_MAP: Record<string, string> = { month: 'overall', week: 'overall', 'all-time': 'overall' };
 
 function entryToCapper(e: any, idx: number): Capper {
@@ -157,7 +157,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               onClick={() => setActiveRange('month')}
               className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
                 activeRange === 'month'
-                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  ? 'bg-gradient-to-tr from-amber-600 to-emerald-650 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -168,7 +168,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               onClick={() => setActiveRange('week')}
               className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
                 activeRange === 'week'
-                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  ? 'bg-gradient-to-tr from-amber-600 to-emerald-650 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -179,7 +179,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               onClick={() => setActiveRange('all-time')}
               className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all text-left ${
                 activeRange === 'all-time'
-                  ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
+                  ? 'bg-gradient-to-tr from-amber-600 to-emerald-650 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -222,7 +222,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
             placeholder="Search verified cappers, sports, or system badges..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs bg-[hsl(var(--ve-surface-raised)/0.46)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] pl-9 pr-4 py-3 rounded-xl focus:border-indigo-500 outline-none transition-all placeholder-slate-500 font-semibold"
+            className="w-full text-xs bg-[hsl(var(--ve-surface-raised)/0.46)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] pl-9 pr-4 py-3 rounded-xl focus:border-emerald-500 outline-none transition-all placeholder-slate-500 font-semibold"
           />
           <Search className="w-4 h-4 text-slate-550 absolute left-3 top-3.5" />
         </div>
@@ -296,7 +296,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                 </div>
               </div>
 
-              <div className="text-[10px] text-indigo-400 font-mono font-bold mt-2.5 flex items-center gap-1">
+              <div className="text-[10px] text-emerald-400 font-mono font-bold mt-2.5 flex items-center gap-1">
                 <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 animate-pulse" />
                 <span>{secondPlace.streak}</span>
               </div>
@@ -404,7 +404,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                 </div>
               </div>
 
-              <div className="text-[10px] text-indigo-400 font-mono font-bold mt-2.5 flex items-center gap-1">
+              <div className="text-[10px] text-emerald-400 font-mono font-bold mt-2.5 flex items-center gap-1">
                 <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 animate-pulse" />
                 <span>{thirdPlace.streak}</span>
               </div>
@@ -418,7 +418,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
       {!loading && <div className="bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-2xl border border-[hsl(var(--ve-border)/0.34)] overflow-hidden shadow-2xl space-y-3" id="all-cappers-ranking-table">
         <div className="bg-[hsl(var(--ve-surface-raised)/0.44)] p-4 border-b border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between select-none font-semibold">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
+            <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
             <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider font-mono">
               Audited Cappers Leaderboard Ranking ({cappersList.length})
             </h3>
@@ -486,7 +486,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-1">
-                              <span className="font-extrabold text-slate-200 group-hover:text-indigo-400 transition-colors">{capper.displayName}</span>
+                              <span className="font-extrabold text-slate-200 group-hover:text-emerald-400 transition-colors">{capper.displayName}</span>
                               {capper.isVerified && <CheckCircle className="w-3.5 h-3.5 text-[var(--ve-accent)] fill-[var(--ve-accent)]" />}
                             </div>
                             <span className="text-[10px] text-slate-500 block">@{capper.username} • {capper.followersCount.toLocaleString()} followers</span>
@@ -517,7 +517,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
                       {/* Streak badge */}
                       <td className="px-5 py-4 text-center">
-                        <span className="text-[10px] text-indigo-400 font-semibold font-mono flex items-center justify-center gap-1 uppercase leading-none">
+                        <span className="text-[10px] text-emerald-400 font-semibold font-mono flex items-center justify-center gap-1 uppercase leading-none">
                           <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400 shrink-0" />
                           {capper.streak}
                         </span>
@@ -542,7 +542,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                         >
                           {isFollowed ? (
                             <>
-                              <UserCheck className="w-3 h-3 text-indigo-400" />
+                              <UserCheck className="w-3 h-3 text-emerald-400" />
                               <span>Following</span>
                             </>
                           ) : (

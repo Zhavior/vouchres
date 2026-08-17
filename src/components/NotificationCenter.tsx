@@ -243,8 +243,8 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
             key={alert.id}
             className={`pointer-events-auto rounded-2xl p-4 shadow-2xl relative overflow-hidden transition-all duration-500 transform translate-x-0 ${
               alert.type === 'HYPE'
-                ? 'bg-gradient-to-br from-indigo-950 via-slate-900 to-[#150d2e] border-2 border-amber-400 text-amber-100 ring-4 ring-amber-400/20 animate-pulse'
-                : 'bg-slate-950/95 backdrop-blur-md border border-sky-500/40 text-slate-100 shadow-sky-950/20'
+                ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-[#150d2e] border-2 border-amber-400 text-amber-100 ring-4 ring-amber-400/20 animate-pulse'
+                : 'bg-slate-950/95 backdrop-blur-md border border-emerald-500/40 text-slate-100 shadow-emerald-950/20'
             }`}
             style={{
               animation: alert.type === 'HYPE' ? 'parlayHypeGold 2.5s infinite alternate, fadeIn 0.4s ease-out' : 'fadeIn 0.35s ease-out',
@@ -289,7 +289,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
 
               <div className="flex-1 pr-4">
                 <span className={`text-[10px] font-mono font-bold tracking-wider uppercase block ${
-                  alert.type === 'HYPE' ? 'text-amber-400' : 'text-sky-400'
+                  alert.type === 'HYPE' ? 'text-amber-400' : 'text-emerald-400'
                 }`}>
                   {alert.title}
                 </span>
@@ -315,7 +315,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
 
             {/* Bottom pulsing neon line timer indicator */}
             <div className={`absolute bottom-0 left-0 h-0.5 w-full ${
-              alert.type === 'HYPE' ? 'bg-amber-400 animate-shimmer' : 'bg-sky-500'
+              alert.type === 'HYPE' ? 'bg-amber-400 animate-shimmer' : 'bg-emerald-500'
             }`} style={{ animation: 'shrinkBar 6.5s linear forwards' }} />
           </div>
         ))}
@@ -336,7 +336,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
           className={`w-12 h-12 rounded-full flex items-center justify-center relative shadow-2xl transition-all duration-300 scale-100 active:scale-95 border ${
             isOpen 
               ? 'bg-rose-500/10 border-rose-500/50 text-rose-450 hover:bg-rose-500/20' 
-              : 'bg-slate-950 hover:bg-slate-900 border-sky-500/40 text-sky-400 hover:text-sky-300'
+              : 'bg-slate-950 hover:bg-slate-900 border-emerald-500/40 text-emerald-400 hover:text-emerald-300'
           }`}
           title="Notification Hub Settings"
           id="notif-fab-toggle"
@@ -346,7 +346,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-650 to-rose-600 border border-rose-950 font-mono text-[9px] font-black tracking-tighter px-1.5 py-0.5 rounded-full shadow animate-bounce">
                 {unreadCount}
               </span>
-              <BellRing className="w-5 h-5 text-sky-400 animate-pulse" />
+              <BellRing className="w-5 h-5 text-emerald-400 animate-pulse" />
             </>
           ) : (
             <Bell className="w-5 h-5" />
@@ -363,8 +363,8 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
             {/* Header row */}
             <div className="flex justify-between items-center pb-3 border-b border-slate-900/80">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
-                  <Bell className="w-4 h-4 text-sky-400 animate-bounce" />
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-emerald-400 animate-bounce" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-100">Live Notification Hub</h4>
@@ -379,7 +379,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className={`p-1.5 rounded-lg border transition-all ${
                     soundEnabled 
-                      ? 'bg-sky-500/15 border-sky-450/40 text-sky-400' 
+                      ? 'bg-emerald-500/15 border-emerald-450/40 text-emerald-400' 
                       : 'bg-slate-900 border-slate-800 text-slate-500'
                   }`}
                   title={soundEnabled ? "Mute alert audio" : "Enable alert audio"}
@@ -409,10 +409,10 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                     }
                   }));
                 }}
-                className="flex-1 py-1.5 px-3 bg-gradient-to-r from-sky-900/50 to-indigo-900/50 hover:from-sky-850 hover:to-indigo-850 border border-sky-505/30 hover:border-sky-404 text-[10px] font-bold text-sky-400 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-sky-950/20"
+                className="flex-1 py-1.5 px-3 bg-gradient-to-r from-emerald-900/50 to-emerald-900/50 hover:from-emerald-850 hover:to-emerald-850 border border-emerald-505/30 hover:border-emerald-404 text-[10px] font-bold text-emerald-400 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-950/20"
               >
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Ask VEdge Agent to Analyze Alerts</span>
               </button>
 
@@ -436,7 +436,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
               <div className="p-2.5 bg-slate-900/40 border border-slate-900 rounded-xl my-1.5 space-y-2 animate-fade-in">
                 <div className="flex justify-between items-center">
                   <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest block">CHECK PREFERRED ALERTS TO RECEIVE:</span>
-                  <span className="text-[8px] text-[#38bdf8] uppercase font-bold animate-pulse">LIVE ALIGNMENT</span>
+                  <span className="text-[8px] text-[#00d9a0] uppercase font-bold animate-pulse">LIVE ALIGNMENT</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10.5px]">
@@ -445,7 +445,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                       type="checkbox"
                       checked={notifyHomeruns}
                       onChange={(e) => setNotifyHomeruns(e.target.checked)}
-                      className="rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-sky-500"
+                      className="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-emerald-500"
                     />
                     <span className={notifyHomeruns ? 'text-slate-200 font-bold' : 'text-slate-500'}>⚾ Homeruns (HR)</span>
                   </label>
@@ -455,7 +455,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                       type="checkbox"
                       checked={notifyRuns}
                       onChange={(e) => setNotifyRuns(e.target.checked)}
-                      className="rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-sky-500"
+                      className="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-emerald-500"
                     />
                     <span className={notifyRuns ? 'text-slate-200 font-bold' : 'text-slate-500'}>🏃 Runs Scored</span>
                   </label>
@@ -465,7 +465,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                       type="checkbox"
                       checked={notifyHits}
                       onChange={(e) => setNotifyHits(e.target.checked)}
-                      className="rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-sky-500"
+                      className="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-emerald-500"
                     />
                     <span className={notifyHits ? 'text-slate-200 font-bold' : 'text-slate-500'}>⚾ Base Hits</span>
                   </label>
@@ -475,9 +475,9 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                       type="checkbox"
                       checked={notifyParlays}
                       onChange={(e) => setNotifyParlays(e.target.checked)}
-                      className="rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-sky-500"
+                      className="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-emerald-500"
                     />
-                    <span className={notifyParlays ? 'text-indigo-400 font-bold' : 'text-slate-500'}>🏆 Parlay Success</span>
+                    <span className={notifyParlays ? 'text-emerald-400 font-bold' : 'text-slate-500'}>🏆 Parlay Success</span>
                   </label>
                 </div>
               </div>
@@ -490,7 +490,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                 onClick={() => setActiveTab('universal')}
                 className={`flex-1 py-1.5 font-mono font-bold rounded-lg text-center transition-all ${
                   activeTab === 'universal' 
-                    ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -501,7 +501,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                 onClick={() => setActiveTab('parlays')}
                 className={`flex-1 py-1.5 font-mono font-bold rounded-lg text-center transition-all ${
                   activeTab === 'parlays' 
-                    ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -524,13 +524,13 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                       key={notif.id} 
                       className={`p-2.5 rounded-xl border flex flex-col gap-1 transition-all ${
                         notif.type === 'HYPE'
-                          ? 'bg-indigo-950/20 border-amber-500/30 text-amber-250'
+                          ? 'bg-emerald-950/20 border-amber-500/30 text-amber-250'
                           : 'bg-slate-950 border-slate-900/90 text-slate-300'
                       }`}
                     >
                       <div className="flex justify-between items-center">
                         <span className={`text-[9px] font-bold tracking-widest font-mono uppercase ${
-                          notif.type === 'HYPE' ? 'text-amber-400' : 'text-sky-400'
+                          notif.type === 'HYPE' ? 'text-amber-400' : 'text-emerald-400'
                         }`}>
                           {notif.title}
                         </span>
@@ -568,7 +568,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                         {slip.legs.map((leg) => (
                           <div key={leg.id} className="flex justify-between items-center text-[10px] font-mono">
                             <span className="text-slate-450 truncate max-w-[210px]">• {leg.selection}</span>
-                            <span className="text-sky-400 font-bold uppercase">{leg.status}</span>
+                            <span className="text-emerald-400 font-bold uppercase">{leg.status}</span>
                           </div>
                         ))}
                       </div>
@@ -624,7 +624,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                   type="button"
                   onClick={simulateParlayWin}
                   disabled={!notifyParlays}
-                  className="py-1 px-2.5 bg-indigo-500/10 border border-indigo-550/35 hover:bg-indigo-500/20 hover:border-indigo-550/70 font-bold font-mono text-[9.5px] text-indigo-305 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="py-1 px-2.5 bg-emerald-500/10 border border-emerald-550/35 hover:bg-emerald-500/20 hover:border-emerald-550/70 font-bold font-mono text-[9.5px] text-emerald-305 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Trophy className="w-3.5 h-3.5 text-amber-400" />
                   Simulate Win 🏆

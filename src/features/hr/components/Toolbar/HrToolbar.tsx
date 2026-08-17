@@ -583,7 +583,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
               <button
                 type="button"
                 onClick={() => setFiltersOpen(false)}
-                className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-vouch-cyan via-cyan-400 to-vouch-emerald px-6 text-sm font-black uppercase tracking-wider text-black shadow-[0_0_20px_rgba(0,240,255,0.35)] transition hover:brightness-110 active:scale-[0.98]"
+                className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-vouch-cyan via-emerald-400 to-vouch-emerald px-6 text-sm font-black uppercase tracking-wider text-black shadow-[0_0_20px_rgba(0,240,255,0.35)] transition hover:brightness-110 active:scale-[0.98]"
               >
                 Apply & Show {countLabel}
               </button>

@@ -43,7 +43,7 @@
   border: 1px solid rgba(49, 181, 131, 0.2);
   border-radius: 0.875rem;
   background:
-    radial-gradient(circle at 88% 0%, rgba(79, 184, 220, 0.1), transparent 36%),
+    radial-gradient(circle at 88% 0%, rgba(255, 255, 255, 0.055), transparent 36%),
     linear-gradient(145deg, rgba(0, 217, 160, 0.055), var(--aurora-max-panel-strong) 55%);
   box-shadow: inset 0 1px 0 rgba(242, 240, 233, 0.045);
 }
@@ -59,7 +59,7 @@
 
 .ve-hr-decision-brief__eyebrow,
 .ve-hr-decision-brief__label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -74,11 +74,11 @@
   font-size: 1rem;
   font-weight: 750;
   line-height: 1.3;
-  color: rgba(231, 236, 243, 0.9);
+  color: rgba(240, 241, 243, 0.9);
 }
 
 .ve-hr-decision-brief__score {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 1.75rem;
   font-weight: 900;
   line-height: 1;
@@ -124,13 +124,13 @@
   color: #D99C4A;
 }
 
-.ve-hr-decision-brief__label { color: rgba(231, 236, 243, 0.38); }
+.ve-hr-decision-brief__label { color: rgba(240, 241, 243, 0.38); }
 
 .ve-hr-decision-brief__copy {
   margin-top: 0.35rem;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: rgba(231, 236, 243, 0.75);
+  color: rgba(240, 241, 243, 0.75);
 }
 
 .ve-hr-decision-brief__status {
@@ -139,11 +139,11 @@
   gap: 0.5rem 1rem;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--ve-hr-border);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: rgba(231, 236, 243, 0.46);
+  color: rgba(240, 241, 243, 0.46);
 }
 
 .ve-hr-decision-brief__status span { display: inline-flex; align-items: center; gap: 0.3rem; }
@@ -158,26 +158,26 @@
   gap: 0.5rem;
   border: 1px solid rgba(49, 181, 131, 0.42);
   border-radius: 0.75rem;
-  background: linear-gradient(90deg, rgba(49, 181, 131, 0.16), rgba(79, 184, 220, 0.13));
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: linear-gradient(90deg, rgba(49, 181, 131, 0.16), rgba(255, 255, 255, 0.0715));
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 850;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #E7ECF3;
+  color: #EFF0F2;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .ve-hr-decision-brief__cta:not(:disabled):hover {
   border-color: rgba(49, 181, 131, 0.72);
-  background: linear-gradient(90deg, rgba(49, 181, 131, 0.24), rgba(79, 184, 220, 0.2));
+  background: linear-gradient(90deg, rgba(49, 181, 131, 0.24), rgba(255, 255, 255, 0.11));
   transform: translateY(-1px);
 }
 
 .ve-hr-decision-brief__cta:disabled {
   cursor: not-allowed;
   border-color: var(--ve-hr-border);
-  background: rgba(231, 236, 243, 0.025);
+  background: rgba(240, 241, 243, 0.025);
   color: rgba(255, 255, 255, 0.35);
 }
 
@@ -291,7 +291,7 @@
 }
 
 .ve-hr-dossier-kicker {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -300,7 +300,7 @@
 }
 
 .ve-hr-dossier-market-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 1.125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -379,7 +379,7 @@
   border-radius: 0.25rem;
   border: 1px solid var(--aurora-max-line);
   background: var(--aurora-max-obsidian);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.45);
@@ -408,7 +408,7 @@
   padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--ve-hr-border);
   background: var(--aurora-max-obsidian);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.45);
 }
@@ -440,7 +440,7 @@
 }
 
 .ve-hr-sidebar-composite-score {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 2rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -453,7 +453,7 @@
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   margin-top: 0.75rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.42);
 }
@@ -537,7 +537,7 @@
 
 .ve-impact-timeline__eyebrow {
   margin: 0 0 0.25rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.515625rem;
   font-weight: 800;
   letter-spacing: 0.165em;
@@ -563,7 +563,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.08rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -619,7 +619,7 @@
 
 .ve-impact-timeline__zone-label {
   fill: rgba(148, 163, 184, 0.34);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 700;
   letter-spacing: 1.4px;
@@ -700,7 +700,7 @@
 
 .ve-impact-timeline__opponent {
   fill: rgba(226, 232, 240, 0.58);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -708,7 +708,7 @@
 
 .ve-impact-timeline__date {
   fill: rgba(148, 163, 184, 0.33);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
 }
 
@@ -737,7 +737,7 @@
 .ve-impact-timeline__tooltip-title,
 .ve-impact-timeline__tooltip-stat,
 .ve-impact-timeline__tooltip-result {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .ve-impact-timeline__tooltip-title {
@@ -777,7 +777,7 @@
   gap: 0.6rem 1rem;
   padding: 0.65rem 1.125rem 0.8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.515625rem;
   color: rgba(226, 232, 240, 0.4);
 }
@@ -921,7 +921,7 @@
 
 .ve-pressure-matrix__eyebrow {
   margin: 0 0 5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.17em;
@@ -951,7 +951,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1027,7 +1027,7 @@
 }
 
 .ve-pressure-core__number strong {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 42px;
   font-weight: 900;
   line-height: 1;
@@ -1037,7 +1037,7 @@
 
 .ve-pressure-core__number span {
   margin-top: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -1064,7 +1064,7 @@
 }
 
 .ve-pressure-core__readout span {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1117,7 +1117,7 @@
 
 .ve-pressure-rail__index {
   flex: 0 0 auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   color: rgba(148, 163, 184, 0.27);
 }
@@ -1134,7 +1134,7 @@
 
 .ve-pressure-rail__identity p {
   margin: 3px 0 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1149,7 +1149,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   color: rgba(148, 163, 184, 0.27);
 }
@@ -1267,7 +1267,7 @@
   display: flex;
   align-items: center;
   padding-left: 10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1280,7 +1280,7 @@
   align-items: center;
   gap: 7px;
   margin-top: 7px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   color: rgba(148, 163, 184, 0.34);
 }
@@ -1310,14 +1310,14 @@
 }
 
 .ve-pressure-rail__score strong {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 20px;
   line-height: 1;
   color: rgba(255, 255, 255, 0.92);
 }
 
 .ve-pressure-rail__score span {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1344,7 +1344,7 @@
   gap: 10px 18px;
   padding: 12px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   color: rgba(148, 163, 184, 0.36);
 }
@@ -1468,7 +1468,7 @@
 
 .ve-pressure-core__metrics span {
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 6px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -1478,7 +1478,7 @@
 .ve-pressure-core__metrics strong {
   display: block;
   margin-top: 4px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.84);
 }
@@ -1490,7 +1490,7 @@
   justify-content: space-between;
   padding: 0 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.055);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1545,7 +1545,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.62);
 }
@@ -1654,7 +1654,7 @@
 
 .ve-decision-delta__eyebrow {
   margin: 0 0 4px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.17em;
@@ -1678,7 +1678,7 @@
 }
 
 .ve-decision-delta__verdict strong {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 18px;
   line-height: 1;
   color: var(--delta-positive);
@@ -1694,7 +1694,7 @@
 }
 
 .ve-decision-delta__verdict span {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1714,7 +1714,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 9px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   color: rgba(148, 163, 184, 0.3);
 }
@@ -1794,7 +1794,7 @@
   display: flex;
   min-width: 74px;
   flex-direction: column;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1859,7 +1859,7 @@
 }
 
 .ve-decision-delta__metrics span {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -1886,7 +1886,7 @@
   gap: 10px 18px;
   padding: 10px 18px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   color: rgba(148, 163, 184, 0.36);
 }
@@ -2158,7 +2158,7 @@
   position: relative;
   z-index: 1;
   margin-top: 5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 49px;
   font-weight: 900;
   line-height: 0.95;
@@ -2180,7 +2180,7 @@
 .ve-hr-sidebar-composite-row span {
   min-width: 0;
   padding: 9px 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 6px;
   letter-spacing: 0.05em;
   text-align: center;
@@ -2207,7 +2207,7 @@
 .ve-player-intelligence-rail__nav::before {
   display: block;
   margin: 0 12px 9px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -2294,7 +2294,7 @@
 }
 
 .ve-player-intelligence-rail__cta small {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -2312,7 +2312,7 @@
   justify-content: center;
   gap: 5px;
   margin-top: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.04em;
   color: rgba(148, 163, 184, 0.34);

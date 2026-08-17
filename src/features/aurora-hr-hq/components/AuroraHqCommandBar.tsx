@@ -62,7 +62,7 @@ export function AuroraHqCommandBar({
         value={date}
         onChange={(e) => onDateChange(e.target.value)}
         className="aurora-hq__control"
-        style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: 0, textTransform: 'none' }}
+        style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: 0, textTransform: 'none' }}
       />
 
       {/* Search */}

@@ -21,8 +21,8 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
 
   const getThemeVars = () => {
     return {
-      '--theme-border-color': activeTheme.borderColor || 'rgba(6,182,212,0.2)',
-      '--theme-accent-color': activeTheme.accentText.includes('cyan') ? '#22d3ee' : activeTheme.accentText.includes('orange') ? '#f97316' : activeTheme.accentText.includes('emerald') ? '#10b981' : activeTheme.accentText.includes('rose') ? '#e11d48' : '#eab308',
+      '--theme-border-color': activeTheme.borderColor || 'rgba(16,185,129,0.2)',
+      '--theme-accent-color': activeTheme.accentText.includes('cyan') ? '#00d9a0' : activeTheme.accentText.includes('orange') ? '#f97316' : activeTheme.accentText.includes('emerald') ? '#10b981' : activeTheme.accentText.includes('rose') ? '#e11d48' : '#eab308',
     };
   };
 
@@ -189,7 +189,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
             </>
           ) : (
             <>
-              <Twitter className="w-4 h-4 text-sky-400" />
+              <Twitter className="w-4 h-4 text-emerald-400" />
               <span>Copy Tweet Draft</span>
             </>
           )}

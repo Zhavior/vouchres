@@ -25,12 +25,12 @@ export default function DecisionConsole({
 
       <div className="mt-6 grid grid-cols-3 gap-3">
         <Metric title="EDGE" value={edge ?? "--"} color="text-emerald-300" />
-        <Metric title="CONFIDENCE" value={confidence} color="text-cyan-300" />
+        <Metric title="CONFIDENCE" value={confidence} color="text-emerald-300" />
         <Metric title="SOURCE" value={source} color="text-yellow-300" />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-        <div className="flex items-center gap-2 text-xs font-black tracking-widest text-cyan-300 uppercase">
+      <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+        <div className="flex items-center gap-2 text-xs font-black tracking-widest text-emerald-300 uppercase">
           <TrendingUp className="h-4 w-4" />
           Why VouchEdge Likes This
         </div>

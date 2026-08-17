@@ -180,7 +180,7 @@ export function ChunkASlateStacks({ data }: Props) {
               className={`group relative overflow-hidden transition-all duration-300 ${
                 isTopRanked
                   ? "border-emerald-400/40 hover:border-emerald-400 hover:shadow-[0_0_40px_rgba(52,211,153,0.12)]"
-                  : "hover:border-vouch-cyan/40 hover:shadow-[0_0_30px_rgba(79,184,220,0.10)]"
+                  : "hover:border-vouch-cyan/40 hover:shadow-[0_0_30px_rgba(0,217,160,0.10)]"
               }`}
             >
               <div className="border-b border-white/10 p-6">

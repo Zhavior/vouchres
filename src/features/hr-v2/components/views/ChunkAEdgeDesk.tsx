@@ -283,7 +283,7 @@ export function ChunkAEdgeDesk({ data }: Props) {
                 isPrime
                   ? "border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(49,181,131,0.16)]"
                   : isPositive
-                  ? "border-vouch-cyan/30 hover:border-vouch-cyan/55 hover:shadow-[0_0_25px_rgba(79,184,220,0.12)]"
+                  ? "border-vouch-cyan/30 hover:border-vouch-cyan/55 hover:shadow-[0_0_25px_rgba(0,217,160,0.12)]"
                   : "hover:border-white/20"
               }`}
             >

@@ -37,7 +37,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--bg-obsidian)] text-white flex items-center justify-center p-8">
-        <p className="font-mono text-sm text-cyan-300/80 animate-pulse">Loading parlay proof…</p>
+        <p className="font-mono text-sm text-emerald-300/80 animate-pulse">Loading parlay proof…</p>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
         <p className="text-sm text-white/50 text-center max-w-md">
           This parlay has no public proof yet. Saved practice slips stay on your device until you sign in and lock to ledger.
         </p>
-        <a href="/live_parlays" className="text-cyan-300 font-bold text-sm hover:underline">Back to Live &amp; Pending</a>
+        <a href="/live_parlays" className="text-emerald-300 font-bold text-sm hover:underline">Back to Live &amp; Pending</a>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
     <div className="min-h-screen bg-[var(--bg-obsidian)] text-white">
       <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
         <header className="space-y-3">
-          <div className="flex items-center gap-2 text-cyan-400">
+          <div className="flex items-center gap-2 text-emerald-400">
             <Layers3 className="w-5 h-5" />
             <span className="text-[11px] font-black uppercase tracking-[0.25em]">ParlayOS Proof</span>
           </div>
@@ -121,9 +121,9 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
         </header>
 
         {proof.proof_hash ? (
-          <section className="rounded-2xl border border-cyan-500/25 bg-cyan-950/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-300/70 mb-2">Proof hash (SHA-256)</p>
-            <p className="font-mono text-[11px] text-cyan-100/90 break-all">{proof.proof_hash}</p>
+          <section className="rounded-2xl border border-emerald-500/25 bg-emerald-950/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300/70 mb-2">Proof hash (SHA-256)</p>
+            <p className="font-mono text-[11px] text-emerald-100/90 break-all">{proof.proof_hash}</p>
           </section>
         ) : null}
 
@@ -142,7 +142,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300/75">Shared proof actions</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300/75">Shared proof actions</p>
               <p className="mt-1 text-sm text-white/55">
                 This page is view-only. You can tail this parlay to your own profile, but you cannot edit the original slip.
               </p>
@@ -152,7 +152,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
                 type="button"
                 onClick={() => void handleTail()}
                 disabled={tailing}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-cyan-200 transition hover:border-cyan-300/55 hover:text-cyan-100 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-emerald-200 transition hover:border-emerald-300/55 hover:text-emerald-100 disabled:opacity-50"
               >
                 <CopyCheck className="h-4 w-4" />
                 {tailing ? "Tailing..." : authMe?.id ? "Tail this parlay" : "Sign in to tail"}
@@ -185,7 +185,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
           {otsUrl ? (
             <a
               href={otsUrl}
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-cyan-200"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-emerald-200"
             >
               <Download className="w-4 h-4" />
               Download OTS proof
@@ -196,7 +196,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
               href={publicProofUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white/70 hover:border-cyan-400/40 hover:text-cyan-200"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white/70 hover:border-emerald-400/40 hover:text-emerald-200"
             >
               <ExternalLink className="w-4 h-4" />
               Public proof link
@@ -204,7 +204,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
           ) : null}
           <a
             href="/live_parlays"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white/70 hover:border-cyan-400/40 hover:text-cyan-200"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white/70 hover:border-emerald-400/40 hover:text-emerald-200"
           >
             <ExternalLink className="w-4 h-4" />
             Back to Live &amp; Pending

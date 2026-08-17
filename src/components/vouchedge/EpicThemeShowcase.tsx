@@ -76,13 +76,13 @@ function categoryIcon(cat: string) {
 }
 
 const FEATURE_CARDS = [
-  { icon: Diamond,   title: "3D Perspective Floor", desc: "Diamond themes use a CSS perspective floor tilted at 75° with a scrolling grid.", color: "#38bdf8" },
+  { icon: Diamond,   title: "3D Perspective Floor", desc: "Diamond themes use a CSS perspective floor tilted at 75° with a scrolling grid.", color: "#00d9a0" },
   { icon: Crown,     title: "Metallic Gold Texture", desc: "Gold themes use a 7-stop layered gradient with overlay stripes for real sheen.", color: "#D4AF37" },
-  { icon: Snowflake, title: "Snow Particle System",  desc: "Ice themes use 40 snowflakes with wind drift and parallax depth.", color: "#7DD3FC" },
+  { icon: Snowflake, title: "Snow Particle System",  desc: "Ice themes use 40 snowflakes with wind drift and parallax depth.", color: "#6EE7B7" },
   { icon: Flame,     title: "Ember Rise + Heat",     desc: "HR Hunter uses rising embers in 3 colors with glow shadows.", color: "#EF4444" },
   { icon: Star,      title: "3D Starfield",          desc: "Galactic themes use 50 stars with translateZ depth.", color: "#FFE81F" },
   { icon: Zap,       title: "Aurora Flow",           desc: "Founder Mode uses dual-layer blurred gradients drifting opposite ways.", color: "#A78BFA" },
-  { icon: Rocket,    title: "Pixel Rain + 3D Cubes", desc: "4-Bit Arcade uses matrix scanlines plus rotating 3D cubes.", color: "#22d3ee" },
+  { icon: Rocket,    title: "Pixel Rain + 3D Cubes", desc: "4-Bit Arcade uses matrix scanlines plus rotating 3D cubes.", color: "#00d9a0" },
   { icon: Palette,   title: "Mesh Gradient Flow",    desc: "Default themes use a 4-stop mesh gradient shifting over 14s.", color: "#a78bfa" },
 ];
 
