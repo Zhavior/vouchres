@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest';
 describe('Aurora Max shell surfaces', () => {
   it('keeps the V mark and requests its emerald treatment in both navigation shells', () => {
     const logo = readFileSync('src/components/brand/VouchEdgeLogo.tsx', 'utf8');
-    const sidebar = readFileSync('src/social/feed/FeedSidebar.tsx', 'utf8');
+    // FeedSidebar was replaced by AppTopBar in da8764be; the top bar is now the
+    // desktop navigation shell and carries the same brand contract.
+    const topBar = readFileSync('src/app/AppTopBar.tsx', 'utf8');
     const drawer = readFileSync('src/social/feed/MobileProfileDrawer.tsx', 'utf8');
 
     expect(logo).toContain('/vouchedge-mark-aurora.svg');
     expect(logo).toContain('emeraldMark');
-    expect(sidebar).toContain('<VouchEdgeLogo emeraldMark');
+    expect(topBar).toContain('<VouchEdgeLogo emeraldMark');
     expect(drawer).toContain('<VouchEdgeLogo emeraldMark');
   });
 
