@@ -8,6 +8,8 @@ import { apiOkFlat } from "../../lib/apiResponse";
 import { AppError } from "../../errors/AppError";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
+import { recordLegacyRouteMetric } from "../../lib/observability/legacyRouteMetrics";
+import { structuredLog } from "../../lib/structuredLog";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../../services/grading/sportGraders";
 import {
   beginParlayGradeObservability,
@@ -172,11 +174,42 @@ export function mountParlaySupportRoutes(router: Router): Router {
     }),
   );
 
-  router.post("/parlays", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {
+  /**
+   * Retired create entry point. Listed as a deprecatedEntryPoint for
+   * parlay.save in server/aegis/ownership.ts and already gone unconditionally —
+   * it is not behind DISABLE_LEGACY_CANONICAL_PARLAY_ROUTE_LABELS because it
+   * should never come back, not because it was overlooked.
+   *
+   * Two things were wrong here. It advertised POST /api/parlays/save as the
+   * replacement, but that route carries the legacy.parlay.save label which
+   * render.yaml disables in production — so the 410 pointed callers at another
+   * 410. The canonical entry point is POST /api/v3/parlays/save, per the
+   * approvedEntryPoints in ownership.ts. And it recorded nothing, so a client
+   * still calling it was invisible: no metric, no log, no Sunset header.
+   */
+  router.post("/parlays", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    recordLegacyRouteMetric({
+      label: "legacy.parlay.create",
+      method: "POST",
+      route: "/parlays",
+      requestId: req.requestId,
+    });
+    structuredLog({
+      level: "warn",
+      event: "legacy_route_hit",
+      requestId: req.requestId,
+      method: "POST",
+      route: "/parlays",
+      label: "legacy.parlay.create",
+    });
+
+    res.setHeader("Deprecation", "true");
+    res.setHeader("Link", '</api/v3/parlays/save>; rel="successor-version"');
+
     throw new AppError({
       status: 410,
       code: "gone",
-      message: "Use POST /api/parlays/save for canonical parlay saves.",
+      message: "Use POST /api/v3/parlays/save for canonical parlay saves.",
       details: { legacy: "legacy_parlay_route_disabled" },
     });
   }));

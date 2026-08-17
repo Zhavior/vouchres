@@ -118,7 +118,11 @@ describe("parlay routes", () => {
       ok: false,
       error: {
         code: "gone",
-        message: expect.stringContaining("/api/parlays/save"),
+        // Must name the canonical entry point. This previously asserted
+        // "/api/parlays/save", which carries the legacy.parlay.save label that
+        // render.yaml disables in production — so the 410 pointed callers at
+        // another 410.
+        message: expect.stringContaining("/api/v3/parlays/save"),
       },
     });
   });
