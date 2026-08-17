@@ -15,7 +15,6 @@ import { LiveGamesNextMatchupSlider } from './LiveGamesNextMatchupSlider';
 import { LiveGamesNextDrawer } from './LiveGamesNextDrawer';
 import { LiveGamesNextKeyboardCheatsheet } from './LiveGamesNextKeyboardCheatsheet';
 import '../live-games-next.css';
-import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 
 export interface LiveGamesNextShellProps {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
@@ -64,10 +63,10 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
   } = useLiveGamesNextData(onAddLegToParlay);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
 
-  // The 3D toggle is global state now — one canvas in AppShell, one
-  // preference shared by every surface and persisted across reloads.
-  const is3DLayerEnabled = useAmbient3dEnabled();
-  const toggle3DLayer = useAmbient3dStore((state) => state.toggle);
+  const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
+  const toggle3DLayer = () => {
+    setIs3DLayerEnabled((enabled) => !enabled);
+  };
 
   // One slate-wide official line score query feeds the hero and the drawer.
   // Cycling the featured game reads the same cache entry — no extra request,

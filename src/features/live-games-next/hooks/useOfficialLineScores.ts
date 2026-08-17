@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '../../../hooks/queries/queryKeys';
 import { visibilityAwareInterval } from '../../../lib/queryVisibility';
 import { fetchSlateLineScores, type SlateLineScores, type OfficialLineScore } from '../api/officialLineScore';
 
@@ -19,7 +18,7 @@ const LIVE_POLL_MS = 20_000;
  */
 export function useOfficialLineScores(date: string, options?: { hasLiveGame?: boolean; enabled?: boolean }) {
   const query = useQuery<SlateLineScores>({
-    queryKey: queryKeys.officialLineScores(date),
+    queryKey: ['officialLineScores', date] as const,
     queryFn: ({ signal }) => fetchSlateLineScores(date, signal),
     staleTime: 10_000,
     gcTime: 300_000,
