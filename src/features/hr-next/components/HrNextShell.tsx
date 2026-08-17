@@ -1,3 +1,4 @@
+import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 import { Search, Sparkles, Command, Keyboard } from 'lucide-react';
 import { useReducer, useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { useHrNextData, type HrNextItem } from '../hooks/useHrNextData';
@@ -33,7 +34,8 @@ export function HrNextShell() {
   } = useHrNextData();
   const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
   const [exportStatus, setExportStatus] = useState<string | null>(null);
-  const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
+  const is3DLayerEnabled = useAmbient3dEnabled();
+  const toggle3DLayer = useAmbient3dStore((state) => state.toggle);
   const [isProMode, setIsProMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('hr_next_pro_mode');
@@ -356,7 +358,7 @@ export function HrNextShell() {
           </button>
           
           <button 
-            onClick={() => setIs3DLayerEnabled(prev => !prev)}
+            onClick={toggle3DLayer}
             className={`rounded px-3 py-1 text-xs font-mono transition-colors ${
               is3DLayerEnabled 
                 ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] hover:bg-[var(--aurora-max-emerald)]/30' 
@@ -406,7 +408,6 @@ export function HrNextShell() {
             savedMap={savedMap} 
             onToggleSaved={toggleSaved} 
             onAddToSlip={handleAddToSlip} 
-            is3DLayerEnabled={is3DLayerEnabled} 
             isProMode={isProMode}
             groupBy={groupBy}
             activeId={focusedId}

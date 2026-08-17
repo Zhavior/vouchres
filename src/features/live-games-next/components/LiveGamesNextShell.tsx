@@ -1,3 +1,4 @@
+import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, Radio, RefreshCw, Zap } from 'lucide-react';
 import { AuroraMaxCommandHeader } from '../../../components/aurora-max/AuroraMaxPrimitives';
@@ -63,10 +64,8 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
   } = useLiveGamesNextData(onAddLegToParlay);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
 
-  const [is3DLayerEnabled, setIs3DLayerEnabled] = useState(true);
-  const toggle3DLayer = () => {
-    setIs3DLayerEnabled((enabled) => !enabled);
-  };
+  const is3DLayerEnabled = useAmbient3dEnabled();
+  const toggle3DLayer = useAmbient3dStore((state) => state.toggle);
 
   // One slate-wide official line score query feeds the hero and the drawer.
   // Cycling the featured game reads the same cache entry — no extra request,
@@ -291,7 +290,7 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
 
           <button
             type="button"
-            onClick={() => toggle3DLayer()}
+            onClick={toggle3DLayer}
             className={`ml-auto shrink-0 rounded px-3 py-1 text-xs font-mono transition-colors ${
               is3DLayerEnabled
                 ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] hover:bg-[var(--aurora-max-emerald)]/30'

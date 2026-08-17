@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { motion, LayoutGroup } from 'framer-motion';
 import type { HrNextItem } from '../hooks/useHrNextData';
 import { HrNextCard } from './HrNextCard';
-import { HrNextVisualLayer } from './HrNextVisualLayer';
 import type { GroupByMode } from '../hooks/useHrNextData';
 
 interface HrNextBoardProps {
@@ -10,7 +9,6 @@ interface HrNextBoardProps {
   savedMap: Record<string, true>;
   onToggleSaved: (id: string) => void;
   onAddToSlip: (row: any) => void;
-  is3DLayerEnabled: boolean;
   isProMode?: boolean;
   groupBy?: GroupByMode;
   activeId?: string | null;
@@ -31,7 +29,6 @@ export function HrNextBoard({
   savedMap, 
   onToggleSaved, 
   onAddToSlip, 
-  is3DLayerEnabled, 
   isProMode = false,
   groupBy,
   activeId: controlledActiveId,
@@ -82,9 +79,6 @@ export function HrNextBoard({
 
   return (
     <LayoutGroup id="hrnext-board">
-      {/* 3D Visual Layer */}
-      <HrNextVisualLayer isVisible={is3DLayerEnabled} />
-
       {isMatchupMode ? (
         displayedMatchups.map((matchup) => (
           <div key={matchup.header.id} className="bg-ve-obsidian/90 border border-white/10 rounded-xl p-5 mb-6">
