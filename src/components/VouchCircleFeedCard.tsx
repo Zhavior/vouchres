@@ -629,9 +629,10 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               (() => {
                 const ps = selectedPlayers[potdIndex] || selectedPlayers[0];
                 if (!ps) return <div className="text-center text-xs text-white/40 py-10">Empty Selection</div>;
-                const aiConf = ps.aiConfidence ?? 94;
-                const pConf = ps.playerConfidence ?? 85;
-                const explanation = ps.customExplanation || "Extreme velocity projections verify launch coefficients.";
+                // No invented fallbacks: an absent metric is omitted, never
+                // substituted with a plausible-looking number or analysis line.
+                const aiConf = ps.aiConfidence;
+                const pConf = ps.playerConfidence;
                 const player = ps.player || {};
 
                 return (
@@ -667,8 +668,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                       <div className="bg-black/20 p-2 rounded-lg border border-white/10">
                         <span className="text-white/40 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Statcast Index</span>
                         <div className="grid grid-cols-2 gap-x-1 text-slate-305">
-                          <div>EVel: <span className="font-extrabold text-[#00d9a0]">{player.advanced?.exitVelocity || "92.4"}</span></div>
-                          <div>HHit: <span className="font-extrabold text-rose-400">{player.advanced?.hardHitPercent ? `${player.advanced.hardHitPercent}%` : "51%"}</span></div>
+                          <div>EVel: <span className="font-extrabold text-[#00d9a0]">{player.advanced?.exitVelocity || "----"}</span></div>
+                          <div>HHit: <span className="font-extrabold text-rose-400">{player.advanced?.hardHitPercent ? `${player.advanced.hardHitPercent}%` : "----"}</span></div>
                         </div>
                       </div>
                     </div>
@@ -677,11 +678,11 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     <div className="grid grid-cols-2 gap-2 font-mono bg-black/15 p-1.5 rounded-lg border border-white/10 text-[9px]">
                       <div className="flex justify-between px-1 border-r border-slate-950">
                         <span className="text-white/40">VAI CONF:</span>
-                        <span className="font-extrabold text-emerald-400">{aiConf}%</span>
+                        <span className="font-extrabold text-emerald-400">{typeof aiConf === 'number' ? `${aiConf}%` : '----'}</span>
                       </div>
                       <div className="flex justify-between px-1">
                         <span className="text-white/40">STABILITY:</span>
-                        <span className="font-extrabold text-amber-500">{pConf}%</span>
+                        <span className="font-extrabold text-amber-500">{typeof pConf === 'number' ? `${pConf}%` : '----'}</span>
                       </div>
                     </div>
                   </div>
@@ -689,9 +690,24 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               })()
             ) : (
               selectedPlayers.map((ps: any, idx: number) => {
-                const mockSparkPoints = idx % 3 === 0 ? "5,25 35,5 65,15 95,8" : idx % 3 === 1 ? "5,8 35,28 65,12 95,20" : "5,18 35,15 65,28 95,6";
-                const aiConf = ps.aiConfidence ?? (idx % 3 === 0 ? 94 : idx % 3 === 1 ? 91 : 88);
-                const pConf = ps.playerConfidence ?? (idx % 3 === 0 ? 88 : idx % 3 === 1 ? 85 : 92);
+                // Trend line renders only from a real series. Previously this was
+                // picked by `idx % 3`, so every card showed one of three invented
+                // shapes that tracked nothing.
+                const trendSeries: number[] = Array.isArray(ps.trendPoints) ? ps.trendPoints : [];
+                const sparkPoints = trendSeries.length >= 2
+                  ? trendSeries
+                      .map((value, i) => {
+                        const x = 5 + (i * 90) / (trendSeries.length - 1);
+                        const max = Math.max(...trendSeries);
+                        const min = Math.min(...trendSeries);
+                        const span = max - min || 1;
+                        const y = 28 - ((value - min) / span) * 26;
+                        return `${x.toFixed(0)},${y.toFixed(0)}`;
+                      })
+                      .join(' ')
+                  : null;
+                const aiConf = ps.aiConfidence;
+                const pConf = ps.playerConfidence;
 
                 return (
                   <div key={ps.player?.id || idx} className={`p-2 rounded-xl border ${activeStyle.nodeTagBg} ${activeStyle.cardBorder} flex flex-col gap-1.5`}>
@@ -716,21 +732,25 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                       </div>
 
                       <div className="w-14 h-4 bg-black/15 rounded p-0.5 border border-white/[0.04] flex items-center justify-center">
-                        <svg className="w-full h-full" viewBox="0 0 100 30">
-                          <polyline fill="none" stroke={activeStyle.activeLineColor1} strokeWidth="1.5" points={mockSparkPoints} />
-                          <circle cx="95" cy={mockSparkPoints.split(" ").pop()?.split(",")[1]} r="2" fill={activeStyle.activeLineColor1} />
-                        </svg>
+                        {sparkPoints ? (
+                          <svg className="w-full h-full" viewBox="0 0 100 30">
+                            <polyline fill="none" stroke={activeStyle.activeLineColor1} strokeWidth="1.5" points={sparkPoints} />
+                            <circle cx="95" cy={sparkPoints.split(" ").pop()?.split(",")[1]} r="2" fill={activeStyle.activeLineColor1} />
+                          </svg>
+                        ) : (
+                          <span className="text-[7px] font-mono text-white/25">----</span>
+                        )}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[8px] font-mono bg-obsidian-900/40 px-1 py-0.5 rounded leading-none">
                       <div className="flex justify-between pr-1.5 border-r border-white/10">
                         <span className="text-white/40">VAI:</span>
-                        <span className="font-bold text-emerald-400">{aiConf}%</span>
+                        <span className="font-bold text-emerald-400">{typeof aiConf === 'number' ? `${aiConf}%` : '----'}</span>
                       </div>
                       <div className="flex justify-between pl-1.5">
                         <span className="text-white/40">COEF:</span>
-                        <span className="font-bold text-amber-500">{pConf}%</span>
+                        <span className="font-bold text-amber-500">{typeof pConf === 'number' ? `${pConf}%` : '----'}</span>
                       </div>
                     </div>
                   </div>

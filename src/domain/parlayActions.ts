@@ -233,7 +233,7 @@ export async function handleCommitParlayTrust(input: {
   }
 
   const result = await apiClient.post<{ parlay?: Record<string, unknown> }>(
-    `/api/parlays/${encodeURIComponent(pickId)}/commit-trust`,
+    `/api/v3/parlays/${encodeURIComponent(pickId)}/commit-trust`,
     { audience: input.audience },
   );
 
@@ -272,7 +272,7 @@ export async function finalizeParlayTrustLockClient(parlay: Parlay): Promise<Par
 
   try {
     const result = await apiClient.post<{ parlay?: Record<string, unknown> }>(
-      `/api/parlays/${encodeURIComponent(pickId)}/finalize-trust-lock`,
+      `/api/v3/parlays/${encodeURIComponent(pickId)}/finalize-trust-lock`,
     );
     const row = result?.parlay;
     if (!row?.locked_at) return null;

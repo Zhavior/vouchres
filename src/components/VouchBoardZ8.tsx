@@ -11,7 +11,6 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import VouchStudioDarkroom from './VouchStudioDarkroom';
 import VouchCard from './vouch-system/VouchCard';
 import VouchPack from './vouchBoard/VouchPack';
-import { apiClient } from '../lib/apiClient';
 import {
   AURORA_ACTIVE,
   AURORA_DISPLAY,
@@ -306,8 +305,11 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
       };
 
     try {
-      await apiClient.post('/api/me/parlays', postPayload);
-      
+      // onPostCreated -> handlePostCreated owns the backend write (POST /api/posts
+      // plus the vouch push). Do not call the API directly here: the previous
+      // POST /api/me/parlays sent a feed-post body to a parlay-save schema that
+      // requires `legs`, so it always 400'd on top of a persistence path that
+      // already worked.
       if (onPostCreated) {
         onPostCreated(postPayload as Partial<FeedPost>);
       }
