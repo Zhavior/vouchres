@@ -98,7 +98,7 @@ const FULL_VIEW: ViewWindow = { x0: 0, x1: 1, y0: 0, y1: 1 };
 /** Keep a window inside the axis, no tighter than MIN_VIEW_SPAN and no wider than full. */
 function clampView(next: ViewWindow): ViewWindow {
   const fit = (lo: number, hi: number): [number, number] => {
-    let span = Math.min(1, Math.max(MIN_VIEW_SPAN, hi - lo));
+    const span = Math.min(1, Math.max(MIN_VIEW_SPAN, hi - lo));
     let start = lo;
     if (start < 0) start = 0;
     if (start + span > 1) start = 1 - span;

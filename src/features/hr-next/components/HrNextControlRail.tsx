@@ -121,8 +121,8 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
     <Frame
       className={
         isRail
-          ? 've-hr-control-rail sticky top-0 hidden w-64 shrink-0 space-y-5 self-start overflow-y-auto border-r border-emerald-950/80 bg-[#05080d] p-4 lg:block'
-          : 've-hr-control-sheet grid grid-cols-1 gap-x-4 gap-y-5 rounded-xl border border-emerald-950/80 bg-[#05080d] p-4 sm:grid-cols-2'
+          ? 've-hr-control-rail sticky top-0 hidden w-64 shrink-0 space-y-5 self-start overflow-y-auto border-r border-emerald-950/80 bg-[#05080d]/80 p-4 backdrop-blur-[1px] lg:block'
+          : 've-hr-control-sheet grid grid-cols-1 gap-x-4 gap-y-5 rounded-xl border border-emerald-950/80 bg-[#05080d]/80 p-4 backdrop-blur-[1px] sm:grid-cols-2'
       }
       aria-label="Board controls"
     >
