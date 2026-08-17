@@ -64,6 +64,11 @@ const RouteTab = React.memo(function RouteTab({
       onClick={() => onNavigate(id)}
       onMouseEnter={() => { if (!isEagerHrSection(id)) preloadSection(id); }}
       aria-current={isActive ? 'page' : undefined}
+      // The shortcut was announced only through `title`, i.e. visually. The old
+      // FeedSidebar exposed it as aria-keyshortcuts and that was lost when the
+      // rail became the top bar, even though useAppShellShortcuts still binds
+      // 1-9. Screen readers get the binding back here.
+      aria-keyshortcuts={shortcut}
       title={shortcut ? `${label} (${shortcut})` : label}
       className={`ve-topbar-tab group inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] transition-colors ${
         isActive
