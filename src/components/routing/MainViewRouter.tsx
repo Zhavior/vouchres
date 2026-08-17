@@ -234,10 +234,15 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'daily_hr_watch_new':
-    case 'hr_board':
       return (
         <FadeInMount>
           <HomeRunIntelligencePageLegacy onSectionChange={navigateSection} />
+        </FadeInMount>
+      );
+    case 'hr_board':
+      return (
+        <FadeInMount>
+          <HrNextPage />
         </FadeInMount>
       );
     case 'hr_max':

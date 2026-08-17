@@ -289,9 +289,14 @@ function Overview({
           <h2 className="text-lg font-semibold text-white">Operations overview</h2>
           <p className="mt-1 text-sm text-white/50">Counts are loaded from the staff API when this page opens or refreshes.</p>
         </div>
-        <button type="button" className={BUTTON} onClick={() => void onRefresh()} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <a href="/daily_hr_watch_new" className={BUTTON}>
+            HR Z8 (legacy)
+          </a>
+          <button type="button" className={BUTTON} onClick={() => void onRefresh()} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
       </div>
       {error ? <p className="text-sm text-amber-200">Last refresh failed: {error}</p> : null}
 
