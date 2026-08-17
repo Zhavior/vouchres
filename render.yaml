@@ -116,6 +116,32 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
 
+  # HR evidence pipeline. One worker drives all three captures (see
+  # server/cron/hrIntelligenceCapture.ts): snapshots every run, shadow scoring
+  # on :00/:30, outcome ingest at 09:00 UTC. Without this the
+  # hr_feature_snapshots / hr_game_outcomes / hr_paired_model_predictions
+  # tables never fill, so model calibration has no data.
+  # The */15 schedule must keep hitting :00 and :30 for shadow scoring to run.
+  - type: cron
+    name: vouchedge-hr-intelligence
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    schedule: "*/15 * * * *"
+    startCommand: node dist/hrIntelligenceCapture.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: MLB_API_BASE_URL
+        value: https://statsapi.mlb.com/api
+
 # NOTE: Single cron host — Render owns grade/delete cron jobs below.
 # Keep vercel.json → "crons": [] while these Render crons are enabled.
 # See docs/PRODUCTION_HOSTING.md. Do not enable Vercel Cron + Render Cron together.

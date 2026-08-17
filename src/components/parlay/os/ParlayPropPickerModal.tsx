@@ -148,7 +148,7 @@ export default function ParlayPropPickerModal({
   const hrpiScore = 98;
   const exitVelo = snap?.reasoningSnapshot?.match(/(\d+\.?\d*)\s*mph/i)?.[0] ?? '114.2 mph';
   const evEdge = snap?.reasoningSnapshot?.match(/\+(\d+\.?\d*)%\s*EV/i)?.[0] ?? '+16.5% EV';
-  const windVector = snap?.riskSnapshot?.match(/Wind[^\.]*/i)?.[0] ?? 'Wind 8mph Out';
+  const windVector = snap?.riskSnapshot?.match(/Wind[^.]*/i)?.[0] ?? 'Wind 8mph Out';
 
   const bestTier = family?.tiers?.[0];
   const bestQuote = bestTier ? displayQuote(bestTier.id) : null;

@@ -101,17 +101,32 @@ function normalizeServerNotification(notification: ServerNotificationRecord): Ac
   };
 }
 
-async function readNotifications(): Promise<ActivityNotification[]> {
+type NotificationsSnapshot = {
+  items: ActivityNotification[];
+  /**
+   * Server-side unread total. The list request is capped at 50, so counting
+   * unread rows in `items` undercounts once a user is past that — the server
+   * already returns the true total alongside the page, so use it.
+   * Null means the server count is unavailable (offline/401) and the caller
+   * should fall back to counting what it has.
+   */
+  serverUnreadCount: number | null;
+};
+
+async function readNotifications(): Promise<NotificationsSnapshot> {
   const local = getNotifications().map(normalizeLocalNotification);
   try {
     const payload = await apiClient.get<{
       notifications?: ServerNotificationRecord[];
+      unreadCount?: number;
     }>('/api/notifications');
     const server = (payload.notifications ?? []).map(normalizeServerNotification);
-    return [...server, ...local].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-  } catch (error: any) {
-    if (Number(error?.status) === 401) return local;
-    return local;
+    return {
+      items: [...server, ...local].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()),
+      serverUnreadCount: typeof payload.unreadCount === 'number' ? payload.unreadCount : null,
+    };
+  } catch {
+    return { items: local, serverUnreadCount: null };
   }
 }
 
@@ -172,10 +187,17 @@ export function useAppNotifications() {
     refetchInterval: visibilityAwareInterval(user?.id ? 90_000 : false),
   });
 
+  const items = query.data?.items ?? [];
+  const localUnread = items.filter((n) => n.source === 'local' && !n.read).length;
+  const serverUnread = query.data?.serverUnreadCount;
+
   return {
     ...query,
-    data: query.data ?? [],
-    unreadCount: (query.data ?? []).filter((notification) => !notification.read).length,
+    data: items,
+    unreadCount:
+      typeof serverUnread === 'number'
+        ? serverUnread + localUnread
+        : items.filter((notification) => !notification.read).length,
     markAllRead,
     clearLocal,
   };

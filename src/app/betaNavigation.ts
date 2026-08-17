@@ -67,6 +67,7 @@ const ACCOUNT_SECTIONS = new Set([
   'epic_themes',
   'admin',
   'admin_hr_next',
+  'admin_model_quality',
 ]);
 
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([

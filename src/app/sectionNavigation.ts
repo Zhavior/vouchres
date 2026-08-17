@@ -107,7 +107,7 @@ export const SECTIONS_USING_LIVE_GAMES = new Set([
   'today_next',
 ]);
 
-const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next', 'hr_board']);
+const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next', 'admin_model_quality', 'hr_board']);
 
 export function getSavedActiveSection(): string | null {
   try {
@@ -387,6 +387,7 @@ export function resolveDevSectionFromLocation() {
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',
     'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
     'premium', 'themestore', 'subscriber_hub', 'settings', 'customize', 'admin', 'admin_hr_next',
+    'admin_model_quality',
   ]);
   if (validSections.has(clean)) {
     return clean;

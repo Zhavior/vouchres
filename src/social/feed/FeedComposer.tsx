@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
 import { FeedPost, Parlay } from '../../types';
+import { useComposerOptions, type ComposerPlayerOption } from '../../hooks/queries/useComposerOptions';
 
 type ComposerMode = 'VOUCH' | 'PARLAY' | 'RESULT' | 'RESEARCH_NOTE';
 
@@ -45,6 +46,35 @@ export default function FeedComposer({
   const [selectedSlipId, setSelectedSlipId] = React.useState('');
   const [isPosting, setIsPosting] = React.useState(false);
 
+  // Structured pick identity, resolved against the real slate.
+  const [gameId, setGameId] = React.useState('');
+  const [playerId, setPlayerId] = React.useState('');
+  const [marketCode, setMarketCode] = React.useState('');
+  // A RESULT post used to hard-code status 'WON', which silently credited a win
+  // (and its profit) to the profile for every result posted.
+  const [resultStatus, setResultStatus] = React.useState<'WON' | 'LOST' | 'VOID'>('WON');
+
+  const identityModes = mode === 'VOUCH' || mode === 'RESULT';
+  const options = useComposerOptions(sport, expanded && identityModes);
+
+  const selectedGame = options.games.find((game) => game.gameId === gameId);
+  const gamePlayers: ComposerPlayerOption[] = React.useMemo(() => {
+    if (!selectedGame) return [];
+    return [...selectedGame.awayTeam.players, ...selectedGame.homeTeam.players].sort((a, b) => {
+      if (a.isStarter !== b.isStarter) return a.isStarter ? -1 : 1;
+      const orderA = a.battingOrder ?? 99;
+      const orderB = b.battingOrder ?? 99;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
+  }, [selectedGame]);
+  const selectedPlayer = gamePlayers.find((player) => player.id === playerId);
+  const selectedMarket = options.markets.find((entry) => entry.id === marketCode);
+
+  // Only claim a structured pick when all three parts actually resolved.
+  const identityResolved = Boolean(selectedGame && selectedPlayer && selectedMarket);
+  const slateAvailable = identityModes && options.supported && !options.isError && options.games.length > 0;
+
   const maxChars = 360;
   const remaining = maxChars - content.length;
   const canPost = content.trim().length >= 3 && remaining >= 0 && !isPosting;
@@ -74,6 +104,10 @@ export default function FeedComposer({
     setOdds('');
     setTags('');
     setSelectedSlipId('');
+    setGameId('');
+    setPlayerId('');
+    setMarketCode('');
+    setResultStatus('WON');
     setMode('VOUCH');
     setExpanded(false);
   };
@@ -100,18 +134,31 @@ export default function FeedComposer({
     };
 
     if (mode === 'VOUCH') {
+      // Prefer the resolved slate identity; fall back to whatever was typed.
+      // Neither branch invents a game or market name.
       postData.vouch = {
         id: `vouch-${Date.now()}`,
         vouchSource: profileName || 'VouchEdge',
         userNote: content.trim(),
         sport,
-        gameName: market.trim() || 'Today slate',
-        market: market.trim() || 'Community pick',
+        gameName: selectedGame?.label || market.trim(),
+        market: identityResolved
+          ? `${selectedPlayer!.name} · ${selectedMarket!.label}`
+          : market.trim(),
+        playerOrTeam: selectedPlayer?.name,
         odds: odds.trim() || '—',
         status: 'PENDING',
         savedCount: 0,
         vouchedCount: 1,
         createdAt: new Date().toISOString(),
+        ...(identityResolved
+          ? {
+              gamePk: selectedGame!.gameId,
+              playerId: selectedPlayer!.id,
+              teamId: selectedPlayer!.teamId,
+              marketCode: selectedMarket!.id,
+            }
+          : {}),
       };
     }
 
@@ -120,11 +167,17 @@ export default function FeedComposer({
     }
 
     if (mode === 'RESULT') {
+      // Units must be an explicit number — defaulting to 1 previously logged a
+      // phantom unit of profit. Profit follows the reported status.
+      const units = Number.parseFloat(odds);
+      const stake = Number.isFinite(units) && units > 0 ? units : 0;
       postData.result = {
-        status: 'WON',
-        units: Number.parseFloat(odds) || 1,
-        profit: Number.parseFloat(odds) || 1,
-        marketName: market.trim() || 'Result update',
+        status: resultStatus,
+        units: stake,
+        profit: resultStatus === 'WON' ? stake : resultStatus === 'LOST' ? -stake : 0,
+        marketName: identityResolved
+          ? `${selectedPlayer!.name} · ${selectedMarket!.label}`
+          : market.trim(),
         details: content.trim(),
       };
     }
@@ -203,6 +256,100 @@ export default function FeedComposer({
             })}
           </div>
 
+          {identityModes && options.supported && (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {slateAvailable ? (
+                <>
+                  <label className="block">
+                    <span className="text-[11px] font-medium text-white/40">Game</span>
+                    <select
+                      value={gameId}
+                      onChange={(event) => {
+                        setGameId(event.target.value);
+                        setPlayerId('');
+                      }}
+                      aria-label="Game"
+                      className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
+                    >
+                      <option value="">Select game</option>
+                      {options.games.map((game) => (
+                        <option key={game.gameId} value={game.gameId}>
+                          {game.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block">
+                    <span className="text-[11px] font-medium text-white/40">Player</span>
+                    <select
+                      value={playerId}
+                      onChange={(event) => setPlayerId(event.target.value)}
+                      aria-label="Player"
+                      disabled={!selectedGame}
+                      className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30 disabled:opacity-40"
+                    >
+                      <option value="">{selectedGame ? 'Select player' : 'Pick a game first'}</option>
+                      {gamePlayers.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.battingOrder ? `${player.battingOrder}. ` : ''}
+                          {player.name} · {player.teamAbbr}
+                          {player.position ? ` (${player.position})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {/* isStarter/battingOrder only come from a posted boxscore, so
+                        anyone else is a roster entry, not a confirmed starter. */}
+                    {selectedPlayer && !selectedPlayer.isStarter && (
+                      <span className="mt-1 block text-[10px] text-white/30">
+                        Not in a posted lineup yet — roster entry only.
+                      </span>
+                    )}
+                  </label>
+
+                  <label className="block">
+                    <span className="text-[11px] font-medium text-white/40">Market</span>
+                    <select
+                      value={marketCode}
+                      onChange={(event) => setMarketCode(event.target.value)}
+                      aria-label="Market"
+                      className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
+                    >
+                      <option value="">Select market</option>
+                      {options.markets.map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                          {entry.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <label className="block sm:col-span-3">
+                  <span className="text-[11px] font-medium text-white/40">
+                    {options.isPending ? 'Loading today’s slate…' : marketLabel}
+                  </span>
+                  <input
+                    value={market}
+                    onChange={(event) => setMarket(event.target.value)}
+                    placeholder={marketPlaceholder}
+                    aria-label="Game or market"
+                    disabled={options.isPending}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30 disabled:opacity-40"
+                  />
+                  {/* Say why the picker is absent instead of silently degrading. */}
+                  {!options.isPending && (
+                    <span className="mt-1 block text-[10px] text-white/30">
+                      {options.isError
+                        ? 'Slate unavailable — this pick will not be gradeable.'
+                        : 'No games on the slate — this pick will not be gradeable.'}
+                    </span>
+                  )}
+                </label>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <label className="block">
               <span className="text-[11px] font-medium text-white/40">Sport</span>
@@ -219,9 +366,25 @@ export default function FeedComposer({
               </select>
             </label>
 
+            {/* VOUCH takes its market from the identity row above, so this cell
+                would otherwise be a second, conflicting market input. */}
+            {!(mode === 'VOUCH' && options.supported) && (
             <label className="block">
-              <span className="text-[11px] font-medium text-white/40">{marketLabel}</span>
-              {mode === 'PARLAY' && savedSlips.length > 0 ? (
+              <span className="text-[11px] font-medium text-white/40">
+                {mode === 'RESULT' ? 'Outcome' : marketLabel}
+              </span>
+              {mode === 'RESULT' ? (
+                <select
+                  value={resultStatus}
+                  onChange={(event) => setResultStatus(event.target.value as 'WON' | 'LOST' | 'VOID')}
+                  aria-label="Result outcome"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
+                >
+                  <option value="WON">Won</option>
+                  <option value="LOST">Lost</option>
+                  <option value="VOID">Void / push</option>
+                </select>
+              ) : mode === 'PARLAY' && savedSlips.length > 0 ? (
                 <select
                   value={selectedSlipId}
                   onChange={(event) => setSelectedSlipId(event.target.value)}
@@ -245,6 +408,7 @@ export default function FeedComposer({
                 />
               )}
             </label>
+            )}
 
             <label className="block">
               <span className="text-[11px] font-medium text-white/40">{oddsLabel}</span>

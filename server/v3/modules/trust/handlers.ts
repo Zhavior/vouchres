@@ -4,6 +4,7 @@ import { apiOkFlat } from "../../../lib/apiResponse";
 import type { RequestWithContext } from "../../../middleware/requestContext";
 import { getVerifiedRecord } from "../../../services/trust/verifiedRecordService";
 import { getCapperTrust, getUserTrust } from "../../../services/trust/trustScoreService";
+import { getTrustCalibration } from "../../../services/trust/trustCalibrationService";
 
 function requirePathId(value: unknown, field: string): string {
   const id = typeof value === "string" ? value.trim() : "";
@@ -45,5 +46,16 @@ export async function sendV3CapperTrustResponse(
     ...(options.includeVersion ? { version: "v3" } : {}),
     trust,
     verifiedRecord,
+  }));
+}
+
+/**
+ * System-wide trust calibration snapshot. Staff-gated at the route level —
+ * this is aggregate model-quality telemetry, not a per-user surface.
+ */
+export async function sendV3TrustCalibrationResponse(req: RequestWithContext, res: Response) {
+  return res.json(apiOkFlat(req, {
+    version: "v3",
+    calibration: await getTrustCalibration(),
   }));
 }

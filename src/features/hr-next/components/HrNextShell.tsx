@@ -439,11 +439,14 @@ export function HrNextShell() {
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
 
-      {/* Solid header fill — a backdrop-blur here would re-composite the whole
-          board on every scroll frame. */}
+      {/* Translucent rather than solid, so the ambient field reads through the
+          chrome. No `backdrop-blur` on this one: it is sticky over a long
+          scrolling list, and a backdrop-filter here re-composites the whole
+          board every scroll frame. Alpha alone gets the particles through at no
+          scroll cost. */}
       <div
         ref={toolbarRef}
-        className="sticky top-0 z-30 space-y-3 border-b border-white/5 bg-[#060a0a] px-4 py-3 sm:px-6"
+        className="sticky top-0 z-30 space-y-3 border-b border-white/5 bg-[#060a0a]/85 px-4 py-3 sm:px-6"
       >
         <AuroraMaxCommandHeader
           compact

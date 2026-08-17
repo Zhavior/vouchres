@@ -134,6 +134,19 @@ export interface Vouch {
   createXPreview?: boolean;
   addHashtags?: boolean;
 
+  // ── Grading identity, same vocabulary as Leg above ──
+  // A vouch composed from the feed used to carry only free text ("Judge HR"),
+  // which cannot be graded or joined to a game. When the composer resolves the
+  // pick against /api/feed/composer-options these carry the real ids.
+  /** MLB Stats API gamePk. */
+  gamePk?: string;
+  /** MLB person id for the vouched player. */
+  playerId?: number | string | null;
+  /** Team id for the player's team when known. */
+  teamId?: number | string | null;
+  /** Canonical market code from the composer options feed, e.g. HR, HIT, RBI. */
+  marketCode?: string;
+
   // Backend sync truth (mirrors Parlay's backendPickId/backendSyncState) —
   // was localStorage-only before Pass 2 of the Vouch backend-wiring judge pass.
   backendVouchId?: string;
