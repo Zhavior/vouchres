@@ -16,7 +16,7 @@ export const PRODUCT_WORKSPACES: readonly ProductWorkspace[] = [
     label: 'Today',
     description: 'The daily decision brief',
     defaultSection: 'today',
-    sections: ['today', 'welcome', 'vouchedge_intro', 'island', 'legacy_studio'],
+    sections: ['today', 'today_next', 'welcome', 'vouchedge_intro', 'island', 'legacy_studio'],
   },
   {
     id: 'research',
