@@ -149,7 +149,17 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 
 /** Returns only enabled features, sorted by order — for sidebar rendering */
 /** Sidebar-only exclusions — settings stays in footer. */
-const SIDEBAR_HIDDEN_FEATURES = ['settings'];
+/*
+ * Routable, but never a nav tab.
+ *
+ * `settings` is reached from the profile menu. `admin_hr_next` is the second
+ * entry that renders HR Next — same page, wrapped in the admin gate — so with
+ * both listed an admin saw "HR Next" twice in the top bar. The id stays live
+ * because it is the canonical HR destination (`HR_NEXT_HOME`) behind the Today
+ * launchpad tile and the `2` shortcut; only the duplicate tab goes away, and
+ * `hr_board` keeps the visible slot in the Daily group.
+ */
+const SIDEBAR_HIDDEN_FEATURES = ['settings', 'admin_hr_next'];
 
 export function getEnabledFeatures(
   layout: FeatureLayout,
