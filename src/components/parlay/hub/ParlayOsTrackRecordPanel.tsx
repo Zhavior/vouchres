@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo } from 'react';
 import { TrendingUp } from 'lucide-react';
-import type { Leg, Parlay } from '../../../types';
+import type { CreatorProofProfile, Leg, Parlay } from '../../../types';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
 import { ParlayOsPanelSkeleton } from './parlayOsUi';
 import { lazyWithRetry } from '../../../lib/lazyWithRetry';
@@ -9,9 +9,12 @@ const ResultsStudio = lazyWithRetry(() => import('../../results/ResultsStudio'),
 
 export default function ParlayOsTrackRecordPanel({
   savedSlips,
+  profile,
   onSectionChange,
 }: {
   savedSlips: unknown[];
+  /** Drives slip ownership in ResultsStudio; without it every slip reads "You". */
+  profile?: CreatorProofProfile;
   onSectionChange?: (section: string) => void;
 }) {
   const mappedParlays = useMemo<Parlay[]>(() => (
@@ -61,7 +64,7 @@ export default function ParlayOsTrackRecordPanel({
 
       <PanelErrorBoundary>
         <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-          <ResultsStudio savedParlays={mappedParlays} />
+          <ResultsStudio savedParlays={mappedParlays} profile={profile} />
         </Suspense>
       </PanelErrorBoundary>
     </div>
