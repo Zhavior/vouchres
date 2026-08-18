@@ -1,5 +1,15 @@
 /* HR Intelligence — editorial dossier (landing card language) */
 
+/* `.aurora-max-shell` sets `position: relative` and, being an equal-specificity
+   single class declared later in the cascade, it beats Tailwind's `fixed`
+   utility on any element carrying both. The HR drawer's root carries both, so
+   without this it lays out in document flow instead of pinning to the viewport
+   — it mounts, the backdrop dims, and the panel renders far down the page.
+   Two classes (0,2,0) so the drawer's own rule wins outright. */
+.ve-hr-drawer.aurora-max-shell {
+  position: fixed;
+}
+
 .ve-hr-profile,
 .ve-hr-drawer {
   --ve-hr-panel: var(--aurora-max-panel-strong);

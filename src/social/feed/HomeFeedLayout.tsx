@@ -145,7 +145,10 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 }: HomeFeedLayoutProps) {
   const { activeTheme, reduceMotion } = useTheme();
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
-  const [cmdKOpen, setCmdKOpen] = React.useState(false);
+  /* Hoisted to navUiStore so route-level chrome can open it — Today's mobile
+     header replaces the app top bar and owns the search affordance there. */
+  const cmdKOpen = useNavUiStore((state) => state.commandPaletteOpen);
+  const setCmdKOpen = useNavUiStore((state) => state.setCommandPaletteOpen);
   const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
 
   const closeNavigationOverlays = React.useCallback(() => {
@@ -178,7 +181,8 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setCmdKOpen(prev => !prev);
+        // Store setter takes a value, not an updater — read current state.
+        useNavUiStore.getState().setCommandPaletteOpen(!useNavUiStore.getState().commandPaletteOpen);
       }
     };
     window.addEventListener('keydown', handler);

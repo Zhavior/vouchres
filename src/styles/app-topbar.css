@@ -34,6 +34,27 @@
   overflow: hidden;
 }
 
+/* Below 1180px the scroller moves to the document — see the "Mobile should use
+   natural document scroll" block in styles/legacy/feed.css, which releases
+   html, body, #root and #inner-view-slot. That block cannot see the three shell
+   elements in between, so without this the chain stays pinned at 100dvh and
+   .z8-layout-root's `overflow: hidden` clips the page at one viewport: the
+   content is there, but nothing scrolls.
+
+   overflow-x stays `clip` so the shell still contains horizontal overflow;
+   `clip` + `visible` is the one mixed pair CSS keeps as authored instead of
+   coercing the visible axis to `auto`. */
+@media (max-width: 1180px) {
+  .z8-app-shell,
+  .ve-motion-content,
+  .z8-layout-root:not(.ve-layout-root-public) {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+}
+
 .z8-layout-root:not(.ve-layout-root-public) > .ve-app-topbar {
   position: sticky;
   top: 0;

@@ -16,6 +16,14 @@ type NavUiState = {
    * nav pill) can hide itself while the chat panel is open. */
   worldChatOpen: boolean;
   setWorldChatOpen: (open: boolean) => void;
+
+  /** The ⌘K palette, hoisted out of HomeFeedLayout for the same reason
+   * worldChatOpen lives here: chrome rendered inside a route (Today's mobile
+   * header owns search now that it replaces the app top bar) has no path to
+   * the layout's local state. */
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
+  openCommandPalette: () => void;
 };
 
 export const useNavUiStore = create<NavUiState>()(
@@ -23,6 +31,10 @@ export const useNavUiStore = create<NavUiState>()(
     (set, get) => ({
       mobileDrawerOpen: false,
       setMobileDrawerOpen: (open) => set({ mobileDrawerOpen: open }),
+      commandPaletteOpen: false,
+      setCommandPaletteOpen: (open: boolean) => set({ commandPaletteOpen: open }),
+      openCommandPalette: () => set({ commandPaletteOpen: true }),
+
       openMobileDrawer: () => {
         // Mobile drawer and the ParlayOS dock share the bottom-screen mobile
         // real estate — only one can be on screen at a time.
