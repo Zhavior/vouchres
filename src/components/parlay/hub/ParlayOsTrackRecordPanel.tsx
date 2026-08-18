@@ -45,10 +45,11 @@ export default function ParlayOsTrackRecordPanel({
 
   return (
     <div className="flex flex-col gap-0">
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-          Saved slips and their current recorded states. Backend-synced and local records remain distinct.
-        </p>
+      {/* No blurb here. `ResultsStudio` leads with its own command header
+          carrying this same sentence, so a copy above it printed the line
+          twice on the page. Only the action that studio does not offer — the
+          jump out to the full Results route — belongs at this level. */}
+      <div className="flex items-center justify-end mb-4 gap-3 flex-wrap empty:mb-0">
         {onSectionChange ? (
           <button
             type="button"
