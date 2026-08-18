@@ -3,6 +3,7 @@ import type { Express, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { getLiveGames } from "../services/mlb/liveGamesService";
+import { getMlbNewsWire } from "../services/mlb/mlbNewsService";
 import { TTL } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
@@ -56,6 +57,14 @@ export function registerMlbRoutes(app: Express): void {
 
   app.get("/api/mlb/gateway/status", asyncHandler(async (req: RequestWithContext, res: Response) => {
     return res.json(apiOkFlat(req, getSportsDataGatewayStatus()));
+  }));
+
+  app.get("/api/mlb/news", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const wire = await getMlbNewsWire();
+    // Matches the service's 5-minute TTL; public because the wire carries no
+    // per-user data and every phone on the slate wants the same six stories.
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    return res.json(apiOkFlat(req, wire as unknown as Record<string, unknown>));
   }));
 
   app.get("/api/mlb/live", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {

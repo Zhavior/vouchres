@@ -2,6 +2,7 @@ export const queryKeys = {
   dailyReport: (date?: string) => ['dailyReport', date ?? 'today'] as const,
   hrBoard: (date: string) => ['hrBoard', date] as const,
   liveGames: () => ['liveGames'] as const,
+  mlbNewsWire: () => ['mlbNewsWire'] as const,
   liveAtBat: (gamePk: number) => ['liveAtBat', gamePk] as const,
   officialLineScores: (date: string) => ['officialLineScores', date] as const,
   aiJudgeLeaderboard: () => ['aiJudgeLeaderboard'] as const,
