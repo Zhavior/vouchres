@@ -39,6 +39,8 @@ const DEFAULT_ALLOWED_SPORTS_HOSTS = [
   "baseballsavant.mlb.com",
   "site.api.espn.com",
   "sports.core.api.espn.com",
+  // Per-article news reader — the listing endpoint above omits story bodies.
+  "now.core.api.espn.com",
 ] as const;
 
 function getAllowedSportsHosts(): Set<string> {

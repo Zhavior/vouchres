@@ -14,9 +14,23 @@
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const NEWS_URL = "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news";
+/**
+ * ESPN's per-article reader. The wire listing omits `story` on every item —
+ * verified against the live feed — so the full body has to be fetched per id.
+ * This is the same public API the ESPN apps read; it returns the editorial body
+ * as lightly-marked-up text, which is parsed into paragraphs below.
+ */
+const ARTICLE_URL = (id: string) => `https://now.core.api.espn.com/v1/sports/news/${id}`;
 const TTL_MS = 5 * 60_000;
 const STALE_IF_ERROR_MS = 30 * 60_000;
+/** A published story does not change; an hour of cache costs nothing. */
+const ARTICLE_TTL_MS = 60 * 60_000;
+const ARTICLE_STALE_IF_ERROR_MS = 12 * 60 * 60_000;
 const MAX_ITEMS = 12;
+/** Long enough for a full game recap; a hard stop against a runaway payload. */
+const MAX_PARAGRAPHS = 60;
+/** ESPN article ids are numeric. Anything else never reaches the upstream. */
+const ARTICLE_ID_RE = /^\d{1,15}$/;
 
 /** Wire tag. `NEWS` is the honest default — most of the feed is recaps. */
 export type MlbNewsCategory = "INJURY" | "LINEUP" | "ROSTER" | "ALERT" | "NEWS";
@@ -25,6 +39,13 @@ export interface MlbNewsMention {
   /** ESPN athlete id — not an MLBAM id. Kept for links, not for joins. */
   espnId: string | null;
   name: string;
+}
+
+export interface MlbNewsImage {
+  url: string;
+  alt: string;
+  width: number | null;
+  height: number | null;
 }
 
 export interface MlbNewsItem {
@@ -37,6 +58,21 @@ export interface MlbNewsItem {
   playerMentions: MlbNewsMention[];
   /** Public ESPN story URL, or null when the feed omits a web link. */
   url: string | null;
+  /** Lead art for the reader's hero, when the feed ships usable art. */
+  image: MlbNewsImage | null;
+  /**
+   * Body text, one entry per paragraph. The listing rarely carries a body, so
+   * this is usually just the summary here and is filled in properly by
+   * `getMlbNewsArticle`. `hasFullStory` says which one the reader is holding.
+   */
+  paragraphs: string[];
+  hasFullStory: boolean;
+}
+
+/** One story, read in full — what the in-app reader renders. */
+export interface MlbNewsArticle extends MlbNewsItem {
+  source: "ESPN";
+  fetchedAt: string;
 }
 
 export interface MlbNewsPayload {
@@ -51,13 +87,25 @@ interface EspnCategory {
   athlete?: { id?: number | string; displayName?: string };
 }
 
+interface EspnImage {
+  url?: string;
+  alt?: string;
+  caption?: string;
+  name?: string;
+  width?: number;
+  height?: number;
+}
+
 interface EspnArticle {
   id?: number | string;
   headline?: string;
   description?: string;
+  /** Editorial body. Present on the per-article endpoint, absent on the list. */
+  story?: string;
   published?: string;
   lastModified?: string;
   categories?: EspnCategory[];
+  images?: EspnImage[];
   links?: { web?: { href?: string }; mobile?: { href?: string } };
 }
 
@@ -90,6 +138,66 @@ function cleanText(value: unknown): string {
     .trim();
 }
 
+/*
+ * ESPN's story field is plain prose carrying a few inline tags — `<a>` for
+ * team and player links, `<hl2>` for subheads — with paragraphs separated by
+ * blank lines. Tags are dropped rather than forwarded: the reader renders text
+ * nodes only, so no upstream markup can reach the DOM.
+ */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  ndash: "\u2013",
+  mdash: "\u2014",
+  rsquo: "\u2019",
+  lsquo: "\u2018",
+  rdquo: "\u201d",
+  ldquo: "\u201c",
+  hellip: "\u2026",
+};
+
+function decodeEntities(value: string): string {
+  return value
+    .replace(/&#(\d{1,7});/g, (_m, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#[xX]([0-9a-fA-F]{1,6});/g, (_m, code: string) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&([a-zA-Z]+);/g, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match);
+}
+
+/*
+ * Wire footers that only make sense as links. Stripping the anchor leaves
+ * "See AP's full MLB coverage here" pointing at nothing, and a rule of
+ * underscores is a print separator — both are noise at the end of the reader.
+ */
+const BOILERPLATE_RE = /^(?:[_\-\u2014\u2013\s]+|(?:see\s+)?ap(?:'|\u2019)?s?\s+(?:full|complete)\b.*|copyright\s+\d{4}.*)$/i;
+
+function storyParagraphs(story: unknown): string[] {
+  const raw = String(story ?? "");
+  if (!raw.trim()) return [];
+
+  return raw
+    // Block boundaries become paragraph breaks before the tags are stripped,
+    // so a body that uses <p> instead of blank lines still splits correctly.
+    .replace(/<\s*br\s*\/?>/gi, "\n\n")
+    .replace(/<\s*\/\s*(?:p|div|hl2|h[1-6]|li)\s*>/gi, "\n\n")
+    .replace(/<[^>]*>/g, "")
+    .split(/\n\s*\n+/)
+    .map((paragraph) =>
+      decodeEntities(paragraph)
+        .replace(/\s+/g, " ")
+        // AP datelines arrive double-punctuated ("PHILADELPHIA -- \u2014 ").
+        .replace(/\s--\s*\u2014/g, " \u2014")
+        .trim(),
+    )
+    // One- and two-character remnants are stray punctuation from stripped tags.
+    .filter((paragraph) => paragraph.length > 2)
+    .filter((paragraph) => !BOILERPLATE_RE.test(paragraph))
+    .slice(0, MAX_PARAGRAPHS);
+}
+
 function toHttps(href: unknown): string | null {
   const raw = cleanText(href);
   if (!raw) return null;
@@ -108,6 +216,32 @@ function toIso(value: unknown): string | null {
   if (!raw) return null;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
+/** Widest usable frame ESPN offers, ignoring thumbnails too small to be a hero. */
+function heroImage(article: EspnArticle): MlbNewsImage | null {
+  let best: MlbNewsImage | null = null;
+  let bestWidth = 0;
+
+  for (const image of article.images ?? []) {
+    const url = toHttps(image?.url);
+    if (!url) continue;
+    const width = Number(image?.width) || 0;
+    const height = Number(image?.height) || 0;
+    if (width && width < 320) continue;
+    if (best && width <= bestWidth) continue;
+
+    best = {
+      url,
+      // ESPN suffixes its alt text with the crop size ("Elly De La Cruz [600x400]").
+      alt: cleanText(image?.alt || image?.caption || image?.name).replace(/\s*\[\d+x\d+\]$/, ""),
+      width: width || null,
+      height: height || null,
+    };
+    bestWidth = width;
+  }
+
+  return best;
 }
 
 function mentionsOf(article: EspnArticle): MlbNewsMention[] {
@@ -137,6 +271,8 @@ function mapArticle(article: EspnArticle): MlbNewsItem | null {
   if (!id) return null;
 
   const description = cleanText(article.description);
+  const body = storyParagraphs(article.story);
+  const hasFullStory = body.length > 0;
 
   return {
     id,
@@ -146,6 +282,11 @@ function mapArticle(article: EspnArticle): MlbNewsItem | null {
     category: classify(`${headline} ${description}`),
     playerMentions: mentionsOf(article),
     url: toHttps(article.links?.web?.href) ?? toHttps(article.links?.mobile?.href),
+    image: heroImage(article),
+    // The summary stands in as a single paragraph so the reader always has
+    // something to render, even before the full body is fetched.
+    paragraphs: hasFullStory ? body : description ? [description] : [],
+    hasFullStory,
   };
 }
 
@@ -164,4 +305,38 @@ export async function getMlbNewsWire(): Promise<MlbNewsPayload> {
     .slice(0, MAX_ITEMS);
 
   return { items, source: "ESPN", fetchedAt: new Date().toISOString() };
+}
+
+/**
+ * One story, read in full, for the in-app reader.
+ *
+ * The wire listing ships headlines and a one-line summary; the body lives
+ * behind ESPN's per-article endpoint, so this is the fallback reader the drawer
+ * calls when it opens a story whose `hasFullStory` is false. Everything is
+ * parsed here rather than in the client: the browser only ever receives an
+ * array of plain-text paragraphs, so no upstream markup can reach the DOM.
+ *
+ * Returns null for an unknown or malformed id — the caller turns that into a
+ * 404 and the reader keeps showing the summary it already had.
+ */
+export async function getMlbNewsArticle(id: string): Promise<MlbNewsArticle | null> {
+  const articleId = cleanText(id);
+  if (!ARTICLE_ID_RE.test(articleId)) return null;
+
+  const raw = await sportsFetchJson<{ headlines?: EspnArticle[] }>(ARTICLE_URL(articleId), {
+    ttlMs: ARTICLE_TTL_MS,
+    staleIfErrorMs: ARTICLE_STALE_IF_ERROR_MS,
+    cacheKey: `mlb:news:article:${articleId}`,
+    debugLabel: "mlbNewsArticle",
+  });
+
+  const headline = raw?.headlines?.[0];
+  if (!headline) return null;
+
+  // The per-article payload omits `id` on some story types; the requested id is
+  // authoritative either way, and mapArticle rejects an item without one.
+  const item = mapArticle({ ...headline, id: headline.id ?? articleId });
+  if (!item) return null;
+
+  return { ...item, source: "ESPN", fetchedAt: new Date().toISOString() };
 }

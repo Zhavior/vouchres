@@ -5,7 +5,7 @@ vi.mock("../server/lib/sports/sportsHttpClient", () => ({
 }));
 
 import { sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
-import { getMlbNewsWire } from "../server/services/mlb/mlbNewsService";
+import { getMlbNewsArticle, getMlbNewsWire } from "../server/services/mlb/mlbNewsService";
 
 const mockFetch = sportsFetchJson as unknown as ReturnType<typeof vi.fn>;
 
@@ -104,5 +104,58 @@ describe("getMlbNewsWire", () => {
     mockFetch.mockResolvedValue({});
 
     await expect(getMlbNewsWire()).resolves.toMatchObject({ items: [] });
+  });
+});
+
+describe("getMlbNewsArticle", () => {
+  it("parses the story body into clean paragraphs", async () => {
+    mockFetch.mockResolvedValue({
+      headlines: [
+        article({
+          story:
+            'PHILADELPHIA -- \u2014 S\u00e1nchez beat the <a href="http://espn.com/mia">Marlins</a>.\n\n' +
+            "<hl2>Up next</hl2>\n\nWheeler starts Tuesday &amp; the Marlins have not named one.\n\n" +
+            "See AP\u2019s full MLB coverage here",
+          images: [{ url: "http://a.espncdn.com/photo/hero.jpg", alt: "Sanchez [600x400]", width: 600, height: 400 }],
+        }),
+      ],
+    });
+
+    const found = await getMlbNewsArticle("49644273");
+
+    expect(found?.hasFullStory).toBe(true);
+    // Markup is stripped, entities decoded, the doubled AP dateline collapsed,
+    // and the link-only wire footer dropped.
+    expect(found?.paragraphs).toEqual([
+      "PHILADELPHIA \u2014 S\u00e1nchez beat the Marlins.",
+      "Up next",
+      "Wheeler starts Tuesday & the Marlins have not named one.",
+    ]);
+    expect(found?.image).toEqual({
+      url: "https://a.espncdn.com/photo/hero.jpg",
+      alt: "Sanchez",
+      width: 600,
+      height: 400,
+    });
+  });
+
+  it("falls back to the summary when the story body is missing", async () => {
+    mockFetch.mockResolvedValue({ headlines: [article()] });
+
+    const found = await getMlbNewsArticle("1");
+
+    expect(found?.hasFullStory).toBe(false);
+    expect(found?.paragraphs).toEqual(["Elly De La Cruz delivered his first career walk-off hit."]);
+  });
+
+  it("rejects a non-numeric id without touching the upstream", async () => {
+    expect(await getMlbNewsArticle("../../etc/passwd")).toBeNull();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("returns null when the payload carries no story", async () => {
+    mockFetch.mockResolvedValue({ headlines: [] });
+
+    expect(await getMlbNewsArticle("1")).toBeNull();
   });
 });
