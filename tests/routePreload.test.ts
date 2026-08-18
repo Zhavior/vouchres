@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const todayDashboard = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
+const parlayOs = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 const resultsStudio = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 
 vi.mock('../src/lib/routeModules', async (importOriginal) => {
@@ -10,6 +11,7 @@ vi.mock('../src/lib/routeModules', async (importOriginal) => {
     routeModules: {
       ...actual.routeModules,
       todayDashboard,
+      parlayOs,
       results: resultsStudio,
     },
   };
@@ -45,7 +47,23 @@ describe('routePreload', () => {
   it('still invokes loaders for sections that are allowed to warm', () => {
     preloadSection('today');
     expect(todayDashboard).toHaveBeenCalledTimes(1);
-    preloadSection('results');
+  });
+
+  it('warms the Parlay OS chunk from every one of its doors', () => {
+    // build / live_parlays / results were three routes and are now one page, so
+    // all three must warm the workspace chunk. `results` in particular used to
+    // fetch a standalone ResultsStudio module that the route no longer mounts.
+    // `preloaded` dedupes per section for the module's lifetime, so each
+    // section is warmed exactly once here — a second call would be a no-op.
+    for (const section of ['build', 'live_parlays', 'results']) {
+      parlayOs.mockClear();
+      preloadSection(section);
+      expect(parlayOs, `${section} should warm the Parlay OS chunk`).toHaveBeenCalledTimes(1);
+    }
+
+    // `results` opens straight onto the tab that lazy-loads ResultsStudio, so
+    // it warms that chunk too — otherwise the page shell renders first and the
+    // panel's skeleton appears a moment later.
     expect(resultsStudio).toHaveBeenCalledTimes(1);
   });
 });

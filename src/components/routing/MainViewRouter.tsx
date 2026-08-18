@@ -53,7 +53,6 @@ const SettingsPageZ8 = lazyPage(routeModules.settings, 'SettingsPageZ8');
 const PremiumSubPage = lazyPage(routeModules.premium, 'PremiumSubPage');
 const PlayerResearchHub = lazyPage(routeModules.research, 'PlayerResearchHub');
 const CustomizePage = lazyPage(routeModules.customize, 'CustomizePage');
-const ResultsStudio = lazyPage(routeModules.results, 'ResultsStudio');
 const SmartAiEngine = lazyPage(routeModules.smartAiEngine, 'SmartAiEngine');
 const MlbIntelligenceHub = lazyPage(routeModules.brainEdge, 'MlbIntelligenceHub');
 const Leaderboard = lazyPage(routeModules.leaderboard, 'Leaderboard');
@@ -69,6 +68,8 @@ const PlayerEdgeLabPageZ8 = lazyPage(routeModules.playerEdgeLab, 'PlayerEdgeLabP
 const PitcherMatchupIntelligencePageZ8 = lazyPage(routeModules.pitcherMatchup, 'PitcherMatchupIntelligencePageZ8');
 const HitterMatchupZonesPageZ8 = lazyPage(routeModules.hitterMatchup, 'HitterMatchupZonesPageZ8');
 const ProCommandCenterPageZ8 = lazyPage(routeModules.proCommandCenter, 'ProCommandCenterPageZ8');
+import type { ParlayCommandPanel } from '../../stores/parlayCommandStore';
+import { parlayOsPanelForSection } from '../../lib/parlays/parlayOsSections';
 const ParlayOsWorkspace = lazyPage(routeModules.parlayOs, 'ParlayOsWorkspace');
 const ParlayProofPage = lazyPage(routeModules.parlayProof, 'ParlayProofPage');
 const NbaNflArena = lazyPage(routeModules.nbaNflArena, 'NbaNflArena');
@@ -229,7 +230,7 @@ function MainViewRouter({
     case 'build':
       return (
         <LazyRoute>
-          <ParlayShell panel="build" navigateSection={navigateSection} />
+          <ParlayShell panel={parlayOsPanelForSection('build')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'ai_pilot':
@@ -320,7 +321,7 @@ function MainViewRouter({
     case 'live_parlays':
       return (
         <LazyRoute>
-          <ParlayShell key="live_parlays" panel="build" navigateSection={navigateSection} />
+          <ParlayShell key="live_parlays" panel={parlayOsPanelForSection('live_parlays')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'parlay_proof':
@@ -405,7 +406,7 @@ function MainViewRouter({
     case 'results':
       return (
         <LazyRoute>
-          <ResultsShell />
+          <ParlayShell key="results" panel={parlayOsPanelForSection('results')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'notifications':
@@ -613,15 +614,26 @@ function FeedShell({ navigateSection }: { navigateSection: (section: string) => 
   );
 }
 
+/**
+ * Parlay OS — the single destination for building, tracking and reviewing slips.
+ *
+ * `build`, `live_parlays` and `results` are three doors into this one page; the
+ * section only decides which tab opens. They used to be separate routes, and
+ * `results` rendered its own copy of ResultsStudio while the workspace rendered
+ * a second one — so the same screen existed twice with different props.
+ */
 function ParlayShell({
   panel,
   navigateSection,
 }: {
-  panel: 'build' | 'live';
+  panel: ParlayCommandPanel;
   navigateSection: (section: string) => void;
 }) {
   const { onSaveVouch } = useAppShell();
   const savedSlips = useAppSavedSlips();
+  // The workspace's Track Record tab renders ResultsStudio, which reads the
+  // profile for slip ownership. Without it every slip was attributed to "You".
+  const profile = useAppProfile();
   const {
     liveGames,
     onAddLegFromResearch,
@@ -634,6 +646,7 @@ function ParlayShell({
     <ParlayOsWorkspace
       savedSlips={savedSlips}
       liveGames={liveGames}
+      profile={profile}
       onSectionChange={navigateSection}
       onAddLegToParlay={onAddLegFromResearch}
       onSaveVouch={onSaveVouch}
@@ -745,13 +758,6 @@ function BoardShell() {
 function LeaderboardShell({ navigateSection }: { navigateSection: (section: string) => void }) {
   const profile = useAppProfile();
   return <Leaderboard profile={profile} onSectionChange={navigateSection} />;
-}
-
-function ResultsShell() {
-  const posts = useAppPosts();
-  const profile = useAppProfile();
-  const savedSlips = useAppSavedSlips();
-  return <ResultsStudio posts={posts} profile={profile} savedParlays={savedSlips} />;
 }
 
 function ProfileShell({

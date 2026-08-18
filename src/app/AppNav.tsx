@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Grid3x3, History, LayoutDashboard, Radio, Zap } from 'lucide-react';
+import { History, LayoutDashboard, Radio, Settings, Zap } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
@@ -72,7 +72,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
   const researchActive = isBetaDestinationActive(activeSection, 'research');
   const trackRecordActive = isBetaDestinationActive(activeSection, 'track_record');
   const liveActive = activeSection === 'live_games';
-  const matrixActive = activeSection === 'hr_max';
+  const settingsActive = activeSection === 'settings';
 
   return (
     <nav
@@ -110,12 +110,12 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
           onPreload={() => preloadSection('live_games')}
         />
         <DockButton
-          label="Matrix"
-          active={matrixActive}
-          icon={Grid3x3}
+          label="Settings"
+          active={settingsActive}
+          icon={Settings}
           collapsed={collapsed}
-          onClick={() => onNavigate('hr_max')}
-          onPreload={() => preloadSection('hr_max')}
+          onClick={() => onNavigate('settings')}
+          onPreload={() => preloadSection('settings')}
         />
         <DockButton
           label="Track"

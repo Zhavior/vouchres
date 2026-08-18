@@ -1,6 +1,7 @@
 import { Search, UserCircle } from 'lucide-react';
 import { useNavUiStore } from '../../../../stores/navUiStore';
 import { TODAY_MOBILE_FILTERS, type TodayMobileFilter } from './todayMobileFilters';
+import '../../../../styles/shell-surfaces-aurora-max.css';
 
 interface TodayMobileChromeProps {
   reportDateLabel: string;
@@ -42,12 +43,15 @@ export function TodayMobileChrome({
     <>
       <header className="fixed inset-x-0 top-0 z-40 flex h-[52px] items-center justify-between gap-3 border-b border-emerald-950/80 bg-[var(--aurora-max-obsidian)]/95 px-4 backdrop-blur-md md:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[var(--aurora-max-emerald)]/15 text-[13px] text-[var(--aurora-max-emerald)]"
+          {/* The real brand mark, not a glyph. This header replaces the shared
+              app top bar on Today, so it is the only VouchEdge logo on the
+              route and has to be the same one every other surface renders. */}
+          <img
+            src="/vouchedge-mark-aurora.svg"
+            alt=""
+            className="ve-logo-mark--emerald h-6 w-6 shrink-0 object-contain"
             aria-hidden="true"
-          >
-            ⚡
-          </span>
+          />
           <span className="truncate font-display text-[15px] font-bold tracking-tight text-white">VouchEdge</span>
         </div>
 

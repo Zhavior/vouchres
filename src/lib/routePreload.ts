@@ -8,7 +8,14 @@ const preloaded = new Set<string>();
  * Section aliases live here; actual module paths live exclusively in
  * routeModules.ts so preloading cannot drift from routed modules.
  */
-const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
+/**
+ * A section maps to one loader, or to several when its page reveals a nested
+ * lazy chunk immediately on open. Warming only the outer chunk there would show
+ * the page shell first and the panel's skeleton a moment later.
+ */
+type SectionLoader = (() => Promise<unknown>) | Array<() => Promise<unknown>>;
+
+const SECTION_LOADERS: Record<string, SectionLoader> = {
   feed: routeModules.homeFeed,
   following: routeModules.following,
 
@@ -32,6 +39,9 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
 
   live_parlays: routeModules.parlayOs,
   build: routeModules.parlayOs,
+  // Opens straight onto the Track Record tab, which lazy-loads ResultsStudio.
+  // Both chunks warm together so the tab does not render a second skeleton.
+  results: [routeModules.parlayOs, routeModules.results],
 
   board: routeModules.vouchBoard,
   research: routeModules.research,
@@ -41,7 +51,6 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   ai_pilot: routeModules.aiPilot,
 
   notifications: routeModules.notifications,
-  results: routeModules.results,
   leaderboard: routeModules.leaderboard,
 
   settings: routeModules.settings,
@@ -78,8 +87,7 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
   today: [],
   brain_picks: ['brain_performance'],
   brain_performance: ['brain_picks'],
-  live_parlays: ['build'],
-  build: ['live_parlays'],
+  // build / live_parlays / results are one page now — nothing to warm.
   ai_engine: ['ai_pilot'],
   pro_command_center: ['player_edge_lab'],
   profile: ['settings'],
@@ -124,11 +132,13 @@ function canWarmRoutes(): boolean {
 
 export function preloadSection(section: string): void {
   if (isEagerHrSection(section)) return;
-  const loader = SECTION_LOADERS[section];
-  if (!loader || preloaded.has(section)) return;
+  const entry = SECTION_LOADERS[section];
+  if (!entry || preloaded.has(section)) return;
   preloaded.add(section);
-  void loader().catch(() => {
-    // Allow a later retry if the chunk fetch failed (deploy race / offline).
+
+  const loaders = Array.isArray(entry) ? entry : [entry];
+  void Promise.all(loaders.map((load) => load())).catch(() => {
+    // Allow a later retry if any chunk fetch failed (deploy race / offline).
     preloaded.delete(section);
   });
 }
