@@ -42,7 +42,7 @@ import type { Parlay } from '../../types';
 import type { TrustAudience } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
-const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
+const ParlayOsHistoryPanel = lazyWithRetry(() => import('./hub/ParlayOsHistoryPanel'), { label: 'ParlayOsHistoryPanel' });
 import ParlayOsTemplatesRow from './hub/ParlayOsTemplatesRow';
 import ParlayOsTemplateGuide from './hub/ParlayOsTemplateGuide';
 import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
@@ -78,6 +78,7 @@ import {
   type SlipGradeStatus,
   type DfsLegContext,
 } from './types/parlayOsTypes';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import {
   AURORA_CYAN_HEX,
   AURORA_EMERALD_HEX,
@@ -105,7 +106,7 @@ function statusColorStyle(token: string) {
   };
 }
 
-const ParlayOsTrackRecordPanel = lazy(() => import('./hub/ParlayOsTrackRecordPanel'));
+const ParlayOsTrackRecordPanel = lazyWithRetry(() => import('./hub/ParlayOsTrackRecordPanel'), { label: 'ParlayOsTrackRecordPanel' });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

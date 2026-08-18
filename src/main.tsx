@@ -10,11 +10,13 @@ import {
 import { initSentry } from './lib/sentry';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 
-const SpeedInsights = lazyWithRetry(() =>
-  import('@vercel/speed-insights/react').then((module) => ({ default: module.SpeedInsights })),
+const SpeedInsights = lazyWithRetry(
+  () => import('@vercel/speed-insights/react').then((module) => ({ default: module.SpeedInsights })),
+  { label: 'Speed Insights', optional: true },
 );
-const Analytics = lazyWithRetry(() =>
-  import('@vercel/analytics/react').then((module) => ({ default: module.Analytics })),
+const Analytics = lazyWithRetry(
+  () => import('@vercel/analytics/react').then((module) => ({ default: module.Analytics })),
+  { label: 'Analytics', optional: true },
 );
 if (import.meta.env.VITE_SENTRY_DSN) {
   initSentry();

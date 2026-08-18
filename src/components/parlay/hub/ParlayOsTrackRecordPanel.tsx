@@ -1,10 +1,11 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { TrendingUp } from 'lucide-react';
 import type { Leg, Parlay } from '../../../types';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
 import { ParlayOsPanelSkeleton } from './parlayOsUi';
+import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 
-const ResultsStudio = lazy(() => import('../../results/ResultsStudio'));
+const ResultsStudio = lazyWithRetry(() => import('../../results/ResultsStudio'), { label: 'ResultsStudio' });
 
 export default function ParlayOsTrackRecordPanel({
   savedSlips,

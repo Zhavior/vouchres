@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -22,10 +22,11 @@ import {
   AURORA_PANEL_PREMIUM,
   AURORA_SECTION_HEADER,
 } from '../../theme/auroraTokens';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
-const AuroraMax = lazy(() => import('./AuroraMax'));
-const AiJudgeConsole = lazy(() => import('./AiJudgeConsole'));
-const SelfHealPanel = lazy(() => import('./SelfHealPanel'));
+const AuroraMax = lazyWithRetry(() => import('./AuroraMax'), { label: 'AuroraMax' });
+const AiJudgeConsole = lazyWithRetry(() => import('./AiJudgeConsole'), { label: 'AiJudgeConsole' });
+const SelfHealPanel = lazyWithRetry(() => import('./SelfHealPanel'), { label: 'SelfHealPanel' });
 
 type AdminTab = 'overview' | 'aurora-max' | 'waitlist' | 'users' | 'billing' | 'cappers' | 'grading' | 'hr-research' | 'ai-judges' | 'system' | 'ops';
 

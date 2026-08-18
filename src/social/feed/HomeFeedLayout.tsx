@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 // App chrome policy: one global top bar owns branding, routes, notifications and
 // account. The left navigation rail is retired — the dense board routes need the
 // full desktop width — and the mobile drawer still covers the phone case.
@@ -16,11 +16,12 @@ import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 import AuroraMaxRouteFrame from '../../components/layout/AuroraMaxRouteFrame';
 import '../../styles/app-topbar.css';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
-const CmdKPalette = lazy(() => import('./CmdKPalette'));
-const FeedRightRail = lazy(() => import('./FeedRightRail'));
-const MobileProfileDrawer = lazy(() => import('./MobileProfileDrawer'));
-const WorldChatWidget = lazy(() => import('../../components/theEdge/WorldChatWidget'));
+const CmdKPalette = lazyWithRetry(() => import('./CmdKPalette'), { label: 'CmdKPalette' });
+const FeedRightRail = lazyWithRetry(() => import('./FeedRightRail'), { label: 'FeedRightRail' });
+const MobileProfileDrawer = lazyWithRetry(() => import('./MobileProfileDrawer'), { label: 'MobileProfileDrawer' });
+const WorldChatWidget = lazyWithRetry(() => import('../../components/theEdge/WorldChatWidget'), { label: 'WorldChatWidget' });
 
 function DeferredWorldChat({ defer }: { defer: boolean }) {
   const [ready, setReady] = useState(() => !defer);

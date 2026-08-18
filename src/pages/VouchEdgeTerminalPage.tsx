@@ -1,12 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import type { FooterNavigationTarget } from '../components/landing-v3';
 import { SIGNED_IN_HOME } from '../app/sectionNavigation';
 import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
+import { lazyWithRetry } from '../lib/lazyWithRetry';
 
 type AuthMode = 'login' | 'signup';
 type SignupPlan = 'free' | 'pro';
 
-const AuthModal = lazy(() => import('../components/auth/AuthModal'));
+const AuthModal = lazyWithRetry(() => import('../components/auth/AuthModal'), { label: 'AuthModal' });
 
 function authModeFromPath(): AuthMode | null {
   if (typeof window === 'undefined') return null;

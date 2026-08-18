@@ -41,8 +41,9 @@ import {
   AuroraMaxProductMark,
   AuroraMaxTruthBadge,
 } from './aurora-max/AuroraMaxPrimitives';
+import { lazyWithRetry } from '../lib/lazyWithRetry';
 
-const TodayPersonalizationPanel = React.lazy(() => import('./today/TodayPersonalizationPanel'));
+const TodayPersonalizationPanel = lazyWithRetry(() => import('./today/TodayPersonalizationPanel'), { label: 'TodayPersonalizationPanel' });
 
 interface Props {
   onSectionChange: (section: string) => void;

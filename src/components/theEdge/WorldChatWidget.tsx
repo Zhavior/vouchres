@@ -1,11 +1,12 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useAppProfile } from '../../context/AppShellContext';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useNavUiStore } from '../../stores/navUiStore';
 import '../../styles/shell-surfaces-aurora-max.css';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
-const WorldChatPanel = lazy(() => import('./WorldChatPanel'));
+const WorldChatPanel = lazyWithRetry(() => import('./WorldChatPanel'), { label: 'WorldChatPanel' });
 
 export default function WorldChatWidget() {
   const profile = useAppProfile();

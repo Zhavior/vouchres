@@ -56,7 +56,7 @@ describe('admin dashboard truthfulness', () => {
     const lab = readFileSync(auroraMaxPath, 'utf8');
 
     expect(dashboard).toContain("label: 'Aurora Max'");
-    expect(dashboard).toContain("const AuroraMax = lazy(() => import('./AuroraMax'))");
+    expect(dashboard).toContain("const AuroraMax = lazyWithRetry(() => import('./AuroraMax')");
     expect(lab).toContain('Canonical product system');
     expect(lab).toContain('Aurora Max — Field Desk System');
     expect(lab).toContain('shared visual direction for VouchEdge pages');
