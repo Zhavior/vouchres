@@ -20,11 +20,19 @@
   box-sizing: border-box;
 }
 
+/* `touch-action: manipulation` rather than `pan-y`: a touch-action on the
+   document restricts every gesture beneath it, so `pan-y` told the browser to
+   refuse horizontal panning anywhere on the page — including inside the
+   phone's horizontal scrollers (the Today spotlight deck, the live-score
+   strip, the filter rail), which could not be swiped sideways by finger at
+   all. `manipulation` keeps what `pan-y` was there for, suppressing
+   double-tap-to-zoom, while allowing both axes. The page itself still cannot
+   drift sideways: overflow-x is clipped on the shell. */
 html, body {
   max-width: 100vw !important;
   width: 100% !important;
   overscroll-behavior: none;
-  touch-action: pan-y;
+  touch-action: manipulation;
   margin: 0;
   padding: 0;
 }

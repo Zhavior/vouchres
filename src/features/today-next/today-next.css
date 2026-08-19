@@ -106,3 +106,35 @@
 .today-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
   border-radius: 0 !important;
 }
+
+/* Today's phone header replaces the shared app top bar rather than stacking
+   beneath it — two brand rows and two search affordances is not a native
+   header. Scoped to this route and this breakpoint; every other surface keeps
+   the shared bar, which is also where Account still lives off Today. */
+@media (max-width: 767px) {
+  body:has(.today-next) .ve-app-topbar {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Intel wire ticker.
+ *
+ * The headline swap is a CSS animation, not a JS-driven one, and its resting
+ * state is fully visible. A framer transition here paints the incoming
+ * headline from opacity 0, and rAF is suspended in a background tab — so a
+ * rotation that lands while the tab is hidden leaves the ticker blank until
+ * the next paint. Base-visible + CSS keyframes cannot fail that way.
+ * ------------------------------------------------------------------------ */
+@keyframes tn-wire-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tn-wire-item {
+  animation: tn-wire-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-wire-item { animation: none; }
+}

@@ -13,6 +13,8 @@ import { privacyRoutes } from "./privacyRoutes";
 import { postRoutes } from "./postRoutes";
 import { vouchRoutes } from "./vouchRoutes";
 import { hrNextRoutes } from "./hrNextRoutes";
+import { hrListRoutes } from "./hrListRoutes";
+import { getPublicHrList, hrListAuthorLabel } from "../services/hr-list/hrListService";
 import { feedRoutes } from "./feedRoutes";
 import { notificationRoutes } from "./notificationRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
@@ -74,6 +76,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", coreRoutes);
   app.use("/api", publicRoutes);
   app.use("/api/hr-next", hrNextRoutes);
+  app.use("/api", hrListRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", postRoutes);
   app.use("/api", vouchRoutes);
@@ -367,6 +370,143 @@ ${trustTimeline ? `<ul class="timeline">${trustTimeline}</ul>` : ""}
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("x-request-id", requestId);
       return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this parlay proof.</p></body></html>`);
+    }
+  }));
+
+  /**
+   * Public "My HR List" permalink — server-rendered so X/Slack/iMessage
+   * crawlers (which do not execute JS) see the Open Graph tags, and so the page
+   * itself shows the player images and the VouchEdge mark rather than an empty
+   * SPA shell. Registered before the SPA catch-all in server.ts.
+   */
+  app.get("/l/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    try {
+      const baseUrl = getSafePublicOrigin();
+      const list = await getPublicHrList(req.params.id);
+
+      if (!list) {
+        res.status(404);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("x-request-id", req.requestId ?? "unknown");
+        return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>HR list not found — VouchEdge</title></head><body><p>This HR list isn't available.</p></body></html>`);
+      }
+
+      const authorLabel = hrListAuthorLabel(list);
+      const createdLabel = formatProofTimestamp(list.first_shared_at ?? list.created_at);
+      const playerCount = list.entries.length;
+
+      const title = escapeHtml(list.title);
+      const topNames = list.entries.slice(0, 3).map((entry) => entry.playerName).join(", ");
+      const description = escapeHtml(
+        `${playerCount} HR ${playerCount === 1 ? "target" : "targets"}${list.slate_date ? ` · ${list.slate_date}` : ""}${topNames ? ` · ${topNames}` : ""} — by ${authorLabel} · ${createdLabel}`
+      );
+      const imageUrl = `${baseUrl}/api/share/hr-list/${encodeURIComponent(list.id)}/card.png`;
+      const pageUrl = `${baseUrl}/l/${encodeURIComponent(list.id)}`;
+
+      const rows = list.entries.map((entry, index) => {
+        const headshot = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${encodeURIComponent(String(entry.playerId))}/headshot/67/current`;
+        const logo = entry.teamId != null && entry.teamId !== ""
+          ? `https://www.mlbstatic.com/team-logos/${encodeURIComponent(String(entry.teamId))}.svg`
+          : null;
+        const rawProb = Number(entry.estimatedHrProb);
+        const prob = Number.isFinite(rawProb) && rawProb > 0
+          ? `${Math.round(rawProb > 1 ? rawProb : rawProb * 100)}%`
+          : null;
+        const matchup = [
+          entry.team ? String(entry.team).toUpperCase() : null,
+          entry.opponent ? `vs ${String(entry.opponent).toUpperCase()}` : null,
+          entry.opposingPitcher ? String(entry.opposingPitcher) : null,
+        ].filter(Boolean).join(" · ");
+
+        return `<li class="row">
+  <span class="rank">${index + 1}</span>
+  <img class="face" src="${escapeHtml(headshot)}" alt="" width="48" height="48" loading="lazy">
+  ${logo ? `<img class="logo" src="${escapeHtml(logo)}" alt="" width="26" height="26" loading="lazy">` : ""}
+  <span class="who"><strong>${escapeHtml(entry.playerName)}</strong><em>${escapeHtml(matchup)}</em></span>
+  ${entry.bestOdds ? `<span class="odds">${escapeHtml(entry.bestOdds)}</span>` : ""}
+  ${prob ? `<span class="prob">${escapeHtml(prob)}<em>HR prob</em></span>` : ""}
+  ${entry.grade ? `<span class="grade">${escapeHtml(entry.grade)}</span>` : ""}
+</li>`;
+      }).join("");
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=300");
+      return res.send(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title} — My HR List on VouchEdge</title>
+<meta name="description" content="${description}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VouchEdge">
+<meta property="og:title" content="${title} — My HR List">
+<meta property="og:description" content="${description}">
+<meta property="og:image" content="${imageUrl}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${description}">
+<meta property="og:url" content="${pageUrl}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title} — My HR List">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${imageUrl}">
+<link rel="canonical" href="${pageUrl}">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:linear-gradient(160deg,#020617,#07131f);color:#f8fafc;padding:32px 20px 56px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.wrap{width:100%;max-width:720px;display:flex;flex-direction:column;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:2px;font-size:15px}
+.brand svg{width:28px;height:28px}
+.pill{font-size:10px;font-weight:800;letter-spacing:1.4px;color:#2EDB91;border:1px solid rgba(46,219,145,.45);background:rgba(46,219,145,.12);border-radius:8px;padding:4px 9px}
+h1{margin:0;font-size:clamp(24px,5vw,34px);line-height:1.15}
+.meta{margin:0;font-size:13px;color:#93a4bb;line-height:1.6}
+.card{width:100%;border-radius:16px;border:1px solid #12314a;display:block}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;background:#0b1220;border:1px solid #12314a;border-radius:14px;padding:10px 14px}
+.rank{font-size:12px;font-weight:800;color:#5c6f88;width:16px;flex:none}
+.face{border-radius:50%;background:#132033;flex:none;object-fit:cover}
+.logo{border-radius:50%;background:#e8eef6;padding:3px;flex:none}
+.who{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.who strong{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who em{font-style:normal;font-size:12px;color:#93a4bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odds{font-size:15px;font-weight:700;color:#7DEBFF;flex:none}
+.prob{display:flex;flex-direction:column;align-items:flex-end;font-size:15px;font-weight:800;flex:none}
+.prob em{font-style:normal;font-size:9px;font-weight:700;letter-spacing:1px;color:#5c6f88}
+.grade{font-size:14px;font-weight:800;color:#2EDB91;border:1px solid rgba(46,219,145,.4);background:rgba(46,219,145,.1);border-radius:8px;padding:5px 9px;flex:none;min-width:38px;text-align:center}
+.cta{display:inline-block;background:#20C7F4;color:#03131b;font-weight:800;text-decoration:none;padding:13px 22px;border-radius:12px;text-align:center;font-size:15px}
+.fine{font-size:11px;color:#5c6f88;line-height:1.6}
+@media(max-width:520px){.odds{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M5 10.5 18.5 14 32 44.5 45.5 14 59 10.5 34.5 57h-5L5 10.5Z" fill="#20C7F4"/><path d="m18.5 31.5 10.25 12L46 22.5l5 4-22.25 27-15.5-18 5.25-4Z" fill="#2EDB91"/><path d="m46.5 10 8.5-3-3.5 7-8 3 3-7ZM51 19l7-2.5-2.75 5.75-6.75 2.5L51 19Z" fill="#7DEBFF"/></svg>
+    VOUCHEDGE <span class="pill">MY HR LIST</span>
+  </div>
+  <h1>${title}</h1>
+  <p class="meta">${description}</p>
+  <img class="card" src="${imageUrl}" alt="${description}" width="1200" height="630">
+  <ul>${rows}</ul>
+  <a class="cta" href="${baseUrl}/">Build your own HR list on VouchEdge →</a>
+  <p class="fine">Snapshot of what the HR board showed when each player was added — values are not rewritten after sharing. Probability-based research, not betting advice. 21+. Gambling problem? Call 1-800-GAMBLER.</p>
+</div>
+</body>
+</html>`);
+    } catch (error) {
+      const requestId = req.requestId ?? "unknown";
+      console.error("[share] /l/:id failed", JSON.stringify({
+        requestId,
+        listId: req.params.id,
+        message: error instanceof Error ? error.message : String(error),
+      }));
+      captureException(error, { requestId, path: req.originalUrl, extra: { listId: req.params.id } });
+      res.status(500);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("x-request-id", requestId);
+      return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this HR list.</p></body></html>`);
     }
   }));
 }

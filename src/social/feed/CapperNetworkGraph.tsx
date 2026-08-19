@@ -1,8 +1,9 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import type { ElementDefinition, StylesheetJson } from 'cytoscape';
 
 import type { FeedPost } from '../../types';
-const CytoscapeGraph = lazy(() => import('../../lib/graph/CytoscapeGraph'));
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
+const CytoscapeGraph = lazyWithRetry(() => import('../../lib/graph/CytoscapeGraph'), { label: 'CytoscapeGraph' });
 
 interface CapperNetworkGraphProps {
   posts: FeedPost[];

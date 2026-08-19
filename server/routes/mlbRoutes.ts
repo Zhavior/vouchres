@@ -3,8 +3,10 @@ import type { Express, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { getLiveGames } from "../services/mlb/liveGamesService";
+import { getMlbNewsArticle, getMlbNewsWire } from "../services/mlb/mlbNewsService";
 import { TTL } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import { structuredLog } from "../lib/structuredLog";
@@ -56,6 +58,34 @@ export function registerMlbRoutes(app: Express): void {
 
   app.get("/api/mlb/gateway/status", asyncHandler(async (req: RequestWithContext, res: Response) => {
     return res.json(apiOkFlat(req, getSportsDataGatewayStatus()));
+  }));
+
+  app.get("/api/mlb/news", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const wire = await getMlbNewsWire();
+    // Matches the service's 5-minute TTL; public because the wire carries no
+    // per-user data and every phone on the slate wants the same six stories.
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    return res.json(apiOkFlat(req, wire as unknown as Record<string, unknown>));
+  }));
+
+  /**
+   * One story, read in full — the in-app reader's source, so a user never has
+   * to leave for espn.com. Registered after the listing route above; the paths
+   * do not overlap, and the id is validated inside the service before any
+   * upstream call.
+   */
+  app.get("/api/mlb/news/:id", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const article = await getMlbNewsArticle(String(req.params.id ?? ""));
+    if (!article) {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "That wire story is no longer available.",
+      });
+    }
+    // Published stories do not change; cache them harder than the wire itself.
+    res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+    return res.json(apiOkFlat(req, article as unknown as Record<string, unknown>));
   }));
 
   app.get("/api/mlb/live", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {

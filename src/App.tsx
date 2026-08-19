@@ -15,6 +15,7 @@ import {
 import { AURORA_MAX_SHELL } from './theme/auroraTokens';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 import { CookieConsentBanner } from './components/legal/CookieConsentBanner';
+import { GlobalCanvasRoot } from './components/visual/GlobalCanvasRoot';
 
 function isAuthCallbackPath(): boolean {
   if (typeof window === 'undefined') return false;
@@ -132,13 +133,19 @@ function MainAppRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {isAuthCallbackPath() ? (
-        <AuthCallbackPage />
-      ) : isPasswordResetPath() ? (
-        <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
-      ) : (
-        <MainAppRoutes />
-      )}
+      {/* Backdrop first, and outside the route tree: the ambient WebGL field is
+          a sibling of the router rather than a descendant, so navigating,
+          signing in, or landing on /auth/* never unmounts the canvas. */}
+      <GlobalCanvasRoot />
+      <div className="relative z-10 min-h-screen bg-transparent">
+        {isAuthCallbackPath() ? (
+          <AuthCallbackPage />
+        ) : isPasswordResetPath() ? (
+          <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
+        ) : (
+          <MainAppRoutes />
+        )}
+      </div>
       <CookieConsentBanner />
     </QueryClientProvider>
   );

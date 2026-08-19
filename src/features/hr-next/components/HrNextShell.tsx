@@ -1,5 +1,5 @@
-import { Sparkles, Keyboard, Trophy, SlidersHorizontal } from 'lucide-react';
-import { useReducer, useCallback, useState, useRef, useMemo, useEffect } from 'react';
+import { Sparkles, Keyboard, Trophy, SlidersHorizontal, Share2, Loader2 } from 'lucide-react';
+import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { AuroraMaxCommandHeader } from '../../../components/aurora-max/AuroraMaxPrimitives';
 import { useHrNextData, type HrNextItem } from '../hooks/useHrNextData';
 import { HrNextBoard } from './HrNextBoard';
@@ -18,6 +18,9 @@ import { HrNextProjectionMatrix } from './HrNextProjectionMatrix';
 import { buildSlateTelemetry } from '../utils/slateTelemetry';
 import { buildTeamRankings, matchupKeyFor } from '../utils/teamRanking';
 import { useHrNextKeybindings } from '../hooks/useHrNextKeybindings';
+import { useHrListStore, selectActiveHrList } from '../../hr-list/hrListStore';
+import { hrWatchRowToListEntry } from '../../hr-list/adapters/hrWatchRowToListEntry';
+import HrListShareSheet from '../../hr-list/components/HrListShareSheet';
 import { useResearchStore } from '../../../stores/useResearchStore';
 import '../hr-next.css';
 import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
@@ -32,14 +35,6 @@ const VIEW_MODES: ReadonlyArray<{ key: HrNextViewMode; label: string }> = [
   { key: 'matrix', label: 'Matrix' },
 ];
 
-type SavedAction = { type: 'toggle'; id: string };
-function savedReducer(state: Record<string, true>, action: SavedAction): Record<string, true> {
-  if (state[action.id]) {
-    const { [action.id]: _, ...rest } = state;
-    return rest;
-  }
-  return { ...state, [action.id]: true };
-}
 
 export function HrNextShell() {
   const {
@@ -51,7 +46,39 @@ export function HrNextShell() {
     mode, setMode,
     date, setDate, isToday, syncing, refetch
   } = useHrNextData();
-  const [savedMap, dispatchSaved] = useReducer(savedReducer, {});
+  // "My List" is the persistent HR list, not per-session state: it survives
+  // reload, syncs to the account, and is what the share card renders. savedMap
+  // is derived from it so the star, the export, and the share all read one
+  // source. Board rows are keyed by stableId, list entries by playerId, so the
+  // active list is projected back onto stableIds here.
+  const activeHrList = useHrListStore(selectActiveHrList);
+  const addHrListPlayer = useHrListStore((state) => state.addPlayer);
+  const removeHrListPlayer = useHrListStore((state) => state.removePlayer);
+  const createHrList = useHrListStore((state) => state.createList);
+  const shareHrList = useHrListStore((state) => state.shareList);
+  const hrListShare = useHrListStore((state) => state.share);
+  const closeHrListShare = useHrListStore((state) => state.closeShare);
+  const hrListSharing = useHrListStore((state) => state.sharing);
+
+  const savedPlayerIds = useMemo(
+    () => new Set((activeHrList?.entries ?? []).map((entry) => String(entry.playerId))),
+    [activeHrList],
+  );
+
+  const savedMap = useMemo(() => {
+    const map: Record<string, true> = {};
+    for (const item of rawRows) {
+      if (item.playerId != null && savedPlayerIds.has(String(item.playerId))) {
+        map[item.stableId] = true;
+      }
+    }
+    return map;
+  }, [rawRows, savedPlayerIds]);
+
+  // Counted off the list itself, not off savedMap: a saved player whose game
+  // has rolled off today's board is still on the list and still shares.
+  const savedCount = activeHrList?.entries.length ?? 0;
+
   const [exportStatus, setExportStatus] = useState<string | null>(null);
 
   // The 3D toggle is global state now — one canvas in AppShell, one
@@ -89,13 +116,51 @@ export function HrNextShell() {
   // header — headshot, name and close button — behind the toolbar the moment a
   // row is added to it.
   const [toolbarHeight, setToolbarHeight] = useState(112);
+  // Distance from the top of the window down to the top of the scroll pane the
+  // board lives in — the app's global top bar. The dock's height budget is the
+  // visible slice of that pane, not the whole window, so a plain `100vh` figure
+  // overshoots by exactly this much and pushes the panel's last rows off the
+  // bottom of the screen where nothing can scroll them back.
+  const [scrollportTop, setScrollportTop] = useState(0);
   const toolbarNodeRef = useRef<HTMLDivElement | null>(null);
+  const boardRowRef = useRef<HTMLDivElement | null>(null);
+  // A sticky element is held inside its containing block's content box, and the
+  // app shell parks 120px of dead reserve below every route's scroll content.
+  // That reserve sits *outside* this row, so over the last stretch of a long
+  // board the dock runs out of floor and slides up under the toolbar. Measuring
+  // it lets the same distance move inside the row instead — the trailing
+  // whitespace looks identical, but now the dock can travel through it.
+  const [dockReserve, setDockReserve] = useState(0);
 
   const measureToolbar = useCallback(() => {
     const node = toolbarNodeRef.current;
     if (!node) return;
     const next = node.getBoundingClientRect().height;
     setToolbarHeight((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
+
+    let scroller: HTMLElement | null = node.parentElement;
+    while (scroller) {
+      const { overflowY } = getComputedStyle(scroller);
+      if (overflowY === 'auto' || overflowY === 'scroll') break;
+      scroller = scroller.parentElement;
+    }
+    // The pane element itself does not move as it scrolls, so this stays put.
+    const paneTop = scroller ? Math.max(0, scroller.getBoundingClientRect().top) : 0;
+    setScrollportTop((prev) => (Math.abs(prev - paneTop) < 0.5 ? prev : paneTop));
+
+    const row = boardRowRef.current;
+    if (scroller && row) {
+      // Everything between this row's content box and the bottom of the pane's
+      // scrollport: the pane's own reserve, this row's padding, and whatever the
+      // pane stops short of the window by. `- 16` leaves the dock the same gap
+      // under it that `dockFrame` leaves above it.
+      const trailing =
+        parseFloat(getComputedStyle(scroller).paddingBottom || '0') +
+        parseFloat(getComputedStyle(row).paddingBottom || '0') +
+        Math.max(0, window.innerHeight - scroller.getBoundingClientRect().bottom);
+      const next = Math.max(0, Math.round(trailing) - 16);
+      setDockReserve((prev) => (prev === next ? prev : next));
+    }
   }, []);
 
   // A callback ref rather than useRef + effect: this component returns a loading
@@ -146,13 +211,15 @@ export function HrNextShell() {
     isLoading,
   ]);
 
-  /** Sticky offset and height budget for the research dock. */
+  /** Sticky offset and height budget for the research dock. `top` is measured
+   *  from the scroll pane's own top edge, which is where sticky resolves from;
+   *  the height has to net out the pane's offset in the window as well. */
   const dockFrame = useMemo(
     () => ({
       top: `${Math.round(toolbarHeight) + 16}px`,
-      maxHeight: `calc(100vh - ${Math.round(toolbarHeight) + 32}px)`,
+      maxHeight: `calc(100vh - ${Math.round(scrollportTop + toolbarHeight) + 32}px)`,
     }),
-    [toolbarHeight],
+    [toolbarHeight, scrollportTop],
   );
 
   const toggleProMode = useCallback(() => {
@@ -165,15 +232,31 @@ export function HrNextShell() {
     });
   }, []);
 
+  // xl is where the panel stops being an in-flow top bar and becomes the dock.
+  // Read once here so the scroll behaviour and the dock's travel reserve cannot
+  // disagree with the breakpoint the CSS actually rendered.
+  const [isDockLayout, setIsDockLayout] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const query = window.matchMedia('(min-width: 1280px)');
+    const apply = () => setIsDockLayout(query.matches);
+    apply();
+    query.addEventListener('change', apply);
+    return () => query.removeEventListener('change', apply);
+  }, []);
+
   const selectedPlayer = useResearchStore((s) => s.selectedPlayer);
   const isDrawerOpen = useResearchStore((s) => s.isDrawerOpen);
   const openDrawer = useResearchStore((s) => s.openDrawer);
   const closeDrawer = useResearchStore((s) => s.closeDrawer);
 
-  // Auto-scroll up to the research square on phone / mobile (<2xl) screens when opened
+  // Below xl the panel is still the in-flow top bar, so it has to be scrolled
+  // to. From xl up it is the sticky dock, which arrives already parked in the
+  // viewport — scrolling there would yank the reader off the card they just
+  // opened, which is the whole point of the dock.
   useEffect(() => {
     if (isDrawerOpen && selectedPlayer) {
-      if (typeof window !== 'undefined' && window.innerWidth < 1536) {
+      if (!isDockLayout) {
         const timer = setTimeout(() => {
           if (topResearchRef.current) {
             topResearchRef.current.scrollIntoView({
@@ -187,11 +270,36 @@ export function HrNextShell() {
         return () => clearTimeout(timer);
       }
     }
-  }, [isDrawerOpen, selectedPlayer?.id]);
+  }, [isDrawerOpen, selectedPlayer?.id, isDockLayout]);
+
+  const isDockDocked = isDockLayout && isDrawerOpen && Boolean(selectedPlayer);
 
   const toggleSaved = useCallback((id: string) => {
-    dispatchSaved({ type: 'toggle', id });
-  }, []);
+    const row = rawRows.find((candidate) => candidate.stableId === id);
+    if (!row) return;
+
+    const entry = hrWatchRowToListEntry(row);
+    // A row with no player id has no stable identity to store against.
+    if (!entry) return;
+
+    if (savedPlayerIds.has(String(entry.playerId))) {
+      if (activeHrList) void removeHrListPlayer(activeHrList.id, entry.playerId);
+      return;
+    }
+
+    // First save of the session creates the list rather than blocking on setup.
+    if (activeHrList) {
+      void addHrListPlayer(activeHrList.id, entry);
+      return;
+    }
+    void createHrList('My HR List').then((created) => {
+      if (created) void addHrListPlayer(created.id, entry);
+    });
+  }, [rawRows, savedPlayerIds, activeHrList, addHrListPlayer, removeHrListPlayer, createHrList]);
+
+  const handleShareHrList = useCallback(() => {
+    if (activeHrList) void shareHrList(activeHrList.id);
+  }, [activeHrList, shareHrList]);
 
   const handleAddToSlip = useCallback((row: any) => {
     openParlayAdd({
@@ -426,7 +534,7 @@ export function HrNextShell() {
     onToggleStatcast: toggleStatcast,
     onExport: handleExport,
     exportStatus,
-    savedCount: Object.keys(savedMap).length,
+    savedCount,
   } as const;
 
   return (
@@ -437,7 +545,12 @@ export function HrNextShell() {
           the board. */}
       <HrNextControlRail {...controlRailProps} />
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      {/* No `overflow-y-auto` here. The app shell's `.ve-scroll-pane` is what
+          actually scrolls; this column never overflows its own box, so an
+          `overflow` value on it only creates a dead scrollport — and a dead
+          scrollport is what `position: sticky` descendants anchor to, which
+          silently killed both the toolbar's pin and the research dock's. */}
+      <main className="flex min-w-0 flex-1 flex-col">
 
       {/* Translucent rather than solid, so the ambient field reads through the
           chrome. No `backdrop-blur` on this one: it is sticky over a long
@@ -535,8 +648,32 @@ export function HrNextShell() {
             </button>
           )}
 
-          <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.12em] text-white/35">
-            {exportStatus ?? `${Object.keys(savedMap).length} saved`}
+          {/* Share My HR List. Publishing is what makes the permalink resolve,
+              so the control stays disabled until the list has a player on it. */}
+          <button
+            type="button"
+            onClick={handleShareHrList}
+            disabled={hrListSharing || savedCount === 0}
+            aria-label={
+              savedCount === 0
+                ? 'Save players to your HR list before sharing'
+                : `Share my HR list — ${savedCount} ${savedCount === 1 ? 'player' : 'players'}`
+            }
+            title={savedCount === 0 ? 'Star players to build your HR list first' : 'Share my HR list'}
+            className={`ml-auto flex items-center gap-1.5 rounded-lg border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors ${
+              savedCount > 0
+                ? 'border-[#10B981] bg-[#10B981]/15 text-[#10B981] hover:bg-[#10B981]/25'
+                : 'border-white/10 bg-white/5 text-white/30'
+            }`}
+          >
+            {hrListSharing
+              ? <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              : <Share2 className="h-3 w-3" aria-hidden="true" />}
+            <span>Share My HR List</span>
+          </button>
+
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/35">
+            {exportStatus ?? `${savedCount} saved`}
           </span>
         </div>
 
@@ -564,33 +701,42 @@ export function HrNextShell() {
       {/* Responsive Content: Dual-mode layout (Side Dock on >=2xl, Top Bar on <2xl) */}
       {/* `items-start` keeps the dock column from stretching to the full height
           of the board — a stretched sticky child has no travel and never moves.
-          The extra bottom padding while the dock is open extends this row past
-          the scroll pane's own trailing space: a sticky element cannot travel
-          below its containing block, so without it the panel gets shoved up
-          under the toolbar over the last stretch of the scroll. */}
+          The trailing reserve for the dock's travel goes on the board column
+          below, not here: a sticky element is held inside its containing
+          block's *content* box, so padding on this row would push the floor up
+          rather than down and shove the panel under the toolbar over the last
+          stretch of the scroll. */}
       {/* `pb-36` is the mobile floor: the nav dock (md:hidden) and the ParlayOS
           slip pill (lg:hidden) are both fixed to the bottom of the viewport, so
           without it the last card in the column can never be scrolled clear of
           them. The reserve steps down as each of those disappears. */}
       <div
-        className={`flex w-full flex-col items-start gap-8 p-4 pb-36 sm:p-6 md:pb-24 lg:pb-6 2xl:flex-row ${
-          isDrawerOpen && selectedPlayer ? '2xl:pb-32' : ''
-        }`}
+        ref={boardRowRef}
+        style={isDockDocked ? { marginBottom: `-${dockReserve}px` } : undefined}
+        className="flex w-full flex-col items-start gap-8 p-4 pb-36 sm:p-6 md:pb-24 lg:pb-6 xl:flex-row"
       >
         {/* Main board column. Pro Mode needs the full width for its 4-tier grid,
             and so do the analytic panels — a scatter plot and the game ladder are
             width-hungry. Only the standard stacked list reads better capped. */}
+        {/* `@container` so the Pro Mode tier grid sizes off this column's real
+            width rather than the viewport's — with the dock beside it the two
+            numbers differ by up to 460px, and a viewport-keyed grid keeps four
+            columns in a space that only fits two. */}
         <div
-          className={`w-full min-w-0 flex-1 space-y-4 ${
+          className={`@container w-full min-w-0 flex-1 space-y-4 ${
             isProMode || isMatrixActive || isTeamRankActive ? '' : 'max-w-5xl'
           }`}
+          // The row gives this distance back as negative margin, so the page is
+          // no longer than before — the trailing space has just moved inside
+          // the box that bounds the dock's travel.
+          style={isDockDocked ? { paddingBottom: `${dockReserve}px` } : undefined}
         >
           {/* Top Bar on compact/narrow screens when player is selected */}
           {isDrawerOpen && selectedPlayer && (
             <div 
               ref={topResearchRef}
               id="hr-next-mobile-research" 
-              className="w-full 2xl:hidden animate-in fade-in slide-in-from-top-4 duration-200 scroll-mt-24"
+              className="w-full xl:hidden animate-in fade-in slide-in-from-top-4 duration-200 scroll-mt-24"
             >
               <HrNextResearchView 
                 playerId={selectedPlayer.id}
@@ -654,19 +800,22 @@ export function HrNextShell() {
           )}
         </div>
 
-        {/* Side dock on wide screens (>= 1536px / 2xl).
-            Only mounted while a player is selected — an always-on placeholder
-            would permanently cost the 4-tier grid 420px of column width. */}
+        {/* Side dock on every desktop width (>= 1280px / xl) — the panel has to
+            stay with the reader, so it rides the viewport instead of sitting at
+            the top of the document. Below xl the left rail already owns 256px
+            and there is nothing left to split, so the panel stays the in-flow
+            top bar. Only mounted while a player is selected — an always-on
+            placeholder would permanently cost the tier grid its column width. */}
         {isDrawerOpen && selectedPlayer && (
           // Locked to the viewport while the board, matrix and game ladder scroll
           // past. `items-start` on the row keeps this column from stretching to
           // the full 3600px of board — a stretched sticky child has nothing left
-          // to travel through and would never move. Sticky only from 2xl, the
+          // to travel through and would never move. Sticky only from xl, the
           // width at which the dock is rendered at all; below that the panel is
           // the in-flow top bar in the main column and needs no lock.
           <aside
             style={dockFrame}
-            className="hidden w-[420px] shrink-0 flex-col 2xl:sticky 2xl:flex"
+            className="hidden shrink-0 flex-col xl:sticky xl:flex xl:w-[360px] 2xl:w-[420px]"
           >
             <div className="flex min-h-0 flex-1 animate-in fade-in slide-in-from-right-4 duration-200">
               <HrNextResearchView
@@ -685,6 +834,15 @@ export function HrNextShell() {
         isOpen={cheatsheetOpen}
         onClose={() => setCheatsheetOpen(false)}
       />
+
+      {/* Opens once the list is published and the permalink is known. */}
+      {hrListShare && activeHrList && (
+        <HrListShareSheet
+          bundle={hrListShare.bundle}
+          listTitle={activeHrList.title}
+          onClose={closeHrListShare}
+        />
+      )}
       </main>
     </div>
   );

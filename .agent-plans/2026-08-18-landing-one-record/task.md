@@ -1,0 +1,23 @@
+# Landing One-Record Tasks
+
+- `[x]` **Phase 1 — Page tree + live hero**
+  - `[x]` Remove `CinematicEditorialStory` and the integrity chapter from `VouchEdgeLandingV3.tsx`
+  - `[x]` Hero: Space Grotesk headline, one promise, Get access + Inspect this record
+  - `[x]` Hero artifact = `useResearchPreview` row (same source as `#record`); empty/error labeled, no NYY @ BAL fixture
+  - `[x]` Brand: VouchEdge in nav; VouchRes at most once in hero body; no `VOUCHRES //` spam
+  - `[x]` Drop unused landing-v3 imports (Pricing/Community/FAQ/CTA/DecisionIntelligence) if still unmounted
+  - `[x]` Quality gate: grep landing for `NYY @ BAL`, `Yankees`, `68`, fabricated sparkline arrays — zero hits in mounted tree
+- `[x]` **Phase 2 — One pin + flatten proof + CSS**
+  - `[x]` Collapse TruthFlow to `#how-it-works`: Matchup / Signals / Vouch / Outcome mutating the same live record
+  - `[x]` Integrity line once as caption, not a section
+  - `[x]` Flatten `ResearchTelemetryStory` (`#record`): no sticky pin; default the live matrix; delete confidence orb `68` and fake bar heights
+  - `[x]` `#access`: 4 steps (Get access → Inspect record → Track a Vouch → See it graded) + existing footer
+  - `[x]` `VouchEdgeTerminalPage` footer IDs: How it works → `#how-it-works`, Research preview → `#record`, Beta → `#access`
+  - `[x]` CSS patch: `--font-display` / `--font-sans` on `.vu-landing`; unpin at `<768px` and `prefers-reduced-motion`; do not rewrite the whole CSS file
+  - `[x]` Quality gate: `rtk tsc` (or project typecheck) on touched TS
+- `[x]` **Phase 3 — Contract + visual gate**
+  - `[x]` Retarget `tests/publicLandingConversion.test.ts` to mounted V3 (live preview hook, no-guarantee copy, no invented metrics). Do not remount `AuroraHero` to satisfy the old file.
+  - `[x]` Run the conversion test
+  - `[x]` Receipts: `/vouchedge-preview` desktop (~1116) + mobile (390) — hero, how-it-works, record, access
+  - `[x]` Apple Craft Judge block with those receipts
+  - `[x]` Iolaus on the UI diff before claiming done

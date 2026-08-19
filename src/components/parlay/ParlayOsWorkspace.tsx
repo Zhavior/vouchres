@@ -6,7 +6,8 @@
  * Judge 1:  Intent-first tab labels (Build / AI Picks / Track Record / My Parlays / Community)
  *           Empty states per tab. Slip feels like money (stake + payout).
  *           Judge Verdict system preserved + enhanced.
- * Judge 2:  Combined odds via computeCombinedOdds(). oddsSource 'estimated' badge.
+ * Judge 2:  Combined odds via assessSlipOdds() — correlation-aware pricing,
+ *           not a naive product. oddsSource 'estimated' badge.
  *           Correlation warning on related-game legs.
  * Judge 3:  Max 2 navigation layers. Judge Verdict as peek drawer (not a tab).
  *           44×44pt min touch targets on all interactive elements.
@@ -38,11 +39,11 @@ import ParlayTrustLockModal from './ParlayTrustLockModal';
 import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useSlipsStore } from '../../stores/slipsStore';
 import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
-import type { Parlay } from '../../types';
+import type { CreatorProofProfile, Parlay } from '../../types';
 import type { TrustAudience } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
-const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
+const ParlayOsHistoryPanel = lazyWithRetry(() => import('./hub/ParlayOsHistoryPanel'), { label: 'ParlayOsHistoryPanel' });
 import ParlayOsTemplatesRow from './hub/ParlayOsTemplatesRow';
 import ParlayOsTemplateGuide from './hub/ParlayOsTemplateGuide';
 import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
@@ -71,13 +72,13 @@ import {
   SLIP_STATUS_META,
   RISK_MODE_META,
   computeJudgeVerdict,
-  computeCombinedOdds,
   type ParlayRiskMode,
   type JudgeVerdict,
   type LegGradeStatus,
   type SlipGradeStatus,
   type DfsLegContext,
 } from './types/parlayOsTypes';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import {
   AURORA_CYAN_HEX,
   AURORA_EMERALD_HEX,
@@ -105,7 +106,7 @@ function statusColorStyle(token: string) {
   };
 }
 
-const ParlayOsTrackRecordPanel = lazy(() => import('./hub/ParlayOsTrackRecordPanel'));
+const ParlayOsTrackRecordPanel = lazyWithRetry(() => import('./hub/ParlayOsTrackRecordPanel'), { label: 'ParlayOsTrackRecordPanel' });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -779,11 +780,16 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
     })
   ), [draftLegs]);
 
-  const combinedOdds = useMemo(() => computeCombinedOdds(draftLegs), [draftLegs]);
   const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
+  // One price for the slip, from one place. This used to also call
+  // computeCombinedOdds(draftLegs) and prefer that value, which multiplied leg
+  // prices as if every leg were independent — so a same-game stack showed a
+  // payout the legs did not justify. assessSlipOdds now prices with correlation
+  // and is the only source; uiLegs carry the gamePk/playerId/market it needs.
   const oddsAssessment = useMemo(() => assessSlipOdds(uiLegs), [uiLegs]);
+  const combinedOdds = oddsAssessment.combined;
   const displayTotalOdds = oddsAssessment.canShowCombined
-    ? (combinedOdds?.american ?? oddsAssessment.combined?.american ?? '—')
+    ? (combinedOdds?.american ?? '—')
     : 'TBD';
   const draftIdentity = useMemo(
     () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
@@ -1056,7 +1062,7 @@ function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) 
 
       {templateProgress ? <ParlayOsTemplateGuide progress={templateProgress} /> : null}
 
-      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="My List mobile workspace">
+      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="Parlay OS mobile workspace">
         {(['slip', 'watchlist', 'review'] as const).map((view) => (
           <button
             key={view}
@@ -1320,11 +1326,13 @@ function CommunityPanel() {
 function TabContent({
   activePanel,
   savedSlips,
+  profile,
   onSaveParlay,
   onSectionChange,
 }: {
   activePanel: ParlayCommandPanel;
   savedSlips:  unknown[];
+  profile?:    CreatorProofProfile;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
   onSectionChange?: (section: string) => void;
 }) {
@@ -1343,7 +1351,7 @@ function TabContent({
       return (
         <PanelErrorBoundary>
           <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-            <ParlayOsTrackRecordPanel savedSlips={savedSlips} onSectionChange={onSectionChange} />
+            <ParlayOsTrackRecordPanel savedSlips={savedSlips} profile={profile} onSectionChange={onSectionChange} />
           </Suspense>
         </PanelErrorBoundary>
       );
@@ -1367,6 +1375,8 @@ function TabContent({
 interface ParlayOsWorkspaceProps {
   savedSlips?:     unknown[];
   liveGames?:      unknown[];
+  /** Read by the Track Record tab for slip ownership. */
+  profile?:        CreatorProofProfile;
   initialPanel?:   ParlayCommandPanel;
   onSectionChange?: (section: string) => void;
   onAddLegToParlay?: (...args: any[]) => void;
@@ -1378,6 +1388,7 @@ interface ParlayOsWorkspaceProps {
 
 export default function ParlayOsWorkspace({
   savedSlips    = [],
+  profile,
   initialPanel  = 'live',
   onSectionChange,
   onSaveParlay,
@@ -1423,7 +1434,7 @@ export default function ParlayOsWorkspace({
 
       <section
         className={`${AURORA_PAGE} parlay-os-workspace-aurora-max flex flex-col`}
-        aria-label="My List"
+        aria-label="Parlay OS"
       >
         {/* Header */}
         <div className={`${AURORA_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
@@ -1431,13 +1442,13 @@ export default function ParlayOsWorkspace({
             <div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${AURORA_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                My List
+                Parlay OS
               </div>
               <h1 className="mt-2 text-xl font-extrabold text-white sm:text-3xl font-z8">
                 Build. Select. Track.
               </h1>
               <p className="mt-1 text-xs text-white/50 max-w-xl font-z8 hidden sm:block">
-                One place to collect picks, review every leg, and monitor each saved list through grading.
+                Build a slip, track every leg live, and review the graded record — one place, no route switching.
               </p>
             </div>
             <LivePulseBars active={liveCount > 0} />
@@ -1468,7 +1479,7 @@ export default function ParlayOsWorkspace({
           <div
             id={tablistId}
             role="tablist"
-            aria-label="My List sections"
+            aria-label="Parlay OS sections"
             className="flex gap-0.5 sm:gap-1 overflow-x-auto pb-0 border-b border-[hsl(var(--ve-border)/0.4)] snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
           >
@@ -1517,6 +1528,7 @@ export default function ParlayOsWorkspace({
                   <TabContent
                     activePanel={tab.id}
                     savedSlips={savedSlips}
+                    profile={profile}
                     onSaveParlay={onSaveParlay}
                     onSectionChange={onSectionChange}
                   />

@@ -27,22 +27,27 @@ describe('AppNav Instagram-style mobile dock', () => {
     expect(dock?.className).toContain('w-[92vw]');
     expect(dock?.className).toContain('rounded-2xl');
     expect(dock?.className).toContain('md:hidden');
-    expect(container.querySelector('.grid-cols-4')).not.toBeNull();
-    expect(buttons).toHaveLength(4);
+    expect(container.querySelector('.grid-cols-5')).not.toBeNull();
+    expect(buttons).toHaveLength(5);
     expect(buttons.every((button) => button.className.includes('ve-touch-target'))).toBe(true);
     expect(buttons[0]?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelector('[aria-label="Go to Today"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="Go to Research"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="Go to Track Record"]')).not.toBeNull();
-    expect(container.querySelector('[aria-label="Open navigation menu and account"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to HR Board"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to Track"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to Live"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Go to Settings"]')).not.toBeNull();
     expect(container.querySelectorAll('.ve-edge-island-trigger')).toHaveLength(0);
 
     fireEvent.click(container.querySelector('[aria-label="Go to Today"]') as HTMLElement);
-    fireEvent.click(container.querySelector('[aria-label="Go to Research"]') as HTMLElement);
-    fireEvent.click(container.querySelector('[aria-label="Go to Track Record"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[aria-label="Go to HR Board"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[aria-label="Go to Live"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[aria-label="Go to Settings"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[aria-label="Go to Track"]') as HTMLElement);
     expect(onNavigate).toHaveBeenNthCalledWith(1, 'today');
     expect(onNavigate).toHaveBeenNthCalledWith(2, 'hr_board');
-    expect(onNavigate).toHaveBeenNthCalledWith(3, 'results');
+    expect(onNavigate).toHaveBeenNthCalledWith(3, 'live_games');
+    expect(onNavigate).toHaveBeenNthCalledWith(4, 'settings');
+    expect(onNavigate).toHaveBeenNthCalledWith(5, 'results');
 
     const feedCss = readFileSync(resolve(process.cwd(), 'src/styles/legacy/feed.css'), 'utf8');
     expect(feedCss).toContain('padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;');

@@ -22,10 +22,14 @@
 .z8-app-shell, .ve-terminal-page {
   min-height: 100vh;
   color: rgba(231,236,243,.94);
+  /* Translucent on purpose: the ambient 3D field is fixed behind the whole
+     app (GlobalCanvasRoot), so an opaque obsidian base here covered it on
+     every route that mounts this shell. The obsidian now comes from
+     TerminalBackground / body, underneath the canvas. */
   background:
     radial-gradient(90% 55% at 50% -18%, rgba(255, 255, 255, 0.044), transparent 62%),
     radial-gradient(50% 42% at 100% 100%, rgba(49,181,131,.05), transparent 68%),
-    #08090A;
+    transparent;
 }
 
 .ve-motion-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }

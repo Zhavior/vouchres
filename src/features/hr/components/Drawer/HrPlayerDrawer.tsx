@@ -13,6 +13,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Sparkles, AlertTriangle, ShieldCheck, ShieldQuestion,
@@ -27,6 +28,7 @@ const MAX_CYAN_HEX = '#00D9A0';
 const MAX_EMERALD_HEX = '#31B583';
 import { logoByTeamName } from '../../../../lib/teamLogos';
 import { useRealGameLog } from '../../hooks/useRealGameLog';
+import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import { lastNGames } from '../../utils/realGameLogs';
 import '../../../../styles/hr-profile.css';
 
@@ -221,6 +223,7 @@ function getLayers(p: HrWatchRow): Array<{
 export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, onClose }) => {
   const [tab, setTab] = useState<DrawerTab>('overview');
   const [imgError, setImgError] = useState(false);
+  const isPhone = useMediaQuery('(max-width: 767px)');
   const { logs: realLog, state: logState } = useRealGameLog(player?.playerId, isOpen);
   const formPreview = lastNGames(realLog ?? [], 8);
 
@@ -256,7 +259,11 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
     { id: 'stats',    label: 'Pro Stats', icon: <LineChart className="h-3 w-3" /> },
   ];
 
-  return (
+  /* Portalled to <body>. Page shells on this app set their own stacking
+     contexts (Today's <main> is `relative z-10`), which would cap this panel's
+     z-index below root-level chrome like the mobile nav dock and the ParlayOS
+     slip bar — an aria-modal sheet would then open underneath them. */
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -266,18 +273,33 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-[hsl(var(--ve-bg-deep)/0.72)] backdrop-blur-sm"
+            className="fixed inset-0 z-[65] bg-[hsl(var(--ve-bg-deep)/0.72)] backdrop-blur-sm"
             aria-hidden="true"
           />
 
           {/* Drawer */}
           <motion.aside
             key="drawer"
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            /* Phones get a bottom sheet, desktop keeps the side drawer: a
+               panel flying in from the right is a desktop gesture, and on a
+               375px column it is just a full-screen page with the wrong
+               animation. Same content either way. */
+            initial={isPhone ? { y: '100%' } : { x: '100%' }}
+            animate={isPhone ? { y: 0 } : { x: 0 }}
+            exit={isPhone ? { y: '100%' } : { x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="ve-hr-drawer aurora-max-shell fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-[var(--aurora-max-line-strong)] bg-[rgba(5,11,13,0.97)] shadow-[-24px_0_80px_rgba(0,0,0,0.48)] sm:h-full"
+            className={`ve-hr-drawer aurora-max-shell fixed z-[70] flex flex-col overflow-hidden bg-[rgba(5,11,13,0.97)] ${
+              isPhone
+                ? 'inset-x-0 bottom-0 top-auto h-[88dvh] rounded-t-3xl border-t border-[var(--aurora-max-line-strong)] shadow-[0_-24px_80px_rgba(0,0,0,0.55)]'
+                : 'inset-y-0 right-0 h-[100dvh] w-full max-w-md border-l border-[var(--aurora-max-line-strong)] shadow-[-24px_0_80px_rgba(0,0,0,0.48)] sm:h-full'
+            }`}
           >
+            {isPhone && (
+              <div className="flex shrink-0 justify-center pt-2.5" aria-hidden="true">
+                <span className="h-1.5 w-11 rounded-full bg-white/20" />
+              </div>
+            )}
             {/* ── Header ────────────────────────────────────── */}
             <div className="ve-hr-drawer-header relative shrink-0 border-b border-[var(--aurora-max-line)] bg-[rgba(8,17,18,0.82)] p-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl sm:p-5 sm:pt-5">
               <button
@@ -564,7 +586,8 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
           </motion.aside>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
 

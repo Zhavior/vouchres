@@ -190,10 +190,19 @@ function CanvasLifecycle() {
   useEffect(() => {
     const element = gl.domElement;
 
+    // Three sources, in order of specificity. `window.innerWidth` is last and
+    // not alone: an embedded or backgrounded frame can report it as 0 while the
+    // document element still measures correctly, and a zero reading here is
+    // what leaves the canvas at its 300x150 HTML default.
+    const viewportWidth = () =>
+      document.documentElement.clientWidth || window.innerWidth || 0;
+    const viewportHeight = () =>
+      document.documentElement.clientHeight || window.innerHeight || 0;
+
     const syncSize = () => {
       const parent = element.parentElement;
-      const width = parent?.clientWidth || window.innerWidth;
-      const height = parent?.clientHeight || window.innerHeight;
+      const width = parent?.clientWidth || viewportWidth();
+      const height = parent?.clientHeight || viewportHeight();
       if (width > 0 && height > 0) setSize(width, height);
     };
 
@@ -220,17 +229,22 @@ function CanvasLifecycle() {
     element.addEventListener('webglcontextlost', handleLost as EventListener);
     element.addEventListener('webglcontextrestored', handleRestored);
 
-    // An observer is attached too, so the sizing stays live wherever the
-    // platform does deliver it.
+    // Observers are attached too, so the sizing stays live wherever the
+    // platform does deliver them. The document element is watched alongside the
+    // canvas container: a viewport shift that does not resize the container
+    // (mobile URL-bar collapse, a devtools split) still has to re-run the
+    // aspect calculation, otherwise the field stretches or blanks.
     const parent = element.parentElement;
-    const observer =
-      parent && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(syncSize) : null;
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(syncSize) : null;
     if (parent) observer?.observe(parent);
+    observer?.observe(document.documentElement);
+    window.visualViewport?.addEventListener('resize', syncSize);
 
     return () => {
       window.clearTimeout(settle);
       window.removeEventListener('resize', syncSize);
       window.removeEventListener('orientationchange', syncSize);
+      window.visualViewport?.removeEventListener('resize', syncSize);
       element.removeEventListener('webglcontextlost', handleLost as EventListener);
       element.removeEventListener('webglcontextrestored', handleRestored);
       observer?.disconnect();

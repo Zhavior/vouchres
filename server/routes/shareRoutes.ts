@@ -12,6 +12,8 @@ import {
 } from "../services/share/hrShareCard";
 import { renderVouchShareCardSvg, VOUCH_SHARE_CARD_HEADERS } from "../services/share/vouchShareCard";
 import { renderParlayShareCardSvg, PARLAY_SHARE_CARD_HEADERS } from "../services/share/parlayShareCard";
+import { renderHrListShareCardSvg, HR_LIST_SHARE_CARD_HEADERS } from "../services/share/hrListShareCard";
+import { getPublicHrList, hrListAuthorLabel } from "../services/hr-list/hrListService";
 import { getPublicVouch } from "../services/persistence/vouchService";
 import { getPublicParlayProof, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getSafePublicOrigin } from "../lib/publicOrigin";
@@ -151,6 +153,50 @@ shareRoutes.get("/share/parlay/:id/card.png", mlbReadLimiter, asyncHandler(async
       status: 500,
       code: "internal_server_error",
       message: "Failed to render parlay share card.",
+      cause: error,
+    });
+  }
+}));
+
+/**
+ * GET /api/share/hr-list/:id/card.png
+ * Open Graph image for a public "My HR List" at /l/:id.
+ *
+ * This card carries the entire message on purpose: X strips the headline and
+ * description from link previews and renders only the image, so the players,
+ * their numbers, the VouchEdge mark, and the destination URL are all drawn in.
+ */
+shareRoutes.get("/share/hr-list/:id/card.png", mlbReadLimiter, asyncHandler(async (req, res) => {
+  const list = await getPublicHrList(req.params.id);
+  if (!list) {
+    // Private and non-existent lists are indistinguishable here by design.
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "HR list not found.",
+      details: { error: "hr_list_not_found" },
+    });
+  }
+
+  try {
+    const svg = await renderHrListShareCardSvg({
+      listId: list.id,
+      title: list.title,
+      ownerHandle: hrListAuthorLabel(list).replace(/^@/, ""),
+      slateDate: list.slate_date,
+      entries: list.entries,
+      publicOrigin: getSafePublicOrigin(),
+    });
+
+    const png = await sharp(Buffer.from(svg)).png().toBuffer();
+    Object.entries(HR_LIST_SHARE_CARD_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
+    return res.status(200).send(png);
+  } catch (error) {
+    console.error("[share] hr-list card render failed", error);
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to render HR list share card.",
       cause: error,
     });
   }

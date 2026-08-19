@@ -6,6 +6,7 @@ import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
 import { toHrParlayPickerPlayer } from '../../hr/utils/hrDecisionBrief';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import { useAppSavedSlips } from '../../../context/AppShellContext';
+import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { useTodayNextHome } from '../hooks/useTodayNextHome';
 import { TodayNextCommandBrief } from './TodayNextCommandBrief';
 import { TodayNextAttention } from './TodayNextAttention';
@@ -14,6 +15,7 @@ import { TodayNextSignalPeek } from './TodayNextSignalPeek';
 import { TodayNextVitalsRail } from './TodayNextVitalsRail';
 import { TodayNextKeyboardCheatsheet } from './TodayNextKeyboardCheatsheet';
 import { TodayNextSkeleton } from './TodayNextSkeleton';
+import { TodayMobileShell } from './mobile/TodayMobileShell';
 import '../today-next.css';
 import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 
@@ -50,6 +52,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
     refresh,
     deskRows,
     deskConfirmedRows,
+    deskAllRows,
     deskState,
     gameCount,
   } = useTodayNextHome(savedSlips);
@@ -79,6 +82,12 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
   }, []);
 
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+
+  /* Phones get a different composition, not a narrowed one — see
+     mobile/TodayMobileShell. Resolved with matchMedia rather than rendering
+     both trees behind `md:hidden`, so only one ever mounts and the page never
+     paints a desktop layout that then swaps. */
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // The 3D toggle is global state now — one canvas in AppShell, one
   // preference shared by every surface and persisted across reloads.
@@ -157,6 +166,20 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
   return (
     <main className="today-next relative z-10 min-h-screen min-w-0 flex-1 overscroll-none">
 
+      {isMobile ? (
+        <TodayMobileShell
+          decision={decision}
+          reportDateLabel={reportDateLabel}
+          firstPitch={firstPitch}
+          liveGames={liveGames}
+          deskRows={deskRows}
+          deskConfirmedRows={deskConfirmedRows}
+          deskAllRows={deskAllRows}
+          onAddPlayer={addPlayerToSlip}
+          onRoute={handleRoute}
+        />
+      ) : (
+        <>
       <div className="sticky top-0 z-30 space-y-3 border-b border-white/5 bg-ve-obsidian/95 px-4 py-4 backdrop-blur-md sm:px-8">
         <AuroraMaxCommandHeader
           compact
@@ -336,6 +359,8 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
           </div>
         </section>
       </div>
+        </>
+      )}
 
       <TodayNextKeyboardCheatsheet isOpen={cheatsheetOpen} onClose={() => setCheatsheetOpen(false)} />
     </main>

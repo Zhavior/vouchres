@@ -1,12 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Search, ShieldCheck, Share, Feather } from 'lucide-react';
 import { Z8_LABEL } from './LandingTokens';
 import PreviewCardStage from '../vouch-studio-darkroom/panels/preview/PreviewCardStage';
 import { cardStyleConfigs } from '../vouch-studio-darkroom/utils/cardStyleConfigs';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';
 import type { CardLayoutId, CustomPlayerSelection, VouchStudioDarkroomProps } from '../vouch-studio-darkroom/types';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
-const TodayDashboard = lazy(() => import('../TodayDashboardZ8'));
+const TodayDashboard = lazyWithRetry(() => import('../TodayDashboardZ8'), { label: 'TodayDashboard' });
 
 const noop = () => {};
 const ORBIT_RADIUS = 38;

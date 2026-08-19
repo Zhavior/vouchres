@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 import DossierModeToggle from './dossier/DossierModeToggle';
 import SaberHeroPanel from './dossier/SaberHeroPanel';
@@ -6,8 +6,9 @@ import MetricsBento from './dossier/MetricsBento';
 import ScoutingBento from './dossier/ScoutingBento';
 import PropsHealthBento from './dossier/PropsHealthBento';
 import GameLogsPanel from './dossier/GameLogsPanel';
+import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 
-const PokemonPlayerCard = lazy(() => import('../../PokemonPlayerCard'));
+const PokemonPlayerCard = lazyWithRetry(() => import('../../PokemonPlayerCard'), { label: 'PokemonPlayerCard' });
 
 export default function DossierPanel({ model }: { model: PlayerResearchModel }) {
   const { dossierMode, activePlayer, activeLegs, handleWagerProposition, savedVouchIds } = model;

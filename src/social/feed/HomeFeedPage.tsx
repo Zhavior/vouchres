@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useRef, useCallback, useMemo } from 'react';
+import React, { useState, Suspense, useRef, useCallback, useMemo } from 'react';
 import FeedTabs from './FeedTabs';
 import FeedComposer from './FeedComposer';
 import FeedPostCard from './FeedPostCard';
@@ -15,7 +15,7 @@ import FeedPostCardSkeleton from './FeedPostCardSkeleton';
 // Lazy: pulls in cytoscape (~300KB+) — keep it out of this already-lazy
 // page's initial chunk too, since HomeFeedPage itself can render before
 // the "Following" tab (where this graph lives) is ever opened.
-const CapperNetworkGraph = lazy(() => import('./CapperNetworkGraph'));
+const CapperNetworkGraph = lazyWithRetry(() => import('./CapperNetworkGraph'), { label: 'CapperNetworkGraph' });
 import { FeedPost, Parlay, Vouch, CreatorProofProfile } from '../../types';
 import { useOptionalSocialGraph, type SocialGraphBucket } from '../../hooks/SocialGraphProvider';
 import { useAuth } from '../../lib/useAuth';
@@ -27,6 +27,7 @@ import {
   Users,
   Feather,
 } from 'lucide-react';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
 function FeedEmptyState({ id, icon, title, body }: { id: string; icon: React.ReactNode; title: string; body: React.ReactNode }) {
   return (

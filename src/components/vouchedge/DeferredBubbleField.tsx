@@ -6,13 +6,14 @@ import {
   type ComponentProps,
 } from 'react';
 import type { BubbleField as BubbleFieldType } from './ParticleFields';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
 type DeferredBubbleFieldProps = ComponentProps<typeof BubbleFieldType>;
 
-const LazyBubbleField = lazy(async () => {
+const LazyBubbleField = lazyWithRetry(async () => {
   const module = await import('./ParticleFields');
   return { default: module.BubbleField };
-});
+}, { label: 'LazyBubbleField', optional: true });
 
 /**
  * Loads and mounts BubbleField after the browser gets its first opportunity

@@ -21,10 +21,12 @@
 .aurora-max-shell {
   position: relative;
   color: var(--aurora-max-paper);
+  /* Translucent base — see the note on .z8-app-shell. The opaque obsidian
+     moved below the global canvas layer; keeping it here hid the field. */
   background:
     radial-gradient(80% 48% at 50% -16%, rgba(0, 217, 160, 0.075), transparent 68%),
     radial-gradient(48% 34% at 100% 100%, rgba(255, 255, 255, 0.0248), transparent 72%),
-    var(--aurora-max-obsidian);
+    transparent;
 }
 
 .aurora-max-shell::before {

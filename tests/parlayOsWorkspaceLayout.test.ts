@@ -47,9 +47,12 @@ describe('ParlayOS workspace foundation', () => {
   });
 
   it('opens the canonical navigation on Build and gives mobile focused workspace tabs', () => {
-    expect(router).toContain('<ParlayShell key="live_parlays" panel="build"');
+    expect(router).toContain("case 'live_parlays':");
+    expect(router).toContain('<ParlayShell key="live_parlays"');
+    expect(router).toContain("parlayOsPanelForSection('live_parlays')");
     expect(workspace).toContain("'slip' | 'watchlist' | 'review'");
-    expect(workspace).toContain('My List mobile workspace');
+    expect(workspace).toContain("useState<'slip' | 'watchlist' | 'review'>('slip')");
+    expect(workspace).toContain('Parlay OS mobile workspace');
     expect(workspace).not.toContain('ParlayOsMobileSlipDock');
   });
 });

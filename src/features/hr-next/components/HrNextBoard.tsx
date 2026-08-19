@@ -164,7 +164,7 @@ export function HrNextBoard({
         <div
           className={
             isProMode
-              ? 'grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-4'
+              ? 'grid grid-cols-1 items-start gap-4 @xl:grid-cols-2 @5xl:grid-cols-4'
               : 'flex flex-col gap-6'
           }
         >
@@ -254,7 +254,7 @@ export function HrNextBoard({
       <div
         className={
           isProMode
-            ? 'grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-4'
+            ? 'grid grid-cols-1 items-start gap-4 @xl:grid-cols-2 @5xl:grid-cols-4'
             : 'flex flex-col gap-2.5'
         }
       >

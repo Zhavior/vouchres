@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import BrainEdgeShell, { type BrainEdgeView } from "./BrainEdgeShell";
 import PickConfirmationBar from "./components/PickConfirmationBar";
 import {
@@ -6,14 +6,13 @@ import {
   usePickSelectionContext,
 } from "./context/PickSelectionContext";
 import "./brain-edge.css";
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
-const IntelligenceWorkspace = lazy(
-  () => import("../../components/MlbIntelligenceHubZ8")
-);
+const IntelligenceWorkspace = lazyWithRetry(
+  () => import("../../components/MlbIntelligenceHubZ8"), { label: 'IntelligenceWorkspace' });
 
-const ProGraphsWorkspace = lazy(
-  () => import("../../pages/pro/ProGraphsLabPageZ8")
-);
+const ProGraphsWorkspace = lazyWithRetry(
+  () => import("../../pages/pro/ProGraphsLabPageZ8"), { label: 'ProGraphsWorkspace' });
 
 type Props = {
   profile?: unknown;

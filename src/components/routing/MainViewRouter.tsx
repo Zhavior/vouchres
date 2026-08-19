@@ -20,54 +20,98 @@ import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import { routeModules } from '../../lib/routeModules';
 
-const ProAccessGate = lazyWithRetry(() =>
+/**
+ * Every routed page loads through here, so a page that fails to import gets
+ * the retry ladder in lazyRoute and keeps the normal route skeleton on screen
+ * while it recovers — instead of collapsing the whole main view into the
+ * app-level error screen.
+ */
+function lazyPage<T extends React.ComponentType<any>>(
+  importer: () => Promise<{ default: T }>,
+  label?: string,
+) {
+  return lazyWithRetry(importer, { label, pendingFallback: <RouteShellSkeleton /> });
+}
+
+const ProAccessGate = lazyPage(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
+  'ProAccessGate',
 );
-const PersonalizedOnboarding = lazyWithRetry(() =>
+const PersonalizedOnboarding = lazyPage(() =>
   import('../onboarding/PersonalizedOnboarding').then((module) => ({
     default: module.PersonalizedOnboarding,
   })),
+  'PersonalizedOnboarding',
 );
-const FollowingHubPage = lazyWithRetry(routeModules.following);
-const HomeFeedPage = lazyWithRetry(routeModules.homeFeed);
-const TodayDashboardZ8 = lazyWithRetry(routeModules.todayDashboard);
-const VouchEdgeTerminalPage = lazyWithRetry(routeModules.vouchEdgeTerminal);
-const VouchBoardZ8 = lazyWithRetry(routeModules.vouchBoard);
-const ProfilePageZ8 = lazyWithRetry(routeModules.profile);
-const SettingsPageZ8 = lazyWithRetry(routeModules.settings);
-const PremiumSubPage = lazyWithRetry(routeModules.premium);
-const PlayerResearchHub = lazyWithRetry(routeModules.research);
-const CustomizePage = lazyWithRetry(routeModules.customize);
-const ResultsStudio = lazyWithRetry(routeModules.results);
-const SmartAiEngine = lazyWithRetry(routeModules.smartAiEngine);
-const MlbIntelligenceHub = lazyWithRetry(routeModules.brainEdge);
-const Leaderboard = lazyWithRetry(routeModules.leaderboard);
-const SubscriberHub = lazyWithRetry(routeModules.subscriberHub);
-const BrainPicksPage = lazyWithRetry(routeModules.brainPicks);
-const BrainPerformancePage = lazyWithRetry(routeModules.brainPerformance);
-const AiPilotPage = lazyWithRetry(routeModules.aiPilot);
-const MlbStatHubPage = lazyWithRetry(routeModules.mlbStats);
-const DailyPlayersPage = lazyWithRetry(routeModules.dailyPlayers);
-const LiveGamesPage = lazyWithRetry(routeModules.liveGames);
-const NotificationsPage = lazyWithRetry(routeModules.notifications);
-const PlayerEdgeLabPageZ8 = lazyWithRetry(routeModules.playerEdgeLab);
-const PitcherMatchupIntelligencePageZ8 = lazyWithRetry(routeModules.pitcherMatchup);
-const HitterMatchupZonesPageZ8 = lazyWithRetry(routeModules.hitterMatchup);
-const ProCommandCenterPageZ8 = lazyWithRetry(routeModules.proCommandCenter);
-const ParlayOsWorkspace = lazyWithRetry(routeModules.parlayOs);
-const ParlayProofPage = lazyWithRetry(routeModules.parlayProof);
-const NbaNflArena = lazyWithRetry(routeModules.nbaNflArena);
-const AisLandingPage = lazyWithRetry(routeModules.aisLanding);
-const MostVouchedTodayPageZ8 = lazyWithRetry(routeModules.mostVouchedToday);
-const AuroraHqShell = lazyWithRetry(routeModules.auroraHq);
-const HrNextPage = lazyWithRetry(() => import('../../features/hr-next/pages/HrNextPage'));
-const TrustModelQualityPage = lazyWithRetry(() => import('../../features/trust/TrustModelQualityPage'));
-const TodayNextPage = lazyWithRetry(() => import('../../features/today-next/pages/TodayNextPage'));
+const FollowingHubPage = lazyPage(routeModules.following, 'FollowingHubPage');
+const HomeFeedPage = lazyPage(routeModules.homeFeed, 'HomeFeedPage');
+const TodayDashboardZ8 = lazyPage(routeModules.todayDashboard, 'TodayDashboardZ8');
+const VouchEdgeTerminalPage = lazyPage(routeModules.vouchEdgeTerminal, 'VouchEdgeTerminalPage');
+const VouchBoardZ8 = lazyPage(routeModules.vouchBoard, 'VouchBoardZ8');
+const ProfilePageZ8 = lazyPage(routeModules.profile, 'ProfilePageZ8');
+const SettingsPageZ8 = lazyPage(routeModules.settings, 'SettingsPageZ8');
+const PremiumSubPage = lazyPage(routeModules.premium, 'PremiumSubPage');
+const PlayerResearchHub = lazyPage(routeModules.research, 'PlayerResearchHub');
+const CustomizePage = lazyPage(routeModules.customize, 'CustomizePage');
+const ResultsStudio = lazyPage(routeModules.results, 'ResultsStudio');
+const SmartAiEngine = lazyPage(routeModules.smartAiEngine, 'SmartAiEngine');
+const MlbIntelligenceHub = lazyPage(routeModules.brainEdge, 'MlbIntelligenceHub');
+const Leaderboard = lazyPage(routeModules.leaderboard, 'Leaderboard');
+const SubscriberHub = lazyPage(routeModules.subscriberHub, 'SubscriberHub');
+const BrainPicksPage = lazyPage(routeModules.brainPicks, 'BrainPicksPage');
+const BrainPerformancePage = lazyPage(routeModules.brainPerformance, 'BrainPerformancePage');
+const AiPilotPage = lazyPage(routeModules.aiPilot, 'AiPilotPage');
+const MlbStatHubPage = lazyPage(routeModules.mlbStats, 'MlbStatHubPage');
+const DailyPlayersPage = lazyPage(routeModules.dailyPlayers, 'DailyPlayersPage');
+const LiveGamesPage = lazyPage(routeModules.liveGames, 'LiveGamesPage');
+const NotificationsPage = lazyPage(routeModules.notifications, 'NotificationsPage');
+const PlayerEdgeLabPageZ8 = lazyPage(routeModules.playerEdgeLab, 'PlayerEdgeLabPageZ8');
+const PitcherMatchupIntelligencePageZ8 = lazyPage(
+  routeModules.pitcherMatchup,
+  'PitcherMatchupIntelligencePageZ8',
+);
+const HitterMatchupZonesPageZ8 = lazyPage(
+  routeModules.hitterMatchup,
+  'HitterMatchupZonesPageZ8',
+);
+const ProCommandCenterPageZ8 = lazyPage(
+  routeModules.proCommandCenter,
+  'ProCommandCenterPageZ8',
+);
+
+import type { ParlayCommandPanel } from '../../stores/parlayCommandStore';
+import { parlayOsPanelForSection } from '../../lib/parlays/parlayOsSections';
+
+const ParlayOsWorkspace = lazyPage(routeModules.parlayOs, 'ParlayOsWorkspace');
+const ParlayProofPage = lazyPage(routeModules.parlayProof, 'ParlayProofPage');
+const NbaNflArena = lazyPage(routeModules.nbaNflArena, 'NbaNflArena');
+const AisLandingPage = lazyPage(routeModules.aisLanding, 'AisLandingPage');
+const MostVouchedTodayPageZ8 = lazyPage(
+  routeModules.mostVouchedToday,
+  'MostVouchedTodayPageZ8',
+);
+const AuroraHqShell = lazyPage(routeModules.auroraHq, 'AuroraHqShell');
+
+const HrNextPage = lazyPage(
+  () => import('../../features/hr-next/pages/HrNextPage'),
+  'HrNextPage',
+);
+
+const TrustModelQualityPage = lazyPage(
+  () => import('../../features/trust/TrustModelQualityPage'),
+  'TrustModelQualityPage',
+);
+
+const TodayNextPage = lazyPage(
+  () => import('../../features/today-next/pages/TodayNextPage'),
+  'TodayNextPage',
+);
 // Module scope on purpose. Building this inside AdminAccessGateShell creates a
 // new lazy component type every render, so React remounts and re-suspends the
 // whole gated subtree each pass — which takes down every admin-gated route.
-const AdminAccessGate = lazyWithRetry(() =>
+const AdminAccessGate = lazyPage(() =>
   import('../admin/AdminAccessGate').then((m) => ({ default: m.AdminAccessGate })),
+  'AdminAccessGate',
 );
 
 function ParlayProofShell() {
@@ -213,7 +257,7 @@ function MainViewRouter({
     case 'build':
       return (
         <LazyRoute>
-          <ParlayShell panel="build" navigateSection={navigateSection} />
+          <ParlayShell panel={parlayOsPanelForSection('build')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'ai_pilot':
@@ -246,10 +290,15 @@ function MainViewRouter({
           <HrNextPage />
         </FadeInMount>
       );
+    // Staff-only. The Command Desk is an internal research surface, not a
+    // subscriber destination — every route into it now lands on the gate for
+    // anyone who is not staff.
     case 'hr_max':
       return (
         <FadeInMount>
-          <HrAuroraMaxPage onNavigate={navigateSection} />
+          <AdminAccessGateShell>
+            <HrAuroraMaxPage onNavigate={navigateSection} />
+          </AdminAccessGateShell>
         </FadeInMount>
       );
     case 'hr_v10':
@@ -299,7 +348,7 @@ function MainViewRouter({
     case 'live_parlays':
       return (
         <LazyRoute>
-          <ParlayShell key="live_parlays" panel="build" navigateSection={navigateSection} />
+          <ParlayShell key="live_parlays" panel={parlayOsPanelForSection('live_parlays')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'parlay_proof':
@@ -384,7 +433,7 @@ function MainViewRouter({
     case 'results':
       return (
         <LazyRoute>
-          <ResultsShell />
+          <ParlayShell key="results" panel={parlayOsPanelForSection('results')} navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'notifications':
@@ -592,15 +641,26 @@ function FeedShell({ navigateSection }: { navigateSection: (section: string) => 
   );
 }
 
+/**
+ * Parlay OS — the single destination for building, tracking and reviewing slips.
+ *
+ * `build`, `live_parlays` and `results` are three doors into this one page; the
+ * section only decides which tab opens. They used to be separate routes, and
+ * `results` rendered its own copy of ResultsStudio while the workspace rendered
+ * a second one — so the same screen existed twice with different props.
+ */
 function ParlayShell({
   panel,
   navigateSection,
 }: {
-  panel: 'build' | 'live';
+  panel: ParlayCommandPanel;
   navigateSection: (section: string) => void;
 }) {
   const { onSaveVouch } = useAppShell();
   const savedSlips = useAppSavedSlips();
+  // The workspace's Track Record tab renders ResultsStudio, which reads the
+  // profile for slip ownership. Without it every slip was attributed to "You".
+  const profile = useAppProfile();
   const {
     liveGames,
     onAddLegFromResearch,
@@ -613,6 +673,7 @@ function ParlayShell({
     <ParlayOsWorkspace
       savedSlips={savedSlips}
       liveGames={liveGames}
+      profile={profile}
       onSectionChange={navigateSection}
       onAddLegToParlay={onAddLegFromResearch}
       onSaveVouch={onSaveVouch}
@@ -724,13 +785,6 @@ function BoardShell() {
 function LeaderboardShell({ navigateSection }: { navigateSection: (section: string) => void }) {
   const profile = useAppProfile();
   return <Leaderboard profile={profile} onSectionChange={navigateSection} />;
-}
-
-function ResultsShell() {
-  const posts = useAppPosts();
-  const profile = useAppProfile();
-  const savedSlips = useAppSavedSlips();
-  return <ResultsStudio posts={posts} profile={profile} savedParlays={savedSlips} />;
 }
 
 function ProfileShell({

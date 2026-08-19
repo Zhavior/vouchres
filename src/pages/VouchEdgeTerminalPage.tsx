@@ -1,12 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import type { FooterNavigationTarget } from '../components/landing-v3';
 import { SIGNED_IN_HOME } from '../app/sectionNavigation';
 import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
+import { lazyWithRetry } from '../lib/lazyWithRetry';
 
 type AuthMode = 'login' | 'signup';
 type SignupPlan = 'free' | 'pro';
 
-const AuthModal = lazy(() => import('../components/auth/AuthModal'));
+const AuthModal = lazyWithRetry(() => import('../components/auth/AuthModal'), { label: 'AuthModal' });
 
 function authModeFromPath(): AuthMode | null {
   if (typeof window === 'undefined') return null;
@@ -72,10 +73,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   const handleFooterNavigate = useCallback((target: FooterNavigationTarget) => {
     const sectionByTarget: Partial<Record<FooterNavigationTarget, string>> = {
-      'Research preview': 'research-preview',
       'How it works': 'how-it-works',
-      Results: 'trust-ledger',
-      Beta: 'pricing',
+      'Live record': 'record',
+      Beta: 'access',
     };
 
     if (target === 'GitHub') {
@@ -91,7 +91,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       <VouchEdgeLandingV3
         onLogin={() => openAuth('login')}
         onJoinBeta={() => openAuth('signup', 'pro')}
-        onViewDemo={() => scrollToSection('research-preview')}
+        onViewDemo={() => scrollToSection('record')}
         onExploreCommunity={() => openAuth('signup', 'free')}
         onFooterNavigate={handleFooterNavigate}
       />

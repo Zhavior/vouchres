@@ -6,8 +6,6 @@ import { NotificationProvider } from '../components/notifications/UnifiedNotific
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
-import { TerminalBackground } from '../components/layout/TerminalBackground';
-import { GlobalAmbientBackdrop } from '../components/visual/GlobalAmbientBackdrop';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
 import { AppNav } from './AppNav';
@@ -126,17 +124,12 @@ export function AppShell({
       <AppShellProvider value={appShellState}>
         <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
           <div className={`z8-app-shell ve-motion-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
-            <TerminalBackground />
-
+            {/* The site backdrop and the ambient WebGL field are no longer
+                mounted here. Both moved to `GlobalCanvasRoot` in App, outside
+                the route tree, so signing in — which swaps the public landing
+                for this shell — no longer tears the WebGL context down and
+                rebuilds it. This shell is transparent on top of them. */}
             <div className="ve-motion-content">
-              {/* The ambient WebGL field lives here — inside `.ve-motion-content`
-                  (position: relative; z-index: 1) so its own `-z-10` resolves
-                  above the obsidian slate that TerminalBackground paints, and
-                  above the router so switching sections never remounts the
-                  canvas. Moving it out to a sibling of TerminalBackground would
-                  drop it behind the slate and make it invisible. */}
-              <GlobalAmbientBackdrop />
-
               {loggingOut && <GoodbyeScreen />}
               <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
                 <NotificationProvider savedSlips={savedSlips} onNavigate={navigateSection}>

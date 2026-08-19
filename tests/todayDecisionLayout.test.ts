@@ -89,7 +89,9 @@ describe('Today decision-first layout', () => {
   });
 
   it('defers the personalization bundle until the user opens it', () => {
-    expect(source).toContain("React.lazy(() => import('./today/TodayPersonalizationPanel'))");
+    // Deferred through the app's resilient lazy loader (src/lib/lazyRoute.tsx),
+    // which keeps the code-split boundary and adds import recovery.
+    expect(source).toContain("lazyWithRetry(() => import('./today/TodayPersonalizationPanel')");
     expect(source).toContain('<Suspense fallback=');
   });
 

@@ -1,8 +1,10 @@
 /**
- * safe-dynamic — ChunkLoadError auto-reload wrapper.
+ * safe-dynamic — Suspense + skeleton wrapper over the app's resilient lazy
+ * loader.
  *
- * NOTE: This project is Vite-based (not Next.js), so we implement the retry
- * logic directly rather than delegating to next/dynamic.
+ * Recovery policy is not duplicated here: `lazyWithRetry` (see lazyRoute.tsx)
+ * owns the retry ladder, the generation reset and the escalation rules, so a
+ * panel loaded through this helper recovers exactly like a routed page.
  *
  * Usage (optional — the aurora_hr_hq route is statically imported and never
  * split, so this utility exists for other dynamic-import call sites):
@@ -10,30 +12,22 @@
  *   const MyComp = safeDynamic(() => import('./MyComp'));
  */
 
-import { Suspense, lazy, type ComponentType } from 'react';
+import { Suspense, type ComponentType } from 'react';
+import { lazyWithRetry } from './lazyWithRetry';
 
 export function safeDynamic<T extends object>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
-  options?: { fallback?: React.ReactNode },
+  options?: { fallback?: React.ReactNode; label?: string },
 ) {
-  const LazyComponent = lazy(() =>
-    importFn().catch((error: unknown) => {
-      const err = error as { name?: string; message?: string };
-      if (
-        err?.name === 'ChunkLoadError' ||
-        err?.message?.includes('Loading chunk') ||
-        err?.message?.includes('Failed to fetch dynamically imported module')
-      ) {
-        if (typeof window !== 'undefined') window.location.reload();
-      }
-      throw error;
-    }),
-  );
+  const LazyComponent = lazyWithRetry(importFn, {
+    label: options?.label ?? 'Panel',
+    pendingFallback: options?.fallback ?? <SkeletonLoader />,
+  });
 
   return function SafeDynamicWrapper(props: T) {
     return (
       <Suspense fallback={options?.fallback ?? <SkeletonLoader />}>
-        <LazyComponent {...props} />
+        <LazyComponent {...(props as React.ComponentProps<ComponentType<T>>)} />
       </Suspense>
     );
   };

@@ -1,0 +1,589 @@
+{
+  "observation": {
+    "provider": "playwright",
+    "executed": true,
+    "passed": true,
+    "url": "http://127.0.0.1:3000/landing",
+    "assetFailures": [],
+    "assetTimings": [
+      {
+        "url": "http://127.0.0.1:3000/@vite/client",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 147
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/vite/dist/client/env.mjs",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 80
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/main.tsx?t=1787103249262",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 295
+      },
+      {
+        "url": "http://127.0.0.1:3000/@react-refresh",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 296
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1144
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/react.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1144
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/App.tsx?t=1787103249262",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1225
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/react-dom_client.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1226
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/system/AppErrorBoundary.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1226
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/sentry.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1226
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/lazyWithRetry.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1226
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-USTO3F3J.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1183
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1183
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/chunkRecovery.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1413
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/app/useSectionNavigation.ts?t=1787101660718",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 273
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/queryClient.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 275
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/boot/guestHrBoardWarmCache.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 275
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/pages/AuthCallbackPage.tsx?t=1787101660718",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 275
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/app/sectionNavigation.ts?t=1787101660718",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 275
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 275
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/theme/auroraTokens.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 464
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/legal/CookieConsentBanner.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 464
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/visual/GlobalCanvasRoot.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 464
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-MUB6OXK6.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 464
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-U4YK74PD.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 465
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/@sentry_react.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 466
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/cookieConsent.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 466
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/lazyRoute.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 466
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/supabaseClient.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 419
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/authSessionStore.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 573
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/stores/profileStore.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 573
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/adminDevAccess.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 573
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/boot/bootDataStore.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 572
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/hooks/queries/queryKeys.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 572
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/hooks/queries/hrBoardQuery.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 572
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/api/hrBoardApiContract.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 572
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/boot/hrBoardEarlyFetch.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 573
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/hrBoardSlice.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 678
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/apiClient.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 678
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/brand/VouchEdgeLogo.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 675
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-DAYAHP34.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 676
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/layout/TerminalBackground.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 648
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/aurora-max/AuroraMaxPrimitives.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 648
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/visual/GlobalAmbientBackdrop.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 648
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/lucide-react.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 677
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/zustand.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 417
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/data/mockData.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 411
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/accountStorage.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 411
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 438
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/hrBoardCache.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 409
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/features/hr/utils/localDate.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 404
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/kernel/loaders/hrBoardLoader.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 404
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/mlbPersonId.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 403
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/apiEnvelope.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 260
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/visual/DecorativeParticleFieldLazy.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 249
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/zod.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 403
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-NJ4V5H3P.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 244
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/stores/ambient3dStore.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 248
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/cacheControl.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 237
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/repositories/HrBoardRepository.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 217
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/zustand_middleware.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 160
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/api/vouchedgeApi.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 141
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/mlbDirect.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 136
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/mlbGatewayClient.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1242
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/apiBase.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1242
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/utils/mlbApi.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1227
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/teamLogos.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1227
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/data/playerData.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1166
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/mlbDirectFallbackPolicy.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1208
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/pages/VouchEdgeTerminalPage.tsx?t=1787102712120",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 1164
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/visual/DecorativeParticleField.tsx",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3074
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/pages/VouchEdgeLandingV3.tsx?t=1787102712120",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3075
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/todayWebVitals.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3075
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/styles/vouchres-ultimate-truth-landing.css?t=1787102712120",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 2041
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/framer-motion.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 2041
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/landing-v3/FooterSection.tsx?t=1787099319194",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 4245
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/landing/ResearchTelemetryStory.tsx?t=1787099319106",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 4246
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/web-vitals.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 4238
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/components/landing-v3/researchPreviewData.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 4247
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/hooks/queries/useLiveGames.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3503
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/hooks/queries/useHrBoardToday.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3509
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/features/hr/utils/normalizeHrWatch.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3510
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/types/liveGames.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3510
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/queryVisibility.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3486
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/features/hr/engine/signalScore.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3483
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/@react-three_fiber.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 4287
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/chunk-MTAQKTJR.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 3215
+      },
+      {
+        "url": "http://127.0.0.1:3000/src/lib/registerServiceWorker.ts",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 58
+      },
+      {
+        "url": "http://127.0.0.1:3000/node_modules/.vite/deps/@vercel_analytics_react.js?v=015c67cc",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 59
+      },
+      {
+        "url": "https://va.vercel-scripts.com/v1/script.debug.js",
+        "kind": "script",
+        "status": 200,
+        "durationMs": 49
+      }
+    ],
+    "injectedFaults": [],
+    "assertions": [],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "unhandledRejections": [],
+    "serviceWorkers": [],
+    "serviceWorkerState": {
+      "supported": true,
+      "registrations": [],
+      "cacheNames": []
+    },
+    "lifecycleEvents": [
+      {
+        "type": "pageshow",
+        "persisted": false,
+        "visibilityState": "visible",
+        "atMs": 1760
+      }
+    ],
+    "durationMs": 21498,
+    "documentResponse": {
+      "status": 200,
+      "cacheControl": "no-cache",
+      "etag": "W/\"2452-4LE+KFOnCxOGL3ZX1qRVskucK4Y\"",
+      "fromServiceWorker": false
+    },
+    "finalUrl": "http://127.0.0.1:3000/landing",
+    "title": "VouchEdge — Sports Research, Home Run Intelligence and Parlay Tracking"
+  },
+  "diagnoses": [],
+  "documentCacheDiagnosis": {
+    "status": "revalidates",
+    "confidence": 0.95,
+    "cacheControl": "no-cache",
+    "reason": "The document cache policy requires storage avoidance or revalidation",
+    "repair": "No HTML cache-policy change is indicated by this response."
+  },
+  "firstPaintLazyDiagnosis": null,
+  "assetTraces": []
+}

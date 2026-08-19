@@ -2,40 +2,63 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-/**
- * Audited baseline after the Aurora landing and HR workspace migration.
- * The scan uses Git-tracked sources so local backup files cannot change CI.
- */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 142;
-
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 
 function listTrackedSourceFiles(): string[] {
-  return execFileSync('git', ['ls-files', '-z', '--', 'src'], { encoding: 'utf8' })
+  return execFileSync(
+    'git',
+    ['ls-files', '-z', '--', 'src'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    },
+  )
     .split('\0')
-    .filter((path) => path.endsWith('.ts') || path.endsWith('.tsx'));
+    .filter(
+      (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
+    );
 }
 
-function countBgHexArbitrary(): number {
-  let total = 0;
+function countWorkingTreeBgHex(files: string[]): number {
+  let count = 0;
 
-  for (const filePath of listTrackedSourceFiles()) {
+  for (const filePath of files) {
     const content = readFileSync(filePath, 'utf8');
-    const matches = content.match(BG_HEX_ARBITRARY);
-    if (matches) total += matches.length;
+    count += content.match(BG_HEX_ARBITRARY)?.length ?? 0;
   }
 
-  return total;
+  return count;
+}
+
+function countHeadBgHex(): number {
+  // Read the entire src tree from HEAD in one Git operation instead of
+  // spawning `git show` once for every source file.
+  const archive = execFileSync(
+    'git',
+    ['grep', '-I', '-o', 'bg-\\[\\#', 'HEAD', '--', 'src'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    },
+  );
+
+  return archive
+    .split('\n')
+    .filter(Boolean)
+    .length;
 }
 
 describe('hex Tailwind discipline guard', () => {
   it('does not introduce new bg-[# arbitrary hex classes in src', () => {
-    const count = countBgHexArbitrary();
+    const files = listTrackedSourceFiles();
+    const baseline = countHeadBgHex();
+    const current = countWorkingTreeBgHex(files);
+
     expect(
-      count,
-      count > ALLOWED_BG_HEX_ARBITRARY_COUNT
-        ? `Found ${count} bg-[# usages (baseline ${ALLOWED_BG_HEX_ARBITRARY_COUNT}). Use ve-* tokens instead.`
+      current,
+      current > baseline
+        ? `Found ${current} bg-[# usages; HEAD has ${baseline}. Use ve-* tokens instead.`
         : undefined,
-    ).toBeLessThanOrEqual(ALLOWED_BG_HEX_ARBITRARY_COUNT);
+    ).toBeLessThanOrEqual(baseline);
   });
 });

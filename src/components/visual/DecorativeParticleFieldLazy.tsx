@@ -1,5 +1,6 @@
-import { Suspense, lazy } from 'react';
+import { Suspense } from 'react';
 import type { DecorativeParticleFieldProps } from './DecorativeParticleField';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
 /*
  * Lazy boundary for the ambient particle field.
@@ -19,9 +20,8 @@ import type { DecorativeParticleFieldProps } from './DecorativeParticleField';
  * with the 3D toggle off the chunk is never even requested, so users who turn
  * it off stop paying for it entirely.
  */
-const DecorativeParticleFieldImpl = lazy(() =>
-  import('./DecorativeParticleField').then((m) => ({ default: m.DecorativeParticleField })),
-);
+const DecorativeParticleFieldImpl = lazyWithRetry(() =>
+  import('./DecorativeParticleField').then((m) => ({ default: m.DecorativeParticleField })), { label: 'DecorativeParticleFieldImpl', optional: true });
 
 export function DecorativeParticleFieldLazy(props: DecorativeParticleFieldProps) {
   if (!props.isVisible) return null;

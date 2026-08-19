@@ -1,12 +1,12 @@
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { motion } from '../../lib/motion';
 import { ArrowRight, Check, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
 import { MermaidDiagram } from '../../lib/diagrams/MermaidDiagram';
 
-const GradingDemo = lazy(() =>
-  import('./GradingDemo').then((m) => ({ default: m.GradingDemo })),
-);
+const GradingDemo = lazyWithRetry(() =>
+  import('./GradingDemo').then((m) => ({ default: m.GradingDemo })), { label: 'GradingDemo' });
 import { logoByTeamId } from '../../lib/teamLogos';
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
 
 const GRADING_FLOWCHART = `flowchart LR
   A["🔒 Pick locks<br/>Timestamped & frozen at game start"] --> B["📡 Game plays out<br/>Tracked live from the official MLB feed"]

@@ -89,15 +89,39 @@ async function waitForUrl(url, attempts = 60, delayMs = 500) {
   return false;
 }
 
+function startApi() {
+  if (!existsSync("dist/server.cjs")) {
+    fail("dist/server.cjs missing — run npm run build first");
+  }
+
+  const child = spawn("node", ["dist/server.cjs"], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      PORT: "3000",
+      NODE_ENV: "development",
+    },
+  });
+
+  child.stdout?.on("data", (chunk) => process.stdout.write(chunk));
+  child.stderr?.on("data", (chunk) => process.stderr.write(chunk));
+
+  return child;
+}
+
 function startPreview() {
   if (!existsSync("dist/index.html")) {
     fail("dist/index.html missing — run npm run build first");
   }
 
-  const child = spawn("npx", ["vite", "preview", "--host", "127.0.0.1", "--port", String(DEFAULT_PORT)], {
-    stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, BROWSER: "none" },
-  });
+  const child = spawn(
+    "npx",
+    ["vite", "preview", "--host", "127.0.0.1", "--port", String(DEFAULT_PORT), "--strictPort"],
+    {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, BROWSER: "none" },
+    },
+  );
 
   child.stdout?.on("data", (chunk) => process.stdout.write(chunk));
   child.stderr?.on("data", (chunk) => process.stderr.write(chunk));
@@ -167,9 +191,25 @@ async function main() {
     fail("dist/ missing — run npm run build first");
   }
 
+  let apiProc = null;
   let previewProc = null;
 
   try {
+    if (START_PREVIEW) {
+      const apiUrl = "http://127.0.0.1:3000/";
+      const apiAlreadyUp = await waitForUrl(apiUrl, 3, 200);
+
+      if (!apiAlreadyUp) {
+        log(`starting API server on ${apiUrl}`);
+        apiProc = startApi();
+
+        const apiReady = await waitForUrl(apiUrl);
+        if (!apiReady) {
+          fail(`API did not become ready at ${apiUrl}`);
+        }
+      }
+    }
+
     const alreadyUp = await waitForUrl(TARGET_URL, 3, 200);
     if (!alreadyUp && START_PREVIEW) {
       log(`starting vite preview on ${DEFAULT_URL}`);
@@ -230,6 +270,9 @@ async function main() {
   } finally {
     if (previewProc && !previewProc.killed) {
       previewProc.kill("SIGTERM");
+    }
+    if (apiProc && !apiProc.killed) {
+      apiProc.kill("SIGTERM");
     }
   }
 }

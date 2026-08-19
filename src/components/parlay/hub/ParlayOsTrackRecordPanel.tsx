@@ -1,16 +1,20 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { TrendingUp } from 'lucide-react';
-import type { Leg, Parlay } from '../../../types';
+import type { CreatorProofProfile, Leg, Parlay } from '../../../types';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
 import { ParlayOsPanelSkeleton } from './parlayOsUi';
+import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 
-const ResultsStudio = lazy(() => import('../../results/ResultsStudio'));
+const ResultsStudio = lazyWithRetry(() => import('../../results/ResultsStudio'), { label: 'ResultsStudio' });
 
 export default function ParlayOsTrackRecordPanel({
   savedSlips,
+  profile,
   onSectionChange,
 }: {
   savedSlips: unknown[];
+  /** Drives slip ownership in ResultsStudio; without it every slip reads "You". */
+  profile?: CreatorProofProfile;
   onSectionChange?: (section: string) => void;
 }) {
   const mappedParlays = useMemo<Parlay[]>(() => (
@@ -41,10 +45,11 @@ export default function ParlayOsTrackRecordPanel({
 
   return (
     <div className="flex flex-col gap-0">
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-          Saved slips and their current recorded states. Backend-synced and local records remain distinct.
-        </p>
+      {/* No blurb here. `ResultsStudio` leads with its own command header
+          carrying this same sentence, so a copy above it printed the line
+          twice on the page. Only the action that studio does not offer — the
+          jump out to the full Results route — belongs at this level. */}
+      <div className="flex items-center justify-end mb-4 gap-3 flex-wrap empty:mb-0">
         {onSectionChange ? (
           <button
             type="button"
@@ -60,7 +65,7 @@ export default function ParlayOsTrackRecordPanel({
 
       <PanelErrorBoundary>
         <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-          <ResultsStudio savedParlays={mappedParlays} />
+          <ResultsStudio savedParlays={mappedParlays} profile={profile} />
         </Suspense>
       </PanelErrorBoundary>
     </div>

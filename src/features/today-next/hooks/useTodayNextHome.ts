@@ -251,6 +251,15 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     };
   }, [hrBoard, hrBoardQuery.lastUpdated, report, vitals.confirmed]);
 
+  const unionRows = useMemo<HrWatchRow[]>(() => {
+    if (!hrBoard) return [];
+    const seen = new Map<string, HrWatchRow>();
+    for (const row of [...hrBoard.confirmed, ...hrBoard.curated, ...hrBoard.all]) {
+      if (!seen.has(row.stableId)) seen.set(row.stableId, row);
+    }
+    return [...seen.values()];
+  }, [hrBoard]);
+
   const refresh = () => {
     void Promise.all([reportQuery.refetch(), hrBoardQuery.refresh()]);
   };
@@ -280,6 +289,18 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     // Research Command Desk inputs — the full ranked evidence, not the preview.
     deskRows: visibleRows,
     deskConfirmedRows: hrBoard?.confirmed ?? [],
+    /* Every row the board published, deduped.
+
+       The three buckets are distinct API payloads, not nested subsets:
+       `confirmed` comes from the confirmed-candidate feed, while `curated` and
+       `all` come from the projected feeds and are stamped 'projected' by
+       normalizeHrWatch regardless of their contents. So neither bucket alone
+       can back a "confirmed only" control — `visibleRows` collapses to the
+       confirmed set (making the filter a no-op), and `all` holds no official
+       rows at all (making it match nothing). The union is the only list where
+       that choice means something; confirmed wins on collision so a row keeps
+       its official status. */
+    deskAllRows: unionRows,
     deskState,
     gameCount: report?.gameCount ?? null,
     firstPitch,

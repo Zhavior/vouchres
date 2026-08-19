@@ -508,108 +508,145 @@ export default function AuthModal({
           aria-modal="true"
           aria-labelledby="ve-auth-title"
           tabIndex={-1}
-          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-[1.75rem] lg:max-w-5xl lg:flex-row ${AURORA_PANEL_PREMIUM}`}
+          className="ve-auth-dialog ve-auth-vouch-dialog"
         >
-          {/* Aurora evidence panel — desktop */}
-          <aside className="ve-auth-aurora-panel hidden lg:flex lg:w-[42%] lg:flex-col">
-            <div className="relative z-10 flex h-full flex-col p-8">
-              <VouchEdgeLogo showBeta markClassName="h-11 w-11" />
+          <header className="ve-auth-vouch-topbar">
+            <button
+              type="button"
+              className="ve-auth-vouch-brand"
+              onClick={onClose}
+              aria-label="Back to VouchEdge"
+            >
+              <span>VouchEdge</span>
+              <b>OPEN BETA</b>
+            </button>
 
-              <div className="mt-14">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.26em] text-emerald-200/70">
-                  Aurora account layer
-                </p>
-                <h2 className="mt-4 max-w-sm text-4xl font-black leading-[1.02] tracking-[-0.045em] text-white">
-                  Your research.<br />Your record.<br />Still visible.
-                </h2>
-                <p className="mt-5 max-w-sm text-sm leading-6 text-white/48">
-                  Sign in to keep game context, reasoning, and available grading connected to one account.
-                </p>
-              </div>
-
-              <div className="mt-10 space-y-3">
-                {[
-                  { step: '01', title: 'Official game context', detail: 'Live status and matchup information' },
-                  { step: '02', title: 'Transparent reasoning', detail: 'Evidence stays attached to the decision' },
-                  { step: '03', title: 'Results stay visible', detail: 'Wins and losses remain in the record' },
-                ].map((item) => (
-                  <div key={item.step} className="ve-auth-proof-row">
-                    <span className="font-mono text-[10px] font-bold text-emerald-200/75">{item.step}</span>
-                    <div>
-                      <p className="text-sm font-bold text-white/88">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-white/36">{item.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-auto flex items-center gap-3 border-t border-white/[0.07] pt-6 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/30">
-                <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.7)]" />
-                Open Beta · MLB first · Research only
-              </div>
+            <div className="ve-auth-vouch-status">
+              <i />
+              <span>SECURE ACCOUNT ACCESS</span>
             </div>
-          </aside>
 
-          <div className="ve-auth-form-panel relative flex min-w-0 flex-1 flex-col">
-          {/* Aurora form header */}
-          <div
-            className="ve-auth-form-header relative px-5 pb-4 pt-5 sm:px-8 sm:pb-5 sm:pt-7"
-          >
             <button
               ref={closeButtonRef}
+              type="button"
               onClick={onClose}
               aria-label="Close"
-              className={`absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-xl text-white/40 transition-colors hover:bg-white/10 hover:text-white sm:right-4 sm:top-4 ${AURORA_INTERACTIVE}`}
+              className="ve-auth-vouch-close"
             >
               <X className="w-4 h-4" />
             </button>
+          </header>
 
-            <div className="mb-7 flex items-center justify-between pr-10 lg:hidden">
-              <VouchEdgeLogo showBeta markClassName="h-9 w-9" />
-              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">Aurora</span>
-            </div>
+          <div className="ve-auth-vouch-layout">
+            <aside className="ve-auth-vouch-story ve-auth-aurora-panel">
+              <div>
+                <span className="ve-auth-vouch-kicker">
+                  {mode === 'signup' ? 'ACCOUNT / 02' : 'ACCOUNT / 01'}
+                </span>
 
-            <div className="mb-3 hidden items-center gap-2 lg:flex">
-              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(125,235,255,0.65)]" />
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-100/45">
-                Secure account access
-              </p>
-            </div>
+                <h1>
+                  {mode === 'signup' ? (
+                    <>
+                      Build a record
+                      <br />
+                      that <em>holds up.</em>
+                    </>
+                  ) : (
+                    <>
+                      Welcome
+                      <br />
+                      <em>back.</em>
+                    </>
+                  )}
+                </h1>
 
-            <h2
-              ref={titleRef}
-              id="ve-auth-title"
-              tabIndex={-1}
-              className="text-2xl font-black tracking-[-0.035em] text-white outline-none sm:text-[1.75rem]"
-            >
-              {emailSent
-                ? 'Check your inbox'
-                : mode === 'signup' && signupStep === 'intro'
-                ? INTRO_SLIDES[introIndex].title
-                : mode === 'signup' && signupStep === 'plan'
-                ? (FREE_BETA_ALL_ACCESS ? 'Your beta access' : 'Choose your plan')
-                : mode === 'signup' && signupStep === 'policy'
-                ? 'Review & agree'
-                : mode === 'signup'
-                ? 'Create your account'
-                : 'Welcome back'}
-            </h2>
-            <p className="mt-2 max-w-md text-sm leading-6 text-white/45">
-              {emailSent
-                ? 'One more step to finish setting up your account.'
-                : mode === 'signup' && signupStep === 'intro'
-                ? INTRO_SLIDES[introIndex].body
-                : mode === 'signup' && signupStep === 'plan'
-                ? (FREE_BETA_ALL_ACCESS
-                    ? 'There is nothing to choose — every feature is unlocked on every account during the beta.'
-                    : 'Choose Basic or the VouchEdge Beta research plan before creating your account.')
-                : mode === 'signup' && signupStep === 'policy'
-                ? 'A quick, honest read before you create an account.'
-                : mode === 'signup'
-                ? 'Create one account for your research workspace and visible record.'
-                : 'Log in to pick up where you left off.'}
-            </p>
-          </div>
+                <p>
+                  {mode === 'signup'
+                    ? 'Research, Vouch, and build an accountable record before the result is known.'
+                    : 'Continue your research record. Your reasoning, Vouches, and available grading stay connected to one account.'}
+                </p>
+              </div>
+
+              <div className="ve-auth-vouch-proof">
+                {mode === 'signup' ? (
+                  <>
+                    <div>
+                      <span>01</span>
+                      <p>$0 Open Beta</p>
+                    </div>
+                    <div>
+                      <span>02</span>
+                      <p>No credit card</p>
+                    </div>
+                    <div>
+                      <span>03</span>
+                      <p>Results stay attached</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span>01</span>
+                      <p>Research stays connected</p>
+                    </div>
+                    <div>
+                      <span>02</span>
+                      <p>Reasoning stays inspectable</p>
+                    </div>
+                    <div>
+                      <span>03</span>
+                      <p>Results remain visible</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="ve-auth-vouch-system">
+                <i />
+                SYSTEM ONLINE
+              </div>
+            </aside>
+
+            <section className="ve-auth-form-panel">
+              <div className="ve-auth-form-header">
+                <span className="ve-auth-vouch-panel-label">
+                  {mode === 'signup' ? 'CREATE ACCOUNT' : 'ACCOUNT ACCESS'}
+                </span>
+
+                <h2
+                  ref={titleRef}
+                  id="ve-auth-title"
+                  tabIndex={-1}
+                >
+                  {emailSent
+                    ? 'Check your inbox'
+                    : mode === 'signup' && signupStep === 'intro'
+                    ? INTRO_SLIDES[introIndex].title
+                    : mode === 'signup' && signupStep === 'plan'
+                    ? (FREE_BETA_ALL_ACCESS ? 'Your beta access' : 'Choose your plan')
+                    : mode === 'signup' && signupStep === 'policy'
+                    ? 'Review & agree'
+                    : mode === 'signup'
+                    ? 'Create your account'
+                    : 'Welcome back'}
+                </h2>
+
+                <p>
+                  {emailSent
+                    ? 'One more step to finish setting up your account.'
+                    : mode === 'signup' && signupStep === 'intro'
+                    ? INTRO_SLIDES[introIndex].body
+                    : mode === 'signup' && signupStep === 'plan'
+                    ? (FREE_BETA_ALL_ACCESS
+                        ? 'Every feature is unlocked on every account during the beta.'
+                        : 'Choose your research plan before creating your account.')
+                    : mode === 'signup' && signupStep === 'policy'
+                    ? 'A quick, clear review before you create an account.'
+                    : mode === 'signup'
+                    ? 'Create one account for your research workspace and visible record.'
+                    : 'Log in to pick up where you left off.'}
+                </p>
+              </div>
 
           {emailSent ? (
             /* ── Check-your-email confirmation ── */
@@ -922,7 +959,7 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={() => setSignupStep('policy')}
-                className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+                className="ve-auth-back-link"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 {PLAN_OPTIONS.find((p) => p.id === plan)?.label ?? 'Basic'} plan
@@ -931,7 +968,7 @@ export default function AuthModal({
           )}
           {/* Tab switch */}
           <div className="px-5 sm:px-8">
-            <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/[0.07] bg-black/25 p-1">
+            <div className="ve-auth-mode-switch">
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   type="button"
@@ -944,12 +981,12 @@ export default function AuthModal({
                     setIntroIndex(0);
                     window.history.replaceState(window.history.state, '', m === 'signup' ? '/signup' : '/login');
                   }}
-                  className="relative rounded-lg py-2.5 text-sm font-bold transition-colors"
+                  className="ve-auth-mode-button"
                   style={{ color: mode === m ? '#071117' : '#64748b' }}
                 >
                   {mode === m && (
                     <div
-                      className="absolute inset-0 rounded-lg"
+                      className="ve-auth-mode-active"
                       style={{ background: 'linear-gradient(110deg, #7de8ff, #55cbed 48%, #64e6b2)' }}
                     />
                   )}
@@ -959,37 +996,23 @@ export default function AuthModal({
             </div>
           </div>
 
-          {/* Perks strip — signup only */}
-            {mode === 'signup' && (
-              <div className="ve-auth-reveal overflow-hidden">
-                <div className="px-6 pt-4">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { icon: ShieldCheck, label: 'Verified record' },
-                      { icon: Sparkles, label: 'Save your slips' },
-                      { icon: ArrowRight, label: 'Climb the board' },
-                    ].map((p, i) => {
-                      const Icon = p.icon;
-                      return (
-                        <div key={i} className={`flex flex-col items-center gap-1 text-center py-2 rounded-lg ${AURORA_SURFACE}`}>
-                          <Icon className="w-3.5 h-3.5 text-vouch-cyan" />
-                          <span className="text-[10px] font-semibold text-slate-400 leading-tight">{p.label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Compact trust strip — signup only */}
+          {mode === 'signup' && (
+            <div className="ve-auth-trust-strip">
+              <span><i /> VERIFIED RECORD</span>
+              <span><i /> $0 OPEN BETA</span>
+              <span><i /> NO CREDIT CARD</span>
+            </div>
+          )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5 px-5 py-5 sm:px-8">
+          <form onSubmit={handleSubmit} className="ve-auth-account-form">
             {/* Google OAuth — available after the signup policy gate and on login. */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={busy || googleBusy || redirectingToCheckout || googleAvailable === false}
-              className={`group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-4 py-3.5 text-sm font-extrabold text-slate-900 shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-all hover:border-emerald-100 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 ${AURORA_INTERACTIVE}`}
+              className="ve-auth-google-button"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-white via-slate-50 to-white opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center justify-center gap-3">
@@ -1162,8 +1185,7 @@ export default function AuthModal({
             <button
               type="submit"
               disabled={busy || googleBusy || redirectingToCheckout}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${AURORA_INTERACTIVE}`}
-              style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
+              className="ve-auth-submit"
             >
               {redirectingToCheckout ? (
                 <>
@@ -1204,6 +1226,7 @@ export default function AuthModal({
           </div>
           </>
           )}
+            </section>
           </div>
         </div>
       </div>

@@ -20,10 +20,12 @@ export const routeModules = {
   research: () => import('../components/PlayerResearchHub'),
   customize: () => import('../components/CustomizePage'),
 
-  results: () => import('../components/results/ResultsStudio'),
   smartAiEngine: () => import('../components/SmartAiEngine'),
 
   brainEdge: () => import('../features/brain-edge/BrainEdgeLabPage'),
+  // Not a route of its own any more — this is the chunk behind Parlay OS's
+  // Track Record tab, registered so the tab can be warmed with its page.
+  results: () => import('../components/results/ResultsStudio'),
   leaderboard: () => import('../components/Leaderboard'),
   subscriberHub: () => import('../components/SubscriberHub'),
 

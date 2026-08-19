@@ -55,7 +55,17 @@ export const selectShellProfile = (state: ReturnType<typeof useProfileStore.getS
 /** A route tab is active for more sections than the one it is named after. */
 export function isNavItemActive(activeSection: string, featureId: string): boolean {
   if (featureId === 'aurora_hr_hq') return isAuroraHqFamilySection(activeSection);
-  if (featureId === 'hr_board') return activeSection === 'hr_board' || activeSection === 'daily_hr_watch_new';
+  // `admin_hr_next` renders the same HR Next page behind the admin gate and no
+  // longer has a tab of its own, so the Daily tab is what lights up for it —
+  // otherwise landing there via the launchpad tile or the `2` shortcut leaves
+  // the bar with nothing selected.
+  if (featureId === 'hr_board') {
+    return (
+      activeSection === 'hr_board' ||
+      activeSection === 'daily_hr_watch_new' ||
+      activeSection === 'admin_hr_next'
+    );
+  }
   if (featureId === 'brain_picks') return activeSection === 'brain_picks' || activeSection === 'brain_performance';
   return activeSection === featureId;
 }
