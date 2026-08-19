@@ -13,6 +13,7 @@ import {
   type FooterNavigationTarget,
 } from '../components/landing-v3';
 import ResearchTelemetryStory from '../components/landing/ResearchTelemetryStory';
+import { apiClient } from '../lib/apiClient';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type Scene = 'hero' | 'ledger' | 'proof';
@@ -25,7 +26,7 @@ const steps: Array<{ id: Step; tag: string; title: string; body: string; proof: 
 ];
 type HeroGame = { awayTeam: { abbreviation: string; name: string }; homeTeam: { abbreviation: string; name: string }; venue: string; probablePitchers: { away: { pitcherName: string } | null; home: { pitcherName: string } | null }; weather: { condition?: string; windMph?: number } | null; dataQuality: string };
 const SAMPLE_HERO_GAME: HeroGame = { awayTeam: { abbreviation: 'NYY', name: 'New York Yankees' }, homeTeam: { abbreviation: 'BAL', name: 'Baltimore Orioles' }, venue: 'Sample MLB matchup', probablePitchers: { away: null, home: null }, weather: null, dataQuality: 'sample' };
-function useVouchEdgeLiveGame() { const [game, setGame] = useState<HeroGame>(SAMPLE_HERO_GAME); const [isLive, setIsLive] = useState(false); useEffect(() => { let cancelled = false; const load = async () => { try { const response = await fetch('/api/mlb/games/today', { headers: { Accept: 'application/json' } }); if (!response.ok) return; const payload = await response.json() as { games?: HeroGame[]; data?: { games?: HeroGame[] } }; const firstGame = payload.games?.[0] ?? payload.data?.games?.[0]; if (firstGame && !cancelled) { setGame(firstGame); setIsLive(true); } } catch { /* Retain an internally consistent sample when the official feed is unavailable. */ } }; void load(); const interval = window.setInterval(load, 60_000); return () => { cancelled = true; window.clearInterval(interval); }; }, []); return { game, isLive }; }
+function useVouchEdgeLiveGame() { const [game, setGame] = useState<HeroGame>(SAMPLE_HERO_GAME); const [isLive, setIsLive] = useState(false); useEffect(() => { let cancelled = false; const load = async () => { try { const payload = await apiClient.get<{ games?: HeroGame[]; data?: { games?: HeroGame[] } }>('/api/mlb/games/today'); const firstGame = payload.games?.[0] ?? payload.data?.games?.[0]; if (firstGame && !cancelled) { setGame(firstGame); setIsLive(true); } } catch { /* Retain an internally consistent sample when the official feed is unavailable. */ } }; void load(); const interval = window.setInterval(load, 60_000); return () => { cancelled = true; window.clearInterval(interval); }; }, []); return { game, isLive }; }
 const transition = { duration: .42, ease: [.22, 1, .36, 1] as const };
 function mlbHeadshot(personId?: number) { return personId ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_160,q_auto:best/v1/people/${personId}/headshot/67/current` : 'https://img.mlbstatic.com/mlb-photos/image/upload/w_160,q_auto:best/v1/people/592450/headshot/67/current'; }
 const FALLBACK_OHTANI_STATS = { avg: '.286', homeRuns: 39, rbi: 92, ops: '.981', asOf: 'Last verified MLB snapshot' };

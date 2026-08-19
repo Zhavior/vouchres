@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HrNextResearchView } from '../src/features/hr-next/components/HrNextResearchView';
 
@@ -152,6 +152,10 @@ beforeEach(() => {
     ok: true,
     json: async () => ({ ok: true, research: mockResearchData }),
   }));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 function renderWithClient(ui: React.ReactElement) {
