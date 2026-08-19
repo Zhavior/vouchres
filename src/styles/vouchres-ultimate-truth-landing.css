@@ -1008,3 +1008,470 @@
 .vu-heroTerminal .vu-hudLabel { display: flex; min-width: 0; justify-content: space-between; gap: 6px; white-space: nowrap; font-size: clamp(6px, .58vw, 8px); }
 .vu-heroTerminal .vu-hudLabel b { flex: 0 0 auto; }
 @media (max-width: 700px) { .vu-heroTerminal .vu-hudGrid { grid-template-columns: 1fr; }.vu-heroTerminal .vu-hudMetrics span { font-size: 8px; }.vu-heroTerminal .vu-hudMetrics strong { font-size: 10px; } }
+
+/* === Decision Ledger: scroll-capture fix ===
+   Restore sticky pinning and full scroll height so all 4 phases
+   are traversed before the section releases the user. */
+.vu-decisionStory {
+  min-height: 400vh !important;
+  position: relative !important;
+}
+.vu-decisionPinned {
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+/* Restore the travelling-light progress bar */
+.vu-decisionStory::before { display: block !important; }
+/* Scroll-snap: softly attract the viewport when entering this section */
+.vu-landing { scroll-snap-type: y proximity; }
+.vu-realSection { scroll-snap-align: start; }
+
+/* ============================================================
+   Mobile jitter / smoothness pass
+   ============================================================ */
+
+/* 1. GPU-promote the pinned panels so they stop repainting on scroll */
+.vu-pinned,
+.vu-decisionPinned {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* 2. Prevent sub-pixel flicker on animated motion.div children */
+.vu-scene,
+.vu-decisionGrid,
+.vu-decisionCopy,
+.vu-recordCard {
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 3. On mobile the 400vh scroll height is too much — 280vh gives a tight,
+      jitter-free traversal across all 4 phases */
+@media (max-width: 800px) {
+  .vu-decisionStory { min-height: 280vh !important; }
+  .vu-decisionPinned {
+    height: 100svh !important;
+    padding: 4rem 1rem 2rem !important;
+    align-items: center !important;
+  }
+  /* Kill scroll-snap on mobile — it fights momentum scrolling and causes snap-jank */
+  .vu-landing { scroll-snap-type: none !important; }
+  .vu-realSection { scroll-snap-align: none !important; }
+}
+
+/* 4. Hero grid: collapse to single column early enough to breathe */
+@media (max-width: 860px) {
+  .vu-heroGrid, .vu-ledgerGrid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+  .vu-heroVisual { order: -1; }
+}
+
+/* 5. Phase-rail dots — stop them popping position on active change */
+.vu-phaseRail span {
+  transition: color .22s ease, opacity .22s ease;
+  will-change: color, opacity;
+}
+
+/* 6. Record rows — clamp layout so animated x-shift doesn't overflow */
+.vu-recordRows { overflow: hidden; }
+.vu-recordRow {
+  min-width: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 7. Travelling-light bar: GPU layer, no layout reflow */
+.vu-decisionStory::before {
+  transform: translateZ(0);
+  will-change: background;
+}
+
+/* 8. Card hover lift: disable on touch so it doesn't flicker on tap */
+@media (hover: none) {
+  .vu-recordCard:hover,
+  motion-div:hover { transform: none !important; box-shadow: none !important; }
+}
+
+/* 9. Auth modal overlay: prevent scroll bleed on mobile */
+@media (max-width: 640px) {
+  .ve-modal-backdrop { overscroll-behavior: contain; touch-action: none; }
+  .ve-modal-panel { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+}
+
+/* ============================================================
+   MOBILE EXPERIENCE OVERHAUL  (<= 640px)
+   ============================================================ */
+@media (max-width: 640px) {
+
+  /* --- NAV --- */
+  .vu-nav { height: 52px; padding: 0 18px; }
+  .vu-brand span { display: none; }
+  .vu-nav button:not(.vu-navCta) { display: none; }
+  .vu-navCta { padding: 8px 14px !important; font-size: 9px !important; }
+
+  /* --- HERO --- */
+  .vu-frame { padding: calc(52px + 18px) 18px 24px; align-items: flex-start; overflow-y: auto; }
+  .vu-heroGrid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .vu-copy h1 { font-size: clamp(32px, 9vw, 46px); margin: 12px 0 16px; line-height: 1.04; }
+  .vu-copy p { font-size: 14px; line-height: 1.7; }
+  .vu-ctas { flex-direction: column; gap: 10px; margin-top: 22px; }
+  .vu-ctas button { width: 100%; padding: 14px 18px; text-align: center; font-size: 10px; }
+  .vu-meta { gap: 14px; margin-top: 28px; font-size: 9px; }
+
+  /* --- HERO TERMINAL (HUD) --- */
+  .vu-heroVisual { width: 100%; order: 2; }
+  .vu-heroVisual.vu-docked .vu-videoFrame { height: 90px; }
+  .vu-heroTerminal { height: auto; min-height: 0; border-radius: 12px; }
+  .vu-heroTerminal .vu-actCanvas { padding: 10px; }
+  .vu-gameHeader { padding: 10px; gap: 8px; }
+  .vu-gameHeader strong { font-size: 10px; }
+  .vu-playerIdentity img { width: 36px; height: 36px; flex-basis: 36px; }
+  .vu-playerIdentity strong { font-size: 10px; max-width: 90px; }
+  .vu-heroTerminal .vu-hudGrid { grid-template-columns: 1fr !important; gap: 6px; }
+  .vu-heroTerminal .vu-hudGrid > section { padding: 8px; }
+  .vu-heroTerminal .vu-hudMetrics { grid-template-columns: repeat(2, 1fr); gap: 4px 8px; }
+  .vu-heroTerminal .vu-hudMetrics span { font-size: 7px; }
+  .vu-heroTerminal .vu-hudMetrics strong { font-size: 9px; }
+  .vu-liveStatsCard { border-radius: 8px; }
+  .vu-statsBanner { font-size: 7px; padding: 5px 8px; }
+  .vu-teamWatermark { display: none; }
+
+  /* --- DECISION LEDGER --- */
+  .vu-decisionStory { min-height: 260vh !important; }
+  .vu-decisionPinned { padding: 3.5rem 1rem 1.5rem !important; height: 100svh !important; }
+  .vu-decisionGrid { grid-template-columns: 1fr !important; gap: 16px; }
+  .vu-decisionCopy h2 { font-size: clamp(26px, 7.5vw, 38px); margin: 8px 0 10px; }
+  .vu-decisionCopy p { font-size: 13px; line-height: 1.65; }
+  .vu-decisionStatus { margin-top: 14px; padding: 10px 12px; }
+  .vu-phaseRail { gap: 8px; margin-top: 14px; }
+  .vu-phaseRail span { font-size: 8px; padding: 4px 8px; }
+  .vu-recordCard { border-radius: 14px; padding: 14px; }
+  .vu-recordTop { flex-direction: row; gap: 6px; font-size: 8px; }
+  .vu-recordHeadline { gap: 12px; padding: 10px 0; }
+  .vu-recordHeadline small { font-size: 7px; }
+  .vu-recordHeadline strong { font-size: 16px; }
+  .vu-recordRow { padding: 8px 10px; font-size: 10px; }
+  .vu-recordRow b { font-size: 11px; }
+  .vu-recordFoot { font-size: 7px; padding: 8px 10px; }
+
+  /* --- INTEGRITY / EVIDENCE --- */
+  .vu-chapterIntegrity { padding: 56px 18px !important; }
+  .vu-integrityNote > div:first-child h2 { font-size: clamp(28px, 8vw, 40px); margin: 10px 0 14px; }
+  .vu-integrityNote > div:first-child p { font-size: 13px; }
+  .vu-integrityChain { flex-wrap: wrap; gap: 6px 10px; font-size: 8px; margin-top: 28px; }
+  .vu-integrityChain i { display: none; }
+
+  /* --- COMMUNITY / PRICING / CTA CHAPTERS --- */
+  .vu-chapter { padding: 56px 18px !important; }
+  .vu-chapterCommunity, .vu-chapterPricing, .vu-chapterCTA { padding: 48px 18px !important; }
+
+  /* --- FAQ --- */
+  .vu-chapterFAQ { padding: 48px 18px !important; }
+
+  /* --- FOOTER --- */
+  .vu-chapterFoot { padding: 40px 18px 32px !important; }
+}
+
+/* ============================================================
+   TABLET TWEAKS  (641px – 900px)
+   ============================================================ */
+@media (min-width: 641px) and (max-width: 900px) {
+  .vu-heroGrid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .vu-copy h1 { font-size: clamp(38px, 6vw, 56px); }
+  .vu-ctas { flex-wrap: wrap; }
+  .vu-decisionGrid { grid-template-columns: 1fr !important; gap: 20px; }
+  .vu-decisionCopy h2 { font-size: clamp(30px, 5vw, 44px); }
+  .vu-decisionStory { min-height: 320vh !important; }
+  .vu-teamWatermark span { font-size: 9rem; }
+  .vu-chapter { padding-left: 32px !important; padding-right: 32px !important; }
+}
+
+/* === 60fps scroll compositing ===
+   contain:strict tells the browser these subtrees are isolated —
+   no scroll event can cause layout/paint outside them.           */
+.vu-pinned {
+  contain: strict;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+.vu-decisionPinned {
+  contain: layout style;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+/* Prevent any child from triggering a composited-layer promotion storm */
+.vu-scene, .vu-decisionGrid { isolation: isolate; }
+/* Remove box-shadow and filter from scroll-critical elements — both
+   force the browser off the compositor thread */
+.vu-recordCard { filter: none !important; }
+.vu-decisionPinned::before { filter: none; }
+/* Use opacity instead of visibility for AnimatePresence children */
+.vu-scene { pointer-events: auto; }
+
+/* ============================================================
+   MOBILE INTRO VIDEO: full-screen, pinned under nav, fills viewport
+   ============================================================ */
+@media (max-width: 640px) {
+  /* When the intro is fullscreen (!introDocked), the visual fills the
+     entire viewport below the 52px nav bar */
+  .vu-heroVisual.vu-fullscreenIntro {
+    position: fixed;
+    top: 52px;          /* sit flush under the nav */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: calc(100svh - 52px);
+    z-index: 40;        /* above page content, below nav (z-50) */
+    border: none;
+    border-radius: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .vu-heroVisual.vu-fullscreenIntro .vu-videoFrame {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .vu-heroVisual.vu-fullscreenIntro .vu-heroVideo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  /* Skip button: anchored to bottom of the fullscreen panel */
+  .vu-skipIntro {
+    position: absolute;
+    bottom: 24px;
+    right: 18px;
+    z-index: 10;
+    background: rgba(0,0,0,.55);
+    color: #f1f1ef;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font: 500 10px ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .1em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+
+  /* Hide the HUD terminal entirely during fullscreen intro on mobile */
+  .vu-heroVisual.vu-fullscreenIntro .vu-heroTerminal { display: none; }
+
+  /* Video label bar sits at the very bottom of the frame */
+  .vu-heroVisual.vu-fullscreenIntro .vu-videoLabel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,.48);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding: 10px 16px;
+    min-height: 44px;
+  }
+}
+
+/* === Hero copy: tighten gap between nav and content on mobile === */
+@media (max-width: 640px) {
+  /* Pull the frame up tight under the 52px nav — no wasted space */
+  .vu-frame {
+    padding-top: calc(52px + 14px) !important;
+    padding-bottom: 16px !important;
+    align-items: flex-start;
+  }
+  /* Tighten the eyebrow + team label stack */
+  .vu-actTeamLabel { margin-bottom: 6px !important; }
+  .vu-eyebrow { margin-bottom: 0 !important; }
+  /* Pull headline closer to eyebrow */
+  .vu-copy h1,
+  .vu-copy h2 {
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  /* Tighten body copy to headline */
+  .vu-copy p { margin-top: 0 !important; }
+}
+
+/* === Kill double-gap between nav and hero eyebrow on mobile === */
+@media (max-width: 640px) {
+  /* vu-pinned adds 58px padding-top on top of vu-frame's own offset — zero it */
+  .vu-pinned { padding-top: 0 !important; }
+  /* vu-frame already accounts for the nav height; bring content flush up */
+  .vu-frame {
+    padding-top: calc(52px + 10px) !important;
+  }
+}
+
+/* ============================================================
+   HERO PHASE: fit everything in one mobile viewport
+   ============================================================ */
+@media (max-width: 640px) {
+  /* Scene must not overflow the sticky panel */
+  .vu-scene {
+    height: calc(100svh - 52px);
+    overflow: hidden;
+    align-items: flex-start;
+  }
+
+  /* Scroll within the frame if truly needed, but target is no-scroll */
+  .vu-frame {
+    height: calc(100svh - 52px);
+    overflow: hidden;
+    padding-top: calc(52px + 8px) !important;
+    padding-bottom: 10px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  /* Hero grid: single col, minimal gap */
+  .vu-heroGrid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100%;
+    align-items: start;
+  }
+
+  /* Hide the visual panel entirely on hero phase — copy is the hero */
+  .vu-heroGrid .vu-heroVisual.vu-docked {
+    display: none !important;
+  }
+
+  /* Eyebrow: tightest possible */
+  .vu-eyebrow {
+    font-size: 8px !important;
+    letter-spacing: .1em !important;
+    line-height: 1.3;
+    margin: 0 0 6px !important;
+  }
+
+  /* Headline: compact but punchy */
+  .vu-copy h1 {
+    font-size: clamp(26px, 7.8vw, 34px) !important;
+    line-height: 1.06 !important;
+    margin: 0 0 10px !important;
+    letter-spacing: -.04em !important;
+  }
+
+  /* Body: readable at 13px */
+  .vu-copy p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    margin: 0 0 14px !important;
+    max-width: 100% !important;
+  }
+
+  /* CTAs: full-width stack, slim height */
+  .vu-ctas {
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-top: 0 !important;
+  }
+  .vu-ctas button {
+    width: 100% !important;
+    padding: 11px 14px !important;
+    font-size: 9px !important;
+    letter-spacing: .09em !important;
+  }
+
+  /* Meta badges: single row, wrap allowed, small */
+  .vu-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px 12px !important;
+    margin-top: 12px !important;
+    font-size: 8px !important;
+    letter-spacing: .07em !important;
+  }
+}
+
+/* === Scrubber bar: transparent / frosted glass === */
+.vu-scrubber {
+  background: rgba(10, 11, 14, 0.42) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.vu-scrubber > button {
+  border-right-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* === Restore docked visual on mobile — was incorrectly hidden === */
+/* Only hide it during the hero SCENE (copy phase), not globally.
+   We target it via the scene wrapper instead. */
+@media (max-width: 640px) {
+  /* Undo the blanket hide */
+  .vu-heroGrid .vu-heroVisual.vu-docked {
+    display: flex !important;
+  }
+  /* But keep the hero grid single-col and hide the visual
+     only when we're in the copy-only hero scene by capping its height */
+  .vu-heroGrid .vu-heroVisual.vu-docked {
+    width: 100%;
+    max-height: 38vh;
+    overflow: hidden;
+    border-radius: 12px;
+    order: 2;
+  }
+  /* Video frame inside docked: fills the panel */
+  .vu-heroGrid .vu-heroVisual.vu-docked .vu-videoFrame {
+    height: clamp(80px, 18vh, 130px) !important;
+    min-height: 0 !important;
+  }
+  /* Terminal inside docked: fill remaining height */
+  .vu-heroGrid .vu-heroVisual.vu-docked .vu-heroTerminal {
+    height: clamp(160px, 26vh, 240px) !important;
+    min-height: 0 !important;
+  }
+}
+
+/* === 60-120fps scroll: strip all transition:all fighting JS scroll === */
+/* Any CSS transition on scroll-driven containers competes with the spring
+   and causes the visible shudder. Explicitly scope transitions to only
+   the properties that need them. */
+.vu-pinned *,
+.vu-decisionPinned * {
+  transition-property: color, background-color, border-color, opacity !important;
+}
+/* Phase copy: only opacity + transform, no layout props */
+.vu-decisionCopy,
+.vu-recordCard,
+.vu-actTeamLabel,
+.vu-copy {
+  transition: none !important;
+  will-change: opacity, transform;
+  transform: translateZ(0);
+}
+/* Phase rail active dots: fast but not instant */
+.vu-phaseRail span {
+  transition: color 180ms ease, opacity 180ms ease !important;
+}
+/* Prevent scroll-linked pseudo-element from triggering paint storm */
+.vu-decisionStory::before {
+  will-change: background-position;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

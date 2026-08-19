@@ -1,6 +1,6 @@
 import '../styles/vouchres-ultimate-truth-landing.css';
 import '../styles/public-landing.css';
-import { AnimatePresence, motion, useInView, useMotionValueEvent, useScroll } from 'framer-motion';
+import { AnimatePresence, motion, useInView, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ResearchPreviewSection,
@@ -38,6 +38,17 @@ function Artifact({ step }: { step: Step }) {
 }
 function Terminal({ step, hero = false }: { step: Step; hero?: boolean }) { const item = steps[Math.min(3, step - 1)]; return <section className={`vu-terminal ${hero ? 'vu-heroTerminal' : ''}`}><header><span>VOUCHEDGE // ENGINE: VOUCHRES // {String(step).padStart(2, '0')} // {hero ? 'PUBLIC PROOF' : item.tag.split(' / ')[1]}</span><i>LIVE</i></header><AnimatePresence mode="wait"><motion.div key={step} initial={{ opacity: 0, x: step % 2 ? -18 : 18, filter: 'blur(5px)' }} animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }} transition={transition} className="vu-terminalBody"><Artifact step={step} /></motion.div></AnimatePresence><footer><span>RECORD / VOUCHEDGE</span><span>{item.status}</span><b>{item.metric}</b></footer></section>; }
 function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onViewDemo'>) { const canvas = useRef<HTMLDivElement>(null); const [scene, setScene] = useState<Scene>('hero'); const [active, setActive] = useState<Step>(1); const [hasAdvancedToRecord, setHasAdvancedToRecord] = useState(false); const recordAdvanceTimer = useRef<number | null>(null); const [videoMuted, setVideoMuted] = useState(true); const [introDocked, setIntroDocked] = useState(false); const heroVideoRef = useRef<HTMLVideoElement>(null);
+  // Prevent all scrolling while the fullscreen intro video is active
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!introDocked) {
+      const prev = root.style.overflow;
+      const prevTouch = root.style.touchAction;
+      root.style.overflow = 'hidden';
+      root.style.touchAction = 'none';
+      return () => { root.style.overflow = prev; root.style.touchAction = prevTouch; };
+    }
+  }, [introDocked]);
   useEffect(() => {
     const video = heroVideoRef.current;
     if (!video) return;
@@ -59,11 +70,26 @@ function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onVie
       video.removeEventListener('ended', handleEnded);
       window.clearTimeout(timer);
     };
-  }, [introDocked]); useEffect(() => { if (introDocked) return; const timer = window.setTimeout(() => setIntroDocked(true), 4000); return () => window.clearTimeout(timer); }, [introDocked]); const replayHeroVideo = () => { const video = heroVideoRef.current; if (!video) return; setIntroDocked(false); video.currentTime = 0; void video.play(); }; const { scrollYProgress } = useScroll({ target: canvas, offset: ['start start', 'end end'] }); useMotionValueEvent(scrollYProgress, 'change', p => { const next: Scene = p < .16 ? 'hero' : p < .8 ? 'ledger' : 'proof'; setScene(next); if (next === 'ledger') setActive(Math.min(4, Math.max(1, Math.floor((p - .16) / .16) + 1)) as Step); if (p >= .995 && !hasAdvancedToRecord) { setHasAdvancedToRecord(true); recordAdvanceTimer.current = window.setTimeout(() => document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 2000); } if (p < .985 && hasAdvancedToRecord) { if (recordAdvanceTimer.current) window.clearTimeout(recordAdvanceTimer.current); recordAdvanceTimer.current = null; setHasAdvancedToRecord(false); } }); const go = (stop: number) => { const el = canvas.current; if (!el) return; const start = el.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: start + (el.offsetHeight - window.innerHeight) * stop, behavior: 'smooth' }); }; const skipToDecision = () => { if (recordAdvanceTimer.current) window.clearTimeout(recordAdvanceTimer.current); recordAdvanceTimer.current = null; setHasAdvancedToRecord(true); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; return <div id="truth-flow" ref={canvas} className="vu-story"><div className="vu-pinned"><div className="vu-frame"><AnimatePresence mode="wait"><motion.section key={scene} className="vu-scene" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .18 }}>{scene === 'hero' && <div className="vu-heroGrid"><div className="vu-copy"><span className="vu-eyebrow">● VOUCHEDGE // ENGINE: VOUCHRES · MLB RESEARCH / PUBLIC PROOF</span><h1>Stop guessing. Build an auditable MLB research ledger before first pitch.</h1><p>VouchEdge pairs Statcast telemetry, pitcher-vulnerability splits, and lineup validation into a decision record you can inspect, track, and improve.</p><div className="vu-ctas"><button className="vu-primary" onClick={onJoinBeta}>OPEN TODAY’S SLATE — FREE BETA</button><button onClick={() => { onViewDemo(); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>INSPECT SAMPLE LEDGER <span>↓</span></button></div><div className="vu-meta"><span>HR TELEMETRY + PITCHER SPLITS</span><span>LINEUP + BULLPEN CONTEXT</span><span>LOCKED PRE-GAME RECORD</span></div></div><div className={`vu-heroVisual ${introDocked ? "vu-docked" : "vu-fullscreenIntro"}`}>
+  }, [introDocked]); useEffect(() => { if (introDocked) return; const timer = window.setTimeout(() => setIntroDocked(true), 4000); return () => window.clearTimeout(timer); }, [introDocked]); const replayHeroVideo = () => { const video = heroVideoRef.current; if (!video) return; setIntroDocked(false); video.currentTime = 0; void video.play(); }; const { scrollYProgress: rawScrollYProgress } = useScroll({ target: canvas, offset: ['start start', 'end end'] });
+  // Spring damper: eliminates mousewheel notch jitter, locks in 60fps glide
+  const scrollYProgress = useSpring(rawScrollYProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
+  const sceneRef = useRef<Scene>('hero'); const stepRef = useRef<Step>(1);
+  useMotionValueEvent(scrollYProgress, 'change', p => {
+    const next: Scene = p < .16 ? 'hero' : p < .8 ? 'ledger' : 'proof';
+    if (next !== sceneRef.current) { sceneRef.current = next; setScene(next); }
+    if (next === 'ledger') {
+      const s = Math.min(4, Math.max(1, Math.floor((p - .16) / .16) + 1)) as Step;
+      if (s !== stepRef.current) { stepRef.current = s; setActive(s); }
+    }
+    if (p >= .995 && !hasAdvancedToRecord) { setHasAdvancedToRecord(true); recordAdvanceTimer.current = window.setTimeout(() => document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 2000); }
+    if (p < .985 && hasAdvancedToRecord) { if (recordAdvanceTimer.current) window.clearTimeout(recordAdvanceTimer.current); recordAdvanceTimer.current = null; setHasAdvancedToRecord(false); }
+  }); const go = (stop: number) => { const el = canvas.current; if (!el) return; const start = el.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: start + (el.offsetHeight - window.innerHeight) * stop, behavior: 'smooth' }); }; const skipToDecision = () => { if (recordAdvanceTimer.current) window.clearTimeout(recordAdvanceTimer.current); recordAdvanceTimer.current = null; setHasAdvancedToRecord(true); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; return <div id="truth-flow" ref={canvas} className="vu-story"><div className="vu-pinned"><div className="vu-frame"><AnimatePresence mode="wait"><motion.section key={scene} className="vu-scene" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .18 }}>{scene === 'hero' && <div className="vu-heroGrid"><div className="vu-copy"><span className="vu-eyebrow">● VOUCHEDGE // ENGINE: VOUCHRES · MLB RESEARCH / PUBLIC PROOF</span><h1>Stop guessing. Build an auditable MLB research ledger before first pitch.</h1><p>VouchEdge pairs Statcast telemetry, pitcher-vulnerability splits, and lineup validation into a decision record you can inspect, track, and improve.</p><div className="vu-ctas"><button className="vu-primary" onClick={onJoinBeta}>OPEN TODAY’S SLATE — FREE BETA</button><button onClick={() => { onViewDemo(); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>INSPECT SAMPLE LEDGER <span>↓</span></button></div><div className="vu-meta"><span>HR TELEMETRY + PITCHER SPLITS</span><span>LINEUP + BULLPEN CONTEXT</span><span>LOCKED PRE-GAME RECORD</span></div></div><div className={`vu-heroVisual ${introDocked ? "vu-docked" : "vu-fullscreenIntro"}`}>
             {!introDocked && <button className="vu-skipIntro" type="button" onClick={() => setIntroDocked(true)}>SKIP INTRO ✕</button>}<div className="vu-videoFrame"><video ref={heroVideoRef} className="vu-heroVideo" autoPlay muted={videoMuted} loop playsInline preload="metadata" aria-label="VouchEdge product preview"><source src="/media/vouchedge-landing-60fps.mp4" type="video/mp4"/></video><div className="vu-videoScan" aria-hidden="true"/><div className="vu-videoLabel"><div><button className="vu-videoReplay" type="button" aria-label="Replay VouchEdge product intro" onClick={replayHeroVideo}>↻ REPLAY</button><button className="vu-videoAudio" type="button" aria-pressed={!videoMuted} aria-label={videoMuted ? "Unmute VouchEdge product video" : "Mute VouchEdge product video"} onClick={() => { const next = !videoMuted; setVideoMuted(next); if (heroVideoRef.current) { heroVideoRef.current.muted = next; void heroVideoRef.current.play(); } }}>{videoMuted ? "◌ SOUND OFF" : "◉ SOUND ON"}</button><b>60 FPS · LIVE RESEARCH FLOW</b></div></div></div><Terminal step={1} hero /></div></div>}{scene === 'ledger' && <div className="vu-ledgerGrid"><div className="vu-copy vu-ledgerCopy"><motion.div key={steps[active - 1].tag} className="vu-actTeamLabel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: .82, y: 0 }} transition={{ duration: .45 }}><span>TEAM / {STORY_MATCHUPS[Math.min(STORY_MATCHUPS.length - 1, active - 1)].team}</span><b>{STORY_MATCHUPS[Math.min(STORY_MATCHUPS.length - 1, active - 1)].matchup}</b></motion.div><span className="vu-eyebrow">VOUCHEDGE FLOW / {String(active).padStart(2, '0')} OF 04</span><AnimatePresence mode="wait"><motion.div key={active} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={transition}><h2>{steps[active - 1].title}</h2><p>{steps[active - 1].body}</p><div className="vu-proof"><span>{steps[active - 1].proof}</span><b>VOUCHEDGE</b></div></motion.div></AnimatePresence></div><Terminal step={active} /></div>}{scene === 'proof' && <motion.div className="vu-proofScene" initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: .16 } } }}><motion.span className="vu-eyebrow" variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}>THE VOUCH RECORD</motion.span><motion.h2 variants={{ hidden: { opacity: 0, y: 30, scale: .97 }, show: { opacity: 1, y: 0, scale: 1 } }}>Research. Vouch. Prove it.</motion.h2><motion.p variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}>Every meaningful decision retains the context that made it worth taking, then meets the result in a record that cannot quietly rewrite the past.</motion.p><motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}><span>RESEARCHED</span><i>→</i><span>TIME STAMPED</span><i>→</i><span>GRADED</span><i>→</i><span>PUBLIC</span></motion.div></motion.div>}</motion.section></AnimatePresence></div><div className="vu-scrubber"><button className={scene === 'hero' ? 'active' : ''} onClick={() => go(0)}>INTRO</button><div className="vu-rail">{steps.map((s, i) => <button key={s.id} aria-label={`VouchRes act ${s.id}`} className={scene === 'ledger' && active === s.id ? 'active' : ''} onClick={() => go(.16 + i * .16 + .035)} />)}</div><span>{scene === 'ledger' ? steps[active - 1].tag : scene === 'proof' ? 'PUBLIC PROOF' : 'LIVE RESEARCH'}</span><button className={scene === 'proof' ? 'active' : ''} onClick={() => go(.86)}>PROOF</button>{hasAdvancedToRecord && <button className="vu-skipDecision" type="button" onClick={skipToDecision}>SKIP TO TRACK THE DECISION ↓</button>}</div></div></div>; }
 function ResearchRecordBridge() {
   const bridgeRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: bridgeRef, offset: ['start start', 'end end'] });
+  const { scrollYProgress: rawBridgeProgress } = useScroll({ target: bridgeRef, offset: ['start start', 'end end'] });
+  // Spring damper on the ledger section scroll — same physics, same glide
+  const scrollYProgress = useSpring(rawBridgeProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
   const [phase, setPhase] = useState(0);
   const [hasAdvancedPastDecision, setHasAdvancedPastDecision] = useState(false);
   const advanceTimer = useRef<number | null>(null);
@@ -73,12 +99,75 @@ function ResearchRecordBridge() {
     { eyebrow: '03 / WINS + LOSSES', title: 'Show the whole record.', body: 'Wins and losses remain visible together, so the scoreboard measures the process honestly—not just the highlights.', label: 'OUTCOMES GRADED', detail: 'Win · Loss · Review' },
     { eyebrow: '04 / METHODOLOGY', title: 'Make the next call better.', body: 'Review what held up, where the evidence failed, and turn every completed record into a sharper research workflow.', label: 'LOOP COMPLETE', detail: 'Research → decision → result' },
   ];
+  const phaseRef = useRef(0);
+  const snapLockRef = useRef(false);
+  const snapTimerRef = useRef<number | null>(null);
+  const touchStartYRef = useRef(0);
+
+  const snapToPhase = (targetPhase: number) => {
+    const el = bridgeRef.current;
+    if (!el) return;
+    const clamped = Math.min(phases.length - 1, Math.max(0, targetPhase));
+    // Calculate the exact scroll position for this phase boundary
+    const sectionTop = el.getBoundingClientRect().top + window.scrollY;
+    const scrollable = el.offsetHeight - window.innerHeight;
+    const ratio = (clamped + 0.02) / phases.length; // land just past the phase boundary
+    const target = sectionTop + scrollable * Math.min(ratio, 0.99);
+    snapLockRef.current = true;
+    window.scrollTo({ top: target, behavior: 'smooth' });
+    // Release snap lock after animation settles
+    if (snapTimerRef.current) window.clearTimeout(snapTimerRef.current);
+    snapTimerRef.current = window.setTimeout(() => { snapLockRef.current = false; }, 700);
+  };
+
+  // Intercept fast wheel scrolls — redirect to next/prev phase
+  useEffect(() => {
+    const el = bridgeRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (snapLockRef.current) { e.preventDefault(); return; }
+      const speed = Math.abs(e.deltaY);
+      if (speed > 40) {
+        const dir = e.deltaY > 0 ? 1 : -1;
+        const target = phaseRef.current + dir;
+        // If scrolling past the last phase or before the first, release native scroll
+        if (target > phases.length - 1 || target < 0) return;
+        e.preventDefault();
+        snapToPhase(target);
+      }
+    };
+    const onTouchStart = (e: TouchEvent) => { touchStartYRef.current = e.touches[0].clientY; };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (snapLockRef.current) return;
+      const delta = touchStartYRef.current - e.changedTouches[0].clientY;
+      if (Math.abs(delta) > 18) {
+        const dir = delta > 0 ? 1 : -1;
+        const target = phaseRef.current + dir;
+        // Same boundary check for touch
+        if (target > phases.length - 1 || target < 0) return;
+        snapToPhase(target);
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useMotionValueEvent(scrollYProgress, 'change', value => {
+    // Direct DOM write — zero React overhead, runs on compositor thread
     bridgeRef.current?.style.setProperty('--ledger-progress', String(Math.min(1, Math.max(0, value))));
-    setPhase(Math.min(phases.length - 1, Math.max(0, Math.floor(value * phases.length))));
+    // Only setState when the discrete phase bucket changes (~4 times total)
+    const next = Math.min(phases.length - 1, Math.max(0, Math.floor(value * phases.length)));
+    if (next !== phaseRef.current) { phaseRef.current = next; setPhase(next); }
     if (value >= .985 && !hasAdvancedPastDecision) {
       setHasAdvancedPastDecision(true);
-      advanceTimer.current = window.setTimeout(() => document.getElementById('transparency-over-hype')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 180);
+      advanceTimer.current = window.setTimeout(() => document.getElementById('transparency-over-hype')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 950);
     }
     if (value < .96 && hasAdvancedPastDecision) {
       if (advanceTimer.current) window.clearTimeout(advanceTimer.current);

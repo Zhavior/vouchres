@@ -1,0 +1,12 @@
+{
+  "url": "http://127.0.0.1:3000/vouchedge-preview",
+  "executed": true,
+  "passed": true,
+  "diagnoses": [],
+  "assetFailures": [],
+  "documentStatus": 200,
+  "durationMs": 2805,
+  "cli": "chronos diagnose",
+  "version": "0.15.0",
+  "note": "Full assetTimings omitted; parent Chronos run 2026-08-18. No repair --apply."
+}
