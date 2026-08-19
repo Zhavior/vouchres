@@ -113,7 +113,14 @@ export const SECTIONS_USING_LIVE_GAMES = new Set([
 /* `hr_max` is the HR Command Desk — an internal research surface, gated in
    MainViewRouter by AdminAccessGate. Listed here so a logged-out deep link is
    sent to sign-in rather than to a staff-only page it cannot render. */
-const PROTECTED_SECTIONS = new Set(['billing', 'admin', 'admin_hr_next', 'admin_model_quality', 'hr_board', 'hr_max']);
+const PROTECTED_SECTIONS = new Set([
+  'billing',
+  'admin',
+  'admin_hr_next',
+  'admin_model_quality',
+  'hr_board',
+  'hr_max',
+]);
 
 export function getSavedActiveSection(): string | null {
   try {

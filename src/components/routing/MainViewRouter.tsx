@@ -53,6 +53,7 @@ const SettingsPageZ8 = lazyPage(routeModules.settings, 'SettingsPageZ8');
 const PremiumSubPage = lazyPage(routeModules.premium, 'PremiumSubPage');
 const PlayerResearchHub = lazyPage(routeModules.research, 'PlayerResearchHub');
 const CustomizePage = lazyPage(routeModules.customize, 'CustomizePage');
+const ResultsStudio = lazyPage(routeModules.results, 'ResultsStudio');
 const SmartAiEngine = lazyPage(routeModules.smartAiEngine, 'SmartAiEngine');
 const MlbIntelligenceHub = lazyPage(routeModules.brainEdge, 'MlbIntelligenceHub');
 const Leaderboard = lazyPage(routeModules.leaderboard, 'Leaderboard');
@@ -65,20 +66,46 @@ const DailyPlayersPage = lazyPage(routeModules.dailyPlayers, 'DailyPlayersPage')
 const LiveGamesPage = lazyPage(routeModules.liveGames, 'LiveGamesPage');
 const NotificationsPage = lazyPage(routeModules.notifications, 'NotificationsPage');
 const PlayerEdgeLabPageZ8 = lazyPage(routeModules.playerEdgeLab, 'PlayerEdgeLabPageZ8');
-const PitcherMatchupIntelligencePageZ8 = lazyPage(routeModules.pitcherMatchup, 'PitcherMatchupIntelligencePageZ8');
-const HitterMatchupZonesPageZ8 = lazyPage(routeModules.hitterMatchup, 'HitterMatchupZonesPageZ8');
-const ProCommandCenterPageZ8 = lazyPage(routeModules.proCommandCenter, 'ProCommandCenterPageZ8');
+const PitcherMatchupIntelligencePageZ8 = lazyPage(
+  routeModules.pitcherMatchup,
+  'PitcherMatchupIntelligencePageZ8',
+);
+const HitterMatchupZonesPageZ8 = lazyPage(
+  routeModules.hitterMatchup,
+  'HitterMatchupZonesPageZ8',
+);
+const ProCommandCenterPageZ8 = lazyPage(
+  routeModules.proCommandCenter,
+  'ProCommandCenterPageZ8',
+);
+
 import type { ParlayCommandPanel } from '../../stores/parlayCommandStore';
 import { parlayOsPanelForSection } from '../../lib/parlays/parlayOsSections';
+
 const ParlayOsWorkspace = lazyPage(routeModules.parlayOs, 'ParlayOsWorkspace');
 const ParlayProofPage = lazyPage(routeModules.parlayProof, 'ParlayProofPage');
 const NbaNflArena = lazyPage(routeModules.nbaNflArena, 'NbaNflArena');
 const AisLandingPage = lazyPage(routeModules.aisLanding, 'AisLandingPage');
-const MostVouchedTodayPageZ8 = lazyPage(routeModules.mostVouchedToday, 'MostVouchedTodayPageZ8');
+const MostVouchedTodayPageZ8 = lazyPage(
+  routeModules.mostVouchedToday,
+  'MostVouchedTodayPageZ8',
+);
 const AuroraHqShell = lazyPage(routeModules.auroraHq, 'AuroraHqShell');
-const HrNextPage = lazyPage(() => import('../../features/hr-next/pages/HrNextPage'), 'HrNextPage');
-const TrustModelQualityPage = lazyPage(() => import('../../features/trust/TrustModelQualityPage'), 'TrustModelQualityPage');
-const TodayNextPage = lazyPage(() => import('../../features/today-next/pages/TodayNextPage'), 'TodayNextPage');
+
+const HrNextPage = lazyPage(
+  () => import('../../features/hr-next/pages/HrNextPage'),
+  'HrNextPage',
+);
+
+const TrustModelQualityPage = lazyPage(
+  () => import('../../features/trust/TrustModelQualityPage'),
+  'TrustModelQualityPage',
+);
+
+const TodayNextPage = lazyPage(
+  () => import('../../features/today-next/pages/TodayNextPage'),
+  'TodayNextPage',
+);
 // Module scope on purpose. Building this inside AdminAccessGateShell creates a
 // new lazy component type every render, so React remounts and re-suspends the
 // whole gated subtree each pass — which takes down every admin-gated route.
