@@ -53,6 +53,20 @@
     cubic-bezier(.16, 1, .3, 1) both;
 }
 
+
+/* Contract layout aliases — preserves Aurora auth panel geometry */
+.ve-auth-dialog {
+  max-width: 56rem;
+}
+
+.ve-auth-aurora-panel {
+  flex: 0 0 clamp(21rem, 42%, 25rem);
+}
+
+.ve-auth-form-panel {
+  flex: 1 1 0%;
+}
+
 .ve-auth-dialog.ve-auth-vouch-dialog::before {
   content: "";
 

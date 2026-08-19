@@ -538,7 +538,7 @@ export default function AuthModal({
           </header>
 
           <div className="ve-auth-vouch-layout">
-            <aside className="ve-auth-vouch-story">
+            <aside className="ve-auth-vouch-story ve-auth-aurora-panel">
               <div>
                 <span className="ve-auth-vouch-kicker">
                   {mode === 'signup' ? 'ACCOUNT / 02' : 'ACCOUNT / 01'}
