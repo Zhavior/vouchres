@@ -103,3 +103,29 @@ body {
     transform: translateY(-8px);
   }
 }
+
+/* =========================================================
+   Sharp Aesthetic: Force square corners across all boards,
+   cards, buttons, dialogs, drawers, and panels.
+   ========================================================= */
+#root [class*="rounded-"],
+#root [class*="rounded"],
+.z8-app-shell [class*="rounded-"],
+.ve-layout-frame [class*="rounded-"],
+.ve-hr-card,
+.ve-hr-panel,
+.ve-vouch-card,
+.z8-feed-card,
+[class*="border"][class*="bg-"] {
+  border-radius: 0px !important;
+}
+
+/* Retain circular shape only for avatars and status dots */
+img[alt*="avatar" i],
+.avatar,
+[class*="avatar" i],
+[class*="Avatar" i],
+.rounded-full.h-2.w-2,
+.rounded-full.h-1\.5.w-1\.5 {
+  border-radius: 50% !important;
+}

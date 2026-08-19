@@ -172,3 +172,24 @@
   inset: 0;
   z-index: -1;
 }
+
+/* Sharp aesthetic: remove rounded corners across boards, cards, tables, and panels */
+.ve-layout-frame,
+.ve-layout-frame *,
+.z8-app-shell [class*="rounded-"],
+.ve-theme-transition [class*="rounded-"],
+.ve-hr-panel,
+.ve-hr-card,
+.ve-vouch-card,
+.z8-feed-card,
+[class*="border"][class*="bg-"] {
+  border-radius: 0px !important;
+}
+
+/* Maintain circular shape only for profile avatars / user icons */
+img[alt*="avatar" i],
+.avatar,
+[class*="avatar" i],
+[class*="Avatar" i] {
+  border-radius: 50% !important;
+}
