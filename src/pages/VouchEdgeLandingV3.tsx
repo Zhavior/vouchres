@@ -51,27 +51,45 @@ function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onVie
     }
   }, [introDocked]);
   useEffect(() => {
+    if (introDocked) return;
+
     const video = heroVideoRef.current;
     if (!video) return;
+
+    // On narrow/mobile viewports, changing from fullscreen intro geometry to
+    // the docked layout creates a large unsolicited layout shift. Keep the
+    // intro stable until the visitor explicitly chooses SKIP INTRO.
+    const allowAutomaticDock = window.matchMedia('(min-width: 851px)').matches;
+    if (!allowAutomaticDock) return;
+
+    const dockIntro = () => setIntroDocked(true);
+
     const handleTimeUpdate = () => {
-      // Start shrinking into the hero dock at 60% of the video duration.
-      if (video.duration && video.currentTime / video.duration >= 0.6 && !introDocked) {
-        setIntroDocked(true);
+      if (video.duration && video.currentTime / video.duration >= 0.6) {
+        dockIntro();
       }
     };
-    const handleEnded = () => {
-      setIntroDocked(true);
-    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
-    // Fallback timer so it always docks after 8s even if autoplay is delayed
-    const timer = window.setTimeout(() => setIntroDocked(true), 6000);
+    video.addEventListener('ended', dockIntro);
+
+    const timer = window.setTimeout(dockIntro, 6000);
+
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('ended', dockIntro);
       window.clearTimeout(timer);
     };
-  }, [introDocked]); useEffect(() => { if (introDocked) return; const timer = window.setTimeout(() => setIntroDocked(true), 4000); return () => window.clearTimeout(timer); }, [introDocked]); const replayHeroVideo = () => { const video = heroVideoRef.current; if (!video) return; setIntroDocked(false); video.currentTime = 0; void video.play(); }; const { scrollYProgress: rawScrollYProgress } = useScroll({ target: canvas, offset: ['start start', 'end end'] });
+  }, [introDocked]);
+
+  const replayHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    setIntroDocked(false);
+    video.currentTime = 0;
+    void video.play();
+  }; const { scrollYProgress: rawScrollYProgress } = useScroll({ target: canvas, offset: ['start start', 'end end'] });
   // Spring damper: eliminates mousewheel notch jitter, locks in 60fps glide
   const scrollYProgress = useSpring(rawScrollYProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
   const sceneRef = useRef<Scene>('hero'); const stepRef = useRef<Step>(1);

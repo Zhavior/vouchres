@@ -82,7 +82,14 @@
       /* Boot canvas — matches the app shell so the pre-mount frame is
          indistinguishable from the loaded app (no flash, no loading card). */
       html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
         background-color: #050A14;
+      }
+      body {
+        min-height: 100vh;
       }
       body, #root {
         font-family: var(--font-z8);
