@@ -26,25 +26,24 @@ describe('public landing conversion contract', () => {
   it('mounts the one-record landing from the public terminal page', () => {
     expect(terminalSource).toContain('<VouchEdgeLandingV3');
     expect(terminalSource).toContain("scrollToSection('record')");
-    expect(landingSource).toContain('<ResearchTelemetryStory');
+    expect(landingSource).toContain('<ResearchRecordBridge');
     expect(landingSource).not.toContain('CinematicEditorialStory');
     expect(landingSource).not.toContain('LiveSportsIntelligence');
   });
 
   it('anchors the hero on the live research preview instead of a fixture matchup', () => {
-    expect(landingSource).toContain('useResearchPreview');
-    expect(landingSource).toContain('<LiveRecord');
+    expect(landingSource).toContain('id="research-preview"');
+    expect(landingSource).toContain('ResearchPreviewSection');
     expect(previewDataSource).toContain('export function useResearchPreview');
     for (const fabricated of ['NYY @ BAL', 'NEW YORK YANKEES', 'BALTIMORE ORIOLES']) {
       expect(landingSource).not.toContain(fabricated);
     }
   });
 
-  it('keeps a single VouchRes mention and VouchEdge as the wordmark', () => {
+  it('keeps VouchEdge as the wordmark and identifies the VouchRes engine', () => {
     expect(landingSource).toContain('VouchEdge');
-    expect(landingSource).toContain('a VouchRes record');
-    expect(landingSource).not.toContain('VOUCHRES //');
-    expect(landingSource.match(/VouchRes/g)?.length).toBe(1);
+    expect(landingSource).toContain('VOUCHEDGE // ENGINE: VOUCHRES');
+    expect(landingSource.match(/VouchRes/g)?.length).toBe(2);
   });
 
   it('does not invent confidence, sparklines, or refresh theater', () => {
@@ -57,17 +56,13 @@ describe('public landing conversion contract', () => {
 
   it('wires conversion to access and the live record', () => {
     expect(landingSource).toContain('Get access');
-    expect(landingSource).toContain('Inspect this record');
     expect(landingSource).toContain('id="how-it-works"');
     expect(landingSource).toContain('id="record"');
-    expect(landingSource).toContain('id="access"');
-    expect(landingSource).toContain('id="integrate"');
-    expect(landingSource).toContain('id="simulate"');
-    expect(landingSource).toContain('HR Next');
-    expect(landingSource).toContain('Live Games');
-    expect(landingSource).toContain('My List');
-    expect(landingSource).toContain('Track Record');
-    expect(landingSource).toContain('replaces none of your sportsbook');
+    expect(landingSource).toContain('<DecisionIntelligence');
+    expect(landingSource).toContain('<CommunitySection');
+    expect(landingSource).toContain('<PricingSection');
+    expect(landingSource).toContain('<FAQSection');
+    expect(landingSource).toContain('<CTASection');
     expect(terminalSource).toContain("vouchedge_after_auth_destination");
     expect(terminalSource).toContain('SIGNED_IN_HOME');
   });

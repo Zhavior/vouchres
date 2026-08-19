@@ -5,41 +5,54 @@ import { describe, expect, it } from 'vitest';
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 
 function listTrackedSourceFiles(): string[] {
-  return execFileSync('git', ['ls-files', '-z', '--', 'src'], {
-    encoding: 'utf8',
-  })
+  return execFileSync(
+    'git',
+    ['ls-files', '-z', '--', 'src'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    },
+  )
     .split('\0')
-    .filter((path) => path.endsWith('.ts') || path.endsWith('.tsx'));
+    .filter(
+      (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
+    );
 }
 
-function countWorkingTreeBgHex(): number {
-  return listTrackedSourceFiles().reduce((total, filePath) => {
+function countWorkingTreeBgHex(files: string[]): number {
+  let count = 0;
+
+  for (const filePath of files) {
     const content = readFileSync(filePath, 'utf8');
-    return total + (content.match(BG_HEX_ARBITRARY)?.length ?? 0);
-  }, 0);
+    count += content.match(BG_HEX_ARBITRARY)?.length ?? 0;
+  }
+
+  return count;
 }
 
 function countHeadBgHex(): number {
-  return listTrackedSourceFiles().reduce((total, filePath) => {
-    try {
-      const content = execFileSync(
-        'git',
-        ['show', `HEAD:${filePath}`],
-        { encoding: 'utf8' },
-      );
+  // Read the entire src tree from HEAD in one Git operation instead of
+  // spawning `git show` once for every source file.
+  const archive = execFileSync(
+    'git',
+    ['grep', '-I', '-o', 'bg-\\[\\#', 'HEAD', '--', 'src'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    },
+  );
 
-      return total + (content.match(BG_HEX_ARBITRARY)?.length ?? 0);
-    } catch {
-      // New file: it does not exist in HEAD.
-      return total;
-    }
-  }, 0);
+  return archive
+    .split('\n')
+    .filter(Boolean)
+    .length;
 }
 
 describe('hex Tailwind discipline guard', () => {
   it('does not introduce new bg-[# arbitrary hex classes in src', () => {
+    const files = listTrackedSourceFiles();
     const baseline = countHeadBgHex();
-    const current = countWorkingTreeBgHex();
+    const current = countWorkingTreeBgHex(files);
 
     expect(
       current,
