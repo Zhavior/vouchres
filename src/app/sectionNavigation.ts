@@ -86,7 +86,11 @@ export const HR_NEXT_HOME = 'admin_hr_next';
 export function resolveSignedInHome(canAccessAdmin: boolean): string {
   return canAccessAdmin ? HR_NEXT_HOME : SIGNED_IN_HOME;
 }
-export const FORCE_PUBLIC_LANDING_PATHS = new Set(['/vouchedge-preview', '/preview/vouchedge']);
+export const FORCE_PUBLIC_LANDING_PATHS = new Set([
+  '/vouchedge-preview',
+  '/preview/vouchedge',
+  '/landing',
+]);
 
 export function shouldForcePublicLanding() {
   if (typeof window === 'undefined') return false;
@@ -204,7 +208,8 @@ export function resolveDevSectionFromLocation() {
 
   if (
     target === 'vouchedge-preview' || target === '/vouchedge-preview' ||
-    target === 'preview/vouchedge' || target === '/preview/vouchedge'
+    target === 'preview/vouchedge' || target === '/preview/vouchedge' ||
+    target === 'landing' || target === '/landing'
   ) {
     return 'vouchedge_intro';
   }

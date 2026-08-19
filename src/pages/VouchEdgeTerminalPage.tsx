@@ -73,10 +73,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   const handleFooterNavigate = useCallback((target: FooterNavigationTarget) => {
     const sectionByTarget: Partial<Record<FooterNavigationTarget, string>> = {
-      'Research preview': 'research-preview',
       'How it works': 'how-it-works',
-      Results: 'trust-ledger',
-      Beta: 'pricing',
+      'Live record': 'record',
+      Beta: 'access',
     };
 
     if (target === 'GitHub') {
@@ -92,7 +91,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       <VouchEdgeLandingV3
         onLogin={() => openAuth('login')}
         onJoinBeta={() => openAuth('signup', 'pro')}
-        onViewDemo={() => scrollToSection('research-preview')}
+        onViewDemo={() => scrollToSection('record')}
         onExploreCommunity={() => openAuth('signup', 'free')}
         onFooterNavigate={handleFooterNavigate}
       />

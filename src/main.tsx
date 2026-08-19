@@ -1,6 +1,7 @@
 import { Component, StrictMode, Suspense, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import './styles/public-landing.css';
 import { AppErrorBoundary } from './components/system/AppErrorBoundary';
 import {
   clearChunkRecoveryFlag,

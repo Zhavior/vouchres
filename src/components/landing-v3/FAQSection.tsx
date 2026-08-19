@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 
 const faqs = [
   {
@@ -44,6 +45,7 @@ const faqs = [
 ];
 
 export default function FAQSection() {
+  const [openQuestion, setOpenQuestion] = useState<string | null>(null);
   return (
     <section
       id="faq"
@@ -74,7 +76,7 @@ export default function FAQSection() {
           </p>
         </motion.div>
 
-        <div className="mt-10 divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+        <div className="mt-10 min-h-[36rem] divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] sm:min-h-[32rem]">
           {faqs.map((faq, index) => (
             <motion.details
               key={faq.question}
@@ -83,6 +85,16 @@ export default function FAQSection() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.03, duration: 0.3 }}
               className="group px-5 py-4 transition-colors open:bg-white/[0.03] sm:px-6"
+              open={openQuestion === faq.question}
+              onMouseEnter={(event) => {
+                const current = event.currentTarget;
+                const accordion = current.parentElement;
+                accordion?.querySelectorAll('details[open]').forEach((item) => {
+                  if (item !== current) item.removeAttribute('open');
+                });
+                current.open = true;
+                setOpenQuestion(faq.question);
+              }}
             >
               <summary className="cursor-pointer list-none text-left text-[15px] font-semibold text-white marker:content-none">
                 <span className="flex items-center justify-between gap-4">
@@ -95,7 +107,19 @@ export default function FAQSection() {
                   </span>
                 </span>
               </summary>
-              <p className="mt-3 max-w-3xl text-[14px] leading-7 text-white/65">{faq.answer}</p>
+              <AnimatePresence initial={false}>
+                {openQuestion === faq.question && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.75 }}
+                    className="overflow-hidden"
+                  >
+                    <p className="mt-3 max-w-3xl text-[14px] leading-7 text-white/65">{faq.answer}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.details>
           ))}
         </div>

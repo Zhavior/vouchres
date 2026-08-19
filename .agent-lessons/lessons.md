@@ -326,3 +326,48 @@ root_cause: Aurora Max restyle of HomeRunIntelligencePageLegacy dropped Pro wiri
 rule: When restoring or editing live hr_board, wire useProMode into HrHeader. Standard mounts spotlight+signal grid; Pro mounts WorkspaceSwitcher plus the original suite. Do not recreate HomeRunIntelligencePageZ8.tsx. Do not inner-lazy the Pro modules on this eager route.
 applies_when: VouchEdge Home Run Intelligence; hr_board; Pro Mode; HrSpotlightDeck; WorkspaceSwitcher
 status: active
+---
+
+id: L-landing-scroller-skill
+date: 2026-08-18
+symptom: Meuze dump pasted as product landing (invented ROI, Inter/Fraunces, Next use client)
+root_cause: Architecture dump treated as copy-paste implementation instead of a skill with honesty kills
+rule: technical-landing-scroller owns sticky-pin scrolly architecture; copy structure not Meuze stats; VouchEdge brand kit wins; KILL:INVENTED_ROI
+applies_when: installing or applying Meuze/technical landing scroller dumps to VouchEdge or the agent roster
+status: active
+---
+
+id: L037
+date: 2026-08-18
+symptom: Meuze teardown asked for indigo mesh, backdrop-blur glass board, clip-text zinc H1, and hover pitch-splits on the public landing
+root_cause: Visual kit from another brand was treated as a drop-in upgrade instead of a FAIL against opaque-board and no-fake-telemetry locks
+rule: Hero atmosphere uses product cyan/white radials; HR Next board stays opaque with backdrop-filter none; H1 stays solid near-white; cell hover is lift only — never invent pitch splits
+applies_when: landing hero Meuze glassmorphism gradient-text indigo backdrop-blur pitch-splits craft pass
+status: active
+---
+
+id: L038
+date: 2026-08-18
+symptom: Hero atmosphere CSS never showed because .vu-landing > #top { background: #050507 } and .vu-pinned { background-color: #050507 !important } beat the later radial theater rules
+root_cause: ID + !important leftover canvas locks from an earlier flat-black pass outranked the cinematic layer
+rule: When adding landing atmosphere, override #top and .vu-pinned canvas locks in the same file; probe computed backgroundImage before claiming depth
+applies_when: landing hero atmosphere radial glow vu-pinned #top background-color important
+status: active
+---
+
+id: L039
+date: 2026-08-18
+symptom: How-it-works scroll storytelling died after the theater CSS pass — the board scrolled away instead of staying pinned
+root_cause: Atmosphere rule set .vu-worksStory .vu-pinned { position: relative }, overriding position: sticky
+rule: Never set position:relative (or overflow on a parent) on .vu-pinned / the how-it-works sticky node. Atmosphere belongs on .vu-hero and inside .vu-frame. Probe computed position:sticky and pinTop=0 across 01–04 before claiming the scrolly works
+applies_when: landing how-it-works sticky pin scrolly theater overflow position relative vu-pinned
+status: active
+---
+
+id: L040
+date: 2026-08-18
+symptom: Boyd said the public landing was 100% wrong and does not look like a Meuze.ai-level page after agents claimed the scrolly skill was done
+root_cause: Agents treated technical-landing-scroller as finished once a sticky 01–04 pin and live feed existed. Meuze’s bar is the viz as the world — large, lit, editorial, one object mutating on scroll — not a flat black two-column spec sheet. Refusing indigo/glass/ROI is not permission to ship a developer wireframe. A later git checkout of HEAD then restored the pre-skill TruthFlow page and burned the uncommitted machine.
+rule: Do not claim Meuze-level or "the skill is done" without Apple Craft screenshots of a living pin (board stays, copy/state change, depth that reads in a still). Architecture (one pin, live or empty, no invented ROI) is the floor. Visual world of the object is the bar. Never git checkout HEAD to undo a botched craft pass when the approved uncommitted landing still exists. meuze.ai is the scroll-story reference, not a license to copy their blue/Inter/guest math, and not a license to stop at CSS sticky alone.
+applies_when: landing Meuze meuze.ai technical-landing-scroller how-it-works sticky pin craft Apple visual bar VouchEdge public landing
+status: active
