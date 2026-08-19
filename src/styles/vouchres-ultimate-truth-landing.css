@@ -1026,9 +1026,8 @@
 }
 /* Restore the travelling-light progress bar */
 .vu-decisionStory::before { display: block !important; }
-/* Scroll-snap: softly attract the viewport when entering this section */
-.vu-landing { scroll-snap-type: y proximity; }
-.vu-realSection { scroll-snap-align: start; }
+.vu-landing { scroll-snap-type: none !important; }
+.vu-realSection { scroll-snap-align: none !important; }
 
 /* ============================================================
    Mobile jitter / smoothness pass
