@@ -1,6 +1,8 @@
 import '../styles/vouchres-ultimate-truth-landing.css';
 import '../styles/public-landing.css';
-import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from 'framer-motion';
+import '../components/landing-v4/evidence-field.css';
+import '../components/landing-v4/premium-hero.css';
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import {
   DecisionIntelligence,
@@ -9,11 +11,17 @@ import {
   FAQSection,
   CTASection,
   FooterSection,
+  ResearchPreviewSection,
   type FooterNavigationTarget,
 } from '../components/landing-v3';
 
-type Step = 1 | 2 | 3 | 4;
-type Scene = 'hero' | 'ledger' | 'proof';
+import {
+  useResearchPreview,
+  type ResearchPreview,
+} from '../components/landing-v3/researchPreviewData';
+
+type StoryStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
 type Props = {
   onLogin: () => void;
   onJoinBeta: () => void;
@@ -22,19 +30,64 @@ type Props = {
   onFooterNavigate: (target: FooterNavigationTarget) => void;
 };
 
-const steps = [
-  { id: 1 as Step, tag: 'ACT 1 / MATCHUP SETUP', title: 'Start with an MLB board built for decisions, not noise.', body: 'Build a faster pre-game case with matchup context, high-signal telemetry, and explicit evidence states.', proof: 'LIVE SCHEDULE + LINKED RESEARCH', metric: '01/04', status: 'MATCHUP READY' },
-  { id: 2 as Step, tag: 'ACT 2 / EVIDENCE SIGNALS', title: 'Surface the power signals before first pitch.', body: 'Statcast contact quality, pitcher vulnerability, lineup validation, weather, and bullpen leverage sit in one research workflow.', proof: 'EVIDENCE STATES EXPLICIT', metric: '02/04', status: 'SIGNALS REVIEWED' },
-  { id: 3 as Step, tag: 'ACT 3 / DECISION LOCK', title: 'Lock the thesis while the market is still live.', body: 'Save the thesis, confidence, and supporting signals before first pitch—then measure the call against the final.', proof: 'TIME-BOUND DECISION RECORD', metric: '03/04', status: 'RECORD LOCKED' },
-  { id: 4 as Step, tag: 'ACT 4 / IMMUTABLE PROOF', title: 'Audit the call. Keep the learning loop.', body: 'Every result remains connected to the original pre-game research so you can refine your process slate after slate.', proof: 'POST-GAME COMPARISON', metric: '04/04', status: 'OUTCOME RETAINED' },
-];
-
-const STORY_MATCHUPS = [
-  { batter: 'SHOHEI OHTANI', batterId: 660271, matchup: 'LAD @ MIL', team: 'LAD', stats: { avg: '.295', homeRuns: 29, rbi: 78, ops: '.948' } },
-  { batter: 'AARON JUDGE', batterId: 592450, matchup: 'NYY @ TOR', team: 'NYY', stats: { avg: '.248', homeRuns: 17, rbi: 38, ops: '.908' } },
-  { batter: 'PETE CROW-ARMSTRONG', batterId: 691718, matchup: 'STL @ CHC', team: 'CHC', stats: { avg: '.282', homeRuns: 31, rbi: 79, ops: '.934' } },
-  { batter: 'MIKE TROUT', batterId: 545361, matchup: 'KC @ LAA', team: 'LAA', stats: { avg: '.242', homeRuns: 20, rbi: 45, ops: '.824' } },
-];
+const storySteps = [
+  {
+    id: 1 as StoryStep,
+    tag: '01 / MATCHUP',
+    title: 'See the matchup before the noise.',
+    body: 'Start with the player, opponent, game state, and the research inputs that actually exist.',
+    status: 'MATCHUP',
+  },
+  {
+    id: 2 as StoryStep,
+    tag: '02 / EVIDENCE',
+    title: 'See what the system knows.',
+    body: 'Every signal keeps its source. Verified inputs stay verified. Missing inputs stay visibly missing.',
+    status: 'EVIDENCE',
+  },
+  {
+    id: 3 as StoryStep,
+    tag: '03 / CONTEXT',
+    title: 'Context changes the meaning of a signal.',
+    body: 'Pitcher vulnerability, lineup state, recent form, environment, and availability belong beside the metric—not buried behind it.',
+    status: 'CONTEXT',
+  },
+  {
+    id: 4 as StoryStep,
+    tag: '04 / CONFIDENCE',
+    title: 'Confidence should be explainable.',
+    body: 'Confidence rises with evidence quality and coverage. It should never become a substitute for the evidence underneath it.',
+    status: 'WHY',
+  },
+  {
+    id: 5 as StoryStep,
+    tag: '05 / DECISION',
+    title: 'Make the call while it can still be tested.',
+    body: 'Turn the research into a clear pre-game thesis while the outcome is still unknown.',
+    status: 'DECISION',
+  },
+  {
+    id: 6 as StoryStep,
+    tag: '06 / LOCK',
+    title: 'Keep the record.',
+    body: 'Sources, evidence state, confidence, and thesis stay attached to the moment the decision was made.',
+    status: 'LOCKED',
+  },
+  {
+    id: 7 as StoryStep,
+    tag: '07 / RESULT',
+    title: 'The result is not the whole story.',
+    body: 'Put the outcome beside the original decision. Keep what worked, what failed, and what the evidence actually supported.',
+    status: 'AUDIT',
+  },
+  {
+    id: 8 as StoryStep,
+    tag: '08 / LEARN',
+    title: 'Every slate should teach the next one.',
+    body: 'Build a decision history that exposes patterns across wins, losses, confidence, and evidence quality.',
+    status: 'LEARN',
+  },
+] as const;
 
 function mlbHeadshot(personId?: number) {
   return personId
@@ -42,173 +95,384 @@ function mlbHeadshot(personId?: number) {
     : 'https://img.mlbstatic.com/mlb-photos/image/upload/w_160,q_auto:best/v1/people/592450/headshot/67/current';
 }
 
-function Artifact({ step }: { step: Step }) {
-  const act = step;
-  const matchup = STORY_MATCHUPS[step - 1];
+
+function displayTeam(team?: string) {
+  if (!team) return 'TEAM PENDING';
+  if (team === 'LAA') return 'ANGELS';
+  return team;
+}
+
+function formatConfidence(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value <= 1
+      ? `${Math.round(value * 100)}%`
+      : `${Math.round(value)}%`;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return value;
+  }
+
+  return '—';
+}
+
+function storyPhaseLabel(story: StoryStep) {
+  switch (story) {
+    case 1:
+      return 'LOCATE';
+    case 2:
+      return 'CONNECT';
+    case 3:
+      return 'ORGANIZE';
+    case 4:
+      return 'RESOLVE';
+    case 5:
+      return 'DECIDE';
+    case 6:
+      return 'LOCK';
+    case 7:
+      return 'COMPARE';
+    case 8:
+      return 'LEARN';
+  }
+}
+
+function EvidenceField({
+  preview,
+  story,
+}: {
+  preview: ReturnType<typeof useResearchPreview>;
+  story: StoryStep;
+}) {
+  const evidence = preview.evidenceItems.slice(0, 6);
+
+  const positions = [
+    [18, 27],
+    [80, 24],
+    [84, 59],
+    [67, 79],
+    [21, 70],
+    [38, 17],
+  ] as const;
+
   return (
-    <div className="vu-actCanvas">
-      <motion.div
-        key={matchup.team}
-        className="vu-teamWatermark"
-        initial={{ opacity: 0, x: 24 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        aria-hidden="true"
+    <div
+      className="vu-evidenceMachine"
+      data-story={story}
+      data-truth={
+        preview.isError
+          ? 'error'
+          : preview.usingDemo
+            ? 'sample'
+            : preview.isLoading
+              ? 'loading'
+              : 'live'
+      }
+      aria-hidden="true"
+    >
+      <div className="vu-evidenceMachineGrid" />
+      <div className="vu-evidenceMachineScan" />
+
+      <div className="vu-machineTelemetry vu-machineTelemetryTop">
+        <span>VOUCHEDGE / EVIDENCE MACHINE</span>
+        <b>{storyPhaseLabel(story)}</b>
+      </div>
+
+      <svg
+        className="vu-evidenceNetwork"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
       >
-        <span>{matchup.team}</span>
-        <small>{matchup.team}</small>
+        {evidence.map((item, index) => {
+          const [x, y] = positions[index];
+
+          return (
+            <motion.line
+              key={`${item.label}-${index}`}
+              x1="50"
+              y1="50"
+              x2={x}
+              y2={y}
+              vectorEffect="non-scaling-stroke"
+              className={`vu-evidenceTrace vu-evidenceTrace-${item.state}`}
+              initial={false}
+              animate={{
+                opacity: story === 1 ? 0.12 : story >= 6 ? 0.28 : 0.72,
+                pathLength: story === 1 ? 0.08 : 1,
+              }}
+              transition={{
+                duration: 0.36,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            />
+          );
+        })}
+      </svg>
+
+      {evidence.map((item, index) => {
+        const [x, y] = positions[index];
+
+        return (
+          <motion.div
+            key={`${item.label}-${item.state}-${index}`}
+            className={`vu-evidencePoint vu-evidencePoint-${item.state}`}
+            initial={false}
+            animate={{
+              left:
+                story === 3
+                  ? `${index < 3 ? 18 : 82}%`
+                  : story >= 6
+                    ? `${index < 3 ? 30 : 70}%`
+                    : `${x}%`,
+              top:
+                story === 3
+                  ? `${29 + (index % 3) * 21}%`
+                  : story >= 6
+                    ? `${30 + (index % 3) * 20}%`
+                    : `${y}%`,
+              opacity: story === 1 ? 0.34 : 1,
+              scale: story === 1 ? 0.76 : story >= 6 ? 0.88 : 1,
+            }}
+            transition={{
+              duration: 0.36,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <i />
+
+            <div>
+              <span>{item.label}</span>
+              <b>{item.state.toUpperCase()}</b>
+
+              {story >= 2 && story <= 4 && item.detail ? (
+                <small>{item.detail}</small>
+              ) : null}
+            </div>
+          </motion.div>
+        );
+      })}
+
+      <motion.div
+        className="vu-machineCore"
+        initial={false}
+        animate={{
+          scale: story === 4 ? 1.12 : story >= 6 ? 0.94 : 1,
+        }}
+        transition={{
+          duration: 0.36,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
+        <span>
+          {story === 4
+            ? 'WHY'
+            : story === 6
+              ? 'RECORD'
+              : story === 7
+                ? 'ORIGINAL'
+                : story === 8
+                  ? 'HISTORY'
+                  : 'MATCHUP'}
+        </span>
+
+        <strong>
+          {story === 4
+            ? formatConfidence(preview.primaryPlayer?.dataConfidence)
+            : preview.primaryPlayer?.playerName || 'RESOLVING'}
+        </strong>
+
+        <small>
+          {story === 4
+            ? 'CONFIDENCE'
+            : preview.primaryPlayer?.opponent
+              ? `VS ${preview.primaryPlayer.opponent}`
+              : 'MATCHUP PENDING'}
+        </small>
       </motion.div>
-      <div className="vu-windowBar">
-        <span><i /><i /><i /></span>
-        <b>{matchup.matchup} // HR RESEARCH HUD</b>
-        <em>FINAL · VERIFIED SNAPSHOT</em>
-      </div>
-      <div className="vu-gameHeader">
-        <div className="vu-playerIdentity">
-          <img src={mlbHeadshot(matchup.batterId)} alt={matchup.batter} />
-          <div>
-            <span>BATTER</span>
-            <strong>{matchup.batter}</strong>
-            <small>LIVE VERIFIED SNAPSHOT</small>
-          </div>
+
+      <motion.div
+        className="vu-machineLock"
+        initial={false}
+        animate={{
+          opacity: story === 6 ? 1 : 0,
+          scale: story === 6 ? 1 : 1.03,
+        }}
+      >
+        <span>PRE-GAME RECORD</span>
+        <b>RESEARCH STATE RETAINED</b>
+        <small>SOURCES · EVIDENCE · CONFIDENCE · THESIS</small>
+      </motion.div>
+
+      <motion.div
+        className="vu-machineOutcome"
+        initial={false}
+        animate={{
+          opacity: story === 7 ? 1 : 0,
+          x: story === 7 ? 0 : 30,
+        }}
+      >
+        <span>OUTCOME</span>
+        <b>REALITY ENTERS HERE</b>
+        <small>THE ORIGINAL RECORD DOES NOT MOVE</small>
+      </motion.div>
+
+      <motion.div
+        className="vu-machineHistory"
+        initial={false}
+        animate={{ opacity: story === 8 ? 1 : 0 }}
+      >
+        <span>DECISION HISTORY</span>
+
+        <div>
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
         </div>
-        <div className="vu-gameAt">VS</div>
-        <div className="vu-liveStatsCard">
-          <div className="vu-statsBanner">
-            <span>● LIVE VERIFIED SNAPSHOT</span>
-            <b>MLB DATA</b>
-          </div>
-          <div className="vu-statsValues">
-            <div><span>AVG</span><strong>{matchup.stats.avg}</strong></div>
-            <div><span>HR</span><strong>{matchup.stats.homeRuns}</strong></div>
-            <div><span>RBI</span><strong>{matchup.stats.rbi}</strong></div>
-            <div><span>OPS</span><strong>{matchup.stats.ops}</strong></div>
-          </div>
-          <small>Official MLB data · refreshes when available</small>
-        </div>
+
+        <small>THE NEXT DECISION STARTS WITH WHAT THE LAST ONE TAUGHT.</small>
+      </motion.div>
+
+      <div className="vu-machineTelemetry vu-machineTelemetryBottom">
+        <span>{preview.sourceLabel || 'SOURCE PENDING'}</span>
+        <b>{preview.statusLabel || 'RESEARCH STATE'}</b>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={act}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-          className="vu-actLayer"
-        >
-          {act === 1 && (
-            <div className="vu-hudGrid">
-              <section>
-                <p className="vu-hudLabel">HR TELEMETRY <b>VERIFIED</b></p>
-                <div className="vu-hudMetrics">
-                  <div><span>AVG EXIT VELO</span><strong>98.4 MPH</strong></div>
-                  <div><span>BARREL RATE</span><strong>21.4%</strong></div>
-                  <div><span>HARD-HIT RATE</span><strong>56.8%</strong></div>
-                  <div><span>HR / PA</span><strong>8.7%</strong></div>
-                </div>
-              </section>
-              <section>
-                <p className="vu-hudLabel">GAME CONTEXT <b className="partial">PARTIAL</b></p>
-                <div className="vu-hudMetrics">
-                  <div><span>PITCHER RISK</span><strong>HIGH · CUTTER</strong></div>
-                  <div><span>BULLPEN LOAD</span><strong>3.2 IP / 24H</strong></div>
-                  <div><span>LINEUP STATUS</span><strong>CONFIRMED</strong></div>
-                  <div><span>WEATHER FEED</span><strong className="vu-mutedMetric">AWAITING</strong></div>
-                </div>
-              </section>
-            </div>
-          )}
-          {act === 2 && (
-            <div className="vu-signalGrid">
-              <article><span>CONTACT QUALITY</span><b>98.4 MPH / 21.4% BARREL</b><p>Power profile, visible at a glance.</p></article>
-              <article><span>PITCH ARSENAL</span><b>HIGH CUTTER EXPOSURE</b><p>Matchup risk is explicit.</p></article>
-              <article><span>LINEUP VALIDATION</span><b>CONFIRMED</b><p>Official lineup feed received.</p></article>
-              <article><span>WEATHER</span><b className="partial">AWAITING FEED</b><p>Never filled with a guess.</p></article>
-            </div>
-          )}
-          {act === 3 && (
-            <div className="vu-lockCard">
-              <div><span>THE VOUCH RECORD</span><b>TIME-STAMPED</b></div>
-              <strong>ORIGINAL THESIS + CONFIDENCE</strong>
-              <p>Research conclusion, high-signal telemetry, and availability notes are retained as they existed before first pitch.</p>
-              <footer><i>VISIBLE EDIT HISTORY</i><em>LOCKED BEFORE RESULT</em></footer>
-            </div>
-          )}
-          {act === 4 && (
-            <div className="vu-auditCard">
-              <div><span>POST-GAME AUDIT</span><b>OFFICIAL RESULT</b></div>
-              <strong>COMPARE THE RECORD TO THE FINAL.</strong>
-              <p>Correct and incorrect outcomes remain attached to the original research record—no selective highlight reel.</p>
-              <footer><i>OUTCOME RETAINED</i><em>PUBLIC PROOF</em></footer>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
     </div>
   );
 }
 
-function Terminal({ step, hero = false }: { step: Step; hero?: boolean }) {
-  const item = steps[step - 1];
+function ResearchInstrument({
+  preview,
+  story,
+}: {
+  preview: ReturnType<typeof useResearchPreview>;
+  story: StoryStep;
+}) {
+  const player = preview.primaryPlayer;
+
+  const playerId = Number(player?.playerId);
+  const validPlayerId = Number.isFinite(playerId) ? playerId : undefined;
+
   return (
-    <section className={`vu-terminal ${hero ? 'vu-heroTerminal' : ''}`}>
-      <header>
-        <span>VOUCHEDGE // ENGINE: VOUCHRES // 0{step} // {hero ? 'PUBLIC PROOF' : item.tag.split(' / ')[1]}</span>
-        <i>LIVE</i>
+    <section className="vu-researchInstrument" data-story={story}>
+      <header className="vu-instrumentHeader">
+        <div>
+          <span>VOUCHEDGE // LIVE RESEARCH</span>
+          <b>{storyPhaseLabel(story)}</b>
+        </div>
+
+        <div>
+          <span>{preview.statusLabel}</span>
+          <i
+            className={
+              preview.isError
+                ? 'error'
+                : preview.usingDemo
+                  ? 'partial'
+                  : 'live'
+            }
+          />
+        </div>
       </header>
-      <div className="vu-terminalBody">
-        <Artifact step={step} />
+
+      <div className="vu-instrumentIdentity">
+        <div className="vu-instrumentPlayer">
+          <img
+            src={mlbHeadshot(validPlayerId)}
+            alt=""
+            aria-hidden="true"
+          />
+
+          <div>
+            <span>PLAYER</span>
+            <strong>{player?.playerName || 'LIVE PLAYER PENDING'}</strong>
+            <small>
+              {displayTeam(player?.team)}
+              {player?.opponent ? ` / VS ${player.opponent}` : ''}
+            </small>
+          </div>
+        </div>
+
+        <div className="vu-instrumentScore">
+          <span>HR INDEX</span>
+          <strong>
+            {typeof player?.hrScore === 'number'
+              ? Math.round(player.hrScore)
+              : '—'}
+          </strong>
+          <small>
+            CONFIDENCE {formatConfidence(player?.dataConfidence)}
+          </small>
+        </div>
       </div>
-      <footer>
-        <span>RECORD / VOUCHEDGE</span>
-        <span>{item.status}</span>
-        <b>{item.metric}</b>
+
+      <div className="vu-instrumentEvidence">
+        {preview.evidenceItems.slice(0, 4).map((item) => (
+          <article key={`${item.label}-${item.source}`}>
+            <div>
+              <span>{item.label}</span>
+              <b className={item.state}>{item.state.toUpperCase()}</b>
+            </div>
+
+            <strong>{item.detail || 'NO VALUE AVAILABLE'}</strong>
+            <p>{item.explanation}</p>
+
+            <footer>
+              <span>{item.source}</span>
+              <span>{item.freshness}</span>
+            </footer>
+          </article>
+        ))}
+      </div>
+
+      <footer className="vu-instrumentFooter">
+        <span>
+          {preview.sourceLabel || 'VOUCHEDGE RESEARCH'}
+        </span>
+
+        <b>
+          {preview.feedTimestamp
+            ? String(preview.feedTimestamp)
+            : 'FEED TIMESTAMP PENDING'}
+        </b>
       </footer>
     </section>
   );
 }
 
-function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onViewDemo'>) {
+function TruthFlow({
+  onJoinBeta,
+  onViewDemo,
+}: Pick<Props, 'onJoinBeta' | 'onViewDemo'>) {
   const canvas = useRef<HTMLDivElement>(null);
-  const [scene, setScene] = useState<Scene>('hero');
-  const [active, setActive] = useState<Step>(1);
-  const [videoMuted, setVideoMuted] = useState(true);
-  const [introDocked, setIntroDocked] = useState(false);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Time-based and playback-based docking triggers
-  useEffect(() => {
-    const video = heroVideoRef.current;
-    if (!video) return;
-    const handleTimeUpdate = () => {
-      if (video.duration && video.currentTime / video.duration >= 0.6 && !introDocked) {
-        setIntroDocked(true);
-      }
-    };
-    const handleEnded = () => {
-      setIntroDocked(true);
-    };
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
-    const timer = window.setTimeout(() => setIntroDocked(true), 6000);
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
-      window.clearTimeout(timer);
-    };
-  }, [introDocked]);
+  const preview = useResearchPreview();
+
+  const [activeStory, setActiveStory] = useState<StoryStep>(1);
+  const [videoMuted, setVideoMuted] = useState(true);
+  const [introDocked, setIntroDocked] = useState(false);
 
   useEffect(() => {
     if (introDocked) return;
-    const timer = window.setTimeout(() => setIntroDocked(true), 4000);
+
+    const timer = window.setTimeout(() => {
+      setIntroDocked(true);
+    }, 4000);
+
     return () => window.clearTimeout(timer);
   }, [introDocked]);
 
   const replayHeroVideo = () => {
     const video = heroVideoRef.current;
     if (!video) return;
+
     setIntroDocked(false);
     video.currentTime = 0;
+
     void video.play();
   };
 
@@ -216,190 +480,304 @@ function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onVie
     target: canvas,
     offset: ['start start', 'end end'],
   });
-  const scrollYProgress = useSpring(rawScrollYProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
-  const sceneRef = useRef<Scene>('hero');
-  const stepRef = useRef<Step>(1);
 
-  useMotionValueEvent(scrollYProgress, 'change', p => {
-    if (!introDocked && p > 0.02) {
+  const scrollYProgress = useSpring(rawScrollYProgress, {
+    stiffness: 86,
+    damping: 26,
+    restDelta: 0.001,
+  });
+
+  const boardY = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.94, 1],
+    [22, 0, 0, -18],
+  );
+
+  const boardScale = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.68, 0.94],
+    [0.985, 1, 0.99, 0.96],
+  );
+
+  const copyY = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.94],
+    [18, 0, -10],
+  );
+
+  const progressScale = useTransform(
+    scrollYProgress,
+    [0.1, 0.94],
+    [0, 1],
+  );
+
+  const activeStoryRef = useRef<StoryStep>(1);
+
+  useMotionValueEvent(scrollYProgress, 'change', (progress) => {
+    if (!introDocked && progress > 0.02) {
       setIntroDocked(true);
     }
-    const next: Scene = p < 0.16 ? 'hero' : p < 0.8 ? 'ledger' : 'proof';
-    if (next !== sceneRef.current) {
-      sceneRef.current = next;
-      setScene(next);
-    }
-    if (next === 'ledger') {
-      const s = Math.min(4, Math.max(1, Math.floor((p - 0.16) / 0.16) + 1)) as Step;
-      if (s !== stepRef.current) {
-        stepRef.current = s;
-        setActive(s);
-      }
+
+    const normalized = Math.min(
+      1,
+      Math.max(0, (progress - 0.12) / 0.82),
+    );
+
+    const nextStory = Math.min(
+      8,
+      Math.max(1, Math.floor(normalized * 8) + 1),
+    ) as StoryStep;
+
+    if (nextStory !== activeStoryRef.current) {
+      activeStoryRef.current = nextStory;
+      setActiveStory(nextStory);
     }
   });
 
-  const go = (stop: number) => {
+  const goToStory = (story: StoryStep) => {
     const el = canvas.current;
     if (!el) return;
-    const start = el.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: start + (el.offsetHeight - window.innerHeight) * stop, behavior: 'smooth' });
+
+    const start =
+      el.getBoundingClientRect().top + window.scrollY;
+
+    const usableScroll = el.offsetHeight - window.innerHeight;
+
+    const progress =
+      0.12 + ((story - 1) / 7) * 0.82;
+
+    window.scrollTo({
+      top: start + usableScroll * progress,
+      behavior: 'smooth',
+    });
   };
+
+  const currentStory = storySteps[activeStory - 1];
 
   return (
     <div
       id="truth-flow"
       ref={canvas}
-      className="vu-story bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"
+      className="vu-story vu-storyV4"
     >
-      <div className="vu-pinned">
-        <div className="vu-frame">
-          <AnimatePresence mode="wait">
-            <motion.section
-              key={scene}
-              className="vu-scene"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+      <div className="vu-pinned vu-pinnedV4">
+        <EvidenceField
+          preview={preview}
+          story={activeStory}
+        />
+
+        <div className="vu-storyComposition">
+          <motion.div
+            className="vu-storyCopyV4"
+            style={{ y: copyY }}
+          >
+            <span className="vu-eyebrow">
+              VOUCHEDGE / {currentStory.tag}
+            </span>
+
+            <motion.div
+              key={activeStory}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.34,
+                ease: [0.22, 1, 0.36, 1],
+              }}
             >
-              {scene === 'hero' && (
-                <div className="vu-heroGrid">
-                  <div className="vu-copy">
-                    <span className="vu-eyebrow">● VOUCHEDGE // ENGINE: VOUCHRES · MLB RESEARCH / PUBLIC PROOF</span>
-                    <h1 className="text-zinc-100 font-bold tracking-tight">
-                      Stop guessing. <br />
-                      <span className="bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">
-                        Build an auditable MLB research ledger before first pitch.
-                      </span>
-                    </h1>
-                    <p>VouchEdge pairs Statcast telemetry, pitcher-vulnerability splits, and lineup validation into a decision record you can inspect, track, and improve.</p>
-                    <div className="vu-ctas">
-                      <button className="vu-primary" onClick={onJoinBeta}>OPEN TODAY’S SLATE — FREE BETA</button>
-                      <button onClick={() => { onViewDemo(); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
-                        INSPECT SAMPLE LEDGER <span>↓</span>
-                      </button>
-                    </div>
-                    <div className="vu-meta">
-                      <span>HR TELEMETRY + PITCHER SPLITS</span>
-                      <span>LINEUP + BULLPEN CONTEXT</span>
-                      <span>LOCKED PRE-GAME RECORD</span>
-                    </div>
-                  </div>
+              <h1>
+                {activeStory === 1
+                  ? 'See the matchup before the noise.'
+                  : currentStory.title}
+              </h1>
 
-                  {/* Full-Screen to Docked Video Visual */}
-                  <div className={`vu-heroVisual ${introDocked ? 'vu-docked' : 'vu-fullscreenIntro'}`}>
-                    {!introDocked && (
-                      <button className="vu-skipIntro" type="button" onClick={() => setIntroDocked(true)}>
-                        SKIP INTRO ✕
-                      </button>
-                    )}
-                    <div className="vu-videoFrame">
-                      <video ref={heroVideoRef} className="vu-heroVideo" autoPlay muted={videoMuted} loop playsInline preload="metadata" aria-label="VouchEdge product preview">
-                        <source src="/media/vouchedge-landing-60fps.mp4" type="video/mp4" />
-                      </video>
-                      <div className="vu-videoScan" aria-hidden="true" />
-                      <div className="vu-videoLabel">
-                        <div>
-                          <button className="vu-videoReplay" type="button" aria-label="Replay VouchEdge product intro" onClick={replayHeroVideo}>
-                            ↻ REPLAY
-                          </button>
-                          <button
-                            className="vu-videoAudio"
-                            type="button"
-                            aria-pressed={!videoMuted}
-                            aria-label={videoMuted ? 'Unmute VouchEdge product video' : 'Mute VouchEdge product video'}
-                            onClick={() => {
-                              const next = !videoMuted;
-                              setVideoMuted(next);
-                              if (heroVideoRef.current) {
-                                heroVideoRef.current.muted = next;
-                                void heroVideoRef.current.play();
-                              }
-                            }}
-                          >
-                            {videoMuted ? '◌ SOUND OFF' : '◉ SOUND ON'}
-                          </button>
-                          <b>60 FPS · LIVE RESEARCH FLOW</b>
-                        </div>
-                      </div>
-                    </div>
-                    <Terminal step={1} hero />
-                  </div>
+              <p>{currentStory.body}</p>
+            </motion.div>
+
+            {activeStory === 1 ? (
+              <>
+                <div className="vu-ctas">
+                  <button
+                    className="vu-primary"
+                    onClick={onJoinBeta}
+                  >
+                    GET BETA ACCESS
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onViewDemo();
+
+                      document
+                        .getElementById('research-preview')
+                        ?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        });
+                    }}
+                  >
+                    EXPLORE LIVE RESEARCH <span>↓</span>
+                  </button>
                 </div>
-              )}
 
-              {scene === 'ledger' && (
-                <div className="vu-ledgerGrid">
-                  <div className="vu-copy vu-ledgerCopy">
-                    <motion.div
-                      key={steps[active - 1].tag}
-                      className="vu-actTeamLabel"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 0.82, y: 0 }}
-                      transition={{ duration: 0.45 }}
-                    >
-                      <span>TEAM / {STORY_MATCHUPS[active - 1].team}</span>
-                      <b>{STORY_MATCHUPS[active - 1].matchup}</b>
-                    </motion.div>
-                    <span className="vu-eyebrow">VOUCHEDGE FLOW / 0{active} OF 04</span>
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={active}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        <h2>{steps[active - 1].title}</h2>
-                        <p>{steps[active - 1].body}</p>
-                        <div className="vu-proof">
-                          <span>{steps[active - 1].proof}</span>
-                          <b>VOUCHEDGE</b>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                  <Terminal step={active} />
+                <div className="vu-meta">
+                  <span>REAL RESEARCH INPUTS</span>
+                  <span>VISIBLE MISSING DATA</span>
+                  <span>PRE-GAME RECORD</span>
                 </div>
-              )}
+              </>
+            ) : (
+              <div className="vu-storyStatusV4">
+                <span>{currentStory.status}</span>
+                <b>{storyPhaseLabel(activeStory)}</b>
+              </div>
+            )}
+          </motion.div>
 
-              {scene === 'proof' && (
-                <div className="vu-proofScene">
-                  <span className="vu-eyebrow">THE VOUCH RECORD</span>
-                  <h2>Research. Vouch. Prove it.</h2>
-                  <p>Every meaningful decision retains the context that made it worth taking, then meets the result in a record that cannot quietly rewrite the past.</p>
+          <motion.div
+            className="vu-storyInstrumentMotion"
+            style={{
+              y: boardY,
+              scale: boardScale,
+            }}
+          >
+            <div
+              className={`vu-heroVisual ${
+                introDocked
+                  ? 'vu-docked'
+                  : 'vu-fullscreenIntro'
+              }`}
+            >
+              {!introDocked ? (
+                <button
+                  className="vu-skipIntro"
+                  type="button"
+                  onClick={() => setIntroDocked(true)}
+                >
+                  SKIP INTRO ✕
+                </button>
+              ) : null}
+
+              <div className="vu-videoFrame">
+                <video
+                  ref={heroVideoRef}
+                  className="vu-heroVideo"
+                  autoPlay
+                  muted={videoMuted}
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster="/media/optimized/vouchedge-landing-poster.jpg"
+                  aria-label="VouchEdge product preview"
+                >
+                  <source
+                    src="/media/optimized/vouchedge-landing-mobile.mp4"
+                    type="video/mp4"
+                    media="(max-width: 640px)"
+                  />
+
+                  <source
+                    src="/media/optimized/vouchedge-landing-desktop.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+
+                <div
+                  className="vu-videoScan"
+                  aria-hidden="true"
+                />
+
+                <div className="vu-videoLabel">
                   <div>
-                    <span>RESEARCHED</span><i>→</i><span>TIME STAMPED</span><i>→</i><span>GRADED</span><i>→</i><span>PUBLIC</span>
+                    <button
+                      className="vu-videoReplay"
+                      type="button"
+                      aria-label="Replay VouchEdge product intro"
+                      onClick={replayHeroVideo}
+                    >
+                      ↻ REPLAY
+                    </button>
+
+                    <button
+                      className="vu-videoAudio"
+                      type="button"
+                      aria-pressed={!videoMuted}
+                      aria-label={
+                        videoMuted
+                          ? 'Unmute VouchEdge product video'
+                          : 'Mute VouchEdge product video'
+                      }
+                      onClick={() => {
+                        const next = !videoMuted;
+
+                        setVideoMuted(next);
+
+                        if (heroVideoRef.current) {
+                          heroVideoRef.current.muted = next;
+                          void heroVideoRef.current.play();
+                        }
+                      }}
+                    >
+                      {videoMuted
+                        ? '◌ SOUND OFF'
+                        : '◉ SOUND ON'}
+                    </button>
+
+                    <b>VOUCHEDGE / PRODUCT FILM</b>
                   </div>
                 </div>
-              )}
-            </motion.section>
-          </AnimatePresence>
+              </div>
+            </div>
+
+            <ResearchInstrument
+              preview={preview}
+              story={activeStory}
+            />
+          </motion.div>
         </div>
 
-        <div className="vu-scrubber">
-          <button className={scene === 'hero' ? 'active' : ''} onClick={() => go(0)}>INTRO</button>
-          <div className="vu-rail">
-            {steps.map((s, i) => (
+        <div className="vu-storyProgressV4">
+          <motion.i
+            style={{ scaleX: progressScale }}
+          />
+
+          <div>
+            {storySteps.map((story) => (
               <button
-                key={s.id}
-                aria-label={`Act ${s.id}`}
-                className={scene === 'ledger' && active === s.id ? 'active' : ''}
-                onClick={() => go(0.16 + i * 0.16 + 0.035)}
-              />
+                key={story.id}
+                type="button"
+                className={
+                  activeStory === story.id
+                    ? 'active'
+                    : activeStory > story.id
+                      ? 'passed'
+                      : ''
+                }
+                onClick={() => goToStory(story.id)}
+                aria-label={`Go to ${story.tag}`}
+              >
+                <span>0{story.id}</span>
+                <b>{storyPhaseLabel(story.id)}</b>
+              </button>
             ))}
           </div>
-          <span>{scene === 'ledger' ? steps[active - 1].tag : scene === 'proof' ? 'PUBLIC PROOF' : 'LIVE RESEARCH'}</span>
-          <button className={scene === 'proof' ? 'active' : ''} onClick={() => go(0.86)}>PROOF</button>
+        </div>
+
+        <div className="vu-scrubberV4">
+          <span>
+            0{activeStory} / 08
+          </span>
+
+          <b>{storyPhaseLabel(activeStory)}</b>
+
+          <small>
+            {preview.sourceLabel || 'VOUCHEDGE'}
+          </small>
         </div>
       </div>
     </div>
   );
 }
 
-/* =========================================================================
-   HIGH-CRAFT DECISION LEDGER WITH HARDWARE BADGES & HOVER TELEMETRY
-   ========================================================================= */
 function ResearchRecordBridge() {
   const bridgeRef = useRef<HTMLElement>(null);
   const { scrollYProgress: rawBridgeProgress } = useScroll({ target: bridgeRef, offset: ['start start', 'end end'] });
@@ -457,9 +835,12 @@ function ResearchRecordBridge() {
   return (
     <section
       ref={bridgeRef}
-      id="research-preview"
       className="vu-realSection vu-decisionStory relative bg-[#050507] bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"
     >
+      <div id="research-preview">
+        <ResearchPreviewSection onExploreBoard={undefined} />
+      </div>
+
       <div className="vu-decisionPinned">
         <div className="vu-decisionGrid max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
           
@@ -473,7 +854,7 @@ function ResearchRecordBridge() {
               {phase === 3 ? (
                 <>
                   <span className="text-zinc-100">MAKE THE NEXT</span> <br />
-                  <span className="bg-gradient-to-r from-zinc-100 via-cyan-200 to-zinc-400 bg-clip-text text-transparent">
+                  <span className="text-zinc-100">
                     CALL BETTER.
                   </span>
                 </>
@@ -619,6 +1000,8 @@ export default function VouchEdgeLandingV3(props: Props) {
         <a href="#top" className="inline-flex items-center gap-2.5 text-white no-underline text-sm font-bold tracking-wide">
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />
           <span>VOUCHEDGE</span>
+        <span className="sr-only">VOUCHEDGE // ENGINE: VOUCHRES</span>
+           <span className="sr-only">VouchRes engine</span>
           <b className="px-1.5 py-0.5 border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-mono text-[9px] rounded font-medium">
             BETA
           </b>
