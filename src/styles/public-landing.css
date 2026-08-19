@@ -353,3 +353,23 @@ body {
     border-radius: 19px;
   }
 }
+
+/* =========================================================
+   Sharp Aesthetic: Force square corners across all landing
+   page hero panels, feature cards, boards, and buttons.
+   ========================================================= */
+main[class*="min-h-screen"] [class*="rounded-"],
+main[class*="min-h-screen"] [class*="rounded"],
+section[id] [class*="rounded-"],
+section[id] [class*="rounded"],
+.ve-vouch-3d-card,
+.ve-landing-feature-slideshow,
+.ve-landing-games-slideshow {
+  border-radius: 0px !important;
+}
+
+/* Maintain circular shape only for floating background glow orbs */
+[class*="rounded-full"][class*="blur-"],
+[class*="rounded-full"][class*="blur["] {
+  border-radius: 9999px !important;
+}

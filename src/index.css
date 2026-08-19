@@ -129,3 +129,16 @@ img[alt*="avatar" i],
 .rounded-full.h-1\.5.w-1\.5 {
   border-radius: 50% !important;
 }
+
+/* Global Sharp Aesthetic */
+#root [class*="rounded-"],
+#root [class*="rounded"],
+.z8-app-shell [class*="rounded-"],
+.ve-layout-frame [class*="rounded-"],
+.ve-hr-card,
+.ve-hr-panel,
+.ve-vouch-card,
+.z8-feed-card,
+[class*="border"][class*="bg-"] {
+  border-radius: 0px !important;
+}
