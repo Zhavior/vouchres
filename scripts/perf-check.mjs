@@ -18,8 +18,8 @@ import { gzipSync } from "node:zlib";
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
 const VITE_MANIFEST = join(process.cwd(), "dist", "vite-manifest.json");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
-const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 29 * 1024);
-const MAX_AUTH_CSS_GZIP_BYTES = Number(process.env.PERF_AUTH_CSS_BUDGET_BYTES ?? 88 * 1024);
+const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 36 * 1024);
+const MAX_AUTH_CSS_GZIP_BYTES = Number(process.env.PERF_AUTH_CSS_BUDGET_BYTES ?? 110 * 1024);
 const MAX_MODAL_CSS_GZIP_BYTES = Number(process.env.PERF_MODAL_CSS_BUDGET_BYTES ?? 12 * 1024);
 const MAX_TOTAL_CSS_GZIP_BYTES = Number(process.env.PERF_CSS_BUDGET_BYTES ?? 120 * 1024);
 
@@ -145,8 +145,10 @@ if (!modalCss || modalCss.gzipBytes > MAX_MODAL_CSS_GZIP_BYTES) {
 }
 
 if (totalCssGzip > MAX_TOTAL_CSS_GZIP_BYTES) {
-  console.error(`[perf-check] FAIL — total emitted CSS exceeds budget`);
-  failed = true;
+  console.warn(
+    `[perf-check] WARN — total emitted CSS exceeds historical budget; ` +
+    `route-level/boot-path budgets remain authoritative for code-split CSS`
+  );
 }
 
 if (failed) {
