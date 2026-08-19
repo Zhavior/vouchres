@@ -1,0 +1,1111 @@
+.vu-landing {
+  --ve-header-height: 64px;
+  --ve-edge: clamp(20px, 4.5vw, 76px);
+  --ve-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ve-text: rgba(246, 247, 248, 0.96);
+  --ve-muted: rgba(214, 223, 229, 0.48);
+  --ve-line: rgba(220, 231, 238, 0.12);
+  --ve-green: rgb(103, 223, 175);
+  --ve-amber: rgb(224, 181, 105);
+  --ve-cyan: rgb(112, 208, 248);
+}
+
+.vu-landing .bg-clip-text,
+.vu-landing .text-transparent {
+  background-image: none !important;
+  background-clip: initial !important;
+  -webkit-background-clip: initial !important;
+  color: var(--ve-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.vu-landing .vu-storyV4 {
+  position: relative;
+  min-height: 880svh;
+  overflow: visible;
+  background: #050507;
+}
+
+.vu-landing .vu-pinnedV4 {
+  position: sticky;
+  top: var(--ve-header-height);
+  width: 100%;
+  height: calc(100svh - var(--ve-header-height));
+  min-height: 560px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 72% 38%, rgba(38, 143, 197, 0.07), transparent 30%),
+    radial-gradient(circle at 38% 70%, rgba(93, 113, 240, 0.04), transparent 27%),
+    #050507;
+}
+
+.vu-landing .vu-storyComposition {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  max-width: 1720px;
+  margin: 0 auto;
+}
+
+.vu-landing .vu-storyCopyV4 {
+  position: absolute;
+  z-index: 7;
+  top: clamp(100px, 15vh, 160px);
+  left: var(--ve-edge);
+  width: min(41vw, 600px);
+  transition: opacity 500ms var(--ve-ease);
+}
+
+.vu-landing .vu-pinnedV4[data-video="fullscreen"] .vu-storyCopyV4 {
+  opacity: 0;
+}
+
+.vu-landing .vu-storyCopyV4 .vu-eyebrow {
+  display: block;
+  margin-bottom: clamp(20px, 3vh, 30px);
+  color: rgba(175, 211, 230, 0.57);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.vu-landing .vu-storyCopyV4 h1 {
+  max-width: 10.5ch;
+  margin: 0;
+  color: var(--ve-text);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(46px, 6vw, 94px);
+  font-weight: 620;
+  line-height: 0.94;
+  letter-spacing: -0.058em;
+  text-wrap: balance;
+}
+
+.vu-landing .vu-storyCopyV4 p {
+  max-width: 530px;
+  margin: clamp(24px, 3.4vh, 36px) 0 0;
+  color: rgba(221, 228, 233, 0.6);
+  font-family: var(--font-sans, "Cabinet Grotesk", sans-serif);
+  font-size: clamp(16px, 1.18vw, 19px);
+  line-height: 1.55;
+  letter-spacing: -0.012em;
+}
+
+.vu-landing .vu-storyCopyV4 .vu-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: clamp(26px, 4vh, 42px);
+}
+
+.vu-landing .vu-storyCopyV4 .vu-ctas button {
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid rgba(231, 237, 241, 0.17);
+  border-radius: 8px;
+  background: rgba(10, 13, 16, 0.82);
+  color: rgba(235, 240, 243, 0.72);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.vu-landing .vu-storyCopyV4 .vu-ctas button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(242, 245, 247, 0.4);
+}
+
+.vu-landing .vu-storyCopyV4 .vu-ctas .vu-primary {
+  border-color: #f3f5f6;
+  background: #f3f5f6;
+  color: #06080a;
+}
+
+.vu-landing .vu-storyCopyV4 .vu-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 18px;
+  color: rgba(205, 217, 224, 0.32);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.vu-landing .vu-storyStatusV4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin-top: 28px;
+  padding: 8px 10px;
+  border: 1px solid var(--ve-line);
+  background: rgba(7, 10, 13, 0.74);
+  color: var(--ve-muted);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.vu-landing .vu-storyStatusV4 b {
+  color: rgba(239, 243, 245, 0.88);
+}
+
+.vu-landing .vu-storyInstrumentMotion {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  transform-origin: 77% 48%;
+  pointer-events: none;
+}
+
+.vu-landing .vu-heroVisual {
+  position: absolute;
+  overflow: hidden;
+  background: #020304;
+  transition:
+    top 900ms var(--ve-ease),
+    right 900ms var(--ve-ease),
+    bottom 900ms var(--ve-ease),
+    left 900ms var(--ve-ease),
+    width 900ms var(--ve-ease),
+    height 900ms var(--ve-ease),
+    border-radius 900ms var(--ve-ease),
+    border-color 900ms var(--ve-ease),
+    box-shadow 900ms var(--ve-ease);
+  will-change: top, right, bottom, left, width, height;
+}
+
+.vu-landing .vu-heroVisual.vu-fullscreenIntro {
+  inset: 0;
+  z-index: 30;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.vu-landing .vu-heroVisual.vu-docked {
+  top: clamp(38px, 6vh, 70px);
+  right: var(--ve-edge);
+  bottom: auto;
+  left: auto;
+  z-index: 10;
+  width: min(45.5vw, 760px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(222, 232, 238, 0.16);
+  border-radius: 14px;
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.vu-landing .vu-videoFrame,
+.vu-landing .vu-heroVideo {
+  width: 100%;
+  height: 100%;
+}
+
+.vu-landing .vu-videoFrame {
+  position: relative;
+  overflow: hidden;
+  background: #020304;
+}
+
+.vu-landing .vu-heroVideo {
+  display: block;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.vu-landing .vu-docked .vu-heroVideo {
+  object-position: center 43%;
+}
+
+.vu-landing .vu-videoScan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(219, 235, 244, 0.024) 4px
+  );
+}
+
+.vu-landing .vu-videoLabel {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.vu-landing .vu-videoLabel > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(225, 234, 239, 0.12);
+  border-radius: 7px;
+  background: rgba(3, 5, 7, 0.76);
+  backdrop-filter: blur(12px);
+}
+
+.vu-landing .vu-videoLabel button,
+.vu-landing .vu-skipIntro {
+  pointer-events: auto;
+}
+
+.vu-landing .vu-videoLabel button {
+  min-height: 26px;
+  border: 0;
+  background: transparent;
+  color: rgba(229, 235, 239, 0.62);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.vu-landing .vu-videoLabel b {
+  padding: 0 4px;
+  color: rgba(207, 219, 226, 0.35);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.vu-landing .vu-skipIntro {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 40;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(232, 239, 243, 0.18);
+  border-radius: 7px;
+  background: rgba(4, 6, 8, 0.65);
+  color: rgba(238, 242, 244, 0.68);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  backdrop-filter: blur(10px);
+}
+
+.vu-landing .vu-researchInstrument {
+  position: absolute;
+  right: var(--ve-edge);
+  bottom: clamp(52px, 7vh, 76px);
+  z-index: 8;
+  width: min(45.5vw, 760px);
+  max-height: 30vh;
+  overflow: hidden;
+  border: 1px solid rgba(219, 230, 236, 0.13);
+  border-radius: 12px;
+  background: rgba(6, 9, 12, 0.9);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+  transition:
+    opacity 500ms var(--ve-ease),
+    transform 700ms var(--ve-ease);
+}
+
+.vu-landing .vu-pinnedV4[data-video="fullscreen"] .vu-researchInstrument {
+  opacity: 0;
+  transform: translateY(24px) scale(0.98);
+}
+
+.vu-landing .vu-instrumentHeader,
+.vu-landing .vu-instrumentFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  padding: 0 12px;
+  color: rgba(211, 222, 228, 0.4);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.vu-landing .vu-instrumentHeader {
+  border-bottom: 1px solid rgba(220, 230, 236, 0.08);
+}
+
+.vu-landing .vu-instrumentHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vu-landing .vu-instrumentHeader b {
+  color: rgba(234, 239, 242, 0.75);
+}
+
+.vu-landing .vu-instrumentHeader i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(149, 161, 169, 0.7);
+}
+
+.vu-landing .vu-instrumentHeader i.live {
+  background: var(--ve-green);
+  box-shadow: 0 0 10px rgba(103, 223, 175, 0.4);
+}
+
+.vu-landing .vu-instrumentHeader i.partial {
+  background: var(--ve-amber);
+}
+
+.vu-landing .vu-instrumentHeader i.error {
+  background: rgb(230, 106, 121);
+}
+
+.vu-landing .vu-instrumentIdentity {
+  display: flex;
+  min-height: 76px;
+  align-items: stretch;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(220, 230, 236, 0.08);
+}
+
+.vu-landing .vu-instrumentPlayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+}
+
+.vu-landing .vu-instrumentPlayer img {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(221, 231, 237, 0.12);
+  border-radius: 7px;
+  object-fit: cover;
+  background: #090c0f;
+}
+
+.vu-landing .vu-instrumentPlayer > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vu-landing .vu-instrumentPlayer span,
+.vu-landing .vu-instrumentScore span {
+  color: rgba(205, 217, 224, 0.36);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
+.vu-landing .vu-instrumentPlayer strong {
+  overflow: hidden;
+  color: rgba(242, 245, 247, 0.93);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vu-landing .vu-instrumentPlayer small,
+.vu-landing .vu-instrumentScore small {
+  color: rgba(205, 217, 224, 0.42);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+}
+
+.vu-landing .vu-instrumentScore {
+  display: flex;
+  min-width: 126px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 13px;
+  border-left: 1px solid rgba(220, 230, 236, 0.08);
+}
+
+.vu-landing .vu-instrumentScore strong {
+  color: rgba(246, 247, 248, 0.97);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 28px;
+  font-weight: 580;
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.vu-landing .vu-instrumentEvidence {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.vu-landing .vu-instrumentEvidence article {
+  min-width: 0;
+  min-height: 92px;
+  padding: 10px;
+  border-right: 1px solid rgba(220, 230, 236, 0.07);
+}
+
+.vu-landing .vu-instrumentEvidence article:last-child {
+  border-right: 0;
+}
+
+.vu-landing .vu-instrumentEvidence article > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.vu-landing .vu-instrumentEvidence span,
+.vu-landing .vu-instrumentEvidence b,
+.vu-landing .vu-instrumentEvidence footer {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.vu-landing .vu-instrumentEvidence article > div span {
+  overflow: hidden;
+  color: rgba(208, 219, 226, 0.42);
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vu-landing .vu-instrumentEvidence article > div b {
+  font-size: 6px;
+  letter-spacing: 0.08em;
+}
+
+.vu-landing .vu-instrumentEvidence b.available {
+  color: var(--ve-green);
+}
+
+.vu-landing .vu-instrumentEvidence b.partial {
+  color: var(--ve-amber);
+}
+
+.vu-landing .vu-instrumentEvidence b.unavailable {
+  color: rgba(158, 169, 177, 0.58);
+}
+
+.vu-landing .vu-instrumentEvidence article > strong {
+  display: block;
+  margin-top: 8px;
+  overflow: hidden;
+  color: rgba(236, 240, 242, 0.77);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 12px;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vu-landing .vu-instrumentEvidence article p {
+  display: -webkit-box;
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: rgba(199, 212, 220, 0.35);
+  font-family: var(--font-sans, "Cabinet Grotesk", sans-serif);
+  font-size: 9px;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.vu-landing .vu-instrumentEvidence article footer {
+  display: none;
+}
+
+.vu-landing .vu-instrumentFooter {
+  min-height: 25px;
+  border-top: 1px solid rgba(220, 230, 236, 0.07);
+  font-size: 7px;
+}
+
+.vu-landing .vu-evidenceMachine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 500ms var(--ve-ease);
+}
+
+.vu-landing .vu-pinnedV4[data-video="fullscreen"] .vu-evidenceMachine {
+  opacity: 0;
+}
+
+.vu-landing .vu-evidenceMachine::before {
+  content: "";
+  position: absolute;
+  inset: -16%;
+  opacity: 0.62;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(58, 169, 222, 0.11), transparent 25%),
+    radial-gradient(circle at 76% 34%, rgba(103, 124, 242, 0.045), transparent 22%);
+  transition:
+    opacity 420ms var(--ve-ease),
+    transform 600ms var(--ve-ease);
+}
+
+.vu-landing .vu-pinnedV4[data-story="4"] .vu-evidenceMachine::before {
+  opacity: 0.9;
+  transform: scale(1.08);
+}
+
+.vu-landing .vu-pinnedV4[data-story="6"] .vu-evidenceMachine::before {
+  opacity: 0.3;
+  transform: scale(0.94);
+}
+
+.vu-landing .vu-pinnedV4[data-story="8"] .vu-evidenceMachine::before {
+  opacity: 0.68;
+  transform: scale(1.12);
+}
+
+.vu-landing .vu-evidenceMachineGrid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.17;
+  background-image:
+    linear-gradient(rgba(222, 233, 240, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(222, 233, 240, 0.045) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 52% 50%, black 0%, transparent 77%);
+}
+
+.vu-landing .vu-pinnedV4[data-story="3"] .vu-evidenceMachineGrid,
+.vu-landing .vu-pinnedV4[data-story="4"] .vu-evidenceMachineGrid {
+  opacity: 0.28;
+  background-size: 38px 38px;
+}
+
+.vu-landing .vu-pinnedV4[data-story="6"] .vu-evidenceMachineGrid {
+  opacity: 0.4;
+  background-size: 30px 30px;
+}
+
+.vu-landing .vu-evidenceMachineScan {
+  position: absolute;
+  top: -10%;
+  left: 7%;
+  width: 86%;
+  height: 1px;
+  opacity: 0;
+  background: rgba(123, 214, 255, 0.5);
+  box-shadow: 0 0 16px rgba(83, 196, 244, 0.22);
+}
+
+.vu-landing .vu-pinnedV4[data-story="1"] .vu-evidenceMachineScan,
+.vu-landing .vu-pinnedV4[data-story="2"] .vu-evidenceMachineScan {
+  opacity: 0.6;
+  animation: vu-v4-scan 3.8s linear infinite;
+}
+
+@keyframes vu-v4-scan {
+  to {
+    transform: translate3d(0, 120vh, 0);
+  }
+}
+
+.vu-landing .vu-machineTelemetry {
+  position: absolute;
+  right: var(--ve-edge);
+  left: var(--ve-edge);
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(211, 223, 230, 0.28);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.vu-landing .vu-machineTelemetryTop {
+  top: 24px;
+}
+
+.vu-landing .vu-machineTelemetryBottom {
+  bottom: 22px;
+}
+
+.vu-landing .vu-machineTelemetry b {
+  color: rgba(225, 233, 238, 0.52);
+  font-weight: 600;
+}
+
+.vu-landing .vu-evidenceNetwork {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  overflow: visible;
+}
+
+.vu-landing .vu-evidenceTrace {
+  stroke-width: 0.7;
+  stroke: rgba(143, 194, 218, 0.36);
+}
+
+.vu-landing .vu-evidenceTrace-available {
+  stroke: rgba(103, 223, 175, 0.48);
+}
+
+.vu-landing .vu-evidenceTrace-partial {
+  stroke: rgba(224, 181, 105, 0.46);
+  stroke-dasharray: 3 3;
+}
+
+.vu-landing .vu-evidenceTrace-unavailable {
+  stroke: rgba(146, 159, 168, 0.2);
+  stroke-dasharray: 2 5;
+}
+
+.vu-landing .vu-evidencePoint {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translate(-50%, -50%);
+  color: rgba(103, 223, 175, 0.82);
+  will-change: left, top, opacity, transform;
+}
+
+.vu-landing .vu-evidencePoint-partial {
+  color: rgba(224, 181, 105, 0.82);
+}
+
+.vu-landing .vu-evidencePoint-unavailable {
+  color: rgba(151, 162, 170, 0.54);
+}
+
+.vu-landing .vu-evidencePoint > i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: #07090b;
+  box-shadow: 0 0 11px currentColor;
+}
+
+.vu-landing .vu-evidencePoint > div {
+  display: flex;
+  max-width: 170px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vu-landing .vu-evidencePoint span {
+  overflow: hidden;
+  color: rgba(230, 235, 239, 0.6);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vu-landing .vu-evidencePoint b,
+.vu-landing .vu-evidencePoint small {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 6px;
+  letter-spacing: 0.09em;
+}
+
+.vu-landing .vu-evidencePoint small {
+  color: rgba(201, 214, 221, 0.3);
+}
+
+.vu-landing .vu-machineCore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  width: clamp(136px, 13vw, 186px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(132, 206, 239, 0.18);
+  border-radius: 50%;
+  background: rgba(6, 9, 12, 0.74);
+  box-shadow:
+    0 0 0 18px rgba(102, 195, 235, 0.025),
+    0 0 42px rgba(53, 173, 225, 0.07);
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.vu-landing .vu-machineCore::before {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  border: 1px dashed rgba(131, 204, 234, 0.16);
+  border-radius: 50%;
+  animation: vu-v4-orbit 20s linear infinite;
+}
+
+@keyframes vu-v4-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vu-landing .vu-machineCore span,
+.vu-landing .vu-machineCore small {
+  color: rgba(209, 221, 228, 0.36);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.vu-landing .vu-machineCore strong {
+  max-width: 86%;
+  overflow: hidden;
+  color: rgba(242, 245, 247, 0.9);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(14px, 1.25vw, 19px);
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vu-landing .vu-machineLock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: min(56vw, 700px);
+  min-height: 320px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(220, 230, 236, 0.25);
+  box-shadow: inset 0 0 0 7px rgba(255, 255, 255, 0.012);
+}
+
+.vu-landing .vu-machineLock span,
+.vu-landing .vu-machineLock b,
+.vu-landing .vu-machineLock small {
+  position: absolute;
+  left: 16px;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.vu-landing .vu-machineLock span {
+  top: 14px;
+  color: rgba(224, 232, 237, 0.44);
+  font-size: 7px;
+}
+
+.vu-landing .vu-machineLock b {
+  bottom: 31px;
+  color: rgba(235, 240, 243, 0.65);
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.vu-landing .vu-machineLock small {
+  bottom: 15px;
+  color: rgba(209, 219, 225, 0.3);
+  font-size: 6px;
+}
+
+.vu-landing .vu-machineOutcome {
+  position: absolute;
+  top: 50%;
+  right: var(--ve-edge);
+  z-index: 4;
+  width: min(26vw, 330px);
+  min-height: 230px;
+  transform: translateY(-50%);
+  padding: 22px;
+  border-left: 1px solid rgba(222, 232, 238, 0.28);
+}
+
+.vu-landing .vu-machineOutcome span,
+.vu-landing .vu-machineOutcome small {
+  display: block;
+  color: rgba(211, 223, 230, 0.36);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.vu-landing .vu-machineOutcome b {
+  display: block;
+  margin: 50px 0 9px;
+  color: rgba(239, 242, 244, 0.88);
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(15px, 1.5vw, 21px);
+  line-height: 1.02;
+}
+
+.vu-landing .vu-machineHistory {
+  position: absolute;
+  right: 10%;
+  bottom: 12%;
+  left: 10%;
+  z-index: 3;
+}
+
+.vu-landing .vu-machineHistory span,
+.vu-landing .vu-machineHistory small {
+  color: rgba(211, 223, 230, 0.35);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.vu-landing .vu-machineHistory > div {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0 10px;
+}
+
+.vu-landing .vu-machineHistory > div::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(123, 196, 228, 0.18);
+}
+
+.vu-landing .vu-machineHistory i {
+  position: relative;
+  z-index: 2;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(119, 207, 245, 0.58);
+  border-radius: 50%;
+  background: #07090b;
+}
+
+.vu-landing .vu-storyProgressV4 {
+  position: absolute;
+  right: var(--ve-edge);
+  bottom: 12px;
+  left: var(--ve-edge);
+  z-index: 15;
+  height: 34px;
+  transition: opacity 300ms ease;
+}
+
+.vu-landing .vu-pinnedV4[data-video="fullscreen"] .vu-storyProgressV4,
+.vu-landing .vu-pinnedV4[data-video="fullscreen"] .vu-scrubberV4 {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vu-landing .vu-storyProgressV4 > i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform-origin: left center;
+  background: rgba(123, 211, 249, 0.54);
+}
+
+.vu-landing .vu-storyProgressV4 > div {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  height: 100%;
+}
+
+.vu-landing .vu-storyProgressV4 button {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 9px 0;
+  border: 0;
+  border-left: 1px solid rgba(221, 231, 237, 0.08);
+  background: transparent;
+  color: rgba(203, 216, 223, 0.24);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 6px;
+  letter-spacing: 0.08em;
+}
+
+.vu-landing .vu-storyProgressV4 button:last-child {
+  border-right: 1px solid rgba(221, 231, 237, 0.08);
+}
+
+.vu-landing .vu-storyProgressV4 button.active {
+  color: rgba(241, 244, 246, 0.92);
+}
+
+.vu-landing .vu-storyProgressV4 button.passed {
+  color: rgba(125, 200, 231, 0.44);
+}
+
+.vu-landing .vu-storyProgressV4 button b {
+  font-weight: 500;
+}
+
+.vu-landing .vu-scrubberV4 {
+  position: absolute;
+  top: 23px;
+  left: 50%;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  color: rgba(207, 220, 227, 0.33);
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 7px;
+  letter-spacing: 0.11em;
+  transition: opacity 300ms ease;
+}
+
+.vu-landing .vu-scrubberV4 b {
+  color: rgba(232, 238, 241, 0.72);
+}
+
+@media (max-width: 1080px) {
+  .vu-landing .vu-storyCopyV4 {
+    width: min(44vw, 470px);
+  }
+
+  .vu-landing .vu-storyCopyV4 h1 {
+    font-size: clamp(42px, 6.4vw, 70px);
+  }
+
+  .vu-landing .vu-heroVisual.vu-docked,
+  .vu-landing .vu-researchInstrument {
+    right: 26px;
+    width: 48vw;
+  }
+
+  .vu-landing .vu-instrumentEvidence {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .vu-landing .vu-instrumentEvidence article:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .vu-landing {
+    --ve-edge: 16px;
+  }
+
+  .vu-landing .vu-storyV4 {
+    min-height: 760svh;
+  }
+
+  .vu-landing .vu-storyCopyV4 {
+    top: 48%;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+
+  .vu-landing .vu-storyCopyV4 h1 {
+    max-width: 11ch;
+    font-size: clamp(38px, 12vw, 58px);
+  }
+
+  .vu-landing .vu-storyCopyV4 p {
+    font-size: 15px;
+  }
+
+  .vu-landing .vu-storyCopyV4 .vu-meta {
+    display: none;
+  }
+
+  .vu-landing .vu-heroVisual.vu-docked {
+    top: 18px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .vu-landing .vu-researchInstrument {
+    right: 16px;
+    bottom: 48px;
+    left: 16px;
+    width: auto;
+    max-height: 24vh;
+  }
+
+  .vu-landing .vu-instrumentEvidence {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vu-landing .vu-instrumentEvidence article:nth-child(n + 3) {
+    display: none;
+  }
+
+  .vu-landing .vu-evidencePoint > div {
+    display: none;
+  }
+
+  .vu-landing .vu-machineCore {
+    top: 42%;
+    width: 118px;
+  }
+
+  .vu-landing .vu-machineLock {
+    width: calc(100vw - 32px);
+    min-height: 280px;
+  }
+
+  .vu-landing .vu-machineOutcome {
+    right: 16px;
+    width: 43vw;
+    min-height: 210px;
+    padding: 16px;
+  }
+
+  .vu-landing .vu-storyProgressV4 button b {
+    display: none;
+  }
+
+  .vu-landing .vu-videoLabel b {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vu-landing .vu-heroVisual {
+    transition-duration: 160ms;
+  }
+
+  .vu-landing .vu-evidenceMachineScan,
+  .vu-landing .vu-machineCore::before {
+    animation: none !important;
+  }
+}

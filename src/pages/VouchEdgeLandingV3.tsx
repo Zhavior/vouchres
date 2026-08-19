@@ -2,7 +2,7 @@ import '../styles/vouchres-ultimate-truth-landing.css';
 import '../styles/public-landing.css';
 import '../components/landing-v4/evidence-field.css';
 import '../components/landing-v4/premium-hero.css';
-import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import {
   DecisionIntelligence,
@@ -11,13 +11,11 @@ import {
   FAQSection,
   CTASection,
   FooterSection,
-  ResearchPreviewSection,
   type FooterNavigationTarget,
 } from '../components/landing-v3';
 
 import {
   useResearchPreview,
-  type ResearchPreview,
 } from '../components/landing-v3/researchPreviewData';
 
 type StoryStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -490,7 +488,7 @@ function TruthFlow({
   const boardY = useTransform(
     scrollYProgress,
     [0, 0.12, 0.94, 1],
-    [22, 0, 0, -18],
+    [0, 0, 0, -18],
   );
 
   const boardScale = useTransform(
@@ -560,13 +558,17 @@ function TruthFlow({
       ref={canvas}
       className="vu-story vu-storyV4"
     >
-      <div className="vu-pinned vu-pinnedV4">
+      <div
+        className="vu-pinned vu-pinnedV4"
+        data-video={introDocked ? 'docked' : 'fullscreen'}
+        data-story={activeStory}
+      >
         <EvidenceField
           preview={preview}
           story={activeStory}
         />
 
-        <div className="vu-storyComposition">
+        <div id="research-preview" className="vu-storyComposition">
           <motion.div
             className="vu-storyCopyV4"
             style={{ y: copyY }}
@@ -778,221 +780,6 @@ function TruthFlow({
   );
 }
 
-function ResearchRecordBridge() {
-  const bridgeRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: rawBridgeProgress } = useScroll({ target: bridgeRef, offset: ['start start', 'end end'] });
-  const scrollYProgress = useSpring(rawBridgeProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
-  const [phase, setPhase] = useState(0);
-
-  const phases = [
-    { eyebrow: '01 / ORIGINAL RESEARCH', title: 'Track the decision.', body: 'Keep the original case intact: matchup evidence, confidence, and the exact context available before first pitch.', label: 'RESEARCH SAVED', detail: 'Signals, thesis, timestamp' },
-    { eyebrow: '02 / DECISION LOCKED', title: 'Keep the record.', body: 'Lock the call before the result arrives. The decision cannot be rewritten after the market or game changes.', label: 'THESIS LOCKED', detail: 'Pre-game record preserved' },
-    { eyebrow: '03 / WINS + LOSSES', title: 'Show the whole record.', body: 'Wins and losses remain visible together, so the scoreboard measures the process honestly—not just the highlights.', label: 'OUTCOMES GRADED', detail: 'Win · Loss · Review' },
-    { eyebrow: '04 / METHODOLOGY', title: 'Make the next call better.', body: 'Review what held up, where the evidence failed, and turn every completed record into a sharper research workflow.', label: 'LOOP COMPLETE', detail: 'Research → decision → result' },
-  ];
-
-  useMotionValueEvent(scrollYProgress, 'change', value => {
-    bridgeRef.current?.style.setProperty('--ledger-progress', String(Math.min(1, Math.max(0, value))));
-    const next = Math.min(phases.length - 1, Math.max(0, Math.floor(value * phases.length)));
-    if (next !== phase) setPhase(next);
-  });
-
-  const record = [
-    {
-      player: 'S. OHTANI',
-      pick: 'HR · +310',
-      result: 'WIN',
-      note: 'BARREL + PARK FIT',
-      ev: '112.4 MPH',
-      la: '28°',
-      dist: '438 FT',
-      tone: 'win' as const,
-    },
-    {
-      player: 'A. JUDGE',
-      pick: 'HR · +275',
-      result: 'LOSS',
-      note: 'CONTACT DID NOT CONVERT',
-      ev: '106.8 MPH',
-      la: '36°',
-      dist: '388 FT (F8)',
-      tone: 'loss' as const,
-    },
-    {
-      player: 'P. CROW-ARMSTRONG',
-      pick: 'HR · +420',
-      result: 'WIN',
-      note: 'PITCHER VULNERABILITY',
-      ev: '104.2 MPH',
-      la: '24°',
-      dist: '412 FT',
-      tone: 'win' as const,
-    },
-  ];
-
-  const current = phases[phase];
-
-  return (
-    <section
-      ref={bridgeRef}
-      className="vu-realSection vu-decisionStory relative bg-[#050507] bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"
-    >
-      <div id="research-preview">
-        <ResearchPreviewSection onExploreBoard={undefined} />
-      </div>
-
-      <div className="vu-decisionPinned">
-        <div className="vu-decisionGrid max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-          
-          {/* Left Column: Aggressive High-Tech Headline & Integrated Trace Rail */}
-          <div className="vu-decisionCopy space-y-6">
-            <span className="vu-eyebrow text-cyan-400 font-mono text-xs tracking-wider">
-              {current.eyebrow}
-            </span>
-
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
-              {phase === 3 ? (
-                <>
-                  <span className="text-zinc-100">MAKE THE NEXT</span> <br />
-                  <span className="text-zinc-100">
-                    CALL BETTER.
-                  </span>
-                </>
-              ) : (
-                <span className="text-zinc-100">{current.title}</span>
-              )}
-            </h2>
-
-            <p className="text-zinc-400 text-base leading-relaxed max-w-lg">
-              {current.body}
-            </p>
-
-            <div className="vu-decisionStatus flex items-center justify-between gap-4 p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-950/80 font-mono text-xs">
-              <span className="text-emerald-400 font-bold tracking-wide">{current.label}</span>
-              <b className="text-zinc-300 font-normal">{current.detail}</b>
-            </div>
-
-            {/* Integrated Horizontal Timeline Trace Rail */}
-            <div className="flex items-center gap-2 pt-2">
-              {phases.map((item, idx) => {
-                const isCurrent = idx === phase;
-                const isPassed = idx < phase;
-                return (
-                  <div key={item.eyebrow} className="flex items-center gap-2">
-                    <div
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all duration-300 ${
-                        isCurrent
-                          ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)] font-bold'
-                          : isPassed
-                          ? 'text-zinc-400 bg-zinc-900/60 border border-zinc-800/80'
-                          : 'text-zinc-600 bg-zinc-950/40 border border-zinc-900'
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isCurrent ? 'bg-emerald-400 animate-pulse' : isPassed ? 'bg-emerald-500/60' : 'bg-zinc-700'
-                        }`}
-                      />
-                      <span>0{idx + 1}</span>
-                    </div>
-                    {idx < phases.length - 1 && (
-                      <div className={`w-3 sm:w-6 h-[1px] ${idx < phase ? 'bg-emerald-500/40' : 'bg-zinc-800'}`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right Column: Decision Ledger & Telemetry HUD Card with Ambient Glow & 1px Border */}
-          <div className="w-full max-w-xl mx-auto rounded-2xl border border-zinc-700/80 bg-zinc-950/95 shadow-[0_0_50px_-12px_rgba(52,211,153,0.15)] backdrop-blur-2xl p-5 sm:p-6">
-            
-            {/* Header Metadata with Live Block Badge & Pre-Pitch Stamp */}
-            <div className="flex flex-wrap justify-between items-center border-b border-zinc-800/80 pb-3.5 mb-4 font-mono text-[11px] text-zinc-400 gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-zinc-200 font-medium">VOUCHEDGE / DECISION LEDGER</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400">
-                  LEDGER LOCK: #0x8F9A...
-                </span>
-                <span className="text-emerald-400 font-semibold text-[10px]">
-                  ● STAMPED PRE-PITCH
-                </span>
-              </div>
-            </div>
-
-            {/* Headline Metrics Bar */}
-            <div className="grid grid-cols-3 gap-3 p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/60 mb-4 text-center font-mono">
-              <div>
-                <small className="block text-[10px] text-zinc-500">TRACKED DECISIONS</small>
-                <strong className="text-lg sm:text-xl font-bold text-white mt-0.5 block">23</strong>
-              </div>
-              <div>
-                <small className="block text-[10px] text-zinc-500">WIN RATE</small>
-                <strong className="text-lg sm:text-xl font-bold text-emerald-400 mt-0.5 block">60.9%</strong>
-              </div>
-              <div>
-                <small className="block text-[10px] text-zinc-500">AUDIT STATUS</small>
-                <strong className="text-lg sm:text-xl font-bold text-cyan-400 mt-0.5 block">PUBLIC</strong>
-              </div>
-            </div>
-
-            {/* Outcome Rows with Micro-Interactions & Secondary Statcast Pills */}
-            <div className="space-y-2.5 mb-4">
-              {record.map((item, index) => (
-                <article
-                  key={item.player}
-                  className={`group p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800/50 hover:border-zinc-700/80 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    phase >= 2 || index === 0 ? 'opacity-100' : 'opacity-45'
-                  }`}
-                >
-                  <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <strong className="text-white font-mono text-sm font-bold">{item.player}</strong>
-                        <span className="text-zinc-500 font-mono text-[11px]">{item.pick}</span>
-                      </div>
-                      {/* Secondary Statcast metrics revealed on hover */}
-                      <div className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 transition-colors mt-0.5">
-                        {item.ev} · {item.la} · {item.dist}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
-                    <span className="font-mono tracking-tight text-[11px] uppercase bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md text-zinc-300">
-                      {item.note}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wider ${
-                        item.tone === 'win'
-                          ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(52,211,153,0.15)]'
-                          : 'bg-rose-950/60 text-rose-400 border border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.15)]'
-                      }`}
-                    >
-                      {item.result}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {/* Footnote */}
-            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 pt-2 border-t border-zinc-800/80">
-              <span>PRE-GAME CONTEXT RETAINED</span>
-              <span>OUTCOMES NEVER HIDDEN</span>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function VouchEdgeLandingV3(props: Props) {
   return (
     <main className="vu-landing bg-[#050507] text-white">
@@ -1024,12 +811,10 @@ export default function VouchEdgeLandingV3(props: Props) {
 
       <div id="how-it-works" className="pt-[64px]">
         <div id="top">
+          <div id="record">
           <TruthFlow onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} />
         </div>
-      </div>
-
-      <div id="record">
-        <ResearchRecordBridge />
+        </div>
       </div>
 
       <motion.section

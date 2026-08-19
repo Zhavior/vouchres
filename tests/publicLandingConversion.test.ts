@@ -26,14 +26,20 @@ describe('public landing conversion contract', () => {
   it('mounts the one-record landing from the public terminal page', () => {
     expect(terminalSource).toContain('<VouchEdgeLandingV3');
     expect(terminalSource).toContain("scrollToSection('record')");
-    expect(landingSource).toContain('<ResearchRecordBridge');
+    expect(landingSource).toContain('<TruthFlow');
+    expect(landingSource).toContain('ResearchInstrument');
+    expect(landingSource).toContain("useResearchPreview()");
+    expect(landingSource).toContain("tag: '07 / RESULT'");
+    expect(landingSource).toContain("tag: '08 / LEARN'");
+    expect(landingSource).not.toContain('ResearchRecordBridge');
     expect(landingSource).not.toContain('CinematicEditorialStory');
     expect(landingSource).not.toContain('LiveSportsIntelligence');
   });
 
   it('anchors the hero on the live research preview instead of a fixture matchup', () => {
     expect(landingSource).toContain('id="research-preview"');
-    expect(landingSource).toContain('ResearchPreviewSection');
+    expect(landingSource).toContain('ResearchInstrument');
+    expect(landingSource).toContain('preview={preview}');
     expect(previewDataSource).toContain('export function useResearchPreview');
     for (const fabricated of ['NYY @ BAL', 'NEW YORK YANKEES', 'BALTIMORE ORIOLES']) {
       expect(landingSource).not.toContain(fabricated);
