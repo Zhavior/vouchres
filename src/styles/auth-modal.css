@@ -396,6 +396,14 @@
   background: #67d39b;
 }
 
+.ve-auth-story-continue {
+  display: none;
+}
+
+.ve-auth-policy-carousel {
+  display: none;
+}
+
 /* ----------------------------------------------------------
    RIGHT ACCOUNT PANEL
    ---------------------------------------------------------- */
@@ -650,6 +658,212 @@ form button[type="submit"]:hover:not(:disabled) {
   }
 }
 
+@media (max-width: 767px) {
+  .ve-auth-backdrop {
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: 0;
+    overscroll-behavior-y: contain;
+  }
+
+  .ve-auth-dialog.ve-auth-vouch-dialog {
+    overflow: visible;
+  }
+
+  .ve-auth-vouch-topbar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 6;
+  }
+
+  .ve-auth-vouch-layout {
+    display: block;
+  }
+
+  .ve-auth-vouch-story,
+  .ve-auth-form-panel {
+    min-height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .ve-auth-vouch-story {
+    justify-content: center;
+    padding: 84px 20px 28px;
+  }
+
+  .ve-auth-vouch-story > div:first-child > p {
+    margin-top: 18px;
+  }
+
+  .ve-auth-vouch-proof {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 28px;
+  }
+
+  .ve-auth-vouch-proof > div {
+    min-height: 68px;
+    padding: 10px;
+    border-right: 1px solid #292a30;
+    border-bottom: 0;
+  }
+
+  .ve-auth-vouch-proof > div:last-child {
+    border-right: 0;
+  }
+
+  .ve-auth-vouch-proof span {
+    margin-bottom: 8px;
+  }
+
+  .ve-auth-vouch-system {
+    margin-top: 16px;
+  }
+
+  .ve-auth-story-continue {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 42px;
+    margin-top: 18px;
+    padding: 0 12px;
+    border: 1px solid #3f434a;
+    border-radius: 0;
+    background: #090a0d;
+    color: #d4d4d8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .ve-auth-story-continue span:last-child {
+    color: #67d39b;
+  }
+
+  .ve-auth-form-panel {
+    padding: 72px 14px 24px;
+    overflow: visible;
+  }
+
+  .ve-auth-form-panel .ve-auth-form-header {
+    margin-bottom: 14px;
+  }
+
+  .ve-auth-form-panel .ve-auth-form-header h2 {
+    margin-top: 8px;
+    font-size: 25px;
+  }
+
+  .ve-auth-form-panel .ve-auth-form-header > p {
+    margin-top: 6px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .ve-auth-policy-step {
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .ve-auth-policy-list--desktop {
+    display: none;
+  }
+
+  .ve-auth-policy-carousel {
+    display: block;
+    min-height: 132px;
+    padding: 10px !important;
+  }
+
+  .ve-auth-policy-carousel-head,
+  .ve-auth-policy-carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .ve-auth-policy-carousel-head span {
+    color: #71717a;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8px;
+    letter-spacing: .1em;
+  }
+
+  .ve-auth-policy-carousel-body {
+    min-height: 48px;
+    margin: 7px 0 8px;
+    color: #a1a1aa;
+    font-size: 9px;
+    line-height: 1.35;
+  }
+
+  .ve-auth-policy-carousel-controls button {
+    min-height: 28px;
+    padding: 0 6px;
+    border: 1px solid #292a30;
+    color: #d4d4d8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 7px;
+    letter-spacing: .08em;
+  }
+
+  .ve-auth-policy-carousel-controls button:disabled {
+    color: #52525b;
+  }
+
+  .ve-auth-policy-carousel-controls > div {
+    display: flex;
+    gap: 4px;
+  }
+
+  .ve-auth-policy-carousel-controls i {
+    width: 5px;
+    height: 5px;
+    background: #3f3f46;
+  }
+
+  .ve-auth-policy-carousel-controls i[data-active="true"] {
+    background: #67d39b;
+  }
+
+  .ve-auth-agreements {
+    margin-top: 8px !important;
+  }
+
+  .ve-auth-agreements > label {
+    gap: 8px !important;
+    padding: 7px !important;
+  }
+
+  .ve-auth-agreements > label[data-locked="true"] {
+    cursor: not-allowed;
+    opacity: .42;
+  }
+
+  .ve-auth-agreements > label > span:last-child {
+    font-size: 9px !important;
+    line-height: 1.3 !important;
+  }
+
+  .ve-auth-policy-step > .flex.items-center {
+    margin-top: 8px !important;
+  }
+
+  .ve-auth-policy-step > .flex.items-center button {
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .ve-auth-policy-step > p:last-child {
+    margin-top: 4px !important;
+    font-size: 9px !important;
+  }
+}
+
 /* ----------------------------------------------------------
    MOTION / ACCESSIBILITY
    ---------------------------------------------------------- */
@@ -669,6 +883,10 @@ form button[type="submit"]:hover:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .ve-auth-dialog {
     animation: none !important;
+  }
+
+  .ve-auth-backdrop {
+    scroll-behavior: auto;
   }
 }
 
