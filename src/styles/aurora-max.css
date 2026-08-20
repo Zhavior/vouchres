@@ -1,7 +1,7 @@
 /* Aurora Max — shared visual contract. Cognitive-Safe desk (not marketing hero).
    Lenis skipped: this is an app shell, not a narrative site. */
 :root {
-  --aurora-max-obsidian: oklch(17% 0 0);
+  --aurora-max-obsidian: #000000;
   --aurora-max-panel: color-mix(in oklab, oklch(20% 0 0) 45%, transparent);
   --aurora-max-panel-strong: color-mix(in oklab, oklch(18% 0 0) 60%, transparent);
   --aurora-max-line: rgba(157, 215, 175, 0.14);
@@ -21,12 +21,7 @@
 .aurora-max-shell {
   position: relative;
   color: var(--aurora-max-paper);
-  /* Translucent base — see the note on .z8-app-shell. The opaque obsidian
-     moved below the global canvas layer; keeping it here hid the field. */
-  background:
-    radial-gradient(80% 48% at 50% -16%, rgba(0, 217, 160, 0.075), transparent 68%),
-    radial-gradient(48% 34% at 100% 100%, rgba(255, 255, 255, 0.0248), transparent 72%),
-    transparent;
+  background: #000000;
 }
 
 .aurora-max-shell::before {
@@ -57,14 +52,7 @@
 }
 
 .aurora-max-route-frame::before {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(52% 25rem at 14% 0%, rgba(0, 217, 160, 0.045), transparent 74%),
-    radial-gradient(42% 22rem at 92% 8%, rgba(255, 255, 255, 0.0193), transparent 72%);
-  content: '';
+  content: none;
 }
 
 .aurora-max-route-frame > * {

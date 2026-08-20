@@ -1,6 +1,8 @@
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
-import { useCallback, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 import './evidence-integrity-journey.css';
+
+const EvidenceEarthGlobe = lazy(() => import('./EvidenceEarthGlobe'));
 
 type IntegrityPhase = 1 | 2 | 3 | 4;
 
@@ -39,13 +41,6 @@ const integrityPhases = [
   },
 ] as const;
 
-const orbitNodes = [
-  [400, 70],
-  [630, 300],
-  [400, 530],
-  [170, 300],
-] as const;
-
 export default function EvidenceIntegrityJourney() {
   const trackRef = useRef<HTMLElement>(null);
   const activeRef = useRef<IntegrityPhase>(1);
@@ -75,7 +70,7 @@ export default function EvidenceIntegrityJourney() {
   const phase = integrityPhases[active - 1];
 
   return (
-    <section ref={trackRef} id="transparency-over-hype" className="ve-integrityJourney" aria-label="How VouchEdge preserves evidence">
+    <section ref={trackRef} id="transparency-over-hype" className="ve-integrityJourney bg-black" aria-label="How VouchEdge preserves evidence">
       <div className="ve-integrityJourney__pin">
         <header className="ve-integrityJourney__hud">
           <span>VOUCHEDGE // PUBLIC RECORD</span>
@@ -122,48 +117,12 @@ export default function EvidenceIntegrityJourney() {
               <span>NO GUARANTEE CLAIMED</span>
             </div>
 
-            <div className="ve-integrityJourney__earthStage">
-              <svg viewBox="0 0 800 600" role="img" aria-label={`Rotating monochrome Earth for the ${phase.label.toLowerCase()} evidence phase`}>
-                <defs>
-                  <radialGradient id="ve-integrity-earth" cx="34%" cy="27%" r="78%">
-                    <stop offset="0%" stopColor="#777" />
-                    <stop offset="45%" stopColor="#292929" />
-                    <stop offset="100%" stopColor="#050505" />
-                  </radialGradient>
-                  <clipPath id="ve-integrity-earth-clip"><circle cx="400" cy="300" r="210" /></clipPath>
-                </defs>
+            <div className="ve-integrityJourney__earthStage bg-black">
+              <Suspense fallback={<div className="ve-integrityJourney__canvasFallback">INITIALIZING EVIDENCE WORLD</div>}>
+                <EvidenceEarthGlobe active={active} onSelect={goToPhase} reduceMotion={Boolean(reduceMotion)} />
+              </Suspense>
 
-                <ellipse className="ve-integrityJourney__orbit" cx="400" cy="300" rx="305" ry="108" />
-                <ellipse className="ve-integrityJourney__orbit ve-integrityJourney__orbit--tilted" cx="400" cy="300" rx="285" ry="88" transform="rotate(-34 400 300)" />
-
-                <g className="ve-integrityJourney__earth" clipPath="url(#ve-integrity-earth-clip)">
-                  <circle className="ve-integrityJourney__sphere" cx="400" cy="300" r="210" />
-                  <g className="ve-integrityJourney__grid">
-                    <ellipse cx="400" cy="300" rx="210" ry="70" />
-                    <ellipse cx="400" cy="300" rx="210" ry="138" />
-                    <ellipse cx="400" cy="300" rx="74" ry="210" />
-                    <ellipse cx="400" cy="300" rx="142" ry="210" />
-                    <path d="M190 300H610" />
-                  </g>
-                  <g className="ve-integrityJourney__land">
-                    <path d="M242 190l38-31 54 7 25 25-17 24-40 5-17 31-27-13-31 8-21-28z" />
-                    <path d="M327 252l33 10 18 31-12 38 20 25-17 67-23 31-18-36 8-45-21-38 5-50z" />
-                    <path d="M419 177l44-19 64 15 22 27-19 23-50-5-19 18-37-13-28-24z" />
-                    <path d="M456 247l49-12 49 21 22 43-17 59-44 39-44-19-19-47-29-32z" />
-                    <path d="M557 395l37-12 30 23-8 31-45 8-20-25z" />
-                  </g>
-                  <path className="ve-integrityJourney__shadow" d="M468 72C346 164 335 424 482 531C592 449 629 172 468 72Z" />
-                </g>
-
-                {orbitNodes.map(([x, y], index) => (
-                  <g key={index} className={active === index + 1 ? 've-integrityJourney__node is-active' : 've-integrityJourney__node'}>
-                    <circle cx={x} cy={y} r={active === index + 1 ? 9 : 5} />
-                    <text x={x} y={y - 17} textAnchor="middle">0{index + 1}</text>
-                  </g>
-                ))}
-              </svg>
-
-              <div className="ve-integrityJourney__earthLabel">
+              <div className={active === 2 ? 've-integrityJourney__earthLabel is-time-stamped' : 've-integrityJourney__earthLabel'}>
                 <span>PHASE 0{active}</span>
                 <strong>{phase.label}</strong>
                 <small>EVIDENCE STATE PRESERVED</small>

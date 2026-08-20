@@ -22,20 +22,13 @@
 .z8-app-shell, .ve-terminal-page {
   min-height: 100vh;
   color: rgba(231,236,243,.94);
-  /* Translucent on purpose: the ambient 3D field is fixed behind the whole
-     app (GlobalCanvasRoot), so an opaque obsidian base here covered it on
-     every route that mounts this shell. The obsidian now comes from
-     TerminalBackground / body, underneath the canvas. */
-  background:
-    radial-gradient(90% 55% at 50% -18%, rgba(255, 255, 255, 0.044), transparent 62%),
-    radial-gradient(50% 42% at 100% 100%, rgba(49,181,131,.05), transparent 68%),
-    transparent;
+  background: #000000;
 }
 
 .ve-motion-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .ve-motion-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(255, 255, 255, 0.0303) 1px,transparent 1px),linear-gradient(90deg,rgba(255, 255, 255, 0.0303) 1px,transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom,black,transparent 72%); }
 .ve-motion-noise { position: absolute; inset: 0; opacity: .035; background-image: var(--background-image-z8-noise); }
-.ve-motion-spotlight { position: absolute; top: -18rem; left: 50%; width: 48rem; height: 34rem; transform: translateX(-50%); border-radius: 999px; background: rgba(0,217,160,.08); filter: blur(72px); }
+.ve-motion-spotlight { display: none; }
 .ve-motion-orb { display: none; }
 .ve-motion-content { position: relative; z-index: 1; }
 

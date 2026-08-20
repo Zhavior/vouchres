@@ -123,12 +123,10 @@ export function AppShell({
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
       <AppShellProvider value={appShellState}>
         <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
-          <div className={`z8-app-shell ve-motion-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
-            {/* The site backdrop and the ambient WebGL field are no longer
-                mounted here. Both moved to `GlobalCanvasRoot` in App, outside
-                the route tree, so signing in — which swaps the public landing
-                for this shell — no longer tears the WebGL context down and
-                rebuilds it. This shell is transparent on top of them. */}
+          <div className={`z8-app-shell ve-motion-shell ve-theme-transition bg-black font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
+            {/* The shared backdrop remains mounted outside the route tree so
+                route changes never rebuild its WebGL context. The shell owns
+                an opaque pitch-black ground for consistent page contrast. */}
             <div className="ve-motion-content">
               {loggingOut && <GoodbyeScreen />}
               <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>

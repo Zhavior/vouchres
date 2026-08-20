@@ -29,12 +29,20 @@ const publicLandingStyles = readFileSync(
   new URL('../src/styles/public-landing.css', import.meta.url),
   'utf8',
 );
+const truthLandingStyles = readFileSync(
+  new URL('../src/styles/vouchres-ultimate-truth-landing.css', import.meta.url),
+  'utf8',
+);
 const integrityJourneySource = readFileSync(
   new URL('../src/components/landing-v3/EvidenceIntegrityJourney.tsx', import.meta.url),
   'utf8',
 );
 const integrityJourneyStyles = readFileSync(
   new URL('../src/components/landing-v3/evidence-integrity-journey.css', import.meta.url),
+  'utf8',
+);
+const evidenceEarthSource = readFileSync(
+  new URL('../src/components/landing-v3/EvidenceEarthGlobe.tsx', import.meta.url),
   'utf8',
 );
 
@@ -64,6 +72,10 @@ describe('public landing conversion contract', () => {
   it('keeps VouchEdge as the wordmark and identifies the VouchRes engine', () => {
     expect(landingSource).toContain('VOUCHEDGE');
     expect(integrityJourneySource).toContain('VouchRes');
+    expect(landingSource).toContain('ve-hud-grid-page');
+    expect(truthLandingStyles).toContain('.ve-hud-grid-page');
+    expect(truthLandingStyles).toContain('background-color: #000000 !important;');
+    expect(truthLandingStyles).toContain('background-size: 44px 44px, 44px 44px !important;');
   });
 
   it('does not invent confidence, sparklines, or refresh theater', () => {
@@ -86,7 +98,16 @@ describe('public landing conversion contract', () => {
     expect(integrityJourneyStyles).toContain('.ve-integrityJourney__pin {');
     expect(integrityJourneyStyles).toContain('position: sticky;');
     expect(integrityJourneyStyles).toContain('height: 100dvh;');
-    expect(integrityJourneyStyles).toContain('animation: ve-integrity-earth-turn');
+    expect(evidenceEarthSource).toContain('<Canvas');
+    expect(evidenceEarthSource).toContain("gl.setClearColor('#000000', 1)");
+    expect(evidenceEarthSource).toContain('alpha: false');
+    expect(evidenceEarthSource).toContain('<instancedMesh');
+    expect(evidenceEarthSource).toContain('fresnel * 0.18');
+    expect(evidenceEarthSource).toContain('dampingFactor={0.05}');
+    expect(evidenceEarthSource).toContain('IntersectionObserver');
+    expect(evidenceEarthSource).toContain("frameloop={inView && !reduceMotion ? 'always' : 'demand'}");
+    expect(integrityJourneyStyles).toContain('.ve-earthReticle');
+    expect(integrityJourneyStyles).toContain('.ve-integrityJourney__earthLabel.is-time-stamped');
     expect(integrityJourneyStyles).toContain('@media (prefers-reduced-motion: reduce)');
   });
 

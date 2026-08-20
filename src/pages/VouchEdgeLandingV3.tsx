@@ -567,13 +567,13 @@ function TruthFlow({
         </div>
       </section>
 
-      <section ref={mobilePipeline} className="relative h-[900dvh] w-full border-t border-zinc-800 bg-zinc-950 md:hidden" aria-labelledby="mobile-truth-pipeline-title">
+      <section ref={mobilePipeline} className="relative h-[900dvh] w-full border-t border-zinc-800 bg-black md:hidden" aria-labelledby="mobile-truth-pipeline-title">
         <div aria-hidden="true" className="mobile-phase-snap-rail pointer-events-none absolute inset-x-0 top-0 flex h-[800dvh] flex-col">
           {storySteps.map((story) => (
             <span key={story.id} className="h-[100dvh] shrink-0 snap-start" />
           ))}
         </div>
-        <div className="sticky top-14 flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden bg-zinc-950 px-4 py-6">
+        <div className="sticky top-14 flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden bg-black px-4 py-6">
           <header className="shrink-0 border-b border-zinc-800 pb-3">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">Stage 02 // Decision pipeline</span>
             <h2 id="mobile-truth-pipeline-title" className="mt-1 text-lg font-black text-white">One record. Eight connected phases.</h2>
@@ -909,7 +909,7 @@ function MobileChapterMarker({ chapter, label, final = false }: { chapter: strin
 
 export default function VouchEdgeLandingV3(props: Props) {
   return (
-    <main className="vu-landing ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
+    <main className="vu-landing ve-hud-grid-page ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
       <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/90 backdrop-blur-xl border-b border-neutral-800/80 sm:border-white/15">
         <a href="#top" className="inline-flex min-w-0 flex-1 items-center gap-2 text-white no-underline text-[11px] font-bold tracking-wider sm:gap-2.5 sm:text-sm">
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />

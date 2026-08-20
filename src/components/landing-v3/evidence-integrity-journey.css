@@ -2,7 +2,7 @@
   position: relative;
   min-height: 400vh;
   border-block: 1px solid rgba(255, 255, 255, 0.15);
-  background: #050505;
+  background: #000000;
 }
 
 .ve-integrityJourney__pin {
@@ -17,9 +17,8 @@
   background:
     linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-    radial-gradient(circle at 72% 48%, rgba(255, 255, 255, 0.07), transparent 36%),
-    #050505;
-  background-size: 44px 44px, 44px 44px, auto, auto;
+    #000000;
+  background-size: 44px 44px, 44px 44px, auto;
 }
 
 .ve-integrityJourney__hud {
@@ -44,7 +43,7 @@
   display: grid;
   grid-template-columns: minmax(300px, 0.38fr) minmax(0, 1fr);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: #080808;
+  background: #000000;
 }
 
 .ve-integrityJourney__story {
@@ -54,7 +53,7 @@
   flex-direction: column;
   padding: clamp(24px, 3vw, 44px);
   border-right: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(145deg, #0d0d0d, #070707 72%);
+  background: #000000;
 }
 
 .ve-integrityJourney__eyebrow,
@@ -146,37 +145,96 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.08), transparent 46%),
     repeating-linear-gradient(0deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
     repeating-linear-gradient(90deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
-    #050505;
+    #000000;
 }
 
-.ve-integrityJourney__earthStage svg {
+.ve-integrityJourney__canvas {
+  position: absolute;
   z-index: 1;
-  width: min(100%, 880px);
-  height: 100%;
-  min-height: 0;
-  overflow: visible;
+  inset: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  background: #000000;
 }
 
-.ve-integrityJourney__sphere { fill: url(#ve-integrity-earth); stroke: rgba(255, 255, 255, 0.48); stroke-width: 1.4; }
-.ve-integrityJourney__grid :is(ellipse, path) { fill: none; stroke: rgba(255, 255, 255, 0.12); }
-.ve-integrityJourney__land { fill: #999; opacity: 0.44; }
-.ve-integrityJourney__shadow { fill: rgba(0, 0, 0, 0.52); }
+.ve-integrityJourney__canvas:active { cursor: grabbing; }
+.ve-integrityJourney__canvas canvas { display: block; width: 100% !important; height: 100% !important; }
 
-.ve-integrityJourney__earth {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ve-integrity-earth-turn 24s linear infinite;
+.ve-integrityJourney__canvasFallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #657078;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.14em;
 }
 
-.ve-integrityJourney__orbit { fill: none; stroke: rgba(255, 255, 255, 0.18); }
-.ve-integrityJourney__orbit--tilted { stroke: rgba(103, 232, 249, 0.28); stroke-dasharray: 5 9; animation: ve-integrity-orbit 14s linear infinite; }
-.ve-integrityJourney__node circle { fill: #555; stroke: #080808; stroke-width: 3; }
-.ve-integrityJourney__node text { fill: #626262; font: 10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-.ve-integrityJourney__node.is-active circle { fill: #67e8f9; stroke: rgba(103, 232, 249, 0.24); stroke-width: 8; animation: ve-integrity-node 1.8s ease-in-out infinite; }
-.ve-integrityJourney__node.is-active text { fill: #dbfbff; }
+.ve-earthNodeLabel {
+  position: relative;
+  z-index: 2;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 170, 0.44);
+  border-radius: 50%;
+  background: rgba(7, 11, 15, 0.78);
+  color: #8f9ba1;
+  font: 700 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.03em;
+  cursor: crosshair;
+  box-shadow: 0 0 0 4px rgba(2, 8, 12, 0.3);
+}
+
+.ve-earthNodeLabel.is-active {
+  border-color: rgba(0, 240, 255, 0.76);
+  color: #dffcff;
+  background: rgba(0, 39, 45, 0.82);
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.38), 0 0 0 5px rgba(0, 240, 255, 0.08);
+}
+
+.ve-earthReticle {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 49px;
+  height: 49px;
+  transform: translate(-50%, -50%);
+  animation: ve-earth-reticle-lock 520ms cubic-bezier(0.16, 1, 0.3, 1) both, ve-earth-reticle-pulse 2.2s 520ms ease-in-out infinite;
+}
+
+.ve-earthReticle i {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(0, 240, 255, 0.8);
+}
+
+.ve-earthReticle i:nth-child(1) { left: 0; top: 0; border-left: 1px solid; border-top: 1px solid; }
+.ve-earthReticle i:nth-child(2) { right: 0; top: 0; border-right: 1px solid; border-top: 1px solid; }
+.ve-earthReticle i:nth-child(3) { right: 0; bottom: 0; border-right: 1px solid; border-bottom: 1px solid; }
+.ve-earthReticle i:nth-child(4) { left: 0; bottom: 0; border-left: 1px solid; border-bottom: 1px solid; }
+
+.ve-earthTooltip {
+  pointer-events: none;
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: max-content;
+  max-width: 310px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  background: rgba(5, 9, 13, 0.94);
+  color: #bceff4;
+  font: 700 8px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.48);
+}
 
 .ve-integrityJourney__earthLabel {
   position: absolute;
@@ -196,10 +254,19 @@
   background: rgba(3, 3, 3, 0.78);
   backdrop-filter: blur(10px);
   text-align: center;
+  transition: border-color 260ms ease, background-color 260ms ease, box-shadow 260ms ease;
 }
 
 .ve-integrityJourney__earthLabel :is(span, small) { color: #777; font: 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: 0.14em; }
 .ve-integrityJourney__earthLabel strong { color: #f1f1f1; font: 560 clamp(18px, 1.7vw, 27px) 'Space Grotesk', Inter, sans-serif; letter-spacing: 0.03em; }
+
+.ve-integrityJourney__earthLabel.is-time-stamped {
+  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 54px rgba(0, 240, 255, 0.18), inset 0 0 24px rgba(0, 240, 255, 0.05);
+  animation: ve-earth-badge-pulse 1.9s ease-in-out infinite;
+}
 
 .ve-integrityJourney__receipt {
   min-height: 70px;
@@ -209,9 +276,20 @@
 .ve-integrityJourney__receipt span { color: #67e8f9; }
 .ve-integrityJourney__receipt strong { color: #bdbdbd; font-weight: 600; text-align: right; }
 
-@keyframes ve-integrity-earth-turn { from { transform: rotate(-3deg); } to { transform: rotate(357deg); } }
-@keyframes ve-integrity-orbit { to { stroke-dashoffset: -140; } }
-@keyframes ve-integrity-node { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+@keyframes ve-earth-reticle-lock {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(8deg); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+
+@keyframes ve-earth-reticle-pulse {
+  0%, 100% { opacity: 0.62; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes ve-earth-badge-pulse {
+  0%, 100% { box-shadow: 0 0 42px rgba(0, 240, 255, 0.12), inset 0 0 18px rgba(0, 240, 255, 0.04); }
+  50% { box-shadow: 0 0 68px rgba(0, 240, 255, 0.24), inset 0 0 30px rgba(0, 240, 255, 0.08); }
+}
 
 @media (max-height: 760px) and (min-width: 768px) {
   .ve-integrityJourney__pin { padding-top: 76px; padding-bottom: 14px; }
@@ -238,7 +316,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ve-integrityJourney__earth,
-  .ve-integrityJourney__orbit--tilted,
-  .ve-integrityJourney__node.is-active circle { animation: none !important; }
+  .ve-earthReticle,
+  .ve-integrityJourney__earthLabel.is-time-stamped { animation: none !important; }
 }

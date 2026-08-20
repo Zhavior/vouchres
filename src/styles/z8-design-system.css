@@ -11,7 +11,7 @@
  * would land it after Tailwind's expanded output and break the build).
  */
 @theme {
-  --color-obsidian-900: #08090A;
+  --color-obsidian-900: #000000;
   --color-obsidian-800: #101113;
   --color-obsidian-700: #17181B;
   --color-obsidian-600: #1F2124;
