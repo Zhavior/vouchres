@@ -28,10 +28,11 @@
 
 .ve-topbar-tab {
   border-radius: 0 !important;
+  transition: all 0.15s ease-out;
 }
 
 .ve-topbar-tab.is-active {
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
 }
 
 /* ── Shell geometry ───────────────────────────────────────────────────────── */

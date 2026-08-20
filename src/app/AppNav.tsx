@@ -76,7 +76,7 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
   return (
     <nav
-      className={`ve-aurora-mobile-dock fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-2xl border-2 border-white/20 bg-black/95 shadow-[0_10px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden font-mono ${
+      className={`ve-aurora-mobile-dock fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-2xl border border-white/[0.08] bg-[#090A0F]/95 shadow-[0_10px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden ${
         hideDock ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'opacity-100'
       } ${collapsed ? 'w-auto px-2.5' : 'w-[92vw] max-w-md px-2'}`}
       aria-label="Mobile app navigation"
@@ -162,19 +162,19 @@ function DockButton({
       <div
         className={`relative flex items-center justify-center transition-all ${
           centerAction
-            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} border-2 ${active ? 'border-cyan-400 bg-cyan-950/60 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.35)]' : 'border-white/15 bg-black/60 text-zinc-400'}`
-            : active ? 'text-cyan-300 scale-105' : 'text-zinc-500 group-hover:text-zinc-300'
+            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} border ${active ? 'border-amber-400 bg-amber-950/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-white/10 bg-zinc-900/80 text-zinc-400'}`
+            : active ? 'text-amber-400 scale-105' : 'text-zinc-500 group-hover:text-zinc-300'
         }`}
       >
-        <Icon className={collapsed ? 'h-[18px] w-[18px]' : centerAction ? 'h-5 w-5' : 'h-[22px] w-[22px]'} strokeWidth={active ? 2.4 : 1.8} />
+        <Icon className={collapsed ? 'h-[18px] w-[18px]' : centerAction ? 'h-5 w-5' : 'h-[22px] w-[22px]'} strokeWidth={active ? 2.2 : 1.8} />
       </div>
       {!collapsed ? (
-        <span className={`text-[9px] font-black uppercase tracking-wider font-mono transition-colors ${active ? 'text-cyan-300' : 'text-zinc-500'}`}>
+        <span className={`text-[10px] font-sans font-medium tracking-normal transition-colors ${active ? 'text-amber-300 font-semibold' : 'text-zinc-500'}`}>
           {label.split(' ')[0]}
         </span>
       ) : null}
       {active && !centerAction && !collapsed ? (
-        <span className="absolute -top-1 h-0.5 w-6 bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,0.9)]" aria-hidden="true" />
+        <span className="absolute -top-1 h-0.5 w-6 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]" aria-hidden="true" />
       ) : null}
     </button>
   );

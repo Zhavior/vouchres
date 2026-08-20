@@ -1,14 +1,13 @@
 /*
- * HR Next — Cyber-Engineering HUD & Deterministic Protocol Primitives.
- * Aligned with the VouchEdge Landing Page, Today's Page, and Live Games Terminal.
+ * HR Next — Quant-Terminal Primitives (Linear × Bloomberg Terminal).
  */
 
 .hr-next {
-  background-color: #000000;
+  background-color: #090A0F;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
-  background-size: 44px 44px, 44px 44px;
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px;
 }
 
 .hr-next * {

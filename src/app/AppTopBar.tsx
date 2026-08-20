@@ -66,18 +66,18 @@ const RouteTab = React.memo(function RouteTab({
       aria-current={isActive ? 'page' : undefined}
       aria-keyshortcuts={shortcut}
       title={shortcut ? `${label} (${shortcut})` : label}
-      className={`ve-topbar-tab group inline-flex h-9 shrink-0 items-center gap-1.5 border px-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] transition-all cursor-pointer ${
+      className={`ve-topbar-tab group inline-flex h-9 shrink-0 items-center gap-1.5 border px-3 font-sans text-xs font-semibold tracking-normal transition-all cursor-pointer ${
         isActive
-          ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 font-black shadow-[0_0_14px_rgba(0,240,255,0.25)]'
-          : 'border-white/10 bg-black/60 text-zinc-400 hover:border-white/30 hover:text-white'
+          ? 'border-amber-400 bg-[#181B22] text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+          : 'border-white/[0.08] bg-[#111318]/90 text-zinc-400 hover:border-zinc-700 hover:bg-[#181B22] hover:text-zinc-200'
       }`}
     >
-      <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+      <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-amber-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
       <span className="whitespace-nowrap">{label}</span>
       {liveOnAir ? <SidebarLiveOnAirBadge compact={liveOnAir === 'dot'} /> : null}
       {shortcut ? (
-        <span className={`hidden 2xl:inline-block px-1 text-[8px] font-mono border ${
-          isActive ? 'border-cyan-400/40 bg-cyan-950/60 text-cyan-300' : 'border-white/10 bg-zinc-900 text-zinc-600'
+        <span className={`hidden 2xl:inline-block px-1 text-[9px] font-mono border ${
+          isActive ? 'border-amber-400/40 bg-amber-950/40 text-amber-300' : 'border-white/10 bg-zinc-900/80 text-zinc-500'
         }`}>
           {shortcut}
         </span>
@@ -185,9 +185,9 @@ export const AppTopBar = React.memo(function AppTopBar({
   return (
     <header
       id="ve-app-topbar"
-      className="ve-app-topbar sticky top-0 z-40 flex h-14 w-full shrink-0 items-center justify-between gap-3 border-b-2 border-white/15 bg-black/95 px-4 backdrop-blur-xl sm:px-6 font-mono"
+      className="ve-app-topbar sticky top-0 z-40 flex h-14 w-full shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] bg-[#090A0F]/95 px-4 backdrop-blur-xl sm:px-6"
     >
-      {/* Left — brand + telemetry tag + quick search */}
+      {/* Left — brand + quick search */}
       <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
         <button
           type="button"
@@ -199,19 +199,15 @@ export const AppTopBar = React.memo(function AppTopBar({
           <VouchEdgeLogo emeraldMark markClassName="h-7 w-7 shrink-0" className="min-w-0" />
         </button>
 
-        <span className="hidden xl:inline px-1.5 py-0.5 border border-white/15 bg-zinc-900 font-mono text-[8px] font-black uppercase text-zinc-400 tracking-widest">
-          HUD // STAGE: 04
-        </span>
-
         <button
           type="button"
           onClick={onOpenCmdK}
-          className="group hidden h-9 items-center gap-2 border border-white/15 bg-zinc-950 px-2.5 font-mono text-[11px] text-zinc-400 transition-colors hover:border-cyan-400 hover:text-cyan-300 md:flex cursor-pointer"
+          className="group hidden h-9 items-center gap-2 border border-white/[0.08] bg-[#111318] px-3 font-sans text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:bg-[#181B22] hover:text-zinc-200 md:flex cursor-pointer"
           aria-label="Open command palette (⌘K)"
         >
-          <Search className="h-3.5 w-3.5 shrink-0 text-zinc-500 group-hover:text-cyan-400" />
-          <span className="hidden lg:inline">Quick search…</span>
-          <span className="ml-1 inline-flex items-center gap-0.5 border border-white/10 bg-black px-1.5 py-0.5 text-[9px] font-black tracking-wider text-zinc-400">
+          <Search className="h-3.5 w-3.5 shrink-0 text-zinc-500 group-hover:text-zinc-300" />
+          <span className="hidden lg:inline font-medium">Search…</span>
+          <span className="ml-1 inline-flex items-center gap-0.5 border border-white/10 bg-zinc-900 px-1.5 py-0.5 font-mono text-[9px] font-medium text-zinc-400">
             <Command className="h-2.5 w-2.5" />K
           </span>
         </button>
@@ -219,7 +215,7 @@ export const AppTopBar = React.memo(function AppTopBar({
         <button
           type="button"
           onClick={onOpenCmdK}
-          className="grid h-9 w-9 shrink-0 place-items-center border border-white/15 bg-zinc-950 text-zinc-400 hover:border-cyan-400 hover:text-white md:hidden cursor-pointer"
+          className="grid h-9 w-9 shrink-0 place-items-center border border-white/[0.08] bg-[#111318] text-zinc-400 hover:border-zinc-700 hover:text-white md:hidden cursor-pointer"
           aria-label="Open command palette"
         >
           <Search className="h-4 w-4" />
@@ -248,12 +244,12 @@ export const AppTopBar = React.memo(function AppTopBar({
       {/* Right — feed status, ambient 3D, notifications, profile */}
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <span
-          className={`hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-[0.14em] xl:inline-flex ${
+          className={`hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wider xl:inline-flex ${
             liveGamesError
-              ? 'border-rose-500/50 bg-rose-950/40 text-rose-300'
+              ? 'border-rose-500/30 bg-rose-950/30 text-rose-400'
               : liveGamesLoading
-                ? 'border-white/10 bg-zinc-950 text-zinc-500'
-                : 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
+                ? 'border-white/[0.08] bg-[#111318] text-zinc-500'
+                : 'border-emerald-500/30 bg-emerald-950/30 text-emerald-400'
           }`}
           title={`MLB feed: ${liveDataState}`}
         >
@@ -273,13 +269,13 @@ export const AppTopBar = React.memo(function AppTopBar({
           onClick={toggle3D}
           aria-pressed={is3DEnabled}
           title={`Ambient 3D layer: ${is3DEnabled ? 'on' : 'off'}`}
-          className={`hidden h-9 items-center gap-1.5 border px-2.5 font-mono text-[10px] font-black uppercase tracking-[0.1em] transition-all cursor-pointer sm:inline-flex ${
+          className={`hidden h-9 items-center gap-1.5 border px-2.5 font-mono text-[10px] font-medium tracking-wide transition-all cursor-pointer sm:inline-flex ${
             is3DEnabled
-              ? 'border-cyan-400 bg-cyan-950/60 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.25)]'
-              : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+              ? 'border-amber-400/40 bg-amber-950/30 text-amber-300'
+              : 'border-white/[0.08] bg-[#111318] text-zinc-400 hover:border-zinc-700 hover:text-white'
           }`}
         >
-          <Box className={`h-3.5 w-3.5 ${is3DEnabled ? 'text-cyan-400' : 'text-zinc-500'}`} />
+          <Box className={`h-3.5 w-3.5 ${is3DEnabled ? 'text-amber-400' : 'text-zinc-500'}`} />
           3D {is3DEnabled ? 'ON' : 'OFF'}
         </button>
 
@@ -292,9 +288,9 @@ export const AppTopBar = React.memo(function AppTopBar({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label={`Account menu for ${profile.displayName}`}
-            className="flex h-9 items-center gap-1.5 border border-white/15 bg-black px-2 transition-colors hover:border-white/30 cursor-pointer"
+            className="flex h-9 items-center gap-1.5 border border-white/[0.08] bg-[#111318] px-2 transition-colors hover:border-zinc-700 cursor-pointer"
           >
-            <span className="grid h-6 w-6 shrink-0 place-items-center overflow-hidden border border-white/20 bg-zinc-900">
+            <span className="grid h-6 w-6 shrink-0 place-items-center overflow-hidden border border-white/10 bg-zinc-900">
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -307,9 +303,9 @@ export const AppTopBar = React.memo(function AppTopBar({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-11 z-50 w-64 overflow-hidden border-2 border-white/20 bg-black p-2 shadow-[0_20px_60px_rgba(0,0,0,0.9)] font-mono animate-in fade-in zoom-in-95 duration-100"
+              className="absolute right-0 top-11 z-50 w-64 overflow-hidden border border-white/[0.08] bg-[#111318] p-2 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-in fade-in zoom-in-95 duration-100 font-sans"
             >
-              <div className="flex items-center gap-2.5 p-2 border border-white/10 bg-zinc-950 mb-2">
+              <div className="flex items-center gap-2.5 p-2.5 border border-white/[0.08] bg-[#181B22] mb-2">
                 <ProfileAvatarBorder
                   borderId={profile.profileBorderId}
                   avatarUrl={profile.avatarUrl}
@@ -320,27 +316,27 @@ export const AppTopBar = React.memo(function AppTopBar({
                   isVerified={profile.verified}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 truncate font-mono text-xs font-black text-white uppercase">
+                  <p className="flex items-center gap-1 truncate text-xs font-bold text-white">
                     {profile.displayName}
-                    {profile.verified && <Shield className="h-3 w-3 shrink-0 fill-cyan-400/85 text-cyan-400" />}
+                    {profile.verified && <Shield className="h-3 w-3 shrink-0 fill-amber-400/85 text-amber-400" />}
                   </p>
-                  <p className="mt-0.5 truncate font-mono text-[10px] text-zinc-400 font-bold">
+                  <p className="mt-0.5 truncate font-mono text-[10px] text-zinc-400 font-medium">
                     {formatProfileWinRate(profile, { suffix: 'win rate' })}
                   </p>
                 </div>
               </div>
 
               {!FOCUSED_BETA_SHELL_ENABLED && (
-                <div className="my-1.5 flex items-center gap-1 border border-white/10 bg-zinc-950 p-1" role="group" aria-label="Sport selector">
+                <div className="my-1.5 flex items-center gap-1 border border-white/[0.08] bg-[#181B22] p-1" role="group" aria-label="Sport selector">
                   {SPORT_LIST.map((sport) => (
                     <button
                       key={sport.id}
                       type="button"
                       onClick={() => handleSportClick(sport.id)}
                       disabled={!sport.enabled}
-                      className={`flex flex-1 items-center justify-center gap-1 border px-1.5 py-1 font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${
+                      className={`flex flex-1 items-center justify-center gap-1 border px-1.5 py-1 font-sans text-[10px] font-bold uppercase transition-colors cursor-pointer ${
                         activeSport === sport.id
-                          ? 'border-cyan-400 bg-cyan-950/60 text-cyan-300'
+                          ? 'border-amber-400 bg-amber-950/40 text-amber-300'
                           : sport.enabled
                             ? 'border-transparent text-zinc-400 hover:text-white'
                             : 'cursor-not-allowed border-transparent text-zinc-700'
@@ -352,48 +348,58 @@ export const AppTopBar = React.memo(function AppTopBar({
                 </div>
               )}
 
-              <div className="my-1.5 h-px bg-white/10" />
+              <div className="my-1.5 h-px bg-white/[0.08]" />
 
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => handleNavigate('profile')}
-                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left font-mono text-[11px] font-bold uppercase text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white cursor-pointer"
+                className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-zinc-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-white cursor-pointer"
               >
-                <UserCircle className="h-3.5 w-3.5 text-cyan-400" /> Profile
-                <kbd className="ml-auto border border-white/10 bg-zinc-900 px-1 text-[8.5px] text-zinc-500">P</kbd>
+                <span className="flex items-center gap-2">
+                  <UserCircle className="h-3.5 w-3.5 text-zinc-500" /> Profile & Stats
+                </span>
+                <kbd className="font-mono text-[9px] text-zinc-500">[P]</kbd>
               </button>
+
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => handleNavigate('settings')}
-                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left font-mono text-[11px] font-bold uppercase text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white cursor-pointer"
+                className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-zinc-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-white cursor-pointer"
               >
-                <Settings className="h-3.5 w-3.5 text-cyan-400" /> Settings
-                <kbd className="ml-auto border border-white/10 bg-zinc-900 px-1 text-[8.5px] text-zinc-500">S</kbd>
+                <span className="flex items-center gap-2">
+                  <Settings className="h-3.5 w-3.5 text-zinc-500" /> Settings
+                </span>
+                <kbd className="font-mono text-[9px] text-zinc-500">[S]</kbd>
               </button>
+
               {!FOCUSED_BETA_SHELL_ENABLED && (
                 <button
                   type="button"
                   role="menuitem"
                   onClick={() => handleNavigate('customize')}
-                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left font-mono text-[11px] font-bold uppercase text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white cursor-pointer"
+                  className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-zinc-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-white cursor-pointer"
                 >
-                  <Palette className="h-3.5 w-3.5 text-cyan-400" /> Customize
-                  <kbd className="ml-auto border border-white/10 bg-zinc-900 px-1 text-[8.5px] text-zinc-500">C</kbd>
+                  <span className="flex items-center gap-2">
+                    <Palette className="h-3.5 w-3.5 text-zinc-500" /> Customize
+                  </span>
+                  <kbd className="font-mono text-[9px] text-zinc-500">[C]</kbd>
                 </button>
               )}
 
-              <div className="my-1.5 h-px bg-white/10" />
+              <div className="my-1.5 h-px bg-white/[0.08]" />
 
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleLogout}
                 disabled={signingOut}
-                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left font-mono text-[11px] font-bold uppercase text-rose-400 transition-colors hover:bg-rose-950/40 hover:text-rose-200 disabled:opacity-50 cursor-pointer"
+                className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-rose-400 transition-colors hover:border-rose-500/20 hover:bg-rose-950/30 hover:text-rose-300 disabled:opacity-50 cursor-pointer"
               >
-                <LogOut className="h-3.5 w-3.5" /> {signingOut ? 'Leaving…' : 'Log out'}
+                <span className="flex items-center gap-2">
+                  <LogOut className="h-3.5 w-3.5" /> {signingOut ? 'Signing out…' : 'Log Out'}
+                </span>
               </button>
             </div>
           )}
