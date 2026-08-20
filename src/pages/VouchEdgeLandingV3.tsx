@@ -3,7 +3,7 @@ import '../styles/public-landing.css';
 import '../styles/vouchedge-mobile-story.css';
 import '../components/landing-v4/evidence-field.css';
 import '../components/landing-v4/premium-hero.css';
-import { motion, useMotionValueEvent, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValueEvent, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useCallback } from 'react';
 import {
   EvidenceIntegrityJourney,
@@ -18,6 +18,7 @@ import {
 import {
   useResearchPreview,
 } from '../components/landing-v3/researchPreviewData';
+import VouchEdgeCinematicIntro from '../components/landing-v3/VouchEdgeCinematicIntro';
 
 type StoryStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -363,9 +364,17 @@ function TacticalHUDTelemetry({
               <span className="shrink-0 text-zinc-500 font-bold">PENDING A SAVED RECORD</span>
             </div>
           </div>
-          <p className="font-mono text-[10px] text-zinc-400 m-0">
-            WINS AND LOSSES SHOULD RECEIVE EQUAL REVIEW WEIGHT
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+            <p className="font-mono text-[10px] text-zinc-400 m-0">
+              WINS AND LOSSES SHOULD RECEIVE EQUAL REVIEW WEIGHT
+            </p>
+            <a
+              href="#public-records"
+              className="hidden sm:inline-flex shrink-0 items-center gap-1 font-mono text-[9px] font-bold text-emerald-400 uppercase tracking-wider border border-emerald-400/40 bg-emerald-950/40 px-2 py-0.5 hover:bg-emerald-900/50 hover:border-emerald-400 transition-colors no-underline cursor-pointer"
+            >
+              RECORD ↓
+            </a>
+          </div>
         </div>
       );
   }
@@ -406,7 +415,12 @@ function TruthFlow({
     restDelta: 0.0001,
   });
 
+  const hudExitOpacity = useTransform(scrollYProgress, [0.85, 0.95, 1.0], [1, 1, 0]);
+  const hudExitY = useTransform(scrollYProgress, [0.95, 1.0], [0, -30]);
+  const hudPointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.98 ? 'none' : 'auto'));
+
   const activeStoryRef = useRef<StoryStep>(1);
+  const hasAutoAdvancedRef = useRef(false);
 
   const { scrollYProgress: mobileScrollYProgress } = useScroll({
     target: mobilePipeline,
@@ -421,6 +435,18 @@ function TruthFlow({
     if (nextStory !== activeStoryRef.current) {
       activeStoryRef.current = nextStory;
       setActiveStory(nextStory);
+    }
+
+    // Supported user experience: when customer scrolls at the final HUD phase (Phase 08 exit),
+    // automatically and smoothly guide them directly into the Public Records chapter
+    if (progress >= 0.98 && !hasAutoAdvancedRef.current) {
+      hasAutoAdvancedRef.current = true;
+      const target = document.getElementById('public-records') || document.getElementById('transparency-over-hype');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else if (progress < 0.85) {
+      hasAutoAdvancedRef.current = false;
     }
   });
 
@@ -437,6 +463,14 @@ function TruthFlow({
   const goToStory = useCallback((story: StoryStep) => {
     const el = canvas.current;
     if (!el) return;
+
+    if (story === 8 && activeStoryRef.current === 8) {
+      const target = document.getElementById('public-records') || document.getElementById('transparency-over-hype');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
 
     const start = el.getBoundingClientRect().top + window.scrollY;
     const usableScroll = el.offsetHeight - window.innerHeight;
@@ -635,8 +669,17 @@ function TruthFlow({
         </div>
       </section>
 
-      <div ref={canvas} className="relative hidden min-h-[420vh] bg-black text-white md:block">
-      <div className="sticky top-16 h-[calc(100dvh-64px)] overflow-y-auto bg-black flex flex-col justify-between p-6 lg:overflow-hidden lg:p-8">
+      <div ref={canvas} className="relative hidden h-[300vh] bg-black text-white md:block">
+        <motion.div
+          style={{
+            opacity: hudExitOpacity,
+            y: hudExitY,
+            pointerEvents: hudPointerEvents,
+            willChange: 'transform, opacity',
+            transform: 'translateZ(0)',
+          }}
+          className="sticky top-0 h-screen overflow-hidden bg-black flex flex-col justify-between p-6 pt-16 lg:p-8 lg:pt-20 will-change-[transform,opacity] [transform:translateZ(0)]"
+        >
 
         {/* TOP TELEMETRY STATUS BAR */}
         <header className="flex items-center justify-between gap-2 border border-neutral-800/80 bg-zinc-950 px-3 py-2 font-mono text-[10px] uppercase tracking-wider shrink-0 sm:px-4 sm:py-2.5">
@@ -650,7 +693,16 @@ function TruthFlow({
           <div className="flex shrink-0 items-center gap-2 text-zinc-400 sm:gap-4">
             <span>PHASE: <strong className="text-white">{storyPhaseLabel(activeStory)}</strong></span>
             <span className="hidden sm:inline">|</span>
-            <span className="hidden sm:inline text-zinc-300">{preview.statusLabel || 'RESEARCH STATE'}</span>
+            {activeStory === 8 ? (
+              <a
+                href="#public-records"
+                className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] font-bold text-emerald-300 hover:text-white no-underline transition-colors animate-pulse"
+              >
+                NEXT: PUBLIC RECORD ↓
+              </a>
+            ) : (
+              <span className="hidden sm:inline text-zinc-300">{preview.statusLabel || 'RESEARCH STATE'}</span>
+            )}
           </div>
         </header>
 
@@ -706,6 +758,20 @@ function TruthFlow({
                 >
                   EXPLORE EVIDENCE ↓
                 </button>
+              </div>
+            ) : activeStory === 8 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-3 font-mono text-xs text-zinc-300 font-bold">
+                  <span>STEP 8 OF 8</span>
+                  <span>·</span>
+                  <span className="text-cyan-300 uppercase tracking-widest">LEARN MODE ACTIVE</span>
+                </div>
+                <a
+                  href="#public-records"
+                  className="inline-flex items-center gap-1.5 border border-emerald-400/60 bg-emerald-950/40 px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-900/50 no-underline cursor-pointer"
+                >
+                  PUBLIC RECORD ↓
+                </a>
               </div>
             ) : (
               <div className="flex items-center gap-3 font-mono text-xs text-zinc-300 font-bold">
@@ -885,7 +951,7 @@ function TruthFlow({
             })}
           </div>
         </nav>
-      </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -910,6 +976,7 @@ function MobileChapterMarker({ chapter, label, final = false }: { chapter: strin
 export default function VouchEdgeLandingV3(props: Props) {
   return (
     <main className="vu-landing ve-hud-grid-page ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
+      <VouchEdgeCinematicIntro />
       <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/90 backdrop-blur-xl border-b border-neutral-800/80 sm:border-white/15">
         <a href="#top" className="inline-flex min-w-0 flex-1 items-center gap-2 text-white no-underline text-[11px] font-bold tracking-wider sm:gap-2.5 sm:text-sm">
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />
@@ -936,7 +1003,7 @@ export default function VouchEdgeLandingV3(props: Props) {
         </div>
       </nav>
 
-      <div id="how-it-works" className="bg-black md:pt-16">
+      <div id="how-it-works" className="bg-black">
         <div id="top">
           <div id="record">
             <TruthFlow onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} />
@@ -944,10 +1011,18 @@ export default function VouchEdgeLandingV3(props: Props) {
         </div>
       </div>
 
-      <div className="ve-mobile-story-slide ve-mobile-story-slide--integrity relative">
+      <motion.div
+        id="public-records"
+        initial={{ opacity: 0.2, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ amount: 0.2 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="ve-mobile-story-slide ve-mobile-story-slide--integrity relative will-change-[transform,opacity] [transform:translateZ(0)]"
+        style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+      >
         <MobileChapterMarker chapter="03 / INTEGRITY" label="PUBLIC RECORD" />
         <EvidenceIntegrityJourney />
-      </div>
+      </motion.div>
       <div className="ve-mobile-story-slide ve-mobile-story-slide--community vu-chapter vu-chapterCommunity bg-black border-t border-white/15">
         <MobileChapterMarker chapter="05 / COMMUNITY" label="CONSENSUS" />
         <CommunitySection onExploreCommunity={props.onExploreCommunity} />
