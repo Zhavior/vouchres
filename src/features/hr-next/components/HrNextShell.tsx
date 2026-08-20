@@ -718,38 +718,12 @@ export function HrNextShell() {
         )}
       </div>
       
-      {/* 2-Column Responsive Layout: Rail + Board */}
+      {/* Board & Research Dock Row */}
       <div
         ref={boardRowRef}
         style={isDockDocked ? { marginBottom: `-${dockReserve}px` } : undefined}
         className="flex w-full flex-col items-start gap-4 pb-36 sm:p-0 md:pb-24 lg:pb-6 xl:flex-row"
       >
-        {/* Desktop Left Rail — sticky query controls */}
-          <HrNextControlRail
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            searchInputRef={searchInputRef}
-            date={date}
-            onDateChange={setDate}
-            isToday={isToday}
-            syncing={syncing}
-            onRefresh={refetch}
-            viewModes={VIEW_MODES}
-            viewMode={viewMode}
-            onViewModeChange={selectView}
-            lineupMode={mode}
-            onLineupModeChange={setMode}
-            filterTag={filterTag}
-            onFilterTagChange={setFilterTag}
-            filterCounts={filterCounts}
-            statcastResolved={statcastResolved}
-            onToggleStatcast={toggleStatcast}
-            onExport={handleExport}
-            exportStatus={exportStatus}
-            savedCount={savedCount}
-            variant="rail"
-          />
-
         {/* `@container` so the Pro Mode tier grid sizes off this column's real
             width rather than the viewport's — with the dock beside it the two
             numbers differ by up to 460px, and a viewport-keyed grid keeps four
