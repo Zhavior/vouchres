@@ -8,7 +8,7 @@
  * duplicates them verbatim — see the "mirrors" note at each site.
  *
  * Palette (approved 2026-07-19, restrained premium — not neon):
- *   ground     #08090A   near-black navy application background
+ *   ground     #000000   pitch-black application background
  *   surface-1  #101113   elevated surface (cards, panels)
  *   surface-2  #17181B   further elevated (nested panels, sheets)
  *   surface-3  #1F2124   highest elevation (active/selected surfaces)
@@ -25,7 +25,7 @@
 
 @theme {
   /* Core surfaces (approved premium navy palette) */
-  --color-ve-obsidian: #08090A;
+  --color-ve-obsidian: #000000;
   --color-ve-graphite: #101113;
   --color-ve-storm: #17181B;
   --color-ve-surface-panel: #1F2124;
@@ -68,7 +68,7 @@
 
   /* Legacy CSS vars consumed by tailwind.config.ts and existing components —
      same approved values, kept under their old names for zero-diff callers. */
-  --bg-obsidian: #08090A;
+  --bg-obsidian: #000000;
   --bg-graphite: #101113;
   --bg-storm: #17181B;
   --surface-panel: #1F2124;

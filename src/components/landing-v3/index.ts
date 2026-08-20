@@ -6,6 +6,7 @@ export { default as LiveSportsIntelligence } from "./LiveSportsIntelligence";
 export { default as WhyVouchEdge } from "./WhyVouchEdge";
 export { default as PremiumFeatures } from "./PremiumFeatures";
 export { default as DecisionIntelligence } from "./DecisionIntelligence";
+export { default as EvidenceIntegrityJourney } from "./EvidenceIntegrityJourney";
 export { default as CommunitySection } from "./CommunitySection";
 export type { CommunitySectionProps } from "./CommunitySection";
 export { default as PricingSection } from "./PricingSection";

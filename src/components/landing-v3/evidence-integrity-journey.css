@@ -1,0 +1,321 @@
+.ve-integrityJourney {
+  position: relative;
+  min-height: 400vh;
+  border-block: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000000;
+}
+
+.ve-integrityJourney__pin {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: calc(64px + clamp(16px, 2vw, 26px)) clamp(24px, 3.5vw, 52px) clamp(18px, 2.4vw, 32px);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    #000000;
+  background-size: 44px 44px, 44px 44px, auto;
+}
+
+.ve-integrityJourney__hud {
+  width: min(100%, 1440px);
+  min-height: 34px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: #747474;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.14em;
+}
+
+.ve-integrityJourney__frame {
+  width: min(100%, 1440px);
+  min-height: 0;
+  flex: 1;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.38fr) minmax(0, 1fr);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #000000;
+}
+
+.ve-integrityJourney__story {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3vw, 44px);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  background: #000000;
+}
+
+.ve-integrityJourney__eyebrow,
+.ve-integrityJourney__phase {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.ve-integrityJourney__eyebrow { color: #666; }
+.ve-integrityJourney__phase { margin-top: clamp(24px, 4vh, 42px); color: #67e8f9; }
+
+.ve-integrityJourney__story h2 {
+  max-width: 11ch;
+  margin: 12px 0 0;
+  color: #f3f3f3;
+  font-family: 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(34px, 3.5vw, 58px);
+  font-weight: 540;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.ve-integrityJourney__story p {
+  max-width: 42ch;
+  margin: 22px 0 0;
+  color: #9a9a9a;
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.65;
+}
+
+.ve-integrityJourney__rail {
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ve-integrityJourney__rail button {
+  width: 100%;
+  min-height: 45px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+  background: transparent;
+  color: #5f5f5f;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.1em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ve-integrityJourney__rail button:hover,
+.ve-integrityJourney__rail button:focus-visible { color: #d8d8d8; outline: none; }
+.ve-integrityJourney__rail button.is-passed { color: #969696; }
+.ve-integrityJourney__rail button.is-active { color: #f4f4f4; background: rgba(103, 232, 249, 0.055); }
+.ve-integrityJourney__rail button.is-active span { color: #67e8f9; }
+
+.ve-integrityJourney__world {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ve-integrityJourney__worldHead,
+.ve-integrityJourney__receipt {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 20px;
+  color: #6f6f6f;
+  font: 700 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.13em;
+}
+
+.ve-integrityJourney__worldHead { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+
+.ve-integrityJourney__earthStage {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
+    repeating-linear-gradient(90deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
+    #000000;
+}
+
+.ve-integrityJourney__canvas {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  background: #000000;
+}
+
+.ve-integrityJourney__canvas:active { cursor: grabbing; }
+.ve-integrityJourney__canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+
+.ve-integrityJourney__canvasFallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #657078;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.14em;
+}
+
+.ve-earthNodeLabel {
+  position: relative;
+  z-index: 2;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 170, 0.44);
+  border-radius: 50%;
+  background: rgba(7, 11, 15, 0.78);
+  color: #8f9ba1;
+  font: 700 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.03em;
+  cursor: crosshair;
+  box-shadow: 0 0 0 4px rgba(2, 8, 12, 0.3);
+}
+
+.ve-earthNodeLabel.is-active {
+  border-color: rgba(0, 240, 255, 0.76);
+  color: #dffcff;
+  background: rgba(0, 39, 45, 0.82);
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.38), 0 0 0 5px rgba(0, 240, 255, 0.08);
+}
+
+.ve-earthReticle {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 49px;
+  height: 49px;
+  transform: translate(-50%, -50%);
+  animation: ve-earth-reticle-lock 520ms cubic-bezier(0.16, 1, 0.3, 1) both, ve-earth-reticle-pulse 2.2s 520ms ease-in-out infinite;
+}
+
+.ve-earthReticle i {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(0, 240, 255, 0.8);
+}
+
+.ve-earthReticle i:nth-child(1) { left: 0; top: 0; border-left: 1px solid; border-top: 1px solid; }
+.ve-earthReticle i:nth-child(2) { right: 0; top: 0; border-right: 1px solid; border-top: 1px solid; }
+.ve-earthReticle i:nth-child(3) { right: 0; bottom: 0; border-right: 1px solid; border-bottom: 1px solid; }
+.ve-earthReticle i:nth-child(4) { left: 0; bottom: 0; border-left: 1px solid; border-bottom: 1px solid; }
+
+.ve-earthTooltip {
+  pointer-events: none;
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: max-content;
+  max-width: 310px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  background: rgba(5, 9, 13, 0.94);
+  color: #bceff4;
+  font: 700 8px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.48);
+}
+
+.ve-integrityJourney__earthLabel {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(250px, 38%);
+  min-height: 108px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(3, 3, 3, 0.78);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  transition: border-color 260ms ease, background-color 260ms ease, box-shadow 260ms ease;
+}
+
+.ve-integrityJourney__earthLabel :is(span, small) { color: #777; font: 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: 0.14em; }
+.ve-integrityJourney__earthLabel strong { color: #f1f1f1; font: 560 clamp(18px, 1.7vw, 27px) 'Space Grotesk', Inter, sans-serif; letter-spacing: 0.03em; }
+
+.ve-integrityJourney__earthLabel.is-time-stamped {
+  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 54px rgba(0, 240, 255, 0.18), inset 0 0 24px rgba(0, 240, 255, 0.05);
+  animation: ve-earth-badge-pulse 1.9s ease-in-out infinite;
+}
+
+.ve-integrityJourney__receipt {
+  min-height: 70px;
+  border-top: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.ve-integrityJourney__receipt span { color: #67e8f9; }
+.ve-integrityJourney__receipt strong { color: #bdbdbd; font-weight: 600; text-align: right; }
+
+@keyframes ve-earth-reticle-lock {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(8deg); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+
+@keyframes ve-earth-reticle-pulse {
+  0%, 100% { opacity: 0.62; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes ve-earth-badge-pulse {
+  0%, 100% { box-shadow: 0 0 42px rgba(0, 240, 255, 0.12), inset 0 0 18px rgba(0, 240, 255, 0.04); }
+  50% { box-shadow: 0 0 68px rgba(0, 240, 255, 0.24), inset 0 0 30px rgba(0, 240, 255, 0.08); }
+}
+
+@media (max-height: 760px) and (min-width: 768px) {
+  .ve-integrityJourney__pin { padding-top: 76px; padding-bottom: 14px; }
+  .ve-integrityJourney__story { padding: 22px 28px; }
+  .ve-integrityJourney__phase { margin-top: 18px; }
+  .ve-integrityJourney__story h2 { font-size: clamp(30px, 3vw, 45px); }
+  .ve-integrityJourney__story p { margin-top: 14px; line-height: 1.5; }
+  .ve-integrityJourney__rail button { min-height: 38px; }
+  .ve-integrityJourney__receipt { min-height: 58px; }
+}
+
+@media (max-width: 767px) {
+  .ve-integrityJourney { min-height: 0; }
+  .ve-integrityJourney__pin { position: static; height: auto; overflow: visible; padding: 76px 18px 28px; }
+  .ve-integrityJourney__hud { font-size: 7px; }
+  .ve-integrityJourney__frame { display: flex; flex-direction: column; }
+  .ve-integrityJourney__story { min-height: 500px; padding: 28px 22px; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.14); }
+  .ve-integrityJourney__story h2 { font-size: clamp(34px, 10vw, 48px); }
+  .ve-integrityJourney__rail { margin-top: 44px; }
+  .ve-integrityJourney__world { min-height: 500px; }
+  .ve-integrityJourney__earthStage { min-height: 390px; }
+  .ve-integrityJourney__receipt { align-items: flex-start; flex-direction: column; justify-content: center; padding-block: 14px; line-height: 1.5; }
+  .ve-integrityJourney__receipt strong { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-earthReticle,
+  .ve-integrityJourney__earthLabel.is-time-stamped { animation: none !important; }
+}

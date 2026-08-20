@@ -6,7 +6,7 @@ import '../components/landing-v4/premium-hero.css';
 import { motion, useMotionValueEvent, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useCallback } from 'react';
 import {
-  DecisionIntelligence,
+  EvidenceIntegrityJourney,
   CommunitySection,
   PricingSection,
   FAQSection,
@@ -567,13 +567,13 @@ function TruthFlow({
         </div>
       </section>
 
-      <section ref={mobilePipeline} className="relative h-[900dvh] w-full border-t border-zinc-800 bg-zinc-950 md:hidden" aria-labelledby="mobile-truth-pipeline-title">
+      <section ref={mobilePipeline} className="relative h-[900dvh] w-full border-t border-zinc-800 bg-black md:hidden" aria-labelledby="mobile-truth-pipeline-title">
         <div aria-hidden="true" className="mobile-phase-snap-rail pointer-events-none absolute inset-x-0 top-0 flex h-[800dvh] flex-col">
           {storySteps.map((story) => (
             <span key={story.id} className="h-[100dvh] shrink-0 snap-start" />
           ))}
         </div>
-        <div className="sticky top-14 flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden bg-zinc-950 px-4 py-6">
+        <div className="sticky top-14 flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden bg-black px-4 py-6">
           <header className="shrink-0 border-b border-zinc-800 pb-3">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">Stage 02 // Decision pipeline</span>
             <h2 id="mobile-truth-pipeline-title" className="mt-1 text-lg font-black text-white">One record. Eight connected phases.</h2>
@@ -909,7 +909,7 @@ function MobileChapterMarker({ chapter, label, final = false }: { chapter: strin
 
 export default function VouchEdgeLandingV3(props: Props) {
   return (
-    <main className="vu-landing ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
+    <main className="vu-landing ve-hud-grid-page ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
       <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/90 backdrop-blur-xl border-b border-neutral-800/80 sm:border-white/15">
         <a href="#top" className="inline-flex min-w-0 flex-1 items-center gap-2 text-white no-underline text-[11px] font-bold tracking-wider sm:gap-2.5 sm:text-sm">
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />
@@ -946,28 +946,7 @@ export default function VouchEdgeLandingV3(props: Props) {
 
       <div className="ve-mobile-story-slide ve-mobile-story-slide--integrity relative">
         <MobileChapterMarker chapter="03 / INTEGRITY" label="PUBLIC RECORD" />
-        <motion.section
-          id="transparency-over-hype"
-          className="vu-integrityNote vu-chapter vu-chapterIntegrity border-t border-b border-white/20 bg-black py-24 sm:py-32"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.6, margin: '0px 0px -100px 0px' }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } } }}
-        >
-          <motion.div variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } }}>
-            <span className="vu-eyebrow font-mono text-sm font-black uppercase tracking-[0.25em] text-cyan-400">RESEARCH LIMITS / PUBLIC RECORD</span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mt-4">Evidence should explain itself.</h2>
-            <p className="text-zinc-200 text-lg sm:text-xl leading-relaxed mt-4">Confidence describes the strength of the available evidence, not a promise of an outcome. VouchRes keeps missing-data notes visible and does not curate a highlight reel of only successful examples.</p>
-          </motion.div>
-          <motion.div className="vu-integrityChain font-mono text-xs sm:text-sm font-bold text-white mt-8" variants={{ hidden: { opacity: 0, x: 24 }, show: { opacity: 1, x: 0 } }}>
-            <span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RESEARCHED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">TIME STAMPED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">COMPARED TO RESULT</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RETAINED</span>
-          </motion.div>
-        </motion.section>
-      </div>
-
-      <div className="ve-mobile-story-slide ve-mobile-story-slide--decision vu-chapter vu-chapterDecision bg-black border-t border-white/15">
-        <MobileChapterMarker chapter="04 / METHOD" label="TRUTH STANDARD" />
-        <DecisionIntelligence />
+        <EvidenceIntegrityJourney />
       </div>
       <div className="ve-mobile-story-slide ve-mobile-story-slide--community vu-chapter vu-chapterCommunity bg-black border-t border-white/15">
         <MobileChapterMarker chapter="05 / COMMUNITY" label="CONSENSUS" />

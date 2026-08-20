@@ -9,10 +9,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, 0.099), transparent 60%),
-    radial-gradient(900px 500px at 50% 120%, rgba(49, 181, 131, 0.12), transparent 60%),
-    #08090A;
+  background: #000000;
   color: #EFF0F2;
   font-family: var(--font-sans);
   opacity: 1;

@@ -93,7 +93,7 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 
   return (
     <div
-      className={`ve-public-landing-root z8-app-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`}
+      className={`ve-public-landing-root z8-app-shell ve-theme-transition bg-black font-z8 ${AURORA_MAX_SHELL}`}
       data-aurora-generation="max"
       data-scroll-owner="document"
     >
@@ -133,7 +133,7 @@ export default function App() {
           a sibling of the router rather than a descendant, so navigating,
           signing in, or landing on /auth/* never unmounts the canvas. */}
       <GlobalCanvasRoot />
-      <div className="relative z-10 min-h-screen bg-transparent">
+      <div className="relative z-10 min-h-screen bg-black">
         {isAuthCallbackPath() ? (
           <AuthCallbackPage />
         ) : isPasswordResetPath() ? (

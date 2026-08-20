@@ -1474,3 +1474,20 @@
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+
+/* Keep every post-HUD chapter inside the same black coordinate world. */
+.ve-hud-grid-page,
+.ve-hud-grid-page > .ve-mobile-story-slide,
+.ve-hud-grid-page :is(#community, #pricing, #faq, #cta),
+.ve-hud-grid-page > .ve-mobile-story-slide--footer > footer {
+  background-color: #000000 !important;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px) !important;
+  background-size: 44px 44px, 44px 44px !important;
+  background-position: 0 0, 0 0 !important;
+}
+
+.ve-hud-grid-page :is(.vu-chapterCommunity, .vu-chapterPricing, .vu-chapterFAQ, .vu-chapterCTA) {
+  background: #000000 !important;
+}
