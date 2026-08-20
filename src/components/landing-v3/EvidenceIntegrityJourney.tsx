@@ -63,7 +63,7 @@ export default function EvidenceIntegrityJourney() {
 
     // Supported user experience: only when customer was inside Public Records and intentionally scrolls UP past Phase 01,
     // smoothly guide them back up into the HUD story (Phase 08)
-    if (isScrollingUp && progress <= 0.02 && prevProgressRef.current > 0.03 && !hasAutoReturnedRef.current) {
+    if (isScrollingUp && progress <= 0.05 && !hasAutoReturnedRef.current) {
       hasAutoReturnedRef.current = true;
       const hudTarget = document.getElementById('how-it-works') || document.getElementById('record');
       if (hudTarget) {
@@ -71,7 +71,7 @@ export default function EvidenceIntegrityJourney() {
         const targetScroll = window.scrollY + hudRect.bottom - window.innerHeight;
         window.scrollTo({ top: Math.max(0, targetScroll), behavior: reduceMotion ? 'auto' : 'smooth' });
       }
-    } else if (progress > 0.12) {
+    } else if (progress > 0.15) {
       hasAutoReturnedRef.current = false;
     }
 

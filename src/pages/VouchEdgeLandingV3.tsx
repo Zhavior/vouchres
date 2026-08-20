@@ -440,15 +440,15 @@ function TruthFlow({
 
     const isScrollingDown = progress > prevProgressRef.current;
 
-    // Supported user experience: when customer intentionally scrolls down past Phase 08 (Phase 08 exit),
+    // Supported user experience: when customer is on Phase 08 and scrolls down towards the exit,
     // automatically and smoothly guide them directly into the Public Records chapter
-    if (isScrollingDown && progress >= 0.98 && prevProgressRef.current < 0.97 && !hasAutoAdvancedRef.current) {
+    if (isScrollingDown && progress >= 0.93 && !hasAutoAdvancedRef.current) {
       hasAutoAdvancedRef.current = true;
       const target = document.getElementById('public-records') || document.getElementById('transparency-over-hype');
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } else if (progress < 0.85) {
+    } else if (progress < 0.80) {
       hasAutoAdvancedRef.current = false;
     }
 
