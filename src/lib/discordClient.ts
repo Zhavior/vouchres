@@ -17,9 +17,12 @@ interface RetryJoinResponse {
  * the existing Stripe/Google "JSON url, client navigates" pattern used
  * elsewhere in this app (see billingClient.ts).
  */
-export async function startDiscordConnect(): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function startDiscordConnect(returnTo?: string): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const data = await apiClient.get<AuthorizeResponse>("/api/discord/authorize");
+    const endpoint = returnTo
+      ? `/api/discord/authorize?return_to=${encodeURIComponent(returnTo)}`
+      : "/api/discord/authorize";
+    const data = await apiClient.get<AuthorizeResponse>(endpoint);
     if (!data.url) return { ok: false, error: "No Discord authorize URL returned." };
     window.location.assign(data.url);
     return { ok: true };
