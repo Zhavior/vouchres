@@ -86,6 +86,8 @@ export default function EvidenceIntegrityJourney() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
                 transition={{ duration: 0.3 }}
+                style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+                className="will-change-[transform,opacity] [transform:translateZ(0)]"
               >
                 <span className="ve-integrityJourney__eyebrow">{phase.eyebrow}</span>
                 <strong className="ve-integrityJourney__phase">{phase.label}</strong>

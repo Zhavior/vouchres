@@ -114,6 +114,11 @@ export function useSectionNavigation() {
   const handleLoginSuccess = useCallback(() => {
     clearSignedOutFlag();
     setSignedOut(false);
+    try {
+      sessionStorage.setItem('vouchedge_show_login_intro', 'true');
+    } catch {
+      // ignore storage failures
+    }
     void (async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
