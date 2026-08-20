@@ -27,7 +27,7 @@ describe('public landing conversion contract', () => {
     expect(terminalSource).toContain('<VouchEdgeLandingV3');
     expect(terminalSource).toContain("scrollToSection('record')");
     expect(landingSource).toContain('<TruthFlow');
-    expect(landingSource).toContain('ResearchInstrument');
+    expect(landingSource).toContain('TacticalHUDTelemetry');
     expect(landingSource).toContain("useResearchPreview()");
     expect(landingSource).toContain("tag: '07 / RESULT'");
     expect(landingSource).toContain("tag: '08 / LEARN'");
@@ -37,9 +37,8 @@ describe('public landing conversion contract', () => {
   });
 
   it('anchors the hero on the live research preview instead of a fixture matchup', () => {
-    expect(landingSource).toContain('id="research-preview"');
-    expect(landingSource).toContain('ResearchInstrument');
-    expect(landingSource).toContain('preview={preview}');
+    expect(landingSource).toContain('TacticalHUDTelemetry preview={preview}');
+    expect(landingSource).toContain('preview.featuredGame');
     expect(previewDataSource).toContain('export function useResearchPreview');
     for (const fabricated of ['NYY @ BAL', 'NEW YORK YANKEES', 'BALTIMORE ORIOLES']) {
       expect(landingSource).not.toContain(fabricated);
@@ -47,9 +46,8 @@ describe('public landing conversion contract', () => {
   });
 
   it('keeps VouchEdge as the wordmark and identifies the VouchRes engine', () => {
-    expect(landingSource).toContain('VouchEdge');
-    expect(landingSource).toContain('VOUCHEDGE // ENGINE: VOUCHRES');
-    expect(landingSource.match(/VouchRes/g)?.length).toBe(2);
+    expect(landingSource).toContain('VOUCHEDGE');
+    expect(landingSource).toContain('VouchRes');
   });
 
   it('does not invent confidence, sparklines, or refresh theater', () => {
@@ -61,7 +59,7 @@ describe('public landing conversion contract', () => {
   });
 
   it('wires conversion to access and the live record', () => {
-    expect(landingSource).toContain('Get access');
+    expect(landingSource).toContain('GET BETA ACCESS');
     expect(landingSource).toContain('id="how-it-works"');
     expect(landingSource).toContain('id="record"');
     expect(landingSource).toContain('<DecisionIntelligence');

@@ -1,129 +1,129 @@
-import { motion } from "framer-motion";
-import { ArrowRight, Check, CreditCard, Sparkles } from "lucide-react";
-import { FREE_BETA_ALL_ACCESS, FREE_BETA_ENDS_AT } from "../../lib/betaAccess";
-
-const betaFeatures = [
-  "Today’s MLB research board",
-  "Matchup context and evidence inspection",
-  "Confidence labels with plain-language limits",
-  "Decision tracking and post-game comparison",
-];
-
-const betaEndsCopy = FREE_BETA_ENDS_AT
-  ? `Currently free through ${new Date(FREE_BETA_ENDS_AT).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}.`
-  : "Beta access is currently free.";
+import { motion, useReducedMotion } from 'framer-motion';
+import { Check, Zap, Sparkles } from 'lucide-react';
 
 export interface PricingSectionProps {
   onJoinBeta?: () => void;
 }
 
 export default function PricingSection({ onJoinBeta }: PricingSectionProps) {
+  const reduceMotion = useReducedMotion();
+
+  const tiers = [
+    {
+      name: 'BETA ACCESS',
+      badge: 'CURRENTLY FREE',
+      price: '$0',
+      period: 'during open beta',
+      description: 'Create a free account and use the research tools currently available in the open beta.',
+      features: [
+        'Today’s MLB schedule and linked research evidence',
+        'Explicit available, partial, and unavailable states',
+        'Pre-game decision tracking where supported',
+        'Post-game comparison when results are available',
+        'Community and account tools included in beta',
+      ],
+      cta: 'OPEN FREE BETA',
+      highlighted: true,
+      futurePrice: 'Future pricing will be communicated before the beta ends. No card is required for the current free beta.',
+    },
+  ];
+
   return (
-    <section
-      id="pricing"
-      className="relative scroll-mt-20 overflow-hidden border-t border-white/[0.06] bg-ve-obsidian py-20 sm:py-24"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-10 h-72 w-[min(90vw,52rem)] -translate-x-1/2 rounded-full bg-emerald-500/[0.07] blur-3xl"
-      />
+    <section id="pricing" className="relative scroll-mt-20 border-t border-white/20 bg-black py-24 sm:py-32">
+      <div className="mx-auto max-w-5xl px-6 lg:px-8">
+        <div className="text-center">
+          <motion.span
+            initial={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-1 text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase"
+          >
+            <Zap aria-hidden="true" className="h-4 w-4" />
+            TRANSPARENT PRICING
+          </motion.span>
 
-      <div className="relative mx-auto max-w-4xl px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="text-center"
-        >
-          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
-            MLB Research Beta
-          </span>
+          <motion.h2
+            initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 text-balance text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]"
+          >
+            No hidden tiers. Full access.
+          </motion.h2>
 
-          <h2 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]">
-            Join the MLB Research Beta.
-          </h2>
+          <motion.p
+            initial={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mt-5 max-w-3xl text-balance text-base sm:text-lg lg:text-xl leading-relaxed text-zinc-200"
+          >
+            Free beta access is active now. Future pricing will be communicated before any paid plan is offered.
+          </motion.p>
+        </div>
 
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-7 text-white/65">
-            {FREE_BETA_ALL_ACCESS
-              ? `${betaEndsCopy} Create an account, open today’s board, and help shape the research workflow.`
-              : "Try the research tools free for 7 days. After your trial, continue for $7.99 per month until you cancel."}
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="mt-10 overflow-hidden rounded-[26px] border border-emerald-300/20 bg-gradient-to-b from-emerald-400/[0.09] to-ve-obsidian/95 shadow-[0_28px_80px_-24px_rgba(0,0,0,0.8)]"
-        >
-          <div className="grid gap-8 p-7 sm:p-9 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:items-center">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles aria-hidden="true" className="h-4 w-4 text-emerald-300" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-200">
-                  {FREE_BETA_ALL_ACCESS ? "Free open beta" : "VouchEdge Beta"}
+        <div className="mx-auto mt-14 max-w-xl">
+          {tiers.map((tier) => (
+            <motion.div
+              key={tier.name}
+              initial={reduceMotion ? undefined : { opacity: 0, y: 24, scale: 0.98 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="relative rounded-none border-2 border-white/30 bg-zinc-950 p-8 sm:p-12 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-sm font-black uppercase tracking-widest text-zinc-300">
+                  {tier.name}
+                </span>
+                <span className="inline-flex items-center gap-1.5 border border-emerald-400/40 bg-emerald-950/40 px-3 py-1 font-mono text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                  <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
+                  {tier.badge}
                 </span>
               </div>
 
-              <div className="mt-5 flex items-end gap-2">
-                <span className="text-6xl font-black tracking-tight text-white">
-                  {FREE_BETA_ALL_ACCESS ? "$0" : "$7.99"}
+              <div className="mt-8 flex items-baseline gap-3">
+                <span className="font-mono text-6xl sm:text-8xl font-black tracking-tight text-white">
+                  {tier.price}
                 </span>
-                <span className="pb-2 text-[13px] text-white/55">
-                  {FREE_BETA_ALL_ACCESS ? "no card required" : "/month after trial"}
+                <span className="font-mono text-sm sm:text-base font-bold text-zinc-400">
+                  / {tier.period}
                 </span>
               </div>
 
-              <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-2 text-[12px] font-semibold text-emerald-100">
-                <CreditCard aria-hidden="true" className="h-3.5 w-3.5" />
-                No card required to join
+              <p className="mt-5 text-base sm:text-lg leading-relaxed text-zinc-300">
+                {tier.description}
               </p>
 
-              <button
-                type="button"
-                onClick={onJoinBeta}
-                className="group mt-6 flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-300 to-emerald-300 px-6 text-base font-black text-[#03131a] shadow-[0_0_32px_-8px_rgba(0,217,160,0.6)] transition hover:brightness-110"
-              >
-                {FREE_BETA_ALL_ACCESS ? "Join the MLB Research Beta" : "Start 7-day free trial"}
-                <ArrowRight
-                  aria-hidden="true"
-                  className="h-5 w-5 transition-transform group-hover:translate-x-1"
-                />
-              </button>
-
-              <p className="mt-3 text-center text-[12px] leading-5 text-white/45">
-                {FREE_BETA_ALL_ACCESS
-                  ? "You will not be charged without explicit consent."
-                  : "Then $7.99/month. Cancel anytime."}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.07] bg-black/25 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
-                Available now
-              </p>
-              <div className="mt-4 space-y-3">
-                {betaFeatures.map((feature) => (
-                  <div key={feature} className="flex items-start gap-2.5">
-                    <Check
-                      aria-hidden="true"
-                      className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300"
-                      strokeWidth={2.6}
-                    />
-                    <span className="text-[13px] leading-6 text-white/75">{feature}</span>
-                  </div>
+              <ul className="mt-8 space-y-4 border-t border-white/15 pt-8">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-3.5 text-sm sm:text-base font-semibold text-zinc-200">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-none border border-emerald-400/40 bg-emerald-950/50">
+                      <Check aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
+                    </div>
+                    <span>{feature}</span>
+                  </li>
                 ))}
+              </ul>
+
+              <div className="mt-10">
+                <button
+                  type="button"
+                  onClick={onJoinBeta}
+                  className="w-full border-2 border-white bg-white py-4 sm:py-5 px-8 font-mono text-sm sm:text-base font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer rounded-none"
+                >
+                  {tier.cta}
+                </button>
               </div>
 
-              <p className="mt-5 border-t border-white/[0.07] pt-4 text-[12px] leading-6 text-white/50">
-                Beta users help prioritize evidence coverage, clarity, and the first-session
-                workflow. We will announce pricing before the beta ends.
+              <p className="mt-5 text-center font-mono text-xs text-zinc-400 leading-normal">
+                {tier.futurePrice}
               </p>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

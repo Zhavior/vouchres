@@ -1,128 +1,104 @@
-import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  FileText,
-  Scale,
-  XCircle,
-} from "lucide-react";
-
-const ledgerFields = [
-  {
-    icon: Clock,
-    title: "Original research timestamp",
-    description: "When the decision was recorded, so later results can be compared honestly.",
-  },
-  {
-    icon: Scale,
-    title: "Original conclusion and confidence",
-    description:
-      "What you tracked and how strong the evidence looked at the time — not rewritten after the game.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Final result",
-    description:
-      "Correct and incorrect outcomes both remain visible. Wins are not the only stories kept.",
-  },
-  {
-    icon: XCircle,
-    title: "Missing-data notes",
-    description:
-      "If key inputs were unavailable before the game, that limitation stays part of the record.",
-  },
-];
+import { motion, useReducedMotion } from 'framer-motion';
+import { Users, Trophy, MessageSquare, ArrowRight } from 'lucide-react';
 
 export interface CommunitySectionProps {
   onExploreCommunity?: () => void;
 }
 
-export default function CommunitySection({
-  onExploreCommunity,
-}: CommunitySectionProps) {
+export default function CommunitySection({ onExploreCommunity }: CommunitySectionProps) {
+  const reduceMotion = useReducedMotion();
+
+  const features = [
+    {
+      icon: Users,
+      title: 'Shared Research Rationale',
+      description: 'Review the evidence and reasoning other members choose to share before game time.',
+    },
+    {
+      icon: Trophy,
+      title: 'Decision History',
+      description: 'Saved decisions can retain their original context and be compared with results when those results are available.',
+    },
+    {
+      icon: MessageSquare,
+      title: 'Signal Discussion',
+      description: 'Debate matchups, pitcher changes, and weather impacts with researchers focused on empirical data.',
+    },
+  ];
+
   return (
-    <section
-      id="trust-ledger"
-      aria-labelledby="trust-ledger-title"
-      className="relative scroll-mt-20 border-t border-white/[0.06] bg-black py-20 sm:py-24"
-    >
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
+    <section id="community" className="relative scroll-mt-20 border-t border-white/20 bg-black py-24 sm:py-32">
+      <div className="mx-auto max-w-5xl px-6 lg:px-8">
+        <div className="text-center">
+          <motion.span
+            initial={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-1 text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase"
           >
-            <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
-              Public results
-            </span>
+            <Users aria-hidden="true" className="h-4 w-4" />
+            COMMUNITY & CONSENSUS
+          </motion.span>
 
-            <h2
-              id="trust-ledger-title"
-              className="mt-5 text-balance text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
-            >
-              Track decisions. Keep the record — wins and losses.
-            </h2>
+          <motion.h2
+            initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 text-balance text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]"
+          >
+            Research is stronger together.
+          </motion.h2>
 
-            <p className="mt-4 text-[15px] leading-7 text-white/65">
-              VouchEdge does not publish fabricated win rates on this page. After you track a
-              decision in the product, your results workspace keeps the original conclusion,
-              confidence, final result, and missing-data notes.
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5">
-              <div className="flex items-center gap-2.5">
-                <FileText aria-hidden="true" className="h-4 w-4 text-emerald-200" />
-                <h3 className="text-[15px] font-bold text-white">Methodology</h3>
-              </div>
-              <p className="mt-3 text-[13px] leading-6 text-white/60">
-                Research conclusions are graded against post-game outcomes after a decision is
-                saved. This page intentionally shows no curated highlight reel of only successful
-                examples.
-              </p>
-              <button
-                type="button"
-                onClick={onExploreCommunity}
-                className="group mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/15"
-              >
-                Open beta and track a decision
-                <ArrowRight
-                  aria-hidden="true"
-                  className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                />
-              </button>
-            </div>
-          </motion.div>
-
-          <div className="relative">
-            <div
-              aria-hidden="true"
-              className="absolute left-[19px] top-3 bottom-3 hidden w-px bg-gradient-to-b from-emerald-300/30 via-white/10 to-transparent sm:block"
-            />
-            <div className="space-y-3">
-              {ledgerFields.map(({ icon: Icon, title, description }, index) => (
-                <motion.div
-                  key={title}
-                  initial={{ opacity: 0, x: 14 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.06, duration: 0.35 }}
-                  className="relative flex gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-colors hover:border-emerald-300/25"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-ve-graphite">
-                    <Icon aria-hidden="true" className="h-4.5 w-4.5 text-emerald-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[15px] font-bold text-white">{title}</h3>
-                    <p className="mt-1.5 text-[13px] leading-6 text-white/65">{description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          <motion.p
+            initial={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mt-5 max-w-3xl text-balance text-base sm:text-lg lg:text-xl leading-relaxed text-zinc-200"
+          >
+            Join sports researchers who value sourced evidence, candid missing-data states, and repeatable methodology over hype.
+          </motion.p>
         </div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={reduceMotion ? undefined : { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } } }}
+          className="mt-14 grid gap-6 sm:grid-cols-3"
+        >
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <motion.div
+                key={feature.title}
+                variants={reduceMotion ? undefined : { hidden: { opacity: 0, y: 22, scale: 0.98 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } } }}
+                className="rounded-none border border-white/20 bg-zinc-950 p-6 sm:p-8"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-none border border-white/20 bg-black">
+                  <Icon aria-hidden="true" className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="mt-5 text-lg sm:text-xl font-bold text-white tracking-wide">{feature.title}</h3>
+                <p className="mt-3 text-sm sm:text-base leading-relaxed text-zinc-300">{feature.description}</p>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {onExploreCommunity ? (
+          <div className="mt-12 text-center">
+            <button
+              type="button"
+              onClick={onExploreCommunity}
+              className="inline-flex items-center gap-3 border-2 border-white bg-white px-8 py-4 font-mono text-sm sm:text-base font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer rounded-none"
+            >
+              Explore the Community
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

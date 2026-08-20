@@ -299,7 +299,7 @@ function TacticalHUDTelemetry({
       return (
         <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
           <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
-            <span className="text-emerald-400 font-bold uppercase tracking-widest">PHASE 06 // RECORD SEALED</span>
+            <span className="text-emerald-400 font-bold uppercase tracking-widest">PHASE 06 // RECORD WORKFLOW</span>
             <span>RECORD STATE</span>
           </div>
           <div className="border border-emerald-400/30 bg-black p-3.5 space-y-2">

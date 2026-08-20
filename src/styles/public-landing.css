@@ -367,15 +367,16 @@ body {
    - `.ve-device-*` — the MacBook/iPhone mockups are drawings of physical
      objects, not UI chrome. Their radii come from hand-written CSS, which
      this attribute-scoped rule never touches. */
-.ve-landing-sharp [class*="rounded"]:not([class*="rounded-full"]) {
-  border-radius: 0;
+.ve-landing-sharp,
+.ve-landing-sharp *,
+.ve-landing-sharp [class*="rounded"] {
+  border-radius: 0 !important;
 }
 
-/* Text pills — eyebrow chips, status tags, the OPEN BETA badge — square off
-   too, otherwise they read as leftovers beside the squared cards. Horizontal
-   padding is what separates them from the round set: crests and dots size
-   themselves with `h-N w-N`, glow blobs carry `blur-*`, and progress rails
-   are bare `h-1`. None of those take a `px-*`. */
-.ve-landing-sharp [class*="rounded-full"][class*="px-"] {
-  border-radius: 0;
+.ve-landing-sharp {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }

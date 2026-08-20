@@ -172,17 +172,7 @@
   position: absolute;
   overflow: hidden;
   background: #020304;
-  transition:
-    top 900ms var(--ve-ease),
-    right 900ms var(--ve-ease),
-    bottom 900ms var(--ve-ease),
-    left 900ms var(--ve-ease),
-    width 900ms var(--ve-ease),
-    height 900ms var(--ve-ease),
-    border-radius 900ms var(--ve-ease),
-    border-color 900ms var(--ve-ease),
-    box-shadow 900ms var(--ve-ease);
-  will-change: top, right, bottom, left, width, height;
+  will-change: top, right, bottom, left, width, height, transform;
 }
 
 .vu-landing .vu-heroVisual.vu-fullscreenIntro {
