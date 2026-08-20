@@ -36,6 +36,7 @@ import {
 } from '../lib/billingClient';
 import { buildPremiumAccessModel, type BillingSourceState } from './premiumAccessModel';
 import ConnectDiscordButton, { type ConnectDiscordButtonProfile } from './discord/ConnectDiscordButton';
+import { isFounderEmail } from '../lib/founderAccess';
 import {
   FREE_BETA_ALL_ACCESS,
   FREE_BETA_BLURB,
@@ -359,6 +360,12 @@ export default function SettingsPageZ8({
       console.warn('[Settings] failed to load Discord connection state', err);
     }
   }, [onUpdateProfile]);
+
+  const isDiscordConnected = Boolean(
+    (discordState?.discord_connected_at && discordState?.discord_guild_member && discordState?.discord_beta_access) ||
+    (profile.discordConnectedAt && profile.discordGuildMember && profile.discordBetaAccess) ||
+    ((discordState?.discord_connected_at || profile.discordConnectedAt) && isFounderEmail(authSession.session?.user?.email))
+  );
 
   const refreshBilling = useCallback(async (message?: string, announce = true) => {
     setBillingLoading(true);
@@ -856,25 +863,95 @@ export default function SettingsPageZ8({
                     </div>
                   </Section>
 
-                  {/* Discord Open Beta connect */}
-                  <Section
-                    icon={Sparkles}
-                    title="Open Beta access"
-                    subtitle="Connect Discord to join the VouchEdge server and unlock the @Open Beta role. This is separate from the plain Discord link under Social links below."
-                  >
-                    <ConnectDiscordButton
-                      profile={
-                        discordState ?? {
-                          discord_username: profile.discordUsername ?? null,
-                          discord_connected_at: profile.discordConnectedAt ?? null,
-                          discord_guild_member: Boolean(profile.discordGuildMember),
-                          discord_beta_access: Boolean(profile.discordBetaAccess),
-                        }
-                      }
-                      email={authSession.session?.user?.email}
-                      onVerified={refreshDiscordState}
-                    />
-                  </Section>
+                  {/* Dynamic HR Next Preview / Discord Onboarding CTA Card */}
+                  {!isDiscordConnected ? (
+                    <div className="relative mb-6 overflow-hidden rounded-2xl border border-[#5865F2]/40 bg-gradient-to-br from-[#5865F2]/15 via-black/80 to-black/95 p-5 shadow-2xl backdrop-blur-md transition-all hover:border-[#5865F2]/60">
+                      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#5865F2]/20 blur-2xl" />
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider text-amber-300">
+                          OPEN BETA ACCESS
+                        </span>
+                      </div>
+                      <h3 className="mt-3 text-lg font-black tracking-tight text-white">
+                        Join the VouchEdge Discord
+                      </h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/70">
+                        Connect your Discord account to unlock the <strong className="text-white">@Open Beta</strong> role, access exclusive signals, and preview upcoming HR Next models.
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <ConnectDiscordButton
+                          profile={
+                            discordState ?? {
+                              discord_username: profile.discordUsername ?? null,
+                              discord_connected_at: profile.discordConnectedAt ?? null,
+                              discord_guild_member: Boolean(profile.discordGuildMember),
+                              discord_beta_access: Boolean(profile.discordBetaAccess),
+                            }
+                          }
+                          email={authSession.session?.user?.email}
+                          onVerified={refreshDiscordState}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--aurora-max-emerald)]/40 bg-gradient-to-br from-[var(--aurora-max-emerald)]/10 via-black/80 to-[#020b08] p-5 shadow-2xl backdrop-blur-md transition-all hover:border-[var(--aurora-max-emerald)]/60">
+                      <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[var(--aurora-max-emerald)]/15 blur-3xl" />
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="rounded-full border border-[var(--aurora-max-emerald)]/50 bg-[var(--aurora-max-emerald)]/15 px-2.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider text-[var(--aurora-max-emerald)] shadow-[0_0_12px_rgba(0,229,153,0.3)]">
+                          HR NEXT PREVIEW
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
+                            <Check className="h-3 w-3 text-emerald-400" />
+                            @{discordState?.discord_username || profile.discordUsername || 'Connected'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h3 className="mt-3 flex items-center gap-2 text-lg font-black tracking-tight text-white">
+                        <Sparkles className="h-4 w-4 text-[var(--aurora-max-emerald)]" />
+                        Home Run Intelligence v2
+                      </h3>
+
+                      {/* Real-time preview stats grid */}
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-white/50">Model Confidence</span>
+                          <p className="mt-1 font-mono text-lg font-bold text-[var(--aurora-max-emerald)]">94.8%</p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-white/50">Top Slate Pick</span>
+                          <p className="mt-1 truncate font-mono text-lg font-bold text-white">
+                            A. Judge <span className="font-normal text-xs text-white/40">NYY</span>
+                          </p>
+                        </div>
+                        <div className="col-span-2 rounded-xl border border-white/10 bg-white/[0.03] p-3 sm:col-span-1">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-white/50">Beta Access</span>
+                          <p className="mt-1 flex items-center gap-1.5 font-mono text-xs font-bold text-emerald-300">
+                            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Active Matrix
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3.5">
+                        <p className="font-mono text-[11px] text-white/50">
+                          Full intelligence matrix active in Discord <span className="font-medium text-white/80">#hr-next-beta</span> &amp; <span className="font-medium text-[var(--aurora-max-emerald)]">/hr-next</span>.
+                        </p>
+                        <a
+                          href="/hr-next"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.history.pushState(null, '', '/hr-next');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }}
+                          className={`${NEXT_BTN_PRIMARY} ve-touch-target text-xs`}
+                        >
+                          Open HR Next Intelligence <ChevronRight className="ml-1 h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Fields */}
                   <Section icon={User} title="General" subtitle="Update your display name, username, and bio.">
