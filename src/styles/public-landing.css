@@ -14,6 +14,65 @@
 @source "../components/landing/aurora/AuroraBackground.tsx";
 @source "../components/landing/hero/LiveHud.tsx";
 
+/* Public landing scroll contract.
+ *
+ * App routes intentionally use #inner-view-slot as a constrained desktop
+ * scrollport. The landing is a viewport-based sticky story and must have one
+ * different owner: the document element. `overflow: clip` contains horizontal
+ * paint without creating a scrolling ancestor, so sticky chapters continue to
+ * resolve against the viewport. The route toggles this class while mounted and
+ * removes it on cleanup, keeping these overrides out of the signed-in app. */
+html.ve-public-landing-scroll {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-x: clip !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto;
+  scrollbar-gutter: stable;
+}
+
+html.ve-public-landing-scroll body,
+html.ve-public-landing-scroll #root {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100% !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
+/* A dialog/drawer can still deliberately suspend the document. The shared
+ * body-scroll-lock writes this inline value while an overlay owns the lock;
+ * preserve that higher-level interaction contract, then the route rules take
+ * over again as soon as the hook restores the inline styles. */
+html.ve-public-landing-scroll[style*="overflow: hidden"],
+html.ve-public-landing-scroll body[style*="overflow: hidden"] {
+  overflow: hidden !important;
+}
+
+html.ve-public-landing-scroll :is(
+  .ve-public-landing-root,
+  .z8-app-shell,
+  .ve-motion-content,
+  .z8-layout-root,
+  #layout-inner-frame,
+  #center-main-content-column,
+  #inner-view-slot
+) {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
+html.ve-public-landing-scroll #inner-view-slot {
+  padding-bottom: 0 !important;
+}
+
+.ve-public-landing-root {
+  min-height: 100dvh !important;
+}
+
 
 body {
   background-color: var(--bg-obsidian);

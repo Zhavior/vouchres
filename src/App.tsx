@@ -92,18 +92,14 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   }, []);
 
   return (
-    <div className={`z8-app-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`} data-aurora-generation="max">
-      <div>
-        <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
-          <div id="center-main-content-column">
-            <div id="inner-view-slot">
-              <Suspense fallback={<RouteFallback />}>
-                <VouchEdgeTerminalPage onAuthed={onAuthed} />
-              </Suspense>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div
+      className={`ve-public-landing-root z8-app-shell ve-theme-transition font-z8 ${AURORA_MAX_SHELL}`}
+      data-aurora-generation="max"
+      data-scroll-owner="document"
+    >
+      <Suspense fallback={<RouteFallback />}>
+        <VouchEdgeTerminalPage onAuthed={onAuthed} />
+      </Suspense>
     </div>
   );
 }
@@ -150,4 +146,3 @@ export default function App() {
     </QueryClientProvider>
   );
 }
-
