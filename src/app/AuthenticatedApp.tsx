@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { useSectionNavigation } from './useSectionNavigation';
 import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFetch';
 import { useAppBootstrap } from './useAppBootstrap';
@@ -6,6 +6,7 @@ import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
 import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
 import { useAuthSession } from '../lib/authSessionStore';
+import VouchEdgeLoginIntro from '../components/auth/VouchEdgeLoginIntro';
 import '../index.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
@@ -14,6 +15,23 @@ patchPublicNotificationsFetch();
 
 function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }) {
   const authSession = useAuthSession();
+  const [showLoginIntro, setShowLoginIntro] = useState(() => {
+    try {
+      return sessionStorage.getItem('vouchedge_show_login_intro') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleLoginIntroComplete = () => {
+    try {
+      sessionStorage.removeItem('vouchedge_show_login_intro');
+    } catch {
+      // ignore storage failures
+    }
+    setShowLoginIntro(false);
+  };
+
   const bootstrap = useAppBootstrap({
     activeSection: navigation.activeSection,
     commitSection: navigation.commitSection,
@@ -36,27 +54,35 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
   });
 
   return (
-    <AppShell
-      activeSection={navigation.activeSection}
-      loggingOut={navigation.loggingOut}
-      isPendingRoute={navigation.isPendingRoute}
-      isLoggedIn={navigation.isLoggedIn}
-      isPublicFrontPage={navigation.isPublicFrontPage}
-      showGlobalAppChrome={navigation.showGlobalAppChrome}
-      profileViewUserId={navigation.profileViewUserId}
-      canSeeThemeStore={bootstrap.canSeeThemeStore}
-      savedSlips={bootstrap.savedSlips}
-      profile={bootstrap.profile}
-      appShellState={domain.appShellState}
-      navigateSection={navigation.navigateSection}
-      navigateToUserProfile={navigation.navigateToUserProfile}
-      handleLoginSuccess={domain.handleLoginSuccess}
-      handleLogoutComplete={domain.handleLogoutComplete}
-      handleUpdateProfile={domain.handleUpdateProfile}
-      onConfirmParlayTier={domain.handleConfirmParlayTier}
-      onSaveParlaySlip={() => navigation.navigateSection('build')}
-      activeLegs={domain.activeLegs}
-    />
+    <>
+      {showLoginIntro && (
+        <VouchEdgeLoginIntro
+          username={bootstrap.profile?.username || bootstrap.profile?.handle || bootstrap.profile?.displayName}
+          onComplete={handleLoginIntroComplete}
+        />
+      )}
+      <AppShell
+        activeSection={navigation.activeSection}
+        loggingOut={navigation.loggingOut}
+        isPendingRoute={navigation.isPendingRoute}
+        isLoggedIn={navigation.isLoggedIn}
+        isPublicFrontPage={navigation.isPublicFrontPage}
+        showGlobalAppChrome={navigation.showGlobalAppChrome}
+        profileViewUserId={navigation.profileViewUserId}
+        canSeeThemeStore={bootstrap.canSeeThemeStore}
+        savedSlips={bootstrap.savedSlips}
+        profile={bootstrap.profile}
+        appShellState={domain.appShellState}
+        navigateSection={navigation.navigateSection}
+        navigateToUserProfile={navigation.navigateToUserProfile}
+        handleLoginSuccess={domain.handleLoginSuccess}
+        handleLogoutComplete={domain.handleLogoutComplete}
+        handleUpdateProfile={domain.handleUpdateProfile}
+        onConfirmParlayTier={domain.handleConfirmParlayTier}
+        onSaveParlaySlip={() => navigation.navigateSection('build')}
+        activeLegs={domain.activeLegs}
+      />
+    </>
   );
 }
 
