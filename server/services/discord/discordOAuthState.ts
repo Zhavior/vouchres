@@ -31,6 +31,14 @@ interface StatePayload {
   nonce: string;
   iat: number;
   exp: number;
+  returnTo?: string;
+}
+
+function sanitizeReturnTo(raw?: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return undefined;
+  return trimmed;
 }
 
 function base64UrlEncode(input: Buffer | string): string {
@@ -46,13 +54,14 @@ function sign(payloadB64: string): string {
   return createHmac("sha256", secret).update(payloadB64).digest("base64url");
 }
 
-export function createDiscordOAuthState(userId: string): string {
+export function createDiscordOAuthState(userId: string, returnTo?: string): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: StatePayload = {
     uid: userId,
     nonce: randomUUID(),
     iat: now,
     exp: now + STATE_TTL_SECONDS,
+    ...(sanitizeReturnTo(returnTo) ? { returnTo: sanitizeReturnTo(returnTo) } : {}),
   };
   const payloadB64 = base64UrlEncode(JSON.stringify(payload));
   const signature = sign(payloadB64);
@@ -60,7 +69,7 @@ export function createDiscordOAuthState(userId: string): string {
 }
 
 export type VerifyStateResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; returnTo?: string }
   | { ok: false; reason: "malformed" | "bad_signature" | "expired" | "replayed" };
 
 /**
@@ -120,5 +129,5 @@ export async function verifyDiscordOAuthState(state: string): Promise<VerifyStat
     }
   }
 
-  return { ok: true, userId: payload.uid };
+  return { ok: true, userId: payload.uid, returnTo: sanitizeReturnTo(payload.returnTo) };
 }

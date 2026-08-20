@@ -69,4 +69,30 @@ describe("discord OAuth2 state (signed CSRF token)", () => {
     const result = await verifyDiscordOAuthState(state);
     expect(result).toEqual({ ok: false, reason: "expired" });
   });
+
+  it("round-trips returnTo destination safely", async () => {
+    const { createDiscordOAuthState, verifyDiscordOAuthState } = await import("../server/services/discord/discordOAuthState");
+
+    const state = createDiscordOAuthState("user-123", "/hr-next");
+    const result = await verifyDiscordOAuthState(state);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.userId).toBe("user-123");
+      expect(result.returnTo).toBe("/hr-next");
+    }
+  });
+
+  it("sanitizes unsafe open-redirect returnTo schemes", async () => {
+    const { createDiscordOAuthState, verifyDiscordOAuthState } = await import("../server/services/discord/discordOAuthState");
+
+    const state = createDiscordOAuthState("user-123", "//evil.com/phish");
+    const result = await verifyDiscordOAuthState(state);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.userId).toBe("user-123");
+      expect(result.returnTo).toBeUndefined();
+    }
+  });
 });

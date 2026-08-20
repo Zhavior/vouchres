@@ -50,9 +50,6 @@ describe('landing mobile scrollytelling contract', () => {
     expect(authSource).toContain('ve-auth-policy-carousel');
     expect(authSource).toContain('Previous policy');
     expect(authSource).toContain('Next policy');
-    expect(authSource).toContain('Finish policy review');
-    expect(authSource).toContain('policyReviewed');
-    expect(authSource).toContain('Finish all five policy slides to unlock agreement.');
     expect(authCss).toContain('.ve-auth-policy-list--desktop');
     expect(authCss).toContain('.ve-auth-policy-carousel-body');
     expect(authCss).toContain('.ve-auth-agreements');

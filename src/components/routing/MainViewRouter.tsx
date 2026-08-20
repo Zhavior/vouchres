@@ -20,6 +20,8 @@ import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
 import { routeModules } from '../../lib/routeModules';
 
+import { useAuthSession } from '../../lib/authSessionStore';
+
 /**
  * Every routed page loads through here, so a page that fails to import gets
  * the retry ladder in lazyRoute and keeps the normal route skeleton on screen
@@ -112,6 +114,10 @@ const TodayNextPage = lazyPage(
 const AdminAccessGate = lazyPage(() =>
   import('../admin/AdminAccessGate').then((m) => ({ default: m.AdminAccessGate })),
   'AdminAccessGate',
+);
+const DiscordBetaAccessGate = lazyPage(() =>
+  import('../auth/DiscordBetaAccessGate').then((m) => ({ default: m.DiscordBetaAccessGate })),
+  'DiscordBetaAccessGate',
 );
 
 function ParlayProofShell() {
@@ -504,9 +510,9 @@ function MainViewRouter({
     case 'admin_hr_next':
       return (
         <LazyRoute>
-          <AdminAccessGateShell>
+          <DiscordBetaAccessGateShell>
             <HrNextPage />
-          </AdminAccessGateShell>
+          </DiscordBetaAccessGateShell>
         </LazyRoute>
       );
     // Staff-only: the endpoints behind this are requireAuth + requireStaff, and
@@ -885,6 +891,24 @@ function AdminAccessGateShell({ children }: { children: React.ReactNode }) {
       <AdminAccessGate profile={profile}>
         {children}
       </AdminAccessGate>
+    </Suspense>
+  );
+}
+
+function DiscordBetaAccessGateShell({ children }: { children: React.ReactNode }) {
+  const profile = useAppProfile();
+  const authSession = useAuthSession();
+
+  return (
+    <Suspense fallback={<RouteShellSkeleton />}>
+      <DiscordBetaAccessGate
+        profile={profile}
+        accountId={authSession.session?.user?.id ?? null}
+        email={authSession.session?.user?.email}
+        returnTo="/hr-next"
+      >
+        {children}
+      </DiscordBetaAccessGate>
     </Suspense>
   );
 }

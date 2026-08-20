@@ -116,9 +116,9 @@ const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string;
     badge: '7 days free',
   },
   SELLER_PRO: {
-    title: 'Seller Pro',
-    price: 'Unavailable',
-    detail: 'Creator access is not sold through the current VouchEdge Beta checkout.',
+    title: 'Free Open Beta',
+    price: '$0',
+    detail: 'Every feature is unlocked during the open beta.',
   },
 };
 
@@ -132,7 +132,10 @@ function formatDate(value?: string | null) {
 function normalizeTier(tier?: string | null): AppTier {
   const t = String(tier ?? '').trim().toUpperCase();
   if (t === 'GOLD' || t === 'PRO') return 'GOLD';
-  if (t === 'SELLER_PRO' || t === 'SELLER PRO' || t === 'CREATOR') return 'SELLER_PRO';
+  if (t === 'SELLER_PRO' || t === 'SELLER PRO' || t === 'CREATOR') {
+    if (FREE_BETA_ALL_ACCESS) return 'BASIC';
+    return 'SELLER_PRO';
+  }
   return 'BASIC';
 }
 
@@ -717,7 +720,7 @@ export default function SettingsPageZ8({
   /* Header meta is assembled from values already on the page — nothing estimated. */
   const accountMetaLine = [
     username ? `@${username}` : displayName || 'Account',
-    `${PLAN_COPY[activeTier].title} · ${activePlanPrice}`,
+    FREE_BETA_ALL_ACCESS ? 'Free Open Beta · $0' : `${PLAN_COPY[activeTier].title} · ${activePlanPrice}`,
     accountEmail ?? 'Session unverified',
   ].join(' · ');
 
@@ -779,7 +782,7 @@ export default function SettingsPageZ8({
             <AuroraMaxTruthBadge
               state={FREE_BETA_ALL_ACCESS || billingSourceState === 'confirmed' ? 'confirmed' : billingSourceState === 'checking' ? 'projected' : 'missing'}
             >
-              {PLAN_COPY[activeTier].title}
+              {FREE_BETA_ALL_ACCESS ? 'Free Open Beta' : PLAN_COPY[activeTier].title}
             </AuroraMaxTruthBadge>
             {activeTier === 'BASIC' && !FREE_BETA_ALL_ACCESS && (
               <button

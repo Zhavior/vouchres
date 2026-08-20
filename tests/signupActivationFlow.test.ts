@@ -27,16 +27,15 @@ const landingFaqSource = readFileSync(
 );
 
 describe('signup and first-session activation', () => {
-  it('keeps the restored intro, questionnaire, plan, policy, and account creation flow', () => {
+  it('follows the Signup V2 flow: 01 Account -> 02 Plan -> 03 Review -> Create Account', () => {
     expect(authSource).toContain('useState<SignupPlan>(initialPlan)');
-    expect(authSource).toContain("initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form'");
-    expect(authSource).toContain("signupStep === 'intro'");
-    expect(authSource).toContain("signupStep === 'questionnaire'");
+    expect(authSource).toContain("useState<SignupStep>('account')");
+    expect(authSource).toContain("signupStep === 'account'");
     expect(authSource).toContain("signupStep === 'plan'");
-    expect(authSource).toContain("signupStep === 'policy'");
-    expect(authSource).toContain("setSignupStep('questionnaire')");
+    expect(authSource).toContain("signupStep === 'review'");
     expect(authSource).toContain("setSignupStep('plan')");
-    expect(authSource).toContain("setSignupStep(m === 'signup' ? 'policy' : 'form')");
+    expect(authSource).toContain("setSignupStep('review')");
+    expect(authSource).toContain("setSignupStep('account')");
     expect(authSource).toContain('ve-auth-aurora-panel');
   });
 

@@ -42,13 +42,25 @@ function frontendRedirectUrl(pathAndQuery: string): string {
   return new URL(pathAndQuery, getSafePublicOrigin()).toString();
 }
 
+function buildRedirectPath(base: string, params: Record<string, string | undefined>): string {
+  const targetBase = base && base.startsWith("/") && !base.startsWith("//") ? base : "/settings";
+  const url = new URL(targetBase, "http://localhost");
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) {
+      url.searchParams.set(k, v);
+    }
+  }
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 discordRoutes.get(
   "/authorize",
   discordLimiter,
   requireAuth,
   asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
     const config = assertDiscordConfigured();
-    const state = createDiscordOAuthState(req.user!.id);
+    const returnTo = typeof req.query.return_to === "string" ? req.query.return_to : undefined;
+    const state = createDiscordOAuthState(req.user!.id, returnTo);
 
     const url = new URL("https://discord.com/api/oauth2/authorize");
     url.searchParams.set("client_id", config.clientId);
@@ -68,33 +80,39 @@ discordRoutes.get(
   asyncHandler(async (req: RequestWithContext, res: Response) => {
     const { code, state, error: discordError } = req.query as Record<string, string | undefined>;
 
-    if (discordError) {
-      console.warn("[discord] user denied or Discord returned an error on callback", { discordError });
-      return res.redirect(frontendRedirectUrl("/settings?discord=denied"));
-    }
-
-    if (!code || !state) {
-      return res.redirect(frontendRedirectUrl("/settings?discord=error&reason=missing_params"));
+    if (!state) {
+      return res.redirect(frontendRedirectUrl(buildRedirectPath("/settings", { discord: "error", reason: "missing_params" })));
     }
 
     const verified = await verifyDiscordOAuthState(state);
+    const target = verified.ok && verified.returnTo ? verified.returnTo : "/settings";
+
+    if (discordError) {
+      console.warn("[discord] user denied or Discord returned an error on callback", { discordError });
+      return res.redirect(frontendRedirectUrl(buildRedirectPath(target, { discord: "denied" })));
+    }
+
+    if (!code) {
+      return res.redirect(frontendRedirectUrl(buildRedirectPath(target, { discord: "error", reason: "missing_params" })));
+    }
+
     if (verified.ok === false) {
       console.warn("[discord] callback rejected — invalid state", { reason: verified.reason });
-      return res.redirect(frontendRedirectUrl(`/settings?discord=error&reason=state_${verified.reason}`));
+      return res.redirect(frontendRedirectUrl(buildRedirectPath("/settings", { discord: "error", reason: `state_${verified.reason}` })));
     }
 
     const outcome = await completeDiscordConnection({ userId: verified.userId, code });
 
     if (outcome.ok === false) {
-      return res.redirect(frontendRedirectUrl(`/settings?discord=error&reason=${outcome.reason}`));
+      return res.redirect(frontendRedirectUrl(buildRedirectPath(target, { discord: "error", reason: outcome.reason })));
     }
     if (outcome.guildMember === true) {
-      return res.redirect(frontendRedirectUrl("/settings?discord=connected"));
+      return res.redirect(frontendRedirectUrl(buildRedirectPath(target, { discord: "connected" })));
     }
     // Connected + identity verified, but the guild join didn't succeed —
     // durable retry state, not a broken half-connected one. Surface the
     // reason so the UI can offer a retry action instead of erroring out.
-    return res.redirect(frontendRedirectUrl(`/settings?discord=retry&reason=${outcome.reason}`));
+    return res.redirect(frontendRedirectUrl(buildRedirectPath(target, { discord: "retry", reason: outcome.reason })));
   }),
 );
 

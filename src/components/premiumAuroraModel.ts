@@ -38,8 +38,8 @@ export function buildPremiumAuroraModel({
   // reconcile against, so never surface "unavailable" or "manage billing".
   if (FREE_BETA_ALL_ACCESS) {
     return {
-      activeTier: 'SELLER_PRO',
-      accessLabel: 'Full access',
+      activeTier: profileFallback,
+      accessLabel: 'Free Open Beta',
       billingLabel: FREE_BETA_HEADLINE,
       billingDetail: FREE_BETA_BLURB,
       hasPaidAccess: true,

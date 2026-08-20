@@ -20,7 +20,6 @@ import {
   FlaskConical,
   Trophy,
   ClipboardCheck,
-  ScrollText,
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -31,19 +30,17 @@ import {
   getGoogleAuthAvailability,
   isSupabaseConfigured,
 } from '../../lib/supabaseClient';
-import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import { FREE_BETA_ALL_ACCESS, FREE_BETA_BLURB, PAYMENTS_ENABLED } from '../../lib/betaAccess';
 import { useBodyScrollLock } from '../../lib/scroll/useBodyScrollLock';
-import VouchEdgeLogo from '../brand/VouchEdgeLogo';
-import { AURORA_INTERACTIVE, AURORA_LABEL, AURORA_PANEL_PREMIUM, AURORA_SURFACE, AURORA_AUTH_GRADIENT, AURORA_AUTH_SHADOW, AURORA_CYAN_HEX, AURORA_BLURPLE_HEX } from '../../theme/auroraTokens';
+import { AURORA_INTERACTIVE, AURORA_LABEL, AURORA_SURFACE, AURORA_AUTH_GRADIENT, AURORA_AUTH_SHADOW, AURORA_CYAN_HEX, AURORA_BLURPLE_HEX } from '../../theme/auroraTokens';
 import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
 type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro';
-type SignupStep = 'intro' | 'questionnaire' | 'plan' | 'policy' | 'form';
+type SignupStep = 'account' | 'plan' | 'review' | 'intro' | 'questionnaire';
 type AgreementKey = 'age' | 'terms' | 'research';
 
 const BILLING_POLICY_SECTION = FREE_BETA_ALL_ACCESS
@@ -81,19 +78,6 @@ const AGREEMENTS: Array<{ id: AgreementKey; label: string }> = [
   { id: 'terms', label: 'I’ve read and agree to the account, privacy, and billing terms shown above.' },
   { id: 'research', label: 'I understand this is probability research for entertainment — not betting advice, with no guaranteed returns.' },
 ];
-
-const INTRO_SLIDES = [
-  {
-    icon: ClipboardCheck,
-    title: 'Keep graded results visible.',
-    body: 'When grading data is available, results stay attached to the original research — including the losses.',
-  },
-  {
-    icon: Trophy,
-    title: 'Build slips, follow cappers, track the record.',
-    body: 'Save parlays, follow research you trust, and see real win rates — not screenshots.',
-  },
-] as const;
 
 const PAID_PLAN_OPTIONS: Array<{
   id: SignupPlan;
@@ -147,7 +131,6 @@ interface AuthModalProps {
   onAuthed?: () => void;
 }
 
-
 export default function AuthModal({
   open,
   initialMode = 'signup',
@@ -160,12 +143,8 @@ export default function AuthModal({
   const initialPlan: SignupPlan = FREE_BETA_ALL_ACCESS ? 'free' : requestedPlan;
 
   const [mode, setMode] = useState<Mode>(initialMode);
-  const [signupStep, setSignupStep] = useState<SignupStep>(() =>
-    initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
-  );
-  const [introIndex, setIntroIndex] = useState(0);
+  const [signupStep, setSignupStep] = useState<SignupStep>('account');
   const [policyIndex, setPolicyIndex] = useState(0);
-  const [policyReviewed, setPolicyReviewed] = useState(false);
   const [plan, setPlan] = useState<SignupPlan>(initialPlan);
   const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
   const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({ age: false, terms: false, research: false });
@@ -206,12 +185,9 @@ export default function AuthModal({
       setNotice(null);
       setEmailSent(false);
       setGoogleBusy(false);
-      setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
-      setIntroIndex(0);
+      setSignupStep('account');
       setPolicyIndex(0);
-      setPolicyReviewed(false);
       setPlan(initialPlan);
-      setAgreements({ age: false, terms: false, research: false });
     }
   }, [open, initialMode, initialPlan]);
 
@@ -311,11 +287,15 @@ export default function AuthModal({
   const friendlyError = (raw: string): string => {
     const m = raw.toLowerCase();
     if (m.includes('invalid login')) return 'Email or password is incorrect.';
-    if (m.includes('already registered') || m.includes('already been registered')) return 'That email is already registered — try logging in.';
+    if (m.includes('database error saving new user') || m.includes('duplicate key') || m.includes('unique constraint') || m.includes('violates unique')) {
+      return 'That handle or email is already registered. Try a different handle or log in.';
+    }
+    if (m.includes('already registered') || m.includes('already been registered') || m.includes('user already exists')) {
+      return 'That email is already registered — try logging in.';
+    }
     if (m.includes('email not confirmed') || m.includes('confirm your email')) {
       return 'Confirm your email before logging in.';
     }
-    if (m.includes('password')) return 'Password must be at least 6 characters.';
     if (
       m.includes('invalid email')
       || m.includes('unable to validate email')
@@ -331,10 +311,66 @@ export default function AuthModal({
       return 'Google sign-in is not enabled yet. Use email or a magic link for now.';
     }
     if (m.includes('rate')) return 'Too many attempts. Please wait a moment and try again.';
-    return raw;
+    if (
+      m.includes('database error')
+      || m.includes('saving new user')
+      || m.includes('unexpected_failure')
+      || m.includes('duplicate key')
+      || m.includes('unique constraint')
+      || m.includes('violates unique')
+    ) {
+      return 'That handle or email is already registered. Try a different handle or log in.';
+    }
+    return raw.replace(/^authApiError:\s*/i, '').trim();
   };
 
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+  async function handleAccountStepContinue(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    setError(null);
+    setNotice(null);
+
+    if (!isSupabaseConfigured) {
+      setError(
+        'Login is not configured locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local (Supabase → Project Settings → API), then restart npm run dev.',
+      );
+      return;
+    }
+
+    if (!email.trim()) { setError('Enter your email.'); return; }
+    if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
+
+    const normalizedHandle = handle.trim().toLowerCase();
+    if (normalizedHandle.length < 3) { setError('Pick a handle (3+ characters).'); return; }
+    if (!/^[a-z0-9][a-z0-9_]*$/.test(normalizedHandle)) {
+      setError('Handle must start with a letter or number and use only lowercase letters, numbers, and underscores.');
+      return;
+    }
+
+    // Live handle availability validation
+    if (handleState === 'taken') {
+      setError('That handle is already taken. Please choose another.');
+      return;
+    }
+
+    try {
+      const checkRes = await apiClient.get<{ available?: boolean }>(`/api/users/handle/${encodeURIComponent(normalizedHandle)}`);
+      if (checkRes.available === false) {
+        setHandleState('taken');
+        setError('That handle is already taken. Please choose another.');
+        return;
+      }
+      setHandleState('available');
+    } catch {
+      // If server handle-check endpoint is unreachable, don't hard-block
+    }
+
+    if (!password) { setError('Enter your password.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+
+    setSignupStep('plan');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -348,17 +384,26 @@ export default function AuthModal({
       return;
     }
 
-    if (!email.trim()) { setError('Enter your email.'); return; }
-    if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
-    if (!password) { setError('Enter your password.'); return; }
     if (mode === 'signup') {
+      if (!email.trim()) { setError('Enter your email.'); setSignupStep('account'); return; }
+      if (!isValidEmail(email)) { setError('Please enter a valid email address.'); setSignupStep('account'); return; }
       const normalizedHandle = handle.trim().toLowerCase();
-      if (normalizedHandle.length < 3) { setError('Pick a handle (3+ characters).'); return; }
+      if (normalizedHandle.length < 3) { setError('Pick a handle (3+ characters).'); setSignupStep('account'); return; }
       if (!/^[a-z0-9][a-z0-9_]*$/.test(normalizedHandle)) {
         setError('Handle must start with a letter or number and use only lowercase letters, numbers, and underscores.');
+        setSignupStep('account');
         return;
       }
-      if (handleState === 'taken') { setError('That handle is already taken.'); return; }
+      if (handleState === 'taken') { setError('That handle is already taken.'); setSignupStep('account'); return; }
+      if (!password || password.length < 6) { setError('Password must be at least 6 characters.'); setSignupStep('account'); return; }
+      if (!agreements.age || !agreements.terms || !agreements.research) {
+        setError('Please agree to the required acknowledgements to create your account.');
+        return;
+      }
+    } else {
+      if (!email.trim()) { setError('Enter your email.'); return; }
+      if (!isValidEmail(email)) { setError('Please enter a valid email address.'); return; }
+      if (!password) { setError('Enter your password.'); return; }
     }
 
     setBusy(true);
@@ -370,14 +415,14 @@ export default function AuthModal({
           handle: handle.trim().toLowerCase(),
           inviteCode: inviteCode.trim() || undefined,
         });
-        if (error) { setError(friendlyError(error.message)); return; }
+        if (error) {
+          const errorMsg = friendlyError(error.message);
+          setError(errorMsg);
+          // Always route back to Phase 1 so user can see and resolve credentials
+          setSignupStep('account');
+          return;
+        }
         if (data?.session) {
-          // Email confirmation is disabled on this Supabase project — signUp
-          // already returned a live session, so the user is logged in right
-          // now. Route them straight in instead of showing a false
-          // "check your inbox" step for an email that isn't coming.
-          // No checkout during the free open beta — the account is already
-          // fully entitled the moment it exists.
           if (plan === 'pro' && PAYMENTS_ENABLED) {
             setRedirectingToCheckout(true);
             const result = await startStripeCheckout();
@@ -402,7 +447,11 @@ export default function AuthModal({
         onAuthed?.();
       }
     } catch (err: any) {
-      setError(friendlyError(err?.message ?? 'Something went wrong. Try again.'));
+      const msg = err?.message ?? 'Something went wrong. Try again.';
+      setError(friendlyError(msg));
+      if (mode === 'signup') {
+        setSignupStep('account');
+      }
     } finally {
       setBusy(false);
     }
@@ -557,7 +606,13 @@ export default function AuthModal({
             <aside className="ve-auth-vouch-story ve-auth-aurora-panel">
               <div>
                 <span className="ve-auth-vouch-kicker">
-                  {mode === 'signup' ? 'ACCOUNT / 02' : 'ACCOUNT / 01'}
+                  {mode === 'signup'
+                    ? signupStep === 'account'
+                      ? 'ACCOUNT / 01'
+                      : signupStep === 'plan'
+                      ? 'PLAN / 02'
+                      : 'REVIEW / 03'
+                    : 'ACCOUNT / 01'}
                 </span>
 
                 <h1>
@@ -636,7 +691,13 @@ export default function AuthModal({
             <section ref={formPanelRef} className="ve-auth-form-panel">
               <div className="ve-auth-form-header">
                 <span className="ve-auth-vouch-panel-label">
-                  {mode === 'signup' ? 'CREATE ACCOUNT' : 'ACCOUNT ACCESS'}
+                  {mode === 'signup'
+                    ? signupStep === 'account'
+                      ? '01 ACCOUNT'
+                      : signupStep === 'plan'
+                      ? '02 PLAN'
+                      : '03 REVIEW'
+                    : 'ACCOUNT ACCESS'}
                 </span>
 
                 <h2
@@ -646,30 +707,26 @@ export default function AuthModal({
                 >
                   {emailSent
                     ? 'Check your inbox'
-                    : mode === 'signup' && signupStep === 'intro'
-                    ? INTRO_SLIDES[introIndex].title
+                    : mode === 'signup' && signupStep === 'account'
+                    ? 'Create your account'
                     : mode === 'signup' && signupStep === 'plan'
                     ? (FREE_BETA_ALL_ACCESS ? 'Your beta access' : 'Choose your plan')
-                    : mode === 'signup' && signupStep === 'policy'
+                    : mode === 'signup' && signupStep === 'review'
                     ? 'Review & agree'
-                    : mode === 'signup'
-                    ? 'Create your account'
                     : 'Welcome back'}
                 </h2>
 
                 <p>
                   {emailSent
                     ? 'One more step to finish setting up your account.'
-                    : mode === 'signup' && signupStep === 'intro'
-                    ? INTRO_SLIDES[introIndex].body
+                    : mode === 'signup' && signupStep === 'account'
+                    ? 'Create one account for your research workspace and visible record.'
                     : mode === 'signup' && signupStep === 'plan'
                     ? (FREE_BETA_ALL_ACCESS
                         ? 'Every feature is unlocked on every account during the beta.'
                         : 'Choose your research plan before creating your account.')
-                    : mode === 'signup' && signupStep === 'policy'
+                    : mode === 'signup' && signupStep === 'review'
                     ? 'A quick, clear review before you create an account.'
-                    : mode === 'signup'
-                    ? 'Create one account for your research workspace and visible record.'
                     : 'Log in to pick up where you left off.'}
                 </p>
               </div>
@@ -700,122 +757,8 @@ export default function AuthModal({
                 Back to sign in
               </button>
             </div>
-          ) : mode === 'signup' && signupStep === 'intro' ? (
-            /* ── Intro slides ── */
-            <div className="px-6 pb-6">
-              <div className="flex items-center justify-center gap-2 py-6">
-                {(() => {
-                  const Icon = INTRO_SLIDES[introIndex].icon;
-                  return (
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center border border-vouch-cyan/30 bg-vouch-cyan/10"
-                      style={{ boxShadow: '0 0 24px rgba(0, 217, 160,0.12)' }}
-                    >
-                      <Icon className="w-8 h-8 text-vouch-cyan" />
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Slide dots */}
-              <div className="flex items-center justify-center gap-1.5 mb-5">
-                {INTRO_SLIDES.map((_, i) => (
-                  <span
-                    key={i}
-                    className="h-1.5 rounded-full transition-all"
-                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#00D9A0' : 'rgba(255,255,255,0.15)' }}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {introIndex > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setIntroIndex((i) => Math.max(0, i - 1))}
-                    className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
-                    style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (introIndex < INTRO_SLIDES.length - 1) setIntroIndex((i) => i + 1);
-                    else setSignupStep('questionnaire');
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
-                  style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
-                >
-                  {introIndex < INTRO_SLIDES.length - 1 ? 'Next' : "Let's go"}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSignupStep('plan')}
-                className="w-full mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                Skip
-              </button>
-            </div>
-          ) : mode === 'signup' && signupStep === 'questionnaire' ? (
-            /* ── Questionnaire selection ── */
-            <div className="px-6 pb-6">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-black text-white">How do you plan to use VouchEdge?</h3>
-                <p className="mt-1 text-sm text-slate-400">Select your primary goal so we can tailor your experience.</p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { id: 'track', label: 'Track my own picks', icon: ClipboardCheck, desc: 'Immutable record keeping' },
-                  { id: 'follow', label: 'Find sharp research', icon: Eye, desc: 'Follow verified cappers' },
-                  { id: 'build', label: 'Build an audience', icon: Trophy, desc: 'Monetize my proof' }
-                ].map(opt => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setSignupStep('plan')}
-                    className={`w-full text-left rounded-xl border p-4 transition-all ${AURORA_INTERACTIVE}`}
-                    style={{
-                      background: 'rgba(0,0,0,0.35)',
-                      borderColor: 'rgba(255,255,255,0.08)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(0, 217, 160,0.4)';
-                      e.currentTarget.style.background = 'rgba(0, 217, 160,0.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                      e.currentTarget.style.background = 'rgba(0,0,0,0.35)';
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                        <opt.icon className="w-5 h-5 text-vouch-cyan" />
-                      </div>
-                      <div>
-                        <div className="text-base font-bold text-white">{opt.label}</div>
-                        <div className="text-xs text-slate-400">{opt.desc}</div>
-                      </div>
-                      <div className="ml-auto opacity-50">
-                        <ArrowRight className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setSignupStep('plan')}
-                className="w-full mt-4 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                Skip
-              </button>
-            </div>
           ) : mode === 'signup' && signupStep === 'plan' ? (
-            /* ── Plan selection ── */
+            /* ── Step 02: Plan selection ── */
             <div className="px-6 pb-6">
               <div className="space-y-2.5">
                 {PLAN_OPTIONS.map((opt) => {
@@ -885,11 +828,22 @@ export default function AuthModal({
                 </p>
               ) : null}
 
+              {error && (
+                <div
+                  role="alert"
+                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2 mt-3"
+                  style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mt-4">
                 <button
                   type="button"
-                  aria-label="Back to introduction"
-                  onClick={() => setSignupStep('intro')}
+                  aria-label="Back to account credentials"
+                  onClick={() => { setError(null); setSignupStep('account'); }}
                   className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
                   style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
                 >
@@ -897,19 +851,19 @@ export default function AuthModal({
                 </button>
                 <button
                   type="button"
-                  aria-label="Back to plan selection"
-                  onClick={() => setSignupStep('policy')}
+                  aria-label="Continue to policy review"
+                  onClick={() => { setError(null); setSignupStep('review'); }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${AURORA_INTERACTIVE}`}
                   style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
                 >
-                  Continue
+                  Continue to review
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          ) : mode === 'signup' && signupStep === 'policy' ? (
-            /* ── Policy agreement ── */
-            <div className="ve-auth-policy-step px-6 pb-6">
+          ) : mode === 'signup' && signupStep === 'review' ? (
+            /* ── Step 03: Policy & Review ── */
+            <form onSubmit={handleSubmit} className="ve-auth-policy-step px-6 pb-6">
               <div className={`ve-auth-policy-list ve-auth-policy-list--desktop max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${AURORA_SURFACE}`}>
                 {POLICY_SECTIONS.map((section) => (
                   <div key={section.title}>
@@ -941,17 +895,12 @@ export default function AuthModal({
                   </div>
                   <button
                     type="button"
-                    aria-label={policyIndex === POLICY_SECTIONS.length - 1 ? 'Finish policy review' : 'Next policy'}
-                    disabled={policyReviewed}
+                    aria-label="Next policy"
                     onClick={() => {
-                      if (policyIndex === POLICY_SECTIONS.length - 1) {
-                        setPolicyReviewed(true);
-                        return;
-                      }
-                      setPolicyIndex((current) => Math.min(POLICY_SECTIONS.length - 1, current + 1));
+                      setPolicyIndex((current) => (current + 1) % POLICY_SECTIONS.length);
                     }}
                   >
-                    {policyReviewed ? 'REVIEWED ✓' : policyIndex === POLICY_SECTIONS.length - 1 ? 'FINISH ✓' : 'NEXT →'}
+                    NEXT →
                   </button>
                 </div>
               </div>
@@ -960,8 +909,6 @@ export default function AuthModal({
                 {AGREEMENTS.map((item) => (
                   <label
                     key={item.id}
-                    aria-disabled={!policyReviewed}
-                    data-locked={!policyReviewed}
                     className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
                     style={{
                       background: agreements[item.id] ? 'rgba(0, 217, 160,0.06)' : 'rgba(0,0,0,0.35)',
@@ -981,10 +928,11 @@ export default function AuthModal({
                       type="checkbox"
                       className="absolute h-px w-px overflow-hidden opacity-0"
                       checked={agreements[item.id]}
-                      disabled={!policyReviewed}
-                      onChange={() => {
-                        if (!policyReviewed) return;
-                        setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                      onChange={(event) => {
+                        setAgreements((prev) => ({
+                          ...prev,
+                          [item.id]: event.target.checked,
+                        }));
                       }}
                     />
                     <span className="text-[12px] leading-5 text-slate-300">{item.label}</span>
@@ -992,47 +940,69 @@ export default function AuthModal({
                 ))}
               </div>
 
+              {error && (
+                <div
+                  role="alert"
+                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2 mt-3"
+                  style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {notice && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2 mt-3"
+                  style={{ background: 'rgba(52,211,153,0.1)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)' }}
+                >
+                  <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{notice}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={() => setSignupStep('plan')}
+                  aria-label="Back to plan selection"
+                  onClick={() => { setError(null); setSignupStep('plan'); }}
                   className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
                   style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <button
-                  type="button"
-                  disabled={!policyReviewed || !agreements.age || !agreements.terms || !agreements.research}
-                  onClick={() => setSignupStep('form')}
+                  type="submit"
+                  disabled={busy || googleBusy || redirectingToCheckout || !agreements.age || !agreements.terms || !agreements.research}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${AURORA_INTERACTIVE}`}
                   style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
                 >
-                  Agree & continue
-                  <ArrowRight className="w-4 h-4" />
+                  {redirectingToCheckout ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Redirecting to checkout...
+                    </>
+                  ) : busy ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      {plan === 'free'
+                        ? 'Create account'
+                        : `Create account & continue to ${PLAN_OPTIONS.find((p) => p.id === plan)?.label ?? 'Beta'}`}
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </div>
-              {(!policyReviewed || !(agreements.age && agreements.terms && agreements.research)) && (
+              {(!agreements.age || !agreements.terms || !agreements.research) && (
                 <p className="mt-2 text-[11px] text-center" style={{ color: '#64748b' }}>
-                  {policyReviewed ? 'Check all three boxes to continue.' : 'Finish all five policy slides to unlock agreement.'}
+                  Check all three boxes to create your account.
                 </p>
               )}
-            </div>
+            </form>
           ) : (
           <>
-          {/* Back to policy agreement (signup only) */}
-          {mode === 'signup' && (
-            <div className="-mt-1 mb-1 px-5 sm:px-8">
-              <button
-                type="button"
-                onClick={() => setSignupStep('policy')}
-                className="ve-auth-back-link"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                {PLAN_OPTIONS.find((p) => p.id === plan)?.label ?? 'Basic'} plan
-              </button>
-            </div>
-          )}
           {/* Tab switch */}
           <div className="px-5 sm:px-8">
             <div className="ve-auth-mode-switch">
@@ -1044,8 +1014,8 @@ export default function AuthModal({
                     setMode(m);
                     setError(null);
                     setNotice(null);
-                    setSignupStep(m === 'signup' ? 'policy' : 'form');
-                    setIntroIndex(0);
+                    setSignupStep('account');
+                    setPolicyIndex(0);
                     window.history.replaceState(window.history.state, '', m === 'signup' ? '/signup' : '/login');
                   }}
                   className="ve-auth-mode-button"
@@ -1073,8 +1043,8 @@ export default function AuthModal({
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="ve-auth-account-form">
-            {/* Google OAuth — available after the signup policy gate and on login. */}
+          <form onSubmit={mode === 'signup' ? handleAccountStepContinue : handleSubmit} className="ve-auth-account-form">
+            {/* Google OAuth */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
@@ -1121,36 +1091,36 @@ export default function AuthModal({
               />
             </Field>
 
-            {/* Handle (signup) */}
-              {mode === 'signup' && (
-                <div className="ve-auth-reveal overflow-hidden">
-                  <Field icon={<User className="w-4 h-4" />}>
-                    <span className="text-sm text-slate-500 shrink-0">@</span>
-                    <input
-                      type="text"
-                      aria-label="Username"
-                      autoComplete="username"
-                      placeholder="yourhandle"
-                      value={handle}
-                      onChange={(e) => {
-                        const next = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                        setHandle(next);
-                        if (error) setError(null);
-                        checkHandle(next);
-                      }}
-                      className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
-                    />
-                    {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
-                    {handleState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                    {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
-                  </Field>
-                  {handleHint[handleState] && (
-                    <p aria-live="polite" className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
-                      {handleHint[handleState]!.text}
-                    </p>
-                  )}
-                </div>
-              )}
+            {/* Handle (signup only) */}
+            {mode === 'signup' && (
+              <div className="ve-auth-reveal overflow-hidden">
+                <Field icon={<User className="w-4 h-4" />}>
+                  <span className="text-sm text-slate-500 shrink-0">@</span>
+                  <input
+                    type="text"
+                    aria-label="Username"
+                    autoComplete="username"
+                    placeholder="yourhandle"
+                    value={handle}
+                    onChange={(e) => {
+                      const next = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                      setHandle(next);
+                      if (error) setError(null);
+                      checkHandle(next);
+                    }}
+                    className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+                  />
+                  {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
+                  {handleState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                  {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
+                </Field>
+                {handleHint[handleState] && (
+                  <p aria-live="polite" className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
+                    {handleHint[handleState]!.text}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Password */}
             <div>
@@ -1206,66 +1176,64 @@ export default function AuthModal({
               )}
             </div>
 
-            {/* Invite code (signup) — optional during preview, required at private-beta launch */}
-              {mode === 'signup' && (
-                <div className="ve-auth-reveal overflow-hidden">
-                  <Field icon={<Ticket className="w-4 h-4" />}>
-                    <input
-                      type="text"
-                      aria-label="Invite code"
-                      placeholder="Invite code — optional"
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                      className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none tracking-wide"
-                    />
-                  </Field>
-                  <p className="ml-1 mt-1 text-[11px]" style={{ color: '#7c8aa0' }}>
-                    Optional during Open Beta. Leave this blank if you do not have a code.
-                  </p>
-                </div>
-              )}
+            {/* Invite code (signup only) */}
+            {mode === 'signup' && (
+              <div className="ve-auth-reveal overflow-hidden">
+                <Field icon={<Ticket className="w-4 h-4" />}>
+                  <input
+                    type="text"
+                    aria-label="Invite code"
+                    placeholder="Invite code — optional"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none tracking-wide"
+                  />
+                </Field>
+                <p className="ml-1 mt-1 text-[11px]" style={{ color: '#7c8aa0' }}>
+                  Optional during Open Beta. Leave this blank if you do not have a code.
+                </p>
+              </div>
+            )}
 
             {/* Error / notice */}
-              {error && (
-                <div
-                  role="alert"
-                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
-                  style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
-                >
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-              {notice && (
-                <div
-                  role="status"
-                  aria-live="polite"
-                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
-                  style={{ background: 'rgba(52,211,153,0.1)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)' }}
-                >
-                  <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>{notice}</span>
-                </div>
-              )}
+            {error && (
+              <div
+                role="alert"
+                className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
+                style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+            {notice && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
+                style={{ background: 'rgba(52,211,153,0.1)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)' }}
+              >
+                <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{notice}</span>
+              </div>
+            )}
 
-            {/* Primary */}
+            {/* Primary Submit */}
             <button
               type="submit"
               disabled={busy || googleBusy || redirectingToCheckout}
               className="ve-auth-submit"
             >
-              {redirectingToCheckout ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Redirecting to checkout...
-                </>
-              ) : busy ? (
+              {busy ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : mode === 'signup' ? (
+                <>
+                  Continue to plan
+                  <ArrowRight className="w-4 h-4" />
+                </>
               ) : (
                 <>
-                  {mode === 'signup'
-                    ? plan === 'free' ? 'Create account' : `Create account & continue to ${PLAN_OPTIONS.find((p) => p.id === plan)?.label}`
-                    : 'Log in'}
+                  Log in
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
