@@ -420,6 +420,7 @@ function TruthFlow({
   const hudPointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.98 ? 'none' : 'auto'));
 
   const activeStoryRef = useRef<StoryStep>(1);
+  const prevProgressRef = useRef(0);
   const hasAutoAdvancedRef = useRef(false);
 
   const { scrollYProgress: mobileScrollYProgress } = useScroll({
@@ -437,9 +438,11 @@ function TruthFlow({
       setActiveStory(nextStory);
     }
 
-    // Supported user experience: when customer scrolls at the final HUD phase (Phase 08 exit),
+    const isScrollingDown = progress > prevProgressRef.current;
+
+    // Supported user experience: when customer intentionally scrolls down past Phase 08 (Phase 08 exit),
     // automatically and smoothly guide them directly into the Public Records chapter
-    if (progress >= 0.98 && !hasAutoAdvancedRef.current) {
+    if (isScrollingDown && progress >= 0.98 && prevProgressRef.current < 0.97 && !hasAutoAdvancedRef.current) {
       hasAutoAdvancedRef.current = true;
       const target = document.getElementById('public-records') || document.getElementById('transparency-over-hype');
       if (target) {
@@ -448,6 +451,8 @@ function TruthFlow({
     } else if (progress < 0.85) {
       hasAutoAdvancedRef.current = false;
     }
+
+    prevProgressRef.current = progress;
   });
 
   useMotionValueEvent(mobileScrollYProgress, 'change', (progress) => {

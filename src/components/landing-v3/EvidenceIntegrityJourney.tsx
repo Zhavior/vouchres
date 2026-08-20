@@ -48,7 +48,8 @@ export default function EvidenceIntegrityJourney() {
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: trackRef, offset: ['start start', 'end end'] });
 
-  const hasAutoReturnedRef = useRef(false);
+  const hasAutoReturnedRef = useRef(true); // Initialized to true so initial arrival at top of Public Records never triggers a bounce back
+  const prevProgressRef = useRef(0);
 
   useMotionValueEvent(scrollYProgress, 'change', (progress) => {
     if (typeof window === 'undefined' || window.matchMedia('(max-width: 767px)').matches) return;
@@ -58,9 +59,11 @@ export default function EvidenceIntegrityJourney() {
       setActive(next);
     }
 
-    // Supported user experience: when customer scrolls up at the beginning of Public Records (Phase 01),
-    // smoothly and symmetrically guide them back up into the HUD story (Phase 08)
-    if (progress <= 0.02 && !hasAutoReturnedRef.current) {
+    const isScrollingUp = progress < prevProgressRef.current;
+
+    // Supported user experience: only when customer was inside Public Records and intentionally scrolls UP past Phase 01,
+    // smoothly guide them back up into the HUD story (Phase 08)
+    if (isScrollingUp && progress <= 0.02 && prevProgressRef.current > 0.03 && !hasAutoReturnedRef.current) {
       hasAutoReturnedRef.current = true;
       const hudTarget = document.getElementById('how-it-works') || document.getElementById('record');
       if (hudTarget) {
@@ -68,9 +71,11 @@ export default function EvidenceIntegrityJourney() {
         const targetScroll = window.scrollY + hudRect.bottom - window.innerHeight;
         window.scrollTo({ top: Math.max(0, targetScroll), behavior: reduceMotion ? 'auto' : 'smooth' });
       }
-    } else if (progress > 0.15) {
+    } else if (progress > 0.12) {
       hasAutoReturnedRef.current = false;
     }
+
+    prevProgressRef.current = progress;
   });
 
   const goToPhase = useCallback((phase: IntegrityPhase) => {
