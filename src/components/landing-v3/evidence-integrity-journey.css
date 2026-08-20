@@ -1,0 +1,244 @@
+.ve-integrityJourney {
+  position: relative;
+  min-height: 400vh;
+  border-block: 1px solid rgba(255, 255, 255, 0.15);
+  background: #050505;
+}
+
+.ve-integrityJourney__pin {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: calc(64px + clamp(16px, 2vw, 26px)) clamp(24px, 3.5vw, 52px) clamp(18px, 2.4vw, 32px);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    radial-gradient(circle at 72% 48%, rgba(255, 255, 255, 0.07), transparent 36%),
+    #050505;
+  background-size: 44px 44px, 44px 44px, auto, auto;
+}
+
+.ve-integrityJourney__hud {
+  width: min(100%, 1440px);
+  min-height: 34px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: #747474;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.14em;
+}
+
+.ve-integrityJourney__frame {
+  width: min(100%, 1440px);
+  min-height: 0;
+  flex: 1;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.38fr) minmax(0, 1fr);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #080808;
+}
+
+.ve-integrityJourney__story {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3vw, 44px);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(145deg, #0d0d0d, #070707 72%);
+}
+
+.ve-integrityJourney__eyebrow,
+.ve-integrityJourney__phase {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.ve-integrityJourney__eyebrow { color: #666; }
+.ve-integrityJourney__phase { margin-top: clamp(24px, 4vh, 42px); color: #67e8f9; }
+
+.ve-integrityJourney__story h2 {
+  max-width: 11ch;
+  margin: 12px 0 0;
+  color: #f3f3f3;
+  font-family: 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(34px, 3.5vw, 58px);
+  font-weight: 540;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.ve-integrityJourney__story p {
+  max-width: 42ch;
+  margin: 22px 0 0;
+  color: #9a9a9a;
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.65;
+}
+
+.ve-integrityJourney__rail {
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ve-integrityJourney__rail button {
+  width: 100%;
+  min-height: 45px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+  background: transparent;
+  color: #5f5f5f;
+  font: 700 9px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.1em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ve-integrityJourney__rail button:hover,
+.ve-integrityJourney__rail button:focus-visible { color: #d8d8d8; outline: none; }
+.ve-integrityJourney__rail button.is-passed { color: #969696; }
+.ve-integrityJourney__rail button.is-active { color: #f4f4f4; background: rgba(103, 232, 249, 0.055); }
+.ve-integrityJourney__rail button.is-active span { color: #67e8f9; }
+
+.ve-integrityJourney__world {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ve-integrityJourney__worldHead,
+.ve-integrityJourney__receipt {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 20px;
+  color: #6f6f6f;
+  font: 700 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.13em;
+}
+
+.ve-integrityJourney__worldHead { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+
+.ve-integrityJourney__earthStage {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.08), transparent 46%),
+    repeating-linear-gradient(0deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
+    repeating-linear-gradient(90deg, transparent 0 43px, rgba(255, 255, 255, 0.026) 44px),
+    #050505;
+}
+
+.ve-integrityJourney__earthStage svg {
+  z-index: 1;
+  width: min(100%, 880px);
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.ve-integrityJourney__sphere { fill: url(#ve-integrity-earth); stroke: rgba(255, 255, 255, 0.48); stroke-width: 1.4; }
+.ve-integrityJourney__grid :is(ellipse, path) { fill: none; stroke: rgba(255, 255, 255, 0.12); }
+.ve-integrityJourney__land { fill: #999; opacity: 0.44; }
+.ve-integrityJourney__shadow { fill: rgba(0, 0, 0, 0.52); }
+
+.ve-integrityJourney__earth {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ve-integrity-earth-turn 24s linear infinite;
+}
+
+.ve-integrityJourney__orbit { fill: none; stroke: rgba(255, 255, 255, 0.18); }
+.ve-integrityJourney__orbit--tilted { stroke: rgba(103, 232, 249, 0.28); stroke-dasharray: 5 9; animation: ve-integrity-orbit 14s linear infinite; }
+.ve-integrityJourney__node circle { fill: #555; stroke: #080808; stroke-width: 3; }
+.ve-integrityJourney__node text { fill: #626262; font: 10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.ve-integrityJourney__node.is-active circle { fill: #67e8f9; stroke: rgba(103, 232, 249, 0.24); stroke-width: 8; animation: ve-integrity-node 1.8s ease-in-out infinite; }
+.ve-integrityJourney__node.is-active text { fill: #dbfbff; }
+
+.ve-integrityJourney__earthLabel {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(250px, 38%);
+  min-height: 108px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(3, 3, 3, 0.78);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.ve-integrityJourney__earthLabel :is(span, small) { color: #777; font: 8px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: 0.14em; }
+.ve-integrityJourney__earthLabel strong { color: #f1f1f1; font: 560 clamp(18px, 1.7vw, 27px) 'Space Grotesk', Inter, sans-serif; letter-spacing: 0.03em; }
+
+.ve-integrityJourney__receipt {
+  min-height: 70px;
+  border-top: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.ve-integrityJourney__receipt span { color: #67e8f9; }
+.ve-integrityJourney__receipt strong { color: #bdbdbd; font-weight: 600; text-align: right; }
+
+@keyframes ve-integrity-earth-turn { from { transform: rotate(-3deg); } to { transform: rotate(357deg); } }
+@keyframes ve-integrity-orbit { to { stroke-dashoffset: -140; } }
+@keyframes ve-integrity-node { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+
+@media (max-height: 760px) and (min-width: 768px) {
+  .ve-integrityJourney__pin { padding-top: 76px; padding-bottom: 14px; }
+  .ve-integrityJourney__story { padding: 22px 28px; }
+  .ve-integrityJourney__phase { margin-top: 18px; }
+  .ve-integrityJourney__story h2 { font-size: clamp(30px, 3vw, 45px); }
+  .ve-integrityJourney__story p { margin-top: 14px; line-height: 1.5; }
+  .ve-integrityJourney__rail button { min-height: 38px; }
+  .ve-integrityJourney__receipt { min-height: 58px; }
+}
+
+@media (max-width: 767px) {
+  .ve-integrityJourney { min-height: 0; }
+  .ve-integrityJourney__pin { position: static; height: auto; overflow: visible; padding: 76px 18px 28px; }
+  .ve-integrityJourney__hud { font-size: 7px; }
+  .ve-integrityJourney__frame { display: flex; flex-direction: column; }
+  .ve-integrityJourney__story { min-height: 500px; padding: 28px 22px; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.14); }
+  .ve-integrityJourney__story h2 { font-size: clamp(34px, 10vw, 48px); }
+  .ve-integrityJourney__rail { margin-top: 44px; }
+  .ve-integrityJourney__world { min-height: 500px; }
+  .ve-integrityJourney__earthStage { min-height: 390px; }
+  .ve-integrityJourney__receipt { align-items: flex-start; flex-direction: column; justify-content: center; padding-block: 14px; line-height: 1.5; }
+  .ve-integrityJourney__receipt strong { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-integrityJourney__earth,
+  .ve-integrityJourney__orbit--tilted,
+  .ve-integrityJourney__node.is-active circle { animation: none !important; }
+}

@@ -6,7 +6,7 @@ import '../components/landing-v4/premium-hero.css';
 import { motion, useMotionValueEvent, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useCallback } from 'react';
 import {
-  DecisionIntelligence,
+  EvidenceIntegrityJourney,
   CommunitySection,
   PricingSection,
   FAQSection,
@@ -946,28 +946,7 @@ export default function VouchEdgeLandingV3(props: Props) {
 
       <div className="ve-mobile-story-slide ve-mobile-story-slide--integrity relative">
         <MobileChapterMarker chapter="03 / INTEGRITY" label="PUBLIC RECORD" />
-        <motion.section
-          id="transparency-over-hype"
-          className="vu-integrityNote vu-chapter vu-chapterIntegrity border-t border-b border-white/20 bg-black py-24 sm:py-32"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.6, margin: '0px 0px -100px 0px' }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } } }}
-        >
-          <motion.div variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } }}>
-            <span className="vu-eyebrow font-mono text-sm font-black uppercase tracking-[0.25em] text-cyan-400">RESEARCH LIMITS / PUBLIC RECORD</span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mt-4">Evidence should explain itself.</h2>
-            <p className="text-zinc-200 text-lg sm:text-xl leading-relaxed mt-4">Confidence describes the strength of the available evidence, not a promise of an outcome. VouchRes keeps missing-data notes visible and does not curate a highlight reel of only successful examples.</p>
-          </motion.div>
-          <motion.div className="vu-integrityChain font-mono text-xs sm:text-sm font-bold text-white mt-8" variants={{ hidden: { opacity: 0, x: 24 }, show: { opacity: 1, x: 0 } }}>
-            <span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RESEARCHED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">TIME STAMPED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">COMPARED TO RESULT</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RETAINED</span>
-          </motion.div>
-        </motion.section>
-      </div>
-
-      <div className="ve-mobile-story-slide ve-mobile-story-slide--decision vu-chapter vu-chapterDecision bg-black border-t border-white/15">
-        <MobileChapterMarker chapter="04 / METHOD" label="TRUTH STANDARD" />
-        <DecisionIntelligence />
+        <EvidenceIntegrityJourney />
       </div>
       <div className="ve-mobile-story-slide ve-mobile-story-slide--community vu-chapter vu-chapterCommunity bg-black border-t border-white/15">
         <MobileChapterMarker chapter="05 / COMMUNITY" label="CONSENSUS" />

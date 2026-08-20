@@ -29,6 +29,14 @@ const publicLandingStyles = readFileSync(
   new URL('../src/styles/public-landing.css', import.meta.url),
   'utf8',
 );
+const integrityJourneySource = readFileSync(
+  new URL('../src/components/landing-v3/EvidenceIntegrityJourney.tsx', import.meta.url),
+  'utf8',
+);
+const integrityJourneyStyles = readFileSync(
+  new URL('../src/components/landing-v3/evidence-integrity-journey.css', import.meta.url),
+  'utf8',
+);
 
 describe('public landing conversion contract', () => {
   it('mounts the one-record landing from the public terminal page', () => {
@@ -55,22 +63,38 @@ describe('public landing conversion contract', () => {
 
   it('keeps VouchEdge as the wordmark and identifies the VouchRes engine', () => {
     expect(landingSource).toContain('VOUCHEDGE');
-    expect(landingSource).toContain('VouchRes');
+    expect(integrityJourneySource).toContain('VouchRes');
   });
 
   it('does not invent confidence, sparklines, or refresh theater', () => {
     expect(telemetrySource).not.toContain('<b>68</b>');
     expect(telemetrySource).not.toContain('[32, 69, 45, 88, 52, 74, 38, 91]');
     expect(landingSource).not.toContain('Refreshed 2 sec ago');
-    expect(landingSource).toContain('not a promise of an outcome');
+    expect(integrityJourneySource).toContain('not a promise of an outcome');
     expect(telemetrySource).toContain('not a fabricated demo');
+  });
+
+  it('turns the public-record integrity section into a four-phase evidence story', () => {
+    expect(landingSource).toContain('<EvidenceIntegrityJourney');
+    expect(integrityJourneySource).toContain('RESEARCH LIMITS / PUBLIC RECORD');
+    expect(integrityJourneySource).toContain("label: 'RESEARCHED'");
+    expect(integrityJourneySource).toContain("label: 'TIME STAMPED'");
+    expect(integrityJourneySource).toContain("label: 'COMPARED TO RESULT'");
+    expect(integrityJourneySource).toContain("label: 'RETAINED'");
+    expect(integrityJourneySource).toContain('not a prediction oracle');
+    expect(integrityJourneySource).toContain('does not invent a saved record');
+    expect(integrityJourneyStyles).toContain('.ve-integrityJourney__pin {');
+    expect(integrityJourneyStyles).toContain('position: sticky;');
+    expect(integrityJourneyStyles).toContain('height: 100dvh;');
+    expect(integrityJourneyStyles).toContain('animation: ve-integrity-earth-turn');
+    expect(integrityJourneyStyles).toContain('@media (prefers-reduced-motion: reduce)');
   });
 
   it('wires conversion to access and the live record', () => {
     expect(landingSource).toContain('GET BETA ACCESS');
     expect(landingSource).toContain('id="how-it-works"');
     expect(landingSource).toContain('id="record"');
-    expect(landingSource).toContain('<DecisionIntelligence');
+    expect(landingSource).toContain('<EvidenceIntegrityJourney');
     expect(landingSource).toContain('<CommunitySection');
     expect(landingSource).toContain('<PricingSection');
     expect(landingSource).toContain('<FAQSection');
