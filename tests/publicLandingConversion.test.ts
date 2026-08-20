@@ -21,6 +21,14 @@ const sectionNavSource = readFileSync(
   new URL('../src/app/sectionNavigation.ts', import.meta.url),
   'utf8',
 );
+const appSource = readFileSync(
+  new URL('../src/App.tsx', import.meta.url),
+  'utf8',
+);
+const publicLandingStyles = readFileSync(
+  new URL('../src/styles/public-landing.css', import.meta.url),
+  'utf8',
+);
 
 describe('public landing conversion contract', () => {
   it('mounts the one-record landing from the public terminal page', () => {
@@ -76,5 +84,18 @@ describe('public landing conversion contract', () => {
     expect(sectionNavSource).toContain("'/landing'");
     expect(sectionNavSource).toContain("'/vouchedge-preview'");
     expect(sectionNavSource).toContain("'/preview/vouchedge'");
+  });
+
+  it('keeps the public landing on one native document scroll owner', () => {
+    expect(appSource).toContain('className={`ve-public-landing-root');
+    expect(appSource).toContain('data-scroll-owner="document"');
+    expect(appSource).not.toContain('className="ve-layout-frame ve-layout-welcome"');
+    expect(terminalSource).toContain("classList.add('ve-public-landing-scroll')");
+    expect(terminalSource).toContain("classList.remove('ve-public-landing-scroll')");
+    expect(publicLandingStyles).toContain('html.ve-public-landing-scroll {');
+    expect(publicLandingStyles).toContain('overflow-y: auto !important;');
+    expect(publicLandingStyles).toContain('overflow-x: clip !important;');
+    expect(publicLandingStyles).toContain('body[style*="overflow: hidden"]');
+    expect(publicLandingStyles).not.toContain('html.ve-public-landing-scroll {\n  overflow: hidden');
   });
 });

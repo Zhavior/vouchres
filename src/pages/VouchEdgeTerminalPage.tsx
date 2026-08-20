@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import type { FooterNavigationTarget } from '../components/landing-v3';
 import { SIGNED_IN_HOME } from '../app/sectionNavigation';
 import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
@@ -47,6 +47,21 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
     window.addEventListener('popstate', syncAuthPath);
     return () => window.removeEventListener('popstate', syncAuthPath);
   }, [syncAuthPath]);
+
+  useLayoutEffect(() => {
+    // The product shell uses #inner-view-slot as its desktop scrollport. The
+    // public landing deliberately does not: its sticky chapters must resolve
+    // against the document viewport. Scope that contract to this route so a
+    // future shell overflow rule cannot turn a non-scrolling ancestor into the
+    // sticky containing block and strand the page at one viewport.
+    document.documentElement.classList.add('ve-public-landing-scroll');
+    document.body.classList.add('ve-public-landing-scroll');
+
+    return () => {
+      document.documentElement.classList.remove('ve-public-landing-scroll');
+      document.body.classList.remove('ve-public-landing-scroll');
+    };
+  }, []);
 
   const openAuth = useCallback((mode: AuthMode, plan: SignupPlan = 'free') => {
     if (mode === 'signup') {
