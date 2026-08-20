@@ -75,7 +75,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
     const sectionByTarget: Partial<Record<FooterNavigationTarget, string>> = {
       'How it works': 'how-it-works',
       'Live record': 'record',
-      Beta: 'access',
+      Beta: 'pricing',
     };
 
     if (target === 'GitHub') {

@@ -36,6 +36,12 @@ npm
 drafts/
 .cache/
 
+# Accidental Finder-style duplicate copies (verified byte-identical)
+**/* 2.ts
+**/* 2.tsx
+**/* 2.css
+front-page-lab-visual *.html
+
 # Internal documentation (not for public GitHub)
 docs/internal/
 .env*

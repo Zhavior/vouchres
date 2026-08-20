@@ -1,72 +1,77 @@
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, Shield } from 'lucide-react';
 
 export interface CTASectionProps {
   onJoinBeta?: () => void;
   onViewDemo?: () => void;
 }
 
-export default function CTASection({
-  onJoinBeta,
-  onViewDemo,
-}: CTASectionProps) {
+export default function CTASection({ onJoinBeta, onViewDemo }: CTASectionProps) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <section
-      id="join-beta"
-      className="relative scroll-mt-20 overflow-hidden border-t border-white/[0.06] bg-black py-24"
-    >
-      <div aria-hidden="true" className="absolute inset-0">
-        <div className="absolute left-1/2 top-1/2 h-[420px] w-[min(92vw,44rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/[0.09] blur-[130px]" />
-      </div>
-
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
+    <section id="cta" className="relative scroll-mt-20 border-t border-white/20 bg-black py-28 sm:py-36">
+      <div className="mx-auto max-w-5xl px-6 lg:px-8 text-center">
+        <motion.span
+          initial={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-flex items-center gap-2 border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-1 text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-300/90">
-            Next step
-          </p>
+          <Shield aria-hidden="true" className="h-4 w-4" />
+          START RESEARCHING NOW
+        </motion.span>
 
-          <h2 className="mt-4 text-balance text-3xl font-black tracking-tight text-white sm:text-[2.8rem] sm:leading-[1.08]">
-            Open today&apos;s MLB research board.
-          </h2>
+        <motion.h2
+          initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-8 text-balance text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[0.96]"
+        >
+          See the evidence before you make the call.
+        </motion.h2>
 
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-white/65">
-            Create a free beta account, land on today&apos;s board, inspect a matchup, and track a
-            decision you can review after the final result.
-          </p>
-        </motion.div>
+        <motion.p
+          initial={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto mt-6 max-w-2xl text-balance text-lg sm:text-xl lg:text-2xl leading-relaxed text-zinc-200"
+        >
+          Create a free beta account, inspect today&apos;s available MLB evidence, and save decisions you can review after the result.
+        </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1, duration: 0.38 }}
-          className="mt-9 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center"
+          initial={reduceMotion ? undefined : { opacity: 0, y: 14 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.45, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <button
             type="button"
             onClick={onJoinBeta}
-            className="group inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-300 to-emerald-300 px-7 text-base font-black text-[#03131a] shadow-[0_0_36px_-8px_rgba(0,217,160,0.6)] transition hover:brightness-110 sm:w-auto"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border-2 border-white bg-white px-10 py-5 font-mono text-base sm:text-lg font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer rounded-none"
           >
-            Open today&apos;s MLB research board
-            <ArrowRight
-              aria-hidden="true"
-              className="h-5 w-5 transition-transform group-hover:translate-x-1"
-            />
+            Get Beta Access Free
+            <ArrowRight aria-hidden="true" className="h-5 w-5" />
           </button>
-
-          <button
-            type="button"
-            onClick={onViewDemo}
-            className="min-h-14 w-full rounded-2xl border border-white/15 px-7 text-base font-semibold text-white/85 transition hover:border-emerald-300/45 hover:bg-white/[0.05] hover:text-white sm:w-auto"
-          >
-            View a research example
-          </button>
+          {onViewDemo ? (
+            <button
+              type="button"
+              onClick={onViewDemo}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 border-2 border-white/30 bg-black px-10 py-5 font-mono text-base sm:text-lg font-bold uppercase tracking-wider text-white transition hover:border-white hover:bg-white/10 cursor-pointer rounded-none"
+            >
+              View a Research Example
+            </button>
+          ) : null}
         </motion.div>
+
+        <p className="mt-6 font-mono text-xs text-zinc-400">
+          No credit card required while the free beta is active
+        </p>
       </div>
     </section>
   );

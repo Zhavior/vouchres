@@ -1,128 +1,128 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-
-const faqs = [
-  {
-    question: "What is VouchEdge?",
-    answer:
-      "VouchEdge is an MLB-first sports research platform. It helps you inspect matchup context, trends, official game data, confidence indicators, evidence, and post-game results in one workspace.",
-  },
-  {
-    question: "Who is it for?",
-    answer:
-      "MLB bettors and serious sports researchers who want evidence before making a decision.",
-  },
-  {
-    question: "Is it a sportsbook?",
-    answer:
-      "No. VouchEdge is not a sportsbook. It does not take bets and does not promise guaranteed betting success.",
-  },
-  {
-    question: "What does confidence mean?",
-    answer:
-      "Confidence represents how strongly the available evidence supports the current research conclusion. It is not a guarantee of the outcome.",
-  },
-  {
-    question: "What data sources are used?",
-    answer:
-      "Today’s public landing preview uses the VouchEdge MLB schedule feed and, when available, linked HR research board rows built from MLB Stats API-backed inputs. Individual evidence fields appear only when those payloads include them.",
-  },
-  {
-    question: "What is available during beta?",
-    answer:
-      "During the open beta you can create a free account, open today’s MLB research board, inspect evidence, track decisions, and compare them with final results. No card is required while the free beta is active.",
-  },
-  {
-    question: "What happens after beta?",
-    answer:
-      "Future pricing will be communicated clearly before the beta ends. You will not be charged without explicit consent.",
-  },
-  {
-    question: "Does VouchEdge guarantee results?",
-    answer:
-      "No. VouchEdge does not guarantee profits, betting success, or prediction accuracy. Research can be wrong, evidence can be incomplete, and outcomes remain uncertain.",
-  },
-];
+import { useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { HelpCircle, ChevronDown } from 'lucide-react';
 
 export default function FAQSection() {
-  const [openQuestion, setOpenQuestion] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      question: 'How is VouchEdge different from pick sellers or projection sites?',
+      answer:
+        'VouchEdge is an MLB-first research workspace, not a sportsbook. It organizes available matchup evidence, confidence context, and missing-data notes without promising guaranteed outcomes.',
+    },
+    {
+      question: 'What happens to missing or unverified data?',
+      answer:
+        'Missing inputs stay visibly missing. If lineup status is unconfirmed, bullpen availability is unknown, or weather data is unavailable, the system flags the gap with yellow or gray indicators rather than filling it with guesses or synthetic values.',
+    },
+    {
+      question: 'What is the "pre-game thesis lock"?',
+      answer:
+        'When you save a supported pre-game decision, VouchEdge retains the original conclusion and evidence snapshot so it can be reviewed beside the result later. The landing preview does not claim that a record exists until one is actually saved.',
+    },
+    {
+      question: 'Is VouchEdge free during the beta?',
+      answer:
+        'The current open beta is free and requires no card. Future pricing will be communicated clearly before the beta ends, and you will not be charged without explicit consent.',
+    },
+    {
+      question: 'Where does the data come from?',
+      answer:
+        'The public landing preview uses the VouchEdge MLB schedule feed and, when available, linked research-board rows built from MLB Stats API-backed inputs. Fields remain unavailable when the returned payload does not include them.',
+    },
+  ];
+
+  const toggle = (idx: number) => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
+
   return (
-    <section
-      id="faq"
-      aria-labelledby="faq-title"
-      className="relative scroll-mt-20 border-t border-white/[0.06] bg-ve-obsidian py-20 sm:py-24"
-    >
-      <div className="mx-auto max-w-4xl px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="max-w-2xl"
-        >
-          <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
-            FAQ
-          </span>
-
-          <h2
-            id="faq-title"
-            className="mt-5 text-3xl font-black tracking-tight text-white sm:text-[2.6rem] sm:leading-[1.08]"
+    <section id="faq" className="relative scroll-mt-20 border-t border-white/20 bg-black py-24 sm:py-32">
+      <div className="mx-auto max-w-4xl px-6 lg:px-8">
+        <div className="text-center">
+          <motion.span
+            initial={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 border border-cyan-400/40 bg-cyan-400/10 px-3.5 py-1 text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase"
           >
-            Questions skeptical visitors ask first
-          </h2>
+            <HelpCircle aria-hidden="true" className="h-4 w-4" />
+            FREQUENTLY ASKED QUESTIONS
+          </motion.span>
 
-          <p className="mt-4 text-[15px] leading-7 text-white/65">
-            Clear answers about what VouchEdge is — and what it is not.
-          </p>
-        </motion.div>
+          <motion.h2
+            initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 text-balance text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05]"
+          >
+            Everything you need to know.
+          </motion.h2>
 
-        <div className="mt-10 min-h-[36rem] divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] sm:min-h-[32rem]">
-          {faqs.map((faq, index) => (
-            <motion.details
-              key={faq.question}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.03, duration: 0.3 }}
-              className="group px-5 py-4 transition-colors open:bg-white/[0.03] sm:px-6"
-              open={openQuestion === faq.question}
-              onMouseEnter={(event) => {
-                const current = event.currentTarget;
-                const accordion = current.parentElement;
-                accordion?.querySelectorAll('details[open]').forEach((item) => {
-                  if (item !== current) item.removeAttribute('open');
-                });
-                current.open = true;
-                setOpenQuestion(faq.question);
-              }}
-            >
-              <summary className="cursor-pointer list-none text-left text-[15px] font-semibold text-white marker:content-none">
-                <span className="flex items-center justify-between gap-4">
-                  {faq.question}
-                  <span
-                    aria-hidden="true"
-                    className="text-lg leading-none text-emerald-300 transition-transform group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </span>
-              </summary>
-              <AnimatePresence initial={false}>
-                {openQuestion === faq.question && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.75 }}
-                    className="overflow-hidden"
-                  >
-                    <p className="mt-3 max-w-3xl text-[14px] leading-7 text-white/65">{faq.answer}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.details>
-          ))}
+          <motion.p
+            initial={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mt-5 max-w-3xl text-balance text-base sm:text-lg lg:text-xl leading-relaxed text-zinc-200"
+          >
+            Honest answers about our methodology, data sources, and beta program.
+          </motion.p>
         </div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={reduceMotion ? undefined : { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+          className="mt-14 divide-y divide-white/10 rounded-none border-2 border-white/20 bg-zinc-950"
+        >
+          {faqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <motion.div
+                key={faq.question}
+                variants={reduceMotion ? undefined : { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } } }}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggle(idx)}
+                  className="flex w-full items-center justify-between p-6 sm:p-8 text-left transition hover:bg-white/5 cursor-pointer"
+                  aria-expanded={isOpen}
+                >
+                  <span className="text-lg sm:text-xl font-bold text-white tracking-wide pr-4">
+                    {faq.question}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`h-5 w-5 shrink-0 text-zinc-400 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-white' : ''
+                    }`}
+                  />
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen ? (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-6 pb-6 sm:px-8 sm:pb-8 text-base sm:text-lg leading-relaxed text-zinc-300">
+                        {faq.answer}
+                      </p>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     </section>
   );

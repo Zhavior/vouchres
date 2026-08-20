@@ -1,7 +1,10 @@
 import '../styles/vouchres-ultimate-truth-landing.css';
 import '../styles/public-landing.css';
-import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import '../styles/vouchedge-mobile-story.css';
+import '../components/landing-v4/evidence-field.css';
+import '../components/landing-v4/premium-hero.css';
+import { motion, useMotionValueEvent, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useCallback } from 'react';
 import {
   DecisionIntelligence,
   CommunitySection,
@@ -12,8 +15,12 @@ import {
   type FooterNavigationTarget,
 } from '../components/landing-v3';
 
-type Step = 1 | 2 | 3 | 4;
-type Scene = 'hero' | 'ledger' | 'proof';
+import {
+  useResearchPreview,
+} from '../components/landing-v3/researchPreviewData';
+
+type StoryStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
 type Props = {
   onLogin: () => void;
   onJoinBeta: () => void;
@@ -22,192 +29,367 @@ type Props = {
   onFooterNavigate: (target: FooterNavigationTarget) => void;
 };
 
-const steps = [
-  { id: 1 as Step, tag: 'ACT 1 / MATCHUP SETUP', title: 'Start with an MLB board built for decisions, not noise.', body: 'Build a faster pre-game case with matchup context, high-signal telemetry, and explicit evidence states.', proof: 'LIVE SCHEDULE + LINKED RESEARCH', metric: '01/04', status: 'MATCHUP READY' },
-  { id: 2 as Step, tag: 'ACT 2 / EVIDENCE SIGNALS', title: 'Surface the power signals before first pitch.', body: 'Statcast contact quality, pitcher vulnerability, lineup validation, weather, and bullpen leverage sit in one research workflow.', proof: 'EVIDENCE STATES EXPLICIT', metric: '02/04', status: 'SIGNALS REVIEWED' },
-  { id: 3 as Step, tag: 'ACT 3 / DECISION LOCK', title: 'Lock the thesis while the market is still live.', body: 'Save the thesis, confidence, and supporting signals before first pitch—then measure the call against the final.', proof: 'TIME-BOUND DECISION RECORD', metric: '03/04', status: 'RECORD LOCKED' },
-  { id: 4 as Step, tag: 'ACT 4 / IMMUTABLE PROOF', title: 'Audit the call. Keep the learning loop.', body: 'Every result remains connected to the original pre-game research so you can refine your process slate after slate.', proof: 'POST-GAME COMPARISON', metric: '04/04', status: 'OUTCOME RETAINED' },
-];
-
-const STORY_MATCHUPS = [
-  { batter: 'SHOHEI OHTANI', batterId: 660271, matchup: 'LAD @ MIL', team: 'LAD', stats: { avg: '.295', homeRuns: 29, rbi: 78, ops: '.948' } },
-  { batter: 'AARON JUDGE', batterId: 592450, matchup: 'NYY @ TOR', team: 'NYY', stats: { avg: '.248', homeRuns: 17, rbi: 38, ops: '.908' } },
-  { batter: 'PETE CROW-ARMSTRONG', batterId: 691718, matchup: 'STL @ CHC', team: 'CHC', stats: { avg: '.282', homeRuns: 31, rbi: 79, ops: '.934' } },
-  { batter: 'MIKE TROUT', batterId: 545361, matchup: 'KC @ LAA', team: 'LAA', stats: { avg: '.242', homeRuns: 20, rbi: 45, ops: '.824' } },
-];
+const storySteps = [
+  {
+    id: 1 as StoryStep,
+    tag: '01 / MATCHUP',
+    title: 'See the matchup before the noise.',
+    body: 'Start with the player, opponent, game state, and the research inputs that actually exist.',
+    status: 'MATCHUP',
+  },
+  {
+    id: 2 as StoryStep,
+    tag: '02 / EVIDENCE',
+    title: 'See what the system knows.',
+    body: 'Every signal keeps its source. Verified inputs stay verified. Missing inputs stay visibly missing.',
+    status: 'EVIDENCE',
+  },
+  {
+    id: 3 as StoryStep,
+    tag: '03 / CONTEXT',
+    title: 'Context changes the meaning of a signal.',
+    body: 'Pitcher vulnerability, lineup state, recent form, environment, and availability belong beside the metric—not buried behind it.',
+    status: 'CONTEXT',
+  },
+  {
+    id: 4 as StoryStep,
+    tag: '04 / CONFIDENCE',
+    title: 'Confidence should be explainable.',
+    body: 'Confidence rises with evidence quality and coverage. It should never become a substitute for the evidence underneath it.',
+    status: 'WHY',
+  },
+  {
+    id: 5 as StoryStep,
+    tag: '05 / DECISION',
+    title: 'Make the call while it can still be tested.',
+    body: 'Turn the research into a clear pre-game thesis while the outcome is still unknown.',
+    status: 'DECISION',
+  },
+  {
+    id: 6 as StoryStep,
+    tag: '06 / LOCK',
+    title: 'Keep the record.',
+    body: 'Sources, evidence state, confidence, and thesis stay attached to the moment the decision was made.',
+    status: 'LOCKED',
+  },
+  {
+    id: 7 as StoryStep,
+    tag: '07 / RESULT',
+    title: 'The result is not the whole story.',
+    body: 'Put the outcome beside the original decision. Keep what worked, what failed, and what the evidence actually supported.',
+    status: 'AUDIT',
+  },
+  {
+    id: 8 as StoryStep,
+    tag: '08 / LEARN',
+    title: 'Every slate should teach the next one.',
+    body: 'Build a decision history that exposes patterns across wins, losses, confidence, and evidence quality.',
+    status: 'LEARN',
+  },
+] as const;
 
 function mlbHeadshot(personId?: number) {
   return personId
     ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_160,q_auto:best/v1/people/${personId}/headshot/67/current`
-    : 'https://img.mlbstatic.com/mlb-photos/image/upload/w_160,q_auto:best/v1/people/592450/headshot/67/current';
+    : '/vouchedge-mark-aurora.svg';
 }
 
-function Artifact({ step }: { step: Step }) {
-  const act = step;
-  const matchup = STORY_MATCHUPS[step - 1];
-  return (
-    <div className="vu-actCanvas">
-      <motion.div
-        key={matchup.team}
-        className="vu-teamWatermark"
-        initial={{ opacity: 0, x: 24 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        aria-hidden="true"
-      >
-        <span>{matchup.team}</span>
-        <small>{matchup.team}</small>
-      </motion.div>
-      <div className="vu-windowBar">
-        <span><i /><i /><i /></span>
-        <b>{matchup.matchup} // HR RESEARCH HUD</b>
-        <em>FINAL · VERIFIED SNAPSHOT</em>
-      </div>
-      <div className="vu-gameHeader">
-        <div className="vu-playerIdentity">
-          <img src={mlbHeadshot(matchup.batterId)} alt={matchup.batter} />
-          <div>
-            <span>BATTER</span>
-            <strong>{matchup.batter}</strong>
-            <small>LIVE VERIFIED SNAPSHOT</small>
+function displayTeam(team?: string) {
+  if (!team) return 'TEAM PENDING';
+  if (team === 'LAA') return 'ANGELS';
+  if (team === 'LAD') return 'DODGERS';
+  return team;
+}
+
+function formatConfidence(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value <= 1
+      ? `${Math.round(value * 100)}%`
+      : `${Math.round(value)}%`;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return value;
+  }
+
+  return '—';
+}
+
+function storyPhaseLabel(story: StoryStep) {
+  switch (story) {
+    case 1:
+      return 'LOCATE';
+    case 2:
+      return 'CONNECT';
+    case 3:
+      return 'ORGANIZE';
+    case 4:
+      return 'RESOLVE';
+    case 5:
+      return 'DECIDE';
+    case 6:
+      return 'LOCK';
+    case 7:
+      return 'COMPARE';
+    case 8:
+      return 'LEARN';
+  }
+}
+
+function TacticalHUDTelemetry({
+  preview,
+  story,
+}: {
+  preview: ReturnType<typeof useResearchPreview>;
+  story: StoryStep;
+}) {
+  const player = preview.primaryPlayer;
+  const confidenceValue = formatConfidence(player?.dataConfidence);
+  const availableEvidenceCount = preview.evidenceItems.filter((item) => item.state === 'available').length;
+
+  switch (story) {
+    case 1:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 01 // MATCHUP LOCATOR</span>
+            <span>{preview.statusLabel || 'RESEARCH STATE'}</span>
           </div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[9px] text-zinc-500 block">GAME MATCHUP</span>
+              <strong className="text-white text-[13px] font-bold block mt-1">
+                {preview.featuredGame ? `${preview.featuredGame.awayTeam} @ ${preview.featuredGame.homeTeam}` : 'MLB MATCHUP PENDING'}
+              </strong>
+            </div>
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[9px] text-zinc-500 block">VENUE & STATE</span>
+              <strong className="text-white text-[13px] font-bold block mt-1 truncate">
+                {preview.featuredGame?.venue || 'VENUE PENDING'}
+              </strong>
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            ✓ SCHEDULE-BACKED · NO SYNTHETIC GAMES · NO INVENTED PICKS
+          </p>
         </div>
-        <div className="vu-gameAt">VS</div>
-        <div className="vu-liveStatsCard">
-          <div className="vu-statsBanner">
-            <span>● LIVE VERIFIED SNAPSHOT</span>
-            <b>MLB DATA</b>
+      );
+
+    case 2:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 02 // EVIDENCE AUDIT</span>
+            <span>4 INPUT LAYERS</span>
           </div>
-          <div className="vu-statsValues">
-            <div><span>AVG</span><strong>{matchup.stats.avg}</strong></div>
-            <div><span>HR</span><strong>{matchup.stats.homeRuns}</strong></div>
-            <div><span>RBI</span><strong>{matchup.stats.rbi}</strong></div>
-            <div><span>OPS</span><strong>{matchup.stats.ops}</strong></div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            {preview.evidenceItems.slice(0, 4).map((item) => (
+              <div key={item.label} className="border border-white/10 bg-black p-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] text-zinc-500">{item.label}</span>
+                  <span className={`text-[7px] px-1 py-0.2 border ${
+                    item.state === 'available' ? 'border-emerald-400/40 text-emerald-300' :
+                    item.state === 'partial' ? 'border-amber-400/40 text-amber-300' : 'border-zinc-700 text-zinc-500'
+                  }`}>
+                    {item.state.toUpperCase()}
+                  </span>
+                </div>
+                <strong className="text-white text-[11px] font-bold block mt-1 truncate">
+                  {item.detail || 'NO VALUE'}
+                </strong>
+              </div>
+            ))}
           </div>
-          <small>Official MLB data · refreshes when available</small>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            MISSING DATA STAYS VISIBLY MISSING · UNVERIFIED GAPS FLAGGED
+          </p>
         </div>
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={act}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-          className="vu-actLayer"
-        >
-          {act === 1 && (
-            <div className="vu-hudGrid">
-              <section>
-                <p className="vu-hudLabel">HR TELEMETRY <b>VERIFIED</b></p>
-                <div className="vu-hudMetrics">
-                  <div><span>AVG EXIT VELO</span><strong>98.4 MPH</strong></div>
-                  <div><span>BARREL RATE</span><strong>21.4%</strong></div>
-                  <div><span>HARD-HIT RATE</span><strong>56.8%</strong></div>
-                  <div><span>HR / PA</span><strong>8.7%</strong></div>
-                </div>
-              </section>
-              <section>
-                <p className="vu-hudLabel">GAME CONTEXT <b className="partial">PARTIAL</b></p>
-                <div className="vu-hudMetrics">
-                  <div><span>PITCHER RISK</span><strong>HIGH · CUTTER</strong></div>
-                  <div><span>BULLPEN LOAD</span><strong>3.2 IP / 24H</strong></div>
-                  <div><span>LINEUP STATUS</span><strong>CONFIRMED</strong></div>
-                  <div><span>WEATHER FEED</span><strong className="vu-mutedMetric">AWAITING</strong></div>
-                </div>
-              </section>
+      );
+
+    case 3:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 03 // CONTEXT MATRIX</span>
+            <span>ENVIRONMENTAL FACTORS</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[8px] text-zinc-500 block">HIT POWER</span>
+              <strong className="text-white text-base font-bold block mt-0.5">
+                {player?.hitterPower != null ? `${Math.round(player.hitterPower)}%` : '—'}
+              </strong>
             </div>
-          )}
-          {act === 2 && (
-            <div className="vu-signalGrid">
-              <article><span>CONTACT QUALITY</span><b>98.4 MPH / 21.4% BARREL</b><p>Power profile, visible at a glance.</p></article>
-              <article><span>PITCH ARSENAL</span><b>HIGH CUTTER EXPOSURE</b><p>Matchup risk is explicit.</p></article>
-              <article><span>LINEUP VALIDATION</span><b>CONFIRMED</b><p>Official lineup feed received.</p></article>
-              <article><span>WEATHER</span><b className="partial">AWAITING FEED</b><p>Never filled with a guess.</p></article>
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[8px] text-zinc-500 block">PITCH VULN</span>
+              <strong className="text-amber-300 text-base font-bold block mt-0.5">
+                {player?.pitcherVulnerability != null ? `${Math.round(player.pitcherVulnerability)}%` : '—'}
+              </strong>
             </div>
-          )}
-          {act === 3 && (
-            <div className="vu-lockCard">
-              <div><span>THE VOUCH RECORD</span><b>TIME-STAMPED</b></div>
-              <strong>ORIGINAL THESIS + CONFIDENCE</strong>
-              <p>Research conclusion, high-signal telemetry, and availability notes are retained as they existed before first pitch.</p>
-              <footer><i>VISIBLE EDIT HISTORY</i><em>LOCKED BEFORE RESULT</em></footer>
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[8px] text-zinc-500 block">PARK FACTOR</span>
+              <strong className="text-emerald-300 text-base font-bold block mt-0.5">
+                {player?.parkFactor != null ? Math.round(player.parkFactor) : '—'}
+              </strong>
             </div>
-          )}
-          {act === 4 && (
-            <div className="vu-auditCard">
-              <div><span>POST-GAME AUDIT</span><b>OFFICIAL RESULT</b></div>
-              <strong>COMPARE THE RECORD TO THE FINAL.</strong>
-              <p>Correct and incorrect outcomes remain attached to the original research record—no selective highlight reel.</p>
-              <footer><i>OUTCOME RETAINED</i><em>PUBLIC PROOF</em></footer>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            VULNERABILITY & ENVIRONMENT LIVE BESIDE THE METRIC
+          </p>
+        </div>
+      );
+
+    case 4:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 04 // EXPLAINABLE CONFIDENCE</span>
+            <span>STRENGTH OF EVIDENCE</span>
+          </div>
+          <div className="flex items-center justify-between gap-4 border border-white/10 bg-black p-3.5">
+            <div>
+              <span className="text-[9px] font-mono text-zinc-400 block">DATA CONFIDENCE GAUGE</span>
+              <strong className="text-white font-mono text-2xl font-black block mt-0.5">
+                {confidenceValue}
+              </strong>
             </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
+            <div className="text-right">
+              <span className="text-[8px] font-mono text-emerald-300 border border-emerald-400/30 bg-emerald-950/40 px-2 py-1 uppercase tracking-widest">
+                {availableEvidenceCount > 0 ? 'AVAILABLE SUPPORT' : 'SUPPORT PENDING'}
+              </span>
+              <span className="text-[9px] font-mono text-zinc-500 block mt-1.5">
+                {availableEvidenceCount} OF {preview.evidenceItems.length} INPUTS AVAILABLE
+              </span>
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            CONFIDENCE REPRESENTS EVIDENCE DEPTH · NOT A GUARANTEE OF OUTCOME
+          </p>
+        </div>
+      );
+
+    case 5:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 05 // PRE-PITCH THESIS</span>
+            <span>ACTIVE HYPOTHESIS</span>
+          </div>
+          <div className="border border-white/10 bg-black p-3.5 space-y-2">
+            <div className="flex justify-between font-mono text-[10px]">
+              <span className="text-zinc-400">PLAYER THESIS:</span>
+              <strong className="text-white">{player?.playerName || 'PLAYER PENDING'} · NO THESIS RECORDED</strong>
+            </div>
+            <div className="flex justify-between font-mono text-[10px]">
+              <span className="text-zinc-400">TARGET VULNERABILITY:</span>
+              <span className="text-amber-300 font-bold">NOT PROVIDED BY LANDING FEED</span>
+            </div>
+            <div className="flex justify-between font-mono text-[10px] border-t border-white/10 pt-1.5">
+              <span className="text-zinc-500">STATE:</span>
+              <span className="text-cyan-300 font-bold">WORKFLOW PREVIEW · NOT A SAVED DECISION</span>
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            SAVE A DECISION IN THE APP TO CREATE A PRE-GAME RECORD
+          </p>
+        </div>
+      );
+
+    case 6:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-emerald-400 font-bold uppercase tracking-widest">PHASE 06 // RECORD WORKFLOW</span>
+            <span>RECORD STATE</span>
+          </div>
+          <div className="border border-emerald-400/30 bg-black p-3.5 space-y-2">
+            <div className="flex justify-between font-mono text-[10px]">
+              <span className="text-zinc-400">RECORD TIMESTAMP:</span>
+              <strong className="text-zinc-300">NOT CREATED IN LANDING PREVIEW</strong>
+            </div>
+            <div className="flex justify-between font-mono text-[10px]">
+              <span className="text-zinc-400">SECURITY PROTOCOL:</span>
+              <span className="text-white font-bold">NO SAVED RECORD</span>
+            </div>
+            <div className="font-mono text-[9px] text-zinc-500 border-t border-white/10 pt-1.5">
+              SIGN IN AND SAVE A DECISION TO USE THE RECORD WORKFLOW
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-emerald-300 m-0">
+            LANDING PREVIEW DOES NOT CLAIM A RECORD WAS SEALED
+          </p>
+        </div>
+      );
+
+    case 7:
+      return (
+        <div className="border border-white/15 bg-zinc-950 p-4 space-y-3">
+          <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400 border-b border-white/10 pb-2">
+            <span className="text-cyan-400 font-bold uppercase tracking-widest">PHASE 07 // REALITY AUDIT</span>
+            <span>POST-GAME TRUTH</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="border border-white/10 bg-black p-2.5">
+              <span className="text-[8px] text-zinc-500 block">ORIGINAL THESIS</span>
+              <strong className="text-white text-[11px] block mt-1">HR Index {typeof player?.hrScore === 'number' ? Math.round(player.hrScore) : '—'}</strong>
+              <span className="text-[8px] text-cyan-300 block mt-0.5">Confidence {confidenceValue}</span>
+            </div>
+            <div className="border border-emerald-400/30 bg-black p-2.5">
+              <span className="text-[8px] text-emerald-400 block">FINAL OUTCOME</span>
+              <strong className="text-zinc-300 text-[11px] block mt-1">OUTCOME NOT LOADED</strong>
+              <span className="text-[8px] text-zinc-500 block mt-0.5">NO RESULT CLAIMED</span>
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            SAVED RECORDS CAN BE COMPARED WITH RESULTS AFTER THEY ARRIVE
+          </p>
+        </div>
+      );
+
+    case 8:
+      return (
+        <div className="border border-neutral-800/80 bg-zinc-950 p-3 space-y-2.5 sm:border-white/15 sm:p-4 sm:space-y-3">
+          <div className="flex items-center justify-between gap-3 font-mono text-[10px] sm:text-xs text-zinc-400 border-b border-white/10 pb-2">
+            <span className="min-w-0 break-words text-cyan-400 font-bold uppercase tracking-wider">PHASE 08 // MODEL LEARNING</span>
+            <span className="hidden shrink-0 sm:inline">REVIEW WORKFLOW</span>
+          </div>
+          <div className="border border-neutral-800/80 bg-black px-3 py-2 font-mono text-xs">
+            <div className="flex items-center justify-between gap-3 py-1 text-zinc-300">
+              <span className="min-w-0 break-words">SAVED DECISION HISTORY</span>
+              <span className="shrink-0 text-zinc-500 font-bold">NOT LOADED</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 py-1 text-zinc-300">
+              <span className="min-w-0 break-words">POST-GAME REVIEW</span>
+              <span className="shrink-0 text-zinc-500 font-bold">PENDING A SAVED RECORD</span>
+            </div>
+          </div>
+          <p className="font-mono text-[10px] text-zinc-400 m-0">
+            WINS AND LOSSES SHOULD RECEIVE EQUAL REVIEW WEIGHT
+          </p>
+        </div>
+      );
+  }
 }
 
-function Terminal({ step, hero = false }: { step: Step; hero?: boolean }) {
-  const item = steps[step - 1];
-  return (
-    <section className={`vu-terminal ${hero ? 'vu-heroTerminal' : ''}`}>
-      <header>
-        <span>VOUCHEDGE // ENGINE: VOUCHRES // 0{step} // {hero ? 'PUBLIC PROOF' : item.tag.split(' / ')[1]}</span>
-        <i>LIVE</i>
-      </header>
-      <div className="vu-terminalBody">
-        <Artifact step={step} />
-      </div>
-      <footer>
-        <span>RECORD / VOUCHEDGE</span>
-        <span>{item.status}</span>
-        <b>{item.metric}</b>
-      </footer>
-    </section>
-  );
-}
-
-function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onViewDemo'>) {
+function TruthFlow({
+  onJoinBeta,
+  onViewDemo,
+}: Pick<Props, 'onJoinBeta' | 'onViewDemo'>) {
   const canvas = useRef<HTMLDivElement>(null);
-  const [scene, setScene] = useState<Scene>('hero');
-  const [active, setActive] = useState<Step>(1);
-  const [videoMuted, setVideoMuted] = useState(true);
-  const [introDocked, setIntroDocked] = useState(false);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Time-based and playback-based docking triggers
-  useEffect(() => {
-    const video = heroVideoRef.current;
-    if (!video) return;
-    const handleTimeUpdate = () => {
-      if (video.duration && video.currentTime / video.duration >= 0.6 && !introDocked) {
-        setIntroDocked(true);
-      }
-    };
-    const handleEnded = () => {
-      setIntroDocked(true);
-    };
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
-    const timer = window.setTimeout(() => setIntroDocked(true), 6000);
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
-      window.clearTimeout(timer);
-    };
-  }, [introDocked]);
+  const preview = useResearchPreview();
+  const player = preview.primaryPlayer;
+  const playerId = Number(player?.playerId);
+  const validPlayerId = Number.isFinite(playerId) ? playerId : undefined;
 
-  useEffect(() => {
-    if (introDocked) return;
-    const timer = window.setTimeout(() => setIntroDocked(true), 4000);
-    return () => window.clearTimeout(timer);
-  }, [introDocked]);
+  const [activeStory, setActiveStory] = useState<StoryStep>(1);
+  const [videoMuted, setVideoMuted] = useState(true);
+  const mobilePipeline = useRef<HTMLElement>(null);
 
   const replayHeroVideo = () => {
     const video = heroVideoRef.current;
     if (!video) return;
-    setIntroDocked(false);
     video.currentTime = 0;
     void video.play();
   };
@@ -216,463 +398,597 @@ function TruthFlow({ onJoinBeta, onViewDemo }: Pick<Props, 'onJoinBeta' | 'onVie
     target: canvas,
     offset: ['start start', 'end end'],
   });
-  const scrollYProgress = useSpring(rawScrollYProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
-  const sceneRef = useRef<Scene>('hero');
-  const stepRef = useRef<Step>(1);
 
-  useMotionValueEvent(scrollYProgress, 'change', p => {
-    if (!introDocked && p > 0.02) {
-      setIntroDocked(true);
-    }
-    const next: Scene = p < 0.16 ? 'hero' : p < 0.8 ? 'ledger' : 'proof';
-    if (next !== sceneRef.current) {
-      sceneRef.current = next;
-      setScene(next);
-    }
-    if (next === 'ledger') {
-      const s = Math.min(4, Math.max(1, Math.floor((p - 0.16) / 0.16) + 1)) as Step;
-      if (s !== stepRef.current) {
-        stepRef.current = s;
-        setActive(s);
-      }
+  const scrollYProgress = useSpring(rawScrollYProgress, {
+    stiffness: 260,
+    damping: 34,
+    mass: 0.6,
+    restDelta: 0.0001,
+  });
+
+  const activeStoryRef = useRef<StoryStep>(1);
+
+  const { scrollYProgress: mobileScrollYProgress } = useScroll({
+    target: mobilePipeline,
+    offset: ['start start', 'end end'],
+  });
+
+  useMotionValueEvent(scrollYProgress, 'change', (progress) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) return;
+    const normalized = Math.min(1, Math.max(0, (progress - 0.05) / 0.90));
+    const nextStory = Math.min(8, Math.max(1, Math.floor(normalized * 8) + 1)) as StoryStep;
+
+    if (nextStory !== activeStoryRef.current) {
+      activeStoryRef.current = nextStory;
+      setActiveStory(nextStory);
     }
   });
 
-  const go = (stop: number) => {
+  useMotionValueEvent(mobileScrollYProgress, 'change', (progress) => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return;
+    const normalizedProgress = Math.min(1, Math.max(0, progress));
+    const nextStory = Math.min(8, Math.floor(normalizedProgress * 8) + 1) as StoryStep;
+    if (nextStory !== activeStoryRef.current) {
+      activeStoryRef.current = nextStory;
+      setActiveStory(nextStory);
+    }
+  });
+
+  const goToStory = useCallback((story: StoryStep) => {
     const el = canvas.current;
     if (!el) return;
+
     const start = el.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: start + (el.offsetHeight - window.innerHeight) * stop, behavior: 'smooth' });
-  };
+    const usableScroll = el.offsetHeight - window.innerHeight;
+    const targetProgress = 0.05 + ((story - 1) / 7) * 0.90;
+
+    window.scrollTo({
+      top: start + usableScroll * targetProgress,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  const currentStory = storySteps[activeStory - 1];
+
+  const bullpenEvidence = preview.evidenceItems.find((item) => item.label.toLowerCase().includes('bullpen'));
+  const weatherEvidence = preview.evidenceItems.find((item) => item.label.toLowerCase() === 'weather');
+
+  const mobileMetric = (value: number | null | undefined) =>
+    typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : '—';
 
   return (
-    <div
-      id="truth-flow"
-      ref={canvas}
-      className="vu-story bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"
-    >
-      <div className="vu-pinned">
-        <div className="vu-frame">
-          <AnimatePresence mode="wait">
-            <motion.section
-              key={scene}
-              className="vu-scene"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-            >
-              {scene === 'hero' && (
-                <div className="vu-heroGrid">
-                  <div className="vu-copy">
-                    <span className="vu-eyebrow">● VOUCHEDGE // ENGINE: VOUCHRES · MLB RESEARCH / PUBLIC PROOF</span>
-                    <h1 className="text-zinc-100 font-bold tracking-tight">
-                      Stop guessing. <br />
-                      <span className="bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-500 bg-clip-text text-transparent">
-                        Build an auditable MLB research ledger before first pitch.
-                      </span>
-                    </h1>
-                    <p>VouchEdge pairs Statcast telemetry, pitcher-vulnerability splits, and lineup validation into a decision record you can inspect, track, and improve.</p>
-                    <div className="vu-ctas">
-                      <button className="vu-primary" onClick={onJoinBeta}>OPEN TODAY’S SLATE — FREE BETA</button>
-                      <button onClick={() => { onViewDemo(); document.getElementById('research-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
-                        INSPECT SAMPLE LEDGER <span>↓</span>
-                      </button>
-                    </div>
-                    <div className="vu-meta">
-                      <span>HR TELEMETRY + PITCHER SPLITS</span>
-                      <span>LINEUP + BULLPEN CONTEXT</span>
-                      <span>LOCKED PRE-GAME RECORD</span>
-                    </div>
-                  </div>
+    <div id="truth-flow" className="bg-black text-white">
+      <section className="relative flex flex-col justify-between h-[100dvh] w-full px-4 pt-14 pb-3 overflow-hidden bg-black md:hidden md:h-auto md:overflow-visible">
+        <header className="shrink-0 border-b border-zinc-800 pb-2">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+            VOUCHEDGE // {currentStory.tag}
+          </span>
+          <h1 className="mt-1 break-words text-xl font-black leading-tight tracking-tight text-white">
+            {currentStory.title}
+          </h1>
+          <p className="mt-1 max-h-10 overflow-hidden text-xs font-medium leading-relaxed text-zinc-300">
+            {currentStory.body}
+          </p>
+        </header>
 
-                  {/* Full-Screen to Docked Video Visual */}
-                  <div className={`vu-heroVisual ${introDocked ? 'vu-docked' : 'vu-fullscreenIntro'}`}>
-                    {!introDocked && (
-                      <button className="vu-skipIntro" type="button" onClick={() => setIntroDocked(true)}>
-                        SKIP INTRO ✕
-                      </button>
-                    )}
-                    <div className="vu-videoFrame">
-                      <video ref={heroVideoRef} className="vu-heroVideo" autoPlay muted={videoMuted} loop playsInline preload="metadata" aria-label="VouchEdge product preview">
-                        <source src="/media/vouchedge-landing-60fps.mp4" type="video/mp4" />
-                      </video>
-                      <div className="vu-videoScan" aria-hidden="true" />
-                      <div className="vu-videoLabel">
-                        <div>
-                          <button className="vu-videoReplay" type="button" aria-label="Replay VouchEdge product intro" onClick={replayHeroVideo}>
-                            ↻ REPLAY
-                          </button>
-                          <button
-                            className="vu-videoAudio"
-                            type="button"
-                            aria-pressed={!videoMuted}
-                            aria-label={videoMuted ? 'Unmute VouchEdge product video' : 'Mute VouchEdge product video'}
-                            onClick={() => {
-                              const next = !videoMuted;
-                              setVideoMuted(next);
-                              if (heroVideoRef.current) {
-                                heroVideoRef.current.muted = next;
-                                void heroVideoRef.current.play();
-                              }
-                            }}
-                          >
-                            {videoMuted ? '◌ SOUND OFF' : '◉ SOUND ON'}
-                          </button>
-                          <b>60 FPS · LIVE RESEARCH FLOW</b>
-                        </div>
-                      </div>
-                    </div>
-                    <Terminal step={1} hero />
-                  </div>
-                </div>
-              )}
-
-              {scene === 'ledger' && (
-                <div className="vu-ledgerGrid">
-                  <div className="vu-copy vu-ledgerCopy">
-                    <motion.div
-                      key={steps[active - 1].tag}
-                      className="vu-actTeamLabel"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 0.82, y: 0 }}
-                      transition={{ duration: 0.45 }}
-                    >
-                      <span>TEAM / {STORY_MATCHUPS[active - 1].team}</span>
-                      <b>{STORY_MATCHUPS[active - 1].matchup}</b>
-                    </motion.div>
-                    <span className="vu-eyebrow">VOUCHEDGE FLOW / 0{active} OF 04</span>
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={active}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        <h2>{steps[active - 1].title}</h2>
-                        <p>{steps[active - 1].body}</p>
-                        <div className="vu-proof">
-                          <span>{steps[active - 1].proof}</span>
-                          <b>VOUCHEDGE</b>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                  <Terminal step={active} />
-                </div>
-              )}
-
-              {scene === 'proof' && (
-                <div className="vu-proofScene">
-                  <span className="vu-eyebrow">THE VOUCH RECORD</span>
-                  <h2>Research. Vouch. Prove it.</h2>
-                  <p>Every meaningful decision retains the context that made it worth taking, then meets the result in a record that cannot quietly rewrite the past.</p>
-                  <div>
-                    <span>RESEARCHED</span><i>→</i><span>TIME STAMPED</span><i>→</i><span>GRADED</span><i>→</i><span>PUBLIC</span>
-                  </div>
-                </div>
-              )}
-            </motion.section>
-          </AnimatePresence>
-        </div>
-
-        <div className="vu-scrubber">
-          <button className={scene === 'hero' ? 'active' : ''} onClick={() => go(0)}>INTRO</button>
-          <div className="vu-rail">
-            {steps.map((s, i) => (
-              <button
-                key={s.id}
-                aria-label={`Act ${s.id}`}
-                className={scene === 'ledger' && active === s.id ? 'active' : ''}
-                onClick={() => go(0.16 + i * 0.16 + 0.035)}
-              />
-            ))}
+        <section aria-label="Context Matrix" className="shrink-0 py-2">
+          <div className="mb-1 flex items-center justify-between font-mono text-[9px] uppercase tracking-wider text-zinc-500">
+            <span>Context Matrix</span>
+            <span>{preview.statusLabel || 'Research state'}</span>
           </div>
-          <span>{scene === 'ledger' ? steps[active - 1].tag : scene === 'proof' ? 'PUBLIC PROOF' : 'LIVE RESEARCH'}</span>
-          <button className={scene === 'proof' ? 'active' : ''} onClick={() => go(0.86)}>PROOF</button>
+          <div className="grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800 font-mono text-[9px]">
+            <div className="min-w-0 bg-black px-2 py-1.5">
+              <span className="block truncate uppercase leading-none tracking-wider text-zinc-400">Hit power</span>
+              <strong className="mt-1 block truncate text-sm font-bold leading-none text-white">{mobileMetric(player?.hitterPower)}</strong>
+            </div>
+            <div className="min-w-0 bg-black px-2 py-1.5">
+              <span className="block truncate uppercase leading-none tracking-wider text-zinc-400">Pitch vuln</span>
+              <strong className="mt-1 block truncate text-sm font-bold leading-none text-amber-300">{mobileMetric(player?.pitcherVulnerability)}</strong>
+            </div>
+            <div className="min-w-0 bg-black px-2 py-1.5">
+              <span className="block truncate uppercase leading-none tracking-wider text-zinc-400">Park factor</span>
+              <strong className="mt-1 block truncate text-sm font-bold leading-none text-emerald-300">{mobileMetric(player?.parkFactor)}</strong>
+            </div>
+          </div>
+        </section>
+
+        <div className="flex-1 min-h-0 relative w-full my-2 border border-zinc-800 bg-black overflow-hidden">
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster="/media/optimized/vouchedge-landing-poster.jpg"
+            aria-label="VouchEdge optical telemetry feed"
+          >
+            <source src="/media/vouchedge-landing-60fps.mp4" type="video/mp4" />
+            <source src="/media/optimized/vouchedge-landing-desktop.mp4" type="video/mp4" />
+          </video>
+          <div aria-hidden="true" className="ve-optical-reticle pointer-events-none absolute inset-0 z-[2]">
+            <span className="absolute inset-x-0 top-1/2 border-t border-emerald-400/15" />
+            <span className="absolute inset-y-0 left-1/2 border-l border-emerald-400/15" />
+            <span className="absolute left-2 top-2 h-3 w-3 border-l border-t border-emerald-400/70" />
+            <span className="absolute right-2 top-2 h-3 w-3 border-r border-t border-emerald-400/70" />
+            <span className="absolute bottom-7 left-2 h-3 w-3 border-b border-l border-emerald-400/70" />
+            <span className="absolute bottom-7 right-2 h-3 w-3 border-b border-r border-emerald-400/70" />
+            <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 border border-emerald-400/50" />
+          </div>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[3] bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.045)_0px,rgba(255,255,255,0.045)_1px,transparent_1px,transparent_4px)]" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-2 border-t border-zinc-800 bg-black/85 px-2 py-1 font-mono text-[9px] uppercase tracking-wider">
+            <span className="min-w-0 truncate text-emerald-400">Optical telemetry [60fps]</span>
+            <span className="shrink-0 text-zinc-500">0{activeStory} // {storyPhaseLabel(activeStory)}</span>
+          </div>
         </div>
+
+        <div className="relative mb-3 h-14 shrink-0 border border-zinc-800 bg-zinc-950 px-2.5">
+          <span aria-hidden="true" className="absolute inset-y-0 left-0 w-px bg-emerald-400" />
+          <div className="flex h-full min-w-0 items-center justify-between gap-1.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden border border-zinc-700 bg-black">
+                <img
+                  src={mlbHeadshot(validPlayerId)}
+                  alt=""
+                  className="h-full w-full scale-110 object-cover object-top"
+                />
+              </div>
+              <div className="min-w-0">
+                <span className="flex items-center gap-1.5 truncate font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                  <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-emerald-400" />
+                  Player dossier
+                </span>
+                <strong className="block truncate text-sm font-bold text-white">{player?.playerName || 'Player unavailable'}</strong>
+                <span className="block truncate font-mono text-[9px] text-zinc-400">
+                  {displayTeam(player?.team)} vs {player?.opponent || 'opponent pending'}
+                </span>
+              </div>
+            </div>
+            <div className="shrink-0 border-l border-zinc-800 pl-2.5 text-right">
+              <span className="block font-mono text-[9px] uppercase tracking-wider text-zinc-400">HR index</span>
+              <strong className="block font-mono text-lg font-black leading-none text-emerald-300">
+                {typeof player?.hrScore === 'number' ? Math.round(player.hrScore) : '—'}
+              </strong>
+              <span className="block font-mono text-[9px] font-bold text-cyan-300">CONF {formatConfidence(player?.dataConfidence)}</span>
+            </div>
+          </div>
+        </div>
+
+        <nav aria-label="Story steps" className="hidden md:flex">
+          {storySteps.map((story) => (
+            <button key={story.id} type="button" onClick={() => goToStory(story.id)}>
+              0{story.id} {storyPhaseLabel(story.id)}
+            </button>
+          ))}
+        </nav>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 text-[10px] font-mono font-bold leading-none text-emerald-300/90 animate-pulse text-center">
+          Scroll // enter pipeline ↓
+        </div>
+      </section>
+
+      <section ref={mobilePipeline} className="relative h-[900dvh] w-full border-t border-zinc-800 bg-zinc-950 md:hidden" aria-labelledby="mobile-truth-pipeline-title">
+        <div aria-hidden="true" className="mobile-phase-snap-rail pointer-events-none absolute inset-x-0 top-0 flex h-[800dvh] flex-col">
+          {storySteps.map((story) => (
+            <span key={story.id} className="h-[100dvh] shrink-0 snap-start" />
+          ))}
+        </div>
+        <div className="sticky top-14 flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden bg-zinc-950 px-4 py-6">
+          <header className="shrink-0 border-b border-zinc-800 pb-3">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">Stage 02 // Decision pipeline</span>
+            <h2 id="mobile-truth-pipeline-title" className="mt-1 text-lg font-black text-white">One record. Eight connected phases.</h2>
+          </header>
+
+          <div className="flex min-h-0 flex-1 items-center gap-4 py-5">
+            <nav aria-label="Narrative phase progress" className="flex h-[62%] shrink-0 flex-col justify-between border-l border-zinc-800 pl-3">
+              {storySteps.map((story) => {
+                const isActive = activeStory === story.id;
+                return (
+                  <span
+                    key={story.id}
+                    aria-current={isActive ? 'step' : undefined}
+                    className="relative flex h-4 items-center font-mono text-[8px] text-zinc-600"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`absolute -left-[17px] h-2.5 w-2.5 border border-emerald-400 ${isActive ? 'bg-emerald-400' : 'bg-black'}`}
+                    />
+                    <span className={isActive ? 'font-bold text-emerald-400' : ''}>0{story.id}</span>
+                  </span>
+                );
+              })}
+            </nav>
+
+            <motion.article
+              key={activeStory}
+              initial={{ opacity: 0.65, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.12 }}
+              aria-live="polite"
+              className="min-w-0 flex-1 break-words border border-zinc-800 bg-black p-4"
+            >
+                <span className="font-mono text-[10px] text-emerald-400 font-bold tracking-wider">
+                  0{activeStory} {storyPhaseLabel(activeStory)}
+                </span>
+                <h3 className="text-lg font-bold text-white mt-1">{currentStory.title}</h3>
+                <p className="text-sm text-zinc-400 mt-2 leading-relaxed">{currentStory.body}</p>
+
+                {activeStory === 3 ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <div className="border border-zinc-800 bg-zinc-950 p-2 text-[10px] font-mono flex justify-between gap-3">
+                      <span className="text-zinc-500">BULLPEN LAYER</span>
+                      <strong className="shrink-0 text-zinc-200">{bullpenEvidence?.state.toUpperCase() || 'UNAVAILABLE'}</strong>
+                    </div>
+                    <div className="border border-zinc-800 bg-zinc-950 p-2 text-[10px] font-mono flex justify-between gap-3">
+                      <span className="text-zinc-500">WEATHER</span>
+                      <strong className="shrink-0 text-zinc-200">{weatherEvidence?.state.toUpperCase() || 'UNAVAILABLE'}</strong>
+                    </div>
+                  </div>
+                ) : null}
+            </motion.article>
+          </div>
+
+          <footer className="flex shrink-0 items-center justify-between border-t border-zinc-800 pt-3 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+            <span>0{activeStory} / 08</span>
+            <span className="animate-pulse">{activeStory === 8 ? 'Story complete // continue ↓' : 'Scroll to advance ↓'}</span>
+          </footer>
+        </div>
+      </section>
+
+      <div ref={canvas} className="relative hidden min-h-[420vh] bg-black text-white md:block">
+      <div className="sticky top-16 h-[calc(100dvh-64px)] overflow-y-auto bg-black flex flex-col justify-between p-6 lg:overflow-hidden lg:p-8">
+
+        {/* TOP TELEMETRY STATUS BAR */}
+        <header className="flex items-center justify-between gap-2 border border-neutral-800/80 bg-zinc-950 px-3 py-2 font-mono text-[10px] uppercase tracking-wider shrink-0 sm:px-4 sm:py-2.5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+            <span className="h-2 w-2 rounded-none bg-emerald-400 animate-pulse" />
+            <span className="truncate text-white font-bold tracking-widest">VOUCHEDGE // HUD</span>
+            <span className="hidden text-zinc-500 sm:inline">|</span>
+            <span className="hidden text-cyan-300 font-bold sm:inline">{currentStory.tag}</span>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 text-zinc-400 sm:gap-4">
+            <span>PHASE: <strong className="text-white">{storyPhaseLabel(activeStory)}</strong></span>
+            <span className="hidden sm:inline">|</span>
+            <span className="hidden sm:inline text-zinc-300">{preview.statusLabel || 'RESEARCH STATE'}</span>
+          </div>
+        </header>
+
+        {/* MAIN TACTICAL HUD WORKSPACE */}
+        <div className="my-auto py-3 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-center max-w-7xl mx-auto w-full sm:py-4">
+
+          {/* LEFT COLUMN: Narrative & Active Phase Telemetry */}
+          <div className="lg:col-span-5 flex flex-col justify-center space-y-3 sm:space-y-4">
+            <span className="font-mono text-[10px] sm:text-xs lg:text-sm font-black uppercase tracking-wider sm:tracking-[0.25em] text-cyan-400 block">
+              VOUCHEDGE / {currentStory.tag}
+            </span>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeStory}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+                className="space-y-2 sm:space-y-4"
+              >
+                <h1 className="break-words text-2xl sm:text-5xl lg:text-6xl xl:text-[68px] font-black text-white leading-tight sm:leading-[0.96] tracking-tight sm:tracking-[-0.045em] text-balance m-0">
+                  {currentStory.title}
+                </h1>
+                <p className="text-zinc-200 text-sm sm:text-lg lg:text-xl leading-relaxed m-0 font-normal">
+                  {currentStory.body}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Step-Specific Active Telemetry Dossier */}
+            <div className="pt-2">
+              <TacticalHUDTelemetry preview={preview} story={activeStory} />
+            </div>
+
+            {/* CTAs on Phase 1 */}
+            {activeStory === 1 ? (
+              <div className="flex flex-wrap gap-2 pt-1 sm:gap-4 sm:pt-2">
+                <button
+                  type="button"
+                  onClick={onJoinBeta}
+                  className="rounded-none border border-white bg-white px-4 py-2.5 font-mono text-xs sm:border-2 sm:px-8 sm:py-4 sm:text-base font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer"
+                >
+                  GET BETA ACCESS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onViewDemo();
+                    goToStory(2);
+                  }}
+                  className="rounded-none border border-white/30 bg-black px-4 py-2.5 font-mono text-xs sm:border-2 sm:px-8 sm:py-4 sm:text-base font-bold uppercase tracking-wider text-white transition hover:border-white hover:bg-white/10 cursor-pointer"
+                >
+                  EXPLORE EVIDENCE ↓
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 font-mono text-xs text-zinc-300 font-bold">
+                <span>STEP {activeStory} OF 8</span>
+                <span>·</span>
+                <span className="text-cyan-300 uppercase tracking-widest">{storyPhaseLabel(activeStory)} MODE ACTIVE</span>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Hardware Instrument & Film Viewport */}
+          <div className="lg:col-span-7 flex flex-col space-y-4">
+
+            {/* Split Screen Hardware Console */}
+            <div className="border border-neutral-800/80 bg-zinc-950 shadow-2xl overflow-hidden sm:border-white/20">
+
+              {/* Product Film Top Viewport */}
+              <div className="relative aspect-video w-full bg-black border-b border-white/15 overflow-hidden">
+                <video
+                  ref={heroVideoRef}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  muted={videoMuted}
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster="/media/optimized/vouchedge-landing-poster.jpg"
+                  aria-label="VouchEdge product film"
+                >
+                  <source src="/media/vouchedge-landing-60fps.mp4" type="video/mp4" />
+                  <source src="/media/optimized/vouchedge-landing-desktop.mp4" type="video/mp4" />
+                </video>
+
+                {/* Optical HUD scanlines */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 opacity-20 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_4px)]"
+                />
+
+                {/* Video controls strip */}
+                <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-2 pointer-events-auto bg-black/80 backdrop-blur-md px-2 py-1.5 border-t border-neutral-800/80 font-mono text-[9px] sm:bottom-2 sm:left-2 sm:right-2 sm:border sm:border-white/15 sm:px-3">
+                  <span className="min-w-0 truncate text-cyan-300 font-bold uppercase tracking-wider sm:tracking-widest">
+                    <span className="sm:hidden">OPTICAL [60FPS]</span>
+                    <span className="hidden sm:inline">OPTICAL TELEMETRY [60FPS]</span>
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                    <button
+                      type="button"
+                      onClick={replayHeroVideo}
+                      className="text-zinc-300 hover:text-white bg-transparent border-0 cursor-pointer font-mono text-[9px] uppercase tracking-wider"
+                    >
+                      ↻ REPLAY
+                    </button>
+                    <span className="text-zinc-600">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !videoMuted;
+                        setVideoMuted(next);
+                        if (heroVideoRef.current) {
+                          heroVideoRef.current.muted = next;
+                          void heroVideoRef.current.play();
+                        }
+                      }}
+                      className="text-zinc-300 hover:text-white bg-transparent border-0 cursor-pointer font-mono text-[9px] uppercase tracking-wider"
+                    >
+                      {videoMuted ? '◌ SOUND OFF' : '◉ SOUND ON'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Research Dossier Console */}
+              <div className="p-3 sm:p-5 bg-black space-y-3 sm:space-y-4">
+
+                {/* Player Dossier Row with Large Typography */}
+                <div className="flex items-center justify-between gap-2 border border-neutral-800/80 bg-zinc-950 p-3 sm:gap-5 sm:border-white/20 sm:p-5">
+                  <div className="flex items-center gap-2.5 min-w-0 sm:gap-4">
+                    <img
+                      src={mlbHeadshot(validPlayerId)}
+                      alt=""
+                      className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 border border-neutral-700 object-cover bg-black rounded-none sm:border-2 sm:border-white/30"
+                    />
+                    <div className="min-w-0">
+                      <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400 block">
+                        PLAYER DOSSIER
+                      </span>
+                      <strong className="text-sm sm:text-2xl font-black text-white block truncate tracking-tight mt-0.5">
+                        {player?.playerName || 'PLAYER UNAVAILABLE'}
+                      </strong>
+                      <span className="font-mono text-[10px] sm:text-sm text-zinc-300 block truncate mt-0.5">
+                        {displayTeam(player?.team)} vs {player?.opponent || 'OPPONENT PENDING'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 border-l border-white/15 pl-3 sm:pl-5">
+                    <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400 block">
+                      HR INDEX
+                    </span>
+                    <strong className="font-mono text-2xl sm:text-5xl font-black text-emerald-300 block leading-none mt-1">
+                      {typeof player?.hrScore === 'number' ? Math.round(player.hrScore) : '—'}
+                    </strong>
+                    <span className="font-mono text-[10px] sm:text-xs font-bold text-cyan-300 block mt-1">
+                      CONF {formatConfidence(player?.dataConfidence)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tactical Evidence Signal Grid (4 High-Contrast Cells) */}
+                <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto sm:grid sm:grid-cols-4">
+                  {preview.evidenceItems.slice(0, 4).map((item) => (
+                    <div
+                      key={item.label}
+                      className="w-[76%] snap-start shrink-0 border border-neutral-800/80 bg-zinc-950 p-2.5 flex flex-col justify-between min-h-[64px] sm:w-auto sm:border-white/15 sm:min-h-[72px]"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[8px] uppercase tracking-wider text-zinc-400 truncate">
+                          {item.label}
+                        </span>
+                        <span
+                          className={`font-mono text-[7px] font-bold px-1 border ${
+                            item.state === 'available' ? 'border-emerald-400/40 text-emerald-300 bg-emerald-950/30' :
+                            item.state === 'partial' ? 'border-amber-400/40 text-amber-300 bg-amber-950/30' : 'border-zinc-700 text-zinc-400 bg-zinc-900'
+                          }`}
+                        >
+                          {item.state.toUpperCase()}
+                        </span>
+                      </div>
+                      <strong className="font-mono text-[11px] font-bold text-white truncate block mt-1">
+                        {item.detail || 'UNAVAILABLE'}
+                      </strong>
+                      <span className="font-mono text-[7px] text-zinc-500 truncate block">
+                        {item.source}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer Timestamp */}
+                <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-2.5 font-mono text-[9px] text-zinc-400">
+                  <span className="min-w-0 truncate">SOURCE: {preview.sourceLabel || 'SOURCE PENDING'}</span>
+                  <span className="shrink-0">{preview.feedTimestamp ? String(preview.feedTimestamp) : 'FEED TIME UNAVAILABLE'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM 8-STEP INTERACTIVE SCRUBBER */}
+        <nav aria-label="Story steps" className="hidden border border-white/15 bg-zinc-950 p-2 font-mono shrink-0 md:block">
+          <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto sm:grid sm:grid-cols-8 sm:gap-1">
+            {storySteps.map((story) => {
+              const isActive = activeStory === story.id;
+              const isPassed = activeStory > story.id;
+
+              return (
+                <button
+                  key={story.id}
+                  type="button"
+                  onClick={() => goToStory(story.id)}
+                  aria-current={isActive ? 'step' : undefined}
+                  className={`snap-start shrink-0 px-3 py-1 text-left border text-xs transition-colors cursor-pointer flex items-center gap-1.5 sm:px-2 sm:py-2 sm:flex-col sm:items-stretch sm:justify-between ${
+                    isActive
+                      ? 'border-white bg-white text-black font-bold'
+                      : isPassed
+                      ? 'border-white/20 bg-zinc-900 text-cyan-300 hover:border-white/40'
+                      : 'border-white/10 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+                  }`}
+                >
+                  <span className="text-[9px] font-bold block">0{story.id}</span>
+                  <span className="text-[9px] uppercase tracking-wider block font-bold truncate">
+                    {storyPhaseLabel(story.id)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
       </div>
     </div>
   );
 }
 
-/* =========================================================================
-   HIGH-CRAFT DECISION LEDGER WITH HARDWARE BADGES & HOVER TELEMETRY
-   ========================================================================= */
-function ResearchRecordBridge() {
-  const bridgeRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: rawBridgeProgress } = useScroll({ target: bridgeRef, offset: ['start start', 'end end'] });
-  const scrollYProgress = useSpring(rawBridgeProgress, { stiffness: 80, damping: 24, restDelta: 0.001 });
-  const [phase, setPhase] = useState(0);
-
-  const phases = [
-    { eyebrow: '01 / ORIGINAL RESEARCH', title: 'Track the decision.', body: 'Keep the original case intact: matchup evidence, confidence, and the exact context available before first pitch.', label: 'RESEARCH SAVED', detail: 'Signals, thesis, timestamp' },
-    { eyebrow: '02 / DECISION LOCKED', title: 'Keep the record.', body: 'Lock the call before the result arrives. The decision cannot be rewritten after the market or game changes.', label: 'THESIS LOCKED', detail: 'Pre-game record preserved' },
-    { eyebrow: '03 / WINS + LOSSES', title: 'Show the whole record.', body: 'Wins and losses remain visible together, so the scoreboard measures the process honestly—not just the highlights.', label: 'OUTCOMES GRADED', detail: 'Win · Loss · Review' },
-    { eyebrow: '04 / METHODOLOGY', title: 'Make the next call better.', body: 'Review what held up, where the evidence failed, and turn every completed record into a sharper research workflow.', label: 'LOOP COMPLETE', detail: 'Research → decision → result' },
-  ];
-
-  useMotionValueEvent(scrollYProgress, 'change', value => {
-    bridgeRef.current?.style.setProperty('--ledger-progress', String(Math.min(1, Math.max(0, value))));
-    const next = Math.min(phases.length - 1, Math.max(0, Math.floor(value * phases.length)));
-    if (next !== phase) setPhase(next);
-  });
-
-  const record = [
-    {
-      player: 'S. OHTANI',
-      pick: 'HR · +310',
-      result: 'WIN',
-      note: 'BARREL + PARK FIT',
-      ev: '112.4 MPH',
-      la: '28°',
-      dist: '438 FT',
-      tone: 'win' as const,
-    },
-    {
-      player: 'A. JUDGE',
-      pick: 'HR · +275',
-      result: 'LOSS',
-      note: 'CONTACT DID NOT CONVERT',
-      ev: '106.8 MPH',
-      la: '36°',
-      dist: '388 FT (F8)',
-      tone: 'loss' as const,
-    },
-    {
-      player: 'P. CROW-ARMSTRONG',
-      pick: 'HR · +420',
-      result: 'WIN',
-      note: 'PITCHER VULNERABILITY',
-      ev: '104.2 MPH',
-      la: '24°',
-      dist: '412 FT',
-      tone: 'win' as const,
-    },
-  ];
-
-  const current = phases[phase];
-
+function MobileChapterMarker({ chapter, label, final = false }: { chapter: string; label: string; final?: boolean }) {
   return (
-    <section
-      ref={bridgeRef}
-      id="research-preview"
-      className="vu-realSection vu-decisionStory relative bg-[#050507] bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"
-    >
-      <div className="vu-decisionPinned">
-        <div className="vu-decisionGrid max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-          
-          {/* Left Column: Aggressive High-Tech Headline & Integrated Trace Rail */}
-          <div className="vu-decisionCopy space-y-6">
-            <span className="vu-eyebrow text-cyan-400 font-mono text-xs tracking-wider">
-              {current.eyebrow}
-            </span>
-
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
-              {phase === 3 ? (
-                <>
-                  <span className="text-zinc-100">MAKE THE NEXT</span> <br />
-                  <span className="bg-gradient-to-r from-zinc-100 via-cyan-200 to-zinc-400 bg-clip-text text-transparent">
-                    CALL BETTER.
-                  </span>
-                </>
-              ) : (
-                <span className="text-zinc-100">{current.title}</span>
-              )}
-            </h2>
-
-            <p className="text-zinc-400 text-base leading-relaxed max-w-lg">
-              {current.body}
-            </p>
-
-            <div className="vu-decisionStatus flex items-center justify-between gap-4 p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-950/80 font-mono text-xs">
-              <span className="text-emerald-400 font-bold tracking-wide">{current.label}</span>
-              <b className="text-zinc-300 font-normal">{current.detail}</b>
-            </div>
-
-            {/* Integrated Horizontal Timeline Trace Rail */}
-            <div className="flex items-center gap-2 pt-2">
-              {phases.map((item, idx) => {
-                const isCurrent = idx === phase;
-                const isPassed = idx < phase;
-                return (
-                  <div key={item.eyebrow} className="flex items-center gap-2">
-                    <div
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all duration-300 ${
-                        isCurrent
-                          ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)] font-bold'
-                          : isPassed
-                          ? 'text-zinc-400 bg-zinc-900/60 border border-zinc-800/80'
-                          : 'text-zinc-600 bg-zinc-950/40 border border-zinc-900'
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isCurrent ? 'bg-emerald-400 animate-pulse' : isPassed ? 'bg-emerald-500/60' : 'bg-zinc-700'
-                        }`}
-                      />
-                      <span>0{idx + 1}</span>
-                    </div>
-                    {idx < phases.length - 1 && (
-                      <div className={`w-3 sm:w-6 h-[1px] ${idx < phase ? 'bg-emerald-500/40' : 'bg-zinc-800'}`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right Column: Decision Ledger & Telemetry HUD Card with Ambient Glow & 1px Border */}
-          <div className="w-full max-w-xl mx-auto rounded-2xl border border-zinc-700/80 bg-zinc-950/95 shadow-[0_0_50px_-12px_rgba(52,211,153,0.15)] backdrop-blur-2xl p-5 sm:p-6">
-            
-            {/* Header Metadata with Live Block Badge & Pre-Pitch Stamp */}
-            <div className="flex flex-wrap justify-between items-center border-b border-zinc-800/80 pb-3.5 mb-4 font-mono text-[11px] text-zinc-400 gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-zinc-200 font-medium">VOUCHEDGE / DECISION LEDGER</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400">
-                  LEDGER LOCK: #0x8F9A...
-                </span>
-                <span className="text-emerald-400 font-semibold text-[10px]">
-                  ● STAMPED PRE-PITCH
-                </span>
-              </div>
-            </div>
-
-            {/* Headline Metrics Bar */}
-            <div className="grid grid-cols-3 gap-3 p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/60 mb-4 text-center font-mono">
-              <div>
-                <small className="block text-[10px] text-zinc-500">TRACKED DECISIONS</small>
-                <strong className="text-lg sm:text-xl font-bold text-white mt-0.5 block">23</strong>
-              </div>
-              <div>
-                <small className="block text-[10px] text-zinc-500">WIN RATE</small>
-                <strong className="text-lg sm:text-xl font-bold text-emerald-400 mt-0.5 block">60.9%</strong>
-              </div>
-              <div>
-                <small className="block text-[10px] text-zinc-500">AUDIT STATUS</small>
-                <strong className="text-lg sm:text-xl font-bold text-cyan-400 mt-0.5 block">PUBLIC</strong>
-              </div>
-            </div>
-
-            {/* Outcome Rows with Micro-Interactions & Secondary Statcast Pills */}
-            <div className="space-y-2.5 mb-4">
-              {record.map((item, index) => (
-                <article
-                  key={item.player}
-                  className={`group p-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800/50 hover:border-zinc-700/80 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    phase >= 2 || index === 0 ? 'opacity-100' : 'opacity-45'
-                  }`}
-                >
-                  <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <strong className="text-white font-mono text-sm font-bold">{item.player}</strong>
-                        <span className="text-zinc-500 font-mono text-[11px]">{item.pick}</span>
-                      </div>
-                      {/* Secondary Statcast metrics revealed on hover */}
-                      <div className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 transition-colors mt-0.5">
-                        {item.ev} · {item.la} · {item.dist}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
-                    <span className="font-mono tracking-tight text-[11px] uppercase bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md text-zinc-300">
-                      {item.note}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wider ${
-                        item.tone === 'win'
-                          ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(52,211,153,0.15)]'
-                          : 'bg-rose-950/60 text-rose-400 border border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.15)]'
-                      }`}
-                    >
-                      {item.result}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {/* Footnote */}
-            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 pt-2 border-t border-zinc-800/80">
-              <span>PRE-GAME CONTEXT RETAINED</span>
-              <span>OUTCOMES NEVER HIDDEN</span>
-            </div>
-
-          </div>
-
-        </div>
+    <>
+      <div className="pointer-events-none absolute inset-x-4 top-[68px] z-20 flex items-center justify-between gap-2 border-b border-zinc-800 pb-2 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-emerald-400 md:hidden">
+        <span className="min-w-0 truncate">VOUCHEDGE // {chapter}</span>
+        <span className="shrink-0 text-zinc-500">{label}</span>
       </div>
-    </section>
+      <div className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex items-center justify-between border-t border-zinc-800 pt-2 font-mono text-[9px] uppercase tracking-wider text-zinc-500 md:hidden">
+        <span>{chapter}</span>
+        <span>{final ? 'End of record' : 'Scroll // next chapter ↓'}</span>
+      </div>
+    </>
   );
 }
 
+
 export default function VouchEdgeLandingV3(props: Props) {
   return (
-    <main className="vu-landing bg-[#050507] text-white">
-      <nav className="fixed top-0 left-0 w-full h-[64px] z-50 px-6 lg:px-8 flex items-center justify-between bg-[#050507]/80 backdrop-blur-xl border-b border-zinc-800/80">
-        <a href="#top" className="inline-flex items-center gap-2.5 text-white no-underline text-sm font-bold tracking-wide">
+    <main className="vu-landing ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
+      <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/90 backdrop-blur-xl border-b border-neutral-800/80 sm:border-white/15">
+        <a href="#top" className="inline-flex min-w-0 flex-1 items-center gap-2 text-white no-underline text-[11px] font-bold tracking-wider sm:gap-2.5 sm:text-sm">
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />
-          <span>VOUCHEDGE</span>
-          <b className="px-1.5 py-0.5 border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-mono text-[9px] rounded font-medium">
+          <span className="truncate font-mono tracking-widest">VOUCHEDGE</span>
+          <b className="hidden px-1.5 py-0.5 border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-mono text-[9px] rounded-none font-semibold tracking-widest sm:inline-flex">
             BETA
           </b>
         </a>
-        <div className="flex items-center gap-3">
+        <div className="grid shrink-0 grid-cols-2 items-center gap-1.5 sm:flex sm:gap-3">
           <button
+            type="button"
             onClick={props.onLogin}
-            className="px-3.5 py-1.5 text-xs font-mono text-zinc-400 hover:text-white transition"
+            className="h-8 border border-zinc-700 bg-black px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-200 transition hover:border-white hover:text-white cursor-pointer rounded-none sm:h-auto sm:border-transparent sm:bg-transparent sm:px-3.5 sm:py-1.5 sm:text-xs sm:font-normal sm:text-zinc-300 sm:hover:border-white/20"
           >
             LOG IN
           </button>
           <button
+            type="button"
             onClick={props.onJoinBeta}
-            className="px-3.5 py-1.5 border border-zinc-300 text-black bg-white hover:bg-zinc-200 text-xs font-mono font-semibold rounded transition"
+            className="h-8 border border-white bg-white px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider text-black transition hover:bg-zinc-100 cursor-pointer rounded-none sm:h-auto sm:px-4 sm:py-1.5 sm:text-xs"
           >
-            Get access
+            SIGN UP
           </button>
         </div>
       </nav>
 
-      <div id="how-it-works" className="pt-[64px]">
+      <div id="how-it-works" className="bg-black md:pt-16">
         <div id="top">
-          <TruthFlow onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} />
+          <div id="record">
+            <TruthFlow onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} />
+          </div>
         </div>
       </div>
 
-      <div id="record">
-        <ResearchRecordBridge />
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--integrity relative">
+        <MobileChapterMarker chapter="03 / INTEGRITY" label="PUBLIC RECORD" />
+        <motion.section
+          id="transparency-over-hype"
+          className="vu-integrityNote vu-chapter vu-chapterIntegrity border-t border-b border-white/20 bg-black py-24 sm:py-32"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.6, margin: '0px 0px -100px 0px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } } }}
+        >
+          <motion.div variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } }}>
+            <span className="vu-eyebrow font-mono text-sm font-black uppercase tracking-[0.25em] text-cyan-400">RESEARCH LIMITS / PUBLIC RECORD</span>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mt-4">Evidence should explain itself.</h2>
+            <p className="text-zinc-200 text-lg sm:text-xl leading-relaxed mt-4">Confidence describes the strength of the available evidence, not a promise of an outcome. VouchRes keeps missing-data notes visible and does not curate a highlight reel of only successful examples.</p>
+          </motion.div>
+          <motion.div className="vu-integrityChain font-mono text-xs sm:text-sm font-bold text-white mt-8" variants={{ hidden: { opacity: 0, x: 24 }, show: { opacity: 1, x: 0 } }}>
+            <span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RESEARCHED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">TIME STAMPED</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">COMPARED TO RESULT</span><i>→</i><span className="border border-white/20 bg-zinc-950 px-3.5 py-2">RETAINED</span>
+          </motion.div>
+        </motion.section>
       </div>
 
-      <motion.section
-        id="transparency-over-hype"
-        className="vu-integrityNote vu-chapter vu-chapterIntegrity"
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.6, margin: '0px 0px -100px 0px' }}
-        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } } }}
-      >
-        <motion.div variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } }}>
-          <span className="vu-eyebrow">RESEARCH LIMITS / PUBLIC RECORD</span>
-          <h2>Evidence should explain itself.</h2>
-          <p>Confidence describes the strength of the available evidence, not a promise of an outcome. VouchRes keeps missing-data notes visible and does not curate a highlight reel of only successful examples.</p>
-        </motion.div>
-        <motion.div className="vu-integrityChain" variants={{ hidden: { opacity: 0, x: 24 }, show: { opacity: 1, x: 0 } }}>
-          <span>RESEARCHED</span><i>→</i><span>TIME STAMPED</span><i>→</i><span>COMPARED TO RESULT</span><i>→</i><span>RETAINED</span>
-        </motion.div>
-      </motion.section>
-
-      <div className="vu-chapter vu-chapterDecision"><DecisionIntelligence /></div>
-      <div className="vu-chapter vu-chapterCommunity"><CommunitySection onExploreCommunity={props.onExploreCommunity} /></div>
-      <div className="vu-chapter vu-chapterPricing"><PricingSection onJoinBeta={props.onJoinBeta} /></div>
-      <div className="vu-chapter vu-chapterFAQ"><FAQSection /></div>
-      <div className="vu-chapter vu-chapterCTA"><CTASection onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} /></div>
-      <FooterSection onNavigate={props.onFooterNavigate} />
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--decision vu-chapter vu-chapterDecision bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="04 / METHOD" label="TRUTH STANDARD" />
+        <DecisionIntelligence />
+      </div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--community vu-chapter vu-chapterCommunity bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="05 / COMMUNITY" label="CONSENSUS" />
+        <CommunitySection onExploreCommunity={props.onExploreCommunity} />
+      </div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--pricing vu-chapter vu-chapterPricing bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="06 / ACCESS" label="OPEN BETA" />
+        <PricingSection onJoinBeta={props.onJoinBeta} />
+      </div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--faq vu-chapter vu-chapterFAQ bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="07 / FAQ" label="CLEAR ANSWERS" />
+        <FAQSection />
+      </div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--cta vu-chapter vu-chapterCTA bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="08 / ACCESS" label="MAKE THE CALL" />
+        <CTASection onJoinBeta={props.onJoinBeta} onViewDemo={props.onViewDemo} />
+      </div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--footer relative bg-black">
+        <MobileChapterMarker chapter="09 / RECORD" label="SYSTEM END" final />
+        <FooterSection onNavigate={props.onFooterNavigate} />
+      </div>
     </main>
   );
 }

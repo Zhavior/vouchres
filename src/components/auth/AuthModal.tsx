@@ -164,6 +164,8 @@ export default function AuthModal({
     initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
   );
   const [introIndex, setIntroIndex] = useState(0);
+  const [policyIndex, setPolicyIndex] = useState(0);
+  const [policyReviewed, setPolicyReviewed] = useState(false);
   const [plan, setPlan] = useState<SignupPlan>(initialPlan);
   const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
   const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({ age: false, terms: false, research: false });
@@ -184,6 +186,15 @@ export default function AuthModal({
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const formPanelRef = useRef<HTMLElement | null>(null);
+
+  const scrollToAccountPanel = useCallback(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formPanelRef.current?.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, []);
 
   useBodyScrollLock(open);
 
@@ -197,6 +208,8 @@ export default function AuthModal({
       setGoogleBusy(false);
       setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
       setIntroIndex(0);
+      setPolicyIndex(0);
+      setPolicyReviewed(false);
       setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });
     }
@@ -217,7 +230,10 @@ export default function AuthModal({
 
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusFrame = window.requestAnimationFrame(() => {
-      (emailInputRef.current ?? closeButtonRef.current)?.focus();
+      const focusTarget = window.matchMedia('(max-width: 767px)').matches
+        ? closeButtonRef.current
+        : (emailInputRef.current ?? closeButtonRef.current);
+      focusTarget?.focus({ preventScroll: true });
     });
 
     const onKey = (e: KeyboardEvent) => {
@@ -605,9 +621,19 @@ export default function AuthModal({
                 <i />
                 SYSTEM ONLINE
               </div>
+
+              <button
+                type="button"
+                className="ve-auth-story-continue"
+                onClick={scrollToAccountPanel}
+                aria-label={mode === 'signup' ? 'Continue to create account' : 'Continue to account access'}
+              >
+                <span>{mode === 'signup' ? 'CREATE ACCOUNT' : 'ACCOUNT ACCESS'}</span>
+                <span aria-hidden="true">↓</span>
+              </button>
             </aside>
 
-            <section className="ve-auth-form-panel">
+            <section ref={formPanelRef} className="ve-auth-form-panel">
               <div className="ve-auth-form-header">
                 <span className="ve-auth-vouch-panel-label">
                   {mode === 'signup' ? 'CREATE ACCOUNT' : 'ACCOUNT ACCESS'}
@@ -883,10 +909,8 @@ export default function AuthModal({
             </div>
           ) : mode === 'signup' && signupStep === 'policy' ? (
             /* ── Policy agreement ── */
-            <div className="px-6 pb-6">
-              <div
-                className={`max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${AURORA_SURFACE}`}
-              >
+            <div className="ve-auth-policy-step px-6 pb-6">
+              <div className={`ve-auth-policy-list ve-auth-policy-list--desktop max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${AURORA_SURFACE}`}>
                 {POLICY_SECTIONS.map((section) => (
                   <div key={section.title}>
                     <p className={`${AURORA_LABEL} text-vouch-cyan`}>{section.title}</p>
@@ -895,10 +919,49 @@ export default function AuthModal({
                 ))}
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className={`ve-auth-policy-carousel rounded-xl border p-4 ${AURORA_SURFACE}`} aria-live="polite">
+                <div className="ve-auth-policy-carousel-head">
+                  <p className={`${AURORA_LABEL} text-vouch-cyan`}>{POLICY_SECTIONS[policyIndex].title}</p>
+                  <span>{String(policyIndex + 1).padStart(2, '0')} / {String(POLICY_SECTIONS.length).padStart(2, '0')}</span>
+                </div>
+                <p className="ve-auth-policy-carousel-body">{POLICY_SECTIONS[policyIndex].body}</p>
+                <div className="ve-auth-policy-carousel-controls">
+                  <button
+                    type="button"
+                    aria-label="Previous policy"
+                    disabled={policyIndex === 0}
+                    onClick={() => setPolicyIndex((current) => Math.max(0, current - 1))}
+                  >
+                    ← PREV
+                  </button>
+                  <div aria-hidden="true">
+                    {POLICY_SECTIONS.map((section, index) => (
+                      <i key={section.title} data-active={index === policyIndex} />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={policyIndex === POLICY_SECTIONS.length - 1 ? 'Finish policy review' : 'Next policy'}
+                    disabled={policyReviewed}
+                    onClick={() => {
+                      if (policyIndex === POLICY_SECTIONS.length - 1) {
+                        setPolicyReviewed(true);
+                        return;
+                      }
+                      setPolicyIndex((current) => Math.min(POLICY_SECTIONS.length - 1, current + 1));
+                    }}
+                  >
+                    {policyReviewed ? 'REVIEWED ✓' : policyIndex === POLICY_SECTIONS.length - 1 ? 'FINISH ✓' : 'NEXT →'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="ve-auth-agreements mt-4 space-y-2.5">
                 {AGREEMENTS.map((item) => (
                   <label
                     key={item.id}
+                    aria-disabled={!policyReviewed}
+                    data-locked={!policyReviewed}
                     className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
                     style={{
                       background: agreements[item.id] ? 'rgba(0, 217, 160,0.06)' : 'rgba(0,0,0,0.35)',
@@ -918,7 +981,11 @@ export default function AuthModal({
                       type="checkbox"
                       className="absolute h-px w-px overflow-hidden opacity-0"
                       checked={agreements[item.id]}
-                      onChange={() => setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      disabled={!policyReviewed}
+                      onChange={() => {
+                        if (!policyReviewed) return;
+                        setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                      }}
                     />
                     <span className="text-[12px] leading-5 text-slate-300">{item.label}</span>
                   </label>
@@ -936,7 +1003,7 @@ export default function AuthModal({
                 </button>
                 <button
                   type="button"
-                  disabled={!agreements.age || !agreements.terms || !agreements.research}
+                  disabled={!policyReviewed || !agreements.age || !agreements.terms || !agreements.research}
                   onClick={() => setSignupStep('form')}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${AURORA_INTERACTIVE}`}
                   style={{ background: AURORA_AUTH_GRADIENT, boxShadow: AURORA_AUTH_SHADOW }}
@@ -945,9 +1012,9 @@ export default function AuthModal({
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-              {!(agreements.age && agreements.terms && agreements.research) && (
+              {(!policyReviewed || !(agreements.age && agreements.terms && agreements.research)) && (
                 <p className="mt-2 text-[11px] text-center" style={{ color: '#64748b' }}>
-                  Check all three boxes to continue.
+                  {policyReviewed ? 'Check all three boxes to continue.' : 'Finish all five policy slides to unlock agreement.'}
                 </p>
               )}
             </div>
