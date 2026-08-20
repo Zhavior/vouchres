@@ -6,11 +6,6 @@ export interface HrNextTacticalFiltersProps {
   activeTag: TacticalFilterTag;
   onTagChange: (tag: TacticalFilterTag) => void;
   counts: Record<TacticalFilterTag, number>;
-  /**
-   * `row` is the original horizontal scroller above the board; `column` is the
-   * stacked list the control rail renders. Same model either way — the rail
-   * does not get its own copy of the filter definitions.
-   */
   orientation?: 'row' | 'column';
 }
 
@@ -31,7 +26,7 @@ export function HrNextTacticalFilters({
       id: 'all',
       label: 'All Radar',
       icon: Layers,
-      accent: 'emerald',
+      accent: 'cyan',
     },
     {
       id: 'hot',
@@ -53,13 +48,13 @@ export function HrNextTacticalFilters({
     },
     {
       id: 'vulnerable_sp',
-      label: 'Vulnerable Starter',
+      label: 'Vulnerable SP',
       icon: Target,
       accent: 'rose',
     },
     {
       id: 'platoon',
-      label: 'Top Power Mismatch',
+      label: 'Power Mismatch',
       icon: Zap,
       accent: 'cyan',
     },
@@ -70,12 +65,12 @@ export function HrNextTacticalFilters({
       className={`font-mono ${
         isColumn
           ? 'flex flex-col items-stretch gap-1'
-          : 'flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none'
+          : 'flex items-center gap-2 overflow-x-auto pb-1 tn-scrollbar-none'
       }`}
       role="toolbar"
       aria-label="Tactical Filter Slicers"
     >
-      {filters.map(({ id, label, icon: Icon, accent }) => {
+      {filters.map(({ id, label, icon: Icon }) => {
         const isActive = activeTag === id;
         const count = counts[id] ?? 0;
 
@@ -85,27 +80,27 @@ export function HrNextTacticalFilters({
             type="button"
             onClick={() => onTagChange(id)}
             aria-pressed={isActive}
-            className={`group flex items-center gap-1.5 rounded-xl border font-bold transition-all ${
-              isColumn ? 'w-full px-2.5 py-1.5 text-[11px]' : 'whitespace-nowrap px-3 py-1.5 text-xs'
+            className={`group flex items-center justify-between gap-2 border font-bold transition-all cursor-pointer ${
+              isColumn ? 'w-full px-2.5 py-1.5 text-xs' : 'whitespace-nowrap px-3 py-1.5 text-xs'
             } ${
               isActive
-                ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border-[var(--aurora-max-emerald)]/50 shadow-[0_0_12px_rgba(0,217,160,0.2)]'
-                : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
+                ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 shadow-[0_0_12px_rgba(0,240,255,0.15)] font-black'
+                : 'border-white/10 bg-black text-zinc-400 hover:text-white hover:bg-zinc-900 hover:border-white/25'
             }`}
           >
-            <Icon
-              className={`w-3.5 h-3.5 transition-transform group-hover:scale-110 ${
-                isActive ? 'text-[var(--aurora-max-emerald)]' : 'text-white/40 group-hover:text-white'
-              }`}
-            />
-            <span className={isColumn ? 'min-w-0 flex-1 truncate text-left' : undefined}>{label}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  isActive ? 'text-cyan-400' : 'text-zinc-500 group-hover:text-zinc-300'
+                }`}
+              />
+              <span className="truncate">{label}</span>
+            </div>
             <span
-              className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono font-black ${
-                isColumn ? 'ml-auto shrink-0 ' : ''
-              }${
+              className={`px-1.5 py-0.2 text-[9px] font-black tabular-nums border ${
                 isActive
-                  ? 'bg-[var(--aurora-max-emerald)]/30 text-white'
-                  : 'bg-white/5 text-white/40'
+                  ? 'border-cyan-400/50 bg-cyan-950/50 text-cyan-200'
+                  : 'border-white/10 bg-zinc-950 text-zinc-500'
               }`}
             >
               {count}

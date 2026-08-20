@@ -7,6 +7,7 @@ import { motion, useMotionValueEvent, useScroll, useSpring, useTransform, Animat
 import { useRef, useState, useCallback } from 'react';
 import {
   EvidenceIntegrityJourney,
+  DecisionIntelligence,
   CommunitySection,
   PricingSection,
   FAQSection,
@@ -1028,6 +1029,10 @@ export default function VouchEdgeLandingV3(props: Props) {
         <MobileChapterMarker chapter="03 / INTEGRITY" label="PUBLIC RECORD" />
         <EvidenceIntegrityJourney />
       </motion.div>
+      <div className="ve-mobile-story-slide ve-mobile-story-slide--method vu-chapter vu-chapterMethod bg-black border-t border-white/15">
+        <MobileChapterMarker chapter="04 / METHOD" label="METHODOLOGY" />
+        <DecisionIntelligence onJoinBeta={props.onJoinBeta} />
+      </div>
       <div className="ve-mobile-story-slide ve-mobile-story-slide--community vu-chapter vu-chapterCommunity bg-black border-t border-white/15">
         <MobileChapterMarker chapter="05 / COMMUNITY" label="CONSENSUS" />
         <CommunitySection onExploreCommunity={props.onExploreCommunity} />

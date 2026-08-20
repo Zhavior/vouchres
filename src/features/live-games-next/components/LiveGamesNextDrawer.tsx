@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Plus, Flame } from 'lucide-react';
+import { X, Plus, Flame, ShieldCheck } from 'lucide-react';
 import type { GameMatchup, HrWatch } from '../../../types/matchup';
 import { LiveGamesNextStatusBadge } from './LiveGamesNextStatusBadge';
 import { LiveGamesNextLineScore } from './LiveGamesNextLineScore';
@@ -9,13 +9,12 @@ export interface LiveGamesNextDrawerProps {
   game: GameMatchup;
   onClose: () => void;
   onAddLeg: (w: HrWatch) => void;
-  /** Official MLB line score for this game, null when the feed has none. */
   lineScore: OfficialLineScore | null;
   lineScoreLoading: boolean;
   lineScoreError: boolean;
 }
 
-/** Right-side matchup drawer — terminal chrome, real feed data only. */
+/** Right-side matchup drawer — Cyber-Engineering HUD terminal. */
 export function LiveGamesNextDrawer({
   game,
   onClose,
@@ -28,23 +27,23 @@ export function LiveGamesNextDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex justify-end"
+      className="fixed inset-0 z-[120] flex justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
       aria-label={`Matchup drawer ${game.away.abbreviation} at ${game.home.abbreviation}`}
       onClick={onClose}
     >
       <div
-        className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-white/10 bg-ve-obsidian font-mono shadow-2xl"
+        className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l-2 border-white/20 bg-black font-mono shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-ve-obsidian/95 px-4 py-3 backdrop-blur-md">
-          <div className="flex min-w-0 items-center gap-2">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/15 bg-zinc-950 px-5 py-3.5 backdrop-blur-md">
+          <div className="flex min-w-0 items-center gap-2.5">
             {game.away.logo && <img src={game.away.logo} alt="" className="h-6 w-6 object-contain" loading="lazy" />}
-            <span className="truncate text-sm font-black text-white">
-              {game.away.abbreviation} <span className="text-white/30">@</span> {game.home.abbreviation}
-            </span>
+            <strong className="truncate text-sm font-black text-white uppercase">
+              {game.away.abbreviation} <span className="text-zinc-500">@</span> {game.home.abbreviation}
+            </strong>
             {game.home.logo && <img src={game.home.logo} alt="" className="h-6 w-6 object-contain" loading="lazy" />}
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -53,25 +52,30 @@ export function LiveGamesNextDrawer({
               type="button"
               onClick={onClose}
               aria-label="Close matchup drawer"
-              className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:text-white"
+              className="p-1 border border-white/20 text-zinc-400 hover:text-white hover:border-white transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        <div className="space-y-4 p-4">
+        <div className="space-y-4 p-5">
           {/* Live scoreboard */}
-          <div className="rounded-xl border border-white/10 bg-ve-obsidian/95 p-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--aurora-max-emerald)]">Live Scoreboard</p>
-            <div className="mt-2 grid grid-cols-3 items-center gap-2">
-              <span className="truncate text-center text-xs font-black text-white">{game.away.abbreviation}</span>
-              <span className="text-center text-2xl font-black tabular-nums text-white">
-                {showScore ? game.score.away : '–'} <span className="text-white/25">:</span> {showScore ? game.score.home : '–'}
+          <div className="border-2 border-white/15 bg-black p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-cyan-300">
+                LIVE SCOREBOARD
               </span>
-              <span className="truncate text-center text-xs font-black text-white">{game.home.abbreviation}</span>
+              <span className="text-[8px] text-zinc-500 uppercase">{game.venue}</span>
             </div>
-            <p className="mt-2 text-center text-[10px] uppercase tracking-wider text-white/40">{game.venue} · {game.status}</p>
+            <div className="grid grid-cols-3 items-center gap-2 py-1">
+              <span className="truncate text-center text-sm font-black text-white uppercase">{game.away.abbreviation}</span>
+              <span className="text-center text-3xl font-black tabular-nums text-white font-sans">
+                {showScore ? game.score.away : '–'} <span className="text-zinc-600">:</span> {showScore ? game.score.home : '–'}
+              </span>
+              <span className="truncate text-center text-sm font-black text-white uppercase">{game.home.abbreviation}</span>
+            </div>
+            <p className="text-center text-[10px] uppercase tracking-wider text-zinc-400">{game.status.toUpperCase()}</p>
           </div>
 
           {/* Official line score */}
@@ -85,30 +89,39 @@ export function LiveGamesNextDrawer({
 
           {/* HR signals */}
           {game.topHrWatch.length > 0 && (
-            <div className="rounded-xl border border-white/10 bg-ve-obsidian/95 p-3">
-              <p className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-white/40">
-                <Flame className="h-3 w-3 text-amber-400" /> Active HR Signals ({game.topHrWatch.length})
-              </p>
-              <ul className="mt-2 space-y-2">
+            <div className="border-2 border-white/15 bg-black p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-400">
+                  <Flame className="h-3.5 w-3.5 text-amber-400" /> ACTIVE HR SIGNALS ({game.topHrWatch.length})
+                </span>
+                <span className="text-[8px] text-zinc-500 uppercase">PROPS DISPATCH</span>
+              </div>
+              <ul className="space-y-2">
                 {game.topHrWatch.map((w) => (
                   <li
                     key={`${w.playerId}-${w.playerName}`}
-                    className="flex items-center gap-2 rounded-lg border border-white/5 bg-black/40 px-2.5 py-2"
+                    className="flex items-center justify-between gap-2 border border-white/10 bg-zinc-950 p-2.5"
                   >
-                    {w.headshot && <img src={w.headshot} alt="" className="h-8 w-8 rounded-full object-cover" loading="lazy" />}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-white">{w.playerName}</p>
-                      <p className="truncate text-[9px] text-white/40">
-                        {w.teamAbbr} vs {w.opposingPitcher} · edge {Math.round(w.hrEdge)}
-                      </p>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {w.headshot ? (
+                        <img src={w.headshot} alt="" className="h-8 w-8 object-cover border border-white/10" loading="lazy" />
+                      ) : (
+                        <div className="h-8 w-8 bg-zinc-800 flex items-center justify-center text-[9px] text-zinc-400 font-bold">HR</div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <strong className="truncate text-xs font-bold text-white block">{w.playerName}</strong>
+                        <span className="truncate text-[9px] text-zinc-400 block">
+                          {w.teamAbbr} vs {w.opposingPitcher} · <strong className="text-cyan-300">{Math.round(w.hrEdge)} HRPI</strong>
+                        </span>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onAddLeg(w)}
                       title={`Add ${w.playerName} Anytime HR to slip`}
-                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 px-2 text-[9px] font-black uppercase text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/25"
+                      className="px-2 py-1 border border-emerald-400 bg-emerald-400 text-black text-[9px] font-black uppercase tracking-wider hover:bg-emerald-300 transition-colors flex items-center gap-0.5 cursor-pointer shrink-0"
                     >
-                      <Plus className="h-3 w-3" /> Slip
+                      <Plus className="h-3 w-3" /> SLIP
                     </button>
                   </li>
                 ))}
@@ -116,13 +129,15 @@ export function LiveGamesNextDrawer({
             </div>
           )}
 
-          {/* Honesty line — per-inning data is the published feed, not a model */}
-          <p className="text-[10px] leading-relaxed text-white/30">
+          {/* Honesty line */}
+          <div className="border border-white/10 bg-zinc-950 p-3 text-[10px] leading-relaxed text-zinc-500">
+            <span className="text-zinc-400 font-bold block mb-0.5">DETERMINISTIC DATA INTEGRITY:</span>
             Scores, status, per-inning runs, and HR signals come from the official MLB live feed and the verified HR
-            board. Nothing on this panel is synthesized — an inning the feed has not published stays blank.
-          </p>
+            board. No synthesized values or interpolated scores.
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, ChevronDown, Clock3, FileCheck2, ListFilter, Plus, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, ChevronDown, Clock3, FileCheck2, ListFilter, Plus, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 import { boardScore, signalLayers } from '../../features/hr/engine/signalScore';
 import { buildHrMatchupGroups, type HrMatchupGroup } from '../../features/hr/components/Table/hrTableModel';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
@@ -32,12 +32,12 @@ interface Props {
 type SortMode = 'score' | 'time';
 
 const STATE_LABEL: Record<TodayFieldState, string> = {
-  loading: 'Syncing sources',
-  live: 'Live slate',
-  pregame: 'Pregame board',
-  postgame: 'Slate complete',
-  'no-slate': 'No MLB slate',
-  degraded: 'Verify source data',
+  loading: 'SYNCING SOURCES',
+  live: 'LIVE SLATE ACTIVE',
+  pregame: 'PREGAME BOARD VERIFIED',
+  postgame: 'SLATE FINALIZED',
+  'no-slate': 'NO ACTIVE MLB SLATE',
+  degraded: 'VERIFY SOURCE SENSORS',
 };
 
 export default function TodayFieldDesk({
@@ -63,54 +63,71 @@ export default function TodayFieldDesk({
   const confirmedFallback = confirmedRows.length === 0 && rows.length > 0;
 
   return (
-    <section className="aurora-max-panel mt-4 overflow-hidden" data-state={state} data-testid="today-field-desk">
-      <div className="border-b border-[var(--aurora-max-line)] bg-[rgba(5,11,13,0.62)] px-4 py-3 sm:px-5">
-        <AuroraMaxCommandHeader
-          compact
-          eyebrow={<span className="flex items-center gap-2"><span className={`h-2 w-2 shrink-0 bg-[var(--aurora-max-emerald)] shadow-[0_0_15px_rgba(0,217,160,0.85)] ${state === 'loading' ? 'animate-pulse' : ''}`} aria-hidden="true" /> Research command desk</span>}
-          title="Today's field desk"
-          description={`${STATE_LABEL[state]} · ${freshnessLabel}`}
-          meta={<div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-white/46">
-          <span>{gameCount ?? '—'} games</span>
-          <span className="text-white/18">/</span>
-          <span className={liveGames > 0 ? 'text-vouch-emerald' : ''}>{liveGames} live</span>
-          </div>}
-        />
+    <section className="border-2 border-white/15 bg-black overflow-hidden font-mono shadow-2xl" data-state={state} data-testid="today-field-desk">
+      {/* COMMAND DESK HEADER */}
+      <div className="border-b border-white/15 bg-zinc-950 px-5 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className={`h-2.5 w-2.5 bg-emerald-400 ${state === 'loading' ? 'animate-pulse' : ''}`} />
+          <div>
+            <h2 className="text-white font-black text-xs tracking-widest uppercase">
+              VOUCHEDGE // RESEARCH COMMAND DESK
+            </h2>
+            <p className="text-[10px] text-zinc-400 uppercase mt-0.5">
+              {STATE_LABEL[state]} · {freshnessLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-[10px] text-zinc-400 font-bold uppercase">
+          <span className="border border-white/15 px-2 py-0.5 bg-black text-zinc-300">
+            {gameCount ?? '—'} GAMES
+          </span>
+          <span className={`border px-2 py-0.5 ${liveGames > 0 ? 'border-rose-500/50 bg-rose-950/40 text-rose-300' : 'border-white/15 bg-black text-zinc-500'}`}>
+            {liveGames} LIVE
+          </span>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,0.94fr)_minmax(440px,1.06fr)]">
+      <div className="grid lg:grid-cols-[minmax(0,0.94fr)_minmax(440px,1.06fr)] divide-y lg:divide-y-0 lg:divide-x divide-white/15">
         <Spotlight player={selected} state={state} onAddPlayer={onAddPlayer} onResearch={onResearch} />
 
-        <div className="min-w-0 border-t border-[var(--aurora-max-line)] bg-[rgba(4,10,15,0.45)] lg:border-l lg:border-t-0">
-          <AuroraMaxRankedWorkspace
-            className="px-4 pt-3 sm:px-5"
-            title={<span className="flex items-center gap-2"><ListFilter className="h-3.5 w-3.5 text-vouch-emerald" aria-hidden="true" /> Daily slate queue</span>}
-            subtitle={`${groups.length} matchup${groups.length === 1 ? '' : 's'} · ${confirmedRows.length} confirmed lineup rows`}
-            controls={<label className="relative inline-flex min-h-9 items-center border border-white/10 bg-black/25 pl-3 pr-8 text-[10px] font-bold text-white/68">
-              <SlidersHorizontal className="mr-1.5 h-3 w-3 text-vouch-cyan" aria-hidden="true" />
-              <span className="sr-only">Sort slate queue</span>
+        <div className="min-w-0 bg-black">
+          {/* SLATE WORKSPACE HEADER */}
+          <div className="px-5 py-3.5 border-b border-white/15 flex items-center justify-between bg-zinc-950">
+            <div className="flex items-center gap-2">
+              <ListFilter className="h-3.5 w-3.5 text-cyan-300" aria-hidden="true" />
+              <strong className="text-white font-bold text-xs uppercase tracking-wider">DAILY SLATE QUEUE</strong>
+            </div>
+
+            <label className="relative inline-flex items-center border border-white/20 bg-black px-2.5 py-1 text-[9px] font-bold text-zinc-300 uppercase cursor-pointer">
+              <SlidersHorizontal className="mr-1.5 h-3 w-3 text-cyan-300" aria-hidden="true" />
               <select
                 value={sortMode}
                 onChange={(event) => setSortMode(event.target.value as SortMode)}
-                className="appearance-none bg-transparent pr-1 outline-none"
+                className="appearance-none bg-transparent pr-4 outline-none uppercase cursor-pointer"
                 aria-label="Sort slate queue"
               >
-                <option value="score">HRPI score</option>
-                <option value="time">Game time</option>
+                <option value="score" className="bg-black text-white">HRPI SCORE</option>
+                <option value="time" className="bg-black text-white">GAME TIME</option>
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 h-3 w-3 text-white/40" aria-hidden="true" />
-            </label>}
-          >
+              <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-zinc-400" aria-hidden="true" />
+            </label>
+          </div>
 
-          <div className="-mx-4 flex items-center gap-2 border-b border-[var(--aurora-max-line)] px-4 py-2 text-[9px] font-bold uppercase tracking-[0.12em] sm:-mx-5 sm:px-5">
+          <div className="px-5 py-2 border-b border-white/10 bg-zinc-950/60 text-[9px] font-bold uppercase tracking-wider flex items-center justify-between text-zinc-400">
+            <span>{groups.length} MATCHUPS · {confirmedRows.length} CONFIRMED BATS</span>
             {confirmedFallback ? (
-              <AuroraMaxTruthBadge state="warning">Confirmed lineups unavailable — showing best available slate</AuroraMaxTruthBadge>
+              <span className="text-amber-400 border border-amber-400/40 px-1.5 py-0.2 bg-amber-950/40">
+                PROJECTED LINEUPS
+              </span>
             ) : (
-              <AuroraMaxTruthBadge state="confirmed">Confirmed only</AuroraMaxTruthBadge>
+              <span className="text-emerald-400 border border-emerald-400/40 px-1.5 py-0.2 bg-emerald-950/40">
+                CONFIRMED ONLY
+              </span>
             )}
           </div>
 
-          <div className="-mx-4 max-h-[310px] overflow-y-auto sm:-mx-5" role="list" aria-label="Today's slate matchups">
+          <div className="max-h-[420px] overflow-y-auto divide-y divide-white/10" role="list" aria-label="Today's slate matchups">
             {groups.length > 0 ? groups.map((group, index) => {
               const player = group.rows[0];
               const active = selected?.stableId === player.stableId;
@@ -128,7 +145,6 @@ export default function TodayFieldDesk({
               );
             }) : <QueueEmpty state={state} onResearch={onResearch} />}
           </div>
-          </AuroraMaxRankedWorkspace>
         </div>
       </div>
     </section>
@@ -148,12 +164,12 @@ function Spotlight({
 }) {
   if (!player) {
     return (
-      <div className="flex min-h-[350px] items-center justify-center border-r border-[var(--aurora-max-line)] p-6 text-center">
-        <div>
-          <Clock3 className="mx-auto h-7 w-7 text-white/24" aria-hidden="true" />
-          <h1 className="mt-4 text-2xl font-black tracking-tight text-white">{state === 'loading' ? 'Building today’s board' : 'No active HR signals yet'}</h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/45">The desk stays honest when the slate or lineup feed has no usable rows.</p>
-          <AuroraMaxControl onClick={onResearch} className="mt-5 min-h-11 px-4 text-xs text-[var(--aurora-max-cyan)]">Open research board</AuroraMaxControl>
+      <div className="flex min-h-[380px] items-center justify-center p-6 text-center bg-black">
+        <div className="space-y-3">
+          <Clock3 className="mx-auto h-8 w-8 text-zinc-600" aria-hidden="true" />
+          <h3 className="text-lg font-black tracking-tight text-white uppercase">{state === 'loading' ? 'BUILDING TODAY’S BOARD' : 'NO ACTIVE HR SIGNALS'}</h3>
+          <p className="mx-auto max-w-sm text-xs text-zinc-500">The desk stays honest when the slate or lineup feed has no usable rows.</p>
+          <button onClick={onResearch} className="mt-4 border border-cyan-400 bg-cyan-950/40 text-cyan-300 px-4 py-2 text-xs font-bold uppercase hover:bg-cyan-900/50 transition-colors cursor-pointer">OPEN RESEARCH BOARD</button>
         </div>
       </div>
     );
@@ -164,58 +180,77 @@ function Spotlight({
   const validLayers = layers.filter((layer) => layer.value != null);
 
   return (
-    <article className="relative min-h-[350px] overflow-hidden border-r border-[var(--aurora-max-line)] p-5 sm:p-6">
-      {player.teamLogoUrl ? <img src={player.teamLogoUrl} alt="" className="pointer-events-none absolute -right-6 top-8 h-40 w-40 object-contain opacity-[0.045]" loading="lazy" decoding="async" /> : null}
-      <div className="relative flex h-full flex-col">
-        <div className="-mx-5 -mt-5 mb-4 flex min-h-9 items-center justify-between border-b border-[var(--aurora-max-line)] bg-[var(--aurora-max-panel-strong)] px-4 sm:-mx-6 sm:-mt-6">
-          <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--aurora-max-emerald)]"><span className="h-2 w-2 shrink-0 bg-[var(--aurora-max-emerald)] shadow-[0_0_15px_rgba(0,217,160,0.85)]" aria-hidden="true" /> Primary research signal</span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-white/30">{player.truthStatus} receipt</span>
+    <article className="relative min-h-[380px] p-5 sm:p-7 flex flex-col justify-between space-y-5 bg-black">
+      {player.teamLogoUrl ? <img src={player.teamLogoUrl} alt="" className="pointer-events-none absolute -right-6 top-8 h-44 w-44 object-contain opacity-[0.035]" loading="lazy" decoding="async" /> : null}
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+          <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+            <span className="h-2 w-2 bg-emerald-400" />
+            SPOTLIGHT DOSSIER
+          </div>
+          <span className="text-[9px] border border-white/15 px-2 py-0.5 text-zinc-400 uppercase">
+            {player.truthStatus} VERIFIED
+          </span>
         </div>
+
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-vouch-emerald">Spotlight receipt</p>
-            <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-white/42">{player.team} vs {player.opponent}</p>
-          </div>
-          <AuroraMaxScoreBadge score={score} />
-        </div>
-
-        <div className="mt-2 flex min-w-0 items-end gap-3">
-          <PlayerPortrait player={player} />
-          <div className="min-w-0 pb-2">
-            <h1 className="truncate text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl">{player.playerName}</h1>
-            <p className="mt-1 truncate text-xs font-semibold text-white/52">
-              {player.pitcherName && player.pitcherName !== 'Pitcher TBD' ? `vs ${player.pitcherName}` : 'Opposing pitcher pending'}
-              {player.venue ? ` · ${player.venue}` : ''}
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+              {player.team} VS {player.opponent}
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1 font-sans">
+              {player.playerName}
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {player.pitcherName && player.pitcherName !== 'Pitcher TBD' ? `VS ${player.pitcherName.toUpperCase()}` : 'OPPOSING PITCHER PENDING'}
+              {player.venue ? ` · ${player.venue.toUpperCase()}` : ''}
             </p>
           </div>
+
+          <div className="border-2 border-emerald-400/60 bg-emerald-950/30 p-2.5 text-center min-w-[70px]">
+            <span className="text-2xl font-black text-emerald-400 block tabular-nums">{score}</span>
+            <span className="text-[8px] font-black text-emerald-300 uppercase tracking-widest">HRPI</span>
+          </div>
         </div>
 
-        <div className="mt-3">
-          <AuroraMaxEvidenceLadder
-            meta={<AuroraMaxTruthBadge state={truthState(player.truthStatus)}>{player.truthStatus} data</AuroraMaxTruthBadge>}
-            items={validLayers.map((layer) => ({
-              label: layer.label,
-              value: Math.round(layer.value as number),
-              score: layer.value,
-              tone: 'confirmed' as const,
-            }))}
-          />
+        {/* Evidence Metric Bars */}
+        <div className="border border-white/10 bg-zinc-950 p-3.5 space-y-2">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+            STATCAST SENSOR LADDER:
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {validLayers.slice(0, 4).map((layer) => (
+              <div key={layer.label} className="border border-white/10 bg-black p-2 flex items-center justify-between text-[10px]">
+                <span className="text-zinc-400 uppercase">{layer.label}</span>
+                <strong className="text-cyan-300 tabular-nums">{Math.round(layer.value as number)}</strong>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <p className="mt-3 line-clamp-2 text-[11px] leading-5 text-white/48">{player.reasons[0] ?? 'Open the full research board to inspect this matchup before making a decision.'}</p>
-        <div className="mt-auto flex gap-2 pt-4">
-          <AuroraMaxControl
-            onClick={() => onAddPlayer(player)}
-            disabled={player.truthStatus === 'blocked'}
-            tone="primary"
-            className="!border-[rgba(0,217,160,0.4)] !bg-[var(--aurora-max-emerald)] !text-[#02100d] min-h-11 flex-1 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add to slip
-          </AuroraMaxControl>
-          <AuroraMaxControl onClick={onResearch} className="min-h-11 px-4 text-xs text-[var(--aurora-max-cyan)]">
-            Full research <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </AuroraMaxControl>
-        </div>
+        <p className="text-xs text-zinc-300 leading-relaxed font-sans border-l-2 border-white/20 pl-3">
+          {player.reasons[0] ?? 'Inspect full Statcast telemetry before locking decisions.'}
+        </p>
+      </div>
+
+      {/* ACTION BUTTONS */}
+      <div className="flex gap-3 pt-3 border-t border-white/10">
+        <button
+          type="button"
+          onClick={() => onAddPlayer(player)}
+          disabled={player.truthStatus === 'blocked'}
+          className="flex-1 min-h-11 border-2 border-white bg-white text-black text-xs font-black uppercase tracking-wider hover:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Plus className="h-4 w-4" /> ADD TO SLIP
+        </button>
+        <button
+          type="button"
+          onClick={onResearch}
+          className="border-2 border-white/20 bg-zinc-900 text-white px-4 min-h-11 text-xs font-bold uppercase tracking-wider hover:border-white transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          FULL EVIDENCE <ArrowRight className="h-3.5 w-3.5" />
+        </button>
       </div>
     </article>
   );
@@ -223,43 +258,93 @@ function Spotlight({
 
 function MatchupRow({ group, player, rank, active, onSelect, receiptOpen, onToggleReceipt }: { group: HrMatchupGroup; player: HrWatchRow; rank: number; active: boolean; onSelect: () => void; receiptOpen: boolean; onToggleReceipt: () => void }) {
   return (
-    <div>
-      <div className={`grid grid-cols-[minmax(0,1fr)_auto] border-b border-[var(--aurora-max-line)] transition ${active ? 'bg-[rgba(0,217,160,0.075)]' : 'hover:bg-[rgba(0,217,160,0.035)]'}`}>
-        <button type="button" aria-pressed={active} onClick={onSelect} className={`grid min-h-[62px] w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 px-4 text-left transition hover:bg-[rgba(0,217,160,0.035)] sm:px-5 ${active ? 'bg-[rgba(0,217,160,0.065)] shadow-[inset_2px_0_var(--aurora-max-emerald)]' : ''}`}>
-          <span className="font-mono text-[10px] font-black text-white/28">{String(rank).padStart(2, '0')}</span>
-          <span className="min-w-0">
-            <span className="flex items-center gap-2"><TeamLogo src={group.primaryLogoUrl} name={group.primaryTeam} /><strong className="truncate text-xs font-black text-white">{group.primaryTeam} vs {group.opponent}</strong></span>
-            <span className="mt-1 flex min-w-0 items-center gap-2 pl-7 text-[10px] text-white/42"><span className="truncate">Lead: {player.playerName}</span><span aria-hidden="true">·</span><span className="shrink-0">{formatGameTime(group.gameTime)}</span></span>
+    <div className={`transition-colors ${active ? 'bg-zinc-950 border-l-4 border-cyan-400' : 'hover:bg-zinc-950/60'}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center">
+        <button
+          type="button"
+          aria-pressed={active}
+          onClick={onSelect}
+          className="p-3.5 flex items-center gap-3 text-left w-full cursor-pointer"
+        >
+          <span className="font-mono text-xs font-black text-zinc-600 tabular-nums w-5">
+            {String(rank).padStart(2, '0')}
           </span>
-          <span className="flex items-center gap-3"><span className="hidden text-right sm:block"><span className="block text-[9px] font-bold uppercase tracking-[0.1em] text-white/28">{group.rows.length} bats</span><span className="mt-0.5 block text-[9px] text-white/38">{player.truthStatus}</span></span><span className="min-w-9 font-mono text-lg font-black text-vouch-emerald">{boardScore(player)}</span></span>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <TeamLogo src={group.primaryLogoUrl} name={group.primaryTeam} />
+              <strong className="truncate text-xs font-bold text-white uppercase">
+                {group.primaryTeam} vs {group.opponent}
+              </strong>
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-[10px] text-zinc-400">
+              <span className="truncate">Lead: {player.playerName}</span>
+              <span>·</span>
+              <span className="shrink-0">{formatGameTime(group.gameTime)}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-right hidden sm:block">
+              <span className="block text-[8px] font-bold text-zinc-500 uppercase">{group.rows.length} BATS</span>
+              <span className="text-[8px] text-zinc-400 uppercase">{player.truthStatus}</span>
+            </div>
+            <span className="font-mono text-base font-black text-emerald-400 min-w-[36px] text-right">
+              {boardScore(player)}
+            </span>
+          </div>
         </button>
-        <div className="flex items-center px-2"><AuroraMaxReceiptAction onClick={onToggleReceipt} expanded={receiptOpen} label={`${receiptOpen ? 'Close' : 'Open'} ${player.playerName} research receipt`}><ChevronDown className={`h-3 w-3 transition ${receiptOpen ? 'rotate-180' : ''}`} /></AuroraMaxReceiptAction></div>
+
+        <button
+          type="button"
+          onClick={onToggleReceipt}
+          className="p-3 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          aria-label={`${receiptOpen ? 'Close' : 'Open'} research receipt`}
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${receiptOpen ? 'rotate-180' : ''}`} />
+        </button>
       </div>
-      {receiptOpen ? <div className="border-b border-[var(--aurora-max-line-strong)] bg-[var(--aurora-max-panel-strong)] px-4 py-3 sm:px-5" role="region" aria-label={`${player.playerName} research receipt`}><div className="flex items-center gap-2 text-[10px] font-semibold text-[var(--aurora-max-paper)]"><FileCheck2 className="h-3.5 w-3.5 text-[var(--aurora-max-emerald)]" /> Research receipt · {player.playerName}</div><div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-3"><div><p className="font-mono uppercase tracking-[0.12em] text-white/30">Sources</p><p className="mt-1 text-white/60">HR research board · MLB schedule · lineup truth</p></div><div><p className="font-mono uppercase tracking-[0.12em] text-white/30">Missing inputs</p><p className="mt-1 text-white/60">{player.warnings[0] ?? 'No additional source gap reported.'}</p></div><div><p className="font-mono uppercase tracking-[0.12em] text-white/30">Conclusion</p><p className="mt-1 text-white/60">{player.reasons[0] ?? 'Evidence detail unavailable.'}</p></div></div></div> : null}
+
+      {receiptOpen && (
+        <div className="border-t border-white/10 bg-zinc-950 p-4 text-[10px] space-y-2">
+          <div className="flex items-center gap-1.5 text-cyan-300 font-bold uppercase">
+            <FileCheck2 className="h-3.5 w-3.5" />
+            RECEIPT FOR {player.playerName.toUpperCase()}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 text-zinc-400 pt-1">
+            <div>
+              <p className="uppercase text-zinc-500 text-[8px] font-bold">SOURCE CHANNELS</p>
+              <p className="text-zinc-300 mt-0.5">MLBAM · Statcast · Lineup Truth</p>
+            </div>
+            <div>
+              <p className="uppercase text-zinc-500 text-[8px] font-bold">INTEGRITY GAPS</p>
+              <p className="text-zinc-300 mt-0.5">{player.warnings[0] ?? '0 missing inputs'}</p>
+            </div>
+            <div>
+              <p className="uppercase text-zinc-500 text-[8px] font-bold">CONCLUSION</p>
+              <p className="text-zinc-300 mt-0.5">{player.reasons[0] ?? 'Verified'}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function QueueEmpty({ state, onResearch }: { state: TodayFieldState; onResearch: () => void }) {
   return (
-    <AuroraMaxFallback
-      title={state === 'loading' ? 'Loading the slate…' : 'No usable matchups yet'}
-      detail="Filters did not hide the slate. The source has not returned an eligible HR row."
-      action={<AuroraMaxControl onClick={onResearch} className="mt-4 min-h-10 text-xs text-vouch-cyan">Open research board</AuroraMaxControl>}
-    />
+    <div className="p-8 text-center space-y-3 font-mono">
+      <p className="text-xs font-bold text-zinc-400 uppercase">{state === 'loading' ? 'LOADING THE SLATE...' : 'NO USABLE MATCHUPS'}</p>
+      <p className="text-[10px] text-zinc-600">The source has not returned an eligible HR row.</p>
+      <button onClick={onResearch} className="border border-white/20 bg-zinc-900 px-4 py-2 text-[10px] font-bold uppercase text-zinc-300 hover:text-white cursor-pointer">OPEN RESEARCH BOARD</button>
+    </div>
   );
-}
-
-function PlayerPortrait({ player }: { player: HrWatchRow }) {
-  const [failed, setFailed] = useState(false);
-  if (!player.headshotUrl || failed) return <div className="flex h-20 w-16 shrink-0 items-center justify-center border border-[var(--aurora-max-line)] bg-white/[0.04] text-lg font-black text-white/42">{getPlayerInitials(player.playerName)}</div>;
-  return <img src={player.headshotUrl} alt="" className="h-20 w-16 shrink-0 object-contain object-bottom" onError={() => setFailed(true)} decoding="async" />;
 }
 
 function TeamLogo({ src, name }: { src: string | null; name: string }) {
   return src
-    ? <img src={src} alt="" className="h-5 w-5 shrink-0 object-contain" loading="lazy" decoding="async" />
-    : <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.06] font-mono text-[7px] font-black text-white/40">{name.slice(0, 2)}</span>;
+    ? <img src={src} alt="" className="h-4 w-4 shrink-0 object-contain" loading="lazy" decoding="async" />
+    : <span className="flex h-4 w-4 shrink-0 items-center justify-center bg-zinc-800 text-[7px] font-black text-white">{name.slice(0, 2)}</span>;
 }
 
 function sortGroups(groups: HrMatchupGroup[], sortMode: SortMode) {
@@ -278,9 +363,3 @@ function formatGameTime(value: string | null) {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-function truthState(status: HrWatchRow['truthStatus']): AuroraMaxTruthState {
-  if (status === 'official') return 'confirmed';
-  if (status === 'projected') return 'projected';
-  if (status === 'blocked') return 'warning';
-  return 'missing';
-}

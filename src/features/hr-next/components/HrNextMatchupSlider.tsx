@@ -12,7 +12,7 @@ export interface HrNextMatchupItem {
 
 export interface HrNextMatchupSliderProps {
   matchups: HrNextMatchupItem[];
-  activeIndex: number; // -1 for "All Games", 0..N-1 for specific game
+  activeIndex: number;
   onSelectIndex: (index: number) => void;
   onPrev: () => void;
   onNext: () => void;
@@ -38,7 +38,6 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Auto-scroll the active pill into view when activeIndex changes
   useEffect(() => {
     if (activeBtnRef.current && scrollContainerRef.current) {
       activeBtnRef.current.scrollIntoView({
@@ -55,7 +54,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
 
   return (
     <div
-      className="w-full flex items-center gap-2 p-2 rounded-2xl bg-ve-obsidian/90 backdrop-blur-xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)] select-none font-mono animate-in fade-in slide-in-from-top-2 duration-200"
+      className="w-full flex items-center gap-2 p-2 border-2 border-white/15 bg-black shadow-2xl select-none font-mono"
       role="region"
       aria-label="Live Matchups Slider"
     >
@@ -66,7 +65,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
           onClick={onPrev}
           aria-label="Previous Matchup (←)"
           title="Previous Matchup (←)"
-          className="h-9 px-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 text-xs font-bold"
+          className="h-9 px-3 border border-white/20 bg-zinc-900 text-zinc-300 hover:border-white hover:text-white flex items-center justify-center gap-1 transition-all text-xs font-bold cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           <span className="hidden md:inline text-[10px]">PREV</span>
@@ -77,15 +76,15 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
           type="button"
           onClick={() => onSelectIndex(-1)}
           aria-pressed={isAll}
-          className={`h-9 flex items-center gap-1.5 px-3 rounded-xl text-xs font-bold transition-all ${
+          className={`h-9 flex items-center gap-2 px-3 text-xs font-bold transition-all border cursor-pointer ${
             isAll
-              ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border border-[var(--aurora-max-emerald)]/50 shadow-[0_0_12px_rgba(0,217,160,0.25)]'
-              : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10'
+              ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 font-black'
+              : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>All Games</span>
-          <span className="px-1.5 py-0.2 rounded bg-black/40 text-[10px] text-white/60">
+          <span className="uppercase">All Games</span>
+          <span className="px-1.5 py-0.2 border border-white/10 bg-zinc-900 text-[10px] text-zinc-300">
             {matchups.length}
           </span>
         </button>
@@ -94,7 +93,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
       {/* Center Carousel Track of Live Matchup Chips */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex items-center gap-2 overflow-x-auto py-1 px-1 scrollbar-none scroll-smooth"
+        className="flex-1 flex items-center gap-2 overflow-x-auto py-1 px-1 tn-scrollbar-none scroll-smooth"
         role="tablist"
         aria-label="Live Team vs Team Matchups"
       >
@@ -112,26 +111,26 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
               role="tab"
               aria-selected={isActive}
               onClick={() => onSelectIndex(idx)}
-              className={`h-9 shrink-0 flex items-center gap-2.5 px-3 rounded-xl text-xs transition-all duration-200 focus:outline-none border ${
+              className={`h-9 shrink-0 flex items-center gap-2.5 px-3 text-xs transition-all duration-150 cursor-pointer border ${
                 isActive
-                  ? 'bg-[var(--aurora-max-emerald)]/20 text-[var(--aurora-max-emerald)] border-[var(--aurora-max-emerald)]/50 shadow-[0_0_15px_rgba(0,217,160,0.3)] font-bold'
-                  : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border-white/5'
+                  ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 font-black shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                  : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
               }`}
             >
               {/* Team Logos */}
-              <div className="flex items-center -space-x-1.5">
+              <div className="flex items-center -space-x-1">
                 {awayLogo && (
                   <img
                     src={awayLogo}
                     alt={m.awayTeam}
-                    className="w-4 h-4 object-contain rounded-full bg-black/40 p-0.5 border border-white/10"
+                    className="w-4 h-4 object-contain"
                   />
                 )}
                 {homeLogo && (
                   <img
                     src={homeLogo}
                     alt={m.homeTeam}
-                    className="w-4 h-4 object-contain rounded-full bg-black/40 p-0.5 border border-white/10"
+                    className="w-4 h-4 object-contain"
                   />
                 )}
               </div>
@@ -139,15 +138,15 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
               {/* Team vs Team Label */}
               <div className="flex items-center gap-1 font-mono font-bold">
                 <span className="text-white">{m.awayTeam}</span>
-                <span className="text-white/40 font-normal text-[10px]">@</span>
+                <span className="text-zinc-500 font-normal text-[10px]">@</span>
                 <span className="text-white">{m.homeTeam}</span>
               </div>
 
               {/* Time or Count Badge */}
-              <span className="text-[10px] text-white/40 font-normal hidden sm:inline">
+              <span className="text-[10px] text-zinc-500 font-normal hidden sm:inline">
                 {timeLabel}
               </span>
-              <span className="px-1.5 py-0.2 rounded bg-black/50 text-[10px] font-bold text-white/60">
+              <span className="px-1.5 py-0.2 border border-white/10 bg-zinc-900 text-[10px] font-bold text-zinc-300">
                 {m.count}
               </span>
             </button>
@@ -162,17 +161,18 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
           onClick={onNext}
           aria-label="Next Matchup (→)"
           title="Next Matchup (→)"
-          className="h-9 px-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-1 transition-all active:scale-95 text-xs font-bold"
+          className="h-9 px-3 border border-white/20 bg-zinc-900 text-zinc-300 hover:border-white hover:text-white flex items-center justify-center gap-1 transition-all text-xs font-bold cursor-pointer"
         >
           <span className="hidden md:inline text-[10px]">NEXT</span>
           <ChevronRight className="w-4 h-4" />
         </button>
 
-        <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-white/40">
-          <kbd className="px-1 py-0.2 bg-black/40 text-white/80 rounded border border-white/10">←</kbd>
-          <kbd className="px-1 py-0.2 bg-black/40 text-white/80 rounded border border-white/10">→</kbd>
+        <div className="hidden lg:flex items-center gap-1 px-2 py-1 border border-white/15 bg-zinc-950 text-[10px] text-zinc-500">
+          <kbd className="border border-white/20 bg-zinc-900 px-1 text-zinc-300">[←]</kbd>
+          <kbd className="border border-white/20 bg-zinc-900 px-1 text-zinc-300">[→]</kbd>
         </div>
       </div>
     </div>
   );
 });
+

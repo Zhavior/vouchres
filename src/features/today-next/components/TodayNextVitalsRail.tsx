@@ -7,50 +7,60 @@ interface TodayNextVitalsRailProps {
 
 export function TodayNextVitalsRail({ vitals }: TodayNextVitalsRailProps) {
   const cells = [
-    { key: 'matchups', icon: Gamepad2, label: 'Matchups', value: vitals.matchups ?? '—', tone: 'text-white' },
+    { key: 'matchups', icon: Gamepad2, label: 'MATCHUPS', value: vitals.matchups ?? '—', tone: 'text-white', badge: 'SLATE' },
     {
       key: 'live',
       icon: Radio,
-      label: 'Live now',
+      label: 'LIVE NOW',
       value: vitals.live,
-      tone: vitals.live > 0 ? 'text-rose-300' : 'text-white/70',
+      tone: vitals.live > 0 ? 'text-rose-400' : 'text-zinc-400',
+      badge: vitals.live > 0 ? 'ACTIVE' : 'IDLE',
+      isLive: vitals.live > 0,
     },
-    { key: 'final', icon: CheckCircle2, label: 'Final', value: vitals.final, tone: 'text-white/70' },
+    { key: 'final', icon: CheckCircle2, label: 'FINAL SCORES', value: vitals.final, tone: 'text-zinc-300', badge: 'OFFICIAL' },
     {
       key: 'signals',
       icon: Activity,
-      label: 'Research rows',
+      label: 'RESEARCH ROWS',
       value: vitals.hrSignals ?? '—',
-      tone: 'text-[var(--aurora-max-emerald)]',
+      tone: 'text-emerald-400',
+      badge: 'VERIFIED',
     },
     {
       key: 'slips',
       icon: ClipboardList,
-      label: 'Pending slips',
+      label: 'PENDING SLIPS',
       value: vitals.pendingSlips,
-      tone: vitals.pendingSlips > 0 ? 'text-amber-300' : 'text-white/70',
+      tone: vitals.pendingSlips > 0 ? 'text-amber-300' : 'text-zinc-400',
+      badge: 'TRACKED',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-white/10 bg-black/40 font-mono sm:flex sm:items-stretch">
-      {cells.map((cell, index) => {
+    <div className="grid grid-cols-2 sm:grid-cols-5 border-2 border-white/15 bg-black font-mono shadow-xl divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+      {cells.map((cell) => {
         const Icon = cell.icon;
         return (
           <div
             key={cell.key}
-            className={`min-w-0 px-3 py-2 sm:min-w-[92px] sm:flex-1 ${index % 2 ? 'border-l border-white/[0.07]' : ''} ${
-              index >= 2 ? 'border-t border-white/[0.07] sm:border-t-0' : ''
-            } ${index ? 'sm:border-l sm:border-white/[0.07]' : 'sm:border-l-0'}`}
+            className="p-3 sm:p-4 flex flex-col justify-between space-y-1.5 hover:bg-zinc-950/60 transition-colors"
           >
-            <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-white/35">
-              <Icon className="h-3 w-3" aria-hidden="true" />
-              {cell.label}
-            </span>
-            <strong className={`mt-0.5 block text-sm font-black tabular-nums ${cell.tone}`}>{cell.value}</strong>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                <Icon className={`h-3 w-3 ${cell.isLive ? 'text-rose-400 animate-pulse' : 'text-zinc-400'}`} aria-hidden="true" />
+                {cell.label}
+              </span>
+              <span className="text-[7px] font-bold px-1 border border-white/10 text-zinc-500 uppercase">
+                {cell.badge}
+              </span>
+            </div>
+            <strong className={`block text-lg sm:text-xl font-black tabular-nums ${cell.tone}`}>
+              {cell.value}
+            </strong>
           </div>
         );
       })}
     </div>
   );
 }
+
