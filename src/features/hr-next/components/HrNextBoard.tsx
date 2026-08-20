@@ -251,30 +251,24 @@ export function HrNextBoard({
 
   // ─── FLAT SORT ────────────────────────────────────────────────────────────
   return (
-      <div
-        className={
-          isProMode
-            ? 'grid grid-cols-1 items-start gap-4 @xl:grid-cols-2 @5xl:grid-cols-4'
-            : 'flex flex-col gap-2.5'
-        }
-      >
-        {items.map((item) => {
-          if (item.type === 'header') return null;
-          return (
-            <div key={item.id} id={`player-card-${item.row.stableId}`} className="w-full min-w-0">
-              <HrNextCard
-                row={item.row}
-                compact={false}
-                isProMode={isProMode}
-                tier={tierForScore(item.row.hrScore)}
-                active={activeId === item.row.stableId}
-                saved={Boolean(savedMap[item.row.stableId])}
-                isReceiptOpen={openReceiptId === item.row.stableId}
-                {...cardHandlers}
-              />
-            </div>
-          );
-        })}
-      </div>
+    <div className="flex flex-col gap-2.5">
+      {items.map((item) => {
+        if (item.type === 'header') return null;
+        return (
+          <div key={item.id} id={`player-card-${item.row.stableId}`} className="w-full min-w-0">
+            <HrNextCard
+              row={item.row}
+              compact={false}
+              isProMode={false}
+              tier={tierForScore(item.row.hrScore)}
+              active={activeId === item.row.stableId}
+              saved={Boolean(savedMap[item.row.stableId])}
+              isReceiptOpen={openReceiptId === item.row.stableId}
+              {...cardHandlers}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
 }

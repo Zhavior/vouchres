@@ -76,14 +76,12 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
   return (
     <nav
-      className={`ve-aurora-mobile-dock fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-2xl border border-white/10 bg-black/35 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden ${
+      className={`ve-aurora-mobile-dock fixed left-1/2 bottom-[calc(0.9rem+env(safe-area-inset-bottom))] z-[60] -translate-x-1/2 rounded-2xl border-2 border-white/20 bg-black/95 shadow-[0_10px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-300 ease-out md:hidden font-mono ${
         hideDock ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'opacity-100'
       } ${collapsed ? 'w-auto px-2.5' : 'w-[92vw] max-w-md px-2'}`}
       aria-label="Mobile app navigation"
     >
-      {/* Five destinations. Account is not one of them: it lives in the app top
-          bar, and on Today (which replaces that bar with its own header) in
-          that header's right cluster — so it stays one tap away either way. */}
+      {/* Five destinations */}
       <div className={`grid grid-cols-5 items-center transition-all duration-300 ${collapsed ? 'h-11 gap-0.5' : 'h-[64px]'}`}>
         <DockButton
           label="Today"
@@ -157,26 +155,26 @@ function DockButton({
       aria-label={`Go to ${label}`}
       aria-current={active ? 'page' : undefined}
       title={label}
-      className={`ve-touch-target group relative flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] ${AURORA_INTERACTIVE} ${
+      className={`ve-touch-target group relative flex min-w-0 flex-col items-center justify-center gap-1 transition-all active:scale-[0.92] cursor-pointer ${AURORA_INTERACTIVE} ${
         collapsed ? 'h-11' : 'h-12'
       }`}
     >
       <div
         className={`relative flex items-center justify-center transition-all ${
           centerAction
-            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} rounded-xl border ${active ? 'border-vouch-cyan/60 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_15px_rgba(0,217,160,0.25)]' : 'border-white/15 bg-black/40 text-white/55'}`
-            : active ? 'text-vouch-cyan' : 'text-white/45 group-hover:text-white/70'
+            ? `${collapsed ? 'h-8 w-8' : 'h-[38px] w-[38px]'} border-2 ${active ? 'border-cyan-400 bg-cyan-950/60 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.35)]' : 'border-white/15 bg-black/60 text-zinc-400'}`
+            : active ? 'text-cyan-300 scale-105' : 'text-zinc-500 group-hover:text-zinc-300'
         }`}
       >
-        <Icon className={collapsed ? 'h-[18px] w-[18px]' : centerAction ? 'h-5 w-5' : 'h-[22px] w-[22px]'} strokeWidth={active ? 2.2 : 1.8} />
+        <Icon className={collapsed ? 'h-[18px] w-[18px]' : centerAction ? 'h-5 w-5' : 'h-[22px] w-[22px]'} strokeWidth={active ? 2.4 : 1.8} />
       </div>
       {!collapsed ? (
-        <span className={`text-[10px] font-bold tracking-wide transition-colors ${active ? 'text-white' : 'text-white/40'}`}>
+        <span className={`text-[9px] font-black uppercase tracking-wider font-mono transition-colors ${active ? 'text-cyan-300' : 'text-zinc-500'}`}>
           {label.split(' ')[0]}
         </span>
       ) : null}
       {active && !centerAction && !collapsed ? (
-        <span className="absolute -top-1 h-0.5 w-7 rounded-b-sm bg-gradient-to-r from-vouch-cyan to-vouch-emerald shadow-[0_2px_8px_rgba(0,217,160,0.8)]" aria-hidden="true" />
+        <span className="absolute -top-1 h-0.5 w-6 bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,0.9)]" aria-hidden="true" />
       ) : null}
     </button>
   );

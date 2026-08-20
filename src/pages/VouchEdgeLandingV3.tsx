@@ -983,26 +983,30 @@ export default function VouchEdgeLandingV3(props: Props) {
   return (
     <main className="vu-landing ve-hud-grid-page ve-landing-sharp ve-mobile-story overflow-x-clip bg-black text-white selection:bg-white selection:text-black">
       <VouchEdgeCinematicIntro />
-      <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/90 backdrop-blur-xl border-b border-neutral-800/80 sm:border-white/15">
+      <nav className="fixed top-0 left-0 w-full h-14 sm:h-16 z-50 px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 bg-black/95 backdrop-blur-xl border-b-2 border-white/15 font-mono">
         <a href="#top" className="inline-flex min-w-0 flex-1 items-center gap-2 text-white no-underline text-[11px] font-bold tracking-wider sm:gap-2.5 sm:text-sm">
+          <span className="flex h-2 w-2 relative shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+          </span>
           <img src="/vouchedge-mark-aurora.svg" alt="VouchEdge Logo" width="24" height="24" aria-hidden="true" />
-          <span className="truncate font-mono tracking-widest">VOUCHEDGE</span>
-          <b className="hidden px-1.5 py-0.5 border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 font-mono text-[9px] rounded-none font-semibold tracking-widest sm:inline-flex">
-            BETA
+          <span className="truncate font-mono font-black tracking-widest text-cyan-300">VOUCHEDGE</span>
+          <b className="hidden px-1.5 py-0.2 border border-cyan-400/40 bg-cyan-950/60 text-cyan-300 font-mono text-[9px] rounded-none font-black tracking-widest sm:inline-flex">
+            STAGE: 01 // PUBLIC
           </b>
         </a>
         <div className="grid shrink-0 grid-cols-2 items-center gap-1.5 sm:flex sm:gap-3">
           <button
             type="button"
             onClick={props.onLogin}
-            className="h-8 border border-zinc-700 bg-black px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-200 transition hover:border-white hover:text-white cursor-pointer rounded-none sm:h-auto sm:border-transparent sm:bg-transparent sm:px-3.5 sm:py-1.5 sm:text-xs sm:font-normal sm:text-zinc-300 sm:hover:border-white/20"
+            className="h-8 border border-white/20 bg-black px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-300 transition hover:border-white hover:text-white cursor-pointer rounded-none sm:h-auto sm:border-white/15 sm:bg-zinc-950 sm:px-3.5 sm:py-1.5 sm:text-xs sm:font-bold"
           >
             LOG IN
           </button>
           <button
             type="button"
             onClick={props.onJoinBeta}
-            className="h-8 border border-white bg-white px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider text-black transition hover:bg-zinc-100 cursor-pointer rounded-none sm:h-auto sm:px-4 sm:py-1.5 sm:text-xs"
+            className="h-8 border-2 border-cyan-400 bg-cyan-400 px-2.5 font-mono text-[9px] font-black uppercase tracking-wider text-black transition hover:bg-cyan-300 cursor-pointer rounded-none sm:h-auto sm:px-4 sm:py-1.5 sm:text-xs shadow-[0_0_12px_rgba(0,240,255,0.35)]"
           >
             SIGN UP
           </button>

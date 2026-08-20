@@ -26,6 +26,14 @@
   display: none;
 }
 
+.ve-topbar-tab {
+  border-radius: 0 !important;
+}
+
+.ve-topbar-tab.is-active {
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+}
+
 /* ── Shell geometry ───────────────────────────────────────────────────────── */
 
 .z8-layout-root:not(.ve-layout-root-public) {

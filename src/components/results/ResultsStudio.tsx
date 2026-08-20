@@ -120,19 +120,43 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
   const monthName = calendarMonth.toLocaleString("default", { month: "long", year: "numeric" });
 
   return (
-    <main className="results-aurora-max min-h-screen min-w-0 overflow-x-hidden pb-24 sm:pb-12">
-      <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5">
-        <AuroraMaxPanel as="section" className="results-command-panel p-4 sm:p-5" ariaLabelledBy="track-record-title">
+    <main className="results-aurora-max min-h-screen min-w-0 overflow-x-hidden pb-24 sm:pb-12 font-mono">
+      <div className="mx-auto w-full max-w-[1280px] min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5">
+        
+        {/* Top Command Desk Panel */}
+        <AuroraMaxPanel as="section" className="results-command-panel p-4 sm:p-5 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="track-record-title">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-3 mb-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-2 w-2 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                    VOUCHEDGE // TRACK RECORD & AUDIT LEDGER
+                  </span>
+                  <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-zinc-900 text-[8px] font-black text-zinc-400">
+                    STAGE: 04 / DETERMINISTIC PROOF
+                  </span>
+                </div>
+                <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                  Verified Research Receipts · Cryptographic Proof · Zero Fake Records
+                </p>
+              </div>
+            </div>
+
+            <AuroraMaxTruthBadge state={stats.synced > 0 ? 'confirmed' : 'missing'}>
+              {stats.synced > 0 ? `${stats.synced} receipts synced` : 'No synced receipts'}
+            </AuroraMaxTruthBadge>
+          </div>
+
           <AuroraMaxCommandHeader
-            eyebrow={<span className="inline-flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Results command desk</span>}
-            title={<span id="track-record-title">Track Record</span>}
+            eyebrow={<span className="inline-flex items-center gap-2 text-cyan-400 font-bold uppercase"><BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Results command desk</span>}
+            title={<span id="track-record-title" className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">Track Record</span>}
             description="Saved slips and their current recorded states. Backend-synced and local records remain visibly distinct."
-            meta={(
-              <AuroraMaxTruthBadge state={stats.synced > 0 ? 'confirmed' : 'missing'}>
-                {stats.synced > 0 ? `${stats.synced} receipts synced` : 'No synced receipts'}
-              </AuroraMaxTruthBadge>
-            )}
           />
+
           <AuroraMaxMetricStrip
             className="mt-4"
             items={[
@@ -146,23 +170,25 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
 
         <div className="grid min-w-0 gap-4 lg:grid-cols-12">
           <div className="min-w-0 space-y-4 lg:col-span-8">
-            <AuroraMaxPanel as="section" className="results-calendar p-3 sm:p-4" ariaLabelledBy="saved-activity-title">
-              <div className="results-calendar__header">
+            
+            {/* Evidence Calendar Panel */}
+            <AuroraMaxPanel as="section" className="results-calendar p-3 sm:p-4 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="saved-activity-title">
+              <div className="results-calendar__header border-b border-white/10 pb-3">
                 <div className="min-w-0">
-                  <AuroraMaxEyebrow>Evidence calendar</AuroraMaxEyebrow>
-                  <h2 id="saved-activity-title" className="mt-1 text-base font-black text-white">Saved activity</h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[9px] text-white/38">
-                    <span className="flex items-center gap-1"><span className="results-key results-key--won" />Win</span>
-                    <span className="flex items-center gap-1"><span className="results-key results-key--lost" />Loss</span>
-                    <span className="flex items-center gap-1"><span className="results-key results-key--pending" />Pending</span>
+                  <AuroraMaxEyebrow>EVIDENCE CALENDAR</AuroraMaxEyebrow>
+                  <h2 id="saved-activity-title" className="mt-1 text-base font-black uppercase tracking-wider text-white">Saved activity</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] font-bold uppercase text-zinc-400">
+                    <span className="flex items-center gap-1.5"><span className="results-key results-key--won border border-emerald-400" />Win</span>
+                    <span className="flex items-center gap-1.5"><span className="results-key results-key--lost border border-rose-400" />Loss</span>
+                    <span className="flex items-center gap-1.5"><span className="results-key results-key--pending border border-cyan-400" />Live/Pending</span>
                   </div>
                 </div>
                 <div className="results-month-control">
-                  <AuroraMaxControl aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="!h-11 !w-11 !p-0">
+                  <AuroraMaxControl aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="!h-9 !w-9 !p-0 border border-white/20 bg-zinc-950 text-zinc-300 hover:border-cyan-400 hover:text-white cursor-pointer">
                     <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                   </AuroraMaxControl>
-                  <span className="min-w-0 text-center text-xs font-bold text-white">{monthName}</span>
-                  <AuroraMaxControl aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="!h-11 !w-11 !p-0">
+                  <span className="min-w-0 text-center text-xs font-black uppercase text-cyan-300 font-mono">{monthName}</span>
+                  <AuroraMaxControl aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="!h-9 !w-9 !p-0 border border-white/20 bg-zinc-950 text-zinc-300 hover:border-cyan-400 hover:text-white cursor-pointer">
                     <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </AuroraMaxControl>
                 </div>
@@ -174,7 +200,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                 <>
                   <div className="results-calendar-grid mb-1 mt-4">
                     {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                      <div key={i} className="text-center font-mono text-[8px] uppercase text-white/28">{d}</div>
+                      <div key={i} className="text-center font-mono text-[9px] font-black uppercase text-zinc-500">{d}</div>
                     ))}
                   </div>
                   <div className="results-calendar-grid">
@@ -193,33 +219,33 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                       const isToday    = day.date === today;
 
                       // Background tint
-                      const bg = isAllWins  ? "rgba(52,211,153,0.09)"
-                               : isAllLoss  ? "rgba(248,113,113,0.09)"
-                               : isMixed    ? "rgba(251,191,36,0.07)"
-                               : hasSlips   ? "rgba(0,217,160,0.05)"
-                               :              "rgba(255,255,255,0.01)";
+                      const bg = isAllWins  ? "rgba(52,211,153,0.12)"
+                               : isAllLoss  ? "rgba(248,113,113,0.12)"
+                               : isMixed    ? "rgba(251,191,36,0.10)"
+                               : hasSlips   ? "rgba(0,240,255,0.08)"
+                               :              "rgba(255,255,255,0.02)";
 
                       // Border
-                      const borderColor = isSelected   ? "rgba(0,217,160,0.7)"
-                                        : isToday      ? "rgba(0,217,160,0.3)"
-                                        : isAllWins    ? "rgba(52,211,153,0.2)"
-                                        : isAllLoss    ? "rgba(248,113,113,0.2)"
-                                        : isMixed      ? "rgba(251,191,36,0.15)"
-                                        :                "rgba(255,255,255,0.03)";
+                      const borderColor = isSelected   ? "#00F0FF"
+                                        : isToday      ? "rgba(0,240,255,0.4)"
+                                        : isAllWins    ? "rgba(52,211,153,0.4)"
+                                        : isAllLoss    ? "rgba(248,113,113,0.4)"
+                                        : isMixed      ? "rgba(251,191,36,0.3)"
+                                        :                "rgba(255,255,255,0.08)";
 
                       return (
                         <button
                           key={day.date}
                           onClick={() => hasSlips && setSelectedDate(isSelected ? null : day.date)}
-                          className={`results-calendar-day relative flex min-w-0 flex-col items-center gap-0.5 px-0.5 pb-1 pt-1.5 transition-all ${
-                            hasSlips ? "cursor-pointer hover:brightness-125" : "cursor-default"
-                          } ${isSelected ? "ring-1 ring-emerald-400" : ""}`}
+                          className={`results-calendar-day relative flex min-w-0 flex-col items-center justify-between p-1.5 transition-all font-mono ${
+                            hasSlips ? "cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(0,240,255,0.25)]" : "cursor-default opacity-60"
+                          } ${isSelected ? "border-2 border-cyan-400 bg-cyan-950/40 shadow-[0_0_12px_rgba(0,240,255,0.3)]" : ""}`}
                           style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
                           title={hasSettled ? `${day.wins} won, ${day.losses} lost; saved on ${day.date}` : hasSlips ? `Saved on ${day.date}` : undefined}
                         >
                           {/* Day number */}
-                          <span className={`text-[10px] font-mono leading-none ${
-                            hasSlips ? "text-white" : "text-slate-700"
+                          <span className={`text-[10px] font-mono font-bold leading-none ${
+                            hasSlips ? "text-white" : "text-zinc-600"
                           }`}>
                             {day.day}
                           </span>
@@ -228,7 +254,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                             <>
                               {/* Win rate */}
                               <span
-                                className="text-[8px] font-extrabold leading-none"
+                                className="text-[9px] font-black leading-none"
                                 style={{
                                   color: isAllWins ? "#34d399"
                                        : isAllLoss ? "#f87171"
@@ -240,17 +266,16 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
 
                               {/* Slip count dots */}
                               <div className="flex gap-[2px] mt-0.5">
-                                {day.wins    > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
-                                {day.losses  > 0 && <div className="w-1 h-1 rounded-full bg-red-400" />}
-                                {day.pending > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
+                                {day.wins    > 0 && <div className="w-1.5 h-1.5 bg-emerald-400" />}
+                                {day.losses  > 0 && <div className="w-1.5 h-1.5 bg-rose-500" />}
+                                {day.pending > 0 && <div className="w-1.5 h-1.5 bg-cyan-400" />}
                               </div>
                             </>
                           ) : hasSlips ? (
-                            // Pending-only days — no settled record yet
                             <>
-                              <span className="text-[8px] font-bold leading-none" style={{ color: "#00d9a0" }}>live</span>
+                              <span className="text-[8px] font-black uppercase leading-none text-cyan-400">live</span>
                               <div className="flex gap-[2px] mt-0.5">
-                                <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                                <div className="w-1.5 h-1.5 bg-cyan-400" />
                               </div>
                             </>
                           ) : null}
@@ -259,24 +284,25 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                     })}
                   </div>
                   {selectedDate && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500">Filtered to: {selectedDate}</span>
-                      <AuroraMaxControl onClick={() => setSelectedDate(null)} className="!min-h-9">Clear</AuroraMaxControl>
+                    <div className="mt-3 flex items-center justify-between border border-cyan-400/40 bg-cyan-950/30 p-2 font-mono">
+                      <span className="text-[10px] font-black uppercase text-cyan-300">FILTERED DATE: {selectedDate}</span>
+                      <button onClick={() => setSelectedDate(null)} className="px-2 py-0.5 border border-white/20 bg-black text-[9px] font-bold uppercase text-zinc-300 hover:border-white hover:text-white cursor-pointer">Clear Filter</button>
                     </div>
                   )}
                 </>
               )}
             </AuroraMaxPanel>
 
-            <AuroraMaxPanel className="results-filter-panel p-3">
+            {/* Filter and Search Panel */}
+            <AuroraMaxPanel className="results-filter-panel p-3 border-2 border-white/15 bg-black shadow-2xl">
               <div className="relative min-w-0 flex-1">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search slips..."
+                  placeholder="SEARCH SLIPS BY TITLE OR LEG..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="results-search min-h-11 w-full border py-2 pl-9 pr-3 text-xs text-white placeholder-white/30 focus:outline-none"
+                  className="results-search min-h-10 w-full border-2 border-white/15 bg-black py-2 pl-9 pr-3 font-mono text-xs text-white uppercase placeholder-zinc-600 focus:border-cyan-400 focus:outline-none"
                 />
               </div>
               <div className="results-filter-grid">
@@ -290,7 +316,7 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
                   <button
                     key={f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`results-filter-control min-h-11 px-3 text-[10px] font-bold uppercase transition-colors ${filter === f.id ? "is-active" : ""}`}
+                    className={`results-filter-control min-h-10 px-3 text-[10px] font-black uppercase transition-colors cursor-pointer ${filter === f.id ? "is-active" : ""}`}
                     data-tone={f.id}
                   >
                     {f.label}
@@ -299,15 +325,16 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
               </div>
             </AuroraMaxPanel>
 
+            {/* Research Receipt Ledger */}
             <AuroraMaxRankedWorkspace
               title="Research receipt ledger"
               subtitle={`${filteredParlays.length} visible of ${allSlips.length} saved slips`}
-              className="results-receipt-workspace"
+              className="results-receipt-workspace border-2 border-white/15 bg-black shadow-2xl"
             >
               {filteredParlays.length === 0 ? (
                 <EmptyResultsState hasSlips={allSlips.length > 0} />
               ) : (
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {filteredParlays.map((parlay) => (
                     <ResultSmartSlipCard
                       key={parlay.id}
@@ -320,19 +347,20 @@ export function ResultsStudio({ profile, savedParlays = [] }: Props) {
             </AuroraMaxRankedWorkspace>
           </div>
 
-          <aside className="min-w-0 space-y-4 lg:col-span-4">
+          {/* Right Rail Breakdown */}
+          <aside className="min-w-0 space-y-4 lg:col-span-4 font-mono">
             <ResultsLedgerSummary summary={stats} />
 
-            <AuroraMaxPanel as="section" className="p-3 sm:p-4" ariaLabelledBy="record-breakdown-title">
-              <AuroraMaxEyebrow>Ranked workspace</AuroraMaxEyebrow>
-              <h2 id="record-breakdown-title" className="mb-3 mt-1 text-base font-black text-white">Record breakdown</h2>
+            <AuroraMaxPanel as="section" className="p-3 sm:p-4 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="record-breakdown-title">
+              <AuroraMaxEyebrow>RANKED WORKSPACE</AuroraMaxEyebrow>
+              <h2 id="record-breakdown-title" className="mb-3 mt-1 text-base font-black uppercase tracking-wider text-white">Record breakdown</h2>
               <ResultsPartition slips={allSlips} />
-              <p className="mt-3 text-[10px] leading-5 text-white/35">Grouped by current saved status and leg count.</p>
+              <p className="mt-3 text-[10px] font-bold uppercase leading-relaxed text-zinc-500 border-t border-white/10 pt-2">Grouped by current saved status and leg count.</p>
             </AuroraMaxPanel>
 
-            <p className="border border-white/[0.06] bg-[#071012]/60 px-3 py-2 text-center text-[9px] leading-4 text-white/28">
-              VouchEdge is for sports research and entertainment. Local records are not presented as verified. No guarantees.
-            </p>
+            <div className="border border-white/10 bg-zinc-950 p-3 text-center text-[9px] uppercase leading-relaxed text-zinc-500 font-mono">
+              VOUCHEDGE DETERMINISTIC PROTOCOL // AUDIT LEDGER · ZERO FAKE METRICS · RESEARCH & ENTERTAINMENT
+            </div>
           </aside>
         </div>
       </div>

@@ -366,6 +366,7 @@ export function HrNextShell() {
   // than a toggle bolted onto Flat Sort: picking it flattens the board and
   // plots it, and closing the panel drops back to Flat Sort.
   const viewMode: HrNextViewMode = isMatrixActive ? 'matrix' : groupBy;
+  const effectiveProMode = viewMode === 'tier' && isProMode;
   const selectView = useCallback(
     (next: HrNextViewMode) => {
       if (next === 'matchup') {
@@ -436,7 +437,7 @@ export function HrNextShell() {
     onToggleCheatsheet: () => setCheatsheetOpen(prev => !prev),
     onPrevMatchup: handlePrevMatchup,
     onNextMatchup: handleNextMatchup,
-    onToggleProMode: toggleProMode,
+    onToggleProMode: viewMode === 'tier' ? toggleProMode : undefined,
     isMatchupMode: groupBy === 'matchup',
   });
 
@@ -647,8 +648,8 @@ export function HrNextShell() {
             </button>
           )}
 
-          {/* Pro Mode toggle */}
-          {groupBy !== 'matchup' && (
+          {/* Pro Mode toggle — appears strictly when By Tier is the option */}
+          {viewMode === 'tier' && (
             <button
               type="button"
               onClick={toggleProMode}
@@ -717,33 +718,45 @@ export function HrNextShell() {
         )}
       </div>
       
-      {/* Responsive Content: Dual-mode layout (Side Dock on >=2xl, Top Bar on <2xl) */}
-      {/* `items-start` keeps the dock column from stretching to the full height
-          of the board — a stretched sticky child has no travel and never moves.
-          The trailing reserve for the dock's travel goes on the board column
-          below, not here: a sticky element is held inside its containing
-          block's *content* box, so padding on this row would push the floor up
-          rather than down and shove the panel under the toolbar over the last
-          stretch of the scroll. */}
-      {/* `pb-36` is the mobile floor: the nav dock (md:hidden) and the ParlayOS
-          slip pill (lg:hidden) are both fixed to the bottom of the viewport, so
-          without it the last card in the column can never be scrolled clear of
-          them. The reserve steps down as each of those disappears. */}
+      {/* 2-Column Responsive Layout: Rail + Board */}
       <div
         ref={boardRowRef}
         style={isDockDocked ? { marginBottom: `-${dockReserve}px` } : undefined}
-        className="flex w-full flex-col items-start gap-8 p-4 pb-36 sm:p-6 md:pb-24 lg:pb-6 xl:flex-row"
+        className="flex w-full flex-col items-start gap-4 pb-36 sm:p-0 md:pb-24 lg:pb-6 xl:flex-row"
       >
-        {/* Main board column. Pro Mode needs the full width for its 4-tier grid,
-            and so do the analytic panels — a scatter plot and the game ladder are
-            width-hungry. Only the standard stacked list reads better capped. */}
+        {/* Desktop Left Rail — sticky query controls */}
+          <HrNextControlRail
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchInputRef={searchInputRef}
+            date={date}
+            onDateChange={setDate}
+            isToday={isToday}
+            syncing={syncing}
+            onRefresh={refetch}
+            viewModes={VIEW_MODES}
+            viewMode={viewMode}
+            onViewModeChange={selectView}
+            lineupMode={mode}
+            onLineupModeChange={setMode}
+            filterTag={filterTag}
+            onFilterTagChange={setFilterTag}
+            filterCounts={filterCounts}
+            statcastResolved={statcastResolved}
+            onToggleStatcast={toggleStatcast}
+            onExport={handleExport}
+            exportStatus={exportStatus}
+            savedCount={savedCount}
+            variant="rail"
+          />
+
         {/* `@container` so the Pro Mode tier grid sizes off this column's real
             width rather than the viewport's — with the dock beside it the two
             numbers differ by up to 460px, and a viewport-keyed grid keeps four
             columns in a space that only fits two. */}
         <div
           className={`@container w-full min-w-0 flex-1 space-y-4 ${
-            isProMode || isMatrixActive || isTeamRankActive ? '' : 'max-w-5xl'
+            effectiveProMode || isMatrixActive || isTeamRankActive ? '' : 'max-w-5xl'
           }`}
           // The row gives this distance back as negative margin, so the page is
           // no longer than before — the trailing space has just moved inside
@@ -810,7 +823,7 @@ export function HrNextShell() {
               savedMap={savedMap}
               onToggleSaved={toggleSaved}
               onAddToSlip={handleAddToSlip}
-              isProMode={isProMode}
+              isProMode={effectiveProMode}
               groupBy={groupBy}
               activeId={focusedId}
               onSelectActiveId={setFocusedId}
@@ -819,19 +832,8 @@ export function HrNextShell() {
           )}
         </div>
 
-        {/* Side dock on every desktop width (>= 1280px / xl) — the panel has to
-            stay with the reader, so it rides the viewport instead of sitting at
-            the top of the document. Below xl the left rail already owns 256px
-            and there is nothing left to split, so the panel stays the in-flow
-            top bar. Only mounted while a player is selected — an always-on
-            placeholder would permanently cost the tier grid its column width. */}
+        {/* Side dock on every desktop width (>= 1280px / xl) */}
         {isDrawerOpen && selectedPlayer && (
-          // Locked to the viewport while the board, matrix and game ladder scroll
-          // past. `items-start` on the row keeps this column from stretching to
-          // the full 3600px of board — a stretched sticky child has nothing left
-          // to travel through and would never move. Sticky only from xl, the
-          // width at which the dock is rendered at all; below that the panel is
-          // the in-flow top bar in the main column and needs no lock.
           <aside
             style={dockFrame}
             className="hidden shrink-0 flex-col xl:sticky xl:flex xl:w-[360px] 2xl:w-[420px]"
