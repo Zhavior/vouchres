@@ -1,15 +1,33 @@
 /*
- * HR Next — Pro Mode transition.
- *
- * The Pro Mode toggle keeps the very same DOM nodes and only swaps class names,
- * so the change is a transform rather than a re-render. The animation is done in
- * CSS on purpose: framer-motion's FLIP projection cannot reconcile a wholesale
- * container-type change (grid <-> flex column) across hundreds of cards and
- * settles with stuck scale matrices, which visibly distorts the cards.
- *
- * Only compositor-friendly properties are animated here — no width/height/top,
- * so the reflow itself lands in one frame and the paint eases in behind it.
+ * HR Next — Quant-Terminal Primitives (Linear × Bloomberg Terminal).
  */
+
+.hr-next {
+  background-color: #090A0F;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px;
+}
+
+.hr-next * {
+  border-radius: 0 !important;
+}
+
+.hr-next .rounded-full {
+  border-radius: 9999px !important;
+}
+
+.hr-next .tn-scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hr-next .tn-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pro Mode transition */
 .hr-next-card {
   transition:
     background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -17,8 +35,6 @@
     opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* The card's internals cross-fade as the layout swaps between the compact scan
-   row and the dense telemetry block. */
 @keyframes hr-next-card-settle {
   from {
     opacity: 0.55;
@@ -40,11 +56,3 @@
   }
 }
 
-/* Sharp corners — the shared Next geometry (same rule as settings-next /
-   today-next / live-games-next). Tailwind's rounded-* utilities are spread
-   across ~100 call sites on this surface; flattening them here keeps the markup
-   readable and the geometry consistent. `rounded-full` is exempt — the tier
-   dots, avatars and status pills are meant to stay round. */
-.hr-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
-  border-radius: 0 !important;
-}

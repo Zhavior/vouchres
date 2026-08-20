@@ -1,29 +1,39 @@
 /*
- * Today Next — terminal surface primitives.
- * Self-contained so the page never depends on another feature's stylesheet
- * being loaded first (no unstyled first paint).
+ * Today Next — Cyber-Engineering HUD & Terminal Surface Primitives
+ * Aligned with the VouchEdge Landing Page design system.
  */
+
+.today-next {
+  background-color: #000000;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+  background-size: 44px 44px, 44px 44px;
+}
+
+.today-next * {
+  border-radius: 0 !important;
+}
+
+.today-next .rounded-full {
+  border-radius: 9999px !important;
+}
 
 .tn-pip {
   display: inline-block;
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
-  border-radius: 999px;
 }
 
 .tn-pip--confirmed { background: var(--aurora-max-emerald, #00d9a0); }
-/* Muted emerald, not blue — the desk has no blue glass. Distinct from
-   `--confirmed`, which uses the bright Aurora Max emerald. */
 .tn-pip--neutral { background: #31b583; }
 .tn-pip--warning { background: #fbbf24; }
 .tn-pip--missing { background: rgba(255, 255, 255, 0.22); }
 
 .tn-receipt {
-  border-right: 1px solid rgba(0, 217, 160, 0.2);
-  border-bottom: 1px solid rgba(0, 217, 160, 0.2);
-  border-left: 1px solid rgba(0, 217, 160, 0.2);
-  background: #0a1510;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000000;
   padding: 1rem;
 }
 
@@ -35,7 +45,7 @@
   display: none;
 }
 
-/* Single-shot skeleton shimmer. One surface, one animation — never staggered. */
+/* Single-shot skeleton shimmer */
 @keyframes tn-sheen {
   0% { background-position: -220% 0; }
   100% { background-position: 220% 0; }
@@ -45,7 +55,7 @@
   background-image: linear-gradient(
     100deg,
     rgba(255, 255, 255, 0.04) 30%,
-    rgba(0, 217, 160, 0.10) 48%,
+    rgba(0, 240, 255, 0.10) 48%,
     rgba(255, 255, 255, 0.04) 66%
   );
   background-size: 220% 100%;
@@ -56,24 +66,13 @@
   .tn-skeleton { animation: none; }
 }
 
-/* ---------------------------------------------------------------------------
- * Research Command Desk on Today Next.
- *
- * The desk component is shared with the Today dashboard, so its own opaque
- * slabs are left alone there and re-skinned here instead of being edited in
- * place. One glass plane on the wrapper; every panel inside it goes fully
- * transparent so the ambient ground reads straight through the desk.
- * ------------------------------------------------------------------------ */
+/* Research Command Desk framing */
 .today-next .tn-desk {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.022);
-  backdrop-filter: blur(20px) saturate(118%);
-  -webkit-backdrop-filter: blur(20px) saturate(118%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: #000000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
-/* The desk's own fills: aurora-max panels plus the hard-coded slab colours in
-   the header strip, the queue column and the spotlight well. */
 .today-next .tn-desk .aurora-max-panel,
 .today-next .tn-desk [class*='bg-[rgba(5,11,13'],
 .today-next .tn-desk [class*='bg-[rgba(4,10,15'],
@@ -83,20 +82,19 @@
 }
 
 .today-next .tn-desk .aurora-max-panel {
-  border-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Tailwind's black/white washes inside the desk would re-opaque the glass. */
-.today-next .tn-desk :is([class*='bg-black/'], [class*='bg-white/']) {
-  background-color: transparent !important;
+/* Wire ticker animation */
+@keyframes tn-wire-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Square, like the rest of the Next geometry. The utility sweep below only
-   reaches Tailwind's rounded-* classes; this catches anything the desk's own
-   stylesheet sets. `rounded-full` (headshots, pips) stays round. */
-.today-next .tn-desk *:not(.rounded-full) {
-  border-radius: 0;
+.tn-wire-item {
+  animation: tn-wire-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
 
 /* Sharp corners — the shared Next geometry (same rule as settings-next /
    hr-next / live-games-next). Tailwind's rounded-* utilities are spread across

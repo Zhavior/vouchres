@@ -8,7 +8,7 @@ export interface LiveGamesNextGameCardProps {
   onSelect: (gamePk: number) => void;
 }
 
-/** One matchup in the dense slate index. */
+/** One matchup card in the dense slate index. */
 export const LiveGamesNextGameCard = React.memo(function LiveGamesNextGameCard({ game, isActive, onSelect }: LiveGamesNextGameCardProps) {
   const showScore = game.isLive || game.isFinal;
 
@@ -18,38 +18,41 @@ export const LiveGamesNextGameCard = React.memo(function LiveGamesNextGameCard({
       onClick={() => onSelect(game.gamePk)}
       data-testid={`live-next-game-${game.gamePk}`}
       aria-pressed={isActive}
-      className={`flex w-full flex-col gap-2 rounded-xl border p-3 text-left font-mono transition-all duration-150 ${
+      className={`flex w-full flex-col justify-between gap-3 border-2 p-3.5 text-left font-mono transition-all duration-150 cursor-pointer ${
         isActive
-          ? 'border-[var(--aurora-max-emerald)] bg-[rgba(0,217,160,0.12)] ring-1 ring-[var(--aurora-max-emerald)]/50 shadow-[0_0_15px_rgba(0,217,160,0.1)]'
+          ? 'border-cyan-400 bg-zinc-950 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
           : game.isLive
-            ? 'border-rose-500/40 bg-ve-obsidian hover:border-rose-500/60 hover:bg-ve-graphite'
+            ? 'border-rose-500/50 bg-black hover:border-rose-500 hover:bg-zinc-950'
             : game.isFinal
-              ? 'border-white/5 bg-ve-obsidian opacity-60 hover:opacity-100'
-              : 'border-white/5 bg-ve-obsidian hover:border-[var(--aurora-max-emerald)]/40 hover:bg-ve-graphite'
+              ? 'border-white/10 bg-black opacity-70 hover:opacity-100 hover:border-white/30'
+              : 'border-white/10 bg-black hover:border-cyan-400/60 hover:bg-zinc-950'
       }`}
       style={{
         contentVisibility: 'auto',
         containIntrinsicSize: '0 128px',
       }}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[9px] font-bold uppercase tracking-wider text-white/35">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+        <span className="truncate text-[9px] font-bold uppercase tracking-wider text-zinc-500">
           {game.venue.split(' ')[0] || 'MLB'}
         </span>
         <LiveGamesNextStatusBadge m={game} />
       </div>
 
-      {[game.away, game.home].map((team, index) => (
-        <div key={`${game.gamePk}-${index}`} className="flex items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-1.5">
-            {team.logo && <img src={team.logo} alt="" className="h-5 w-5 shrink-0 object-contain" loading="lazy" />}
-            <span className="truncate text-xs font-black text-white">{team.abbreviation}</span>
-          </span>
-          <span className={`text-sm font-black tabular-nums ${showScore ? 'text-white' : 'text-white/25'}`}>
-            {showScore ? (index === 0 ? game.score.away : game.score.home) : '–'}
-          </span>
-        </div>
-      ))}
+      <div className="space-y-1.5">
+        {[game.away, game.home].map((team, index) => (
+          <div key={`${game.gamePk}-${index}`} className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2">
+              {team.logo && <img src={team.logo} alt="" className="h-4 w-4 shrink-0 object-contain" loading="lazy" />}
+              <span className="truncate text-xs font-bold text-white">{team.abbreviation}</span>
+            </span>
+            <span className={`text-sm font-black tabular-nums font-mono ${showScore ? 'text-white' : 'text-zinc-600'}`}>
+              {showScore ? (index === 0 ? game.score.away : game.score.home) : '–'}
+            </span>
+          </div>
+        ))}
+      </div>
     </button>
   );
 });
+

@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info, ShieldCheck } from 'lucide-react';
 import {
   AuroraMaxEvidenceLadder,
   AuroraMaxEyebrow,
@@ -15,12 +15,12 @@ interface ResultsLedgerSummaryProps {
 
 export function ResultsLedgerSummary({ summary }: ResultsLedgerSummaryProps) {
   return (
-    <AuroraMaxPanel as="section" className="p-3 sm:p-4" ariaLabelledBy="results-record-state-title">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <AuroraMaxPanel as="section" className="p-3 sm:p-4 border-2 border-white/15 bg-black font-mono shadow-2xl" ariaLabelledBy="results-record-state-title">
+      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-white/10 pb-3">
         <div>
-          <AuroraMaxEyebrow>Receipt coverage</AuroraMaxEyebrow>
-          <h2 id="results-record-state-title" className="mt-1 text-lg font-black tracking-tight text-white">
-          What is actually recorded
+          <AuroraMaxEyebrow>RECEIPT COVERAGE</AuroraMaxEyebrow>
+          <h2 id="results-record-state-title" className="mt-1 text-base font-black uppercase tracking-wider text-white">
+            What is actually recorded
           </h2>
         </div>
         <AuroraMaxTruthBadge state={summary.synced > 0 ? 'confirmed' : 'missing'}>
@@ -52,8 +52,8 @@ export function ResultsLedgerSummary({ summary }: ResultsLedgerSummaryProps) {
         </>
       )}
 
-      <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-white/40">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <p className="mt-4 flex items-start gap-2 text-[10px] leading-relaxed text-zinc-400 border-t border-white/10 pt-3">
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-400" aria-hidden="true" />
         Local status remains explicitly local. VouchEdge does not label a record verified without a durable backend source.
       </p>
     </AuroraMaxPanel>

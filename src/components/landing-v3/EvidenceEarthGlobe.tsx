@@ -66,21 +66,67 @@ const PHASE_CAMERA_VECTOR: Record<IntegrityPhase, THREE.Vector3> = {
 const PRIMARY_RING_TILT = new THREE.Euler(0.2, 0.16, -0.15);
 const SECONDARY_RING_TILT = new THREE.Euler(1.08, -0.18, 0.55);
 
-function isLand(lat: number, lon: number) {
-  const ellipses = [
-    [-104, 47, 42, 25, -0.15],
-    [-82, 18, 20, 16, 0.2],
-    [-61, -17, 18, 34, -0.1],
-    [14, 50, 23, 15, 0.05],
-    [20, 5, 22, 34, 0.08],
-    [74, 40, 58, 25, -0.08],
-    [107, 5, 25, 18, 0.2],
-    [135, -25, 20, 14, -0.05],
-    [-42, 72, 12, 8, 0],
-  ] as const;
+function isLand(lat: number, lon: number): boolean {
+  const l = ((lon + 180) % 360) - 180;
+  const regions: ReadonlyArray<readonly [number, number, number, number, number]> = [
+    // North America - Continental US, Canada, Alaska, Mexico
+    [-100, 48, 46, 22, -0.05],
+    [-118, 52, 22, 20, 0.2],
+    [-85, 42, 26, 18, 0.1],
+    [-75, 45, 18, 16, 0.25],
+    [-92, 33, 24, 14, 0.0],
+    [-115, 36, 18, 15, 0.25],
+    [-102, 25, 16, 14, 0.3], // Mexico
+    [-152, 64, 22, 14, 0.0], // Alaska
+    [-135, 60, 16, 12, 0.15], // Yukon / NW Canada
+    [-70, 52, 20, 15, 0.1],  // Quebec / Labrador
+    [-42, 72, 18, 12, -0.1], // Greenland
+    
+    // South America
+    [-62, -5, 22, 18, 0.0],  // Amazon / Brazil North
+    [-48, -14, 18, 18, 0.15], // Brazil East
+    [-65, -28, 16, 26, 0.1], // Argentina / Chile / Andes
+    [-74, 4, 14, 12, 0.2],   // Colombia / Venezuela
+    
+    // Europe
+    [10, 50, 22, 14, 0.05],  // Central Europe (France, Germany, Poland)
+    [-4, 40, 14, 12, 0.0],   // Iberian Peninsula (Spain, Portugal)
+    [12, 42, 8, 12, 0.3],    // Italy
+    [15, 62, 14, 18, 0.2],   // Scandinavia (Norway, Sweden, Finland)
+    [-2, 54, 8, 10, 0.2],    // UK & Ireland
+    [26, 56, 18, 16, 0.05],  // Baltic / Eastern Europe
+    [32, 40, 16, 12, 0.0],   // Turkey / Balkans
+    
+    // Africa
+    [15, 25, 34, 16, 0.0],   // Sahara / North Africa
+    [2, 10, 18, 12, 0.0],    // West Africa
+    [24, 4, 22, 18, 0.0],    // Central Africa / Congo
+    [38, 8, 14, 14, 0.25],   // Horn of Africa / East Africa
+    [24, -20, 20, 18, 0.0],  // Southern Africa
+    [47, -19, 6, 14, 0.2],   // Madagascar
+    
+    // Asia
+    [45, 30, 18, 14, 0.1],   // Middle East / Arabia
+    [65, 55, 35, 18, 0.0],   // Russia / Urals
+    [95, 60, 45, 18, -0.05], // Siberia
+    [130, 62, 35, 16, 0.05], // Far East Siberia
+    [78, 22, 18, 18, 0.15],  // India
+    [105, 35, 32, 18, 0.0],  // China East & Central
+    [88, 38, 22, 14, 0.0],   // Tibet / Western China
+    [102, 16, 14, 16, 0.15], // Southeast Asia / Indochina
+    [127, 36, 6, 10, 0.25],  // Korea
+    [138, 36, 10, 14, 0.35], // Japan
+    [118, 2, 24, 14, 0.0],   // Indonesia / Borneo
+    [122, 13, 8, 12, 0.15],  // Philippines
+    
+    // Australia & Oceania
+    [125, -24, 20, 16, 0.0], // West Australia
+    [142, -26, 18, 18, 0.1], // East Australia
+    [174, -41, 6, 12, 0.3],  // New Zealand
+  ];
 
-  return ellipses.some(([centerLon, centerLat, width, height, tilt]) => {
-    const dx = (lon - centerLon) / width;
+  return regions.some(([centerLon, centerLat, width, height, tilt]) => {
+    const dx = (l - centerLon) / width;
     const dy = (lat - centerLat) / height;
     const x = dx * Math.cos(tilt) - dy * Math.sin(tilt);
     const y = dx * Math.sin(tilt) + dy * Math.cos(tilt);
@@ -91,11 +137,26 @@ function isLand(lat: number, lon: number) {
 function DotMatrixContinents() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const points = useMemo(() => {
-    const result: THREE.Vector3[] = [];
-    for (let lat = -72; lat <= 78; lat += 3) {
-      const longitudeStep = 3 / Math.max(0.28, Math.cos(THREE.MathUtils.degToRad(lat)));
-      for (let lon = -180; lon < 180; lon += longitudeStep) {
-        if (isLand(lat, lon)) result.push(latLonToVector3(lat, lon, 1.615));
+    const result: Array<{ pos: THREE.Vector3; color: THREE.Color }> = [];
+    const colorPalette = [
+      new THREE.Color('#38bdf8'), // sky blue
+      new THREE.Color('#22d3ee'), // cyan
+      new THREE.Color('#34d399'), // emerald
+      new THREE.Color('#a5f3fc'), // ice cyan
+      new THREE.Color('#f0fdf4'), // luminous white-emerald
+    ];
+
+    for (let lat = -72; lat <= 78; lat += 1.2) {
+      const latRad = THREE.MathUtils.degToRad(lat);
+      const cosLat = Math.max(0.18, Math.cos(latRad));
+      const lonStep = 1.2 / cosLat;
+      for (let lon = -180; lon < 180; lon += lonStep) {
+        if (isLand(lat, lon)) {
+          const elev = 1.615 + Math.sin(lat * 0.15 + lon * 0.1) * 0.006;
+          const pos = latLonToVector3(lat, lon, elev);
+          const color = colorPalette[Math.floor(Math.abs(Math.sin(lat * 14 + lon * 9)) * colorPalette.length)];
+          result.push({ pos, color });
+        }
       }
     }
     return result;
@@ -105,19 +166,21 @@ function DotMatrixContinents() {
     const mesh = meshRef.current;
     if (!mesh) return;
     const matrix = new THREE.Matrix4();
-    const scale = new THREE.Vector3(0.014, 0.014, 0.014);
+    const scale = new THREE.Vector3(0.007, 0.007, 0.007);
     const quaternion = new THREE.Quaternion();
-    points.forEach((point, index) => {
-      matrix.compose(point, quaternion, scale);
+    points.forEach(({ pos, color }, index) => {
+      matrix.compose(pos, quaternion, scale);
       mesh.setMatrixAt(index, matrix);
+      mesh.setColorAt(index, color);
     });
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [points]);
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, points.length]} frustumCulled>
-      <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color="#b9f8ff" transparent opacity={0.62} toneMapped={false} />
+      <octahedronGeometry args={[1, 0]} />
+      <meshBasicMaterial transparent opacity={0.78} toneMapped={false} />
     </instancedMesh>
   );
 }

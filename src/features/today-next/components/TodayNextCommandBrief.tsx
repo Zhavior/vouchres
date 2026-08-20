@@ -1,4 +1,4 @@
-import { ArrowRight, Radio, Timer } from 'lucide-react';
+import { ArrowRight, Radio, Timer, ShieldCheck, Lock } from 'lucide-react';
 import type { TodayDecision } from '../../../components/today/todayDecisionModel';
 import { formatClock, formatCountdown, type TodayNextFirstPitch } from '../hooks/useTodayNextHome';
 import type { ApiGame } from '../../../types/mlb';
@@ -10,27 +10,21 @@ interface TodayNextCommandBriefProps {
   onRoute: (section: string) => void;
 }
 
-const TONE: Record<TodayDecision['tone'], { accent: string; glow: string; chip: string }> = {
+const TONE: Record<TodayDecision['tone'], { accent: string; border: string; chip: string }> = {
   emerald: {
-    accent: 'text-[var(--aurora-max-emerald)]',
-    glow: 'border-[var(--aurora-max-emerald)]/35 shadow-[0_0_40px_rgba(0,217,160,0.12)]',
-    chip: 'border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/10 text-[var(--aurora-max-emerald)]',
+    accent: 'text-emerald-400',
+    border: 'border-emerald-400/50',
+    chip: 'border-emerald-400/40 bg-emerald-950/40 text-emerald-300',
   },
-  /*
-   * The `cyan` tone name is the decision model's, not a colour instruction —
-   * it is the "informational, not yet confirmed" tier. It renders in the muted
-   * emerald so it stays distinct from the bright `emerald` (confirmed/live)
-   * tone without reintroducing blue.
-   */
   cyan: {
-    accent: 'text-vouch-emerald',
-    glow: 'border-vouch-emerald/30 shadow-[0_0_40px_rgba(49,181,131,0.12)]',
-    chip: 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald',
+    accent: 'text-cyan-300',
+    border: 'border-cyan-400/50',
+    chip: 'border-cyan-400/40 bg-cyan-950/40 text-cyan-300',
   },
   amber: {
     accent: 'text-amber-300',
-    glow: 'border-amber-400/30 shadow-[0_0_40px_rgba(251,191,36,0.10)]',
-    chip: 'border-amber-400/40 bg-amber-400/10 text-amber-300',
+    border: 'border-amber-400/50',
+    chip: 'border-amber-400/40 bg-amber-950/40 text-amber-300',
   },
 };
 
@@ -50,51 +44,61 @@ export function TodayNextCommandBrief({
 
   return (
     <section
-      className={`rounded-2xl border bg-ve-obsidian/95 p-5 sm:p-6 ${tone.glow}`}
+      className={`border-2 ${tone.border} bg-black p-5 sm:p-7 font-mono shadow-2xl space-y-4`}
       aria-labelledby="today-next-brief-title"
     >
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[0.18em] ${tone.chip}`}
-          >
-            {decision.statusLabel}
-          </span>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest ${tone.chip}`}
+            >
+              <ShieldCheck className="h-3 w-3" />
+              {decision.statusLabel}
+            </span>
+            <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">
+              STAGE 01 // PRE-PITCH THESIS
+            </span>
+          </div>
 
           <h2
             id="today-next-brief-title"
-            className="mt-3 text-balance text-xl font-black leading-tight tracking-tight text-white sm:text-2xl"
+            className="text-balance text-2xl sm:text-3xl lg:text-4xl font-black leading-tight tracking-tight text-white font-sans"
           >
             {decision.title}
           </h2>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{decision.description}</p>
+          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-zinc-300 font-sans">{decision.description}</p>
 
-          <button
-            type="button"
-            onClick={() => onRoute(decision.ctaSection)}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--aurora-max-emerald)]/45 bg-[var(--aurora-max-emerald)]/15 px-4 font-mono text-[11px] font-black uppercase tracking-wider text-[var(--aurora-max-emerald)] transition hover:bg-[var(--aurora-max-emerald)]/30"
-          >
-            {decision.ctaLabel}
-            <ArrowRight className="h-4 w-4" />
-          </button>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => onRoute(decision.ctaSection)}
+              className="inline-flex items-center gap-2.5 border-2 border-white bg-white px-5 py-3 text-xs sm:text-sm font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer"
+            >
+              {decision.ctaLabel}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Clock column — live games take precedence over the countdown. */}
-        <div className="w-full shrink-0 lg:w-[280px]">
+        {/* Clock / Live Ticker Column */}
+        <div className="w-full shrink-0 lg:w-[320px]">
           {liveGames.length > 0 ? (
-            <div className="rounded-xl border border-rose-400/35 bg-rose-500/[0.07] p-4 font-mono">
-              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-rose-300">
-                <Radio className="h-3 w-3 animate-pulse" /> Live now
-              </span>
-              <strong className="mt-1.5 block text-2xl font-black tabular-nums text-white">
-                {liveGames.length} <span className="text-sm font-bold text-white/50">in progress</span>
-              </strong>
-              <ul className="mt-2.5 space-y-1">
+            <div className="border-2 border-rose-500/50 bg-black p-4 space-y-2.5">
+              <div className="flex items-center justify-between border-b border-rose-500/30 pb-2">
+                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-rose-400">
+                  <Radio className="h-3 w-3 animate-pulse" /> LIVE TELEMETRY
+                </span>
+                <span className="text-[8px] border border-rose-500/40 px-1 text-rose-300 uppercase">
+                  {liveGames.length} IN PROGRESS
+                </span>
+              </div>
+              <ul className="space-y-1.5">
                 {liveGames.slice(0, 3).map((game) => (
-                  <li key={game.gamePk} className="flex items-center justify-between gap-2 text-[10px] text-white/60">
-                    <span className="truncate font-bold text-white/80">{teamLine(game)}</span>
-                    <span className="shrink-0 tabular-nums text-rose-300">
+                  <li key={game.gamePk} className="flex items-center justify-between gap-2 text-xs p-1.5 bg-zinc-950 border border-white/10">
+                    <span className="truncate font-bold text-white">{teamLine(game)}</span>
+                    <span className="shrink-0 tabular-nums text-rose-400 font-bold">
                       {game.score ? `${game.score.away}-${game.score.home}` : '—'}
                       {game.inning != null ? ` · I${game.inning}` : ''}
                     </span>
@@ -102,34 +106,42 @@ export function TodayNextCommandBrief({
                 ))}
               </ul>
               {liveGames.length > 3 && (
-                <p className="mt-1.5 text-[10px] text-white/35">+{liveGames.length - 3} more live</p>
+                <p className="text-[9px] text-zinc-500 text-right">+{liveGames.length - 3} more live matchups</p>
               )}
               <button
                 type="button"
                 onClick={() => onRoute('live_games')}
-                className="mt-3 w-full rounded-lg border border-white/10 bg-white/5 py-2 text-[10px] font-black uppercase tracking-wider text-white/70 transition hover:text-white"
+                className="w-full border border-white/20 bg-zinc-900 py-2 text-[10px] font-bold uppercase tracking-wider text-zinc-200 transition hover:border-white hover:text-white cursor-pointer"
               >
-                Track live games
+                TRACK ALL LIVE GAMES →
               </button>
             </div>
           ) : firstPitch ? (
-            <div className="rounded-xl border border-white/10 bg-black/40 p-4 font-mono">
-              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-white/40">
-                <Timer className="h-3 w-3" /> First pitch
-              </span>
-              <strong className="mt-1.5 block text-3xl font-black tabular-nums text-[var(--aurora-max-emerald)] drop-shadow-[0_0_12px_rgba(0,217,160,0.35)]">
-                {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'Starting'}
-              </strong>
-              <p className="mt-2 truncate text-[11px] font-bold text-white">{teamLine(firstPitch.game)}</p>
-              <p className="mt-0.5 truncate text-[10px] text-white/40">
-                {formatClock(firstPitch.game.gameDate)} · {firstPitch.game.venue || 'Venue unavailable'}
-              </p>
+            <div className="border-2 border-white/20 bg-black p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                  <Timer className="h-3.5 w-3.5 text-cyan-300" /> FIRST PITCH LOCK
+                </span>
+                <span className="text-[8px] text-emerald-400 border border-emerald-400/40 px-1">PRE-GAME</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">COUNTDOWN TO FIRST PITCH:</span>
+                <strong className="mt-1 block text-3xl sm:text-4xl font-black tabular-nums text-cyan-300">
+                  {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'STARTING SOON'}
+                </strong>
+              </div>
+              <div className="pt-2 border-t border-white/10 text-xs">
+                <p className="truncate font-bold text-white">{teamLine(firstPitch.game)}</p>
+                <p className="text-[10px] text-zinc-400 mt-0.5">
+                  {formatClock(firstPitch.game.gameDate)} · {firstPitch.game.venue || 'Venue confirmed'}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-center font-mono">
-              <p className="text-[11px] font-bold text-white/50">No upcoming first pitch</p>
-              <p className="mt-1 text-[10px] leading-4 text-white/30">
-                Every scheduled game has started or finished.
+            <div className="border-2 border-dashed border-white/15 bg-black p-5 text-center space-y-1.5">
+              <p className="text-xs font-bold text-zinc-300 uppercase">NO PENDING FIRST PITCH</p>
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                All scheduled games have started or reached final verification.
               </p>
             </div>
           )}
@@ -138,3 +150,4 @@ export function TodayNextCommandBrief({
     </section>
   );
 }
+
