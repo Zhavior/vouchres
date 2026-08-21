@@ -18,7 +18,8 @@ import {
   Activity,
   Globe,
   Radio,
-  Zap
+  Zap,
+  Linkedin
 } from 'lucide-react';
 import { FooterSection } from '../components/landing-v3';
 import PublicNav from '../components/landing-v3/PublicNav';
@@ -135,6 +136,17 @@ export default function DevProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                <a
+                  href="https://www.linkedin.com/in/reinaldsantos"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 md:flex-initial flex items-center justify-center gap-2 border border-white/15 bg-black px-4 py-2.5 font-mono text-xs font-bold text-white hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors"
+                >
+                  <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+                  <span>LinkedIn</span>
+                  <ExternalLink className="w-3 h-3 opacity-50" />
+                </a>
+
                 <a
                   href="https://github.com/Zhavior"
                   target="_blank"

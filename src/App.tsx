@@ -35,7 +35,15 @@ function getStaticPublicPage(): 'policy' | 'about' | 'contact' | 'blog' | 'dev' 
   if (path === '/about') return 'about';
   if (path === '/contact' || path === '/support') return 'contact';
   if (path === '/blog' || path === '/updates') return 'blog';
-  if (path === '/dev' || path === '/founder' || path === '/boyd' || path === '/author/boyd') return 'dev';
+  if (
+    path === '/dev' ||
+    path === '/founder' ||
+    path === '/boyd' ||
+    path === '/boydsantos' ||
+    path === '/@boydsantos' ||
+    path === '/author/boyd' ||
+    path === '/author/boydsantos'
+  ) return 'dev';
   return null;
 }
 

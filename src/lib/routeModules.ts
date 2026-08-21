@@ -9,6 +9,7 @@
 export const routeModules = {
   following: () => import('../pages/FollowingHubPage'),
   homeFeed: () => import('../social/feed/HomeFeedPage'),
+  news: () => import('../features/news/NewsHubPage'),
 
   todayDashboard: () => import('../components/TodayDashboardZ8'),
   vouchEdgeTerminal: () => import('../pages/VouchEdgeTerminalPage'),

@@ -47,6 +47,7 @@ const PersonalizedOnboarding = lazyPage(() =>
   'PersonalizedOnboarding',
 );
 const FollowingHubPage = lazyPage(routeModules.following, 'FollowingHubPage');
+const NewsHubPage = lazyPage(routeModules.news, 'NewsHubPage');
 const HomeFeedPage = lazyPage(routeModules.homeFeed, 'HomeFeedPage');
 const TodayDashboardZ8 = lazyPage(routeModules.todayDashboard, 'TodayDashboardZ8');
 const VouchEdgeTerminalPage = lazyPage(routeModules.vouchEdgeTerminal, 'VouchEdgeTerminalPage');
@@ -252,6 +253,13 @@ function MainViewRouter({
       return (
         <LazyRoute fallback={<TodayNextSkeleton />}>
           <TodayNextPage navigateSection={navigateSection} />
+        </LazyRoute>
+      );
+    case 'news':
+    case 'blog':
+      return (
+        <LazyRoute>
+          <NewsHubPage navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'feed':

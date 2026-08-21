@@ -13,7 +13,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair, LayoutTemplate,
+  CalendarDays, Grid3x3, Crown, Crosshair, LayoutTemplate, Newspaper,
 } from 'lucide-react';
 import { isAuroraHqFamilySection } from './betaNavigation';
 import type { useProfileStore } from '../stores/profileStore';
@@ -22,7 +22,7 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair, Shield, LayoutTemplate,
+  CalendarDays, Grid3x3, Crown, Crosshair, Shield, LayoutTemplate, Newspaper,
 };
 
 /**
