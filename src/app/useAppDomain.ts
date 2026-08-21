@@ -126,7 +126,6 @@ export function useAppDomain({
         tags: entry.draft.tags ?? ['#ParlayOS'],
       });
     }
-    useParlayOsStore.getState().openSheet(true);
   }, []);
 
   const handleConfirmParlayTier = useCallback((tier: ParlayMarketTier) => {
@@ -185,7 +184,6 @@ export function useAppDomain({
         body: replacement.draft.selection ?? tier.label,
         section: 'build',
       });
-      useParlayOsStore.getState().openSheet(true);
       return;
     }
 
