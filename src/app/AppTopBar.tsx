@@ -262,19 +262,19 @@ export const AppTopBar = React.memo(function AppTopBar({
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <span
           className={`hidden items-center gap-1.5 rounded border px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-wider xl:inline-flex ${
-            liveGamesError && activeSection !== 'td_next' && activeSection !== 'nfl_touchdown'
+            liveGamesError && activeSection !== 'td_next'
               ? 'border-rose-500/20 bg-rose-500/10 text-rose-400'
-              : liveGamesLoading && activeSection !== 'td_next' && activeSection !== 'nfl_touchdown'
+              : liveGamesLoading && activeSection !== 'td_next'
                 ? 'border-white/[0.06] bg-white/[0.04] text-zinc-500'
                 : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
           }`}
-          title={`${activeSection === 'td_next' || activeSection === 'nfl_touchdown' ? 'NFL' : 'MLB'} feed: Connected`}
+          title={`${activeSection === 'td_next' ? 'NFL' : 'MLB'} feed: Connected`}
         >
           <span className="flex h-1.5 w-1.5 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
           </span>
-          {activeSection === 'td_next' || activeSection === 'nfl_touchdown' ? 'NFL FEED' : `MLB ${liveDataState}`}
+          {activeSection === 'td_next' ? 'NFL FEED' : `MLB ${liveDataState}`}
         </span>
 
         <button

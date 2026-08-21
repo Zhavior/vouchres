@@ -95,7 +95,6 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "aurora_hr_hq", label: "Aurora HQ", icon: "Sparkles", enabled: true, order: 20.5, group: "Account", access: "admin" },
   { id: "admin", label: "Admin Ops", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
   { id: "admin_hr_next", label: "HR Next", icon: "Sparkles", enabled: true, order: 21.5, group: "Account", access: "admin" },
-  { id: "nfl_touchdown", label: "NFL Touchdown Intelligence", icon: "Activity", enabled: true, order: 21.55, group: "Account" },
   { id: "admin_model_quality", label: "Model Quality", icon: "Activity", enabled: true, order: 21.6, group: "Account", access: "admin" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
