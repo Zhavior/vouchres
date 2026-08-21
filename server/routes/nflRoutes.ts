@@ -37,12 +37,58 @@ export function registerNflRoutes(app: Express): void {
         games: data,
         meta: buildApiMeta({
           source: "espn_nfl",
-          dataQuality: "live",
+          dataQuality: "projection_preview",
         }),
       }));
     } catch (error) {
       console.error("Error fetching NFL touchdown intelligence:", error);
       return res.status(500).json({ error: "Failed to fetch NFL intelligence" });
+    }
+  }));
+
+  // NFL Touchdown Full Slate API
+  app.get("/api/nfl/touchdown-slate", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    try {
+      const { fetchNflTouchdownSlatePlayers } = await import("../services/nfl/nflEspnService");
+      const players = await fetchNflTouchdownSlatePlayers();
+      return res.json({
+        success: true,
+        totalPlayers: players.length,
+        players,
+      });
+    } catch (error) {
+      console.error("Error fetching NFL touchdown slate players:", error);
+      return res.status(500).json({ success: false, error: (error as Error).message });
+    }
+  }));
+
+  // NFL Historical Ledger API
+  app.get("/api/nfl/ledger", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    try {
+      const { fetchNflHistoricalLedger } = await import("../services/nfl/nflEspnService");
+      const ledger = await fetchNflHistoricalLedger();
+      return res.json({
+        success: true,
+        data: ledger,
+      });
+    } catch (error) {
+      console.error("Error fetching NFL ledger:", error);
+      return res.status(500).json({ success: false, error: (error as Error).message });
+    }
+  }));
+
+  // NFL Live Red Zone Threats API
+  app.get("/api/nfl/live-threats", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    try {
+      const { fetchLiveRedZoneThreats } = await import("../services/nfl/nflEspnService");
+      const threats = await fetchLiveRedZoneThreats();
+      return res.json({
+        success: true,
+        data: threats,
+      });
+    } catch (error) {
+      console.error("Error fetching NFL live threats:", error);
+      return res.status(500).json({ success: false, error: (error as Error).message });
     }
   }));
 
