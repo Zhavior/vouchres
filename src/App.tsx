@@ -1,4 +1,5 @@
 import { Suspense, useEffect } from 'react';
+import './index.css';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
@@ -27,6 +28,16 @@ function isPasswordResetPath(): boolean {
   return window.location.pathname.toLowerCase() === '/auth/reset-password';
 }
 
+function getStaticPublicPage(): 'policy' | 'about' | 'contact' | 'blog' | null {
+  if (typeof window === 'undefined') return null;
+  const path = window.location.pathname.toLowerCase();
+  if (path === '/policy' || path === '/terms') return 'policy';
+  if (path === '/about') return 'about';
+  if (path === '/contact' || path === '/support') return 'contact';
+  if (path === '/blog' || path === '/updates') return 'blog';
+  return null;
+}
+
 function isPublicAuthPath(): boolean {
   if (typeof window === 'undefined') return false;
   return ['/login', '/signin', '/signup', '/join'].includes(window.location.pathname.toLowerCase());
@@ -35,6 +46,10 @@ function isPublicAuthPath(): boolean {
 const AuthenticatedApp = lazyWithRetry(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazyWithRetry(() => import('./pages/VouchEdgeTerminalPage'));
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
+const PolicyPage = lazyWithRetry(() => import('./pages/PolicyPage'));
+const AboutPage = lazyWithRetry(() => import('./pages/AboutPage'));
+const ContactPage = lazyWithRetry(() => import('./pages/ContactPage'));
+const BlogPage = lazyWithRetry(() => import('./pages/BlogPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
@@ -49,7 +64,7 @@ const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
  */
 function warmBootRouteChunk() {
   if (typeof window === 'undefined') return;
-  if (isAuthCallbackPath() || isPasswordResetPath()) return;
+  if (isAuthCallbackPath() || isPasswordResetPath() || getStaticPublicPage()) return;
 
   // Same resolution useSectionNavigation runs for its initial section.
   const bootSection = resolveAuthenticatedSection(
@@ -127,18 +142,30 @@ function MainAppRoutes() {
 }
 
 export default function App() {
+  const staticPage = getStaticPublicPage();
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Backdrop first, and outside the route tree: the ambient WebGL field is
           a sibling of the router rather than a descendant, so navigating,
           signing in, or landing on /auth/* never unmounts the canvas. */}
-      <GlobalCanvasRoot />
+      {!staticPage && <GlobalCanvasRoot />}
       <div className="relative z-10 min-h-screen bg-black flex flex-col">
         <div className="flex-grow">
           {isAuthCallbackPath() ? (
             <AuthCallbackPage />
           ) : isPasswordResetPath() ? (
             <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
+          ) : staticPage === 'policy' ? (
+            <Suspense fallback={<RouteFallback />}><PolicyPage /></Suspense>
+          ) : staticPage === 'blog' ? (
+            <Suspense fallback={<RouteFallback />}><BlogPage /></Suspense>
+          ) : window.location.pathname.startsWith('/blog/') ? (
+            <Suspense fallback={<RouteFallback />}><BlogPage slug={window.location.pathname.replace('/blog/', '')} /></Suspense>
+          ) : staticPage === 'about' ? (
+            <Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>
+          ) : staticPage === 'contact' ? (
+            <Suspense fallback={<RouteFallback />}><ContactPage /></Suspense>
           ) : (
             <MainAppRoutes />
           )}

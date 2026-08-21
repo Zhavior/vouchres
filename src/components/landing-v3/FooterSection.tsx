@@ -88,12 +88,25 @@ export default function FooterSection() {
           {/* Security & Access */}
           <div className="lg:col-span-2">
             <h4 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-white">
-              Protocol
+              Company
             </h4>
-            <div className="mt-4 space-y-2.5 text-[12px] leading-relaxed text-zinc-400">
-              <p>Non-custodial research tools.</p>
-              <p>Terms of service and privacy disclosures reviewed at onboarding.</p>
-            </div>
+            <ul className="mt-4 space-y-2.5">
+              <li>
+                <a href="/about" className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white">About Us</a>
+              </li>
+              <li>
+                <a href="/contact" className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white">Contact</a>
+              </li>
+              <li>
+                <a href="/blog" className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white">Blog</a>
+              </li>
+              <li>
+                <a href="/policy" className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white">Privacy Policy</a>
+              </li>
+              <li>
+                <a href="/terms" className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white">Terms of Service</a>
+              </li>
+            </ul>
           </div>
         </div>
 
