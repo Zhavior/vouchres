@@ -28,13 +28,14 @@ function isPasswordResetPath(): boolean {
   return window.location.pathname.toLowerCase() === '/auth/reset-password';
 }
 
-function getStaticPublicPage(): 'policy' | 'about' | 'contact' | 'blog' | null {
+function getStaticPublicPage(): 'policy' | 'about' | 'contact' | 'blog' | 'dev' | null {
   if (typeof window === 'undefined') return null;
   const path = window.location.pathname.toLowerCase();
   if (path === '/policy' || path === '/terms') return 'policy';
   if (path === '/about') return 'about';
   if (path === '/contact' || path === '/support') return 'contact';
   if (path === '/blog' || path === '/updates') return 'blog';
+  if (path === '/dev' || path === '/founder' || path === '/boyd' || path === '/author/boyd') return 'dev';
   return null;
 }
 
@@ -50,6 +51,7 @@ const PolicyPage = lazyWithRetry(() => import('./pages/PolicyPage'));
 const AboutPage = lazyWithRetry(() => import('./pages/AboutPage'));
 const ContactPage = lazyWithRetry(() => import('./pages/ContactPage'));
 const BlogPage = lazyWithRetry(() => import('./pages/BlogPage'));
+const DevProfilePage = lazyWithRetry(() => import('./pages/DevProfilePage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
@@ -166,6 +168,8 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>
           ) : staticPage === 'contact' ? (
             <Suspense fallback={<RouteFallback />}><ContactPage /></Suspense>
+          ) : staticPage === 'dev' ? (
+            <Suspense fallback={<RouteFallback />}><DevProfilePage /></Suspense>
           ) : (
             <MainAppRoutes />
           )}

@@ -56,6 +56,39 @@ export default function AboutPage() {
               </p>
             </div>
           </motion.div>
+
+          {/* Founder & Lead Developer Spotlight */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-16 w-full border border-cyan-500/30 bg-gradient-to-r from-zinc-950 via-black to-cyan-950/30 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 border border-cyan-400/50 bg-cyan-950/60 flex items-center justify-center font-mono font-black text-cyan-300 text-lg shrink-0">
+                BRS
+              </div>
+              <div>
+                <div className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-bold">
+                  FOUNDER & CHIEF SYSTEMS ARCHITECT
+                </div>
+                <div className="font-mono text-lg font-black text-white">
+                  Boyd R. Santos
+                </div>
+                <div className="font-mono text-xs text-zinc-400">
+                  Dartmouth, NS, Canada 🇨🇦
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="/dev"
+              className="inline-flex items-center justify-center gap-2 border border-cyan-400 bg-cyan-400 hover:bg-cyan-300 text-black px-5 py-2.5 font-mono text-xs font-black uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(34,211,238,0.25)] no-underline shrink-0"
+            >
+              <span>View Dev Profile</span>
+              <span>→</span>
+            </a>
+          </motion.div>
         </main>
         <FooterSection />
       </div>

@@ -19,6 +19,7 @@ seoRoutes.get(
     const staticUrls = [
       { loc: `${baseUrl}/`, priority: "1.0", changefreq: "daily" },
       { loc: `${baseUrl}/about`, priority: "0.8", changefreq: "monthly" },
+      { loc: `${baseUrl}/dev`, priority: "0.8", changefreq: "monthly" },
       { loc: `${baseUrl}/contact`, priority: "0.7", changefreq: "monthly" },
       { loc: `${baseUrl}/blog`, priority: "0.9", changefreq: "weekly" },
       { loc: `${baseUrl}/policy`, priority: "0.3", changefreq: "yearly" },
