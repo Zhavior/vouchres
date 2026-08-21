@@ -17,16 +17,76 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: '1',
+    slug: 'why-i-built-vouchedge',
+    title: 'Why I Built VouchEdge: Ending the Era of Blind Bets & Fake Locks',
+    excerpt: 'I was tired of watching people lose their hard-earned money and get scammed by fake lock sellers. Here is why VouchEdge was built to empower informed decision making.',
+    date: 'August 21, 2026',
+    tag: 'Founder Story',
+    author: 'Boyd R. Santos',
+    authorRole: 'Founder & Chief Architect',
+    readTime: '4 MIN READ',
+    featured: true,
+    colorAccent: 'cyan',
+    keyTakeaway: 'When you eliminate fake promises and expose real probability, you empower analysts to make smart, educated decisions.',
+    content: `
+# Why I Built VouchEdge
+
+**I was tired of watching people lose.**
+
+I was tired of seeing everyday people get scammed by so-called "handicappers" and flashy apps selling fake "95% guaranteed lock" algorithms. 
+
+Every single day on social media, you see the same story:
+* Someone pays hundreds of dollars for a "sure thing" pick.
+* The pick loses.
+* The seller deletes the tweet or edits their spreadsheet to pretend they never lost.
+* The bettor is left in the red with zero explanation of *why* the bet failed.
+
+**I refused to let that remain the standard. That is why I built VouchEdge.**
+
+---
+
+## 1. Helping People Understand What They Are Betting On
+
+Most people lose money not because they are unlucky, but because they are betting blind. They see a big name or a trendy narrative and put money on it without knowing:
+* What is the opposing pitcher's true release velocity and spin rate?
+* What is the wind speed and humidity at the stadium today?
+* What is the batter's recent barrel percentage against lefties over the last 14 days?
+
+VouchEdge was created to turn sports betting into **objective, sourced research**. We give you the raw Statcast data, the meteorological index, and the probability distributions so you actually know the *why* behind every decision.
+
+---
+
+## 2. Total Accountability Through Immutable Ledgers
+
+In the financial world, transactions are locked into ledgers. In sports analytics, people delete their losses.
+
+On VouchEdge, when you or an AI Judge submit a decision, it is cryptographically stamped with SHA-256 before the first pitch. 
+* It cannot be deleted.
+* It cannot be phantom-edited.
+* It remains on your public record forever.
+
+---
+
+## 3. The Future: Improving Together
+
+VouchEdge is not a gambling parlor. It is a decision intelligence workstation. 
+
+I built this platform from Dartmouth, Nova Scotia for everyone who wants to improve, learn, and stop getting taken advantage of. 
+
+Welcome to the standard of truth.
+`
+  },
+  {
+    id: '2',
     slug: 'open-beta-live',
-    title: 'VouchEdge Open Beta is Live: Sourced Evidence Over Synthetic Locks.',
+    title: 'VouchEdge Open Beta is Live: Sourced Evidence Over Synthetic Locks',
     excerpt: 'The evidence ledger is officially open. We are onboarding the first cohort of MLB analysts into the production intelligence environment.',
     date: 'August 20, 2026',
     tag: 'Release Notes',
     author: 'Boyd R. Santos',
     authorRole: 'Founder & Chief Architect',
     readTime: '3 MIN READ',
-    featured: true,
-    colorAccent: 'cyan',
+    colorAccent: 'emerald',
     keyTakeaway: 'The public beta opens access to real-time HRPI calculations and cryptographic ledger validation.',
     content: `
 # The Open Beta is Here.
@@ -35,20 +95,7 @@ After months of rigorous internal testing, stress-testing real-time Statcast pit
 
 ---
 
-## Why VouchEdge Exists
-
-Sports analytics today is polluted by marketing hype:
-* Aggressive claims of *"95% guaranteed lock"* algorithms.
-* Ghost-editing loss records after the game ends.
-* Completely opaque "AI models" with zero sourced evidence.
-
-**VouchEdge was engineered as the antidote.**
-
-We built an intelligence environment for analysts who demand **sourced evidence**, **explicit coverage gaps**, and **honest post-game review**. We do not synthesize confidence; we expose reality.
-
----
-
-### Core Architecture Capabilities in Phase 1:
+## Core Architecture Capabilities in Phase 1:
 
 1. **The Real-Time HRPI Board**: Calculates pitcher vulnerability, park factors, barrel rates, and wind velocity into an objective home run probability index.
 2. **Immutable Proof Ledgers**: Cryptographically locked timestamps. When first pitch is thrown, the ledger freezes. Bad picks cannot be deleted, good picks cannot be edited.
@@ -59,12 +106,10 @@ We built an intelligence environment for analysts who demand **sourced evidence*
 ## How to Access the Beta
 
 We are rolling out seats in controlled cohorts to guarantee sub-50ms API latencies across our live MLB stat engine. Click **JOIN BETA** in the navigation header to reserve your seat in Cohort 1.
-
-Welcome to the future of sports research.
 `
   },
   {
-    id: '2',
+    id: '3',
     slug: 'rejecting-synthetic-win-rates',
     title: 'The Mathematical Reason We Rejected Synthetic Win-Rates',
     excerpt: 'Why "95% lock" models are statistically fraudulent and how transparent probability distribution protects analysts from catastrophic drawdown.',
@@ -73,7 +118,7 @@ Welcome to the future of sports research.
     author: 'Quantitative Team',
     authorRole: 'Probability Systems',
     readTime: '5 MIN READ',
-    colorAccent: 'emerald',
+    colorAccent: 'amber',
     keyTakeaway: 'Probability is not a promise. Exposing variance and data gaps is the only mathematically honest approach.',
     content: `
 # The Mathematical Fraud of "Guaranteed Locks"
@@ -104,7 +149,7 @@ You see every input that went into the calculation. **No black boxes. No halluci
 `
   },
   {
-    id: '3',
+    id: '4',
     slug: 'architecting-the-aurora-engine',
     title: 'Architecting Aurora: 60fps GPU Acceleration in a React App Shell',
     excerpt: 'A deep dive into our custom Three.js WebGL canvas bridge and how we maintain sub-millisecond DOM responsiveness during live game feeds.',

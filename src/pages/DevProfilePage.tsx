@@ -177,13 +177,13 @@ export default function DevProfilePage() {
                 <span>Engineering Philosophy & Mission</span>
               </div>
               <h2 className="text-2xl font-black font-mono text-white">
-                Zero Hallucinations. Pure Sourced Truth.
+                Tired of Losses & Scams. Built for Decision Intelligence.
               </h2>
-              <p className="text-sm text-zinc-400 font-mono leading-relaxed">
-                I engineered VouchEdge because sports analytics has become plagued by fake "95% lock" models, erased bad picks, and opaque AI promises. 
+              <p className="text-sm text-zinc-300 font-mono leading-relaxed">
+                "I was tired of seeing people lose their hard-earned money blindly, and tired of watching everyday bettors get scammed by fake 'lock' sellers. I created VouchEdge to give people real tools to make informed decisions and truly understand what they are betting on."
               </p>
               <p className="text-sm text-zinc-400 font-mono leading-relaxed">
-                My objective is simple: build high-density, low-latency telemetry for serious analysts who value mathematical truth over synthetic hype. When you place a pick on VouchEdge, it enters an immutable ledger that can never be rewritten.
+                We combine real-time MLB Statcast data, meteorological modeling, and SHA-256 cryptographic ledgers to ensure that all evidence is 100% transparent and accountable.
               </p>
             </div>
 
