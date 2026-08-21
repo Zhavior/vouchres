@@ -11,7 +11,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Search, Command, LogOut, Settings, Palette, Box, ChevronDown, Shield, UserCircle,
+  Search, Command, LogOut, Settings, Palette, Box, ChevronDown, Shield, UserCircle, CreditCard,
 } from 'lucide-react';
 import VouchEdgeLogo from '../components/brand/VouchEdgeLogo';
 import ProfileAvatarBorder from '../components/profile/ProfileAvatarBorder';
@@ -66,18 +66,18 @@ const RouteTab = React.memo(function RouteTab({
       aria-current={isActive ? 'page' : undefined}
       aria-keyshortcuts={shortcut}
       title={shortcut ? `${label} (${shortcut})` : label}
-      className={`ve-topbar-tab group inline-flex h-9 shrink-0 items-center gap-1.5 border px-3 font-sans text-xs font-semibold tracking-normal transition-all cursor-pointer ${
+      className={`ve-topbar-tab group inline-flex h-8 shrink-0 items-center gap-1.5 px-3 font-sans text-xs font-medium tracking-normal transition-all cursor-pointer rounded-md ${
         isActive
-          ? 'border-amber-400 bg-[#181B22] text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-          : 'border-white/[0.08] bg-[#111318]/90 text-zinc-400 hover:border-zinc-700 hover:bg-[#181B22] hover:text-zinc-200'
+          ? 'bg-white/[0.12] text-white border border-white/[0.15] shadow-sm'
+          : 'bg-transparent border border-transparent text-zinc-400 hover:border-white/[0.08] hover:bg-white/[0.04] hover:text-zinc-200'
       }`}
     >
-      <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-amber-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+      <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
       <span className="whitespace-nowrap">{label}</span>
       {liveOnAir ? <SidebarLiveOnAirBadge compact={liveOnAir === 'dot'} /> : null}
       {shortcut ? (
-        <span className={`hidden 2xl:inline-block px-1 text-[9px] font-mono border ${
-          isActive ? 'border-amber-400/40 bg-amber-950/40 text-amber-300' : 'border-white/10 bg-zinc-900/80 text-zinc-500'
+        <span className={`hidden 2xl:inline-block px-1 text-[9px] font-mono border rounded ${
+          isActive ? 'border-white/20 bg-white/10 text-white' : 'border-white/[0.06] bg-black/40 text-zinc-500'
         }`}>
           {shortcut}
         </span>
@@ -153,14 +153,31 @@ export const AppTopBar = React.memo(function AppTopBar({
     onOpenCmdK,
   });
 
-  // Close the profile menu on outside click / Escape.
+  // Close the profile menu on outside click / Escape / scoped menu hotkeys.
   useEffect(() => {
     if (!menuOpen) return;
     const onPointerDown = (event: MouseEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      } else if (event.key === 'p' || event.key === 'P') {
+        event.preventDefault();
+        handleNavigate('profile');
+      } else if (event.key === 'b' || event.key === 'B') {
+        event.preventDefault();
+        handleNavigate('premium');
+      } else if (event.key === 's' || event.key === 'S') {
+        event.preventDefault();
+        handleNavigate('settings');
+      } else if ((event.key === 'a' || event.key === 'A') && canAccessAdminSurfaces(profile)) {
+        event.preventDefault();
+        handleNavigate('admin');
+      } else if (!FOCUSED_BETA_SHELL_ENABLED && (event.key === 'c' || event.key === 'C')) {
+        event.preventDefault();
+        handleNavigate('customize');
+      }
     };
     document.addEventListener('mousedown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
@@ -168,7 +185,7 @@ export const AppTopBar = React.memo(function AppTopBar({
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [menuOpen]);
+  }, [menuOpen, handleNavigate, profile]);
 
   const needsFastLivePoll = SECTIONS_USING_LIVE_GAMES.has(activeSection) || activeSection === 'today';
   const { data: liveGamesPayload, isError: liveGamesError, isLoading: liveGamesLoading } = useLiveGames({
@@ -185,7 +202,7 @@ export const AppTopBar = React.memo(function AppTopBar({
   return (
     <header
       id="ve-app-topbar"
-      className="ve-app-topbar sticky top-0 z-40 flex h-14 w-full shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] bg-[#090A0F]/95 px-4 backdrop-blur-xl sm:px-6"
+      className="ve-app-topbar sticky top-0 z-40 flex h-14 w-full shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] bg-[#050505]/95 px-4 backdrop-blur-xl sm:px-6"
     >
       {/* Left — brand + quick search */}
       <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
@@ -202,12 +219,12 @@ export const AppTopBar = React.memo(function AppTopBar({
         <button
           type="button"
           onClick={onOpenCmdK}
-          className="group hidden h-9 items-center gap-2 border border-white/[0.08] bg-[#111318] px-3 font-sans text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:bg-[#181B22] hover:text-zinc-200 md:flex cursor-pointer"
+          className="group hidden h-8 items-center gap-2 rounded-md border border-white/[0.08] bg-[#111113] px-3 font-sans text-xs text-zinc-400 transition-colors hover:border-white/[0.16] hover:bg-[#18181B] hover:text-zinc-200 md:flex cursor-pointer"
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0 text-zinc-500 group-hover:text-zinc-300" />
           <span className="hidden lg:inline font-medium">Search…</span>
-          <span className="ml-1 inline-flex items-center gap-0.5 border border-white/10 bg-zinc-900 px-1.5 py-0.5 font-mono text-[9px] font-medium text-zinc-400">
+          <span className="ml-1 inline-flex items-center gap-0.5 rounded border border-white/[0.08] bg-black/50 px-1.5 py-0.5 font-mono text-[9px] font-medium text-zinc-400">
             <Command className="h-2.5 w-2.5" />K
           </span>
         </button>
@@ -215,14 +232,14 @@ export const AppTopBar = React.memo(function AppTopBar({
         <button
           type="button"
           onClick={onOpenCmdK}
-          className="grid h-9 w-9 shrink-0 place-items-center border border-white/[0.08] bg-[#111318] text-zinc-400 hover:border-zinc-700 hover:text-white md:hidden cursor-pointer"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/[0.08] bg-[#111113] text-zinc-400 hover:border-white/[0.16] hover:text-white md:hidden cursor-pointer"
           aria-label="Open command palette"
         >
           <Search className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Centre — route tabs */}
+      {/* Centre — route tabs (strictly operational primary nav) */}
       <nav
         className="ve-topbar-tabs hidden min-w-0 flex-1 items-center justify-center gap-1.5 overflow-x-auto md:flex"
         aria-label="Main navigation"
@@ -244,12 +261,12 @@ export const AppTopBar = React.memo(function AppTopBar({
       {/* Right — feed status, ambient 3D, notifications, profile */}
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <span
-          className={`hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wider xl:inline-flex ${
+          className={`hidden items-center gap-1.5 rounded border px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-wider xl:inline-flex ${
             liveGamesError
-              ? 'border-rose-500/30 bg-rose-950/30 text-rose-400'
+              ? 'border-rose-500/20 bg-rose-500/10 text-rose-400'
               : liveGamesLoading
-                ? 'border-white/[0.08] bg-[#111318] text-zinc-500'
-                : 'border-emerald-500/30 bg-emerald-950/30 text-emerald-400'
+                ? 'border-white/[0.06] bg-white/[0.04] text-zinc-500'
+                : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
           }`}
           title={`MLB feed: ${liveDataState}`}
         >
@@ -269,13 +286,13 @@ export const AppTopBar = React.memo(function AppTopBar({
           onClick={toggle3D}
           aria-pressed={is3DEnabled}
           title={`Ambient 3D layer: ${is3DEnabled ? 'on' : 'off'}`}
-          className={`hidden h-9 items-center gap-1.5 border px-2.5 font-mono text-[10px] font-medium tracking-wide transition-all cursor-pointer sm:inline-flex ${
+          className={`hidden h-8 items-center gap-1.5 rounded-md border px-2.5 font-mono text-[10px] font-medium tracking-wide transition-all cursor-pointer sm:inline-flex ${
             is3DEnabled
-              ? 'border-amber-400/40 bg-amber-950/30 text-amber-300'
-              : 'border-white/[0.08] bg-[#111318] text-zinc-400 hover:border-zinc-700 hover:text-white'
+              ? 'border-white/20 bg-white/10 text-white'
+              : 'border-white/[0.08] bg-[#111113] text-zinc-400 hover:border-white/[0.16] hover:text-white'
           }`}
         >
-          <Box className={`h-3.5 w-3.5 ${is3DEnabled ? 'text-amber-400' : 'text-zinc-500'}`} />
+          <Box className={`h-3.5 w-3.5 ${is3DEnabled ? 'text-white' : 'text-zinc-500'}`} />
           3D {is3DEnabled ? 'ON' : 'OFF'}
         </button>
 
@@ -288,9 +305,9 @@ export const AppTopBar = React.memo(function AppTopBar({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label={`Account menu for ${profile.displayName}`}
-            className="flex h-9 items-center gap-1.5 border border-white/[0.08] bg-[#111318] px-2 transition-colors hover:border-zinc-700 cursor-pointer"
+            className="flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] bg-[#111113] px-2 transition-colors hover:border-white/[0.16] hover:bg-[#18181B] cursor-pointer"
           >
-            <span className="grid h-6 w-6 shrink-0 place-items-center overflow-hidden border border-white/10 bg-zinc-900">
+            <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-zinc-900">
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -350,6 +367,7 @@ export const AppTopBar = React.memo(function AppTopBar({
 
               <div className="my-1.5 h-px bg-white/[0.08]" />
 
+              {/* Profile & Stats */}
               <button
                 type="button"
                 role="menuitem"
@@ -357,11 +375,40 @@ export const AppTopBar = React.memo(function AppTopBar({
                 className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-zinc-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-white cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  <UserCircle className="h-3.5 w-3.5 text-zinc-500" /> Profile & Stats
+                  <UserCircle className="h-3.5 w-3.5 text-zinc-500" /> Profile &amp; Stats
                 </span>
                 <kbd className="font-mono text-[9px] text-zinc-500">[P]</kbd>
               </button>
 
+              {/* Plan & Billing (Segregated from primary navigation) */}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => handleNavigate('premium')}
+                className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-zinc-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-white cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <CreditCard className="h-3.5 w-3.5 text-emerald-400" /> Plan &amp; Billing
+                </span>
+                <kbd className="font-mono text-[9px] text-zinc-500">[B]</kbd>
+              </button>
+
+              {/* Admin Ops (Staff/Admin only, segregated from primary navigation) */}
+              {canAccessAdminSurfaces(profile) && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleNavigate('admin')}
+                  className="flex w-full items-center justify-between border border-transparent px-2.5 py-1.5 text-left text-xs font-medium text-amber-300 transition-colors hover:border-white/[0.08] hover:bg-[#181B22] hover:text-amber-200 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Shield className="h-3.5 w-3.5 text-amber-400" /> Admin Ops
+                  </span>
+                  <kbd className="font-mono text-[9px] text-zinc-500">[A]</kbd>
+                </button>
+              )}
+
+              {/* Settings */}
               <button
                 type="button"
                 role="menuitem"

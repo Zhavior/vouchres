@@ -133,14 +133,16 @@ export default function App() {
           a sibling of the router rather than a descendant, so navigating,
           signing in, or landing on /auth/* never unmounts the canvas. */}
       <GlobalCanvasRoot />
-      <div className="relative z-10 min-h-screen bg-black">
-        {isAuthCallbackPath() ? (
-          <AuthCallbackPage />
-        ) : isPasswordResetPath() ? (
-          <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
-        ) : (
-          <MainAppRoutes />
-        )}
+      <div className="relative z-10 min-h-screen bg-black flex flex-col">
+        <div className="flex-grow">
+          {isAuthCallbackPath() ? (
+            <AuthCallbackPage />
+          ) : isPasswordResetPath() ? (
+            <Suspense fallback={<RouteFallback />}><ResetPasswordPage /></Suspense>
+          ) : (
+            <MainAppRoutes />
+          )}
+        </div>
       </div>
       <CookieConsentBanner />
     </QueryClientProvider>

@@ -13,8 +13,20 @@ const fieldDeskSource = readFileSync(
   new URL('../src/components/today/TodayFieldDesk.tsx', import.meta.url),
   'utf8',
 );
+const todayNextShellSource = readFileSync(
+  new URL('../src/features/today-next/components/TodayNextShell.tsx', import.meta.url),
+  'utf8',
+);
+const todayCommandBriefSource = readFileSync(
+  new URL('../src/features/today-next/components/TodayNextCommandBrief.tsx', import.meta.url),
+  'utf8',
+);
+const todayMobileShellSource = readFileSync(
+  new URL('../src/features/today-next/components/mobile/TodayMobileShell.tsx', import.meta.url),
+  'utf8',
+);
 
-describe('Today decision-first layout', () => {
+describe('Today decision-first layout & Command Desk', () => {
   it('leads with the real slate summary and connected field desk', () => {
     expect(source).toContain('buildTodayDecision({');
     expect(source).toContain('<TodayFieldDesk');
@@ -43,7 +55,7 @@ describe('Today decision-first layout', () => {
 
   it('uses touch-safe control sizing throughout', () => {
     expect(fieldDeskSource).toContain('min-h-11');
-    expect(fieldDeskSource).toContain('AuroraMaxControl');
+    expect(fieldDeskSource).toContain('Spotlight');
   });
 
   it('does not expose a mode switch that leaves the Today brief unchanged', () => {
@@ -74,9 +86,15 @@ describe('Today decision-first layout', () => {
     expect(source).toContain('Every row keeps its research receipt.');
   });
 
-  it('uses a mobile 2x2 layout for stats and canonical quick actions', () => {
-    expect(fieldDeskSource).toContain('Primary research signal');
-    expect(fieldDeskSource).toContain('AuroraMaxRankedWorkspace');
+  it('implements neobrutalist Stage 01 status and hard offset shadows on CTA', () => {
+    expect(todayCommandBriefSource).toContain('STAGE 01: PRE-PITCH THESIS');
+    expect(todayCommandBriefSource).toContain('shadow-[3px_3px_0px_0px_#00FF87]');
+    expect(todayCommandBriefSource).toContain('Review HR Intelligence ->');
+  });
+
+  it('implements the mobile-first single-column ladder with sticky action hub', () => {
+    expect(todayMobileShellSource).toContain('snap-x snap-mandatory');
+    expect(todayMobileShellSource).toContain('⚡ SLIP');
   });
 
   it('refreshes both sources and removes nonessential motion when requested', () => {
@@ -89,8 +107,6 @@ describe('Today decision-first layout', () => {
   });
 
   it('defers the personalization bundle until the user opens it', () => {
-    // Deferred through the app's resilient lazy loader (src/lib/lazyRoute.tsx),
-    // which keeps the code-split boundary and adds import recovery.
     expect(source).toContain("lazyWithRetry(() => import('./today/TodayPersonalizationPanel')");
     expect(source).toContain('<Suspense fallback=');
   });

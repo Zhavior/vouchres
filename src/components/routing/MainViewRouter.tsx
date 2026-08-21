@@ -99,6 +99,11 @@ const HrNextPage = lazyPage(
   'HrNextPage',
 );
 
+const NflTouchdownPage = lazyPage(
+  () => import('../../features/nfl-touchdown/pages/NflTouchdownPage'),
+  'NflTouchdownPage',
+);
+
 const TrustModelQualityPage = lazyPage(
   () => import('../../features/trust/TrustModelQualityPage'),
   'TrustModelQualityPage',
@@ -513,6 +518,12 @@ function MainViewRouter({
           <DiscordBetaAccessGateShell>
             <HrNextPage />
           </DiscordBetaAccessGateShell>
+        </LazyRoute>
+      );
+    case 'nfl_touchdown':
+      return (
+        <LazyRoute>
+          <NflTouchdownPage />
         </LazyRoute>
       );
     // Staff-only: the endpoints behind this are requireAuth + requireStaff, and

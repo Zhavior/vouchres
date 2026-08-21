@@ -1,5 +1,4 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import type { FooterNavigationTarget } from '../components/landing-v3';
 import { SIGNED_IN_HOME } from '../app/sectionNavigation';
 import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
 import { lazyWithRetry } from '../lib/lazyWithRetry';
@@ -86,21 +85,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
     window.history.replaceState(null, '', '/');
   }, []);
 
-  const handleFooterNavigate = useCallback((target: FooterNavigationTarget) => {
-    const sectionByTarget: Partial<Record<FooterNavigationTarget, string>> = {
-      'How it works': 'how-it-works',
-      'Live record': 'record',
-      Beta: 'pricing',
-    };
-
-    if (target === 'GitHub') {
-      window.open('https://github.com/Zhavior/vouchres', '_blank', 'noopener,noreferrer');
-      return;
-    }
-    const section = sectionByTarget[target];
-    if (section) scrollToSection(section);
-  }, []);
-
   return (
     <>
       <VouchEdgeLandingV3
@@ -108,7 +92,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         onJoinBeta={() => openAuth('signup', 'pro')}
         onViewDemo={() => scrollToSection('record')}
         onExploreCommunity={() => openAuth('signup', 'free')}
-        onFooterNavigate={handleFooterNavigate}
       />
 
       {authOpen && (
