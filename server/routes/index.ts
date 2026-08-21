@@ -36,6 +36,9 @@ import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
 import { creatorBusinessRoutes } from "./creatorBusinessRoutes";
 import { todayPreferencesRoutes } from "./todayPreferencesRoutes";
+import { contactRoutes } from "./contactRoutes";
+import { newsletterRoutes } from "./newsletterRoutes";
+import { seoRoutes } from "./seoRoutes";
 import { registerV3Routes } from "../v3/routes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
@@ -90,6 +93,9 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", socialHubRoutes);
   app.use("/api", creatorBusinessRoutes);
   app.use("/api", todayPreferencesRoutes);
+  app.use("/api", contactRoutes);
+  app.use("/api", newsletterRoutes);
+  app.use("/", seoRoutes);
   registerV3Routes(app);
 
   registerMlbRoutes(app);

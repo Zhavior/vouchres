@@ -241,4 +241,39 @@ describe('Today Command Desk Specifications', () => {
       expect(onAddPlayer).toHaveBeenCalled();
     });
   });
+
+  describe('Today Loading State & Telemetry Integration', () => {
+    it('renders TodayNextSkeleton with accessible loading attributes and responsive structures', async () => {
+      const { TodayNextSkeleton } = await import('../src/features/today-next/components/TodayNextSkeleton');
+      const { container } = render(<TodayNextSkeleton />);
+
+      const skeletonEl = container.querySelector('.today-next');
+      expect(skeletonEl).not.toBeNull();
+      expect(skeletonEl?.getAttribute('aria-busy')).toBe('true');
+      expect(skeletonEl?.getAttribute('aria-live')).toBe('polite');
+
+      const shimmerBlocks = container.querySelectorAll('.tn-skeleton');
+      expect(shimmerBlocks.length).toBeGreaterThan(10);
+    });
+
+    it('mounts data-performance-page="today" on TodayNextPage so Core Web Vitals are tracked', async () => {
+      const { isTodayPerformancePage } = await import('../src/lib/todayWebVitals');
+      const { TodayNextPage } = await import('../src/features/today-next/pages/TodayNextPage');
+      const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      expect(isTodayPerformancePage()).toBe(false);
+      const { unmount } = render(
+        <QueryClientProvider client={queryClient}>
+          <TodayNextPage />
+        </QueryClientProvider>,
+      );
+      expect(isTodayPerformancePage()).toBe(true);
+      unmount();
+      expect(isTodayPerformancePage()).toBe(false);
+    });
+  });
 });

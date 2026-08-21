@@ -14,6 +14,7 @@ import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog"
 import { notify } from "../../../lib/appNotifications";
 import { useAutoRepairDraftIdentity } from "../../../hooks/useAutoRepairDraftIdentity";
 import PlayerHeadshot from "../../parlays/PlayerHeadshot";
+import { TdCorrelationWarning } from "../../../app/td-next/components/TdCorrelationWarning";
 import "../../../styles/shell-surfaces-aurora-max.css";
 
 export type ParlayOsLayerProps = {
@@ -154,11 +155,13 @@ export default function ParlayOsLayer({
                     </button>
                   </div>
                 ) : (
-                  <div
-                    ref={legListRef}
-                    className="h-full space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-2.5 scroll-smooth [scrollbar-color:rgba(0,240,255,0.25)_transparent] [scrollbar-width:thin]"
-                    aria-label="Current parlay legs"
-                  >
+                  <>
+                    <TdCorrelationWarning />
+                    <div
+                      ref={legListRef}
+                      className="h-full space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-2.5 scroll-smooth [scrollbar-color:rgba(0,240,255,0.25)_transparent] [scrollbar-width:thin]"
+                      aria-label="Current parlay legs"
+                    >
                     {draftLegs.map((leg, index) => (
                       <article
                         key={leg.id}
@@ -223,7 +226,8 @@ export default function ParlayOsLayer({
                         ) : null}
                       </article>
                     ))}
-                  </div>
+                    </div>
+                  </>
                 )}
                 {draftLegs.length > 0 ? (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#03080e] to-transparent" aria-hidden="true" />

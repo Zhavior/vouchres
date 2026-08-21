@@ -102,7 +102,7 @@ export default function TodayFieldDesk({
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(420px,0.85fr)] divide-y lg:divide-y-0 lg:divide-x divide-white/[0.08]">
+      <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] divide-y lg:divide-y-0 lg:divide-x divide-white/[0.08]">
         {/* Left: Spotlight Dossier */}
         <Spotlight player={selected} state={state} onAddPlayer={onAddPlayer} onResearch={onResearch} />
 

@@ -7,7 +7,7 @@ import { AppShell } from './AppShell';
 import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
 import { useAuthSession } from '../lib/authSessionStore';
 import VouchEdgeLoginIntro from '../components/auth/VouchEdgeLoginIntro';
-import '../index.css';
+
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
 

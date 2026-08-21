@@ -994,6 +994,17 @@ export default function VouchEdgeLandingV3(props: Props) {
             STAGE: 01 // PUBLIC
           </b>
         </a>
+        <div className="flex shrink-0 items-center gap-4 sm:gap-6 mr-2 sm:mr-6">
+          <a href="/about" className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors no-underline">
+            About
+          </a>
+          <a href="/contact" className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors no-underline">
+            Contact
+          </a>
+          <a href="/blog" className="hidden lg:block text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors no-underline">
+            Log
+          </a>
+        </div>
         <div className="grid shrink-0 grid-cols-2 items-center gap-1.5 sm:flex sm:gap-3">
           <button
             type="button"

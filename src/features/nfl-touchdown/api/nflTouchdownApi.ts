@@ -34,14 +34,13 @@ export interface NflMatchupIntelligence {
 }
 
 export interface NflTouchdownIntelligenceResponse {
-  data: {
-    date: string;
-    games: NflMatchupIntelligence[];
-    meta?: any;
-  }
+  ok: boolean;
+  date: string;
+  games: NflMatchupIntelligence[];
+  meta?: any;
 }
 
 export async function fetchNflTouchdownIntelligence(): Promise<NflMatchupIntelligence[]> {
   const res = await apiClient.get<NflTouchdownIntelligenceResponse>('/api/nfl/touchdown-intelligence/today');
-  return res.data.data.games || [];
+  return res.data.games || [];
 }
