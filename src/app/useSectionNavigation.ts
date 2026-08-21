@@ -17,6 +17,7 @@ import {
   requiresLogin,
   isPublicFrontPage,
   shouldForcePublicLanding,
+  sectionToPath,
 } from './sectionNavigation';
 import { persistAuthSession, supabase } from '../lib/supabaseClient';
 import { useAuthSession } from '../lib/authSessionStore';
@@ -68,6 +69,13 @@ export function useSectionNavigation() {
     startTransition(() => {
       saveActiveSection(target);
       setActiveSection(target);
+      if (typeof window !== 'undefined') {
+        const nextPath = sectionToPath(target);
+        const currentPath = window.location.pathname.toLowerCase();
+        if (currentPath !== nextPath && (currentPath !== '/' || nextPath !== '/')) {
+          window.history.pushState(null, '', nextPath);
+        }
+      }
     });
   }, []);
 
