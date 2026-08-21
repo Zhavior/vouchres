@@ -17,6 +17,137 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: '1',
+    slug: 'how-to-find-positive-ev-home-run-props-statcast-math',
+    title: 'The Mathematics of MLB Home Run Props: How to Find Real +EV Using Statcast & Weather Physics',
+    excerpt: 'A complete quantitative guide on why 90% of home run bettors lose money chasing box scores, and how to use Statcast barrel rates, pitcher vulnerability, and air density vectors to beat sportsbook lines.',
+    date: 'August 21, 2026',
+    tag: 'Quantitative Strategy',
+    author: 'Boyd R. Santos',
+    authorRole: 'Founder & Chief Systems Architect',
+    readTime: '7 MIN READ',
+    featured: true,
+    colorAccent: 'cyan',
+    keyTakeaway: 'Home run props are high-variance rare events. True edge comes from finding mispriced implied probabilities using Statcast barrel clustering and wind vectors—not past box scores.',
+    content: `
+# The Mathematics of MLB Home Run Props
+
+Home run player props have exploded into the most popular wager in modern sports betting. 
+
+They offer electrifying payouts: turning a \$10 bet into \$45 or \$60 on a single swing. But there is an uncomfortable truth that sportsbooks love and "cappers" hide from you:
+
+> **Over 90% of retail bettors lose their bankroll on home run props because they bet on past results rather than underlying physics.**
+
+In this masterclass guide, we break down the exact quantitative methodology we engineered into the **VouchEdge HRPI (Home Run Probability Index)** engine. 
+
+---
+
+## 1. The Retail Trap: Box-Score Chasing
+
+The average bettor checks ESPN, sees that a player hit a home run in 3 straight games, and immediately bets him again tonight because he is "hot."
+
+**In probability theory, this is the classic Gambler’s Fallacy.**
+
+A home run is a high-variance, discrete event. In a sample size of 5 to 10 games, random variance dominates. A hitter can go 0-for-15 while hitting 4 balls at 108mph right at outfielders (pure bad luck), while another hitter bloops two 335-foot wind-aided fly balls over the Crawford Boxes (pure good luck).
+
+If you price a bet on the *result* rather than the *quality of contact*, the sportsbook's built-in 20% vig will drain your bankroll over time.
+
+---
+
+## 2. The 3 Statcast Signals That Actually Predict Home Runs
+
+To predict future home runs mathematically, you must strip away fielding luck and analyze raw physics through MLB Statcast telemetry:
+
+### A. Barrel Rate per Plate Appearance (BRL/PA%)
+A **Statcast Barrel** is defined as a batted ball with an exit velocity of at least 98 mph and a launch angle between 24° and 30°. 
+* Across the league, batted balls classified as Barrels have an average batting average above **.800** and a slugging percentage over **2.500**.
+* *Crucial Rule:* Always evaluate **Barrel% per Plate Appearance**, not per batted ball. Hitters with elite contact quality who also possess high walk rates (e.g. Aaron Judge, Juan Soto) generate far higher true HR equity.
+
+### B. 14-Day Rolling Hard-Hit% (95mph+ Velocity)
+Season-long statistics lag behind reality. A hitter dealing with a minor wrist impingement might have a season Hard-Hit rate of 48%, but over their last 40 plate appearances, their exit velocity has dropped to 36%. VouchEdge tracks rolling 14-day Statcast windows to catch power inflection points before sportsbooks adjust the lines.
+
+### C. Launch Angle Standard Deviation
+Hitters who consistently cluster their launch angles between **24° and 32°** are far more likely to homer than hitters with high average exit velocity who alternate between ground balls (0°) and pop-outs (45°).
+
+---
+
+## 3. The Pitcher Vulnerability Matrix
+
+You are never betting on a hitter in isolation; you are betting on a **kinetic matchup**.
+
+| Analytical Variable | What Retail Bettors Look At | What VouchEdge Quant Models Analyze |
+| :--- | :--- | :--- |
+| **Pitcher Quality** | Season ERA (4.15) | Rolling 30-day HR/9 & FIP against specific handedness |
+| **Pitch Arsenal** | "He has good stuff" | Hitter xwOBA vs Pitcher's primary pitch type (e.g. 4-Seam Fastball > 95mph) |
+| **Zone Contact** | Strikeout counts | Zone-Contact% in 2-strike counts (vulnerability to hanging breaking balls) |
+| **Bullpen Depth** | Win/Loss record | Available high-leverage arms vs fatigued middle relief |
+
+---
+
+## 4. Atmospheric Physics: The Weather Vector
+
+Baseball is played in open air, and air density determines how far a sphere travels.
+
+1. **Temperature:** For every **10°F increase** in ambient temperature, air density drops, allowing a batted ball to travel approximately **2.5 to 3.5 additional feet**. A 395-foot warning track out in 55°F weather becomes a 405-foot home run at 85°F.
+2. **Tailwinds & Outward Vector:** A sustained 12mph wind blowing directly out to center field at Wrigley Field or Fenway Park adds between **12 and 18 feet of carry**, turning routine fly balls into bleacher souvenirs.
+3. **Barometric Pressure & Elevation:** Low pressure systems and high altitude (Coors Field) dramatically reduce aerodynamic drag.
+
+The VouchEdge HRPI engine runs live meteorological simulations 30 minutes before first pitch, adjusting each player's true probability based on stadium geometry and wind vector angles.
+
+---
+
+## 5. How to Calculate Positive Expected Value (+EV)
+
+A bet is only worth making if the **true mathematical probability** is higher than the **implied probability** of the sportsbook's odds.
+
+### The Conversion Formula:
+
+$$\\text{Implied Probability} = \\frac{100}{\\text{American Odds} + 100}$$
+
+For example, if DraftKings or FanDuel lists a hitter at **+400**, the sportsbook's implied probability is:
+
+$$\\frac{100}{400 + 100} = 20.0\\%$$
+
+If the VouchEdge HRPI model analyzes the Statcast barrel rate, opposing pitcher's handedness split, and 14mph outward tailwind and calculates the hitter's **true probability at 26.5%** (+277 fair value):
+
+$$\\text{Expected Value (EV)} = (0.265 \\times 4.00) - (0.735 \\times 1.00) = +32.5\\%$$
+
+This is **+32.5% Positive Expected Value (+EV)**. Over a sample of 500 bets, consistently finding +EV edges is how quantitative analysts generate consistent alpha while recreational gamblers go broke.
+
+---
+
+## 6. Comparison: Retail Gambler vs. Quantitative Analyst
+
+| Characteristic | The Retail Gambler | The VouchEdge Analyst |
+| :--- | :--- | :--- |
+| **Decision Driver** | Gut feeling, hype, Twitter "locks" | Sourced Statcast velocity, weather vectors & HRPI |
+| **Post-Game Accountability** | Deletes tweets, blames umpires | Records decision on immutable SHA-256 ledger |
+| **Bankroll Management** | Bets \$200 on "sure things" | Strict 1-unit kelly criterion allocation |
+| **Edge Source** | Box-score recency | Closing Line Value (CLV) & +EV Discrepancies |
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is a good Barrel Rate for predicting home runs?
+In MLB, the league average barrel rate is roughly 6.5% to 7.0%. Elite power hitters maintain a Barrel% above **14.0% per plate appearance**. Any hitter maintaining a 15%+ barrel rate over their last 50 plate appearances facing a fly-ball pitcher is a prime candidate for a home run prop.
+
+### How much does wind affect home run odds?
+A 10 to 15 mph wind blowing straight out to the outfield increases home run frequency by approximately **8% to 15%**, depending on stadium wall height and atmospheric temperature.
+
+### How does VouchEdge calculate the HRPI?
+The VouchEdge Home Run Probability Index (HRPI) synthesizes rolling Statcast exit velocities, launch angle distributions, pitcher pitch-mix vulnerability, umpire strike zone tendencies, and live stadium weather vectors into an objective probability percentage.
+
+---
+
+## Stop Betting Blind. Start Using Evidence.
+
+You don't need to pay self-proclaimed "gurus" for fake lock picks. 
+
+Explore our **Real-Time HRPI Board** on the VouchEdge terminal and see the raw underlying mathematics for today's entire MLB slate before first pitch.
+`
+  },
+  {
+    id: '2',
     slug: 'why-i-built-vouchedge',
     title: 'Why I Built VouchEdge: Ending the Era of Blind Bets & Fake Locks',
     excerpt: 'I was tired of watching people lose their hard-earned money and get scammed by fake lock sellers. Here is why VouchEdge was built to empower informed decision making.',
@@ -25,8 +156,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Boyd R. Santos',
     authorRole: 'Founder & Chief Architect',
     readTime: '4 MIN READ',
-    featured: true,
-    colorAccent: 'cyan',
+    colorAccent: 'emerald',
     keyTakeaway: 'When you eliminate fake promises and expose real probability, you empower analysts to make smart, educated decisions.',
     content: `
 # Why I Built VouchEdge
@@ -77,7 +207,7 @@ Welcome to the standard of truth.
 `
   },
   {
-    id: '2',
+    id: '3',
     slug: 'open-beta-live',
     title: 'VouchEdge Open Beta is Live: Sourced Evidence Over Synthetic Locks',
     excerpt: 'The evidence ledger is officially open. We are onboarding the first cohort of MLB analysts into the production intelligence environment.',
@@ -86,7 +216,7 @@ Welcome to the standard of truth.
     author: 'Boyd R. Santos',
     authorRole: 'Founder & Chief Architect',
     readTime: '3 MIN READ',
-    colorAccent: 'emerald',
+    colorAccent: 'amber',
     keyTakeaway: 'The public beta opens access to real-time HRPI calculations and cryptographic ledger validation.',
     content: `
 # The Open Beta is Here.
@@ -109,7 +239,7 @@ We are rolling out seats in controlled cohorts to guarantee sub-50ms API latenci
 `
   },
   {
-    id: '3',
+    id: '4',
     slug: 'rejecting-synthetic-win-rates',
     title: 'The Mathematical Reason We Rejected Synthetic Win-Rates',
     excerpt: 'Why "95% lock" models are statistically fraudulent and how transparent probability distribution protects analysts from catastrophic drawdown.',
@@ -118,7 +248,7 @@ We are rolling out seats in controlled cohorts to guarantee sub-50ms API latenci
     author: 'Quantitative Team',
     authorRole: 'Probability Systems',
     readTime: '5 MIN READ',
-    colorAccent: 'amber',
+    colorAccent: 'purple',
     keyTakeaway: 'Probability is not a promise. Exposing variance and data gaps is the only mathematically honest approach.',
     content: `
 # The Mathematical Fraud of "Guaranteed Locks"
@@ -149,7 +279,7 @@ You see every input that went into the calculation. **No black boxes. No halluci
 `
   },
   {
-    id: '4',
+    id: '5',
     slug: 'architecting-the-aurora-engine',
     title: 'Architecting Aurora: 60fps GPU Acceleration in a React App Shell',
     excerpt: 'A deep dive into our custom Three.js WebGL canvas bridge and how we maintain sub-millisecond DOM responsiveness during live game feeds.',
@@ -158,7 +288,7 @@ You see every input that went into the calculation. **No black boxes. No halluci
     author: 'Frontend Systems',
     authorRole: 'GPU & UI Engineering',
     readTime: '6 MIN READ',
-    colorAccent: 'purple',
+    colorAccent: 'cyan',
     keyTakeaway: 'Offloading background render loops to WebGL keeps the React main thread free for high-speed live data streams.',
     content: `
 # High-Density Visual Telemetry Without Main-Thread Lag
