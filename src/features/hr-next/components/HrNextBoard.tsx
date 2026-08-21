@@ -143,15 +143,22 @@ export function HrNextBoard({
     ) : null;
 
   if (isTierMode) {
-    const populated = tierColumns.filter((column) => column.rows.length > 0);
+    const totalRows = tierColumns.reduce((sum, col) => sum + col.rows.length, 0);
 
-    if (populated.length === 0) {
+    // If every tier is empty, show one unified empty state — not 4 blank columns.
+    if (totalRows === 0) {
       return (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a1010] px-6 py-12 text-center font-mono text-xs text-white/40">
           No rows matched the active filters.
         </div>
       );
     }
+
+    // Pro Mode: always show all 4 tier columns so the grid is stable.
+    // Standard: collapse empty tiers to avoid dead space in single-column layout.
+    const displayColumns = isProMode
+      ? tierColumns
+      : tierColumns.filter((column) => column.rows.length > 0);
 
     // One tree for both modes — only the class names differ, so React keeps the
     // very same DOM nodes and the switch is a transform, not a re-render.
@@ -168,7 +175,7 @@ export function HrNextBoard({
               : 'flex flex-col gap-6'
           }
         >
-          {populated.map((column) => (
+          {displayColumns.map((column) => (
             <section
               key={column.tier.key}
               aria-label={`${column.tier.label} tier`}
@@ -195,9 +202,15 @@ export function HrNextBoard({
                 </span>
               </header>
 
-              <div className={isProMode ? 'space-y-3' : 'space-y-2.5'}>
-                {renderTierRows(column)}
-              </div>
+              {column.rows.length > 0 ? (
+                <div className={isProMode ? 'space-y-3' : 'space-y-2.5'}>
+                  {renderTierRows(column)}
+                </div>
+              ) : (
+                <div className={`rounded-lg border border-dashed ${column.tier.columnBorder} bg-[#060a0a]/50 px-3 py-6 text-center font-mono text-[10px] text-white/25`}>
+                  No {column.tier.label.toLowerCase()} picks on today's slate
+                </div>
+              )}
               {renderExpander(column)}
             </section>
           ))}
