@@ -1,0 +1,121 @@
+/*
+ * News Hub — Bloomberg / ESPN Terminal Aesthetics
+ * Machined metallic surfaces, tactile micro-interactions, authentic data animations.
+ */
+
+.news-hub-root {
+  background-color: #050505;
+  color: #F4F4F5;
+}
+
+/* 1. Authentic Machined Category Pill Tabs */
+.news-category-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #A1A1AA;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.news-category-tab:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.news-category-tab--active {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #FFFFFF !important;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* 2. Top Breaking Live Ticker Shimmer Bar */
+.news-ticker-bar {
+  background: linear-gradient(90deg, #0A0A0C 0%, #111114 50%, #0A0A0C 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.news-ticker-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.05), transparent);
+  animation: news-ticker-sweep 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes news-ticker-sweep {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(400%); }
+}
+
+/* 3. Statcast Metric Gauge Bars (Non-AI, Precise Sports Science) */
+.news-metric-bar {
+  height: 0.35rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.news-metric-bar__fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.news-metric-bar__fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: news-bar-glint 2.5s infinite;
+}
+
+@keyframes news-bar-glint {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+/* 4. Interactive Live Card Hover States */
+.news-bento-card {
+  background-color: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.news-bento-card:hover {
+  background-color: #161619;
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(52, 211, 153, 0.05);
+}

@@ -42,5 +42,5 @@ export interface NflTouchdownIntelligenceResponse {
 
 export async function fetchNflTouchdownIntelligence(): Promise<NflMatchupIntelligence[]> {
   const res = await apiClient.get<NflTouchdownIntelligenceResponse>('/api/nfl/touchdown-intelligence/today');
-  return res.data.games || [];
+  return res.games || [];
 }

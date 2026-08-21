@@ -69,6 +69,8 @@ export const PUBLIC_SECTIONS = new Set([
   // ParlayOS supports guest practice-mode building; saving prompts sign-in
   // (see backendSyncState: 'auth_required' in domain/parlayActions.ts).
   'build',
+  'td_next',
+  'nfl_touchdown',
 ]);
 
 export const SIGNED_IN_HOME = 'today';
@@ -388,8 +390,14 @@ export function resolveDevSectionFromLocation() {
     return 'live_games';
   }
 
-  if (target === 'nfl-touchdown' || target === '/nfl-touchdown' || target === 'nfl_touchdown' || target === '/nfl_touchdown') {
-    return 'nfl_touchdown';
+  if (
+    target === 'td-next' || target === '/td-next' ||
+    target === 'td_next' || target === '/td_next' ||
+    target === 'tdnext' || target === '/tdnext' ||
+    target === 'nfl-touchdown' || target === '/nfl-touchdown' ||
+    target === 'nfl_touchdown' || target === '/nfl_touchdown'
+  ) {
+    return 'td_next';
   }
 
   // General fallback normalization for all valid section route names
@@ -405,7 +413,7 @@ export function resolveDevSectionFromLocation() {
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',
     'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
     'premium', 'themestore', 'subscriber_hub', 'settings', 'customize', 'admin', 'admin_hr_next',
-    'admin_model_quality', 'nfl_touchdown'
+    'admin_model_quality', 'nfl_touchdown', 'td_next'
   ]);
   if (validSections.has(clean)) {
     return clean;

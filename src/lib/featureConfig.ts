@@ -57,6 +57,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "today",         label: "Today",                 icon: "CalendarDays", enabled: true, order: 2,    group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "news",          label: "News Wire",             icon: "Newspaper",    enabled: true, order: 2.5,  group: "Daily", locked: true },
   { id: "hr_board",      label: "HR Next",               icon: "Flame",        enabled: true, order: 3,    group: "Daily", sports: ALL_SPORTS, locked: true, access: "admin" },
+  { id: "td_next",       label: "TD Next",               icon: "Activity",     enabled: true, order: 3.2,  group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "mlb_stats",     label: "MLB Stat Hub",          icon: "BarChart3",    enabled: true, order: 4,    group: "Daily", sports: ALL_SPORTS, locked: false },
   { id: "daily_players", label: "Daily Players",         icon: "Users",        enabled: true, order: 5,    group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "live_games",    label: "Live Games",            icon: "Tv",           enabled: true, order: 6,    group: "Daily", sports: ALL_SPORTS, locked: true },

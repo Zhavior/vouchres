@@ -529,6 +529,7 @@ function MainViewRouter({
           </DiscordBetaAccessGateShell>
         </LazyRoute>
       );
+    case 'td_next':
     case 'nfl_touchdown':
       return (
         <LazyRoute>

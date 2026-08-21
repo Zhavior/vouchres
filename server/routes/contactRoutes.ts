@@ -18,7 +18,7 @@ contactRoutes.post(
     if (!email || typeof email !== "string" || !email.includes("@")) {
       throw new AppError({
         status: 400,
-        code: "invalid_email",
+        code: "validation_error",
         message: "A valid email address is required.",
       });
     }
@@ -26,7 +26,7 @@ contactRoutes.post(
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       throw new AppError({
         status: 400,
-        code: "invalid_message",
+        code: "validation_error",
         message: "Message payload cannot be empty.",
       });
     }
