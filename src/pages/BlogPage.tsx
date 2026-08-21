@@ -69,13 +69,34 @@ export default function BlogPage({ slug }: { slug?: string }) {
     }
   };
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const [newsletterError, setNewsletterError] = useState('');
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newsletterEmail) return;
+    if (!newsletterEmail || !newsletterEmail.includes('@')) return;
     setNewsletterStatus('submitting');
-    setTimeout(() => {
+    setNewsletterError('');
+
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || 'Subscription failed.');
+      }
+
       setNewsletterStatus('success');
-    }, 1000);
+    } catch (err: any) {
+      console.error('[newsletter] subscribe error:', err);
+      setNewsletterError(err?.message || 'Failed to subscribe.');
+      setNewsletterStatus('idle');
+    }
   };
 
   // Extract unique tags
