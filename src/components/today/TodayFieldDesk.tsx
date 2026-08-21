@@ -183,12 +183,23 @@ export default function TodayFieldDesk({
   );
 }
 
-/** Render a monospace stepped block gauge, e.g. [■■■■■■■■░░] */
-function renderBlockMeter(value: number, max: number = 100, blocks: number = 10): string {
-  const ratio = Math.max(0, Math.min(1, value / max));
-  const filled = Math.round(ratio * blocks);
-  const unfilled = blocks - filled;
-  return `[${'■'.repeat(filled)}${'░'.repeat(unfilled)}]`;
+function AnimatedBar({ value, max, colorClass }: { value: number; max: number; colorClass: string }) {
+  const [width, setWidth] = React.useState(0);
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setWidth(Math.max(0, Math.min(100, (value / max) * 100)));
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [value, max]);
+
+  return (
+    <div className="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
+      <div 
+        className={`h-full ${colorClass} transition-all duration-1000 ease-out`} 
+        style={{ width: `${width}%` }}
+      />
+    </div>
+  );
 }
 
 function getMicroTelemetry(player: HrWatchRow) {
@@ -359,7 +370,7 @@ function Spotlight({
             <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
               <span className="text-[10px] text-zinc-400 font-medium tracking-wider">HITTER POWER</span>
               <div className="flex items-center gap-2">
-                <span className="text-emerald-400 tracking-tighter text-xs font-mono">{renderBlockMeter(hitterPower, 100, 10)}</span>
+                <AnimatedBar value={hitterPower} max={100} colorClass="bg-emerald-400" />
                 <span className="text-emerald-400 font-bold text-xs tabular-nums w-14 text-right font-mono">{hitterPower}/100</span>
               </div>
             </div>
@@ -368,7 +379,7 @@ function Spotlight({
             <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
               <span className="text-[10px] text-zinc-400 font-medium tracking-wider">PITCHER VULN</span>
               <div className="flex items-center gap-2">
-                <span className="text-sky-400 tracking-tighter text-xs font-mono">{renderBlockMeter(pitcherVuln, 100, 10)}</span>
+                <AnimatedBar value={pitcherVuln} max={100} colorClass="bg-sky-400" />
                 <span className="text-sky-400 font-bold text-xs tabular-nums w-14 text-right font-mono">{pitcherVuln}/100</span>
               </div>
             </div>
@@ -377,7 +388,7 @@ function Spotlight({
             <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
               <span className="text-[10px] text-zinc-400 font-medium tracking-wider">PARK FACTOR</span>
               <div className="flex items-center gap-2">
-                <span className="text-amber-300 tracking-tighter text-xs font-mono">{renderBlockMeter(parkVal, 150, 10)}</span>
+                <AnimatedBar value={parkVal} max={150} colorClass="bg-amber-300" />
                 <span className="text-amber-300 font-bold text-xs tabular-nums w-14 text-right font-mono">{parkVal} IDX</span>
               </div>
             </div>

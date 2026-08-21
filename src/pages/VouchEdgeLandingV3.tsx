@@ -13,7 +13,6 @@ import {
   FAQSection,
   CTASection,
   FooterSection,
-  type VouchEdgeLandingV3Props,
 } from '../components/landing-v3';
 
 import {

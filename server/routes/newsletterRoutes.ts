@@ -21,7 +21,7 @@ newsletterRoutes.post(
     if (!email || typeof email !== "string" || !email.includes("@")) {
       throw new AppError({
         status: 400,
-        code: "invalid_email",
+        code: "validation_error",
         message: "A valid email address is required to subscribe.",
       });
     }
@@ -50,7 +50,7 @@ newsletterRoutes.post(
     if (!slug || typeof slug !== "string") {
       throw new AppError({
         status: 400,
-        code: "invalid_slug",
+        code: "validation_error",
         message: "A valid blog post slug is required to broadcast.",
       });
     }

@@ -41,6 +41,8 @@ const RESEARCH_SECTIONS = new Set([
   'brain_performance',
   'nba_nfl',
   'pro_command_center',
+  'td_next',
+  'nfl_touchdown',
 ]);
 
 const TRACK_RECORD_SECTIONS = new Set([
@@ -73,16 +75,22 @@ const ACCOUNT_SECTIONS = new Set([
 const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'today',
   'today_next',
+  'news',
   'hr_board',
+  'td_next',
   'live_games',
+  'nfl_touchdown',
   'results',
 ]);
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([
   'today',
   'today_next',
+  'news',
   'hr_board',
+  'td_next',
   'live_games',
+  'nfl_touchdown',
   'results',
   'premium',
   'profile',

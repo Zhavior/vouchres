@@ -36,11 +36,11 @@ interface TodayNextShellProps {
 
 /** Number-key shortcuts, mirroring the Launchpad tiles in order. */
 const LAUNCH_KEYS: Record<string, string> = {
-  '1': 'hr_board',
-  '2': 'admin_hr_next',
-  '3': 'live_games',
-  '4': 'research',
-  '5': 'live_parlays',
+  '1': 'news',
+  '2': 'hr_board',
+  '3': 'nfl_touchdown',
+  '4': 'live_games',
+  '5': 'research',
   '6': 'results',
 };
 

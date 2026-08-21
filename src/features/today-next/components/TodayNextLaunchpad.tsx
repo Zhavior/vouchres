@@ -7,6 +7,8 @@ import {
   Target,
   Tv,
   UserRoundSearch,
+  Newspaper,
+  Trophy,
 } from 'lucide-react';
 import type { TodayNextVitals } from '../hooks/useTodayNextHome';
 
@@ -18,22 +20,31 @@ interface TodayNextLaunchpadProps {
 export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps) {
   const tiles = [
     {
+      section: 'news',
+      icon: Newspaper,
+      label: 'News Wire & Blog',
+      detail: 'MLB news & engineering blog',
+      count: 'LIVE',
+      accent: 'text-emerald-400',
+      key: '1',
+    },
+    {
       section: 'hr_board',
       icon: Flame,
       label: 'HR Intelligence',
       detail: 'Ranked home-run evidence',
       count: vitals.hrSignals != null ? `${vitals.hrSignals} rows` : null,
       accent: 'text-emerald-400',
-      key: '1',
+      key: '2',
     },
     {
-      section: 'admin_hr_next',
-      icon: Sparkles,
-      label: 'HR Next Terminal',
-      detail: 'Terminal board & telemetry',
-      count: null,
-      accent: 'text-sky-400',
-      key: '2',
+      section: 'nfl_touchdown',
+      icon: Trophy,
+      label: 'NFL Touchdown',
+      detail: 'Anytime TD probability models',
+      count: 'NEXT GEN',
+      accent: 'text-amber-400',
+      key: '3',
     },
     {
       section: 'live_games',
@@ -42,7 +53,7 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
       detail: 'Scores & in-game context',
       count: vitals.live > 0 ? `${vitals.live} live` : null,
       accent: vitals.live > 0 ? 'text-rose-400' : 'text-zinc-400',
-      key: '3',
+      key: '4',
     },
     {
       section: 'research',
@@ -51,15 +62,6 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
       detail: 'Source-level dossiers',
       count: null,
       accent: 'text-sky-400',
-      key: '4',
-    },
-    {
-      section: 'live_parlays',
-      icon: Target,
-      label: 'Decision Slips',
-      detail: 'Slips in progress',
-      count: vitals.pendingSlips > 0 ? `${vitals.pendingSlips} pending` : null,
-      accent: vitals.pendingSlips > 0 ? 'text-amber-300' : 'text-emerald-400',
       key: '5',
     },
     {
