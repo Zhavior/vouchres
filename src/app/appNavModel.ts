@@ -66,8 +66,8 @@ export function isNavItemActive(activeSection: string, featureId: string): boole
       activeSection === 'admin_hr_next'
     );
   }
-  if (featureId === 'td_next' || featureId === 'nfl_touchdown') {
-    return activeSection === 'td_next' || activeSection === 'nfl_touchdown';
+  if (featureId === 'td_next') {
+    return activeSection === 'td_next';
   }
   if (featureId === 'brain_picks') return activeSection === 'brain_picks' || activeSection === 'brain_performance';
   return activeSection === featureId;
