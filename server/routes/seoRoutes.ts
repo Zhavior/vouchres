@@ -18,6 +18,13 @@ seoRoutes.get(
 
     const staticUrls = [
       { loc: `${baseUrl}/`, priority: "1.0", changefreq: "daily" },
+      { loc: `${baseUrl}/today`, priority: "1.0", changefreq: "daily" },
+      { loc: `${baseUrl}/hr-board`, priority: "0.9", changefreq: "daily" },
+      { loc: `${baseUrl}/td-next`, priority: "0.9", changefreq: "daily" },
+      { loc: `${baseUrl}/live-games`, priority: "0.8", changefreq: "daily" },
+      { loc: `${baseUrl}/research`, priority: "0.8", changefreq: "daily" },
+      { loc: `${baseUrl}/build`, priority: "0.8", changefreq: "daily" },
+      { loc: `${baseUrl}/news`, priority: "0.8", changefreq: "daily" },
       { loc: `${baseUrl}/about`, priority: "0.8", changefreq: "monthly" },
       { loc: `${baseUrl}/dev`, priority: "0.8", changefreq: "monthly" },
       { loc: `${baseUrl}/contact`, priority: "0.7", changefreq: "monthly" },
@@ -63,6 +70,13 @@ seoRoutes.get(
     const baseUrl = getSafePublicOrigin();
     const robots = `User-agent: *
 Allow: /
+Allow: /today
+Allow: /hr-board
+Allow: /td-next
+Allow: /live-games
+Allow: /research
+Allow: /build
+Allow: /news
 Allow: /about
 Allow: /contact
 Allow: /blog

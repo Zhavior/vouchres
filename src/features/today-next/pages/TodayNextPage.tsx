@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { TodayNextShell } from '../components/TodayNextShell';
 
 interface TodayNextPageProps {
@@ -5,6 +6,10 @@ interface TodayNextPageProps {
 }
 
 export function TodayNextPage({ navigateSection }: TodayNextPageProps) {
+  useEffect(() => {
+    document.title = "Today's Command Desk — VouchEdge";
+  }, []);
+
   return (
     // overflow-x-clip, not overflow-hidden: `hidden` would make this a scroll
     // container, which breaks the shell's sticky header against document
