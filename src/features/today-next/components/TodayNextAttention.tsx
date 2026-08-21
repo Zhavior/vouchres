@@ -1,3 +1,4 @@
+import React from 'react';
 import { AlertTriangle, ArrowUpRight, Database, Gamepad2, Target } from 'lucide-react';
 import type { TodayAttentionItem, TodayDecision } from '../../../components/today/todayDecisionModel';
 
@@ -17,33 +18,33 @@ function toneFor(item: TodayAttentionItem): { text: string; badge: string; borde
   if (/unavailable|incomplete|missing|degraded|cannot|needs verification/.test(value)) {
     return {
       text: 'text-amber-300',
-      badge: 'border-amber-400/40 bg-amber-950/40 text-amber-300',
-      border: 'border-amber-400/30',
+      badge: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+      border: 'border-amber-500/20',
     };
   }
   if (/available|complete|pending/.test(value)) {
     return {
       text: 'text-emerald-400',
-      badge: 'border-emerald-400/40 bg-emerald-950/40 text-emerald-300',
-      border: 'border-white/10 hover:border-emerald-400/50',
+      badge: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400',
+      border: 'border-white/[0.08] hover:border-white/[0.18]',
     };
   }
   return {
-    text: 'text-white',
-    badge: 'border-white/20 bg-zinc-900 text-zinc-300',
-    border: 'border-white/10 hover:border-white/30',
+    text: 'text-[#F4F4F5]',
+    badge: 'border-white/[0.08] bg-white/[0.04] text-zinc-300',
+    border: 'border-white/[0.08] hover:border-white/[0.18]',
   };
 }
 
 export function TodayNextAttention({ decision, onRoute }: TodayNextAttentionProps) {
   return (
     <section aria-label="What needs attention" className="font-mono space-y-3">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-        <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-400">
+      <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+        <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
           <AlertTriangle className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
           SYSTEM ATTENTION &amp; INTEGRITY
         </h2>
-        <span className="text-[9px] text-zinc-600 uppercase">STAGE 01 AUDIT</span>
+        <span className="text-[9px] text-zinc-500 uppercase font-mono">STAGE 01 AUDIT</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -55,35 +56,33 @@ export function TodayNextAttention({ decision, onRoute }: TodayNextAttentionProp
           return (
             <div
               key={item.id}
-              className={`flex flex-col justify-between border-2 ${tone.border} bg-black p-4 font-mono transition-all`}
+              onClick={routable ? () => onRoute(item.section!) : undefined}
+              className={`group flex flex-col justify-between border ${tone.border} bg-[#111113] p-4 font-mono rounded-xl transition-all shadow-md ${
+                routable ? 'cursor-pointer hover:bg-[#18181B]' : ''
+              }`}
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                    <Icon className="h-3 w-3 text-zinc-400" aria-hidden="true" />
+                  <span className="flex items-center gap-1.5 text-[9px] font-mono font-medium uppercase tracking-wider text-zinc-400">
+                    <Icon className="h-3 w-3 text-zinc-500" aria-hidden="true" />
                     {item.label}
                   </span>
-                  <span className={`px-1.5 py-0.2 text-[8px] font-bold uppercase border ${tone.badge}`}>
-                    {item.kind}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-1.5 py-0.5 text-[8px] font-mono font-medium uppercase border rounded ${tone.badge}`}>
+                      {item.kind}
+                    </span>
+                    {routable && (
+                      <ArrowUpRight className="h-3 w-3 text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
                 </div>
 
-                <strong className={`block text-sm font-black leading-tight ${tone.text}`}>
+                <strong className={`block text-sm font-bold leading-tight ${tone.text}`}>
                   {item.value}
                 </strong>
 
                 <p className="text-[11px] leading-relaxed text-zinc-400 font-sans">{item.detail}</p>
               </div>
-
-              {routable && (
-                <button
-                  type="button"
-                  onClick={() => onRoute(item.section!)}
-                  className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300 transition hover:text-white cursor-pointer"
-                >
-                  RESOLVE IN WORKSPACE <ArrowUpRight className="h-3 w-3" />
-                </button>
-              )}
             </div>
           );
         })}
@@ -92,3 +91,4 @@ export function TodayNextAttention({ decision, onRoute }: TodayNextAttentionProp
   );
 }
 
+export default TodayNextAttention;

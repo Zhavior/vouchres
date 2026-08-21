@@ -1,138 +1,189 @@
 /*
- * Today Next — Cyber-Engineering HUD & Terminal Surface Primitives
- * Aligned with the VouchEdge Landing Page design system.
+ * Today Next — Apple Cupertino Pro Material Design System
+ * Physical material tiers, deep tonal contrast, and optical restraint.
  */
 
+:root {
+  --ve-bg-base: #050505;
+  --ve-surface: #111113;
+  --ve-surface-raised: #18181B;
+  --ve-surface-elevated: #202024;
+  --ve-border: rgba(255, 255, 255, 0.08);
+  --ve-border-subtle: rgba(255, 255, 255, 0.05);
+  --ve-border-hover: rgba(255, 255, 255, 0.16);
+
+  /* Functional Accents — Restrained & Desaturated */
+  --ve-accent-emerald: #34D399;
+  --ve-accent-emerald-dim: rgba(52, 211, 153, 0.12);
+  --ve-accent-rose: #FB7185;
+  --ve-accent-rose-dim: rgba(251, 113, 133, 0.12);
+  --ve-accent-sky: #38BDF8;
+  --ve-accent-sky-dim: rgba(56, 189, 248, 0.12);
+  --ve-accent-amber: #FBBF24;
+  --ve-accent-amber-dim: rgba(251, 191, 36, 0.12);
+
+  /* Material Layer Shadows */
+  --tn-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --tn-shadow-card-sm: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --tn-shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
 .today-next {
-  background-color: #000000;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
-  background-size: 44px 44px, 44px 44px;
+  color: #F4F4F5;
+  background-color: var(--ve-bg-base);
 }
 
-.today-next * {
-  border-radius: 0 !important;
-}
-
+/* Rounded subtle corner standard */
 .today-next .rounded-full {
   border-radius: 9999px !important;
 }
 
-.tn-pip {
+/* ============================================================
+   MATERIAL SURFACE UTILITIES
+   ============================================================ */
+
+/* Surface Card Plate */
+.tn-card {
+  background-color: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--tn-shadow-card);
+}
+.tn-card-sm {
+  background-color: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--tn-shadow-card-sm);
+}
+
+/* Machined Surface CTA (Apple Pro Standard) */
+.today-next .tn-cta {
+  background-color: #FFFFFF;
+  color: #09090B;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: background-color 120ms ease, opacity 120ms ease, transform 80ms ease;
+}
+.today-next .tn-cta:hover {
+  background-color: #E4E4E7;
+  transform: translateY(-1px);
+}
+.today-next .tn-cta:active {
+  background-color: #D4D4D8;
+  transform: translateY(1px);
+}
+
+/* Translucent Glass Pill CTA */
+.today-next .tn-cta-glass {
+  background-color: rgba(52, 211, 153, 0.10);
+  color: #34D399;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.today-next .tn-cta-glass:hover {
+  background-color: rgba(52, 211, 153, 0.18);
+  border-color: rgba(52, 211, 153, 0.40);
+}
+
+/* ============================================================
+   OPTICAL LIVE INDICATORS (RESTRAINED LEDS)
+   ============================================================ */
+
+/* The live dot: 6px clean circular LED */
+.tn-live-dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
-  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  background-color: #34D399;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+  animation: tn-live-pulse 1.8s ease-in-out infinite;
 }
 
-.tn-pip--confirmed { background: var(--aurora-max-emerald, #00d9a0); }
-.tn-pip--neutral { background: #31b583; }
-.tn-pip--warning { background: #fbbf24; }
-.tn-pip--missing { background: rgba(255, 255, 255, 0.22); }
-
-.tn-receipt {
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: #000000;
-  padding: 1rem;
+@keyframes tn-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.9); }
 }
 
-.tn-scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.tn-scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-/* Single-shot skeleton shimmer */
-@keyframes tn-sheen {
-  0% { background-position: -220% 0; }
-  100% { background-position: 220% 0; }
+/* Rose variant for in-progress games */
+.tn-live-dot--rose {
+  background-color: #FB7185;
+  box-shadow: 0 0 8px rgba(251, 113, 133, 0.6);
+  animation: tn-live-pulse-rose 1.8s ease-in-out infinite;
 }
 
-.tn-skeleton {
-  background-image: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.04) 30%,
-    rgba(0, 240, 255, 0.10) 48%,
-    rgba(255, 255, 255, 0.04) 66%
-  );
-  background-size: 220% 100%;
-  animation: tn-sheen 1.5s linear infinite;
+@keyframes tn-live-pulse-rose {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.9); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tn-skeleton { animation: none; }
-}
-
-/* Research Command Desk framing */
-.today-next .tn-desk {
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  background: #000000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-}
-
-.today-next .tn-desk .aurora-max-panel,
-.today-next .tn-desk [class*='bg-[rgba(5,11,13'],
-.today-next .tn-desk [class*='bg-[rgba(4,10,15'],
-.today-next .tn-desk [class*='bg-[var(--aurora-max-panel'] {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.today-next .tn-desk .aurora-max-panel {
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* Wire ticker animation */
-@keyframes tn-wire-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tn-wire-item {
-  animation: tn-wire-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-
-/* Sharp corners — the shared Next geometry (same rule as settings-next /
-   hr-next / live-games-next). Tailwind's rounded-* utilities are spread across
-   ~35 call sites on this surface; flattening them here keeps the markup
-   readable and the geometry consistent. `rounded-full` is exempt — the status
-   pips and circular pills are meant to stay round. */
-.today-next :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded):not(.rounded-full) {
-  border-radius: 0 !important;
-}
-
-/* Today's phone header replaces the shared app top bar rather than stacking
-   beneath it — two brand rows and two search affordances is not a native
-   header. Scoped to this route and this breakpoint; every other surface keeps
-   the shared bar, which is also where Account still lives off Today. */
-@media (max-width: 767px) {
-  body:has(.today-next) .ve-app-topbar {
-    display: none;
+  .tn-live-dot,
+  .tn-live-dot--rose {
+    animation: none;
+    box-shadow: none;
   }
 }
 
-/* ---------------------------------------------------------------------------
- * Intel wire ticker.
- *
- * The headline swap is a CSS animation, not a JS-driven one, and its resting
- * state is fully visible. A framer transition here paints the incoming
- * headline from opacity 0, and rAF is suspended in a background tab — so a
- * rotation that lands while the tab is hidden leaves the ticker blank until
- * the next paint. Base-visible + CSS keyframes cannot fail that way.
- * ------------------------------------------------------------------------ */
-@keyframes tn-wire-in {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ============================================================
+   MEDIA FRAMING — Subdued Titanium Trim
+   ============================================================ */
+
+.tn-hud-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: #0A0A0C;
 }
 
-.tn-wire-item {
-  animation: tn-wire-in 220ms ease-out;
+/* Subtle corner tick mark */
+.tn-hud-frame::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 3;
+  pointer-events: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .tn-wire-item { animation: none; }
+.tn-hud-corner-br {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* ============================================================
+   TYPOGRAPHY TIERS
+   ============================================================ */
+
+.tn-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tn-meta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: #A1A1AA;
+}
+
+.tn-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #71717A;
 }

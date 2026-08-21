@@ -76,9 +76,6 @@ const FOCUSED_BETA_SIDEBAR_FEATURES = new Set([
   'hr_board',
   'live_games',
   'results',
-  'premium',
-  'admin',
-  'admin_hr_next',
 ]);
 
 const FOCUSED_BETA_COMMAND_SECTIONS = new Set([

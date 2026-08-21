@@ -388,6 +388,10 @@ export function resolveDevSectionFromLocation() {
     return 'live_games';
   }
 
+  if (target === 'nfl-touchdown' || target === '/nfl-touchdown' || target === 'nfl_touchdown' || target === '/nfl_touchdown') {
+    return 'nfl_touchdown';
+  }
+
   // General fallback normalization for all valid section route names
   const clean = target.replace(/^\//, '').replace(/-/g, '_');
   if (clean === 'hr_intel_v2' || clean === 'hr_aurora_max') {
@@ -401,7 +405,7 @@ export function resolveDevSectionFromLocation() {
     'ai_pilot', 'live_games', 'research', 'board', 'leaderboard', 'results',
     'notifications', 'profile', 'nba_nfl', 'most_vouched_today', 'most_vouched',
     'premium', 'themestore', 'subscriber_hub', 'settings', 'customize', 'admin', 'admin_hr_next',
-    'admin_model_quality',
+    'admin_model_quality', 'nfl_touchdown'
   ]);
   if (validSections.has(clean)) {
     return clean;

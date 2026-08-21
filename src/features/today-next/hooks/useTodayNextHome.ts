@@ -45,6 +45,8 @@ export interface TodayNextFirstPitch {
   kickoffMs: number;
   /** Null once the game has started or the time is unparseable. */
   countdownMs: number | null;
+  /** True once client timer has mounted to prevent SSR hydration mismatch. */
+  isMounted: boolean;
 }
 
 export interface TodayNextSignalPreview {
@@ -57,6 +59,9 @@ export interface TodayNextSignalPreview {
   oddsLabel: string | null;
   confirmed: boolean;
   headline: string;
+  hitterPower?: number | null;
+  pitcherVuln?: number | null;
+  parkFactor?: number | null;
 }
 
 export interface TodayNextReceipt {
@@ -104,15 +109,23 @@ function freshnessLabel(report: DailyMlbReport | null, boardUpdatedAt: Date | nu
   return `Updated ${hours}h ago`;
 }
 
-/** A one-second tick, only while something on screen actually counts down. */
-function useTicker(active: boolean): number {
-  const [now, setNow] = useState(() => Date.now());
+/** A one-second tick with SSR hydration guard. */
+function useTicker(active: boolean): { now: number; isMounted: boolean } {
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<number>(() => Date.now());
+
   useEffect(() => {
-    if (!active) return;
+    setMounted(true);
+    setNow(Date.now());
+  }, []);
+
+  useEffect(() => {
+    if (!active || !mounted) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [active]);
-  return now;
+  }, [active, mounted]);
+
+  return { now, isMounted: mounted };
 }
 
 export function useTodayNextHome(savedSlips: readonly Parlay[]) {
@@ -153,8 +166,8 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     return best;
   }, [games]);
 
-  // Only tick while a countdown is actually on screen.
-  const now = useTicker(Boolean(firstPitchGame));
+  // SSR hydration guard on countdown ticker
+  const { now, isMounted } = useTicker(Boolean(firstPitchGame));
 
   const firstPitch = useMemo<TodayNextFirstPitch | null>(() => {
     if (!firstPitchGame) return null;
@@ -163,8 +176,9 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
       game: firstPitchGame.game,
       kickoffMs: firstPitchGame.at,
       countdownMs: remaining > 0 ? remaining : null,
+      isMounted,
     };
-  }, [firstPitchGame, now]);
+  }, [firstPitchGame, now, isMounted]);
 
   const vitals = useMemo<TodayNextVitals>(() => {
     let live = 0;
@@ -212,7 +226,7 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
   const topSignals = useMemo<TodayNextSignalPreview[]>(() => {
     return [...visibleRows]
       .sort((a, b) => b.hrScore - a.hrScore)
-      .slice(0, 3)
+      .slice(0, 5)
       .map((row) => ({
         id: row.stableId,
         playerName: row.playerName,
@@ -227,6 +241,9 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
             : null,
         confirmed: row.truthStatus === 'official',
         headline: row.reasons.find((reason) => reason?.trim())?.trim() ?? 'No model rationale published.',
+        hitterPower: row.hitterPower,
+        pitcherVuln: row.pitcherVulnerability,
+        parkFactor: row.parkContext ?? row.parkFactor ?? row.parkIndex,
       }));
   }, [visibleRows]);
 
@@ -267,8 +284,6 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
   const isLoading = reportQuery.isLoading || hrBoardQuery.loading;
   const isDegraded = reportQuery.isError || Boolean(hrBoardQuery.error) || report?.dataQuality === 'limited';
 
-  /* The Research Command Desk's own state machine. Same derivation the Today
-     dashboard uses, so the two surfaces never disagree about the slate. */
   const deskState: TodayFieldState = isLoading
     ? 'loading'
     : isDegraded
@@ -286,20 +301,8 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     decision,
     vitals,
     topSignals,
-    // Research Command Desk inputs — the full ranked evidence, not the preview.
     deskRows: visibleRows,
     deskConfirmedRows: hrBoard?.confirmed ?? [],
-    /* Every row the board published, deduped.
-
-       The three buckets are distinct API payloads, not nested subsets:
-       `confirmed` comes from the confirmed-candidate feed, while `curated` and
-       `all` come from the projected feeds and are stamped 'projected' by
-       normalizeHrWatch regardless of their contents. So neither bucket alone
-       can back a "confirmed only" control — `visibleRows` collapses to the
-       confirmed set (making the filter a no-op), and `all` holds no official
-       rows at all (making it match nothing). The union is the only list where
-       that choice means something; confirmed wins on collision so a row keeps
-       its official status. */
     deskAllRows: unionRows,
     deskState,
     gameCount: report?.gameCount ?? null,

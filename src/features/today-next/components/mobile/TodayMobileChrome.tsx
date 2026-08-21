@@ -1,90 +1,114 @@
-import { Search, UserCircle } from 'lucide-react';
+import React from 'react';
+import { RefreshCw, Search, ShieldCheck, UserCircle, Zap } from 'lucide-react';
 import { useNavUiStore } from '../../../../stores/navUiStore';
 import { TODAY_MOBILE_FILTERS, type TodayMobileFilter } from './todayMobileFilters';
-import '../../../../styles/shell-surfaces-aurora-max.css';
+import { formatCountdown, type TodayNextFirstPitch } from '../../hooks/useTodayNextHome';
 
 interface TodayMobileChromeProps {
   reportDateLabel: string;
   liveCount: number;
+  gameCount: number | null;
+  firstPitch: TodayNextFirstPitch | null;
   filter: TodayMobileFilter;
   onFilterChange: (filter: TodayMobileFilter) => void;
   counts: Record<TodayMobileFilter, number>;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-/** "Sunday, Aug 16" → "Sun, Aug 16" — the bar has one line to spend. */
 function compactDate(label: string): string {
   return label.replace(
     /^(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day/,
-    (_match, stem: string) => ({ Mon: 'Mon', Tues: 'Tue', Wednes: 'Wed', Thurs: 'Thu', Fri: 'Fri', Satur: 'Sat', Sun: 'Sun' })[stem] ?? stem,
+    (_match, stem: string) =>
+      ({ Mon: 'Mon', Tues: 'Tue', Wednes: 'Wed', Thurs: 'Thu', Fri: 'Fri', Satur: 'Sat', Sun: 'Sun' })[stem] ?? stem,
   );
 }
 
-/*
- * The phone's app header, fixed to the viewport, plus the slate filter rail
- * stuck beneath it.
- *
- * This replaces the shared app top bar on Today rather than stacking under it
- * (see the `body:has()` rule in today-next.css) — two brand bars, two search
- * affordances and 108px of chrome before any content is not a native header.
- * Account moves in here alongside search: the five-tab bottom bar has no slot
- * for it, and it is the only route to settings and sign-out on a phone.
- */
 export function TodayMobileChrome({
   reportDateLabel,
   liveCount,
+  gameCount,
+  firstPitch,
   filter,
   onFilterChange,
   counts,
+  onRefresh,
+  isRefreshing = false,
 }: TodayMobileChromeProps) {
   const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
   const openCommandPalette = useNavUiStore((s) => s.openCommandPalette);
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-[52px] items-center justify-between gap-3 border-b border-emerald-950/80 bg-[var(--aurora-max-obsidian)]/95 px-4 backdrop-blur-md md:hidden">
+      {/* Telemetry Top Bar (Sticky on Mobile) */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-[52px] items-center justify-between gap-2 border-b border-white/[0.08] bg-[#050505]/95 px-3 backdrop-blur-xl font-mono md:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          {/* The real brand mark, not a glyph. This header replaces the shared
-              app top bar on Today, so it is the only VouchEdge logo on the
-              route and has to be the same one every other surface renders. */}
-          <img
-            src="/vouchedge-mark-aurora.svg"
-            alt=""
-            className="ve-logo-mark--emerald h-6 w-6 shrink-0 object-contain"
-            aria-hidden="true"
-          />
-          <span className="truncate font-display text-[15px] font-bold tracking-tight text-white">VouchEdge</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <div className="min-w-0">
+            <span className="block truncate font-bold text-xs text-[#F4F4F5] uppercase tracking-wider">
+              VOUCHEDGE // TODAY
+            </span>
+            <div className="flex items-center gap-1.5 text-[9px] text-zinc-400">
+              <span className="text-emerald-400 font-medium">{gameCount ?? '—'} SLATE</span>
+              <span>·</span>
+              {firstPitch?.countdownMs != null ? (
+                <span className="text-emerald-400 font-medium tabular-nums font-mono">
+                  LOCK: {formatCountdown(firstPitch.countdownMs)}
+                </span>
+              ) : (
+                <span>{compactDate(reportDateLabel)}</span>
+              )}
+            </div>
+          </div>
         </div>
-
-        <p className="shrink-0 font-mono text-[11px] text-white/45">{compactDate(reportDateLabel)}</p>
 
         <div className="flex shrink-0 items-center gap-1.5">
           {liveCount > 0 && (
-            <span className="flex items-center gap-1 rounded-full border border-rose-400/30 bg-rose-500/10 px-2 py-0.5 font-mono text-[10px] font-black text-rose-300">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" aria-hidden="true" />
-              {liveCount}
+            <span className="flex items-center gap-1 border border-rose-500/25 bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-mono font-medium text-rose-400 rounded">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+              {liveCount} LIVE
             </span>
           )}
+
+          {/* Sensors Verified pill */}
+          <span className="hidden xs:inline-flex items-center gap-1 border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-mono font-medium text-emerald-400 rounded">
+            <ShieldCheck className="h-2.5 w-2.5" /> VERIFIED
+          </span>
+
+          {/* Quick Sync [R] */}
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              aria-label="Quick Sync"
+              className="grid h-8 w-8 place-items-center rounded-md border border-white/[0.08] bg-[#111113] text-zinc-300 hover:text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => openCommandPalette?.()}
             aria-label="Search"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/55 active:bg-white/10"
+            className="grid h-8 w-8 place-items-center rounded-md border border-white/[0.08] bg-[#111113] text-zinc-300 active:bg-white/10 min-h-[44px] min-w-[44px]"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={openMobileDrawer}
             aria-label="Account and navigation"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/55 active:bg-white/10"
+            className="grid h-8 w-8 place-items-center border border-white/20 bg-[#131B1E] text-zinc-300 active:bg-white/10 min-h-[44px] min-w-[44px]"
           >
-            <UserCircle className="h-5 w-5" />
+            <UserCircle className="h-4 w-4" />
           </button>
         </div>
       </header>
 
+      {/* Sticky Filter Rail */}
       <div
-        className="tn-scrollbar-none sticky top-[52px] z-30 flex gap-2 overflow-x-auto border-b border-emerald-950/50 bg-[var(--aurora-max-obsidian)]/90 px-4 py-2 backdrop-blur-sm md:hidden"
+        className="tn-scrollbar-none sticky top-[52px] z-30 flex gap-2 overflow-x-auto border-b border-white/15 bg-[#0A0D0E]/95 px-3 py-2 backdrop-blur-sm md:hidden font-mono"
         role="tablist"
         aria-label="Slate filter"
       >
@@ -97,18 +121,17 @@ export function TodayMobileChrome({
               role="tab"
               aria-selected={active}
               onClick={() => onFilterChange(def.id)}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors active:scale-[0.97] ${
+              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 py-2 text-[11px] font-bold uppercase transition-colors min-h-[44px] ${
                 active
-                  ? 'border-[var(--aurora-max-emerald)]/45 bg-[var(--aurora-max-emerald)]/15 text-[var(--aurora-max-emerald)]'
-                  : 'border-white/10 bg-white/[0.03] text-white/55'
+                  ? 'border-[#00FF87] bg-emerald-950/60 text-[#00FF87] shadow-[2px_2px_0px_0px_#00FF87]'
+                  : 'border-white/15 bg-[#131B1E] text-zinc-400'
               }`}
             >
               <span aria-hidden="true">{def.glyph}</span>
               {def.label}
-              <span className={`font-mono text-[10px] tabular-nums ${active ? 'text-[var(--aurora-max-emerald)]/70' : 'text-white/30'}`}>
+              <span className={`font-mono text-[9px] tabular-nums ${active ? 'text-[#00FF87]' : 'text-zinc-500'}`}>
                 ({counts[def.id]})
               </span>
-              <span className="sr-only">. {def.description}</span>
             </button>
           );
         })}

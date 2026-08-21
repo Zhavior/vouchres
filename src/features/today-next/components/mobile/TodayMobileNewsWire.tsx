@@ -1,104 +1,82 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Zap } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Flame, Zap } from 'lucide-react';
 import type { HrWatchRow } from '../../../hr/types/hrWatch';
 import { useMlbNewsWire, type MlbNewsItem } from '../../hooks/useMlbNewsWire';
 import { NewsDetailDrawer } from './NewsDetailDrawer';
-import { buildSlateIndex, CATEGORY_STYLES, relativeTime } from './newsWireFormat';
+import {
+  buildSlateIndex,
+  CATEGORY_STYLES,
+  classifyTacticalNews,
+  getCyberFallbackImage,
+  relativeTime,
+  resolveMentions,
+} from './newsWireFormat';
 
 interface TodayMobileNewsWireProps {
-  /** The loaded slate, used to resolve a story's players into openable rows. */
   slateRows: readonly HrWatchRow[];
   onOpenPlayer: (row: HrWatchRow) => void;
 }
 
-const ROTATE_MS = 6_000;
-
 export function TodayMobileNewsWire({ slateRows, onOpenPlayer }: TodayMobileNewsWireProps) {
   const { items } = useMlbNewsWire();
-  const [cursor, setCursor] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [openItem, setOpenItem] = useState<MlbNewsItem | null>(null);
-  const [documentHidden, setDocumentHidden] = useState(
-    () => typeof document !== 'undefined' && document.visibilityState === 'hidden',
-  );
 
   const slateIndex = useMemo(() => buildSlateIndex(slateRows), [slateRows]);
 
-  /*
-   * Rotation stops while the sheet is open, a finger is down, or the tab is
-   * hidden. The last one is not an optimisation: rotating in a background tab
-   * swaps the headline through a crossfade whose frames never run, so the tab
-   * is returned to with an invisible headline until the next paint.
-   */
-  useEffect(() => {
-    const sync = () => setDocumentHidden(document.visibilityState === 'hidden');
-    document.addEventListener('visibilitychange', sync);
-    return () => document.removeEventListener('visibilitychange', sync);
-  }, []);
-
-  useEffect(() => {
-    if (items.length <= 1 || paused || openItem || documentHidden) return;
-    const id = window.setInterval(() => setCursor((c) => (c + 1) % items.length), ROTATE_MS);
-    return () => window.clearInterval(id);
-  }, [items.length, paused, openItem, documentHidden]);
-
-  useEffect(() => {
-    if (cursor >= items.length) setCursor(0);
-  }, [cursor, items.length]);
-
-  const current = items[cursor] ?? null;
-  const currentStyle = CATEGORY_STYLES[current?.category ?? 'NEWS'];
+  if (items.length === 0) return null;
 
   return (
-    <section className="px-4 md:hidden" aria-label="MLB intel and injury wire">
-      {/* The strip keeps its height before the feed lands, so the sections
-          below it never jump when the first headline arrives. */}
-      <button
-        type="button"
-        disabled={!current}
-        onClick={() => current && setOpenItem(current)}
-        onPointerDown={() => setPaused(true)}
-        onPointerUp={() => setPaused(false)}
-        onPointerCancel={() => setPaused(false)}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        aria-label={current ? `Open wire story: ${current.headline}` : 'Intel wire loading'}
-        className="flex h-11 w-full items-center gap-2.5 overflow-hidden rounded-xl border border-emerald-950/80 bg-[var(--aurora-max-panel-strong)] px-3 text-left transition active:bg-white/[0.04] disabled:cursor-default"
-      >
-        <span className="flex shrink-0 items-center gap-1 rounded-md border border-[var(--aurora-max-emerald)]/40 bg-[var(--aurora-max-emerald)]/12 px-1.5 py-0.5 font-mono text-[9px] font-black tracking-[0.12em] text-[var(--aurora-max-emerald)]">
-          <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-          WIRE
+    <section className="px-4 md:hidden font-mono" aria-label="MLB tactical intel wire">
+      <div className="flex items-center justify-between pb-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+          <Zap className="h-3 w-3 text-[#00FF87]" />
+          TACTICAL INTEL WIRE ({items.length})
         </span>
+        <span className="text-[9px] text-zinc-500 uppercase">SWIPE STORIES →</span>
+      </div>
 
-        <div aria-live="polite" className="min-w-0 flex-1">
-          {current ? (
-            /*
-             * Keyed so each rotation restarts the entrance animation, and
-             * unanimated while the tab is hidden — a browser freezes a hidden
-             * tab's animations on their first frame, which for a fade-in means
-             * an invisible headline sitting there until the tab is looked at.
-             */
-            <span
-              key={current.id}
-              className={`flex min-w-0 items-center gap-2 ${documentHidden ? '' : 'tn-wire-item'}`}
+      {/* Horizontal snap-carousel of tactical news cards */}
+      <div className="tn-scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+        {items.map((item) => {
+          const category = classifyTacticalNews(item);
+          const style = CATEGORY_STYLES[category];
+          const mentions = resolveMentions(item, slateIndex, item.paragraphs);
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setOpenItem(item)}
+              className="w-[75vw] max-w-[280px] shrink-0 snap-center border border-white/[0.08] bg-[#111113] p-3 text-left flex flex-col justify-between space-y-2.5 transition-colors hover:border-white/[0.18] active:bg-[#18181B] min-h-[140px] cursor-pointer rounded-xl shadow-md"
             >
-              <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-black tracking-wider ${currentStyle.pill}`}>
-                {currentStyle.label}
-              </span>
-              <span className="truncate text-[12px] font-medium text-white/80">{current.headline}</span>
-            </span>
-          ) : (
-            <span className="font-mono text-[11px] text-white/30">Scanning the wire…</span>
-          )}
-        </div>
+              {/* Top Row: Category Tag & Timestamp */}
+              <div className="flex items-center justify-between w-full">
+                <span className={`px-1.5 py-0.5 text-[8px] font-mono font-medium uppercase border tracking-wider rounded ${style.pill}`}>
+                  {style.label}
+                </span>
+                <span className="text-[8px] text-zinc-400 font-mono">{relativeTime(item.publishedAt)}</span>
+              </div>
 
-        {current && (
-          <span className="shrink-0 font-mono text-[10px] tabular-nums text-white/35">{relativeTime(current.publishedAt)}</span>
-        )}
-      </button>
+              {/* Headline */}
+              <h4 className="text-[#F4F4F5] font-medium text-xs leading-snug line-clamp-2 font-sans">{item.headline}</h4>
 
-      {/* The reader owns the story from here: full body, slate CTAs and the
-          ESPN credit, with no way out of the app. */}
+              {/* Bottom Tag: Slate Mentions & Read CTA */}
+              <div className="flex items-center justify-between w-full pt-1.5 border-t border-white/[0.06] text-[9px]">
+                {mentions.length > 0 ? (
+                  <span className="text-emerald-400 font-medium flex items-center gap-1">
+                    <Flame className="h-2.5 w-2.5" /> {mentions.length} SLATE BAT{mentions.length > 1 ? 'S' : ''}
+                  </span>
+                ) : (
+                  <span className="text-zinc-500 font-mono tracking-wider uppercase text-[8px]">TACTICAL INTEL</span>
+                )}
+                <span className="text-sky-400 font-medium uppercase font-mono tracking-wider">READ →</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* In-app slide-over / sheet modal drawer */}
       <NewsDetailDrawer
         item={openItem}
         slateIndex={slateIndex}

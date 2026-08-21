@@ -15,17 +15,7 @@ const trustSignals = [
   "Saved decisions retain their original evidence state",
 ] as const;
 
-export type FooterNavigationTarget =
-  | "How it works"
-  | "Live record"
-  | "Beta"
-  | "GitHub";
-
-export interface FooterSectionProps {
-  onNavigate?: (target: FooterNavigationTarget) => void;
-}
-
-export default function FooterSection({ onNavigate }: FooterSectionProps) {
+export default function FooterSection() {
   return (
     <footer className="relative z-10 w-full border-t border-white/15 bg-black text-zinc-400 font-sans antialiased">
       <div className="mx-auto w-full max-w-7xl px-6 py-14 sm:py-16 md:px-12">
@@ -45,12 +35,6 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GitHub Repository"
-                onClick={(e) => {
-                  if (onNavigate) {
-                    e.preventDefault();
-                    onNavigate("GitHub");
-                  }
-                }}
                 className="inline-flex items-center gap-2 rounded-none border border-white/20 bg-zinc-950 px-3.5 py-2 font-mono text-xs text-white transition-colors hover:border-white hover:bg-zinc-900"
               >
                 <Github className="h-4 w-4" />
@@ -76,12 +60,6 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
                 <li key={item.label}>
                   <a
                     href={item.href}
-                    onClick={(e) => {
-                      if (onNavigate) {
-                        e.preventDefault();
-                        onNavigate(item.target);
-                      }
-                    }}
                     className="inline-block text-[13px] text-zinc-400 transition-colors hover:text-white"
                   >
                     {item.label}
@@ -121,10 +99,14 @@ export default function FooterSection({ onNavigate }: FooterSectionProps) {
 
         {/* Bottom Ledger & Copyright */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 font-mono text-[11px] text-zinc-400 sm:flex-row">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
             <span className="text-white">© {new Date().getFullYear()} VouchEdge Inc.</span>
             <span>·</span>
             <span>All rights reserved.</span>
+            <span>·</span>
+            <span className="text-zinc-300">By Boyd R. Santos</span>
+            <span>·</span>
+            <span>Made in Canada 🇨🇦</span>
           </div>
           <div className="flex items-center gap-2 text-center text-[10px] uppercase tracking-wider text-zinc-400 sm:text-right">
             <span>Research & Evidence System</span>

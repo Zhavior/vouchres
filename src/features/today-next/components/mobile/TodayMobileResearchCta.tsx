@@ -17,24 +17,23 @@ export function TodayMobileResearchCta({ remaining, onRoute }: TodayMobileResear
   if (remaining <= 0) return null;
 
   return (
-    <section className="px-4 md:hidden" aria-label="Full research board">
-      <div className="rounded-xl border-2 border-[var(--aurora-max-emerald)]/35 bg-[var(--aurora-max-panel-strong)] p-4 shadow-[4px_4px_0_0_rgba(0,217,160,0.18)]">
-        <p className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[var(--aurora-max-emerald)]">
+    <section className="px-4 md:hidden font-mono" aria-label="Full research board">
+      <div className="rounded-xl border border-white/[0.08] bg-[#111113] p-5 shadow-2xl space-y-2">
+        <p className="font-mono text-[9px] font-medium uppercase tracking-wider text-emerald-400">
           Deep research terminal
         </p>
-        <h2 className="mt-1.5 text-[17px] font-bold leading-snug text-white">
+        <h2 className="text-base sm:text-lg font-bold leading-snug text-white font-sans">
           Explore {remaining} remaining slate bats
         </h2>
-        <p className="mt-1.5 text-[13px] leading-5 text-white/50">
-          Full layer breakdowns, pitcher arsenals and the ranked matrix — the whole board, not just tonight's top
-          collisions.
+        <p className="text-xs leading-relaxed text-zinc-400 font-sans">
+          Full layer breakdowns, pitcher arsenals and the ranked matrix — the whole board, not just tonight's top collisions.
         </p>
         <button
           type="button"
           onClick={() => onRoute('hr_max')}
-          className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--aurora-max-emerald)]/45 bg-[var(--aurora-max-emerald)]/15 text-[13px] font-bold text-[var(--aurora-max-emerald)] transition active:bg-[var(--aurora-max-emerald)]/30"
+          className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-white text-black text-xs font-mono font-semibold uppercase hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer"
         >
-          Launch full research board ({remaining})
+          <span>Launch full research board ({remaining})</span>
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>

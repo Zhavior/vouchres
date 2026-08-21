@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowRight, Flame, Keyboard, ListFilter, Plus, ShieldCheck, Zap } from 'lucide-react';
 import HrPlayerDrawer from '../../../hr/components/Drawer/HrPlayerDrawer';
 import type { HrWatchRow } from '../../../hr/types/hrWatch';
 import type { TodayDecision } from '../../../../components/today/todayDecisionModel';
@@ -16,6 +16,9 @@ import {
   TODAY_MOBILE_FILTERS,
   type TodayMobileFilter,
 } from './todayMobileFilters';
+import { boardScore } from '../../../hr/engine/signalScore';
+import { buildHrMatchupGroups } from '../../../hr/components/Table/hrTableModel';
+import { useAppSavedSlips } from '../../../../context/AppShellContext';
 
 interface TodayMobileShellProps {
   decision: TodayDecision;
@@ -24,25 +27,26 @@ interface TodayMobileShellProps {
   liveGames: ApiGame[];
   deskRows: readonly HrWatchRow[];
   deskConfirmedRows: readonly HrWatchRow[];
-  /** Unnarrowed board, so 'confirmed only' is a real filter and not a no-op. */
   deskAllRows: readonly HrWatchRow[];
+  gameCount?: number | null;
   onAddPlayer: (row: HrWatchRow) => void;
   onRoute: (section: string) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  onOpenShortcuts?: () => void;
 }
 
 const HERO_COUNT = 5;
 
-/*
- * The phone composition. Not the desktop stack narrowed — a different order.
- *
- * Today answers "what should I do in the next hour": the brief, the top few
- * collisions, live scores, and a door to the full board. It deliberately does
- * NOT render the whole 250+ row slate any more — that duplicated the HR Max
- * route and left two surfaces answering the same question. The board lives in
- * research; this page hands off to it.
- *
- * The desktop desk's side-by-side spotlight + queue does not survive a 375px
- * column, so the spotlight becomes a swipe deck.
+/**
+ * Mobile-First Layout: Single-column stacked telemetry ladder on mobile (<768px).
+ * Features:
+ * - Telemetry Top Bar (Sticky on Mobile)
+ * - Hero Intel Callout with Stage 01 status & #00FF87 hard shadow CTA
+ * - Spotlight Dossier horizontal swipe deck with 3-tier gauge
+ * - Daily Slate Queue horizontal swipe carousel (overflow-x-auto snap-x snap-mandatory flex gap-3)
+ * - Curated Tactical Intel Wire (LINEUP, PITCHER, WEATHER, DEVIATION)
+ * - Floating Action Hub (Sticky bottom bar with Quick Slip drawer pill [ ⚡ Slip (N) ])
  */
 export function TodayMobileShell({
   decision,
@@ -52,11 +56,16 @@ export function TodayMobileShell({
   deskRows,
   deskConfirmedRows,
   deskAllRows,
+  gameCount,
   onAddPlayer,
   onRoute,
+  onRefresh,
+  isRefreshing,
+  onOpenShortcuts,
 }: TodayMobileShellProps) {
   const [filter, setFilter] = useState<TodayMobileFilter>('collision');
   const [openRow, setOpenRow] = useState<HrWatchRow | null>(null);
+  const savedSlips = useAppSavedSlips();
 
   const source = deskAllRows.length > 0 ? deskAllRows : deskConfirmedRows.length > 0 ? deskConfirmedRows : deskRows;
 
@@ -76,69 +85,150 @@ export function TodayMobileShell({
   const hero = filtered.slice(0, HERO_COUNT);
   const rest = filtered.slice(HERO_COUNT);
 
+  // Grouped matchups for the Daily Slate Queue swipe carousel
+  const matchupGroups = useMemo(() => buildHrMatchupGroups(source), [source]);
+
+  const pendingSlipCount = useMemo(
+    () => savedSlips.filter((s) => String(s.status || 'PENDING').toUpperCase() === 'PENDING').length,
+    [savedSlips],
+  );
+
+  const resolvedGameCount = gameCount ?? (decision.upcomingGames + decision.liveGames + decision.finalGames);
+
   return (
-    /* Bottom gutter clears the two pieces of fixed chrome stacked at the
-       bottom of a phone: the ParlayOS slip dock and the nav pill beneath it.
-       The mobile rule on #inner-view-slot already contributes 5rem, which
-       covers the pill alone — the dock needs the rest, or the last rows of the
-       board sit permanently underneath it. */
-    /* Top gutter clears the fixed 52px header only — the filter rail below it
-       is sticky, not fixed, so it flows as the first child and sits directly
-       under the header rather than needing its own reserved space. Bottom
-       gutter clears the slip pill stacked over the nav bar. */
-    <div className="pt-[52px] pb-[132px] md:hidden">
+    <div className="pt-[52px] pb-[100px] md:hidden font-mono text-white min-h-screen">
+      {/* 1. Telemetry Top Bar (Sticky on Mobile) */}
       <TodayMobileChrome
         reportDateLabel={reportDateLabel}
         liveCount={liveGames.length}
+        gameCount={resolvedGameCount}
+        firstPitch={firstPitch}
         filter={filter}
         onFilterChange={setFilter}
         counts={counts}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
       />
 
-      {/* Decision brief — one card, one action. */}
-      <section className="px-4 pt-4" aria-label="Today's brief">
-        <div className="rounded-2xl border border-white/10 bg-[var(--aurora-max-panel-strong)] p-4">
-          {firstPitch && liveGames.length === 0 && (
-            <p className="mb-2 font-mono text-[11px] text-white/45">
-              First pitch in{' '}
-              <span className="font-bold tabular-nums text-white">
-                {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'now'}
+      {/* 2. Hero Intel Callout (Compact Hero Card) */}
+      <section className="px-3 pt-3.5" aria-label="Today's tactical brief">
+        <div className="border border-white/[0.08] bg-[#111113] p-4.5 space-y-3.5 rounded-xl shadow-2xl">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-mono font-medium uppercase text-emerald-400 rounded-md">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              STAGE 01: PRE-PITCH THESIS
+            </span>
+            {firstPitch && liveGames.length === 0 && (
+              <span className="text-[10px] text-zinc-400 font-mono">
+                LOCK:{' '}
+                <strong className="text-emerald-400 font-medium tabular-nums font-mono">
+                  {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'NOW'}
+                </strong>
               </span>
-            </p>
-          )}
-          <h2 className="text-balance text-[19px] font-bold leading-snug text-white">{decision.title}</h2>
-          <p className="mt-1.5 text-[13px] leading-5 text-white/50">{decision.description}</p>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-balance text-base sm:text-lg font-bold leading-snug text-white font-sans">
+              {decision.title}
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-sans">{decision.description}</p>
+          </div>
+
           <button
             type="button"
-            onClick={() => onRoute(decision.ctaSection)}
-            className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--aurora-max-emerald)]/45 bg-[var(--aurora-max-emerald)]/15 text-[13px] font-bold text-[var(--aurora-max-emerald)] transition active:bg-[var(--aurora-max-emerald)]/30"
+            onClick={() => onRoute(decision.ctaSection || 'hr_board')}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 bg-white text-black text-xs font-semibold uppercase tracking-wider hover:bg-zinc-200 active:bg-zinc-300 rounded-lg shadow-sm transition-all cursor-pointer font-mono"
           >
-            {decision.ctaLabel}
+            <span>{decision.ctaLabel || 'Review HR Intelligence ->'}</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </section>
 
-      {/* Spotlight deck */}
+      {/* 3. Spotlight Dossier (3-Tier Gauge Snap Deck) */}
       <div className="pt-4">
         <TodayMobileHero rows={hero} onAdd={onAddPlayer} onOpen={setOpenRow} />
       </div>
 
-      {/* Live scores */}
-      <div className="pt-5">
-        <TodayMobileLiveStrip games={liveGames} onRoute={onRoute} />
-      </div>
+      {/* 4. Daily Slate Queue (Horizontal Swipe Carousel) */}
+      <section className="px-3 pt-4" aria-label="Daily Slate Queue">
+        <div className="flex items-center justify-between pb-2">
+          <span className="flex items-center gap-1.5 text-[10px] font-mono font-medium uppercase tracking-wider text-zinc-400">
+            <ListFilter className="h-3 w-3 text-sky-400" />
+            DAILY SLATE QUEUE ({matchupGroups.length} MATCHUPS)
+          </span>
+          <span className="text-[9px] text-zinc-500 uppercase font-mono">SWIPE SLATE →</span>
+        </div>
 
-      {/* Intel wire — between the scores and the handoff, where a phone
-          scrolling for "what changed" actually looks. */}
-      <div className="pt-5">
+        <div className="tn-scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+          {matchupGroups.map((group) => {
+            const leadPlayer = group.rows[0];
+            const confirmedCount = group.rows.filter((r) => r.truthStatus === 'official').length;
+
+            return (
+              <div
+                key={group.key}
+                className="w-[72vw] max-w-[260px] shrink-0 snap-center border border-white/[0.08] bg-[#111113] p-3.5 space-y-2.5 rounded-xl shadow-md flex flex-col justify-between"
+              >
+                {/* Matchup Header */}
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
+                  <strong className="text-xs font-bold text-[#F4F4F5] uppercase truncate font-sans">
+                    {group.primaryTeam} vs {group.opponent}
+                  </strong>
+                  <span className="text-[9px] text-zinc-400 font-mono">
+                    {group.gameTime ? new Date(group.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'TBD'}
+                  </span>
+                </div>
+
+                {/* Lead Bat Telemetry */}
+                {leadPlayer && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="truncate font-medium text-zinc-200">{leadPlayer.playerName}</span>
+                      <span className="text-emerald-400 font-bold tabular-nums font-mono">{boardScore(leadPlayer)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[9px] text-zinc-400 font-mono">
+                      <span className="border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 rounded text-[8px] text-zinc-300">
+                        {confirmedCount > 0 ? `${confirmedCount} CONFIRMED BATS` : 'PROJECTED'}
+                      </span>
+                      <span className="text-zinc-500 text-[8px] uppercase">LEAD HRPI</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Add Button */}
+                {leadPlayer && leadPlayer.truthStatus !== 'blocked' && (
+                  <button
+                    type="button"
+                    onClick={() => onAddPlayer(leadPlayer)}
+                    className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-[10px] font-mono font-medium uppercase text-zinc-200 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3 text-emerald-400" /> ADD LEAD BAT
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 5. Live scores ticker if games active */}
+      {liveGames.length > 0 && (
+        <div className="pt-3">
+          <TodayMobileLiveStrip games={liveGames} onRoute={onRoute} />
+        </div>
+      )}
+
+      {/* 6. Curated MLB Tactical Intel Wire */}
+      <div className="pt-4">
         <TodayMobileNewsWire slateRows={source} onOpenPlayer={setOpenRow} />
       </div>
 
-      {/* Hand off to the full board */}
-      <div className="pt-5">
+      {/* 7. Deep Research Board CTA */}
+      <div className="pt-4 px-3">
         {filtered.length === 0 ? (
-          <p className="px-4 py-6 text-center text-[13px] leading-6 text-white/40">
+          <p className="border border-dashed border-white/[0.08] bg-[#111113] p-6 text-center text-xs leading-relaxed text-zinc-400 rounded-xl">
             {emptyReasonFor(filter, source.length > 0)}
           </p>
         ) : (
@@ -146,7 +236,35 @@ export function TodayMobileShell({
         )}
       </div>
 
-      {/* Deep intel. HrPlayerDrawer owns its own overlay and escape handling. */}
+      {/* 8. Floating Action Hub (Mobile Only) */}
+      <aside
+        aria-label="Floating Action Hub"
+        className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-2 rounded-2xl border border-white/[0.12] bg-[#111113]/95 p-2 backdrop-blur-xl shadow-2xl md:hidden font-mono"
+      >
+        {/* Quick Slip Drawer Pill */}
+        <button
+          type="button"
+          onClick={() => onRoute('live_parlays')}
+          className="flex min-h-[44px] flex-1 items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/15 px-3 py-2 text-xs font-mono font-semibold uppercase text-emerald-300 rounded-xl transition-all cursor-pointer"
+        >
+          <Zap className="h-4 w-4" />
+          <span>⚡ SLIP ({pendingSlipCount})</span>
+        </button>
+
+        {/* Shortcuts button */}
+        {onOpenShortcuts && (
+          <button
+            type="button"
+            onClick={onOpenShortcuts}
+            aria-label="Open Keyboard Shortcuts"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-300 active:bg-white/10"
+          >
+            <Keyboard className="h-4 w-4 text-sky-400" />
+          </button>
+        )}
+      </aside>
+
+      {/* Deep Player Dossier Drawer */}
       <HrPlayerDrawer player={openRow} isOpen={openRow != null} onClose={() => setOpenRow(null)} />
     </div>
   );

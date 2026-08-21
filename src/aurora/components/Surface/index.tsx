@@ -19,7 +19,7 @@ export function Surface({
   return (
     <div
       className={clsx(
-        "rounded-3xl border border-white/10 bg-neutral-950/70 backdrop-blur-xl",
+        "rounded-2xl border border-white/[0.08] bg-[#111113]/90 backdrop-blur-xl",
         elevationClass,
         className
       )}

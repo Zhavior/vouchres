@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/apiClient';
 import { queryKeys } from '../../../hooks/queries/queryKeys';
 import { visibilityAwareInterval } from '../../../lib/queryVisibility';
+import { isTacticalMlbItem } from '../components/mobile/newsWireFormat';
 
 export type MlbNewsCategory = 'INJURY' | 'LINEUP' | 'ROSTER' | 'ALERT' | 'NEWS';
 
@@ -41,10 +42,10 @@ interface MlbNewsResponse {
 }
 
 /**
- * The intel wire feed.
+ * The tactical intel wire feed.
  *
- * Mirrors the server's five-minute TTL — refetching faster only burns a
- * request to be handed the same cached six stories back.
+ * Filters out generic lifestyle/entertainment noise in favor of strictly
+ * tactical MLB signals: lineups, pitching changes, weather, and deviations.
  */
 export function useMlbNewsWire() {
   const { data, isLoading, error } = useQuery({
@@ -55,8 +56,11 @@ export function useMlbNewsWire() {
     refetchInterval: () => visibilityAwareInterval(5 * 60_000),
   });
 
+  const rawItems = data?.items ?? [];
+  const tacticalItems = rawItems.filter(isTacticalMlbItem);
+
   return {
-    items: data?.items ?? [],
+    items: tacticalItems,
     isLoading,
     error: error instanceof Error ? error : null,
   };
@@ -64,16 +68,6 @@ export function useMlbNewsWire() {
 
 /**
  * The full body of one wire story.
- *
- * The listing endpoint carries headlines and a one-line summary; the editorial
- * body is fetched per story, parsed server-side and returned as plain-text
- * paragraphs. Enabled only once the reader is actually open, and skipped
- * entirely when the listing already shipped a full body — the drawer opens on
- * the summary it has and swaps in the full text when it lands, so nothing is
- * blocked on this request.
- *
- * A failure is not surfaced as an error state: the reader keeps rendering the
- * summary, which is a smaller version of the same story rather than nothing.
  */
 export function useMlbNewsArticle(item: MlbNewsItem | null) {
   const id = item?.id ?? null;

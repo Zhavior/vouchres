@@ -17,6 +17,7 @@ import '../../styles/legacy/feed-stream.css';
 import AuroraMaxRouteFrame from '../../components/layout/AuroraMaxRouteFrame';
 import '../../styles/app-topbar.css';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
+import { FooterSection } from '../../components/landing-v3';
 
 const CmdKPalette = lazyWithRetry(() => import('./CmdKPalette'), { label: 'CmdKPalette' });
 const FeedRightRail = lazyWithRetry(() => import('./FeedRightRail'), { label: 'FeedRightRail' });
@@ -222,8 +223,11 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           <FeedScrollProvider scrollRef={scrollPaneRef}>
-            <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot" ref={scrollPaneRef}>
-              <AuroraMaxRouteFrame section={activeSection}>{children}</AuroraMaxRouteFrame>
+            <div className="ve-scroll-pane w-full min-h-0 flex-1 flex flex-col" id="inner-view-slot" ref={scrollPaneRef}>
+              <div className="flex-grow">
+                <AuroraMaxRouteFrame section={activeSection}>{children}</AuroraMaxRouteFrame>
+              </div>
+              {!isPublicFrontPage && <FooterSection />}
             </div>
           </FeedScrollProvider>
         </main>
@@ -251,10 +255,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
             />
           </Suspense>
         </OptionalChromeBoundary>
-      )}
-
-      {!isPublicFrontPage && (
-        <DeferredWorldChat defer={isEagerHrSection(activeSection)} />
       )}
     </div>
   );

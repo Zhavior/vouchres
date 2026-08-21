@@ -1,4 +1,15 @@
-import { ArrowRight, Radio, Timer, ShieldCheck, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ArrowRight,
+  ChevronDown,
+  Clock,
+  Flame,
+  Lock,
+  Radio,
+  ShieldCheck,
+  Timer,
+  Zap,
+} from 'lucide-react';
 import type { TodayDecision } from '../../../components/today/todayDecisionModel';
 import { formatClock, formatCountdown, type TodayNextFirstPitch } from '../hooks/useTodayNextHome';
 import type { ApiGame } from '../../../types/mlb';
@@ -10,21 +21,24 @@ interface TodayNextCommandBriefProps {
   onRoute: (section: string) => void;
 }
 
-const TONE: Record<TodayDecision['tone'], { accent: string; border: string; chip: string }> = {
+const TONE: Record<TodayDecision['tone'], { accent: string; border: string; chip: string; shadow: string }> = {
   emerald: {
     accent: 'text-emerald-400',
-    border: 'border-emerald-400/50',
-    chip: 'border-emerald-400/40 bg-emerald-950/40 text-emerald-300',
+    border: 'border-emerald-500/20',
+    chip: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    shadow: 'shadow-[3px_3px_0px_0px_#00FF87]',
   },
   cyan: {
-    accent: 'text-cyan-300',
-    border: 'border-cyan-400/50',
-    chip: 'border-cyan-400/40 bg-cyan-950/40 text-cyan-300',
+    accent: 'text-sky-400',
+    border: 'border-sky-500/20',
+    chip: 'border-sky-500/25 bg-sky-500/10 text-sky-300',
+    shadow: 'shadow-[3px_3px_0px_0px_#00F0FF]',
   },
   amber: {
-    accent: 'text-amber-300',
-    border: 'border-amber-400/50',
-    chip: 'border-amber-400/40 bg-amber-950/40 text-amber-300',
+    accent: 'text-amber-400',
+    border: 'border-amber-500/20',
+    chip: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+    shadow: 'shadow-[3px_3px_0px_0px_#FBBF24]',
   },
 };
 
@@ -40,108 +54,176 @@ export function TodayNextCommandBrief({
   liveGames,
   onRoute,
 }: TodayNextCommandBriefProps) {
+  const [lockBannerExpanded, setLockBannerExpanded] = useState(true);
   const tone = TONE[decision.tone];
+
+  const awayPitcher = firstPitch?.game.probablePitchers?.away?.pitcherName || 'Probable Starter TBD';
+  const homePitcher = firstPitch?.game.probablePitchers?.home?.pitcherName || 'Probable Starter TBD';
 
   return (
     <section
-      className={`border-2 ${tone.border} bg-black p-5 sm:p-7 font-mono shadow-2xl space-y-4`}
+      className="border border-white/[0.08] bg-[#111113] p-6 font-mono space-y-4 rounded-xl shadow-2xl"
       aria-labelledby="today-next-brief-title"
     >
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        {/* Left Column: Stage Badge, Title, Description, Primary CTA */}
+        <div className="min-w-0 flex-1 space-y-3.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-mono font-medium uppercase tracking-wider text-emerald-400 rounded-md">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              STAGE 01: PRE-PITCH THESIS
+            </span>
             <span
-              className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest ${tone.chip}`}
+              className={`inline-flex items-center gap-1 border px-2.5 py-1 text-[9px] font-mono font-medium uppercase tracking-wider rounded-md ${tone.chip}`}
             >
               <ShieldCheck className="h-3 w-3" />
               {decision.statusLabel}
-            </span>
-            <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">
-              STAGE 01 // PRE-PITCH THESIS
             </span>
           </div>
 
           <h2
             id="today-next-brief-title"
-            className="text-balance text-2xl sm:text-3xl lg:text-4xl font-black leading-tight tracking-tight text-white font-sans"
+            className="text-balance text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-white font-sans"
           >
             {decision.title}
           </h2>
 
-          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-zinc-300 font-sans">{decision.description}</p>
+          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-zinc-400 font-sans">
+            {decision.description}
+          </p>
 
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap items-center gap-3">
+            {/* Primary Action — Apple Machined Surface standard */}
             <button
               type="button"
-              onClick={() => onRoute(decision.ctaSection)}
-              className="inline-flex items-center gap-2.5 border-2 border-white bg-white px-5 py-3 text-xs sm:text-sm font-black uppercase tracking-wider text-black transition hover:bg-zinc-200 cursor-pointer"
+              onClick={() => onRoute(decision.ctaSection || 'hr_board')}
+              className="tn-cta inline-flex items-center gap-2.5 px-5 py-2.5 text-xs sm:text-sm font-semibold tracking-normal text-black bg-white rounded-lg hover:bg-zinc-200 cursor-pointer shadow-sm"
             >
-              {decision.ctaLabel}
+              <span>{decision.ctaLabel || 'Review HR Intelligence ->'}</span>
               <ArrowRight className="h-4 w-4" />
+            </button>
+
+            {/* Secondary Action */}
+            <button
+              type="button"
+              onClick={() => onRoute('research')}
+              className="inline-flex items-center gap-2 border border-white/[0.10] bg-white/[0.05] px-4 py-2.5 text-xs font-medium text-zinc-200 hover:bg-white/[0.10] hover:border-white/[0.20] rounded-lg transition-colors cursor-pointer"
+            >
+              <Flame className="h-3.5 w-3.5 text-sky-400" />
+              <span>PLAYER DOSSIERS</span>
             </button>
           </div>
         </div>
 
-        {/* Clock / Live Ticker Column */}
-        <div className="w-full shrink-0 lg:w-[320px]">
+        {/* Right Column: Live Ticker or Pre-Game Lock Telemetry */}
+        <div className="w-full shrink-0 lg:w-[360px]">
           {liveGames.length > 0 ? (
-            <div className="border-2 border-rose-500/50 bg-black p-4 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-rose-500/30 pb-2">
-                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-rose-400">
-                  <Radio className="h-3 w-3 animate-pulse" /> LIVE TELEMETRY
-                </span>
-                <span className="text-[8px] border border-rose-500/40 px-1 text-rose-300 uppercase">
-                  {liveGames.length} IN PROGRESS
-                </span>
+            <div className="border border-white/[0.08] bg-[#111113] p-4 space-y-2.5 rounded-lg shadow-md">
+              {/* Header with Restrained Live Indicator */}
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
+                  <span className="text-xs font-mono tracking-wider text-zinc-300 uppercase">Live Telemetry</span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">{liveGames.length} IN PROGRESS</span>
               </div>
-              <ul className="space-y-1.5">
+
+              <ul className="divide-y divide-white/[0.04] my-1">
                 {liveGames.slice(0, 3).map((game) => (
-                  <li key={game.gamePk} className="flex items-center justify-between gap-2 text-xs p-1.5 bg-zinc-950 border border-white/10">
-                    <span className="truncate font-bold text-white">{teamLine(game)}</span>
-                    <span className="shrink-0 tabular-nums text-rose-400 font-bold">
+                  <li
+                    key={game.gamePk}
+                    className="flex items-center justify-between gap-2 text-xs py-2"
+                  >
+                    <span className="truncate font-medium text-zinc-200">{teamLine(game)}</span>
+                    <span className="shrink-0 tabular-nums text-rose-400 font-mono text-xs font-medium">
                       {game.score ? `${game.score.away}-${game.score.home}` : '—'}
                       {game.inning != null ? ` · I${game.inning}` : ''}
                     </span>
                   </li>
                 ))}
               </ul>
+
               {liveGames.length > 3 && (
-                <p className="text-[9px] text-zinc-500 text-right">+{liveGames.length - 3} more live matchups</p>
+                <p className="text-[9px] font-mono text-zinc-500 text-right">+{liveGames.length - 3} more live matchups</p>
               )}
+
               <button
                 type="button"
                 onClick={() => onRoute('live_games')}
-                className="w-full border border-white/20 bg-zinc-900 py-2 text-[10px] font-bold uppercase tracking-wider text-zinc-200 transition hover:border-white hover:text-white cursor-pointer"
+                className="w-full mt-2 py-2 px-3 bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] rounded-lg text-xs font-mono text-zinc-200 tracking-wide transition-all min-h-[40px] cursor-pointer"
               >
                 TRACK ALL LIVE GAMES →
               </button>
             </div>
           ) : firstPitch ? (
-            <div className="border-2 border-white/20 bg-black p-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                  <Timer className="h-3.5 w-3.5 text-cyan-300" /> FIRST PITCH LOCK
+            <div className="border border-white/[0.08] bg-[#111113] p-4 space-y-3 rounded-lg shadow-md">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-zinc-400">
+                  <Timer className="h-3.5 w-3.5 text-sky-400" /> FIRST PITCH LOCK
                 </span>
-                <span className="text-[8px] text-emerald-400 border border-emerald-400/40 px-1">PRE-GAME</span>
+                <span className="text-[8px] font-mono text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded bg-emerald-500/10">
+                  PRE-GAME
+                </span>
               </div>
+
               <div>
-                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block">COUNTDOWN TO FIRST PITCH:</span>
-                <strong className="mt-1 block text-3xl sm:text-4xl font-black tabular-nums text-cyan-300">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider block font-mono">COUNTDOWN TO LOCK:</span>
+                <strong className="mt-1 block text-3xl sm:text-4xl font-black tabular-nums text-[#F4F4F5] font-mono">
                   {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'STARTING SOON'}
                 </strong>
               </div>
-              <div className="pt-2 border-t border-white/10 text-xs">
-                <p className="truncate font-bold text-white">{teamLine(firstPitch.game)}</p>
-                <p className="text-[10px] text-zinc-400 mt-0.5">
-                  {formatClock(firstPitch.game.gameDate)} · {firstPitch.game.venue || 'Venue confirmed'}
-                </p>
+
+              {/* Collapsible Pre-Game Lock Banner */}
+              <div className="border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-2 rounded-md">
+                <button
+                  type="button"
+                  onClick={() => setLockBannerExpanded((v) => !v)}
+                  className="flex w-full items-center justify-between text-[10px] font-medium text-zinc-300 uppercase tracking-wider cursor-pointer"
+                  aria-expanded={lockBannerExpanded}
+                >
+                  <span className="flex items-center gap-1.5 text-sky-300">
+                    <Lock className="h-3 w-3" /> MATCHUP LOCK TELEMETRY
+                  </span>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                      lockBannerExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {lockBannerExpanded && (
+                  <div className="pt-2 border-t border-white/[0.06] text-xs space-y-1.5 animate-in fade-in duration-150 font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-[10px] uppercase">MATCHUP:</span>
+                      <span className="font-medium text-zinc-200">{teamLine(firstPitch.game)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-[10px] uppercase">START TIME:</span>
+                      <span className="text-zinc-300">{formatClock(firstPitch.game.gameDate)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-[10px] uppercase">VENUE:</span>
+                      <span className="text-zinc-300 truncate max-w-[180px]">
+                        {firstPitch.game.venue || 'Stadium Confirmed'}
+                      </span>
+                    </div>
+                    <div className="pt-1.5 border-t border-white/[0.06] text-[10px] text-zinc-400 space-y-0.5">
+                      <p className="truncate">
+                        <span className="text-zinc-500">AWAY ARM:</span> {awayPitcher}
+                      </p>
+                      <p className="truncate">
+                        <span className="text-zinc-500">HOME ARM:</span> {homePitcher}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-white/15 bg-black p-5 text-center space-y-1.5">
-              <p className="text-xs font-bold text-zinc-300 uppercase">NO PENDING FIRST PITCH</p>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
-                All scheduled games have started or reached final verification.
+            <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-center space-y-1.5 rounded-lg">
+              <p className="text-xs font-medium text-zinc-300 uppercase font-mono">NO PENDING FIRST PITCH</p>
+              <p className="text-[10px] text-zinc-500 leading-relaxed font-sans">
+                The slate has no scheduled MLB games currently pending first pitch.
               </p>
             </div>
           )}
@@ -151,3 +233,4 @@ export function TodayNextCommandBrief({
   );
 }
 
+export default TodayNextCommandBrief;

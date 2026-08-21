@@ -77,7 +77,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "live_parlays", label: "My List", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
   { id: "research", label: "Aurora Max", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track", locked: true },
-  { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
+  { id: "results", label: "Results / Ledger", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
   { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },
 
   // Social
@@ -87,12 +87,13 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
-  { id: "premium", label: FREE_BETA_ALL_ACCESS ? "Beta Access" : "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "premium", label: FREE_BETA_ALL_ACCESS ? "Beta Access" : "Plan & Billing", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "profile", label: "Profile", icon: "UserCircle", enabled: true, order: 20, group: "Account", locked: true },
   { id: "aurora_hr_hq", label: "Aurora HQ", icon: "Sparkles", enabled: true, order: 20.5, group: "Account", access: "admin" },
   { id: "admin", label: "Admin Ops", icon: "Shield", enabled: true, order: 21, group: "Account", access: "admin", locked: true },
   { id: "admin_hr_next", label: "HR Next", icon: "Sparkles", enabled: true, order: 21.5, group: "Account", access: "admin" },
+  { id: "nfl_touchdown", label: "NFL Touchdown Intelligence", icon: "Activity", enabled: true, order: 21.55, group: "Account" },
   { id: "admin_model_quality", label: "Model Quality", icon: "Activity", enabled: true, order: 21.6, group: "Account", access: "admin" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
@@ -152,14 +153,10 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 /*
  * Routable, but never a nav tab.
  *
- * `settings` is reached from the profile menu. `admin_hr_next` is the second
- * entry that renders HR Next — same page, wrapped in the admin gate — so with
- * both listed an admin saw "HR Next" twice in the top bar. The id stays live
- * because it is the canonical HR destination (`HR_NEXT_HOME`) behind the Today
- * launchpad tile and the `2` shortcut; only the duplicate tab goes away, and
- * `hr_board` keeps the visible slot in the Daily group.
+ * `settings`, `premium`, and `admin` are segregated into the profile menu.
+ * `admin_hr_next` is the duplicate entry for HR Next.
  */
-const SIDEBAR_HIDDEN_FEATURES = ['settings', 'admin_hr_next'];
+const SIDEBAR_HIDDEN_FEATURES = ['settings', 'admin_hr_next', 'admin', 'premium'];
 
 export function getEnabledFeatures(
   layout: FeatureLayout,

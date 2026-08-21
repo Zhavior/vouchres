@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Activity,
   BarChart3,
@@ -31,7 +32,7 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
       label: 'HR Next Terminal',
       detail: 'Terminal board & telemetry',
       count: null,
-      accent: 'text-cyan-300',
+      accent: 'text-sky-400',
       key: '2',
     },
     {
@@ -40,7 +41,7 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
       label: 'Live Games',
       detail: 'Scores & in-game context',
       count: vitals.live > 0 ? `${vitals.live} live` : null,
-      accent: vitals.live > 0 ? 'text-rose-400' : 'text-zinc-300',
+      accent: vitals.live > 0 ? 'text-rose-400' : 'text-zinc-400',
       key: '3',
     },
     {
@@ -49,7 +50,7 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
       label: 'Player Evidence',
       detail: 'Source-level dossiers',
       count: null,
-      accent: 'text-cyan-300',
+      accent: 'text-sky-400',
       key: '4',
     },
     {
@@ -74,12 +75,33 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
 
   return (
     <section aria-label="Research workspaces" className="font-mono space-y-3">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-        <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-400">
-          <Activity className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-          SYSTEM WORKSPACES
-        </h2>
-        <span className="text-[9px] text-zinc-600 uppercase">PRESS [1-6] TO LAUNCH</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-2.5 font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300 truncate">
+            SYSTEM WORKSPACES
+          </h2>
+          <span className="text-zinc-600 hidden sm:inline">|</span>
+          <span className="text-[9px] text-zinc-500 uppercase hidden md:inline truncate font-mono">
+            HOTKEYS: [1-6] LAUNCH · [K] SEARCH · [?] KEYS
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Docked MY LIST Trigger */}
+          <button
+            type="button"
+            onClick={() => onRoute('live_parlays')}
+            className="inline-flex items-center gap-1.5 border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] font-mono font-medium uppercase tracking-wider text-zinc-200 hover:bg-white/[0.10] hover:text-white rounded-md transition-colors cursor-pointer"
+            title="Open My List Workspace [5]"
+          >
+            <Target className="h-3 w-3 text-emerald-400" />
+            <span>{vitals.pendingSlips > 0 ? `${vitals.pendingSlips} MY LIST` : 'MY LIST'}</span>
+            <kbd className="hidden sm:inline-block border border-white/20 bg-black/40 px-1 text-[8px] font-mono text-zinc-400 rounded">
+              [5]
+            </kbd>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -90,16 +112,16 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
               key={tile.section}
               type="button"
               onClick={() => onRoute(tile.section)}
-              className="group flex min-h-[92px] flex-col justify-between border-2 border-white/10 bg-black p-4 text-left font-mono transition-all hover:border-cyan-400/80 hover:bg-zinc-950 cursor-pointer"
+              className="group flex min-h-[92px] flex-col justify-between border border-white/[0.08] bg-[#111113] p-4 text-left font-mono rounded-xl transition-all hover:border-white/[0.18] hover:bg-[#18181B] shadow-md cursor-pointer"
             >
               <div className="flex w-full items-start justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-2">
                   <Icon className={`h-4 w-4 shrink-0 ${tile.accent}`} aria-hidden="true" />
-                  <strong className="truncate text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                  <strong className="truncate text-xs font-medium text-[#F4F4F5] group-hover:text-white transition-colors">
                     {tile.label}
                   </strong>
                 </span>
-                <kbd className="hidden shrink-0 border border-white/20 bg-zinc-900 px-1.5 py-0.2 text-[9px] font-bold text-zinc-400 sm:block">
+                <kbd className="hidden shrink-0 border border-white/10 bg-black/40 px-1.5 py-0.5 text-[9px] font-medium text-zinc-400 sm:block font-mono rounded">
                   [{tile.key}]
                 </kbd>
               </div>
@@ -107,7 +129,7 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
               <span className="mt-1.5 truncate text-[10px] text-zinc-400">{tile.detail}</span>
 
               {tile.count && (
-                <span className={`mt-2 text-[10px] font-bold tabular-nums ${tile.accent}`}>
+                <span className={`mt-2 text-[10px] font-bold tabular-nums font-mono ${tile.accent}`}>
                   ● {tile.count}
                 </span>
               )}
@@ -119,3 +141,4 @@ export function TodayNextLaunchpad({ vitals, onRoute }: TodayNextLaunchpadProps)
   );
 }
 
+export default TodayNextLaunchpad;

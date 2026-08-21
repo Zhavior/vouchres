@@ -13,7 +13,7 @@ import {
   FAQSection,
   CTASection,
   FooterSection,
-  type FooterNavigationTarget,
+  type VouchEdgeLandingV3Props,
 } from '../components/landing-v3';
 
 import {
@@ -28,7 +28,6 @@ type Props = {
   onJoinBeta: () => void;
   onViewDemo: () => void;
   onExploreCommunity: () => void;
-  onFooterNavigate: (target: FooterNavigationTarget) => void;
 };
 
 const storySteps = [
@@ -1055,7 +1054,7 @@ export default function VouchEdgeLandingV3(props: Props) {
       </div>
       <div className="ve-mobile-story-slide ve-mobile-story-slide--footer relative bg-black">
         <MobileChapterMarker chapter="09 / RECORD" label="SYSTEM END" final />
-        <FooterSection onNavigate={props.onFooterNavigate} />
+        <FooterSection />
       </div>
     </main>
   );
