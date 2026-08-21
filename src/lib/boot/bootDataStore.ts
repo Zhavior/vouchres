@@ -2,6 +2,7 @@ export type VouchEdgeBootKey =
   | "lineupToday"
   | "dailyPlayers"
   | "dailyHrBoard"
+  | "dailyReport"
   | "savedParlays"
   | "notifications"
   | "playerRegistryCount"

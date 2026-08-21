@@ -204,6 +204,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
     } catch (err: any) {
       throw upstreamUnavailable("Daily report unavailable.", err);
@@ -216,6 +217,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, { report: report.vulnerablePitchers, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Vulnerable pitchers unavailable.", err);
@@ -226,6 +228,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, { targets: report.hrTargets, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("HR targets unavailable.", err);
@@ -236,6 +239,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, { sneaky: report.sneakyHr, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Sneaky HR unavailable.", err);
@@ -246,6 +250,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, { ...report.rbi, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("RBI targets unavailable.", err);
@@ -256,6 +261,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       res.json(apiOkFlat(req, { environments: report.runEnvironments, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Run environments unavailable.", err);

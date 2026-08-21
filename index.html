@@ -229,20 +229,31 @@
           var section = (window.location.hash.replace(/^#/, '') || window.location.pathname)
             .toLowerCase()
             .replace(/^\//, '');
-          if (section !== 'hr_board' && section !== 'daily_hr_watch_new') return;
+          var isTodaySection = !section || section === 'today' || section === 'today_next';
+          var isHrSection = section === 'hr_board' || section === 'daily_hr_watch_new';
 
-          window.__veHrBoardEarly = fetch('/api/mlb/hr-board/today?previewLimit=350&compact=1', {
-            credentials: 'include',
-          }).then(function (res) {
-            if (!res.ok) throw new Error('hr_board_early_fetch_failed');
-            window.__veHrBoardEarlyCacheControl = res.headers.get('cache-control');
-            return res.json();
-          });
-          // The consumer attaches its own handler; this one only stops an
-          // unhandled rejection from surfacing when the early fetch loses.
-          window.__veHrBoardEarly.catch(function () {});
+          if (isTodaySection) {
+            window.__veDailyReportEarly = fetch('/api/mlb/reports/daily', {
+              credentials: 'include',
+            }).then(function (res) {
+              if (!res.ok) throw new Error('daily_report_early_fetch_failed');
+              return res.json();
+            });
+            window.__veDailyReportEarly.catch(function () {});
+          }
+
+          if (isTodaySection || isHrSection) {
+            window.__veHrBoardEarly = fetch('/api/mlb/hr-board/today?previewLimit=350&compact=1', {
+              credentials: 'include',
+            }).then(function (res) {
+              if (!res.ok) throw new Error('hr_board_early_fetch_failed');
+              window.__veHrBoardEarlyCacheControl = res.headers.get('cache-control');
+              return res.json();
+            });
+            window.__veHrBoardEarly.catch(function () {});
+          }
         } catch (e) {
-          /* Best effort only — the app still fetches the board on its own. */
+          /* Best effort only — the app still fetches on its own. */
         }
       })();
     </script>
