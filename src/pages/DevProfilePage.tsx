@@ -15,18 +15,46 @@ import {
   ArrowUpRight, 
   ExternalLink,
   BookOpen,
-  Activity
+  Activity,
+  Globe,
+  Radio,
+  Zap
 } from 'lucide-react';
 import { FooterSection } from '../components/landing-v3';
 import PublicNav from '../components/landing-v3/PublicNav';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 import { BLOG_POSTS } from '../data/blog/posts';
 
+const VENTURES = [
+  {
+    id: "vouchedge",
+    name: "VouchEdge",
+    url: "https://vouchedge.xyz",
+    displayUrl: "vouchedge.xyz",
+    role: "Founder & Chief Architect",
+    tag: "SPORTS INTELLIGENCE",
+    color: "cyan",
+    description: "MLB decision intelligence and real-time probability distribution engine. Features SHA-256 cryptographic ledgers to end the era of deleted losses and fake locks.",
+    highlights: ["Real-Time Statcast Feeds", "HRPI Probability Modeling", "Zero-Hallucination UI", "Immutable Proof Engine"]
+  },
+  {
+    id: "seolaquest",
+    name: "SEOlaQuest",
+    url: "https://seolaquest.com",
+    displayUrl: "seolaquest.com",
+    role: "Founder & Lead Developer",
+    tag: "AI SOCIAL LISTENING",
+    color: "amber",
+    description: "AI-powered social listening, lead monitoring, and buyer-intent detection across X (Twitter) and Reddit for high-velocity SaaS founders and operators.",
+    highlights: ["Real-Time Intent Monitoring", "Multi-Platform AI Scouts", "Gamified Lead Arcade", "Sub-Minute Alerts"]
+  }
+];
+
 const TECH_STACK = [
   { category: "Core Frontend", items: ["React 19", "TypeScript", "Vite", "Tailwind CSS", "Framer Motion"] },
   { category: "GPU & Graphics", items: ["WebGL Shaders", "Three.js", "Aurora Engine", "60fps HUD Canvas"] },
   { category: "Backend & Systems", items: ["Node.js / Express", "Supabase (PostgreSQL)", "Redis / Upstash", "SendGrid Email Pipeline"] },
-  { category: "Quantitative Telemetry", items: ["MLB Statcast Live Feed", "HRPI Probability Engine", "Immutable Evidence Ledgers", "Weather & Vector Modeling"] },
+  { category: "Intelligence & Telemetry", items: ["MLB Statcast Live Feed", "AI Social Scouts", "SHA-256 Proof Ledgers", "Real-Time Intent Parsing"] },
 ];
 
 export default function DevProfilePage() {
@@ -68,7 +96,7 @@ export default function DevProfilePage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="border border-white/15 bg-zinc-950/90 shadow-2xl p-6 sm:p-10 relative overflow-hidden mb-10"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-amber-400 to-cyan-400" />
             
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-white/10">
               <div className="flex items-center gap-5">
@@ -100,7 +128,7 @@ export default function DevProfilePage() {
                   </h1>
                   
                   <p className="text-zinc-400 font-mono text-xs sm:text-sm mt-1">
-                    Founder & Chief Systems Architect @ <span className="text-white font-bold">VouchEdge</span>
+                    Founder & Systems Architect @ <span className="text-cyan-300 font-bold">VouchEdge</span> & <span className="text-amber-300 font-bold">SEOlaQuest</span>
                   </p>
                 </div>
               </div>
@@ -163,53 +191,108 @@ export default function DevProfilePage() {
           </motion.div>
 
           {/* ============================================================ */}
-          {/* MANIFESTO & PHILOSOPHY                                       */}
+          {/* SHIPPED VENTURES & ECOSYSTEM (VouchEdge + SEOlaQuest)         */}
           {/* ============================================================ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
+            className="mb-10 space-y-4"
           >
-            <div className="lg:col-span-2 border border-white/10 bg-zinc-950/80 p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2 font-mono text-xs font-black uppercase tracking-widest text-cyan-400">
-                <Terminal className="w-4 h-4" />
-                <span>Engineering Philosophy & Mission</span>
-              </div>
-              <h2 className="text-2xl font-black font-mono text-white">
-                Tired of Losses & Scams. Built for Decision Intelligence.
-              </h2>
-              <p className="text-sm text-zinc-300 font-mono leading-relaxed">
-                "I was tired of seeing people lose their hard-earned money blindly, and tired of watching everyday bettors get scammed by fake 'lock' sellers. I created VouchEdge to give people real tools to make informed decisions and truly understand what they are betting on."
-              </p>
-              <p className="text-sm text-zinc-400 font-mono leading-relaxed">
-                We combine real-time MLB Statcast data, meteorological modeling, and SHA-256 cryptographic ledgers to ensure that all evidence is 100% transparent and accountable.
-              </p>
+            <div className="flex items-center gap-2 font-mono text-xs font-black uppercase tracking-widest text-cyan-400">
+              <Globe className="w-4 h-4" />
+              <span>Shipped Platforms & Ventures</span>
             </div>
 
-            {/* Quick Metrics Bento Card */}
-            <div className="border border-white/10 bg-zinc-950/80 p-6 sm:p-8 flex flex-col justify-between space-y-6">
-              <div className="space-y-4 font-mono">
-                <div className="text-xs text-zinc-500 uppercase tracking-wider">PRIMARY DISPATCH</div>
-                <div className="text-xl font-bold text-white">VouchEdge Ecosystem</div>
-                <div className="text-xs text-cyan-400">vouchedge.xyz</div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {VENTURES.map((v) => {
+                const isCyan = v.color === 'cyan';
+                return (
+                  <div 
+                    key={v.id}
+                    className={`border ${isCyan ? 'border-cyan-500/40 bg-gradient-to-b from-cyan-950/20 to-zinc-950' : 'border-amber-500/40 bg-gradient-to-b from-amber-950/20 to-zinc-950'} p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-xl relative overflow-hidden`}
+                  >
+                    <div className={`h-1 w-full absolute top-0 left-0 ${isCyan ? 'bg-cyan-400' : 'bg-amber-400'}`} />
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className={`border ${isCyan ? 'border-cyan-400/50 bg-cyan-950/60 text-cyan-300' : 'border-amber-400/50 bg-amber-950/60 text-amber-300'} px-2.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider`}>
+                          {v.tag}
+                        </span>
+                        <a 
+                          href={v.url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center gap-1 font-mono text-xs text-zinc-400 hover:text-white transition-colors"
+                        >
+                          <span>{v.displayUrl}</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
 
-              <div className="pt-4 border-t border-white/10 space-y-2 font-mono text-xs">
-                <div className="flex justify-between text-zinc-400">
-                  <span>Architecture:</span>
-                  <span className="text-white font-bold">SPA + Express Hybrid</span>
-                </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Rendering:</span>
-                  <span className="text-cyan-300 font-bold">GPU Aurora Pipeline</span>
-                </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Security:</span>
-                  <span className="text-emerald-400 font-bold">SHA-256 Ledger Lock</span>
-                </div>
-              </div>
+                      <h3 className="text-2xl font-black font-mono text-white">
+                        {v.name}
+                      </h3>
+
+                      <p className="text-xs sm:text-sm text-zinc-300 font-mono leading-relaxed">
+                        {v.description}
+                      </p>
+
+                      <div className="pt-2">
+                        <div className="font-mono text-[10px] uppercase text-zinc-500 font-bold tracking-wider mb-2">
+                          KEY CAPABILITIES
+                        </div>
+                        <ul className="grid grid-cols-2 gap-2 font-mono text-xs text-zinc-400">
+                          {v.highlights.map((h, i) => (
+                            <li key={i} className="flex items-center gap-1.5">
+                              <span className={isCyan ? 'text-cyan-400' : 'text-amber-400'}>✓</span>
+                              <span className="truncate">{h}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                      <span className="font-mono text-xs text-zinc-500">{v.role}</span>
+                      <a
+                        href={v.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider ${isCyan ? 'text-cyan-400 hover:text-cyan-300' : 'text-amber-400 hover:text-amber-300'} transition-colors`}
+                      >
+                        <span>Launch Platform</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </motion.div>
+
+          {/* ============================================================ */}
+          {/* MANIFESTO & PHILOSOPHY                                       */}
+          {/* ============================================================ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="border border-white/10 bg-zinc-950/80 p-6 sm:p-8 space-y-4 mb-10"
+          >
+            <div className="flex items-center gap-2 font-mono text-xs font-black uppercase tracking-widest text-cyan-400">
+              <Terminal className="w-4 h-4" />
+              <span>Engineering Philosophy & Mission</span>
+            </div>
+            <h2 className="text-2xl font-black font-mono text-white">
+              Tired of Losses & Scams. Built for Decision Intelligence.
+            </h2>
+            <p className="text-sm text-zinc-300 font-mono leading-relaxed">
+              "I was tired of seeing people lose their hard-earned money blindly, and tired of watching everyday bettors get scammed by fake 'lock' sellers. I created VouchEdge to give people real tools to make informed decisions and truly understand what they are betting on."
+            </p>
+            <p className="text-sm text-zinc-400 font-mono leading-relaxed">
+              Whether building MLB Statcast predictive engines on <strong>VouchEdge</strong> or real-time social lead intelligence on <strong>SEOlaQuest</strong>, the core thesis is identical: eradicate black boxes, eliminate fake promises, and arm builders and analysts with sourced, verifiable telemetry.
+            </p>
           </motion.div>
 
           {/* ============================================================ */}
@@ -218,7 +301,7 @@ export default function DevProfilePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="border border-white/10 bg-zinc-950/80 p-6 sm:p-8 mb-10"
           >
             <div className="flex items-center gap-2 font-mono text-xs font-black uppercase tracking-widest text-cyan-400 mb-6">
@@ -252,7 +335,7 @@ export default function DevProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="border border-white/10 bg-zinc-950/80 p-6 sm:p-8 mb-12"
             >
               <div className="flex items-center justify-between mb-6">
