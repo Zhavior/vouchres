@@ -33,9 +33,41 @@
   background-color: var(--ve-bg-base);
 }
 
-/* Rounded subtle corner standard */
-.today-next .rounded-full {
-  border-radius: 9999px !important;
+/* ============================================================
+   SKELETON SHIMMER & LOADING ANIMATION
+   ============================================================ */
+
+.tn-skeleton {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tn-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  animation: tn-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes tn-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-skeleton::after {
+    animation: none;
+  }
 }
 
 /* ============================================================

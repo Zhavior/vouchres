@@ -313,7 +313,7 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     reportDateLabel: formatReportDate(report?.date),
     freshness: receipt.updated,
     isLoading,
-    isRefreshing: reportQuery.isFetching && !reportQuery.isLoading,
+    isRefreshing: (reportQuery.isFetching || hrBoardQuery.syncing) && !isLoading,
     error: reportQuery.isError ? (reportQuery.error ?? new Error('Daily report unavailable')) : null,
     isDegraded,
     refresh,

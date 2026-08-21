@@ -1,6 +1,7 @@
 import { getExperimentVariant } from '../../lib/experiments';
 import React, { Suspense, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
+import { TodayNextSkeleton } from '../../features/today-next/components/TodayNextSkeleton';
 import FadeInMount from '../system/FadeInMount';
 import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
 import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
@@ -109,9 +110,9 @@ const TrustModelQualityPage = lazyPage(
   'TrustModelQualityPage',
 );
 
-const TodayNextPage = lazyPage(
+const TodayNextPage = lazyWithRetry(
   () => import('../../features/today-next/pages/TodayNextPage'),
-  'TodayNextPage',
+  { label: 'TodayNextPage', pendingFallback: <TodayNextSkeleton /> },
 );
 // Module scope on purpose. Building this inside AdminAccessGateShell creates a
 // new lazy component type every render, so React remounts and re-suspends the
@@ -249,7 +250,7 @@ function MainViewRouter({
       );
     case 'today':
       return (
-        <LazyRoute>
+        <LazyRoute fallback={<TodayNextSkeleton />}>
           <TodayNextPage navigateSection={navigateSection} />
         </LazyRoute>
       );
@@ -544,7 +545,7 @@ function MainViewRouter({
       );
     case 'today_next':
       return (
-        <LazyRoute>
+        <LazyRoute fallback={<TodayNextSkeleton />}>
           <AdminAccessGateShell>
             <TodayNextPage navigateSection={navigateSection} />
           </AdminAccessGateShell>

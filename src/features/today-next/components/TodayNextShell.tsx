@@ -144,7 +144,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
 
   if (error) {
     return (
-      <main className="today-next relative z-10 flex min-h-screen min-w-0 flex-1 items-center justify-center px-4">
+      <div className="today-next relative z-10 flex min-h-screen min-w-0 flex-1 items-center justify-center px-4">
         <div className="max-w-md space-y-3 border-2 border-rose-500/50 bg-[#131B1E] p-6 text-center font-mono shadow-2xl">
           <AlertTriangle className="mx-auto h-6 w-6 text-rose-400" />
           <p className="text-sm font-bold text-white uppercase tracking-wider">DAILY BRIEF TELEMETRY UNAVAILABLE</p>
@@ -161,12 +161,12 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
             <RefreshCw className="h-3.5 w-3.5" /> RETRY SENSOR SYNC
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="today-next relative z-10 min-h-screen min-w-0 flex-1 overscroll-none text-white font-mono">
+    <div className="today-next relative z-10 min-h-screen min-w-0 flex-1 overscroll-none text-white font-mono">
       {isMobile ? (
         <TodayMobileShell
           decision={decision}
@@ -424,7 +424,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
       )}
 
       <TodayNextKeyboardCheatsheet isOpen={cheatsheetOpen} onClose={() => setCheatsheetOpen(false)} />
-    </main>
+    </div>
   );
 }
 

@@ -65,9 +65,9 @@ export function TodayNextCommandBrief({
       className="border border-white/[0.08] bg-[#111113] p-6 font-mono space-y-4 rounded-xl shadow-2xl"
       aria-labelledby="today-next-brief-title"
     >
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px] items-start">
         {/* Left Column: Stage Badge, Title, Description, Primary CTA */}
-        <div className="min-w-0 flex-1 space-y-3.5">
+        <div className="min-w-0 space-y-3.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-mono font-medium uppercase tracking-wider text-emerald-400 rounded-md">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -83,12 +83,12 @@ export function TodayNextCommandBrief({
 
           <h2
             id="today-next-brief-title"
-            className="text-balance text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-white font-sans"
+            className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-white font-sans"
           >
             {decision.title}
           </h2>
 
-          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-zinc-400 font-sans">
+          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-zinc-300 font-sans">
             {decision.description}
           </p>
 
@@ -116,7 +116,7 @@ export function TodayNextCommandBrief({
         </div>
 
         {/* Right Column: Live Ticker or Pre-Game Lock Telemetry */}
-        <div className="w-full shrink-0 lg:w-[360px]">
+        <div className="w-full">
           {liveGames.length > 0 ? (
             <div className="border border-white/[0.08] bg-[#111113] p-4 space-y-2.5 rounded-lg shadow-md">
               {/* Header with Restrained Live Indicator */}
