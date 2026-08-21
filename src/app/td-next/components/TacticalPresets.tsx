@@ -20,56 +20,63 @@ export function TacticalPresets({ onApplyPreset, onReset }: TacticalPresetsProps
   };
 
   return (
-    <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
-      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mr-2 shrink-0">
-        META STRATEGIES
-      </span>
+    <section className="space-y-1.5 font-mono">
+      <h3 className="px-0.5 text-[9px] font-black uppercase tracking-widest text-zinc-500 flex justify-between items-center">
+        <span>META STRATEGIES</span>
+        {activePreset && (
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-2.5 h-2.5" />
+            CLEAR
+          </button>
+        )}
+      </h3>
       
-      <button
-        onClick={() => handleApply('HEAVY_GL')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-          activePreset === 'HEAVY_GL'
-            ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-            : 'border-white/10 bg-black text-zinc-400 hover:text-white hover:border-white/30'
-        }`}
-      >
-        <Zap className="w-3 h-3" />
-        Heavy Goal-Line Machines
-      </button>
-
-      <button
-        onClick={() => handleApply('MISMATCH')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-          activePreset === 'MISMATCH'
-            ? 'border-emerald-400 bg-emerald-950/40 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
-            : 'border-white/10 bg-black text-zinc-400 hover:text-white hover:border-white/30'
-        }`}
-      >
-        <Target className="w-3 h-3" />
-        Mismatch Exploits
-      </button>
-
-      <button
-        onClick={() => handleApply('VALUE')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-          activePreset === 'VALUE'
-            ? 'border-purple-400 bg-purple-950/40 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-            : 'border-white/10 bg-black text-zinc-400 hover:text-white hover:border-white/30'
-        }`}
-      >
-        <Rocket className="w-3 h-3" />
-        Value Longshots
-      </button>
-
-      {activePreset && (
+      <div className="flex flex-col gap-1 border border-white/10 bg-zinc-950 p-1">
         <button
-          onClick={handleReset}
-          className="flex items-center gap-1 px-2 py-1.5 ml-2 text-[9px] font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
+          type="button"
+          onClick={() => handleApply('HEAVY_GL')}
+          aria-pressed={activePreset === 'HEAVY_GL'}
+          className={`flex items-center justify-between w-full px-2.5 py-1.5 text-left text-[10px] font-black uppercase tracking-wider transition-colors border cursor-pointer ${
+            activePreset === 'HEAVY_GL'
+              ? 'border-cyan-400 bg-cyan-950/50 text-cyan-300 shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+              : 'border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-white'
+          }`}
         >
-          <RefreshCw className="w-3 h-3" />
-          Clear
+          <span>Goal-Line Machines</span>
+          <Zap className="w-3.5 h-3.5 opacity-50" />
         </button>
-      )}
-    </div>
+
+        <button
+          type="button"
+          onClick={() => handleApply('MISMATCH')}
+          aria-pressed={activePreset === 'MISMATCH'}
+          className={`flex items-center justify-between w-full px-2.5 py-1.5 text-left text-[10px] font-black uppercase tracking-wider transition-colors border cursor-pointer ${
+            activePreset === 'MISMATCH'
+              ? 'border-emerald-400 bg-emerald-950/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+              : 'border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-white'
+          }`}
+        >
+          <span>Mismatch Exploits</span>
+          <Target className="w-3.5 h-3.5 opacity-50" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleApply('VALUE')}
+          aria-pressed={activePreset === 'VALUE'}
+          className={`flex items-center justify-between w-full px-2.5 py-1.5 text-left text-[10px] font-black uppercase tracking-wider transition-colors border cursor-pointer ${
+            activePreset === 'VALUE'
+              ? 'border-purple-400 bg-purple-950/50 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.15)]'
+              : 'border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-white'
+          }`}
+        >
+          <span>Value Longshots</span>
+          <Rocket className="w-3.5 h-3.5 opacity-50" />
+        </button>
+      </div>
+    </section>
   );
 }

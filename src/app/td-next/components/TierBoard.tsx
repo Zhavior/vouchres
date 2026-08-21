@@ -81,7 +81,7 @@ export const TierBoard: React.FC<TierBoardProps> = ({
   return (
     <div className="w-full overflow-x-auto pb-4 scroll-smooth" style={{ scrollbarWidth: 'thin' }}>
       {/* 4-Column Board with Minimum Width Constraint (min-w-[1140px]) to Guarantee ≥260px per Card */}
-      <div className="grid grid-cols-4 gap-4 items-start w-full min-w-[1140px] font-mono">
+      <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 gap-4 items-start w-full font-mono">
         {TIER_COLUMNS.map((col) => {
           const players = tierPartition[col.tier];
           const Icon = col.icon;
@@ -89,7 +89,7 @@ export const TierBoard: React.FC<TierBoardProps> = ({
           return (
             <section
               key={col.tier}
-              className="flex flex-col min-w-[260px]"
+              className="flex flex-col min-w-0"
               style={{ contain: 'layout style' }}
             >
               {/* Column Header styled like HR Next */}
