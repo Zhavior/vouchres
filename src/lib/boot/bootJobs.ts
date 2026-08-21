@@ -2,6 +2,7 @@ import { apiClient } from "../apiClient";
 import { bootDataStore, type VouchEdgeBootKey } from "./bootDataStore";
 import { parseHrBoardApiResponse } from "../../api/hrBoardApiContract";
 import { claimEarlyHrBoard } from "./hrBoardEarlyFetch";
+import { claimEarlyDailyReport } from "./dailyReportEarlyFetch";
 import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../hrBoardSlice";
 
 export type VouchEdgeBootJob = {
@@ -41,6 +42,7 @@ async function runAndCache(
 }
 
 const LINEUP_TODAY_PATH = "/api/mlb/lineup/today";
+const DAILY_REPORT_PATH = "/api/mlb/reports/daily";
 /**
  * Must stay at the canonical limit: this response is seeded as the board query's
  * initialData, and the query does not refetch on mount, so a shorter boot board
@@ -67,14 +69,35 @@ async function hrBoardTodayShared(signal: AbortSignal): Promise<unknown> {
   return board;
 }
 
+async function dailyReportShared(signal: AbortSignal): Promise<unknown> {
+  if (bootDataStore.has("dailyReport")) {
+    return bootDataStore.get("dailyReport");
+  }
+  const early = claimEarlyDailyReport();
+  const report = early
+    ? await early
+    : await fetchJson(DAILY_REPORT_PATH, signal);
+  bootDataStore.set("dailyReport", report);
+  return report;
+}
+
 /** Required boot jobs only — optional warmups run after first paint via idle. */
 export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
+  {
+    id: "dailyReport",
+    label: "Syncing daily intelligence report",
+    feature: "Today Home",
+    required: true,
+    weight: 22,
+    timeoutMs: 4500,
+    run: (signal) => dailyReportShared(signal),
+  },
   {
     id: "lineupToday",
     label: "Syncing today’s MLB slate",
     feature: "Daily slate",
     required: true,
-    weight: 28,
+    weight: 22,
     timeoutMs: 4500,
     run: (signal) => lineupTodayShared(signal),
   },
@@ -83,7 +106,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     label: "Loading Daily Players intelligence",
     feature: "Daily Players",
     required: true,
-    weight: 18,
+    weight: 16,
     timeoutMs: 4500,
     run: async (signal) => {
       const data = await lineupTodayShared(signal);
@@ -96,7 +119,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     label: "Warming HR board signals",
     feature: "Daily HR Board",
     required: true,
-    weight: 24,
+    weight: 20,
     timeoutMs: 5500,
     run: (signal) => hrBoardTodayShared(signal),
   },

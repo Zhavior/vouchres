@@ -228,7 +228,7 @@ async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
   console.log(`[mlbIntelligenceEngine] ${games.length} games, ${pitcherIds.size} probable pitchers — fetching stats...`);
 
   // Fetch all pitcher season stats in parallel
-  const pitcherStatsList = await limitConcurrency([...pitcherIds], 6, async (id) => {
+  const pitcherStatsList = await limitConcurrency([...pitcherIds], 12, async (id) => {
     try {
       return { status: "fulfilled" as const, value: { id, stats: await getPitcherStats(id) } };
     } catch (reason) {
