@@ -620,8 +620,8 @@ export default function BlogPage({ slug }: { slug?: string }) {
           </AnimatePresence>
         </main>
         
-        {/* Only show footer when looking at the list, keep reader clean */}
-        {!activePost && <FooterSection />}
+        {/* Always display footer for consistent navigation and SEO across all views */}
+        <FooterSection />
       </div>
     </div>
   );
