@@ -44,6 +44,8 @@ export function devAuthActive(): boolean {
 }
 
 export const PUBLIC_SECTIONS = new Set([
+  'today',
+  'today_next',
   'welcome',
   'vouchedge_intro',
   'legacy_studio',
@@ -73,6 +75,51 @@ export const PUBLIC_SECTIONS = new Set([
 ]);
 
 export const SIGNED_IN_HOME = 'today';
+
+/**
+ * Maps a section ID to its canonical public URL path.
+ */
+export function sectionToPath(section: string): string {
+  const canonical = canonicalizeSection(section);
+  switch (canonical) {
+    case 'today':
+    case 'today_next':
+      return '/today';
+    case 'td_next':
+      return '/td-next';
+    case 'hr_board':
+    case 'daily_hr_watch_new':
+      return '/hr-board';
+    case 'hr_next':
+    case 'admin_hr_next':
+      return '/hr-next';
+    case 'live_games':
+      return '/live-games';
+    case 'research':
+    case 'player_research':
+      return '/research';
+    case 'build':
+    case 'live_parlays':
+      return '/build';
+    case 'news':
+    case 'blog':
+      return '/news';
+    case 'feed':
+      return '/feed';
+    case 'following':
+      return '/following';
+    case 'results':
+      return '/results';
+    case 'profile':
+      return '/profile';
+    case 'settings':
+      return '/settings';
+    case 'vouchedge_intro':
+      return '/';
+    default:
+      return `/${canonical.replace(/_/g, '-')}`;
+  }
+}
 
 /**
  * HR Next is the default landing experience for anyone who can reach it.
@@ -148,6 +195,7 @@ export function resolvePublicSection(section: string): string {
   if (shouldForcePublicLanding()) return 'vouchedge_intro';
   if (hasRealAuthToken()) return section;
   if (section === 'welcome' || section === 'island') return 'vouchedge_intro';
+  if (section === 'welcome' || section === 'island') return 'vouchedge_intro';
   return section;
 }
 
@@ -176,7 +224,7 @@ export function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
     hash === 'vouchedge-intro' ||
     hash === '';
   if (onLandingPath) {
-    window.history.replaceState(null, '', `/${homeSection}`);
+    window.history.replaceState(null, '', sectionToPath(homeSection));
   }
 }
 
