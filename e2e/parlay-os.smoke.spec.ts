@@ -1,32 +1,39 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+async function openReplacementWorkspace(page: Page) {
+  await page.goto("/#build");
+  await page.waitForLoadState("domcontentloaded");
+
+  const rejectTelemetry = page.getByRole("button", { name: "Reject non-essential" });
+  if (await rejectTelemetry.isVisible({ timeout: 5_000 }).catch(() => false)) {
+    await rejectTelemetry.click();
+  }
+
+  await expect(page.getByRole("heading", { name: "My List & Parlay Editor" })).toBeVisible({ timeout: 30_000 });
+}
 
 test.describe("My List smoke", () => {
-  test("My List build tab loads", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
+  test.describe.configure({ timeout: 90_000 });
 
-    const buildLink = page.getByRole("button", { name: /build/i }).first();
-    if (await buildLink.isVisible().catch(() => false)) {
-      await buildLink.click();
-    } else {
-      await page.goto("/#build");
-    }
+  test("replacement workspace navigation loads", async ({ page }) => {
+    await openReplacementWorkspace(page);
 
-    await expect(page.getByRole("region", { name: "My List" })).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole("tab", { name: /build/i })).toBeVisible();
+    const workspaceNav = page.getByRole("navigation", { name: "My List and parlay workspace" });
+    await expect(workspaceNav.getByRole("button", { name: /My List/i })).toBeVisible();
+    await expect(workspaceNav.getByRole("button", { name: /Active Parlay/i })).toBeVisible();
+    await expect(workspaceNav.getByRole("button", { name: /Saved & Graded/i })).toBeVisible();
+    await expect(page.getByRole("region", { name: /My List \+ Editor/i })).toBeVisible();
   });
 
-  test("My List empty build state guides user", async ({ page }) => {
-    await page.goto("/#build");
-    await page.waitForLoadState("domcontentloaded");
+  test("empty active parlay guides user to verified players", async ({ page }) => {
+    await openReplacementWorkspace(page);
 
-    const hub = page.getByRole("region", { name: "My List" });
-    await expect(hub).toBeVisible({ timeout: 30_000 });
+    const activeParlay = page.getByRole("button", { name: /Active Parlay/i });
+    await expect(activeParlay).toBeVisible();
+    await activeParlay.click();
 
-    const emptyBuildState = page.getByRole("heading", { name: /build from your research/i });
-    const openSlip = page.getByRole("button", { name: /open slip/i });
-    const hasEmpty = await emptyBuildState.isVisible().catch(() => false);
-    const hasSlip = await openSlip.isVisible().catch(() => false);
-    expect(hasEmpty || hasSlip).toBeTruthy();
+    await expect(page.getByRole("region", { name: "Parlay Editor" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your active parlay is empty" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Browse HR Players" })).toBeVisible();
   });
 });
