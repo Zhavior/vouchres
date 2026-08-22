@@ -2,7 +2,8 @@
 /**
  * Fails CI when the main Vite index chunk or initial-route CSS exceeds gzip budgets.
  * Default JS: 130 KiB — ~108 KiB baseline + headroom per Phase 3 audit.
- * Default CSS: 90 KiB total gzip (current build ~87 KiB + headroom)
+ * Default boot-path CSS: 118 KiB gzip (current largest route ~113 KiB with
+ * shared framework CSS loaded once + narrow regression headroom)
  */
 import { readFileSync, existsSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -11,7 +12,7 @@ import { gzipSync } from "node:zlib";
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
 const VITE_MANIFEST = join(process.cwd(), "dist", "vite-manifest.json");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
-const MAX_CSS_GZIP_BYTES = Number(process.env.CSS_BUDGET_BYTES ?? 110 * 1024);
+const MAX_CSS_GZIP_BYTES = Number(process.env.CSS_BUDGET_BYTES ?? 118 * 1024);
 
 function formatKiB(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;

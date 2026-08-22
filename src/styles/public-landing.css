@@ -1,18 +1,7 @@
-@import "tailwindcss" source(none);
-@import "./fonts.css";
-@import "./vouchedge-tokens.css";
-@import "./vouchedge-utilities.css";
-@import "./vouchedge-motion.css";
-@import "./z8-design-system.css";
-@import "./z8-premium.css";
-
-@config "../../tailwind.public.config.ts";
-@source "../pages/VouchEdgeLandingV3.tsx";
-@source "../components/landing-v3/**/*.{ts,tsx}";
-@source "../components/brand/VouchEdgeLogo.tsx";
-@source "../components/landing/aurora/AuroraHero.tsx";
-@source "../components/landing/aurora/AuroraBackground.tsx";
-@source "../components/landing/hero/LiveHud.tsx";
+/* Tailwind, fonts, tokens, utilities, motion, and the shared design systems are
+ * loaded once by index.css. Re-importing them in this route chunk duplicated
+ * the same generated CSS on the landing boot path. Keep this file scoped to
+ * landing-only rules so route loading adds no second framework payload. */
 
 /* Public landing scroll contract.
  *
