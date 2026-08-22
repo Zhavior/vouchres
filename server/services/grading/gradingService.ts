@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getGrader, type LegOutcome } from "./sportGraders";
 import { gradePick } from "../persistence/pickService";
+import { settleMlbPlayerMarket } from "./marketSettlementEngine";
 import { createParlayGradedNotification, createParlayLegSettledNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
 import { trustLedgerRepository } from "../../repositories/trustLedgerRepository";
@@ -35,7 +36,7 @@ export interface GradeResult {
   warnings?: string[];
   leg_results?: Array<{
     leg_index: number;
-    status: "won" | "lost" | "push";
+    status: "won" | "lost" | "push" | "void";
     note?: string;
     selection?: string;
     market_code?: string;
@@ -623,7 +624,7 @@ async function gradeParlayPick(
   const boxscoreCache = new Map<string, any>();
   const legResults: Array<{
     leg_index: number;
-    status: "won" | "lost" | "push";
+    status: "won" | "lost" | "push" | "void";
     odds: number;
     note?: string;
     selection?: string;
@@ -715,6 +716,16 @@ async function gradeParlayPick(
 
     const gradedLeg = await gradeParlayLegWithCache(supabaseAdmin, leg, legBoxscore);
 
+    if (gradedLeg.status === "review") {
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `parlay_leg_requires_review:${leg.leg_index}`,
+        warnings: [gradedLeg.note],
+      };
+    }
+
     legResults.push({
       leg_index: Number(leg.leg_index),
       status: gradedLeg.status,
@@ -747,7 +758,7 @@ async function gradeParlayPick(
   }
 
   const wonLegs = legResults.filter((r) => r.status === "won");
-  const pushLegs = legResults.filter((r) => r.status === "push");
+  const pushLegs = legResults.filter((r) => r.status === "push" || r.status === "void");
 
   if (wonLegs.length === 0) {
     return {
@@ -778,7 +789,7 @@ async function gradeParlayLegWithCache(
   supabaseAdmin: any,
   leg: any,
   boxscore: any
-): Promise<{ status: "won" | "lost" | "push"; note: string }> {
+): Promise<{ status: "won" | "lost" | "push" | "void" | "review"; note: string }> {
   const eventKey = String(leg.event_key || "").trim();
 
   if (eventKey) {
@@ -797,6 +808,10 @@ async function gradeParlayLegWithCache(
   }
 
   const graded = gradeExactParlayLeg(leg, boxscore);
+
+  // Review outcomes never enter the shared result cache. A later provider
+  // correction or identity repair must be able to re-run the leg.
+  if (graded.status === "review") return graded;
 
   if (eventKey) {
     const marketCode = normalizeMarketCode(leg.market_code || leg.market);
@@ -836,35 +851,17 @@ async function gradeParlayLegWithCache(
 function gradeExactParlayLeg(
   leg: any,
   boxscore: any
-): { status: "won" | "lost" | "push"; note: string } {
-  const marketCode = normalizeMarketCode(leg.market_code || leg.market);
-  const target = Number(leg.stat_target ?? defaultTargetForMarket(marketCode));
-  const comparator = String(leg.comparator || ">=").trim();
+): { status: "won" | "lost" | "push" | "void" | "review"; note: string } {
+  const result = settleMlbPlayerMarket({
+    sport: String(leg.sport || "mlb"),
+    marketCode: String(leg.market_code || leg.market || ""),
+    playerId: leg.player_id,
+    statTarget: leg.stat_target,
+    comparator: leg.comparator,
+    legIndex: Number(leg.leg_index),
+  }, boxscore);
 
-  const playerStats = findPlayerStatsForLeg(boxscore, leg);
-
-  if (!playerStats) {
-    return {
-      status: "push",
-      note: `Could not match player for leg ${leg.leg_index} by player_id or selection fallback.`,
-    };
-  }
-
-  const actual = getActualStatForMarket(playerStats, marketCode);
-
-  if (actual === null) {
-    return {
-      status: "push",
-      note: `Market ${marketCode || "UNKNOWN"} is not gradable from current boxscore stats.`,
-    };
-  }
-
-  const won = compareStat(actual, target, comparator);
-
-  return {
-    status: won ? "won" : "lost",
-    note: `${marketCode} graded ${actual} ${comparator} ${target} for ${playerStats.name || "matched player"}.`,
-  };
+  return { status: result.decision, note: result.reason };
 }
 
 function normalizeMarketCode(value: unknown): string {

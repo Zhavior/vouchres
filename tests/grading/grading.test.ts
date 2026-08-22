@@ -11,6 +11,7 @@ function mockBoxscore(playerName: string, stats: { homeRuns?: number; rbi?: numb
             person: { fullName: playerName },
             stats: {
               batting: {
+                plateAppearances: 4,
                 homeRuns: stats.homeRuns ?? 0,
                 rbi: stats.rbi ?? 0,
                 runs: stats.runs ?? 0,
@@ -30,27 +31,27 @@ const grader = getGrader("mlb");
 describe("MLB grader — evaluateLeg", () => {
   it("HR: grades WON when player hit 1+ HR", () => {
     const game = { final: true, raw: mockBoxscore("Aaron Judge", { homeRuns: 1 }) };
-    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
+    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", playerId: "1", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
     expect(result.status).toBe("won");
     expect(result.actual).toBe(1);
   });
 
   it("HR: grades LOST when player hit 0 HR", () => {
     const game = { final: true, raw: mockBoxscore("Aaron Judge", { homeRuns: 0 }) };
-    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
+    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", playerId: "1", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
     expect(result.status).toBe("lost");
     expect(result.actual).toBe(0);
   });
 
-  it("HR: grades PUSH (DNP) when player not in boxscore", () => {
+  it("HR: routes an absent canonical player to review", () => {
     const game = { final: true, raw: mockBoxscore("Someone Else", { homeRuns: 2 }) };
-    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
-    expect(result.status).toBe("push");
+    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", playerId: "2", market: "hr", selection: "Aaron Judge 1+ HR" }, game);
+    expect(result.status).toBe("error");
   });
 
   it("RBI: grades WON when player has 1+ RBI", () => {
     const game = { final: true, raw: mockBoxscore("Shohei Ohtani", { rbi: 2 }) };
-    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", market: "rbi", selection: "Shohei Ohtani 1+ RBI" }, game);
+    const result = grader.evaluateLeg({ sport: "mlb", gamePk: "1", playerId: "1", market: "rbi", selection: "Shohei Ohtani 1+ RBI" }, game);
     expect(result.status).toBe("won");
   });
 });

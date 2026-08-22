@@ -34,7 +34,22 @@ interface BatterRow {
   headshotUrl?: string | null;
   recentForm: { games: number; hr: number; hits: number; atBats: number; strikeOuts: number } | null;
   vsPitcher: BvpStats | null;
+  seasonStats?: { pa: number; avg: number; obp: number; slg: number; iso: number; ops: number; hr: number } | null;
+  statcast?: { xslg: number | null; barrelPct: number | null; hardHitPct: number | null; avgExitVelo: number | null } | null;
   tags: string[];
+}
+
+interface PitchMixRow {
+  pitchType: string;
+  pitchName: string;
+  pitchUsage: number | null;
+  woba: number | null;
+  xwoba: number | null;
+  xslg: number | null;
+  whiffPct: number | null;
+  hardHitPct: number | null;
+  pitches: number | null;
+  pa: number | null;
 }
 
 interface PitcherMatchupResponse {
@@ -47,6 +62,7 @@ interface PitcherMatchupResponse {
     headshotUrl?: string | null;
     seasonStats: Record<string, unknown> | null;
     recentStarts: Array<Record<string, unknown>>;
+    pitchMix: PitchMixRow[];
   };
   opponent: {
     team: string;
@@ -119,6 +135,11 @@ function decimal(value: number | string | null | undefined): string {
   return value.toFixed(3).replace(/^0/, '');
 }
 
+function percent(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '—';
+  return `${value.toFixed(1)}%`;
+}
+
 function shortDate(value: unknown): string {
   if (typeof value !== 'string') return '—';
   const date = new Date(value);
@@ -183,7 +204,7 @@ function LineupTable({ rows }: { rows: BatterRow[] }) {
       <table className="min-w-[920px] border-separate border-spacing-0 text-left text-sm">
         <thead>
           <tr className="text-[10px] uppercase tracking-wider text-slate-500">
-            {['Headshot', 'Batter', 'Bats', 'Position', 'Lineup spot', 'AB vs pitcher', 'H', 'HR', 'BB', 'K', 'AVG', 'OPS', 'Tags'].map((heading) => (
+            {['Headshot', 'Batter', 'Bats', 'Position', 'Lineup spot', 'Season HR', 'Season OPS', 'ISO', 'xSLG', 'Barrel%', 'Hard-hit%', 'Avg EV', 'AB vs pitcher', 'H', 'HR', 'BB', 'K', 'AVG', 'OPS', 'Tags'].map((heading) => (
               <th key={heading} className="border-b border-white/10 bg-slate-950/95 px-3 py-3 font-black">{heading}</th>
             ))}
           </tr>
@@ -209,6 +230,13 @@ function LineupTable({ rows }: { rows: BatterRow[] }) {
                 <td className="border-b border-white/10 px-3 py-3 font-mono font-black text-slate-200">{batter.bats}</td>
                 <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{batter.position}</td>
                 <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{batter.lineupSpot ?? 'Projected'}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{batter.seasonStats?.hr ?? '—'}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{decimal(batter.seasonStats?.ops)}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{decimal(batter.seasonStats?.iso)}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-cyan-300">{decimal(batter.statcast?.xslg)}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-amber-300">{percent(batter.statcast?.barrelPct)}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-amber-300">{percent(batter.statcast?.hardHitPct)}</td>
+                <td className="border-b border-white/10 px-3 py-3 font-mono text-cyan-300">{batter.statcast?.avgExitVelo == null ? '—' : `${batter.statcast.avgExitVelo.toFixed(1)} mph`}</td>
                 <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{bvp?.ab ?? '—'}</td>
                 <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{bvp?.h ?? '—'}</td>
                 <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{bvp?.hr ?? '—'}</td>
@@ -240,14 +268,55 @@ function RecentStarts({ starts }: { starts: Array<Record<string, unknown>> }) {
   return (
     <div className="grid gap-2">
       {starts.map((start, index) => (
-        <div key={`${String(start.date ?? index)}-${index}`} className="grid gap-2 rounded-3xl border border-white/10 bg-white/[0.045] p-3 sm:grid-cols-5">
+        <div key={`${String(start.date ?? index)}-${index}`} className="grid gap-2 rounded-3xl border border-white/10 bg-white/[0.045] p-3 sm:grid-cols-2 xl:grid-cols-10">
           <StatPill label="Date" value={shortDate(start.date)} />
           <StatPill label="IP" value={start.inningsPitched as string | number | null | undefined} />
           <StatPill label="K" value={start.strikeOuts as string | number | null | undefined} />
           <StatPill label="ER" value={start.earnedRuns as string | number | null | undefined} />
           <StatPill label="BB" value={start.baseOnBalls as string | number | null | undefined} />
+          <StatPill label="H" value={start.hits as string | number | null | undefined} />
+          <StatPill label="HR" value={start.homeRuns as string | number | null | undefined} />
+          <StatPill label="Pitches" value={start.numberOfPitches as string | number | null | undefined} />
+          <StatPill label="Strike%" value={typeof start.strikePercentage === 'number' ? `${(start.strikePercentage * 100).toFixed(1)}%` : null} />
+          <StatPill label="WHIP" value={start.whip as string | number | null | undefined} />
         </div>
       ))}
+    </div>
+  );
+}
+
+function PitchMixTable({ rows }: { rows: PitchMixRow[] }) {
+  if (!rows.length) {
+    return <EmptyState title="Pitch arsenal unavailable" detail="Savant did not return a qualified pitch-mix row for this pitcher. No repertoire is inferred." />;
+  }
+
+  return (
+    <div className="overflow-x-auto border border-white/10 bg-slate-950/55">
+      <table className="min-w-[980px] border-separate border-spacing-0 text-left text-sm">
+        <thead>
+          <tr className="text-[10px] uppercase tracking-wider text-slate-500">
+            {['Pitch', 'Type', 'Usage', 'Pitches', 'PA', 'wOBA', 'xwOBA', 'xSLG', 'Whiff%', 'Hard-hit%'].map((heading) => (
+              <th key={heading} className="border-b border-white/10 bg-slate-950/95 px-3 py-3 font-black">{heading}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={`${row.pitchType}-${row.pitchName}`} className="hover:bg-white/[0.035]">
+              <td className="border-b border-white/10 px-3 py-3 font-black text-white">{row.pitchName}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-400">{row.pitchType}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-cyan-300">{percent(row.pitchUsage)}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{row.pitches ?? '—'}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{row.pa ?? '—'}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-slate-300">{decimal(row.woba)}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-cyan-300">{decimal(row.xwoba)}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-cyan-300">{decimal(row.xslg)}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-amber-300">{percent(row.whiffPct)}</td>
+              <td className="border-b border-white/10 px-3 py-3 font-mono text-amber-300">{percent(row.hardHitPct)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -276,6 +345,7 @@ function fallbackPayload({
       throws: pitcherHand || 'U',
       seasonStats: null,
       recentStarts: [],
+      pitchMix: [],
     },
     opponent: {
       team: opponent || 'Opponent',
@@ -397,6 +467,7 @@ async function activeRosterFallback({
       throws,
       seasonStats: null,
       recentStarts: [],
+      pitchMix: [],
     },
     opponent: {
       team: teamNameOf(opponentTeam) || opponent || 'Opponent',
@@ -560,11 +631,15 @@ export default function PitcherMatchupDrawer({
             </button>
           </div>
 
-          <div className="mt-5 grid gap-2 sm:grid-cols-4">
+          <div className="mt-5 grid gap-2 sm:grid-cols-4 xl:grid-cols-8">
             <StatPill label="Matchup score" value={matchupScore ?? null} />
             <StatPill label="Label" value={matchupLabel ?? null} />
             <StatPill label="ERA" value={season?.era as string | number | null | undefined} />
             <StatPill label="WHIP" value={season?.whip as string | number | null | undefined} />
+            <StatPill label="K/9" value={season?.strikeoutsPer9 as string | number | null | undefined} />
+            <StatPill label="BB/9" value={season?.walksPer9 as string | number | null | undefined} />
+            <StatPill label="HR/9" value={season?.homeRunsPer9 as string | number | null | undefined} />
+            <StatPill label="AVG Against" value={season?.battingAverageAgainst as string | number | null | undefined} />
           </div>
 
           <div className="mt-3 rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-4 py-3 text-xs font-bold leading-relaxed text-yellow-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -630,10 +705,15 @@ export default function PitcherMatchupDrawer({
               )}
               {tab === 'recent' && <RecentStarts starts={data.pitcher.recentStarts} />}
               {tab === 'splits' && (
-                <EmptyState
-                  title="No pitch mix or split data yet"
-                  detail="The current trusted services do not expose pitch mix, whiff split, or platoon split data for this drawer."
-                />
+                <div className="space-y-4">
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    <StatPill label="Strike%" value={typeof season?.strikePercentage === 'number' ? `${(season.strikePercentage * 100).toFixed(1)}%` : null} />
+                    <StatPill label="K/BB" value={season?.strikeoutWalkRatio as string | number | null | undefined} />
+                    <StatPill label="Pitches/IP" value={season?.pitchesPerInning as string | number | null | undefined} />
+                    <StatPill label="Batters faced" value={season?.battersFaced as string | number | null | undefined} />
+                  </div>
+                  <PitchMixTable rows={data.pitcher.pitchMix ?? []} />
+                </div>
               )}
             </div>
           )}

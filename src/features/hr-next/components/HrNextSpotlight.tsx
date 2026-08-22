@@ -5,6 +5,7 @@ import { logoByTeamName } from '../../../lib/teamLogos';
 import { formatGameTime } from '../utils/cardUtils';
 import type { SlateAlpha } from '../utils/slateTelemetry';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
+import { assessVerifiedNow } from '../utils/verifiedNow';
 
 /**
  * "Slate Alpha" spotlight — sharp brutalist dossier card for the largest model-vs-book divergence.
@@ -20,6 +21,7 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
 }) {
   const { row, hrpi, tier, evEdgePct, modelProbPct, impliedProbPct, oddsLabel, isFallback } = alpha;
   const teamLogo = logoByTeamName(row.team);
+  const sourceComplete = assessVerifiedNow(row).verified;
   const lineupLabel = row.truthStatus === 'official'
     ? 'CONFIRMED'
     : row.truthStatus === 'projected'
@@ -35,7 +37,7 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 bg-amber-400 animate-pulse" />
           <span className="px-2 py-0.5 border border-amber-400/50 bg-amber-950/50 text-[9px] font-black uppercase tracking-widest text-amber-300">
-            SLATE ALPHA // HIGHEST VALUE DIVERGENCE
+            {isFallback ? 'HRPI LEADER // RESEARCH ONLY' : 'SLATE ALPHA // HIGHEST VALUE DIVERGENCE'}
           </span>
         </div>
         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
@@ -125,14 +127,19 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
           </button>
           <button
             type="button"
-            onClick={() => onAddToSlip(row)}
-            className="inline-flex h-8 items-center gap-1 border border-amber-400 bg-amber-400 text-black px-3.5 text-[10px] font-black uppercase tracking-wider hover:bg-amber-300 transition-colors cursor-pointer"
+            onClick={() => sourceComplete && onAddToSlip(row)}
+            disabled={!sourceComplete}
+            title={sourceComplete ? 'Add verified candidate to slip' : 'Required lineup, weather, bullpen, Statcast, game-time, and market inputs are missing'}
+            className={`inline-flex h-8 items-center gap-1 border px-3.5 text-[10px] font-black uppercase tracking-wider transition-colors ${
+              sourceComplete
+                ? 'border-amber-400 bg-amber-400 text-black hover:bg-amber-300 cursor-pointer'
+                : 'border-white/15 bg-zinc-950 text-zinc-600 cursor-not-allowed'
+            }`}
           >
-            <Plus className="h-3.5 w-3.5" /> + SLIP
+            {sourceComplete ? <><Plus className="h-3.5 w-3.5" /> + SLIP</> : 'INPUTS LOCKED'}
           </button>
         </div>
       </div>
     </section>
   );
 });
-

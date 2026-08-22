@@ -171,7 +171,7 @@ parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request
     advice:
       blockingIssueCount === 0
         ? "Parlay grading identity looks clean."
-        : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
+        : "Some legs are missing exact grading identity. New saves must use /api/v3/parlays/save; old rows may need repair/backfill.",
   });
 
   return res.json(envelope);

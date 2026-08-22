@@ -3,6 +3,7 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { parlayRoutes } from "../server/routes/parlayRoutes";
+import { v3GradingRoutes } from "../server/v3/modules/grading/routes";
 import { AppError } from "../server/errors/AppError";
 
 vi.mock("../server/middleware/auth", async (importOriginal) => {
@@ -83,6 +84,7 @@ beforeAll(async () => {
   const app = express();
   app.use(express.json());
   app.use("/api", parlayRoutes);
+  app.use("/api/v3/grading", v3GradingRoutes);
   app.use("/api", apiErrorHandler);
 
   await new Promise<void>((resolve) => {
@@ -105,28 +107,6 @@ afterAll(async () => {
 });
 
 describe("parlay routes", () => {
-  it("returns gone envelope for legacy POST /parlays", async () => {
-    const response = await fetch(`${baseUrl}/api/parlays`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-    const body = await response.json();
-
-    expect(response.status).toBe(410);
-    expect(body).toMatchObject({
-      ok: false,
-      error: {
-        code: "gone",
-        // Must name the canonical entry point. This previously asserted
-        // "/api/parlays/save", which carries the legacy.parlay.save label that
-        // render.yaml disables in production — so the 410 pointed callers at
-        // another 410.
-        message: expect.stringContaining("/api/v3/parlays/save"),
-      },
-    });
-  });
-
   it("returns ok envelope for stateless POST /parlays/grade", async () => {
     const response = await fetch(`${baseUrl}/api/parlays/grade`, {
       method: "POST",
@@ -136,6 +116,7 @@ describe("parlay routes", () => {
           {
             sport: "MLB",
             gamePk: "777001",
+            playerId: "1",
             market: "ANYTIME_HR",
             selection: "Player HR",
             oddsDecimal: 2.1,
@@ -217,11 +198,11 @@ describe("parlay routes", () => {
     expect(gradePendingPicks).toHaveBeenCalled();
   });
 
-  it("rejects non-staff POST /parlays/grade-due", async () => {
+  it("rejects non-staff POST /v3/grading/grade-due", async () => {
     (globalThis as any).__parlayTestIsStaff = false;
     vi.mocked(gradePendingPicks).mockClear();
     try {
-      const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+      const response = await fetch(`${baseUrl}/api/v3/grading/grade-due`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ days: 2 }),
@@ -239,7 +220,7 @@ describe("parlay routes", () => {
     }
   });
 
-  it("returns graded envelope for authenticated POST /parlays/grade-due", async () => {
+  it("returns graded envelope for authenticated POST /v3/grading/grade-due", async () => {
     vi.mocked(gradePendingPicks).mockResolvedValueOnce({
       graded: [
         { pick_id: "pick-a", status: "won" },
@@ -252,7 +233,7 @@ describe("parlay routes", () => {
       summary: { warnings: ["partial settle"] },
     } as any);
 
-    const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+    const response = await fetch(`${baseUrl}/api/v3/grading/grade-due`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ days: 3 }),
@@ -262,6 +243,7 @@ describe("parlay routes", () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       ok: true,
+      version: "v3",
       mode: "grade_due",
       gradedParlays: 1,
       gradedLegs: 2,
@@ -287,7 +269,7 @@ describe("parlay routes", () => {
       summary: { warnings: [] },
     } as any);
 
-    const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+    const response = await fetch(`${baseUrl}/api/v3/grading/grade-due`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ days: 2 }),

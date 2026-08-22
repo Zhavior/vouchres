@@ -11,13 +11,12 @@ const actionsSource = readFileSync(
 );
 
 describe('ParlayOS transaction safety contract', () => {
-  it('never falls back to an arbitrary saved slip when locking', () => {
+  it('does not contain the removed trust-lock transaction path', () => {
     expect(workspaceSource).not.toContain('savedSlips[0]');
-    expect(workspaceSource).toContain('const saved = saveResult.parlay;');
+    expect(workspaceSource).not.toContain('ParlayTrustLockModal');
   });
 
-  it('requires confirmed backend persistence before trust commitment', () => {
-    expect(workspaceSource).toContain("saveResult.syncState !== 'synced'");
+  it('keeps backend trust commitment strict in the action layer', () => {
     expect(actionsSource).toContain('const pickId = working.backendPickId;');
     expect(actionsSource).not.toContain('working.backendPickId ?? working.id');
   });

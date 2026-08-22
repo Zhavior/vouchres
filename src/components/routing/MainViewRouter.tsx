@@ -98,7 +98,7 @@ const HrNextPage = lazyPage(
 );
 
 const NflTouchdownPage = lazyPage(
-  () => import('../../features/nfl-touchdown/pages/NflTouchdownPage'),
+  routeModules.nflTouchdown,
   'NflTouchdownPage',
 );
 
@@ -411,26 +411,26 @@ function MainViewRouter({
     case 'pitcher_matchup_intelligence':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Pitcher Matchup Intelligence" navigateSection={navigateSection}>
+          <AdminAccessGateShell>
             <PitcherMatchupIntelligencePageZ8 onNavigate={navigateSection} />
-          </ProGateShell>
+          </AdminAccessGateShell>
         </LazyRoute>
       );
     case 'team_matchup_lab':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Pitcher Matchup Intelligence" navigateSection={navigateSection}>
+          <AdminAccessGateShell>
             <PitcherMatchupIntelligencePageZ8 onNavigate={navigateSection} />
-          </ProGateShell>
+          </AdminAccessGateShell>
         </LazyRoute>
       );
     case 'hitter_matchup':
     case 'hitter_matchup_zones':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Hitter Matchup Zones" navigateSection={navigateSection}>
+          <AdminAccessGateShell>
             <HitterMatchupZonesPageZ8 onNavigate={navigateSection} />
-          </ProGateShell>
+          </AdminAccessGateShell>
         </LazyRoute>
       );
     case 'pro_graphs_lab':

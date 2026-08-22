@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TrendingUp, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { TouchdownPlayer } from '../../../types/touchdown';
+import { apiClient } from '../../../lib/apiClient';
 
 interface LedgerRow {
   id: string;
@@ -24,12 +25,9 @@ export function TdLedgerView({ players }: TdLedgerViewProps) {
   useEffect(() => {
     async function fetchLedger() {
       try {
-        const res = await fetch('/api/nfl/ledger');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success) {
-            setLedgerData(json.data);
-          }
+        const json = await apiClient.get<{ success: boolean; data: LedgerRow[] }>('/api/nfl/ledger');
+        if (json.success) {
+          setLedgerData(json.data);
         }
       } catch (e) {
         console.error("Failed to fetch ledger", e);
@@ -45,17 +43,11 @@ export function TdLedgerView({ players }: TdLedgerViewProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black uppercase text-white font-mono flex items-center gap-2">
           <TrendingUp className="text-cyan-400" />
-          TDPI Historical Accuracy Ledger
+          Verified TD Outcome Ledger
         </h2>
-        <div className="flex gap-4 font-mono">
-          <div className="text-right">
-            <div className="text-[10px] text-zinc-500 uppercase">Week 9 ROI</div>
-            <div className="text-lg font-black text-emerald-400">+14.2%</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-zinc-500 uppercase">Closing Line Value</div>
-            <div className="text-lg font-black text-cyan-300">73.5%</div>
-          </div>
+        <div className="border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-right font-mono">
+          <div className="text-[10px] font-bold uppercase text-amber-300">Calibration pending</div>
+          <div className="text-[9px] text-zinc-500">No ROI or accuracy claim without stored snapshots.</div>
         </div>
       </div>
 
@@ -101,7 +93,7 @@ export function TdLedgerView({ players }: TdLedgerViewProps) {
             {!loading && ledgerData.length === 0 && (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-zinc-500">
-                  No historical ledger data available.
+                  No verified prediction/outcome pairs are stored yet.
                 </td>
               </tr>
             )}

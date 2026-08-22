@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 const todayDashboard = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 const parlayOs = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
 const resultsStudio = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
+const nflTouchdown = vi.hoisted(() => vi.fn(() => Promise.resolve({})));
+const prefetchQuery = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+
+vi.mock('../src/lib/queryClient', () => ({
+  queryClient: { prefetchQuery },
+}));
 
 vi.mock('../src/lib/routeModules', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/lib/routeModules')>();
@@ -13,6 +19,7 @@ vi.mock('../src/lib/routeModules', async (importOriginal) => {
       todayDashboard,
       parlayOs,
       results: resultsStudio,
+      nflTouchdown,
     },
   };
 });
@@ -47,6 +54,14 @@ describe('routePreload', () => {
   it('still invokes loaders for sections that are allowed to warm', () => {
     preloadSection('today');
     expect(todayDashboard).toHaveBeenCalledTimes(1);
+  });
+
+  it('warms the TD Next route and both connection queries together', async () => {
+    preloadSection('td_next');
+    await vi.waitFor(() => {
+      expect(nflTouchdown).toHaveBeenCalledTimes(1);
+      expect(prefetchQuery).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('warms the Parlay OS chunk from every one of its doors', () => {

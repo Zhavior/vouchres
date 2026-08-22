@@ -24,6 +24,7 @@ import { FooterSection } from '../components/landing-v3';
 import PublicNav from '../components/landing-v3/PublicNav';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 import { BLOG_POSTS, BlogPost } from '../data/blog/posts';
+import { apiClient } from '../lib/apiClient';
 
 export default function BlogPage({ slug }: { slug?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,16 +88,7 @@ export default function BlogPage({ slug }: { slug?: string }) {
     setNewsletterError('');
 
     try {
-      const response = await fetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newsletterEmail }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || 'Subscription failed.');
-      }
+      await apiClient.post('/api/newsletter/subscribe', { email: newsletterEmail });
 
       setNewsletterStatus('success');
     } catch (err: any) {

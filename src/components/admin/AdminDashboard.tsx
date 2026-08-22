@@ -12,6 +12,7 @@ import {
   Search,
   Server,
   Shield,
+  Swords,
   UserCog,
   Users,
   Wrench,
@@ -23,6 +24,7 @@ import {
   AURORA_SECTION_HEADER,
 } from '../../theme/auroraTokens';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
+import { navigateToSection } from '../../lib/appNavigation';
 
 const AuroraMax = lazyWithRetry(() => import('./AuroraMax'), { label: 'AuroraMax' });
 const AiJudgeConsole = lazyWithRetry(() => import('./AiJudgeConsole'), { label: 'AiJudgeConsole' });
@@ -323,6 +325,9 @@ function Overview({
           <p className="mt-1 text-sm text-white/50">Counts are loaded from the staff API when this page opens or refreshes.</p>
         </div>
         <div className="flex items-center gap-2">
+          <button type="button" className={PRIMARY_BUTTON} onClick={() => navigateToSection('team_matchup_lab')}>
+            <Swords className="h-4 w-4" /> Pitcher Truth Desk
+          </button>
           <a href="/daily_hr_watch_new" className={BUTTON}>
             HR Z8 (legacy)
           </a>

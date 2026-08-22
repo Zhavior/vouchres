@@ -33,29 +33,28 @@ describe('HR pages production chunk contract', () => {
     expect(hits).toEqual([]);
   });
 
-  it('statically composes all HR desks in MainViewRouter — no route-module lazy', () => {
+  it('keeps each HR desk behind its own route-level lazy boundary', () => {
     const router = readFileSync('src/components/routing/MainViewRouter.tsx', 'utf8');
     const modules = readFileSync('src/lib/routeModules.ts', 'utf8');
 
-    expect(router).toContain("import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage'");
-    expect(router).toContain("import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage'");
-    expect(router).toContain("import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10'");
-    expect(router).toContain("import HomeRunIntelligencePageLegacy from '../../features/hr/pages/HomeRunIntelligencePageLegacy'");
+    expect(router).toContain("const HrAuroraMaxPage = lazyPage(");
+    expect(router).toContain("import('../../features/hr-max/pages/HrAuroraMaxPage')");
+    expect(router).toContain("const AuroraHqPage = lazyPage(");
+    expect(router).toContain("import('../../features/aurora-hr-hq/pages/AuroraHqPage')");
+    expect(router).toContain("const HrIntelligencePageV10 = lazyPage(");
+    expect(router).toContain("import('../../features/hr-v2/pages/HrIntelligencePageV10')");
+    expect(router).toContain("const HomeRunIntelligencePageLegacy = lazyPage(");
+    expect(router).toContain("import('../../features/hr/pages/HomeRunIntelligencePageLegacy')");
     expect(router).toContain("case 'hr_max':");
     expect(router).toContain("case 'aurora_hr_hq':");
     expect(router).toContain("case 'aurora_daily_slate':");
     expect(router).toContain("case 'hr_v10':");
     expect(router).toContain("case 'hr_board':");
-    expect(router).not.toMatch(/lazyWithRetry\(routeModules\.hrMax\)/);
-    expect(router).not.toMatch(/lazyWithRetry\(routeModules\.hrV10\)/);
-    expect(router).not.toMatch(/lazyWithRetry\(\(\)\s*=>\s*import\([^)]*HrAuroraMaxPage/);
-    expect(router).not.toMatch(/lazyWithRetry\(\(\)\s*=>\s*import\([^)]*AuroraHqPage/);
-    expect(router).not.toMatch(/lazyWithRetry\(\(\)\s*=>\s*import\([^)]*HrIntelligencePageV10/);
     expect(modules).not.toContain('hrV10');
     expect(modules).not.toContain('HrAuroraMaxPage');
   });
 
-  it('does not wait on a MainViewRouter chunk or neighbor-warm HR desks', () => {
+  it('keeps MainViewRouter available while avoiding neighbor-warming heavy HR desks', () => {
     const shell = readFileSync('src/app/AppShell.tsx', 'utf8');
     const preload = readFileSync('src/lib/routePreload.ts', 'utf8');
     const layout = readFileSync('src/social/feed/HomeFeedLayout.tsx', 'utf8');
@@ -70,6 +69,6 @@ describe('HR pages production chunk contract', () => {
     expect(preload).toMatch(/EAGER_HR_SECTIONS = new Set\(\[[^\]]*aurora_daily_slate/);
     expect(preload).toMatch(/EAGER_HR_SECTIONS = new Set\(\[[^\]]*hr_v10/);
     expect(layout).toContain('DeferredWorldChat');
-    expect(layout).toContain('isEagerHrSection(activeSection)');
+    expect(shell).toContain('const isHrRoute = isEagerHrSection(activeSection)');
   });
 });

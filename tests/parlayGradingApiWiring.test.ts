@@ -23,14 +23,13 @@ const cronRoutes = readFileSync(
 );
 
 describe('parlay grading API wiring', () => {
-  it('exposes POST /api/me/parlays as a save alias into the canonical handler', () => {
-    expect(userRoutes).toContain('"/me/parlays"');
-    expect(userRoutes).toMatch(/parlayUserRoutes\.post\(\s*"\/me\/parlays"/);
-    expect(userRoutes).toContain('saveMeParlayHandler');
+  it('removes legacy lifecycle routes from the non-V3 router', () => {
+    expect(userRoutes).not.toContain('"/me/parlays"');
+    expect(userRoutes).not.toContain('"/parlays/save"');
+    expect(userRoutes).not.toContain('saveMeParlayHandler');
   });
 
   it('keeps the canonical V3 save and grade endpoints mounted', () => {
-    expect(userRoutes).toContain('"/parlays/save"');
     expect(supportRoutes).toContain('"/parlays/grade"');
     expect(cronRoutes).toContain('"/cron/parlays/grade-due"');
     expect(cronRoutes).toContain('gradePendingPicks');

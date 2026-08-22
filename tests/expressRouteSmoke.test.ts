@@ -270,7 +270,7 @@ describe("API route smoke envelopes", () => {
   });
 
   it("normalizes missing auth on canonical parlay save", async () => {
-    const response = await requestJson("/api/parlays/save", {
+    const response = await requestJson("/api/v3/parlays/save", {
       method: "POST",
       body: JSON.stringify({ legs: [] }),
     });

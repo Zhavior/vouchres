@@ -48,12 +48,15 @@ export type GradeLegPayloadInput = {
   market_code?: string | null;
   selection?: string | null;
   playerName?: string | null;
+  playerId?: string | number | null;
+  player_id?: string | number | null;
   marketLabel?: string | null;
   statTarget?: number | null;
   threshold?: number | null;
   stat_target?: number | null;
   odds?: number | null;
   oddsDecimal?: number | null;
+  comparator?: string | null;
 };
 
 export type GradeLegPayload = {
@@ -61,7 +64,9 @@ export type GradeLegPayload = {
   gamePk: string;
   market: string;
   selection: string;
+  playerId?: string;
   threshold?: number;
+  comparator?: string;
   oddsDecimal?: number;
 };
 
@@ -143,8 +148,9 @@ export function buildGradeLegPayload(input: GradeLegPayloadInput): GradeLegPaylo
     [input.playerName, input.marketLabel].filter(Boolean).join(" ").trim() ||
     "Player prop";
   const selection = selectionRaw.slice(0, MAX_SELECTION_LEN);
+  const playerId = cleanIdentity(input.playerId ?? input.player_id);
 
-  if (!sport || !gamePk || !selection || !market) return null;
+  if (!sport || !gamePk || !selection || !market || (sport === "mlb" && !playerId)) return null;
 
   const oddsDecimal = toDecimalOrNull(input.oddsDecimal ?? input.odds ?? null) ?? undefined;
   const threshold = statTarget != null && Number.isFinite(Number(statTarget))
@@ -157,7 +163,9 @@ export function buildGradeLegPayload(input: GradeLegPayloadInput): GradeLegPaylo
     market,
     selection,
   };
+  if (playerId) payload.playerId = playerId;
   if (threshold != null) payload.threshold = threshold;
+  if (input.comparator) payload.comparator = String(input.comparator);
   if (oddsDecimal != null && oddsDecimal > 1 && oddsDecimal <= MAX_ODDS_DECIMAL) {
     payload.oddsDecimal = oddsDecimal;
   }

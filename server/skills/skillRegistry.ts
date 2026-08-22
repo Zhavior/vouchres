@@ -11,10 +11,8 @@ import { scoreRunEnvironment } from "../services/intelligence/runEnvironmentEngi
 import { buildParlay } from "../services/intelligence/parlayEngine";
 import { runJudgePanel } from "../services/judging/trustJudgeService";
 import { PickCandidate } from "../services/judging/judgeTypes";
-import { gradeResult, GameOutcome } from "../services/results/resultGrader";
 import { gradeAndLearn } from "../services/results/learningNoteService";
 import { getCapperTrust } from "../services/trust/trustScoreService";
-import { getPick } from "../services/trust/resultLedgerService";
 
 export interface Skill {
   id: string;
@@ -101,18 +99,6 @@ export const SKILLS: Skill[] = [
     inputSchema: ["pick"],
     outputSchema: ["verdict"],
     run: async (input) => ({ verdict: runJudgePanel(input.pick as PickCandidate) }),
-  },
-  {
-    id: "gradeResult",
-    name: "Grade Result",
-    description: "Grade a pending pick against a final game outcome.",
-    inputSchema: ["pickId", "outcome"],
-    outputSchema: ["status"],
-    run: async (input) => {
-      const pick = getPick(input.pickId);
-      if (!pick) return { status: "pending", error: "pick not found" };
-      return { status: gradeResult(pick, input.outcome as GameOutcome) };
-    },
   },
   {
     id: "updateTrustScore",

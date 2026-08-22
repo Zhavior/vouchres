@@ -8,6 +8,8 @@ import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDe
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
 import { warmPlayerRegistryInBackground } from "./server/services/mlb/playerRegistryService";
 import { warmDailyReportCacheInBackground } from "./server/services/intelligence/mlbIntelligenceEngine";
+import { prewarmTdBoardV2 } from "./server/services/hubs/tdBoardHub";
+import { getSportsDataIoTdProviderStatus } from "./server/services/nfl/providers/sportsDataIoProvider";
 
 // Local/dev: load .env then .env.local (local wins).
 if (process.env.VERCEL !== "1") {
@@ -24,6 +26,17 @@ warmPlayerRegistryInBackground();
 setInterval(() => {
   warmPlayerRegistryInBackground();
 }, 15 * 60_000).unref();
+
+function warmTdBoardIfConfigured(): void {
+  if (process.env.TD_BOARD_V2_ENABLED === "false") return;
+  if (!getSportsDataIoTdProviderStatus().configured) return;
+  void prewarmTdBoardV2().catch((error) => {
+    console.warn("[TD_BOARD_V2] background prewarm failed", (error as Error).message);
+  });
+}
+
+warmTdBoardIfConfigured();
+setInterval(warmTdBoardIfConfigured, 5 * 60_000).unref();
 
 export async function createApp(httpServer?: http.Server) {
   return createApiApp(httpServer);

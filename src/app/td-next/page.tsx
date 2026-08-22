@@ -3,7 +3,6 @@ import "../../features/hr-next/hr-next.css";
 import React, { useCallback, useState } from 'react';
 import { useTouchdownEngine } from '../../features/nfl-touchdown/hooks/useTouchdownEngine';
 import { MatchupTicker } from './components/MatchupTicker';
-import { TelemetryHUD } from './components/TelemetryHUD';
 import { SlateAlphaHero } from './components/SlateAlphaHero';
 import { TacticalRadar } from './components/TacticalRadar';
 import { TacticalPresets } from './components/TacticalPresets';
@@ -13,6 +12,7 @@ import { MatchupDossierModal } from './components/MatchupDossierModal';
 import { TdLedgerView } from './components/TdLedgerView';
 import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
 import type { TouchdownPlayer } from '../../types/touchdown';
+import { TdConnectionPanel } from './components/TdConnectionPanel';
 
 export function TdNextPage() {
   const {
@@ -26,7 +26,10 @@ export function TdNextPage() {
     selectGame,
     slateAlphaPlayer,
     tierPartition,
-    telemetry,
+    boardConnection,
+    boardMeta,
+    boardError,
+    refreshBoard,
     liveThreats,
     selectedPlayerDossier,
     openDossier,
@@ -93,12 +96,19 @@ export function TdNextPage() {
         
         {/* Sticky Top Header */}
         <div className="sticky top-0 z-30 space-y-3 border-b-2 border-white/15 bg-black/95 px-4 py-3 sm:px-6 font-mono backdrop-blur-xl">
-          <MatchupTicker
-            games={games}
-            selectedGameId={filters.selectedGameId}
-            onSelectGame={selectGame}
+          {games.length > 0 && (
+            <MatchupTicker
+              games={games}
+              selectedGameId={filters.selectedGameId}
+              onSelectGame={selectGame}
+            />
+          )}
+          <TdConnectionPanel
+            connection={boardConnection}
+            board={boardMeta}
+            error={boardError}
+            onRefresh={() => { void refreshBoard(); }}
           />
-          <TelemetryHUD telemetry={telemetry} />
 
           <div className="flex items-center gap-2 pt-2 border-t border-white/10">
             <button
@@ -144,12 +154,19 @@ export function TdNextPage() {
                   <div className="font-mono text-xs font-bold text-cyan-300">CALIBRATING SLATE TELEMETRY...</div>
                   <div className="font-mono text-[10px] text-zinc-500 mt-2">Computing TDPI values for all active skill players</div>
                 </div>
-              ) : (
+              ) : allPlayers.length > 0 ? (
                 <TierBoard
                   tierPartition={tierPartition}
                   onOpenDossier={openDossier}
                   onAddToSlip={handleAddToSlip}
                 />
+              ) : (
+                <div className="border border-white/10 bg-[#07080C]/80 px-6 py-16 text-center font-mono">
+                  <div className="text-sm font-black uppercase tracking-widest text-white">No verified touchdown candidates</div>
+                  <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-zinc-500">
+                    TD Next will populate only after the licensed provider returns a complete, source-backed board. Demo players are intentionally disabled.
+                  </p>
+                </div>
               )}
             </>
           )}

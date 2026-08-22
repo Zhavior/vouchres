@@ -1,17 +1,13 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type {
   TouchdownPlayer,
   NflTickerGame,
-  SlateTelemetryMetrics,
   TacticalRadarFilters,
   PlayerTier,
   LiveThreatEvent,
 } from '../../../types/touchdown';
-import {
-  MOCK_TOUCHDOWN_PLAYERS,
-  INITIAL_NFL_TICKER_GAMES,
-  SLATE_TELEMETRY_SNAPSHOT,
-} from '../data/mockTouchdownData';
+import { liveThreatsQueryOptions, tdBoardV2QueryOptions } from '../queries/touchdownQueries';
 
 const DEFAULT_FILTERS: TacticalRadarFilters = {
   searchQuery: '',
@@ -26,78 +22,16 @@ const DEFAULT_FILTERS: TacticalRadarFilters = {
 };
 
 export function useTouchdownEngine() {
-  const [players, setPlayers] = useState<TouchdownPlayer[]>(MOCK_TOUCHDOWN_PLAYERS);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [games, setGames] = useState<NflTickerGame[]>(INITIAL_NFL_TICKER_GAMES);
+  const slateQuery = useQuery(tdBoardV2QueryOptions());
+  const threatsQuery = useQuery(liveThreatsQueryOptions());
+  const players = slateQuery.data?.success ? slateQuery.data.players : [];
+  const games: NflTickerGame[] = slateQuery.data?.success ? slateQuery.data.games : [];
   const [filters, setFilters] = useState<TacticalRadarFilters>(DEFAULT_FILTERS);
   const [selectedPlayerDossier, setSelectedPlayerDossier] = useState<TouchdownPlayer | null>(null);
 
-  // Fetch real-time slate-wide player data
-  useEffect(() => {
-    async function fetchLiveSlate() {
-      try {
-        setIsLoading(true);
-        const res = await fetch('/api/nfl/touchdown-slate');
-        const json = await res.json();
-        if (json.success && json.players?.length > 0) {
-          setPlayers(json.players);
-        }
-      } catch (err) {
-        console.warn('NFL live API error, falling back to mock 16-game dataset', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchLiveSlate();
-  }, []);
-    const [liveThreats, setLiveThreats] = useState<LiveThreatEvent[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    
-    async function pollLiveThreats() {
-      try {
-        const res = await fetch('/api/nfl/live-threats');
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json.success && mounted) {
-          setLiveThreats(json.data);
-        }
-      } catch (err) {
-        console.warn("Failed to fetch live threats", err);
-      }
-    }
-    
-    pollLiveThreats();
-    const interval = setInterval(pollLiveThreats, 15000);
-    
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Periodic live pulse simulation: toggles yard line and possession
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGames((prevGames) =>
-        prevGames.map((game) => {
-          if (game.status === 'LIVE') {
-            const isBalMin = game.id === 'game-3';
-            const randomYard = isBalMin ? Math.floor(Math.random() * 12) + 2 : (game.redZoneYardLine ?? 14);
-            return {
-              ...game,
-              redZoneYardLine: randomYard,
-              clock: `Q${game.period ?? 2} ${Math.floor(Math.random() * 14) + 1}:${String(Math.floor(Math.random() * 59)).padStart(2, '0')}`,
-            };
-          }
-          return game;
-        })
-      );
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
+  const liveThreats: LiveThreatEvent[] = threatsQuery.data?.success
+    ? threatsQuery.data.data
+    : [];
 
   // Filter mutation handlers
   const updateFilter = useCallback(<K extends keyof TacticalRadarFilters>(key: K, value: TacticalRadarFilters[K]) => {
@@ -209,16 +143,6 @@ export function useTouchdownEngine() {
     return tiers;
   }, [filteredPlayers]);
 
-  // Dynamic Telemetry Metrics
-  const telemetry: SlateTelemetryMetrics = useMemo(() => {
-    const liveAlerts = games.filter((g) => g.isRedZoneActive).length;
-    return {
-      ...SLATE_TELEMETRY_SNAPSHOT,
-      totalGames: games.length,
-      liveRedZoneAlerts: liveAlerts,
-    };
-  }, [games]);
-
   return {
     players: filteredPlayers,
     allPlayers: players,
@@ -230,12 +154,17 @@ export function useTouchdownEngine() {
     selectGame,
     slateAlphaPlayer,
     tierPartition,
-    telemetry,
+    boardConnection: slateQuery.isFetching && slateQuery.data
+      ? 'refreshing' as const
+      : slateQuery.data?.connection ?? (slateQuery.isError ? 'unavailable' as const : 'refreshing' as const),
+    boardMeta: slateQuery.data ?? null,
+    boardError: slateQuery.error,
+    refreshBoard: slateQuery.refetch,
     liveThreats,
     selectedPlayerDossier,
     setSelectedPlayerDossier,
     openDossier: (player: TouchdownPlayer) => setSelectedPlayerDossier(player),
     closeDossier: () => setSelectedPlayerDossier(null),
-    isLoading,
+    isLoading: slateQuery.isLoading && !slateQuery.data,
   };
 }

@@ -14,6 +14,7 @@
 
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { isMlbFinalStatusText } from "../mlb/gameStatus";
+import { settleMlbPlayerMarket } from "./marketSettlementEngine";
 import { isPlayerNameMatch } from "./gradingService";
 
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
@@ -81,7 +82,9 @@ export interface GradableLeg {
   gamePk: string; // event id
   market: string; // 'hr' | 'hr_multi' | 'rbi' | 'rbi_over' | 'run' | 'hits' | 'tb'
   selection: string; // carries the player name, e.g. "Aaron Judge 1+ HR"
+  playerId?: string | number;
   threshold?: number;
+  comparator?: string;
   oddsDecimal?: number;
 }
 
@@ -123,91 +126,33 @@ function extractPlayerName(selection: string): string {
     .trim();
 }
 
-/** Read a batting or pitching stat for a named player from an MLB boxscore. */
-function countPlayerStat(raw: any, playerName: string, stat: string): number | null {
-  if (!raw?.teams) return null;
-  for (const side of ["away", "home"]) {
-    const players = raw.teams[side]?.players;
-    if (!players) continue;
-    for (const key of Object.keys(players)) {
-      const p = players[key];
-      const fullName = String(p?.person?.fullName || p?.name || "");
-      if (!fullName) continue;
-      if (isPlayerNameMatch(fullName, playerName)) {
-        const battingVal = p?.stats?.batting?.[stat];
-        const pitchingVal = p?.stats?.pitching?.[stat];
-        const v = typeof battingVal === "number" ? battingVal : typeof pitchingVal === "number" ? pitchingVal : null;
-        return v ?? 0;
-      }
-    }
-  }
-  return null; // player not found in this boxscore
-}
-
 /** Map a market code → the MLB boxscore stat field + default threshold. */
-const MLB_MARKETS: Record<string, { stat: string; threshold: number }> = {
-  hr: { stat: "homeRuns", threshold: 1 },
-  anytime_hr: { stat: "homeRuns", threshold: 1 },
-  hr_multi: { stat: "homeRuns", threshold: 2 },
-  rbi: { stat: "rbi", threshold: 1 },
-  rbi_over: { stat: "rbi", threshold: 1 }, // threshold overridden by leg.threshold
-  run: { stat: "runs", threshold: 1 },
-  runs: { stat: "runs", threshold: 1 },
-  hit: { stat: "hits", threshold: 1 },
-  hits: { stat: "hits", threshold: 1 },
-  hits_over: { stat: "hits", threshold: 1 },
-  tb: { stat: "totalBases", threshold: 1 },
-  total_bases: { stat: "totalBases", threshold: 1 },
-  stolen_base: { stat: "stolenBases", threshold: 1 },
-  stolen_bases: { stat: "stolenBases", threshold: 1 },
-  strikeouts: { stat: "strikeOuts", threshold: 5 },
-  ks: { stat: "strikeOuts", threshold: 5 },
-};
+const MLB_MARKETS = [
+  "hr", "anytime_hr", "hr_multi", "rbi", "rbi_over", "run", "runs",
+  "hit", "hits", "hits_over", "tb", "total_bases", "stolen_base",
+  "stolen_bases", "strikeouts", "ks",
+] as const;
 
 const mlbGrader: SportGrader = {
   sport: "mlb",
-  supportedMarkets: Object.keys(MLB_MARKETS),
+  supportedMarkets: [...MLB_MARKETS],
 
   async fetchGame(gamePk: string): Promise<GameData | null> {
     return fetchMLBGameData(gamePk);
   },
 
   evaluateLeg(leg: GradableLeg, game: GameData): LegOutcome {
-    const def = MLB_MARKETS[leg.market.toLowerCase()];
-    if (!def) return { status: "error", note: `unknown_market:${leg.market}` };
-
-    const player = extractPlayerName(leg.selection);
-    const actual = countPlayerStat(game.raw, player, def.stat);
-    if (actual === null) {
-      if (game.final) {
-        return { status: "push", actual: null, note: `player_not_found:${player}` };
-      }
-      return { status: "pending", actual: null, note: `game_in_progress:${player}` };
-    }
-
-    const threshold = leg.threshold ?? def.threshold;
-
-    if (actual >= threshold) {
-      return {
-        status: "won",
-        actual,
-        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+)`,
-      };
-    }
-
-    if (game.final) {
-      return {
-        status: "lost",
-        actual,
-        note: `${player}: ${actual} ${def.stat} (needed ${threshold}+, Final)`,
-      };
-    }
-
-    return {
-      status: "pending",
-      actual,
-      note: `${player}: ${actual}/${threshold} ${def.stat} (In Progress)`,
-    };
+    if (!game.final) return { status: "pending", actual: null, note: "game not final" };
+    const result = settleMlbPlayerMarket({
+      sport: "mlb",
+      marketCode: leg.market,
+      playerId: leg.playerId,
+      statTarget: leg.threshold,
+      comparator: leg.comparator,
+    }, game.raw);
+    if (result.decision === "review") return { status: "error", actual: result.actual, note: result.reason };
+    if (result.decision === "void") return { status: "push", actual: result.actual, note: result.reason };
+    return { status: result.decision, actual: result.actual, note: result.reason };
   },
 };
 

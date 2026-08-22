@@ -15,7 +15,7 @@ export type TacticalFilterTag = 'all' | 'hot' | 'high_ev' | 'wind_out' | 'vulner
 export function matchesTacticalFilter(row: HrWatchRow, tag: TacticalFilterTag): boolean {
   if (tag === 'all') return true;
   if (tag === 'hot') {
-    return (row.recentHomeRuns != null && row.recentHomeRuns > 0) || (row.recentForm != null && row.recentForm >= 80);
+    return row.recentHomeRuns != null && row.recentHomeRuns >= 2;
   }
   if (tag === 'high_ev') {
     const hasEv = row.hrProbability != null && row.impliedProbability != null && row.impliedProbability > 0 &&
@@ -23,10 +23,13 @@ export function matchesTacticalFilter(row: HrWatchRow, tag: TacticalFilterTag): 
     return hasEv || row.reasons.some(r => r.toLowerCase().includes('ev') || r.toLowerCase().includes('value') || r.toLowerCase().includes('edge'));
   }
   if (tag === 'wind_out') {
-    return (row.parkFactor != null && row.parkFactor >= 104) || row.reasons.some(r => r.toLowerCase().includes('wind') || r.toLowerCase().includes('park'));
+    return row.weather != null && row.reasons.some((reason) => {
+      const normalized = reason.toLowerCase();
+      return normalized.includes('wind') && (normalized.includes('out') || normalized.includes('carry') || normalized.includes('boost'));
+    });
   }
   if (tag === 'vulnerable_sp') {
-    return (row.pitcherVulnerability != null && row.pitcherVulnerability >= 68) || row.reasons.some(r => r.toLowerCase().includes('pitcher') || r.toLowerCase().includes('vulnerable'));
+    return Boolean(row.pitcherName?.trim()) && row.pitcherVulnerability != null && row.pitcherVulnerability >= 75;
   }
   if (tag === 'platoon') {
     return (row.hitterPower != null && row.hitterPower >= 82) || row.reasons.some(r => r.toLowerCase().includes('power') || r.toLowerCase().includes('platoon') || r.toLowerCase().includes('iso'));

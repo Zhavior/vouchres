@@ -94,37 +94,46 @@ function collectClientApiPaths(): Map<string, string[]> {
 function collectServerRoutePatterns(): string[] {
   vi.stubEnv("CRON_SECRET", "test-cron-secret");
   const app = express();
-  registerApiRoutes(app);
-
   const patterns: string[] = [];
 
-  const visit = (stack: any[], prefix: string) => {
+  const visitRouter = (stack: any[], prefix: string) => {
     for (const layer of stack ?? []) {
       if (layer.route?.path !== undefined) {
         const paths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
         for (const p of paths) patterns.push(`${prefix}${p}`);
         continue;
       }
-      if (layer.name === "router" && layer.handle?.stack) {
-        visit(layer.handle.stack, prefix + mountPathOf(layer));
-      }
+      // Nested routers without a literal mount are uncommon in this tree; their
+      // leaf routes still contribute to the inventory and top-level app.use
+      // below supplies the deployed API prefix.
+      if (layer.handle?.stack) visitRouter(layer.handle.stack, prefix);
     }
   };
 
-  // Express encodes a router's mount path as a regexp; recover the literal
-  // prefix from the layer when it is a plain string mount.
-  const mountPathOf = (layer: any): string => {
-    const source: string = layer.regexp?.source ?? "";
-    if (source === "^\\/?(?=\\/|$)") return "";
-    const literal = source
-      .replace(/^\^/, "")
-      .replace(/\\\/\?\(\?=\\\/\|\$\)$/, "")
-      .replace(/\\\//g, "/")
-      .replace(/\$$/, "");
-    return /^[/\w.-]*$/.test(literal) ? literal : "";
+  // Express 5 no longer exposes layer.regexp, so record the literal mount path
+  // at registration time instead of reverse-engineering private router state.
+  const originalUse = app.use.bind(app);
+  (app as any).use = (...args: any[]) => {
+    const mount = typeof args[0] === "string" ? args[0] : "";
+    const handlers = typeof args[0] === "string" ? args.slice(1) : args;
+    for (const handler of handlers) {
+      if (handler?.stack) visitRouter(handler.stack, mount);
+    }
+    return originalUse(...args);
   };
 
-  visit((app as any)._router?.stack ?? (app as any).router?.stack, "");
+  for (const method of ["get", "post", "put", "patch", "delete"] as const) {
+    const original = app[method].bind(app);
+    (app as any)[method] = (routePath: any, ...handlers: any[]) => {
+      if (typeof routePath === "string" || Array.isArray(routePath)) {
+        const paths = Array.isArray(routePath) ? routePath : [routePath];
+        patterns.push(...paths);
+      }
+      return original(routePath, ...handlers);
+    };
+  }
+
+  registerApiRoutes(app);
   return patterns.map(normalisePattern);
 }
 

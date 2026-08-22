@@ -3,14 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { getDefaultLayout, getSidebarFeatures } from '../src/lib/featureConfig';
 
 describe('focused beta shell', () => {
-  it('limits the default sidebar to the paid MLB workflow', () => {
+  it('limits the default sidebar to the focused daily workflow', () => {
     // hr_board became access: "admin" when HR Intelligence was restricted to
     // admins and replaced by HR Next, so it is no longer in the default set.
     expect(getSidebarFeatures(getDefaultLayout()).map((feature) => feature.id)).toEqual([
       'today',
+      'news',
+      'td_next',
       'live_games',
       'results',
-      'premium',
     ]);
   });
 
@@ -23,11 +24,11 @@ describe('focused beta shell', () => {
     ).toContain('hr_board');
   });
 
-  it('shows Aurora HQ only when the current profile is an admin', () => {
+  it('keeps profile-menu admin destinations out of the sidebar', () => {
     const layout = getDefaultLayout();
 
     expect(getSidebarFeatures(layout).map((feature) => feature.id)).not.toContain('admin');
-    expect(getSidebarFeatures(layout, { canAccessAdmin: true }).map((feature) => feature.id)).toContain('admin');
+    expect(getSidebarFeatures(layout, { canAccessAdmin: true }).map((feature) => feature.id)).not.toContain('admin');
   });
 
   it('removes fabricated consensus and payment-based verification claims', () => {

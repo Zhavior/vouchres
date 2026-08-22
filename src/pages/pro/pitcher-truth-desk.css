@@ -1,0 +1,62 @@
+/*
+ * Pitcher Truth Desk
+ *
+ * The data tree remains the canonical pitcher-matchup page. This scope gives
+ * it HR Next's square, dense, obsidian command-desk language without changing
+ * another matchup surface. Flow remains flex/grid; absolute positioning below
+ * is reserved for decoration, the signal plot, and its tooltips.
+ */
+.pitcher-truth-desk {
+  color: #fff;
+  overflow-wrap: break-word;
+}
+
+.pitcher-truth-desk :where(section, article, .ve-card, .ve-card-compact, .ve-stat-card, .ve-input, .ve-button-secondary) {
+  border-radius: 0 !important;
+}
+
+.pitcher-truth-desk :where(section, article, .ve-card, .ve-card-compact, .ve-stat-card) {
+  background-color: rgba(0, 0, 0, 0.82);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+}
+
+.pitcher-truth-desk :where(h1, h2, h3, h4, button, input, select, table) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.pitcher-truth-desk h1 {
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.pitcher-truth-desk :where(button, select, input) {
+  border-radius: 0 !important;
+}
+
+.pitcher-truth-desk button {
+  overflow-wrap: anywhere;
+}
+
+.pitcher-truth-desk table {
+  border-collapse: separate;
+}
+
+.pitcher-truth-desk tbody tr:hover td {
+  background-color: rgba(0, 240, 255, 0.035);
+}
+
+.pitcher-truth-desk :where(th, td) {
+  white-space: nowrap;
+}
+
+.pitcher-truth-desk td.max-w-48 {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .pitcher-truth-desk h1 {
+    font-size: clamp(1.45rem, 8vw, 2rem);
+  }
+}

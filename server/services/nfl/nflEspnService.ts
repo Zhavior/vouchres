@@ -1,4 +1,51 @@
 import { z } from "zod";
+import { limitConcurrency, TTLCache } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+
+const ESPN_NFL_BASE = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
+const SCOREBOARD_URL = `${ESPN_NFL_BASE}/scoreboard`;
+const TOUCHDOWN_SLATE_TTL_MS = 60_000;
+const ESPN_SCOREBOARD_TTL_MS = 15_000;
+const ESPN_ROSTER_TTL_MS = 6 * 60 * 60_000;
+const ESPN_STALE_IF_ERROR_MS = 24 * 60 * 60_000;
+const NFL_ROSTER_CONCURRENCY = 6;
+const TOUCHDOWN_SLATE_LIMIT = 350;
+
+const touchdownSlateCache = new TTLCache<any[]>(TOUCHDOWN_SLATE_TTL_MS, "nfl:touchdown-slate");
+
+function boundTouchdownCandidates(players: any[]): any[] {
+  const quotas = { ELITE: 100, STRONG: 100, VALUE: 90, SLEEPER: 60 } as const;
+  const selected = Object.entries(quotas).flatMap(([tier, limit]) =>
+    players
+      .filter((player) => player.tier === tier)
+      .sort((left, right) => right.tdpiScore - left.tdpiScore)
+      .slice(0, limit),
+  );
+  if (selected.length >= TOUCHDOWN_SLATE_LIMIT) return selected;
+
+  const selectedIds = new Set(selected.map((player) => player.id));
+  const remaining = players
+    .filter((player) => !selectedIds.has(player.id))
+    .sort((left, right) => right.tdpiScore - left.tdpiScore)
+    .slice(0, TOUCHDOWN_SLATE_LIMIT - selected.length);
+  return [...selected, ...remaining];
+}
+
+function fetchEspnJson<T>(url: string, ttlMs: number, cacheKey: string): Promise<T> {
+  return sportsFetchJson<T>(url, {
+    cacheKey,
+    ttlMs,
+    staleIfErrorMs: ESPN_STALE_IF_ERROR_MS,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "nflEspn",
+  });
+}
+
+/** Test and operational invalidation for the derived slate response. */
+export function clearNflTouchdownSlateCache(): void {
+  touchdownSlateCache.clear();
+}
 
 export interface NflTeamIntelligence {
   id: string;
@@ -34,12 +81,7 @@ export interface NflMatchupIntelligence {
 }
 
 export async function fetchNflTouchdownIntelligence(): Promise<NflMatchupIntelligence[]> {
-  const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
-  if (!response.ok) {
-    throw new Error(`ESPN API failed with status ${response.status}`);
-  }
-
-  const data = await response.json();
+  const data = await fetchEspnJson<any>(SCOREBOARD_URL, ESPN_SCOREBOARD_TTL_MS, "nfl:scoreboard");
   const events = data?.events || [];
 
   const parsedEvents = events.map((event: any) => {
@@ -193,96 +235,94 @@ function calculateTDPI(metrics: {
 }
 
 export async function fetchNflTouchdownSlatePlayers(): Promise<any[]> {
-  try {
-    const scoreboardRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
-    if (!scoreboardRes.ok) throw new Error('Failed to fetch ESPN scoreboard');
-    const scoreboardData = await scoreboardRes.json();
-    const events = scoreboardData.events || [];
+  return touchdownSlateCache.getOrSet("today", async () => {
+    try {
+      const scoreboardData = await fetchEspnJson<any>(
+        SCOREBOARD_URL,
+        ESPN_SCOREBOARD_TTL_MS,
+        "nfl:scoreboard",
+      );
+      const events = Array.isArray(scoreboardData?.events) ? scoreboardData.events : [];
 
-    const allPlayers: any[] = [];
+      const teamContexts = events.flatMap((event: any) => {
+        const competitors = event.competitions?.[0]?.competitors || [];
+        const homeTeam = competitors.find((candidate: any) => candidate.homeAway === "home");
+        const awayTeam = competitors.find((candidate: any) => candidate.homeAway === "away");
+        return [homeTeam, awayTeam]
+          .filter(Boolean)
+          .map((team: any) => ({
+            event,
+            team,
+            opponent: team.id === homeTeam?.id ? awayTeam : homeTeam,
+          }));
+      });
 
-    // Process every game and team on the slate
-    for (const event of events) {
-      const competition = event.competitions?.[0];
-      const competitors = competition?.competitors || [];
-      const homeTeam = competitors.find((c: any) => c.homeAway === 'home');
-      const awayTeam = competitors.find((c: any) => c.homeAway === 'away');
+      const playerGroups = await limitConcurrency(
+        teamContexts,
+        NFL_ROSTER_CONCURRENCY,
+        async ({ event, team, opponent }) => {
+          try {
+            const rosterUrl = `${ESPN_NFL_BASE}/teams/${team.team.id}/roster`;
+            const rosterJson = await fetchEspnJson<any>(
+              rosterUrl,
+              ESPN_ROSTER_TTL_MS,
+              `nfl:roster:${team.team.id}`,
+            );
+            const athletes = (rosterJson.athletes || []).flatMap((group: any) => group.items || []);
+            const skillPlayers = athletes.filter((athlete: any) =>
+              ["RB", "WR", "TE", "QB"].includes(athlete.position?.abbreviation),
+            );
 
-      for (const team of [homeTeam, awayTeam]) {
-        if (!team) continue;
-        const oppTeam = team.id === homeTeam?.id ? awayTeam : homeTeam;
+            return skillPlayers.flatMap((athlete: any) => {
+              const isRB = athlete.position?.abbreviation === "RB";
+              const isQB = athlete.position?.abbreviation === "QB";
+              const rzTouchShare = athlete.statsSummary?.rzShare ?? (isRB ? Math.random() * 60 + 15 : Math.random() * 40 + 5);
+              const inside10Touches = athlete.statsSummary?.inside10 ?? Math.floor(Math.random() * 12);
+              const impliedTotal = 24.5;
+              const oppRzDefRank = Math.floor(Math.random() * 32) + 1;
+              const { score, tier } = calculateTDPI({ rzTouchShare, inside10Touches, impliedTotal, oppRzDefRank });
 
-        // Fetch team roster
-        try {
-          const rosterRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${team.team.id}/roster`);
-          if (!rosterRes.ok) continue;
-          
-          const rosterJson = await rosterRes.json();
-          // Flatten offensive skill positions
-          const athletes = (rosterJson.athletes || []).flatMap((group: any) => group.items || []);
-          const skillPlayers = athletes.filter((a: any) =>
-            ['RB', 'WR', 'TE', 'QB'].includes(a.position?.abbreviation)
-          );
+              if (score < 20 && !isQB) return [];
 
-          // Map and compute metrics for every skill player
-          for (const athlete of skillPlayers) {
-            // Provide realistic fallback seeds if API lacks detailed prop stats
-            const isRB = athlete.position?.abbreviation === 'RB';
-            const isQB = athlete.position?.abbreviation === 'QB';
-            const rzTouchShare = athlete.statsSummary?.rzShare ?? (isRB ? Math.random() * 60 + 15 : Math.random() * 40 + 5);
-            const inside10Touches = athlete.statsSummary?.inside10 ?? Math.floor(Math.random() * 12);
-            // Defaulting implied total. A real app would fetch this from an odds API.
-            const impliedTotal = 24.5;
-            // Defaulting opp defense rank.
-            const oppRzDefRank = Math.floor(Math.random() * 32) + 1;
-
-            const { score, tier } = calculateTDPI({
-              rzTouchShare,
-              inside10Touches,
-              impliedTotal,
-              oppRzDefRank,
+              return [{
+                id: `p-${athlete.id}`,
+                name: athlete.displayName,
+                jerseyNumber: athlete.jersey,
+                position: athlete.position?.abbreviation,
+                team: team.team.abbreviation,
+                opponent: opponent?.team.abbreviation || "TBD",
+                isHome: team.homeAway === "home",
+                headshotUrl: athlete.headshot?.href || "",
+                gameStatus: event.status?.type?.state === "in" ? "LIVE" : "PRE",
+                gameClock: event.status?.displayClock,
+                isRedZoneActive: false,
+                tdpiScore: score,
+                tier,
+                impliedTeamTotal: impliedTotal,
+                rzTouchShare,
+                inside10Touches,
+                oppRzDefRank,
+                oppRzTdPercentAllowed: 55.0,
+                marketOdds: "+185",
+                modelEdgePercent: Math.round((Math.random() * 15 + 5) * 10) / 10,
+                rzTargets: isRB ? 2 : 7,
+                goalLineSnapPercent: Math.round(Math.min(rzTouchShare * 1.1, 100)),
+                aiVouchScore: Math.floor(score * 0.95) + 5,
+              }];
             });
-
-            // If a player is heavily buried in the depth chart (score < 20), skip them to avoid bloat
-            if (score < 20 && !isQB) continue;
-
-            allPlayers.push({
-              id: `p-${athlete.id}`,
-              name: athlete.displayName,
-              jerseyNumber: athlete.jersey,
-              position: athlete.position?.abbreviation,
-              team: team.team.abbreviation,
-              opponent: oppTeam?.team.abbreviation || 'TBD',
-              isHome: team.homeAway === 'home',
-              headshotUrl: athlete.headshot?.href || '',
-              gameStatus: event.status?.type?.state === 'in' ? 'LIVE' : 'PRE',
-              gameClock: event.status?.displayClock,
-              isRedZoneActive: false, // Could be determined by parsing live play-by-play
-              tdpiScore: score,
-              tier,
-              impliedTeamTotal: impliedTotal,
-              rzTouchShare,
-              inside10Touches,
-              oppRzDefRank,
-              oppRzTdPercentAllowed: 55.0,
-              marketOdds: '+185',
-              modelEdgePercent: Math.round((Math.random() * 15 + 5) * 10) / 10,
-              rzTargets: isRB ? 2 : 7,
-              goalLineSnapPercent: Math.round(Math.min(rzTouchShare * 1.1, 100)),
-              aiVouchScore: Math.floor(score * 0.95) + 5,
-            });
+          } catch (rosterError) {
+            console.error(`Failed to fetch roster for team ${team.team.id}`, rosterError);
+            return [];
           }
-        } catch (rosterErr) {
-          console.error(`Failed to fetch roster for team ${team.team.id}`, rosterErr);
-        }
-      }
-    }
+        },
+      );
 
-    return allPlayers;
-  } catch (err) {
-    console.error('Error in fetchNflTouchdownSlatePlayers:', err);
-    throw err;
-  }
+      return boundTouchdownCandidates(playerGroups.flat());
+    } catch (error) {
+      console.error("Error in fetchNflTouchdownSlatePlayers:", error);
+      throw error;
+    }
+  });
 }
 
 /**
@@ -395,8 +435,7 @@ export async function fetchNflHistoricalLedger() {
  */
 export async function fetchLiveRedZoneThreats() {
   try {
-    const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
-    const data = await res.json();
+    const data = await fetchEspnJson<any>(SCOREBOARD_URL, ESPN_SCOREBOARD_TTL_MS, "nfl:scoreboard");
     
     // Look for games that are currently in progress and in the red zone
     const liveGames = data.events.filter((e: any) => e.status.type.state === "in");
@@ -425,23 +464,6 @@ export async function fetchLiveRedZoneThreats() {
           keyPlayers: ["Active Personnel"],
         });
       }
-    }
-    
-    // If no live red zone threats found (off-season or no games active right now),
-    // we inject a simulated one so the UI banner still functions for the demo.
-    if (threats.length === 0) {
-       return [
-         {
-           id: `sim-threat-${Date.now()}`,
-           timestamp: 'Just now',
-           gameId: 'sim-1',
-           team: 'BAL',
-           opponent: 'MIN',
-           yardLine: 6,
-           description: 'Ravens 1st & Goal at MIN 6. Heavy 22-personnel on field.',
-           keyPlayers: ['Derrick Henry', 'Lamar Jackson'],
-         }
-       ];
     }
     
     return threats;

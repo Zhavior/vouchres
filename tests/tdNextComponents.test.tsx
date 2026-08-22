@@ -8,6 +8,7 @@ import { SlateAlphaHero } from '../src/app/td-next/components/SlateAlphaHero';
 import { PlayerTDCard } from '../src/app/td-next/components/PlayerTDCard';
 import { TacticalRadar } from '../src/app/td-next/components/TacticalRadar';
 import { TierBoard } from '../src/app/td-next/components/TierBoard';
+import { TdConnectionPanel } from '../src/app/td-next/components/TdConnectionPanel';
 import {
   MOCK_TOUCHDOWN_PLAYERS,
   INITIAL_NFL_TICKER_GAMES,
@@ -17,6 +18,23 @@ import type { TacticalRadarFilters } from '../src/types/touchdown';
 
 describe('TD NEXT Component Suite', () => {
   const derrickHenry = MOCK_TOUCHDOWN_PLAYERS.find((p) => p.name === 'Derrick Henry')!;
+
+  describe('TdConnectionPanel', () => {
+    it('shows a truthful provider setup state when V2 is not configured', () => {
+      render(
+        <TdConnectionPanel
+          connection="not_configured"
+          board={null}
+          error={null}
+          onRefresh={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText(/Production feed required/i)).toBeTruthy();
+      expect(screen.getByText(/waiting for a verified NFL data source/i)).toBeTruthy();
+      expect(screen.queryByText(/Live source-backed board/i)).toBeNull();
+    });
+  });
 
   describe('MatchupTicker', () => {
     it('renders ticker games with live score and clock', () => {
@@ -146,10 +164,10 @@ describe('TD NEXT Component Suite', () => {
       );
 
       expect(screen.getByText(/Tactical Radar/i)).toBeTruthy();
-      expect(screen.getByText(/All Touchdowns/i)).toBeTruthy();
-      expect(screen.getByText(/Goal-Line Rushers/i)).toBeTruthy();
+      expect(screen.getByText(/All Positions/i)).toBeTruthy();
+      expect(screen.getByText(/GL Rushers/i)).toBeTruthy();
 
-      const rzCheckbox = screen.getByLabelText(/RZ Touch Share > 25%/i);
+      const rzCheckbox = screen.getByRole('button', { name: /RZ Touch Share > 25%/i });
       fireEvent.click(rzCheckbox);
       expect(onUpdate).toHaveBeenCalledWith('rzTouchShareMin25', true);
     });
@@ -179,6 +197,25 @@ describe('TD NEXT Component Suite', () => {
       expect(screen.getByText('TIER 2: STRONG TD')).toBeTruthy();
       expect(screen.getByText('TIER 3: VALUE EDGE')).toBeTruthy();
       expect(screen.getByText('TIER 4: SLEEPER / DART')).toBeTruthy();
+    });
+
+    it('renders a bounded first batch and reveals more without another connection', () => {
+      const players = Array.from({ length: 20 }, (_, index) => ({
+        ...derrickHenry,
+        id: `elite-${index}`,
+        name: `Elite Player ${index + 1}`,
+      }));
+      const { container } = render(
+        <TierBoard
+          tierPartition={{ ELITE: players, STRONG: [], VALUE: [], SLEEPER: [] }}
+          onOpenDossier={vi.fn()}
+          onAddToSlip={vi.fn()}
+        />
+      );
+
+      expect(container.querySelectorAll('.hr-next-card')).toHaveLength(16);
+      fireEvent.click(screen.getByRole('button', { name: /Show 4 more/i }));
+      expect(container.querySelectorAll('.hr-next-card')).toHaveLength(20);
     });
   });
 });

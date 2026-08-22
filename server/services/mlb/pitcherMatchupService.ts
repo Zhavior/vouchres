@@ -19,7 +19,12 @@ import {
 import { headshotUrl, type NormalizedPlayer, type NormalizedTeam } from "./mlbTypes";
 import { reportCache } from "./mlbCache";
 import { limitConcurrency } from "../../lib/cache";
-import { getStatcastBatterMapResult, type StatcastBatterQuality } from "./statcastClient";
+import {
+  getPitchMixMapResult,
+  getStatcastBatterMapResult,
+  type StatcastBatterQuality,
+  type StatcastPitchMixRow,
+} from "./statcastClient";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const MAX_BATTERS = 13;
@@ -95,6 +100,7 @@ export interface PitcherMatchupResponse {
     headshotUrl: string;
     seasonStats: unknown | null;
     recentStarts: unknown[];
+    pitchMix: StatcastPitchMixRow[];
   };
   opponent: {
     team: string;
@@ -223,10 +229,17 @@ export async function getPitcherMatchup(
       }
 
       // ---- Pitcher card ----
-      const [pitcherBasics, pitcherStats] = await Promise.all([
+      const [pitcherBasics, pitcherStats, pitchMixResult] = await Promise.all([
         getPlayerBasics(pitcherId),
         getPitcherStats(pitcherId),
+        getPitchMixMapResult().catch((err) => {
+          console.warn(`[pitcherMatchup] pitch mix failed ${pitcherId}:`, err instanceof Error ? err.message : String(err));
+          return { map: {}, feedStatus: "unavailable" as const };
+        }),
       ]);
+      const pitchMix = pitchMixResult.map[pitcherId] ?? [];
+      if (pitchMixResult.feedStatus === "unavailable") warnings.push("Savant pitcher arsenal unavailable.");
+      else if (pitchMix.length === 0) warnings.push("No qualified Savant pitch mix for this pitcher.");
       // Prefer a real L/R from the schedule, else fall back to /people basics
       // (the schedule's probablePitcher hydrate often omits pitchHand).
       const scheduleThrows =
@@ -249,6 +262,7 @@ export async function getPitcherMatchup(
         headshotUrl: headshotUrl(pitcherId),
         seasonStats: pitcherStats.season,
         recentStarts: pitcherStats.recentGames,
+        pitchMix,
       };
 
       // ---- Opponent projected lineup ----

@@ -16,6 +16,8 @@ import { HrNextSpotlight } from './HrNextSpotlight';
 import { HrNextTeamRankView } from './HrNextTeamRankView';
 import { HrNextProjectionMatrix } from './HrNextProjectionMatrix';
 import { buildSlateTelemetry } from '../utils/slateTelemetry';
+import { buildVerifiedNowSlate } from '../utils/verifiedNow';
+import { HrNextVerifiedNow } from './HrNextVerifiedNow';
 import { buildTeamRankings, matchupKeyFor } from '../utils/teamRanking';
 import { useHrNextKeybindings } from '../hooks/useHrNextKeybindings';
 import { useHrListStore, selectActiveHrList } from '../../hr-list/hrListStore';
@@ -321,6 +323,7 @@ export function HrNextShell() {
 
   // Slate-level telemetry for the header bar and the Slate Alpha spotlight.
   const telemetry = useMemo(() => buildSlateTelemetry(rawRows), [rawRows]);
+  const verifiedNow = useMemo(() => buildVerifiedNowSlate(rawRows), [rawRows]);
 
   // Extract live slate matchups for the Matchup Slider
   const availableMatchups = useMemo<HrNextMatchupItem[]>(() => {
@@ -753,6 +756,12 @@ export function HrNextShell() {
             </div>
           )}
 
+          <HrNextVerifiedNow
+            slate={verifiedNow}
+            onOpenResearch={handleToggleResearch}
+            onAddToSlip={handleAddToSlip}
+          />
+
           {/* Top telemetry bar — four quick-scan slate metrics */}
           <HrNextTelemetryBar telemetry={telemetry} />
 
@@ -845,10 +854,10 @@ export function HrNextShell() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
             <span className="text-white font-bold uppercase tracking-wider">
-              VOUCH DETERMINISTIC PROTOCOL // AUDIT VERIFICATION: VALIDATED
+              VOUCH DETERMINISTIC PROTOCOL // SOURCE GAPS PRESERVED
             </span>
             <span className="text-zinc-600 hidden md:inline">
-              [SHA-256: 9f8a3c4b712e09a8f4c1e621d84e]
+              VERIFIED NOW: {verifiedNow.completeRows}/{verifiedNow.totalRows}
             </span>
           </div>
           <div className="flex items-center gap-3 text-[9px] uppercase tracking-widest text-zinc-400">
@@ -857,9 +866,9 @@ export function HrNextShell() {
               MLB PIPELINE ENGINE: RUNNING
             </span>
             <span>·</span>
-            <span>ZERO FAKE METRICS</span>
+            <span>MISSING INPUTS STAY LOCKED</span>
             <span>·</span>
-            <span>STATCAST CALIBRATED</span>
+            <span>NO OUTCOME GUARANTEE</span>
           </div>
         </div>
       </footer>

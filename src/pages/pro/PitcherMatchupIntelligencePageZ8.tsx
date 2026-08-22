@@ -1,5 +1,3 @@
-import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
-import { ProLockedCard } from "../../components/pro/ProLockedCard";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
@@ -23,8 +21,10 @@ import { VerifiedDataNotice } from '../../components/pro';
 import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { apiClient } from '../../lib/apiClient';
-import { AURORA_LABEL, AURORA_PAGE, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER } from '../../theme/auroraTokens';
+import { AURORA_LABEL, AURORA_PANEL, AURORA_PANEL_PREMIUM, AURORA_SECTION_HEADER } from '../../theme/auroraTokens';
 import { openParlayAdd } from '../../lib/parlays/parlayAddContract';
+import '../../features/hr-next/hr-next.css';
+import './pitcher-truth-desk.css';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
 
@@ -343,10 +343,7 @@ async function fetchJsonResponse<T>(path: string, signal: AbortSignal): Promise<
   return apiClient.get<T>(path, undefined, signal);
 }
 
-import { MatchupPageShell } from '../../features/matchup/MatchupPageShell';
-
 export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNavigate?: (section: string) => void }) {
-  const { isPro } = useEntitlements();
   const { data: liveData } = useLiveGames();
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
@@ -582,9 +579,17 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
     });
   };
 
+  const openHitterZones = () => {
+    if (onNavigate) {
+      onNavigate('hitter_matchup_zones');
+      return;
+    }
+    window.location.hash = '#hitter-matchup-zones';
+  };
+
   return (
-    <MatchupPageShell active="pitcher" onNavigate={onNavigate}>
-      <div className="space-y-4">
+    <main className="pitcher-truth-desk ve-page-shell min-h-full min-w-0 overflow-x-clip bg-ve-obsidian/75 font-mono">
+      <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4 xl:px-5">
         <section className={`${AURORA_PANEL} relative overflow-hidden rounded-2xl p-4`}>
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/55 to-transparent" />
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-vouch-cyan/8 blur-3xl" />
@@ -592,20 +597,38 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
             <div className="min-w-0">
               <div className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${AURORA_LABEL} text-vouch-cyan`}>
                 <Target className="h-3.5 w-3.5" />
-                Matchup Matrix
+                Admin · Official Matchup Matrix
               </div>
-              <h1 className={`mt-3 ${AURORA_SECTION_HEADER} text-white`}>Pitcher Matchup Intelligence</h1>
+              <h1 className={`mt-3 ${AURORA_SECTION_HEADER} text-white`}>Pitcher Truth Desk</h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
-                Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
+                The canonical pitcher research surface. Every row comes from the current MLB schedule, probable-pitcher, season-stat, park, weather, and matchup feeds; unavailable fields stay unavailable.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">Official probables only</span>
                 <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">No fake Statcast</span>
-                <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">Drawer-ready rows</span>
+                <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">Admin only</span>
               </div>
             </div>
 
-            <div className="ve-card-compact rounded-xl p-3 lg:min-w-64">
+            <div className="flex min-w-0 flex-col gap-2 lg:min-w-80">
+              <div className="grid grid-cols-2 border border-white/15 bg-black" aria-label="Matchup truth surfaces">
+                <button
+                  type="button"
+                  aria-current="page"
+                  className="min-h-10 border-r border-cyan-400/35 bg-cyan-400/10 px-3 py-2 text-center text-[10px] font-black uppercase tracking-wider text-cyan-300"
+                >
+                  Pitcher Truth
+                </button>
+                <button
+                  type="button"
+                  onClick={openHitterZones}
+                  className="min-h-10 px-3 py-2 text-center text-[10px] font-black uppercase tracking-wider text-white/55 transition hover:bg-white/5 hover:text-white"
+                >
+                  Hitter Zones
+                </button>
+              </div>
+
+              <div className="ve-card-compact rounded-xl p-3">
               <label className={`${AURORA_LABEL} text-[hsl(var(--ve-text-muted))]`} htmlFor="matchup-date">
                 Slate Date
               </label>
@@ -633,6 +656,7 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                     ? `${rows.length} live rows · refreshing`
                     : `${rows.length} pitcher rows loaded`
                   : 'Preparing live MLB slate'}
+              </div>
               </div>
             </div>
           </div>
@@ -1185,25 +1209,12 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
                               onClick={(event) => {
                                 event.stopPropagation();
 
-                                if (!isPro) {
-                                  window.dispatchEvent(
-                                    new CustomEvent("vouch:navigate", {
-                                      detail: { section: "premium" },
-                                    })
-                                  );
-                                  return;
-                                }
-
                                 handleCopy(row);
                               }}
                               className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-2 text-xs font-black text-vouch-cyan hover:border-vouch-cyan/45"
                             >
                               <ClipboardCopy className="h-3.5 w-3.5" />
-                              {isPro
-                                ? copiedKey === rowKey
-                                  ? 'Copied'
-                                  : 'Copy Research'
-                                : 'Unlock Research'}
+                              {copiedKey === rowKey ? 'Copied' : 'Copy Research'}
                             </button>
                             <button
                               type="button"
@@ -1269,6 +1280,6 @@ export default function PitcherMatchupIntelligencePageZ8({ onNavigate }: { onNav
           </div>
         </section>
       </div>
-    </MatchupPageShell>
+    </main>
   );
 }

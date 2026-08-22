@@ -41,7 +41,7 @@ describe('Aurora access gate', () => {
     const settings = readFileSync('src/components/SettingsPageZ8.tsx', 'utf8');
 
     expect(settings).not.toContain("price: '$49.99'");
-    expect(settings).toContain('Creator access is not sold through the current VouchEdge Beta checkout.');
+    expect(settings).toContain("? 'Creator entitlement'");
     expect(settings).toContain('billingModel.billingLabel');
   });
 });

@@ -121,10 +121,21 @@ export const GradeParlayLegSchema = z.preprocess(
       gamePk: requiredTrimmedString("gamePk", 64),
       market: z.string().trim().toLowerCase().min(1, "market is required.").max(80),
       selection: requiredTrimmedString("selection", 280),
+      playerId: requiredTrimmedString("playerId", 64).optional(),
       threshold: z.coerce.number().finite().optional(),
+      comparator: z.enum([">=", ">", "<=", "<", "="]).default(">="),
       oddsDecimal: z.coerce.number().finite().gt(1).max(10000).optional(),
     })
-    .passthrough(),
+    .passthrough()
+    .superRefine((leg, ctx) => {
+      if (leg.sport === "mlb" && !leg.playerId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["playerId"],
+          message: "Canonical playerId is required for MLB grading.",
+        });
+      }
+    }),
 );
 
 export const GradeParlaySchema = z.object({

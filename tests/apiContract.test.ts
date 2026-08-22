@@ -16,7 +16,7 @@ const TOP_FE_API_PATHS = [
   "/api/mlb/hr-board/today",
   "/api/mlb/lineup/today",
   "/api/auth/me",
-  "/api/me/parlays",
+  "/api/v3/me/parlays",
   "/api/feed",
   "/api/ai/parlay-edge",
   "/api/billing/status",

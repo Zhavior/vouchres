@@ -106,7 +106,9 @@ export function buildSlateTelemetry(rows: HrWatchRow[]): SlateTelemetry {
       weatherSum += weather;
       weatherCount += 1;
     }
-    if ((parkIndex != null && parkIndex >= 104) || (weather != null && weather >= 70)) {
+    // A favorable park is not weather. Only rows carrying the published
+    // weather layer can increment a tile labelled "Weather Edge".
+    if (weather != null && weather >= 70) {
       boostedRows += 1;
     }
     if (parkIndex != null && (topParkIndex == null || parkIndex > topParkIndex)) {
@@ -172,7 +174,7 @@ export function buildSlateTelemetry(rows: HrWatchRow[]): SlateTelemetry {
       topParkIndex,
       topParkVenue,
       averageWeatherIndex: weatherCount > 0 ? Math.round(weatherSum / weatherCount) : null,
-      hasFeed: weatherCount > 0 || topParkIndex != null,
+      hasFeed: weatherCount > 0,
     },
     topCollision,
     alpha,

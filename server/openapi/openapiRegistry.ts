@@ -667,7 +667,7 @@ openapiRegistry.registerPath({
 
 openapiRegistry.registerPath({
   method: "post",
-  path: "/api/parlays/save",
+  path: "/api/v3/parlays/save",
   summary: "Save a canonical user parlay slip",
   tags: ["Parlays"],
   request: {
@@ -729,7 +729,7 @@ openapiRegistry.registerPath({
 
 openapiRegistry.registerPath({
   method: "get",
-  path: "/api/me/parlays",
+  path: "/api/v3/me/parlays",
   summary: "List authenticated user's saved parlays",
   tags: ["Parlays"],
   request: { query: ListParlaysQueryDocSchema },
@@ -737,36 +737,6 @@ openapiRegistry.registerPath({
     200: {
       description: "Parlay list",
       content: { "application/json": { schema: MeParlaysListSchema } },
-    },
-  },
-});
-
-openapiRegistry.registerPath({
-  method: "post",
-  path: "/api/me/parlays",
-  summary: "Save a parlay (compat alias for /api/v3/parlays/save)",
-  tags: ["Parlays"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: SaveMeParlayDocSchema,
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Parlay saved (deduped)",
-      content: { "application/json": { schema: OkEnvelopeSchema } },
-    },
-    201: {
-      description: "Parlay created",
-      content: { "application/json": { schema: OkEnvelopeSchema } },
-    },
-    401: {
-      description: "Unauthorized",
-      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });
@@ -926,7 +896,7 @@ openapiRegistry.registerPath({
 
 openapiRegistry.registerPath({
   method: "post",
-  path: "/api/parlays/grade-due",
+  path: "/api/v3/grading/grade-due",
   summary: "Staff: grade all pending picks (systemwide)",
   tags: ["Parlays"],
   request: {

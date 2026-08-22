@@ -94,7 +94,9 @@ export const MatchupTicker: React.FC<MatchupTickerProps> = ({
                       {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
-                  <span className="text-[8.5px] text-zinc-500 mt-0.5 tracking-tight">{game.spread}</span>
+                  <span className="text-[8.5px] text-zinc-500 mt-0.5 tracking-tight">
+                    {game.spread ?? 'LINES LOCKED'}
+                  </span>
                 </div>
 
                 {/* Matchup Teams & Score */}
@@ -110,7 +112,7 @@ export const MatchupTicker: React.FC<MatchupTickerProps> = ({
                     <span className="text-xs font-bold text-white">{game.awayTeam.abbreviation}</span>
                     {(isLive || isFinal) && (
                       <span className="text-xs font-bold font-mono text-zinc-200">
-                        {game.awayTeam.score}
+                        {game.awayTeam.score ?? '—'}
                       </span>
                     )}
                     {game.awayTeam.hasPossession && isLive && (
@@ -131,7 +133,7 @@ export const MatchupTicker: React.FC<MatchupTickerProps> = ({
                     <span className="text-xs font-bold text-white">{game.homeTeam.abbreviation}</span>
                     {(isLive || isFinal) && (
                       <span className="text-xs font-bold font-mono text-zinc-200">
-                        {game.homeTeam.score}
+                        {game.homeTeam.score ?? '—'}
                       </span>
                     )}
                     {game.homeTeam.hasPossession && isLive && (

@@ -19,20 +19,23 @@ const router = readFileSync(
 );
 
 describe('ParlayOS workspace foundation', () => {
-  it('uses a 65/35-style desktop builder and watchlist split', () => {
-    expect(workspace).toContain("lg:grid-cols-[minmax(0,1.85fr)_minmax(300px,1fr)]");
-    expect(workspace).toContain('Slip Builder');
-    expect(workspace).toContain('Watchlist');
-    expect(workspace).toContain('Research queue');
-    expect(workspace).not.toContain('layout="fixed"');
-    expect(workspace).not.toContain('xl:pr-80');
+  it('mounts only the replacement list, parlay editor, and ledger', () => {
+    expect(workspace).toContain("type WorkspaceView = 'list' | 'parlay' | 'saved'");
+    expect(workspace).toContain('My List &amp; Parlay Editor');
+    expect(workspace).toContain('My List + Editor');
+    expect(workspace).toContain('Parlay Editor');
+    expect(workspace).toContain('Parlay Ledger');
+    expect(workspace).not.toContain('AI Picks');
+    expect(workspace).not.toContain('CommunityPanel');
+    expect(workspace).not.toContain('ParlayOsTemplatesRow');
   });
 
-  it('shows honest watchlist states without inventing targets', () => {
-    expect(workspace).toContain("type WatchlistTab = 'targets' | 'waiting' | 'removed'");
-    expect(workspace).toContain('Nothing under review yet');
-    expect(workspace).toContain('Nothing waiting for confirmation');
-    expect(workspace).toContain('Waiting targets never affect active-slip odds or risk calculations.');
+  it('keeps saved players independent until explicitly promoted to a parlay', () => {
+    expect(workspace).toContain("type ListState = 'players' | 'waiting' | 'removed'");
+    expect(workspace).toContain('Keep Player Only');
+    expect(workspace).toContain('Add to Parlay');
+    expect(workspace).toContain('A verified game is required before this player can become a gradable parlay leg.');
+    expect(workspace).toContain('Unconfirmed targets can wait here without affecting the active parlay.');
   });
 
   it('opens a compact dock without navigating away from the current page', () => {
@@ -46,13 +49,12 @@ describe('ParlayOS workspace foundation', () => {
     expect(appShell).toContain("suppressFloatingDock={activeSection === 'build' || activeSection === 'live_parlays'}");
   });
 
-  it('opens the canonical navigation on Build and gives mobile focused workspace tabs', () => {
+  it('opens the canonical replacement workspace without the old mobile shell', () => {
     expect(router).toContain("case 'live_parlays':");
     expect(router).toContain('<ParlayShell key="live_parlays"');
     expect(router).toContain("parlayOsPanelForSection('live_parlays')");
-    expect(workspace).toContain("'slip' | 'watchlist' | 'review'");
-    expect(workspace).toContain("useState<'slip' | 'watchlist' | 'review'>('slip')");
-    expect(workspace).toContain('Parlay OS mobile workspace');
+    expect(workspace).toContain('useState<WorkspaceView>');
+    expect(workspace).toContain('My List and parlay workspace');
     expect(workspace).not.toContain('ParlayOsMobileSlipDock');
   });
 });

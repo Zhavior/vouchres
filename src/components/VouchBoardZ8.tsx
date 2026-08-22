@@ -307,7 +307,7 @@ export default function VouchBoardZ8({ savedVouches, onRemoveVouch, onPostCreate
     try {
       // onPostCreated -> handlePostCreated owns the backend write (POST /api/posts
       // plus the vouch push). Do not call the API directly here: the previous
-      // POST /api/me/parlays sent a feed-post body to a parlay-save schema that
+      // The removed legacy parlay alias sent a feed-post body to a save schema that
       // requires `legs`, so it always 400'd on top of a persistence path that
       // already worked.
       if (onPostCreated) {

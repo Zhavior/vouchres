@@ -1,4 +1,9 @@
 import { routeModules } from './routeModules';
+import { queryClient } from './queryClient';
+import {
+  liveThreatsQueryOptions,
+  touchdownSlateQueryOptions,
+} from '../features/nfl-touchdown/queries/touchdownQueries';
 
 const preloaded = new Set<string>();
 
@@ -15,9 +20,20 @@ const preloaded = new Set<string>();
  */
 type SectionLoader = (() => Promise<unknown>) | Array<() => Promise<unknown>>;
 
+async function preloadTouchdownWorkspace(): Promise<unknown> {
+  const modulePromise = routeModules.nflTouchdown();
+  await Promise.all([
+    modulePromise,
+    queryClient.prefetchQuery(touchdownSlateQueryOptions()),
+    queryClient.prefetchQuery(liveThreatsQueryOptions()),
+  ]);
+  return modulePromise;
+}
+
 const SECTION_LOADERS: Record<string, SectionLoader> = {
   feed: routeModules.homeFeed,
   following: routeModules.following,
+  td_next: preloadTouchdownWorkspace,
 
   today: routeModules.todayDashboard,
   welcome: routeModules.todayDashboard,

@@ -17,6 +17,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "MLB",
       gamePk: "777001",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "Aaron Judge Anytime HR",
       odds: -110,
@@ -25,6 +26,7 @@ describe("gradeLegMapper", () => {
     expect(payload).toMatchObject({
       sport: "mlb",
       gamePk: "777001",
+      playerId: "592450",
       market: "hr",
       selection: "Aaron Judge Anytime HR",
     });
@@ -36,6 +38,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "mlb",
       gamePk: "777001",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "Player HR",
       oddsDecimal: -110,
@@ -48,6 +51,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "mlb",
       gamePk: "777001",
+      playerId: "592450",
       marketCode: "RUN",
       playerName: "Aaron Judge",
       marketLabel: "To Score 1+ Run",
@@ -62,6 +66,7 @@ describe("gradeLegMapper", () => {
       sport: "mlb",
       gamePk: "",
       gameId: "777001",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "Judge HR",
     });
@@ -73,6 +78,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "mlb",
       game: "777001",
+      playerId: "592450",
       marketCode: "HIT",
       selection: "Player Hit",
     });
@@ -84,6 +90,7 @@ describe("gradeLegMapper", () => {
     expect(buildGradeLegPayload({
       sport: "mlb",
       gamePk: "leg-123",
+      playerId: "592450",
       marketCode: "HIT",
       selection: "Player Hit",
     })).toBeNull();
@@ -93,6 +100,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "mlb",
       gamePk: "777001",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "x".repeat(300),
     });
@@ -104,6 +112,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "mlb",
       gamePk: "777001",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "Longshot HR",
       odds: 1_000_000,
@@ -116,6 +125,7 @@ describe("gradeLegMapper", () => {
     const payload = buildGradeLegPayload({
       sport: "MLB",
       eventKey: "MLB_777001_147_592450_ANYTIME_HR_1_GTE",
+      playerId: "592450",
       marketCode: "ANYTIME_HR",
       selection: "Aaron Judge 1+ HR",
       odds: -110,
@@ -129,6 +139,7 @@ describe("gradeLegMapper", () => {
       sport: "mlb",
       gamePk: "leg-123",
       eventKey: "MLB_777001_147_592450_HIT_1_GTE",
+      playerId: "592450",
       marketCode: "HIT",
       selection: "Player Hit",
     });

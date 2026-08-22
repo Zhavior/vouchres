@@ -1,1543 +1,228 @@
-/**
- * ParlayOS workspace — canonical builder, live tracking, and proof surface.
- *
- * 12-judge panel synthesis applied:
- *
- * Judge 1:  Intent-first tab labels (Build / AI Picks / Track Record / My Parlays / Community)
- *           Empty states per tab. Slip feels like money (stake + payout).
- *           Judge Verdict system preserved + enhanced.
- * Judge 2:  Combined odds via assessSlipOdds() — correlation-aware pricing,
- *           not a naive product. oddsSource 'estimated' badge.
- *           Correlation warning on related-game legs.
- * Judge 3:  Max 2 navigation layers. Judge Verdict as peek drawer (not a tab).
- *           44×44pt min touch targets on all interactive elements.
- *           Single <StickyFooterSlot> for action bar.
- * Judge 4:  All leg state through useParlayCommandStore only.
- *           OptimisticSaveState as discriminated union via parlayOsTypes.
- * Judge 5:  AI pick confidence shown per leg card (0–100). Reason text shown.
- * Judge 6:  Grading is store-driven; this component only reads results.
- * Judge 7:  Full ARIA tablist/tab/tabpanel. <LiveAnnouncer> for state changes.
- *           Icon+text for all status indicators (not color-only).
- *           Focus management on sheet open/close. Focus-visible rings.
- * Judge 8:  DfsLegContext strip on leg cards when available.
- * Judge 9:  Snapshot-and-revert optimistic save pattern surfaced in UI.
- * Judge 10: Community tab (was Premium) with PremiumFeed + TailButton.
- *           Responsible agreement is one-time per session, not per save.
- * Judge 11: liveProgress indicator on pending legs during LIVE state.
- * Judge 12: Status fields use LEG_STATUS_META / SLIP_STATUS_META from parlayOsTypes.
- */
-
-import React, {
-  useEffect, useState, useCallback, useRef, useMemo, useId,
-} from 'react';
-import '../../styles/shell-surfaces-aurora-max.css';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Archive, CheckCircle2, ChevronRight, Clock3, FilePlus2, ListChecks, Pencil, Plus, RotateCcw, Save, Trash2, X } from 'lucide-react';
+import '../../styles/my-list-workspace.css';
+import { selectActiveHrList, useHrListStore } from '../../features/hr-list/hrListStore';
+import type { HrListEntry } from '../../features/hr-list/hrListTypes';
 import {
-  Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
-  ChevronUp, ChevronDown, X, AlertTriangle, Clock3, Archive, ListPlus,
-} from 'lucide-react';
-import ParlayTrustLockModal from './ParlayTrustLockModal';
-import { useAppCommandStore } from '../../stores/appCommandStore';
-import { useSlipsStore } from '../../stores/slipsStore';
-import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
-import type { CreatorProofProfile, Parlay } from '../../types';
-import type { TrustAudience } from '../../lib/trustLockSchedule';
-import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
-import { lazy, Suspense } from 'react';
-const ParlayOsHistoryPanel = lazyWithRetry(() => import('./hub/ParlayOsHistoryPanel'), { label: 'ParlayOsHistoryPanel' });
-import ParlayOsTemplatesRow from './hub/ParlayOsTemplatesRow';
-import ParlayOsTemplateGuide from './hub/ParlayOsTemplateGuide';
-import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
-import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
-import { assessTemplateProgress } from '../../lib/parlays/templateProgress';
-import { useParlayOsStore } from '../../stores/parlayOsStore';
-import {
-  normalizeParlayLeg,
-  normalizeParlaySlip,
-} from '../../lib/parlays/parlayBridge';
-import type { CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
-import type { ParlaySaveResult } from '../../domain/parlayActions';
-import ParlayIdentityBadge from '../trust/ParlayIdentityBadge';
-import ParlayIdentityExplainer from '../trust/ParlayIdentityExplainer';
-import { assessClientParlayIdentity } from '../../lib/parlayIdentity';
-import { deriveLegProgress } from '../../lib/parlayLegProgress';
-import {
-  selectActiveParlayPanel,
   selectDraftLegs,
   selectSavedSlips,
   useParlayCommandStore,
+  type DraftParlayLeg,
   type ParlayCommandPanel,
 } from '../../stores/parlayCommandStore';
-import {
-  LEG_STATUS_META,
-  SLIP_STATUS_META,
-  RISK_MODE_META,
-  computeJudgeVerdict,
-  type ParlayRiskMode,
-  type JudgeVerdict,
-  type LegGradeStatus,
-  type SlipGradeStatus,
-  type DfsLegContext,
-} from './types/parlayOsTypes';
-import { lazyWithRetry } from '../../lib/lazyWithRetry';
-import {
-  AURORA_CYAN_HEX,
-  AURORA_EMERALD_HEX,
-  AURORA_LABEL,
-  AURORA_PAGE,
-  AURORA_PAGE_PAD_X,
-  AURORA_PANEL_PREMIUM,
-  AURORA_SECTION_HEADER,
-  AURORA_STAT_CHIP,
-  auroraStatusColor,
-} from '../../theme/auroraTokens';
-import { withAlpha } from '../../theme/colors';
-import ParlayBuilderRail from './ParlayBuilderRail';
-import { SmartParlayLegList } from './smart/SmartParlayLegCard';
+import { assessClientParlayIdentity } from '../../lib/parlayIdentity';
+import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
-import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParlaySlipLiveProgress';
-import { useAutoRepairDraftIdentity } from '../../hooks/useAutoRepairDraftIdentity';
+import { normalizeParlayLeg, normalizeParlaySlip, type CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
+import type { ParlaySaveResult } from '../../domain/parlayActions';
+import type { CreatorProofProfile } from '../../types';
 
-function statusColorStyle(token: string) {
-  const color = auroraStatusColor(token);
-  return {
-    color,
-    borderColor: withAlpha(color, 0.4),
-    background: withAlpha(color, 0.12),
-  };
-}
+type WorkspaceView = 'list' | 'parlay' | 'saved';
+type ListState = 'players' | 'waiting' | 'removed';
+type Comparator = '>=' | '>' | '<=' | '<' | '=';
 
-const ParlayOsTrackRecordPanel = lazyWithRetry(() => import('./hub/ParlayOsTrackRecordPanel'), { label: 'ParlayOsTrackRecordPanel' });
+const MARKETS = [
+  { code: 'ANYTIME_HR', label: 'Home Run', target: 1 },
+  { code: 'HIT', label: 'Hits', target: 1 },
+  { code: 'TOTAL_BASES', label: 'Total Bases', target: 1 },
+  { code: 'RBI', label: 'RBI', target: 1 },
+  { code: 'RUN', label: 'Runs', target: 1 },
+  { code: 'WALK', label: 'Walks', target: 1 },
+  { code: 'STOLEN_BASE', label: 'Stolen Base', target: 1 },
+] as const;
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const TABS: Array<{
-  id: ParlayCommandPanel;
-  label: string;
-  sub: string;
-  icon: typeof Layers3;
-}> = [
-  { id: 'build',      label: 'Build',         sub: 'Slip builder',    icon: Layers3 },
-  { id: 'ai',         label: 'AI Picks',       sub: 'V.A.I discovery', icon: Bot },
-  { id: 'vai_ledger', label: 'Track Record',   sub: 'Every AI pick, graded', icon: Brain },
-  { id: 'live',       label: 'History',     sub: 'Private · Public · Subs',    icon: Radio },
-  { id: 'premium',    label: 'Community',      sub: 'Posted slips',    icon: Users },
+const COMPARATORS: Array<{ value: Comparator; label: string }> = [
+  { value: '>=', label: 'At least' }, { value: '>', label: 'Over' },
+  { value: '<=', label: 'At most' }, { value: '<', label: 'Under' },
+  { value: '=', label: 'Exactly' },
 ];
 
-// ─── Live announcer (Judge 7: aria-live for screen readers) ───────────────────
+function marketLabel(code: string | null | undefined) {
+  return MARKETS.find((market) => market.code === code)?.label ?? code ?? 'Market';
+}
 
-const AnnouncerContext = React.createContext<(msg: string) => void>(() => {});
+function numberValue(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 1;
+}
 
-function LiveAnnouncer({ children }: { children: React.ReactNode }) {
+function playerToLeg(entry: HrListEntry, marketCode: string, target: number, comparator: Comparator): DraftParlayLeg {
+  const gamePk = entry.gamePk == null ? undefined : String(entry.gamePk);
+  const playerId = String(entry.playerId);
+  return {
+    id: ['player', gamePk, playerId, marketCode, target, comparator].filter(Boolean).join('_'),
+    source: 'manual', sport: 'MLB',
+    selection: `${entry.playerName} · ${comparator} ${target} ${marketLabel(marketCode)}`,
+    playerName: entry.playerName, playerId, teamId: entry.teamId ?? null,
+    teamLabel: entry.team ?? null, gameId: gamePk ?? null, gamePk,
+    marketCode, marketLabel: marketLabel(marketCode), statTarget: target, comparator,
+    odds: entry.bestOdds ?? null, externalProvider: 'mlb_statsapi',
+    eventKey: gamePk ? ['mlb', gamePk, playerId, marketCode, target, comparator].join('_') : null,
+    note: entry.note ?? null,
+  };
+}
+
+function TargetArchive({ kind }: { kind: 'waiting' | 'removed' }) {
+  const waiting = useParlayCommandStore((state) => state.waitingTargets);
+  const removed = useParlayCommandStore((state) => state.removedTargets);
+  const promote = useParlayCommandStore((state) => state.promoteWaitingTarget);
+  const remove = useParlayCommandStore((state) => state.removeWaitingTarget);
+  const restore = useParlayCommandStore((state) => state.restoreRemovedTarget);
+  const clear = useParlayCommandStore((state) => state.clearRemovedTargets);
+  const targets = kind === 'waiting' ? waiting : removed;
+
+  if (targets.length === 0) return (
+    <div className="parlay-next-empty"><Archive /><h3>{kind === 'waiting' ? 'Nothing is waiting' : 'Nothing has been removed'}</h3><p>{kind === 'waiting' ? 'Unconfirmed targets can wait here without affecting the active parlay.' : 'Removed targets stay recoverable until you clear them.'}</p></div>
+  );
+  return (
+    <div className="parlay-next-archive">
+      {targets.map((target) => <article key={target.id}>
+        <div><strong>{target.leg.playerName ?? target.leg.selection}</strong><span>{marketLabel(target.leg.marketCode)} · {target.reason ?? 'No reason recorded'}</span></div>
+        <div><button type="button" onClick={() => kind === 'waiting' ? promote(target.id) : restore(target.id)}><RotateCcw /> {kind === 'waiting' ? 'Add to Parlay' : 'Restore'}</button>{kind === 'waiting' ? <button type="button" className="is-danger" onClick={() => remove(target.id, 'Removed from waiting')}><Trash2 /> Remove</button> : null}</div>
+      </article>)}
+      {kind === 'removed' ? <button type="button" className="parlay-next-clear" onClick={clear}>Clear removed targets</button> : null}
+    </div>
+  );
+}
+
+function MyListEditor({ onSectionChange, onOpenParlay }: { onSectionChange?: (section: string) => void; onOpenParlay: () => void }) {
+  const [listState, setListState] = useState<ListState>('players');
+  const [editing, setEditing] = useState<HrListEntry | null>(null);
+  const [marketCode, setMarketCode] = useState('ANYTIME_HR');
+  const [target, setTarget] = useState(1);
+  const [comparator, setComparator] = useState<Comparator>('>=');
+  const [newListName, setNewListName] = useState('');
   const [message, setMessage] = useState('');
-  const announce = useCallback((msg: string) => setMessage(msg), []);
-  return (
-    <AnnouncerContext.Provider value={announce}>
-      {children}
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-        role="status"
-      >
-        {message}
-      </div>
-    </AnnouncerContext.Provider>
-  );
-}
+  const lists = useHrListStore((state) => state.lists);
+  const activeList = useHrListStore(selectActiveHrList);
+  const setActiveList = useHrListStore((state) => state.setActiveList);
+  const createList = useHrListStore((state) => state.createList);
+  const renameList = useHrListStore((state) => state.renameList);
+  const removeList = useHrListStore((state) => state.removeList);
+  const removePlayer = useHrListStore((state) => state.removePlayer);
+  const setNote = useHrListStore((state) => state.setNote);
+  const lastError = useHrListStore((state) => state.lastError);
+  const addDraftLeg = useParlayCommandStore((state) => state.addDraftLeg);
+  const waitingCount = useParlayCommandStore((state) => state.waitingTargets.length);
+  const removedCount = useParlayCommandStore((state) => state.removedTargets.length);
+  const players = activeList?.entries ?? [];
 
-function useAnnounce() {
-  return React.useContext(AnnouncerContext);
-}
-
-// ─── Status badge (Judge 7: icon+text, not color-only) ───────────────────────
-
-function StatusBadge({ status, size = 'sm' }: { status: LegGradeStatus | SlipGradeStatus; size?: 'xs' | 'sm' }) {
-  const meta = ({ ...SLIP_STATUS_META, ...LEG_STATUS_META } as Record<string, typeof LEG_STATUS_META[LegGradeStatus]>)[status]
-    ?? LEG_STATUS_META.pending;
-  const sz = size === 'xs' ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5';
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border font-bold uppercase tracking-wide ${sz}`}
-      style={statusColorStyle(meta.token)}
-    >
-      <span aria-hidden="true">{meta.icon}</span>
-      {meta.label}
-    </span>
-  );
-}
-
-// ─── Live pulse bars ──────────────────────────────────────────────────────────
-
-function LivePulseBars({ active }: { active: boolean }) {
-  if (!active) return null;
-  return (
-    <div className="flex h-5 items-end gap-[3px]" aria-label="Live parlay activity" aria-hidden="true">
-      {[0, 1, 2, 3, 4].map((bar) => (
-        <span
-          key={bar}
-          className="w-[3px] rounded-full bg-vouch-cyan/90"
-          style={{
-            height: `${8 + (bar % 3) * 4}px`,
-            boxShadow: '0 0 8px rgba(0,240,255,0.5)',
-            animation: 've-cmd-live-bar 0.9s ease-in-out infinite',
-            animationDelay: `${bar * 110}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── DFS context strip (Judge 8) ─────────────────────────────────────────────
-
-function DfsStrip({ ctx }: { ctx: DfsLegContext }) {
-  return (
-    <div className="flex items-center gap-2 mt-1.5 px-2 py-1 rounded-lg bg-vouch-amber/10 border border-vouch-amber/20">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-vouch-amber">DFS</span>
-      <span className="text-[10px] text-[hsl(var(--ve-text-muted))]">
-        Floor <b className="text-[hsl(var(--ve-text-primary))]">{ctx.floor}</b>
-        {' · '}Proj <b className="text-vouch-amber">{ctx.projection}</b>
-        {' · '}Ceil <b className="text-[hsl(var(--ve-success))]">{ctx.ceiling}</b>
-      </span>
-      {ctx.salaryTier && (
-        <span
-          className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase"
-          style={{
-            color: ctx.salaryTier === 'value' ? 'hsl(var(--ve-success))'
-              : ctx.salaryTier === 'premium' ? '#00FF94'
-              : '#00F0FF',
-            background: ctx.salaryTier === 'value' ? 'hsl(var(--ve-success)/0.1)'
-              : ctx.salaryTier === 'premium' ? withAlpha(AURORA_EMERALD_HEX, 0.1)
-              : withAlpha(AURORA_CYAN_HEX, 0.1),
-          }}
-        >
-          {ctx.salaryTier}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// ─── Draft leg card ───────────────────────────────────────────────────────────
-
-interface DraftLegCardProps {
-  leg: ReturnType<typeof selectDraftLegs>[number];
-  isWeak: boolean;
-  onRemove: (id: string) => void;
-}
-
-const _DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
-  const record = leg as Record<string, unknown>;
-  const confidenceRaw = record.confidence ?? record.edgeScore;
-  const confidence = typeof confidenceRaw === 'number' ? confidenceRaw : Number.NaN;
-  const hasConf = Number.isFinite(confidence);
-  const dfsCtx = record.dfsContext as DfsLegContext | undefined;
-  const liveProgress =
-    (record.liveProgress as { current: number; target: number } | undefined) ??
-    deriveLegProgress({
-      status: String(record.status ?? "pending"),
-      marketCode: String(record.marketCode ?? record.market ?? ""),
-      market: String(record.market ?? record.marketLabel ?? ""),
-      selection: String(record.selection ?? record.playerName ?? ""),
-    });
-  const oddsSource = record.oddsSource as string | undefined;
-  const status = (record.status as LegGradeStatus | undefined) ?? 'pending';
-  const _statusMeta = LEG_STATUS_META[status as LegGradeStatus] ?? LEG_STATUS_META.pending;
-
-  return (
-    <div
-      className={[
-        'relative flex flex-col gap-1.5 rounded-xl border p-3 transition-all',
-        isWeak
-          ? 'border-[hsl(var(--ve-warning)/0.4)] bg-[hsl(var(--ve-warning)/0.05)]'
-          : 'border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface))]',
-      ].join(' ')}
-    >
-      {/* Remove button — 44×44pt touch target (Judge 3) */}
-      <button
-        onClick={() => onRemove(leg.id)}
-        aria-label={`Remove ${leg.selection || 'this leg'}`}
-        className="absolute right-2 top-2 flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded-lg text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-      >
-        <X className="h-3.5 w-3.5" aria-hidden="true" />
-      </button>
-
-      {/* Leg info */}
-      <div className="pr-8">
-        <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))] leading-snug">
-          {leg.selection || leg.playerName || 'Prop leg'}
-        </p>
-        <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-          {[leg.sport, leg.teamLabel, leg.marketLabel].filter(Boolean).join(' · ')}
-        </p>
-      </div>
-
-      {/* Bottom row: status + confidence + odds + estimated badge */}
-      <div className="flex items-center gap-2 flex-wrap mt-0.5">
-        <StatusBadge status={status as LegGradeStatus} size="xs" />
-
-        {hasConf && (
-          <span className={[
-            'text-[9px] font-bold px-1.5 py-0.5 rounded-full border',
-            confidence >= 70
-              ? 'text-[hsl(var(--ve-success))] bg-[hsl(var(--ve-success)/0.1)] border-[hsl(var(--ve-success)/0.3)]'
-              : confidence >= 55
-                ? 'text-vouch-cyan bg-vouch-cyan/10 border-vouch-cyan/25'
-                : 'text-[hsl(var(--ve-warning))] bg-[hsl(var(--ve-warning)/0.1)] border-[hsl(var(--ve-warning)/0.3)]',
-          ].join(' ')}>
-            {Math.round(confidence)}% conf
-          </span>
-        )}
-
-        {leg.odds != null && (
-          <span className="text-[10px] font-semibold text-[hsl(var(--ve-text-primary)/0.8)] ml-auto">
-            {String(leg.odds)}
-            {oddsSource === 'estimated' && (
-              <span className="ml-1 text-[9px] text-[hsl(var(--ve-warning))]" title="Estimated odds — not live">Est.</span>
-            )}
-          </span>
-        )}
-
-        {isWeak && (
-          <span className="flex items-center gap-0.5 text-[9px] text-[hsl(var(--ve-warning))]">
-            <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-            Review
-          </span>
-        )}
-      </div>
-
-      {/* Live progress (Judge 11) */}
-      {liveProgress && (
-        <div className="flex items-center gap-2 mt-1">
-          <div className="flex-1 h-1 rounded-full bg-[hsl(var(--ve-border)/0.3)]" role="meter"
-            aria-label={`Progress: ${liveProgress.current} of ${liveProgress.target}`}
-            aria-valuenow={liveProgress.current} aria-valuemin={0} aria-valuemax={liveProgress.target}>
-            <div
-              className="h-full rounded-full bg-vouch-cyan/80 transition-all"
-              style={{ width: `${Math.min(100, (liveProgress.current / liveProgress.target) * 100)}%` }}
-            />
-          </div>
-          <span className="text-[9px] font-mono text-vouch-cyan">
-            {liveProgress.current}/{liveProgress.target}
-          </span>
-        </div>
-      )}
-
-      {/* DFS context (Judge 8) */}
-      {dfsCtx && <DfsStrip ctx={dfsCtx} />}
-
-      {/* AI reason */}
-      {typeof record.reason === 'string' && record.reason && (
-        <p className="text-[10px] text-[hsl(var(--ve-text-muted))] italic mt-0.5 leading-snug">
-          {record.reason}
-        </p>
-      )}
-    </div>
-  );
-});
-
-function JudgeVerdictDrawer({
-  verdict,
-  open,
-  onToggle,
-  onMoveToWaiting,
-}: {
-  verdict: JudgeVerdict;
-  open: boolean;
-  onToggle: () => void;
-  onMoveToWaiting?: (legId: string, reason: string) => void;
-}) {
-  const drawerRef = useRef<HTMLDivElement>(null);
-
-  // Focus management (Judge 7)
-  useEffect(() => {
-    if (open && drawerRef.current) {
-      const first = drawerRef.current.querySelector<HTMLElement>('button, [tabindex="0"]');
-      first?.focus();
-    }
-  }, [open]);
-
-  const tierColors: Record<string, string> = {
-    excellent: '--ve-success',
-    solid:     '--ve-accent-cyan',
-    caution:   '--ve-accent-gold',
-    risky:     '--ve-warning',
-    reject:    '--ve-danger',
-  };
-  const tierToken = tierColors[verdict.tier] ?? '--ve-text-muted';
-  const tierColor = auroraStatusColor(tierToken);
-
-  return (
-    <div
-      className={[
-        'fixed bottom-36 xl:bottom-[4.5rem] left-0 right-0 z-30 mx-auto max-w-3xl px-4 transition-all duration-[var(--ve-duration-normal)]',
-        open ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]',
-      ].join(' ')}
-    >
-      {/* Peek tab always visible */}
-      <button
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-label={`Judge Verdict: ${verdict.tier}. ${open ? 'Collapse' : 'Expand'} details`}
-        className={[
-          'w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-xl border border-b-0',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
-          'transition-colors min-h-[2.75rem]',
-        ].join(' ')}
-        style={{
-          background:  withAlpha(tierColor, 0.1),
-          borderColor: withAlpha(tierColor, 0.4),
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-extrabold uppercase tracking-widest" style={{ color: tierColor }}>
-            {verdict.tier.toUpperCase()}
-          </span>
-          <span className="text-xs text-[hsl(var(--ve-text-muted))] truncate max-w-xs">
-            {verdict.headline}
-          </span>
-          <span className="hidden sm:inline text-[9px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wide shrink-0">
-            Advisory
-          </span>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm font-extrabold" style={{ color: tierColor }}>
-            {verdict.score}
-          </span>
-          {open ? (
-            <ChevronDown className="h-3.5 w-3.5 text-[hsl(var(--ve-text-muted))]" aria-hidden="true" />
-          ) : (
-            <ChevronUp className="h-3.5 w-3.5 text-[hsl(var(--ve-text-muted))]" aria-hidden="true" />
-          )}
-        </div>
-      </button>
-
-      {/* Expanded detail */}
-      {open && (
-        <div
-          ref={drawerRef}
-          role="region"
-          aria-label="Judge Verdict detail"
-          className="bg-[hsl(var(--ve-bg-panel))] border rounded-b-xl p-4 flex flex-col gap-3"
-          style={{ borderColor: withAlpha(tierColor, 0.3) }}
-        >
-          <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/38">Highest-risk leg</p>
-              {verdict.highestRiskLeg ? (
-                <>
-                  <p className="mt-2 text-sm font-black text-white">{verdict.highestRiskLeg.label}</p>
-                  <ul className="mt-2 space-y-1">
-                    {verdict.highestRiskLeg.reasons.map((reason) => (
-                      <li key={reason} className="text-[10px] leading-4 text-amber-100/70">{reason}</li>
-                    ))}
-                  </ul>
-                </>
-              ) : <p className="mt-2 text-xs leading-5 text-white/48">No leg is structurally weaker from the data currently available.</p>}
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/38">Required checks</p>
-                <span className="font-mono text-[10px] font-black text-white/60">{verdict.findings.length}</span>
-              </div>
-              <ul className="mt-2 max-h-28 space-y-1.5 overflow-y-auto">
-                {verdict.findings.length > 0 ? verdict.findings.map((finding) => (
-                  <li key={finding.id} className={`text-[10px] leading-4 ${finding.severity === 'high' ? 'text-rose-200/80' : 'text-amber-100/70'}`}>
-                    {finding.message}
-                  </li>
-                )) : <li className="text-[10px] leading-4 text-vouch-emerald/75">No structural checks are currently open.</li>}
-              </ul>
-            </div>
-          </div>
-
-          {verdict.saferConstruction && onMoveToWaiting ? (
-            <div className="flex flex-col gap-3 rounded-xl border border-vouch-cyan/20 bg-vouch-cyan/[0.055] p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-vouch-cyan">Lower-risk structure</p>
-                <p className="mt-1 text-xs font-bold text-white/85">{verdict.saferConstruction.title}</p>
-                <p className="mt-1 text-[10px] leading-4 text-white/45">{verdict.saferConstruction.description}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onMoveToWaiting(verdict.saferConstruction!.moveToWaitingLegId, verdict.highestRiskLeg?.reasons.join('; ') ?? 'Judge Review')}
-                className="min-h-10 shrink-0 rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 text-[9px] font-black uppercase tracking-wide text-vouch-cyan hover:bg-vouch-cyan/15"
-              >
-                Move to Waiting
-              </button>
-            </div>
-          ) : null}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Empty state components (Judge 1) ────────────────────────────────────────
-
-function EmptyBuildSlip({ onSectionChange }: { onSectionChange?: (section: string) => void }) {
-  return (
-    <div className="flex min-h-[260px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-white/10 bg-black/20 px-5 py-10 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan" aria-hidden="true">
-        <ListPlus className="h-6 w-6" />
-      </div>
-      <div>
-        <h3 className="text-base font-black text-white">Build from your research</h3>
-        <p className="mt-2 max-w-md text-xs leading-5 text-white/48">
-          Add hitters from HR Intelligence or supported pitcher targets from Pitchers Matchup. Keep uncertain targets in the Watchlist until the data confirms them.
-        </p>
-      </div>
-      <div className="flex flex-wrap justify-center gap-2">
-        <button
-          type="button"
-          onClick={() => onSectionChange?.('hr_board')}
-          className="min-h-[2.75rem] rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald hover:bg-vouch-emerald/15"
-        >
-          Browse HR Signals
-        </button>
-        <button
-          type="button"
-          onClick={() => onSectionChange?.('team_matchup_lab')}
-          className="min-h-[2.75rem] rounded-xl border border-white/15 bg-white/[0.025] px-4 text-[11px] font-black uppercase tracking-wide text-white/65 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
-        >
-          Browse Pitchers
-        </button>
-      </div>
-    </div>
-  );
-}
-
-type WatchlistTab = 'targets' | 'waiting' | 'removed';
-
-function WatchlistFoundation({ onSectionChange }: { onSectionChange?: (section: string) => void }) {
-  const [activeTab, setActiveTab] = useState<WatchlistTab>('targets');
-  const waitingTargets = useParlayCommandStore((state) => state.waitingTargets);
-  const removedTargets = useParlayCommandStore((state) => state.removedTargets);
-  const promoteWaitingTarget = useParlayCommandStore((state) => state.promoteWaitingTarget);
-  const removeWaitingTarget = useParlayCommandStore((state) => state.removeWaitingTarget);
-  const restoreRemovedTarget = useParlayCommandStore((state) => state.restoreRemovedTarget);
-  const clearRemovedTargets = useParlayCommandStore((state) => state.clearRemovedTargets);
-  const announce = useAnnounce();
-  const tabs: Array<{ id: WatchlistTab; label: string; icon: typeof Layers3 }> = [
-    { id: 'targets', label: 'Targets', icon: Layers3 },
-    { id: 'waiting', label: 'Waiting', icon: Clock3 },
-    { id: 'removed', label: 'Removed', icon: Archive },
-  ];
-  const activeItems = activeTab === 'waiting' ? waitingTargets : activeTab === 'removed' ? removedTargets : [];
-  const totalTargets = waitingTargets.length;
-
-  return (
-    <aside className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-2xl border border-white/12 bg-[radial-gradient(circle_at_top_right,rgba(0,255,148,0.07),transparent_38%),linear-gradient(160deg,#091520_0%,#050b12_65%)] shadow-[0_22px_60px_rgba(0,0,0,0.28)] lg:min-h-[560px]" aria-labelledby="parlayos-watchlist-heading">
-      <div className="sticky top-0 z-10 border-b border-white/[0.08] bg-[#07101a]/95 px-4 pt-4 backdrop-blur-xl">
-        <div className="flex items-start justify-between gap-3 pb-3">
-          <div>
-            <p className={`${AURORA_LABEL} text-vouch-emerald`}>Research queue</p>
-            <h2 id="parlayos-watchlist-heading" className="mt-1 text-lg font-black text-white">Watchlist</h2>
-          </div>
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] font-black text-white/45">{totalTargets} waiting</span>
-        </div>
-        <div className="grid grid-cols-3 gap-1" role="tablist" aria-label="Watchlist states">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const selected = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setActiveTab(tab.id)}
-                className={`z8-control flex min-h-10 items-center justify-center gap-1.5 border-b-2 px-2 text-[10px] font-bold transition ${
-                  selected ? 'border-vouch-emerald text-vouch-emerald' : 'border-transparent text-white/38 hover:text-white/70'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" /> {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={`flex flex-1 p-4 ${activeItems.length === 0 ? 'items-center justify-center text-center' : 'items-start'}`} role="tabpanel">
-        {activeItems.length === 0 ? <div>
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.025] text-white/30">
-            {activeTab === 'targets' ? <Layers3 className="h-5 w-5" /> : activeTab === 'waiting' ? <Clock3 className="h-5 w-5" /> : <Archive className="h-5 w-5" />}
-          </div>
-          <h3 className="mt-4 text-sm font-black text-white/80">
-            {activeTab === 'targets' ? 'Nothing under review yet' : activeTab === 'waiting' ? 'Nothing waiting for confirmation' : 'No removed targets'}
-          </h3>
-          <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-white/42">
-            {activeTab === 'targets'
-              ? 'Add players you are considering without committing them to your slip.'
-              : activeTab === 'waiting'
-                ? 'Targets blocked by lineup, pitcher, or odds confirmation will appear here.'
-                : 'Removed targets stay here so an accidental removal is recoverable.'}
-          </p>
-          {activeTab === 'targets' ? (
-            <button
-              type="button"
-              onClick={() => onSectionChange?.('hr_board')}
-              className="z8-control mt-5 min-h-10 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/10 px-4 text-[11px] font-black uppercase tracking-wide text-vouch-emerald"
-            >
-              Find targets
-            </button>
-          ) : null}
-        </div> : (
-          <div className="w-full space-y-2">
-            {activeItems.map((target) => (
-              <article key={target.id} className="rounded-xl border border-white/[0.09] bg-black/20 p-3 text-left transition hover:border-vouch-cyan/25">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-black text-white">{target.leg.playerName ?? target.leg.selection}</p>
-                    <p className="mt-1 truncate text-[10px] text-white/45">
-                      {[target.leg.teamLabel, target.leg.marketLabel ?? target.leg.marketCode].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                  <span className="font-mono text-[10px] font-bold text-vouch-emerald">{target.leg.odds ?? 'TBD'}</span>
-                </div>
-                {target.reason ? <p className="mt-2 text-[10px] leading-4 text-amber-100/65">Waiting for: {target.reason}</p> : null}
-                {target.leg.note ? <p className="mt-1.5 text-[10px] leading-4 text-white/48">Note: {target.leg.note}</p> : null}
-                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (activeTab === 'waiting') {
-                        promoteWaitingTarget(target.id);
-                        announce('Target promoted to the active slip.');
-                      } else {
-                        restoreRemovedTarget(target.id);
-                        announce('Removed target restored.');
-                      }
-                    }}
-                    className="min-h-9 rounded-lg border border-vouch-emerald/25 bg-vouch-emerald/[0.07] text-[9px] font-black uppercase tracking-wide text-vouch-emerald"
-                  >
-                    {activeTab === 'waiting' ? 'Add to Slip' : 'Restore'}
-                  </button>
-                  {activeTab === 'waiting' ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        removeWaitingTarget(target.id, 'Removed from Waiting');
-                        announce('Target moved to removed history.');
-                      }}
-                      className="min-h-9 rounded-lg border border-white/10 text-[9px] font-black uppercase tracking-wide text-white/45 hover:border-rose-300/25 hover:text-rose-200"
-                    >
-                      Remove
-                    </button>
-                  ) : <span aria-hidden="true" />}
-                </div>
-              </article>
-            ))}
-            {activeTab === 'removed' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  clearRemovedTargets();
-                  announce('Removed history cleared.');
-                }}
-                className="min-h-10 w-full rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-wide text-white/38 hover:border-rose-300/25 hover:text-rose-200"
-              >
-                Clear removed history
-              </button>
-            ) : null}
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-white/[0.07] px-4 py-3 text-[10px] leading-4 text-white/35">
-        Waiting targets never affect active-slip odds or risk calculations.
-      </div>
-    </aside>
-  );
-}
-
-function EmptyAiPicks() {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-      <div className="text-5xl" aria-hidden="true">🤖</div>
-      <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">Scanning today's slate…</h3>
-      <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-xs">
-        V.A.I is analyzing confirmed lineups, matchups, and market signals to surface high-confidence props.
-      </p>
-      <div className="flex gap-1" aria-label="Loading">
-        {[0,1,2].map((i) => (
-          <div key={i} className="w-2 h-2 rounded-full bg-vouch-cyan/50 animate-pulse"
-            style={{ animationDelay: `${i * 150}ms` }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EmptyCommunity() {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-      <div className="text-5xl" aria-hidden="true">👥</div>
-      <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">No community slips yet</h3>
-      <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-xs">
-        Post your first slip to start building your track record. Other users can tail your picks.
-      </p>
-    </div>
-  );
-}
-
-// ─── Stake + payout calculator (Judge 1) ─────────────────────────────────────
-
-const _StakePayout = function StakePayout({
-  combinedDecimalOdds,
-}: {
-  combinedDecimalOdds: number | null;
-}) {
-  const [stake, setStake] = useState<number>(10);
-
-  const payout = combinedDecimalOdds != null && Number.isFinite(combinedDecimalOdds)
-    ? Math.round(stake * combinedDecimalOdds * 100) / 100
-    : null;
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-[hsl(var(--ve-bg-deep)/0.8)] border border-[hsl(var(--ve-border)/0.4)]">
-      <div className="flex flex-col gap-0.5 flex-1">
-        <label className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">Stake</label>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-[hsl(var(--ve-text-muted))]">$</span>
-          <input
-            type="number"
-            min={1}
-            max={10000}
-            value={stake}
-            onChange={(e) => setStake(Math.max(1, Number(e.target.value)))}
-            aria-label="Stake amount in dollars"
-            className="w-20 bg-transparent text-sm font-extrabold text-[hsl(var(--ve-text-primary))] focus:outline-none focus:ring-1 focus:ring-vouch-cyan/50 rounded px-1"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-0.5 items-end">
-        <span className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">To Win</span>
-        <span className="text-sm font-extrabold text-[hsl(var(--ve-success))]">
-          {payout != null ? `$${payout.toFixed(2)}` : '—'}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// ─── Build Slip panel ─────────────────────────────────────────────────────────
-
-interface BuildSlipPanelProps {
-  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
-  onSectionChange?: (section: string) => void;
-}
-
-function BuildSlipPanel({ onSaveParlay, onSectionChange }: BuildSlipPanelProps) {
-  const draftLegs       = useParlayCommandStore(selectDraftLegs);
-  const draftMode       = useParlayCommandStore((s) => s.draftMode);
-  const slipNote        = useParlayCommandStore((s) => s.slipNote);
-  const setSlipNote     = useParlayCommandStore((s) => s.setSlipNote);
-  const removeDraftLeg  = useParlayCommandStore((s) => s.removeDraftLeg);
-  const moveDraftLegToWaiting = useParlayCommandStore((s) => s.moveDraftLegToWaiting);
-  const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
-  const batchRepairDraftLegs = useParlayCommandStore((s) => s.batchRepairDraftLegs);
-  const liveGames = useAppCommandStore((s) => s.liveGames);
-  useAutoRepairDraftIdentity(draftLegs.length > 0);
-  const openLegEditor   = useParlayOsStore((s) => s.openLegEditor);
-  const buildTemplateId = useParlayOsStore((s) => s.buildTemplateId);
-  const setBuildTemplate = useParlayOsStore((s) => s.setBuildTemplate);
-  const announce        = useAnnounce();
-  const onCommitParlayTrust = useAppCommandStore((s) => s.onCommitParlayTrust);
-  const { isCreator } = useEntitlements();
-
-  const [isSaving, setIsSaving]             = useState(false);
-  const [isSharing, setIsSharing]           = useState(false);
-  const [saveError, setSaveError]            = useState<string | null>(null);
-  const [shareError, setShareError]          = useState<string | null>(null);
-  const [trustModalOpen, setTrustModalOpen]  = useState(false);
-  const [riskMode, setRiskMode]              = useState<ParlayRiskMode>('balanced');
-  const [verdictOpen, setVerdictOpen]        = useState(false);
-  const [mobileView, setMobileView]          = useState<'slip' | 'watchlist' | 'review'>('slip');
-  const [stake, setStake]                    = useState(10);
-  // One-time responsible agreement per session (Judge 10)
-  const [agreedSession, setAgreedSession]   = useState(false);
-  const [identityExplainerOpen, setIdentityExplainerOpen] = useState(false);
-
-  const verdict = useMemo(() => computeJudgeVerdict(
-    draftLegs.map((leg) => {
-      const confidenceValue = (leg as Record<string, unknown>).confidence;
-      return {
-        id: leg.id,
-        playerName: leg.playerName,
-        selection: leg.selection,
-        playerId: leg.playerId,
-        confidence: typeof confidenceValue === 'number' && Number.isFinite(confidenceValue) ? confidenceValue : null,
-        gameId: leg.gameId ?? leg.gamePk,
-        gamePk: leg.gamePk ?? leg.gameId,
-        teamId: leg.teamId,
-        marketCode: leg.marketCode,
-        odds: leg.odds,
-        dataStatus: leg.addSnapshot?.dataStatus ?? 'unknown',
-        riskSnapshot: leg.addSnapshot?.riskSnapshot,
-        source: leg.source,
-      };
-    })
-  ), [draftLegs]);
-
-  const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
-  // One price for the slip, from one place. This used to also call
-  // computeCombinedOdds(draftLegs) and prefer that value, which multiplied leg
-  // prices as if every leg were independent — so a same-game stack showed a
-  // payout the legs did not justify. assessSlipOdds now prices with correlation
-  // and is the only source; uiLegs carry the gamePk/playerId/market it needs.
-  const oddsAssessment = useMemo(() => assessSlipOdds(uiLegs), [uiLegs]);
-  const combinedOdds = oddsAssessment.combined;
-  const displayTotalOdds = oddsAssessment.canShowCombined
-    ? (combinedOdds?.american ?? '—')
-    : 'TBD';
-  const draftIdentity = useMemo(
-    () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
-    [draftLegs],
-  );
-  const templateProgress = useMemo(
-    () => assessTemplateProgress(buildTemplateId, draftLegs),
-    [buildTemplateId, draftLegs],
-  );
-
-  const riskMeta = RISK_MODE_META[riskMode];
-
-  const canSave = draftLegs.length > 0 && draftIdentity.complete && Boolean(onSaveParlay) && !isSaving && !isSharing;
-  const canShare = draftLegs.length >= 2 && draftIdentity.complete && agreedSession && !isSaving && !isSharing;
-  const saveBlockReason = !agreedSession
-    ? 'Check the responsible-play box below to enable Save.'
-    : !draftIdentity.complete
-      ? 'Repair legs missing gamePk or playerId before save.'
-      : !onSaveParlay
-        ? 'Save is unavailable in this view.'
-        : null;
-  const saveDisabled = !agreedSession || !canSave;
-
-  function buildDraftParlay() {
-    const draftId = `draft-${Date.now()}`;
-    const capturedAt = new Date().toISOString();
-    return normalizeParlaySlip({
-      id: draftId,
-      clientRef: draftId,
-      title: `${riskMeta.label} Parlay — ${new Date().toLocaleDateString()}`,
-      mode: 'PRACTICE',
-      source: draftMode === 'ai_locked' ? 'vai_ai_made_parlay' : 'manual_builder',
-      sport: 'mlb',
-      status: 'pending',
-      wagerAmount: stake,
-      legs: draftLegs.map((l) => normalizeParlayLeg(l)),
-      createdAt: capturedAt,
-      metadata: {
-        savedContext: {
-          slipNote: slipNote.trim() || null,
-          capturedAt,
-          legs: draftLegs.map((leg) => ({
-            id: leg.id,
-            note: leg.note ?? null,
-            addSnapshot: leg.addSnapshot ?? null,
-          })),
-        },
-      },
-    });
+  function editPlayer(entry: HrListEntry) {
+    setEditing(entry); setMarketCode('ANYTIME_HR'); setTarget(1); setComparator('>='); setMessage('');
+  }
+  function addToParlay() {
+    if (!editing) return;
+    if (editing.gamePk == null) { setMessage('This player needs a verified game before the leg can be graded.'); return; }
+    addDraftLeg(playerToLeg(editing, marketCode, target, comparator));
+    setMessage(`${editing.playerName} added to the active parlay.`); onOpenParlay();
+  }
+  async function makeList(event: React.FormEvent) {
+    event.preventDefault(); const title = newListName.trim() || 'My Player List';
+    await createList(title); setNewListName(''); setMessage(`${title} created.`);
   }
 
-  async function handleSave() {
-    if (!canSave || !onSaveParlay) return;
-    setIsSaving(true);
-    setSaveError(null);
-    try {
-      const result = await onSaveParlay(buildDraftParlay());
-      announce(result.syncState === 'synced' ? 'Parlay saved to your account.' : 'Parlay saved on this device.');
-      clearDraft();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Save failed';
-      setSaveError(msg);
-      announce(`Save failed: ${msg}`);
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function handleTrustConfirm(audience: TrustAudience) {
-    if (!onSaveParlay || draftLegs.length < 2) return;
-    setIsSharing(true);
-    setShareError(null);
-    try {
-      const draftParlay = buildDraftParlay();
-      const saveResult = await onSaveParlay(draftParlay);
-      const saved = saveResult.parlay;
-      if (!saved.backendPickId || saveResult.syncState !== 'synced') {
-        throw new Error('Parlay was saved locally but must sync to your account before locking.');
-      }
-      await onCommitParlayTrust({ parlay: saved as Parlay, audience });
-      announce('Parlay sent to Private wins. Locks in 5 minutes.');
-      setTrustModalOpen(false);
-      clearDraft();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Lock in failed';
-      setShareError(msg);
-      announce(`Lock in failed: ${msg}`);
-    } finally {
-      setIsSharing(false);
-    }
-  }
-
-  const liveProgressQuery = useParlaySlipLiveProgress(
-    draftLegs.map((leg) => ({
-      id: leg.id,
-      gamePk: leg.gamePk,
-      playerId: leg.playerId,
-      marketCode: leg.marketCode,
-      statTarget: leg.statTarget != null ? Number(leg.statTarget) : null,
-    })),
-    { enabled: draftLegs.length > 0 },
-  );
-  const liveProgressByLegId = useMemo(() => {
-    const map = liveProgressMap(liveProgressQuery.data);
-    const out: Record<string, { current: number; target: number; label: string }> = {};
-    map.forEach((value, key) => {
-      if (value.current != null) {
-        out[key] = { current: value.current, target: value.target, label: value.label };
-      }
-    });
-    return out;
-  }, [liveProgressQuery.data]);
-
-  const legContent = uiLegs.length > 0 ? (
-    <SmartParlayLegList
-      legs={uiLegs.map((leg) => ({
-        ...leg,
-        actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
-        statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
-      }))}
-      weakLegIds={verdict.weakLegIds}
-      onEdit={(legId) => openLegEditor(legId)}
-      onRemove={(legId) => {
-        removeDraftLeg(legId);
-        announce('Leg removed.');
-      }}
-    />
-  ) : undefined;
-
-  const railFooterExtra = (
-    <div className="space-y-3 mb-4">
-      {draftLegs.length > 0 ? (
-        <div className="space-y-1.5">
-          <label htmlFor="parlay-slip-note" className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/42">
-            Why I built this slip <span className="normal-case text-white/28">(optional)</span>
-          </label>
-          <textarea
-            id="parlay-slip-note"
-            value={slipNote}
-            onChange={(event) => setSlipNote(event.target.value)}
-            rows={2}
-            placeholder="Capture your decision before the result is known"
-            className="w-full resize-none rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-xs leading-5 text-white/72 placeholder:text-white/25 focus:border-vouch-cyan/35 focus:outline-none"
-          />
-          <p className="text-right font-mono text-[9px] text-white/28">{slipNote.length}/500</p>
-        </div>
-      ) : null}
-      {draftLegs.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <ParlayIdentityBadge
-            identity={draftIdentity}
-            onExplain={() => setIdentityExplainerOpen(true)}
-          />
-          {!draftIdentity.complete ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[10px] text-amber-200/80 leading-snug">
-                Repair legs missing gamePk or playerId before save or lock.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  batchRepairDraftLegs(liveGames);
-                  announce('Attempted identity repair from today\'s slate.');
-                }}
-                className="text-[10px] font-bold uppercase tracking-wide text-emerald-300 hover:text-emerald-200 underline min-h-[2rem]"
-              >
-                Repair identity
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {saveError ? (
-        <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
-          <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {shareError ? (
-        <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-warning)/0.1)] border border-[hsl(var(--ve-warning)/0.4)]">
-          <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-warning))] shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="text-xs text-[hsl(var(--ve-warning))]">{shareError}</p>
-        </div>
-      ) : null}
-
-      {!agreedSession ? (
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={agreedSession}
-            onChange={(e) => setAgreedSession(e.target.checked)}
-            className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
-          />
-          <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
-            I confirm this is for entertainment/research purposes. Bet responsibly. (Required to save.)
-          </span>
-        </label>
-      ) : null}
-
-      {saveBlockReason && draftLegs.length > 0 ? (
-        <p className="text-[10px] text-amber-200/90 leading-snug" role="status">
-          {saveBlockReason}
-        </p>
-      ) : null}
-
-      {draftLegs.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => { clearDraft(); announce('Draft cleared.'); }}
-          aria-label="Clear all legs from draft"
-          className="w-full min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan text-xs font-bold uppercase tracking-wide"
-        >
-          Clear Draft
-        </button>
-      ) : null}
+  return <section className="parlay-next-panel" aria-labelledby="my-list-heading">
+    <div className="parlay-next-panel__heading"><div><p className="parlay-next-eyebrow">PLAYER LIBRARY</p><h2 id="my-list-heading">My List + Editor</h2><p>Save a player for research, then choose if and when they become a gradable parlay leg.</p></div><span className="parlay-next-count">{players.length} players</span></div>
+    <div className="parlay-next-list-tools">
+      {lists.length ? <select value={activeList?.id ?? ''} onChange={(event) => setActiveList(event.target.value)} aria-label="Choose My List">{lists.map((list) => <option key={list.id} value={list.id}>{list.title}</option>)}</select> : null}
+      <form onSubmit={makeList}><input value={newListName} onChange={(event) => setNewListName(event.target.value)} placeholder="New list name" maxLength={80} aria-label="New list name" /><button type="submit"><FilePlus2 /> New List</button></form>
+      {activeList ? <div className="parlay-next-list-actions"><button type="button" onClick={() => { const title = window.prompt('Rename this list', activeList.title)?.trim(); if (title) void renameList(activeList.id, title); }}><Pencil /> Rename</button><button type="button" className="is-danger" onClick={() => { if (window.confirm(`Delete “${activeList.title}”?`)) void removeList(activeList.id); }}><Trash2 /> Delete</button></div> : null}
     </div>
-  );
-
-  const sharedRailProps = {
-    legs: uiLegs,
-    legContent,
-    onRemoveLeg: (id: string) => {
-      removeDraftLeg(id);
-      announce('Leg removed.');
-    },
-    totalOdds: displayTotalOdds,
-    stake,
-    onStakeChange: setStake,
-    potentialPayout:
-      combinedOdds?.decimal != null && Number.isFinite(combinedOdds.decimal)
-        ? Math.round(stake * combinedOdds.decimal * 100) / 100
-        : null,
-    onSaveParlay: handleSave,
-    onShareParlay: () => setTrustModalOpen(true),
-    shareLabel: 'Lock to Ledger',
-    shareDisabled: !canShare,
-    isSharing,
-    saveLabel: 'Save Slip',
-    isSaving,
-    saveDisabled,
-    showLiveIndicator: draftLegs.length > 0,
-    subtitle: 'Add from Player Research, VouchCards, or +',
-    footerExtra: railFooterExtra,
-    liveProgressByLegId,
-  };
-
-  return (
-    <div className="flex min-h-0 flex-col gap-4 pb-8">
-      <ParlayOsTemplatesRow
-        activeTemplateId={buildTemplateId}
-        onSelect={(id) => {
-          setBuildTemplate(id);
-          announce(`Template ${id} selected.`);
-        }}
-        onClear={() => {
-          setBuildTemplate(null);
-          announce('Template guide cleared.');
-        }}
-      />
-
-      {templateProgress ? <ParlayOsTemplateGuide progress={templateProgress} /> : null}
-
-      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/10 bg-black/30 p-1 lg:hidden" role="tablist" aria-label="Parlay OS mobile workspace">
-        {(['slip', 'watchlist', 'review'] as const).map((view) => (
-          <button
-            key={view}
-            type="button"
-            role="tab"
-            aria-selected={mobileView === view}
-            onClick={() => setMobileView(view)}
-            className={`min-h-11 rounded-xl px-2 text-[10px] font-black uppercase tracking-[0.12em] transition ${
-              mobileView === view
-                ? 'border border-vouch-cyan/35 bg-vouch-cyan/12 text-vouch-cyan shadow-[inset_0_0_18px_rgba(0,240,255,0.08)]'
-                : 'border border-transparent text-white/42'
-            }`}
-          >
-            {view === 'slip' ? `Slip (${draftLegs.length})` : view}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(300px,1fr)]">
-        <section className={`${mobileView === 'slip' ? 'block' : 'hidden'} min-w-0 space-y-4 rounded-2xl border border-vouch-cyan/25 bg-[radial-gradient(circle_at_top_left,rgba(0,240,255,0.08),transparent_34%),linear-gradient(155deg,#07131d_0%,#040a11_68%)] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-4 lg:block`} aria-labelledby="parlayos-slip-builder-heading">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
-            <div>
-              <p className={`${AURORA_LABEL} text-vouch-cyan`}>Primary workspace</p>
-              <h2 id="parlayos-slip-builder-heading" className="mt-1 text-lg font-black text-white">Slip Builder</h2>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-white/55">{draftLegs.length} legs</span>
-              <span className="rounded-full border border-vouch-cyan/20 bg-vouch-cyan/[0.07] px-2.5 py-1 text-vouch-cyan">{displayTotalOdds} combined</span>
-              <span className="rounded-full border border-amber-300/20 bg-amber-300/[0.07] px-2.5 py-1 text-amber-200">{riskMeta.label} mode</span>
-            </div>
-          </div>
-
-          {draftLegs.length === 0 ? <EmptyBuildSlip onSectionChange={onSectionChange} /> : null}
-
-          {draftLegs.length > 0 ? (
-            <>
-      {draftMode === 'ai_locked' && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-vouch-emerald/10 border border-vouch-emerald/30">
-          <Bot className="h-3.5 w-3.5 text-vouch-emerald" aria-hidden="true" />
-          <span className="text-xs text-vouch-emerald">
-            V.A.I Locked — this slip uses AI-selected legs only
-          </span>
-        </div>
-      )}
-
-      {/* Risk mode selector (Judge 1: bound to visible mode identity) */}
-      <div role="group" aria-label="Slip risk mode" className="flex gap-1.5 flex-wrap">
-        {(Object.keys(RISK_MODE_META) as ParlayRiskMode[]).map((m) => {
-          const meta = RISK_MODE_META[m];
-          const active = riskMode === m;
-          const modeColor = auroraStatusColor(meta.token);
-          return (
-            <button
-              key={m}
-              onClick={() => setRiskMode(m)}
-              aria-pressed={active}
-              className={[
-                'flex flex-col gap-0 px-3 py-2 rounded-xl border text-left transition-all min-h-[2.75rem]',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
-                active
-                  ? ''
-                  : 'border-[hsl(var(--ve-border)/0.5)] hover:border-[hsl(var(--ve-border))] bg-transparent',
-              ].join(' ')}
-              style={active ? { borderColor: withAlpha(modeColor, 0.5), background: withAlpha(modeColor, 0.12) } : undefined}
-            >
-              <span className="text-[10px] font-extrabold uppercase tracking-wide" style={{ color: active ? modeColor : 'hsl(var(--ve-text-muted))' }}>
-                {meta.label}
-              </span>
-              <span className="text-[9px] text-[hsl(var(--ve-text-muted))]">{meta.sub}</span>
-            </button>
-          );
+    <div className="parlay-next-subnav" role="tablist" aria-label="My List states">
+      <button type="button" role="tab" aria-selected={listState === 'players'} onClick={() => setListState('players')}><ListChecks /> Players <span>{players.length}</span></button>
+      <button type="button" role="tab" aria-selected={listState === 'waiting'} onClick={() => setListState('waiting')}><Clock3 /> Waiting <span>{waitingCount}</span></button>
+      <button type="button" role="tab" aria-selected={listState === 'removed'} onClick={() => setListState('removed')}><Archive /> Removed <span>{removedCount}</span></button>
+    </div>
+    {lastError ? <p className="parlay-next-alert is-error" role="alert">{lastError}</p> : null}{message ? <p className="parlay-next-alert" role="status">{message}</p> : null}
+    {listState === 'players' ? <div className="parlay-next-editor-layout">
+      <div className="parlay-next-player-list">
+        {!players.length ? <div className="parlay-next-empty"><ListChecks /><h3>{activeList ? 'No players in this list' : 'Create your first player list'}</h3><p>Players added from HR Intelligence stay here without changing your parlay.</p>{activeList ? <button type="button" onClick={() => onSectionChange?.('hr_board')}>Find Players</button> : null}</div> : players.map((entry) => {
+          const selected = editing && String(editing.playerId) === String(entry.playerId);
+          return <article key={String(entry.playerId)} className={`parlay-next-player ${selected ? 'is-selected' : ''}`}><button type="button" className="parlay-next-player__main" onClick={() => editPlayer(entry)}><span className="parlay-next-player__name">{entry.playerName}</span><span>{[entry.team, entry.opponent ? `vs ${entry.opponent}` : null].filter(Boolean).join(' · ') || 'MLB player'}</span><span className={entry.gamePk == null ? 'is-warning' : 'is-verified'}>{entry.gamePk == null ? 'Game not verified' : `Game ${entry.gamePk} verified`}</span></button><button type="button" className="parlay-next-icon-button" aria-label={`Remove ${entry.playerName}`} onClick={() => activeList && void removePlayer(activeList.id, entry.playerId)}><X /></button></article>;
         })}
       </div>
-
-      <ParlayBuilderRail {...sharedRailProps} layout="inline" title="Active Draft" />
-
-      {/* Judge Verdict peek drawer (Judge 3) */}
-      {draftLegs.length > 0 && (
-        <div className="hidden lg:block">
-          <JudgeVerdictDrawer
-            verdict={verdict}
-            open={verdictOpen}
-            onToggle={() => setVerdictOpen((v) => !v)}
-            onMoveToWaiting={(legId, reason) => {
-              moveDraftLegToWaiting(legId, reason);
-              announce('Highest-risk leg moved to Waiting.');
-              setVerdictOpen(false);
-            }}
-          />
-        </div>
-      )}
-
-      {identityExplainerOpen ? (
-        <ParlayIdentityExplainer
-          identity={draftIdentity}
-          onClose={() => setIdentityExplainerOpen(false)}
-        />
-      ) : null}
-
-      <ParlayTrustLockModal
-        open={trustModalOpen}
-        title={`${riskMeta.label} Parlay — ${draftLegs.length} legs`}
-        onClose={() => setTrustModalOpen(false)}
-        onConfirm={handleTrustConfirm}
-        isSubmitting={isSharing}
-        canUseSubscriber={isCreator}
-      />
-
-            </>
-          ) : null}
-        </section>
-
-        <div className={`${mobileView === 'watchlist' ? 'block' : 'hidden'} min-w-0 lg:block`}>
-          <WatchlistFoundation onSectionChange={onSectionChange} />
-        </div>
-
-        <section className={`${mobileView === 'review' ? 'block' : 'hidden'} rounded-2xl border border-amber-300/20 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.08),transparent_42%),#060c13] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.3)] lg:hidden`} aria-labelledby="parlayos-mobile-review-heading">
-          <p className={`${AURORA_LABEL} text-amber-200`}>Decision check</p>
-          <div className="mt-2 flex items-start justify-between gap-4">
-            <div>
-              <h2 id="parlayos-mobile-review-heading" className="text-lg font-black text-white">Judge Review</h2>
-              <p className="mt-1 text-xs leading-5 text-white/52">{verdict.headline}</p>
-            </div>
-            <div className="text-right">
-              <span className="flex h-12 min-w-12 items-center justify-center rounded-2xl border border-amber-300/25 bg-amber-300/10 font-mono text-lg font-black text-amber-200">{verdict.score}</span>
-              <span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/32">{verdict.reviewLabel}</span>
-            </div>
-          </div>
-          {draftLegs.length === 0 ? (
-            <p className="mt-6 rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-xs leading-5 text-white/42">Add at least one player to receive a slip-specific risk review.</p>
-          ) : (
-            <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
-              {verdict.highestRiskLeg ? (
-                <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3">
-                  <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">Highest-risk leg</p>
-                  <p className="mt-1.5 text-sm font-black text-white">{verdict.highestRiskLeg.label}</p>
-                  <p className="mt-1 text-[10px] leading-4 text-white/52">{verdict.highestRiskLeg.reasons.join(' · ')}</p>
-                </div>
-              ) : null}
-              <ul className="space-y-2">
-              {verdict.findings.map((finding) => (
-                <li key={finding.id} className="flex gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 text-xs leading-5 text-white/68">
-                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-200" aria-hidden="true" />
-                  {finding.message}
-                </li>
-              ))}
-              </ul>
-              {verdict.saferConstruction ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    moveDraftLegToWaiting(verdict.saferConstruction!.moveToWaitingLegId, verdict.highestRiskLeg?.reasons.join('; ') ?? 'Judge Review');
-                    announce('Highest-risk leg moved to Waiting.');
-                    setMobileView('watchlist');
-                  }}
-                  className="min-h-11 w-full rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 text-[10px] font-black uppercase tracking-wide text-vouch-cyan"
-                >
-                  {verdict.saferConstruction.title}
-                </button>
-              ) : null}
-            </div>
-          )}
-        </section>
+      <div className="parlay-next-editor" aria-label="Player and parlay editor">
+        {editing ? <><div className="parlay-next-editor__title"><div><p>EDITING PLAYER</p><h3>{editing.playerName}</h3></div><button type="button" aria-label="Close editor" onClick={() => setEditing(null)}><X /></button></div>
+          <label>Market<select value={marketCode} onChange={(event) => { const next = event.target.value; setMarketCode(next); setTarget(MARKETS.find((market) => market.code === next)?.target ?? 1); }}>{MARKETS.map((market) => <option key={market.code} value={market.code}>{market.label}</option>)}</select></label>
+          <div className="parlay-next-form-row"><label>Condition<select value={comparator} onChange={(event) => setComparator(event.target.value as Comparator)}>{COMPARATORS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label>Line<input type="number" min="0" step="0.5" value={target} onChange={(event) => setTarget(numberValue(event.target.value))} /></label></div>
+          <label>Research note<textarea defaultValue={editing.note ?? ''} maxLength={140} placeholder="Why is this player on the list?" onBlur={(event) => activeList && void setNote(activeList.id, editing.playerId, event.target.value)} /></label>
+          <div className="parlay-next-editor__preview"><span>Proposed leg</span><strong>{editing.playerName} · {COMPARATORS.find((item) => item.value === comparator)?.label} {target} {marketLabel(marketCode)}</strong></div>
+          <div className="parlay-next-editor__actions"><button type="button" className="is-secondary" onClick={() => { setMessage(`${editing.playerName} remains player-only.`); setEditing(null); }}>Keep Player Only</button><button type="button" className="is-primary" disabled={editing.gamePk == null || !Number.isFinite(target)} onClick={addToParlay}><Plus /> Add to Parlay</button></div>
+          {editing.gamePk == null ? <p className="parlay-next-help is-warning">A verified game is required before this player can become a gradable parlay leg.</p> : null}</> : <div className="parlay-next-empty is-compact"><Pencil /><h3>Select a player to edit</h3><p>Choose the market, condition, line, and note. Adding to a parlay is always a separate action.</p></div>}
       </div>
-    </div>
-  );
+    </div> : <TargetArchive kind={listState} />}
+  </section>;
 }
 
-// ─── AI Picks panel ───────────────────────────────────────────────────────────
-
-function AiPicksPanel() {
-  const aiPicks       = useParlayCommandStore((s) => s.aiPicks);
-  const addAiLegToDraft = useParlayCommandStore((s) => s.addAiLegToDraft);
-  const announce      = useAnnounce();
-
-  if (aiPicks.length === 0) return <EmptyAiPicks />;
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-        V.A.I picks are built from confirmed lineups and matchup signals.
-        Odds marked <strong className="text-[hsl(var(--ve-warning))]">Est.</strong> are model estimates — not live sportsbook lines.
-      </p>
-
-      {aiPicks.map((pick) => {
-        const record = pick as Record<string, unknown>;
-        const confidence = typeof record.confidence === 'number' ? record.confidence : Number.NaN;
-        const hasConf = Number.isFinite(confidence);
-
-        return (
-          <div
-            key={pick.id}
-            className="flex items-start gap-3 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface))]"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-[hsl(var(--ve-text-primary))]">
-                  {pick.playerName || pick.selection}
-                </span>
-                {hasConf && (
-                  <span className={[
-                    'text-[9px] font-bold px-1.5 py-0.5 rounded-full border',
-                    confidence >= 70
-                      ? 'text-[hsl(var(--ve-success))] bg-[hsl(var(--ve-success)/0.1)] border-[hsl(var(--ve-success)/0.3)]'
-                      : 'text-vouch-cyan bg-vouch-cyan/10 border-vouch-cyan/25',
-                  ].join(' ')}>
-                    {Math.round(confidence)}%
-                  </span>
-                )}
-                {String(record.oddsSource ?? '') === 'estimated' && (
-                  <span className="text-[9px] text-[hsl(var(--ve-warning))]">Est. odds</span>
-                )}
-              </div>
-              <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-                {[pick.marketLabel, pick.teamLabel].filter(Boolean).join(' · ')}
-              </p>
-              {typeof record.reason === 'string' && record.reason && (
-                <p className="text-[10px] text-[hsl(var(--ve-text-muted))] italic mt-1">{record.reason}</p>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                addAiLegToDraft(pick);
-                announce(`Added ${pick.playerName || pick.selection} to slip.`);
-              }}
-              aria-label={`Add ${pick.playerName || pick.selection} to slip`}
-              className="shrink-0 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan hover:bg-vouch-cyan/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-            >
-              <span className="text-sm" aria-hidden="true">+</span>
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Community panel (was Premium) — Judge 10 ────────────────────────────────
-
-function CommunityPanel() {
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-        Posted community slips — tail any pick to instantly copy it into your builder.
-      </p>
-      {/* Phase 2: PremiumFeed with TailButton */}
-      <EmptyCommunity />
-      <div className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-dashed border-[hsl(var(--ve-border)/0.5)]">
-        <Crown className="h-6 w-6 text-vouch-amber" aria-hidden="true" />
-        <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))]">Community feed coming in Phase 2</p>
-        <p className="text-[10px] text-[hsl(var(--ve-text-muted))] text-center max-w-xs">
-          Post your slip to build a public track record. The tail mechanic launches with the community feed.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Tab content switcher ─────────────────────────────────────────────────────
-
-function TabContent({
-  activePanel,
-  savedSlips,
-  profile,
-  onSaveParlay,
-  onSectionChange,
-}: {
-  activePanel: ParlayCommandPanel;
-  savedSlips:  unknown[];
-  profile?:    CreatorProofProfile;
-  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
-  onSectionChange?: (section: string) => void;
-}) {
-  switch (activePanel) {
-    case 'build':
-      return <BuildSlipPanel onSaveParlay={onSaveParlay} onSectionChange={onSectionChange} />;
-    case 'ai':
-      return (
-        <PanelErrorBoundary>
-          <Suspense fallback={<EmptyAiPicks />}>
-            <AiPicksPanel />
-          </Suspense>
-        </PanelErrorBoundary>
-      );
-    case 'vai_ledger':
-      return (
-        <PanelErrorBoundary>
-          <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-            <ParlayOsTrackRecordPanel savedSlips={savedSlips} profile={profile} onSectionChange={onSectionChange} />
-          </Suspense>
-        </PanelErrorBoundary>
-      );
-    case 'live':
-      return (
-        <PanelErrorBoundary>
-          <Suspense fallback={<ParlayOsPanelSkeleton label="Loading parlay history" />}>
-            <ParlayOsHistoryPanel />
-          </Suspense>
-        </PanelErrorBoundary>
-      );
-    case 'premium':
-      return <CommunityPanel />;
-    default:
-      return null;
+function ActiveParlay({ onSaveParlay, onSectionChange }: { onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>; onSectionChange?: (section: string) => void }) {
+  const draftLegs = useParlayCommandStore(selectDraftLegs);
+  const updateDraftLeg = useParlayCommandStore((state) => state.updateDraftLeg);
+  const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
+  const moveToWaiting = useParlayCommandStore((state) => state.moveDraftLegToWaiting);
+  const clearDraft = useParlayCommandStore((state) => state.clearDraft);
+  const slipNote = useParlayCommandStore((state) => state.slipNote);
+  const setSlipNote = useParlayCommandStore((state) => state.setSlipNote);
+  const [stake, setStake] = useState(10); const [acknowledged, setAcknowledged] = useState(false); const [saving, setSaving] = useState(false); const [message, setMessage] = useState('');
+  const identity = useMemo(() => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]), [draftLegs]);
+  const odds = useMemo(() => assessSlipOdds(draftLegsToUiLegs(draftLegs)), [draftLegs]);
+  const payout = odds.combined?.decimal && Number.isFinite(odds.combined.decimal) ? Math.round(stake * odds.combined.decimal * 100) / 100 : null;
+  const canSave = draftLegs.length > 0 && identity.complete && acknowledged && Boolean(onSaveParlay) && !saving;
+  async function saveParlay() {
+    if (!canSave || !onSaveParlay) return; setSaving(true); setMessage(''); const draftId = `draft-${Date.now()}`; const capturedAt = new Date().toISOString();
+    try { const result = await onSaveParlay(normalizeParlaySlip({ id: draftId, clientRef: draftId, title: `MLB Parlay · ${new Date().toLocaleDateString()}`, mode: 'PRACTICE', source: 'manual_builder', sport: 'mlb', status: 'pending', wagerAmount: stake, legs: draftLegs.map((leg) => normalizeParlayLeg(leg)), createdAt: capturedAt, metadata: { savedContext: { slipNote: slipNote.trim() || null, capturedAt } } })); setMessage(result.syncState === 'synced' ? 'Parlay saved and synced.' : 'Parlay saved on this device; account sync is pending.'); clearDraft(); }
+    catch (error) { setMessage(error instanceof Error ? error.message : 'Parlay could not be saved.'); } finally { setSaving(false); }
   }
+  return <section className="parlay-next-panel" aria-labelledby="active-parlay-heading">
+    <div className="parlay-next-panel__heading"><div><p className="parlay-next-eyebrow">ACTIVE PARLAY</p><h2 id="active-parlay-heading">Parlay Editor</h2><p>Every leg carries an official player ID, game, market, condition, and target for deterministic grading.</p></div><span className="parlay-next-count">{draftLegs.length} legs</span></div>
+    {message ? <p className="parlay-next-alert" role="status">{message}</p> : null}
+    {!draftLegs.length ? <div className="parlay-next-empty"><ListChecks /><h3>Your active parlay is empty</h3><p>Add a verified player from My List, HR Intelligence, or Pitcher Matchup.</p><button type="button" onClick={() => onSectionChange?.('hr_board')}>Browse HR Players</button></div> : <>
+      <div className="parlay-next-legs">{draftLegs.map((leg, index) => <article key={leg.id} className="parlay-next-leg"><div className="parlay-next-leg__number">{String(index + 1).padStart(2, '0')}</div><div className="parlay-next-leg__body">
+        <div className="parlay-next-leg__title"><div><strong>{leg.playerName ?? leg.selection}</strong><span>{[leg.teamLabel, leg.gamePk ? `Game ${leg.gamePk}` : 'Game missing'].filter(Boolean).join(' · ')}</span></div><span className={leg.playerId && leg.gamePk ? 'is-verified' : 'is-warning'}>{leg.playerId && leg.gamePk ? 'GRADABLE' : 'REPAIR NEEDED'}</span></div>
+        <div className="parlay-next-leg__controls"><label>Market<select value={leg.marketCode ?? 'ANYTIME_HR'} onChange={(event) => updateDraftLeg(leg.id, { marketCode: event.target.value, marketLabel: marketLabel(event.target.value) })}>{MARKETS.map((market) => <option key={market.code} value={market.code}>{market.label}</option>)}</select></label><label>Condition<select value={leg.comparator ?? '>='} onChange={(event) => updateDraftLeg(leg.id, { comparator: event.target.value })}>{COMPARATORS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label>Line<input type="number" min="0" step="0.5" value={numberValue(leg.statTarget)} onChange={(event) => updateDraftLeg(leg.id, { statTarget: numberValue(event.target.value) })} /></label><label>Odds<input value={leg.odds ?? ''} onChange={(event) => updateDraftLeg(leg.id, { odds: event.target.value })} placeholder="TBD" /></label></div>
+        <label className="parlay-next-leg__note">Leg note<input value={leg.note ?? ''} maxLength={140} onChange={(event) => updateDraftLeg(leg.id, { note: event.target.value })} placeholder="Evidence or risk" /></label>
+        <div className="parlay-next-leg__actions"><button type="button" onClick={() => moveToWaiting(leg.id, 'Moved from editor')}><Clock3 /> Move to Waiting</button><button type="button" className="is-danger" onClick={() => removeDraftLeg(leg.id, 'Removed from parlay editor')}><Trash2 /> Remove</button></div>
+      </div></article>)}</div>
+      <div className="parlay-next-summary"><div><span>Combined odds</span><strong>{odds.canShowCombined ? odds.combined?.american ?? 'TBD' : 'TBD'}</strong></div><label>Stake<input type="number" min="0" step="1" value={stake} onChange={(event) => setStake(Math.max(0, numberValue(event.target.value)))} /></label><div><span>Estimated payout</span><strong>{payout == null ? 'TBD' : `$${payout.toFixed(2)}`}</strong></div></div>
+      {!odds.canShowCombined ? <p className="parlay-next-help">Combined odds stay hidden until every leg has usable odds. Correlated legs are adjusted by policy.</p> : null}
+      {!identity.complete ? <p className="parlay-next-alert is-error">{identity.missingLegIndexes.length} leg(s) are missing official grading identity and cannot be saved.</p> : null}
+      <label className="parlay-next-note">Parlay decision note<textarea value={slipNote} maxLength={500} onChange={(event) => setSlipNote(event.target.value)} placeholder="Record why you built this parlay before the result is known." /></label>
+      <label className="parlay-next-ack"><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} /><span>I understand this is a research tracker, not a guarantee. Bet responsibly.</span></label>
+      <div className="parlay-next-savebar"><button type="button" className="is-danger" onClick={clearDraft}><Trash2 /> Clear Parlay</button><button type="button" className="is-primary" disabled={!canSave} onClick={() => void saveParlay()}><Save /> {saving ? 'Saving…' : 'Save Parlay'}</button></div>
+    </>}
+  </section>;
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+function SavedParlays({ slips }: { slips: unknown[] }) {
+  const rows = slips as Array<Record<string, unknown>>;
+  return <section className="parlay-next-panel" aria-labelledby="saved-parlays-heading"><div className="parlay-next-panel__heading"><div><p className="parlay-next-eyebrow">SAVED + GRADED</p><h2 id="saved-parlays-heading">Parlay Ledger</h2><p>Saved parlays remain evidence records while their legs settle from official game data.</p></div><span className="parlay-next-count">{rows.length} saved</span></div>
+    {!rows.length ? <div className="parlay-next-empty"><Archive /><h3>No saved parlays yet</h3><p>Build a parlay with verified player and game identity, then save it here for grading.</p></div> : <div className="parlay-next-saved-list">{rows.map((slip, index) => { const legs = Array.isArray(slip.legs) ? slip.legs as Array<Record<string, unknown>> : []; return <article key={String(slip.id ?? index)}><div className="parlay-next-saved-list__heading"><div><strong>{String(slip.title ?? 'Saved Parlay')}</strong><span>{String(slip.createdAt ?? slip.created_at ?? '')}</span></div><span>{String(slip.status ?? 'pending').replaceAll('_', ' ').toUpperCase()}</span></div><ol>{legs.map((leg, legIndex) => <li key={String(leg.id ?? legIndex)}><CheckCircle2 /><div><strong>{String(leg.playerName ?? leg.selection ?? 'Player leg')}</strong><span>{String(leg.marketLabel ?? leg.marketCode ?? leg.market ?? 'Market')} · {String(leg.status ?? 'pending').toUpperCase()}</span></div></li>)}</ol></article>; })}</div>}
+  </section>;
+}
 
 interface ParlayOsWorkspaceProps {
-  savedSlips?:     unknown[];
-  liveGames?:      unknown[];
-  /** Read by the Track Record tab for slip ownership. */
-  profile?:        CreatorProofProfile;
-  initialPanel?:   ParlayCommandPanel;
-  onSectionChange?: (section: string) => void;
-  onAddLegToParlay?: (...args: any[]) => void;
-  onSaveVouch?:    (...args: any[]) => void;
-  onPostCreated?:  (...args: any[]) => void;
-  onSaveParlay?:   (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
-  onHideParlay?:   (parlayId: string) => Promise<void> | void;
+  savedSlips?: unknown[]; liveGames?: unknown[]; profile?: CreatorProofProfile; initialPanel?: ParlayCommandPanel;
+  onSectionChange?: (section: string) => void; onAddLegToParlay?: (...args: any[]) => void;
+  onSaveVouch?: (...args: any[]) => void; onPostCreated?: (...args: any[]) => void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
+  onHideParlay?: (parlayId: string) => Promise<void> | void;
 }
 
-export default function ParlayOsWorkspace({
-  savedSlips    = [],
-  profile,
-  initialPanel  = 'live',
-  onSectionChange,
-  onSaveParlay,
-}: ParlayOsWorkspaceProps) {
-  const activePanel       = useParlayCommandStore(selectActiveParlayPanel);
-  const setActivePanel    = useParlayCommandStore((s) => s.setActivePanel);
-  const hydrateSavedSlips = useParlayCommandStore((s) => s.hydrateSavedSlips);
-  const draftLegCount     = useParlayCommandStore((s) => s.draftLegs.length);
+export default function ParlayOsWorkspace({ savedSlips = [], initialPanel = 'build', onSectionChange, onSaveParlay }: ParlayOsWorkspaceProps) {
+  const [view, setView] = useState<WorkspaceView>(initialPanel === 'vai_ledger' || initialPanel === 'live' ? 'saved' : 'list');
+  const draftLegs = useParlayCommandStore(selectDraftLegs);
   const commandSavedSlips = useParlayCommandStore(selectSavedSlips);
-
-  const tablistId = useId();
-
-  useEffect(() => { setActivePanel(initialPanel); }, [initialPanel, setActivePanel]);
+  const hydrateSavedSlips = useParlayCommandStore((state) => state.hydrateSavedSlips);
   useEffect(() => { hydrateSavedSlips(savedSlips); }, [hydrateSavedSlips, savedSlips]);
-
-  const liveCount    = commandSavedSlips.filter((s) => ['pending','live','open','active'].includes(String(s.status).toLowerCase())).length;
-  const gradedCount  = commandSavedSlips.filter((s) => ['won','lost','push','void'].includes(String(s.status).toLowerCase())).length;
-  const totalTracked = commandSavedSlips.reduce((n, s) => n + (Array.isArray(s.legs) ? s.legs.length : 0), 0);
-
-  // Arrow-key roving tabindex (Judge 7)
-  function handleTabKeyDown(e: React.KeyboardEvent, currentIdx: number) {
-    const next = e.key === 'ArrowRight' ? (currentIdx + 1) % TABS.length
-      : e.key === 'ArrowLeft' ? (currentIdx - 1 + TABS.length) % TABS.length
-      : null;
-    if (next !== null) {
-      e.preventDefault();
-      setActivePanel(TABS[next].id);
-      // Move DOM focus to the newly active tab
-      const tablist = document.getElementById(tablistId);
-      const buttons = tablist?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-      buttons?.[next]?.focus();
-    }
-  }
-
-  return (
-    <LiveAnnouncer>
-      <style>{`
-        @keyframes ve-cmd-live-bar {
-          0%, 100% { transform: scaleY(0.45); opacity: 0.45; }
-          50%       { transform: scaleY(1.25); opacity: 1; }
-        }
-      `}</style>
-
-      <section
-        className={`${AURORA_PAGE} parlay-os-workspace-aurora-max flex flex-col`}
-        aria-label="Parlay OS"
-      >
-        {/* Header */}
-        <div className={`${AURORA_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
-          <header className={`${AURORA_PANEL_PREMIUM} ${AURORA_SECTION_HEADER} mb-4 flex items-start justify-between gap-3 flex-wrap p-4 sm:p-5`}>
-            <div>
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${AURORA_LABEL} text-vouch-cyan`}>
-                <Sparkles className="h-3 w-3" aria-hidden="true" />
-                Parlay OS
-              </div>
-              <h1 className="mt-2 text-xl font-extrabold text-white sm:text-3xl font-z8">
-                Build. Select. Track.
-              </h1>
-              <p className="mt-1 text-xs text-white/50 max-w-xl font-z8 hidden sm:block">
-                Build a slip, track every leg live, and review the graded record — one place, no route switching.
-              </p>
-            </div>
-            <LivePulseBars active={liveCount > 0} />
-          </header>
-
-          {/* Stats strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-            {[
-              { label: 'Draft legs',   value: draftLegCount,              note: 'queued' },
-              { label: 'Live locked',  value: liveCount,                     note: 'in-flight' },
-              { label: 'Saved slips',  value: commandSavedSlips.length,      note: 'total' },
-              { label: 'Legs tracked', value: totalTracked,                  note: `${gradedCount} graded` },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className={`${AURORA_STAT_CHIP} rounded-xl p-3`}
-              >
-                <p className={`${AURORA_LABEL} text-white/40`}>{stat.label}</p>
-                <div className="mt-1.5 flex items-end justify-between gap-2">
-                  <span className="text-2xl font-extrabold text-white">{stat.value}</span>
-                  <span className={`${AURORA_LABEL} text-white/35`}>{stat.note}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Tab bar — full ARIA tab pattern (Judge 7) */}
-          <div
-            id={tablistId}
-            role="tablist"
-            aria-label="Parlay OS sections"
-            className="flex gap-0.5 sm:gap-1 overflow-x-auto pb-0 border-b border-[hsl(var(--ve-border)/0.4)] snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-          >
-            {TABS.map((tab, idx) => {
-              const Icon = tab.icon;
-              const isActive = activePanel === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  id={`${tablistId}-tab-${tab.id}`}
-                  aria-selected={isActive}
-                  aria-controls={`${tablistId}-panel-${tab.id}`}
-                  tabIndex={isActive ? 0 : -1}
-                  onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                  onClick={() => setActivePanel(tab.id)}
-                  className={[
-                    'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 text-[11px] sm:text-xs font-semibold whitespace-nowrap border-b-2 -mb-px transition-all snap-start shrink-0',
-                    'min-h-[2.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
-                    isActive
-                      ? 'border-vouch-cyan text-vouch-cyan'
-                      : 'border-transparent text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
-                  ].join(' ')}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Tab panel */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {TABS.map((tab) => (
-            <div
-              key={tab.id}
-              role="tabpanel"
-              id={`${tablistId}-panel-${tab.id}`}
-              aria-labelledby={`${tablistId}-tab-${tab.id}`}
-              hidden={activePanel !== tab.id}
-              className={`px-4 py-5 sm:px-6 lg:px-8 mx-auto ${tab.id === 'build' ? 'max-w-[1440px]' : 'max-w-4xl'}`}
-            >
-              {activePanel === tab.id && (
-                <PanelErrorBoundary>
-                  <TabContent
-                    activePanel={tab.id}
-                    savedSlips={savedSlips}
-                    profile={profile}
-                    onSaveParlay={onSaveParlay}
-                    onSectionChange={onSectionChange}
-                  />
-                </PanelErrorBoundary>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-    </LiveAnnouncer>
-  );
+  useEffect(() => { setView(initialPanel === 'vai_ledger' || initialPanel === 'live' ? 'saved' : 'list'); }, [initialPanel]);
+  return <main className="parlay-next" aria-labelledby="parlay-next-title">
+    <header className="parlay-next-hero"><div><p className="parlay-next-eyebrow">VOUCHEDGE · MLB WORKSPACE</p><h1 id="parlay-next-title">My List &amp; Parlay Editor</h1><p>One player library. One active parlay. Official-ID grading for HR and every supported MLB market.</p></div><div className="parlay-next-hero__flow"><span>LIST</span><ChevronRight /><span>EDIT</span><ChevronRight /><span>PARLAY</span><ChevronRight /><span>GRADE</span></div></header>
+    <nav className="parlay-next-nav" aria-label="My List and parlay workspace">
+      <button type="button" aria-current={view === 'list' ? 'page' : undefined} onClick={() => setView('list')}><ListChecks /><span><strong>My List</strong><small>Players + editor</small></span></button>
+      <button type="button" aria-current={view === 'parlay' ? 'page' : undefined} onClick={() => setView('parlay')}><Pencil /><span><strong>Active Parlay</strong><small>{draftLegs.length} gradable legs</small></span><b>{draftLegs.length}</b></button>
+      <button type="button" aria-current={view === 'saved' ? 'page' : undefined} onClick={() => setView('saved')}><Archive /><span><strong>Saved &amp; Graded</strong><small>Results ledger</small></span><b>{commandSavedSlips.length}</b></button>
+    </nav>
+    {view === 'list' ? <MyListEditor onSectionChange={onSectionChange} onOpenParlay={() => setView('parlay')} /> : null}
+    {view === 'parlay' ? <ActiveParlay onSaveParlay={onSaveParlay} onSectionChange={onSectionChange} /> : null}
+    {view === 'saved' ? <SavedParlays slips={commandSavedSlips} /> : null}
+  </main>;
 }

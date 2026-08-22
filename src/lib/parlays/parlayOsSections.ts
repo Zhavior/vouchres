@@ -19,8 +19,9 @@ export type ParlayOsSection = (typeof PARLAY_OS_SECTIONS)[number];
 
 const SECTION_TO_PANEL: Record<ParlayOsSection, ParlayCommandPanel> = {
   build: 'build',
-  // Was pointed at 'build', so the History door opened the slip builder.
-  live_parlays: 'live',
+  // "My List" is the creation/editor entry. Saved parlays remain available
+  // inside the workspace without hiding the editor behind the History tab.
+  live_parlays: 'build',
   // The former standalone Results route — now the workspace's Track Record tab.
   results: 'vai_ledger',
 };

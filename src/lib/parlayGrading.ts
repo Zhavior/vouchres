@@ -4,9 +4,8 @@
  * into the local Parlay objects. This is the fast UX preview path.
  *
  * Durable DB settlement is owned by gradePendingPicks() via
- * GET /api/cron/parlays/grade-due (and staff /api/parlays/grade-due). That path
- * only sees parlays that were saved through /api/v3/parlays/save (or the
- * /api/me/parlays POST compat alias).
+ * GET /api/cron/parlays/grade-due (and staff /api/v3/grading/grade-due). That path
+ * only sees parlays that were saved through /api/v3/parlays/save.
  *
  * Wire-compatible with the production Supabase pipeline: the same leg shape
  * ({ sport, gamePk, market, selection }) is what POST /api/parlays expects.

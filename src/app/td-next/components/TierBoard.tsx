@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlayerTDCard } from './PlayerTDCard';
 import type { TouchdownPlayer, PlayerTier } from '../../../types/touchdown';
 import { Zap, Flame, Sparkles, Target, Moon } from 'lucide-react';
@@ -73,17 +73,29 @@ const TIER_COLUMNS: TierColumnDef[] = [
   },
 ];
 
+const INITIAL_VISIBLE_PER_TIER = 16;
+const VISIBLE_STEP = 16;
+
 export const TierBoard: React.FC<TierBoardProps> = ({
   tierPartition,
   onOpenDossier,
   onAddToSlip,
 }) => {
+  const [visibleByTier, setVisibleByTier] = useState<Record<PlayerTier, number>>({
+    ELITE: INITIAL_VISIBLE_PER_TIER,
+    STRONG: INITIAL_VISIBLE_PER_TIER,
+    VALUE: INITIAL_VISIBLE_PER_TIER,
+    SLEEPER: INITIAL_VISIBLE_PER_TIER,
+  });
+
   return (
     <div className="w-full overflow-x-auto pb-4 scroll-smooth" style={{ scrollbarWidth: 'thin' }}>
       {/* 4-Column Board with Minimum Width Constraint (min-w-[1140px]) to Guarantee ≥260px per Card */}
       <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 gap-4 items-start w-full font-mono">
         {TIER_COLUMNS.map((col) => {
           const players = tierPartition[col.tier];
+          const visibleCount = Math.min(visibleByTier[col.tier], players.length);
+          const visiblePlayers = players.slice(0, visibleCount);
           const Icon = col.icon;
 
           return (
@@ -116,7 +128,7 @@ export const TierBoard: React.FC<TierBoardProps> = ({
                     <p className="text-[10px] mt-0.5 text-zinc-600">Adjust tactical radar filters</p>
                   </div>
                 ) : (
-                  players.map((player) => (
+                  visiblePlayers.map((player) => (
                     <PlayerTDCard
                       key={player.id}
                       player={player}
@@ -125,6 +137,18 @@ export const TierBoard: React.FC<TierBoardProps> = ({
                     />
                   ))
                 )}
+                {visibleCount < players.length ? (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleByTier((current) => ({
+                      ...current,
+                      [col.tier]: Math.min(current[col.tier] + VISIBLE_STEP, players.length),
+                    }))}
+                    className="border border-white/15 bg-white/[0.03] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-400 transition hover:border-white/30 hover:text-white"
+                  >
+                    Show {Math.min(VISIBLE_STEP, players.length - visibleCount)} more · {visibleCount} of {players.length}
+                  </button>
+                ) : null}
               </div>
             </section>
           );

@@ -39,6 +39,12 @@ export interface PitcherRecentGame {
   strikeOuts: number;
   earnedRuns: number;
   baseOnBalls: number;
+  hits?: number;
+  homeRuns?: number;
+  numberOfPitches?: number;
+  strikes?: number;
+  strikePercentage?: number | null;
+  whip?: number | null;
 }
 
 export interface HitterStats {
@@ -56,6 +62,21 @@ export interface PitcherSeasonStats {
   gamesStarted: number;
   gamesPitched: number;
   whip: number | null;
+  wins?: number;
+  losses?: number;
+  hits?: number;
+  earnedRuns?: number;
+  homeRunsAllowed?: number;
+  battersFaced?: number;
+  numberOfPitches?: number;
+  strikes?: number;
+  strikePercentage?: number | null;
+  strikeoutsPer9?: number | null;
+  walksPer9?: number | null;
+  hitsPer9?: number | null;
+  strikeoutWalkRatio?: number | null;
+  pitchesPerInning?: number | null;
+  battingAverageAgainst?: number | null;
 }
 
 export interface PitcherStats {
@@ -244,6 +265,21 @@ export async function getPitcherStats(pitcherId: number): Promise<PitcherStats> 
           gamesStarted: Number(s.gamesStarted) || 0,
           gamesPitched: Number(s.gamesPitched) || 0,
           whip: Number.isFinite(parseFloat(s.whip)) ? parseFloat(s.whip) : null,
+          wins: Number(s.wins) || 0,
+          losses: Number(s.losses) || 0,
+          hits: Number(s.hits) || 0,
+          earnedRuns: Number(s.earnedRuns) || 0,
+          homeRunsAllowed: Number(s.homeRunsAllowed ?? s.homeRuns) || 0,
+          battersFaced: Number(s.battersFaced) || 0,
+          numberOfPitches: Number(s.numberOfPitches) || 0,
+          strikes: Number(s.strikes) || 0,
+          strikePercentage: Number.isFinite(parseFloat(s.strikePercentage)) ? parseFloat(s.strikePercentage) : null,
+          strikeoutsPer9: Number.isFinite(parseFloat(s.strikeoutsPer9Inn)) ? parseFloat(s.strikeoutsPer9Inn) : null,
+          walksPer9: Number.isFinite(parseFloat(s.walksPer9Inn)) ? parseFloat(s.walksPer9Inn) : null,
+          hitsPer9: Number.isFinite(parseFloat(s.hitsPer9Inn)) ? parseFloat(s.hitsPer9Inn) : null,
+          strikeoutWalkRatio: Number.isFinite(parseFloat(s.strikeoutWalkRatio)) ? parseFloat(s.strikeoutWalkRatio) : null,
+          pitchesPerInning: Number.isFinite(parseFloat(s.pitchesPerInning)) ? parseFloat(s.pitchesPerInning) : null,
+          battingAverageAgainst: Number.isFinite(parseFloat(s.avg)) ? parseFloat(s.avg) : null,
         };
       }
     } catch (err) {
@@ -261,7 +297,15 @@ export async function getPitcherStats(pitcherId: number): Promise<PitcherStats> 
         strikeOuts: Number(sp.stat?.strikeOuts) || 0,
         earnedRuns: Number(sp.stat?.earnedRuns) || 0,
         baseOnBalls: Number(sp.stat?.baseOnBalls) || 0,
-      }));
+        hits: Number(sp.stat?.hits) || 0,
+        homeRuns: Number(sp.stat?.homeRuns) || 0,
+        numberOfPitches: Number(sp.stat?.numberOfPitches) || 0,
+        strikes: Number(sp.stat?.strikes) || 0,
+        strikePercentage: Number.isFinite(parseFloat(sp.stat?.strikePercentage)) ? parseFloat(sp.stat.strikePercentage) : null,
+        whip: Number.isFinite(parseFloat(sp.stat?.whip)) ? parseFloat(sp.stat.whip) : null,
+      }))
+        .sort((a: PitcherRecentGame, b: PitcherRecentGame) => b.date.localeCompare(a.date))
+        .slice(0, 5);
     } catch (err) {
       console.warn(`[statsClient] pitcher game log failed for ${pitcherId}:`, (err as Error).message);
     }

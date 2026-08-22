@@ -6,30 +6,16 @@ import type { AuthedRequest } from "../middleware/auth";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { assertUserOwnsResource } from "../middleware/ownership";
 import {
-  getUserParlay,
   getParlayAuditHistory,
   hideUserParlay,
   listUserParlayRows,
-  listUserParlays,
   repairUserParlayIdentity,
   updateParlaySummary,
-  commitParlayTrustLedger,
-  finalizeParlayTrustLock,
 } from "../services/parlays/userParlayService";
-import { saveUserParlay } from "../services/parlays/parlayCreationService";
 import { tailParlayForUser } from "../services/social/parlayTailService";
 import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../validators/parlaySchemas";
-import { sendV3ParlayDetailResponse, sendV3ParlayListResponse, sendV3ParlaySaveResponse, sendV3ParlayTrustCommitResponse, sendV3ParlayTrustFinalizeResponse } from "../v3/modules/parlays/handlers";
 
 type ParlayReq = AuthedRequest & RequestWithContext;
-
-export const getParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  return sendV3ParlayDetailResponse(req, res);
-});
-
-export const listMyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  return sendV3ParlayListResponse(req, res);
-});
 
 export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
   const query = req.query as unknown as ListParlaysQuery;
@@ -43,10 +29,6 @@ export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res:
     offset: query.offset,
   });
   return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
-});
-
-export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  return sendV3ParlaySaveResponse(req, res);
 });
 
 export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
@@ -142,12 +124,4 @@ export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Respon
 
   const result = await hideUserParlay({ userId: req.user!.id, parlayId: req.params.id });
   return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
-});
-
-export const commitParlayTrustHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  return sendV3ParlayTrustCommitResponse(req, res);
-});
-
-export const finalizeParlayTrustLockHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
-  return sendV3ParlayTrustFinalizeResponse(req, res);
 });

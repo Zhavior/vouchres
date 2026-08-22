@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
@@ -23,6 +23,9 @@ function countWorkingTreeBgHex(files: string[]): number {
   let count = 0;
 
   for (const filePath of files) {
+    // `git ls-files` includes staged/working-tree deletions until the deletion
+    // is committed. Deleted source cannot introduce a new Tailwind class.
+    if (!existsSync(filePath)) continue;
     const content = readFileSync(filePath, 'utf8');
     count += content.match(BG_HEX_ARBITRARY)?.length ?? 0;
   }

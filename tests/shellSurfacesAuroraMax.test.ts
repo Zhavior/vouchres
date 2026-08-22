@@ -15,15 +15,19 @@ describe('Aurora Max shell surfaces', () => {
     expect(drawer).toContain('<VouchEdgeLogo emeraldMark');
   });
 
-  it('applies the Aurora Max contract to ParlayOS and World Chat', () => {
+  it('keeps the floating layer and World Chat on Aurora while the replacement workspace owns its CSS', () => {
     const layer = readFileSync('src/components/parlay/os/ParlayOsLayer.tsx', 'utf8');
     const workspace = readFileSync('src/components/parlay/ParlayOsWorkspace.tsx', 'utf8');
     const widget = readFileSync('src/components/theEdge/WorldChatWidget.tsx', 'utf8');
     const panel = readFileSync('src/components/theEdge/WorldChatPanel.tsx', 'utf8');
     const styles = readFileSync('src/styles/shell-surfaces-aurora-max.css', 'utf8');
+    const workspaceStyles = readFileSync('src/styles/my-list-workspace.css', 'utf8');
 
     expect(layer).toContain('parlay-os-aurora-max');
-    expect(workspace).toContain('parlay-os-workspace-aurora-max');
+    expect(workspace).toContain("import '../../styles/my-list-workspace.css'");
+    expect(workspace).toContain('className="parlay-next"');
+    expect(workspace).not.toContain('parlay-os-workspace-aurora-max');
+    expect(workspaceStyles).toContain('.parlay-next');
     expect(widget).toContain('world-chat-aurora-max');
     expect(panel).toContain('world-chat-panel-aurora-max');
     expect(styles).toContain('border-radius: 0 !important');

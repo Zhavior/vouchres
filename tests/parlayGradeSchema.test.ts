@@ -9,6 +9,7 @@ describe("GradeParlaySchema", () => {
         {
           sport: "MLB",
           gamePk: 823062,
+          playerId: 592450,
           marketCode: "ANYTIME_HR",
           selection: "Aaron Judge 1+ HR",
           odds: -110,

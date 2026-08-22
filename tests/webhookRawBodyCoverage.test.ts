@@ -25,31 +25,31 @@ import { registerApiRoutes } from "../server/routes";
 function mountedWebhookPaths(): string[] {
   vi.stubEnv("CRON_SECRET", "test-cron-secret");
   const app = express();
-  registerApiRoutes(app);
-
   const paths: string[] = [];
-  const visit = (stack: any[], prefix: string) => {
+  const visitRouter = (stack: any[], prefix: string) => {
     for (const layer of stack ?? []) {
       if (layer.route?.path !== undefined) {
         const routePaths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
         for (const p of routePaths) paths.push(`${prefix}${p}`);
         continue;
       }
-      if (layer.name === "router" && layer.handle?.stack) {
-        const source: string = layer.regexp?.source ?? "";
-        const literal =
-          source === "^\\/?(?=\\/|$)"
-            ? ""
-            : source
-                .replace(/^\^/, "")
-                .replace(/\\\/\?\(\?=\\\/\|\$\)$/, "")
-                .replace(/\\\//g, "/")
-                .replace(/\$$/, "");
-        visit(layer.handle.stack, prefix + (/^[/\w.-]*$/.test(literal) ? literal : ""));
-      }
+      if (layer.handle?.stack) visitRouter(layer.handle.stack, prefix);
     }
   };
-  visit((app as any)._router?.stack ?? (app as any).router?.stack, "");
+
+  // Express 5 removed layer.regexp. Capture the public mount path while the
+  // deployed route registrar attaches each router.
+  const originalUse = app.use.bind(app);
+  (app as any).use = (...args: any[]) => {
+    const mount = typeof args[0] === "string" ? args[0] : "";
+    const handlers = typeof args[0] === "string" ? args.slice(1) : args;
+    for (const handler of handlers) {
+      if (handler?.stack) visitRouter(handler.stack, mount);
+    }
+    return originalUse(...args);
+  };
+
+  registerApiRoutes(app);
 
   return paths
     .map((p) => p.replace(/\/+/g, "/").replace(/\/$/, ""))

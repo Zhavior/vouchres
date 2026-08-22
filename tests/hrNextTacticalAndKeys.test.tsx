@@ -88,8 +88,11 @@ describe('HrNextTacticalFilters', () => {
     const highEvRow = makeMockRow({ hrProbability: 0.35, impliedProbability: 0.25 });
     expect(matchesTacticalFilter(highEvRow, 'high_ev')).toBe(true);
 
-    const windRow = makeMockRow({ parkFactor: 110 });
+    const windRow = makeMockRow({ weather: 82, reasons: ['Wind blowing out 9mph'] });
     expect(matchesTacticalFilter(windRow, 'wind_out')).toBe(true);
+
+    const favorableParkWithoutWeather = makeMockRow({ parkFactor: 110, weather: null, reasons: ['Favorable park'] });
+    expect(matchesTacticalFilter(favorableParkWithoutWeather, 'wind_out')).toBe(false);
 
     const vulnerableSpRow = makeMockRow({ pitcherVulnerability: 80 });
     expect(matchesTacticalFilter(vulnerableSpRow, 'vulnerable_sp')).toBe(true);

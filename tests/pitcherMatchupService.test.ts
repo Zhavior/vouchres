@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   getHitterStats: vi.fn(),
   getPitcherStats: vi.fn(),
   getBatterVsPitcher: vi.fn(),
+  getPitchMixMapResult: vi.fn(),
   getStatcastBatterMapResult: vi.fn(),
   sportsFetchJson: vi.fn(),
 }));
@@ -31,6 +32,7 @@ vi.mock("../server/services/mlb/statsClient", () => ({
 }));
 
 vi.mock("../server/services/mlb/statcastClient", () => ({
+  getPitchMixMapResult: mocks.getPitchMixMapResult,
   getStatcastBatterMapResult: mocks.getStatcastBatterMapResult,
 }));
 
@@ -86,6 +88,7 @@ describe("getPitcherMatchup", () => {
     );
     mocks.getHitterStats.mockResolvedValue(null);
     mocks.getBatterVsPitcher.mockResolvedValue(null);
+    mocks.getPitchMixMapResult.mockResolvedValue({ map: {}, feedStatus: "ok" });
     mocks.getStatcastBatterMapResult.mockResolvedValue({ map: {}, feedStatus: "ok" });
     mocks.sportsFetchJson.mockResolvedValue({ people: [] });
   });

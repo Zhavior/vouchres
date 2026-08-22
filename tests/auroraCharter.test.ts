@@ -88,7 +88,7 @@ describe('Aurora Master Charter', () => {
   it('keeps Aurora Max primitives shared by the canonical desk and Today', () => {
     const primitives = readProjectFile('src/components/aurora-max/AuroraMaxPrimitives.tsx');
     const canonicalDesk = readProjectFile('src/components/admin/AuroraMax.tsx');
-    const todayDesk = readProjectFile('src/components/today/TodayFieldDesk.tsx');
+    const todayDesk = readProjectFile('src/components/TodayDashboardZ8.tsx');
 
     for (const primitive of ['AuroraMaxCommandHeader', 'AuroraMaxEvidenceLadder', 'AuroraMaxRankedWorkspace', 'AuroraMaxTruthBadge', 'AuroraMaxFallback']) {
       expect(primitives).toContain(`export function ${primitive}`);
@@ -96,8 +96,8 @@ describe('Aurora Master Charter', () => {
     expect(canonicalDesk).toContain("from '../aurora-max/AuroraMaxPrimitives'");
     expect(canonicalDesk).toContain('<AuroraMaxCommandHeader');
     expect(canonicalDesk).toContain('<AuroraMaxRankedWorkspace');
-    expect(todayDesk).toContain("from '../aurora-max/AuroraMaxPrimitives'");
-    expect(todayDesk).toContain('<AuroraMaxEvidenceLadder');
+    expect(todayDesk).toContain("from './aurora-max/AuroraMaxPrimitives'");
+    expect(todayDesk).toContain('<AuroraMaxRankedWorkspace');
     expect(todayDesk).toContain('<AuroraMaxFallback');
     const hrDesk = readProjectFile('src/features/hr-max/components/HrMaxDesk.tsx');
     expect(hrDesk).toContain("from '../../../components/aurora-max/AuroraMaxPrimitives'");

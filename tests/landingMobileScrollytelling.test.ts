@@ -27,8 +27,8 @@ describe('landing mobile scrollytelling contract', () => {
 
   it('keeps login and signup visible as matched mobile navbar actions', () => {
     expect(landingSource).toContain('grid shrink-0 grid-cols-2 items-center');
-    expect(landingSource).toContain('h-8 border border-zinc-700 bg-black');
-    expect(landingSource).toContain('h-8 border border-white bg-white');
+    expect(landingSource).toContain('h-8 border border-white/20 bg-black');
+    expect(landingSource).toContain('h-8 border-2 border-cyan-400 bg-cyan-400');
     expect(landingSource).toContain('LOG IN');
     expect(landingSource).toContain('SIGN UP');
   });

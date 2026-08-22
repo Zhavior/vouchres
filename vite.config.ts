@@ -1,5 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -137,50 +137,82 @@ export default defineConfig(({ mode }) => {
       // Keep a machine-readable asset graph for production budget checks.
       manifest: 'vite-manifest.json',
       chunkSizeWarningLimit: 600,
-      rollupOptions: {
+      rolldownOptions: {
+        preserveEntrySignatures: 'allow-extension',
         output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return;
-
-            const isPkg = (pkg: string) =>
-              id.includes(`/node_modules/${pkg}/`) ||
-              id.includes(`\\node_modules\\${pkg}\\`);
-
-            // State + query cache — before react check (@tanstack/react-query contains "/react/")
-            if (
-              id.includes('@tanstack/react-query') ||
-              isPkg('zustand') ||
-              isPkg('zod')
-            ) {
-              return 'vendor-state';
-            }
-
-            // Core React runtime — exact package paths only
-            if (isPkg('react') || isPkg('react-dom') || isPkg('scheduler')) {
-              return 'vendor-react';
-            }
-
-            if (id.includes('@supabase/')) return 'vendor-supabase';
-
-            if (
-              id.includes('/recharts/') ||
-              id.includes('/d3-') ||
-              id.includes('victory-')
-            ) {
-              return 'vendor-charts';
-            }
-
-            if (isPkg('framer-motion') || isPkg('motion')) {
-              return 'vendor-motion';
-            }
-
-            if (id.includes('stripe')) return 'vendor-stripe';
-
-            if (id.includes('cytoscape') || id.includes('mermaid')) {
-              return 'vendor-graph';
-            }
-
-            if (id.includes('@tanstack/react-virtual')) return 'vendor-virtual';
+          strictExecutionOrder: true,
+          codeSplitting: {
+            groups: [
+              {
+                name: 'vendor-state',
+                test: /node_modules[\\/](?:@tanstack[\\/]react-query|zustand|zod)[\\/]/,
+              },
+              {
+                name: 'vendor-react',
+                test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/,
+              },
+              {
+                name: 'vendor-supabase',
+                test: /node_modules[\\/]@supabase[\\/]/,
+              },
+              {
+                name: 'vendor-three-fiber',
+                test: /node_modules[\\/]@react-three[\\/]fiber[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-three-drei',
+                test: /node_modules[\\/]@react-three[\\/]drei[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-three-core',
+                test: /node_modules[\\/]three[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-three-stdlib',
+                test: /node_modules[\\/]three-stdlib[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-recharts',
+                test: /node_modules[\\/]recharts[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-d3',
+                test: /node_modules[\\/]d3-[^\\/]+[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-victory',
+                test: /node_modules[\\/]victory(?:-[^\\/]+)?[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-motion',
+                test: /node_modules[\\/](?:framer-motion|motion)[\\/]/,
+              },
+              {
+                name: 'vendor-stripe',
+                test: /node_modules[\\/]@?stripe[\\/]/,
+              },
+              {
+                name: 'vendor-cytoscape',
+                test: /node_modules[\\/]cytoscape[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-mermaid',
+                test: /node_modules[\\/]mermaid[\\/]/,
+                includeDependenciesRecursively: false,
+              },
+              {
+                name: 'vendor-virtual',
+                test: /node_modules[\\/]@tanstack[\\/]react-virtual[\\/]/,
+              },
+            ],
           },
         },
       },

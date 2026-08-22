@@ -39,7 +39,7 @@ describe("openapi routes", () => {
     expect(body.paths["/api/health/backend"]).toBeTruthy();
     expect(body.paths["/api/mlb/live"]).toBeTruthy();
     expect(body.paths["/api/mlb/hr-board/today"]).toBeTruthy();
-    expect(body.paths["/api/parlays/save"]).toBeTruthy();
+    expect(body.paths["/api/v3/parlays/save"]).toBeTruthy();
     expect(body.paths["/api/cron/parlays/grade-due"]).toBeTruthy();
     expect(body.paths["/api/notifications"]).toBeTruthy();
     expect(body.paths["/api/mlb/matchups/today"]).toBeTruthy();
@@ -53,7 +53,7 @@ describe("openapi routes", () => {
     expect(body.paths["/api/notifications/unread-count"]).toBeTruthy();
     expect(body.paths["/api/cron/parlays/integrity"]).toBeTruthy();
     expect(body.paths["/api/billing/status"]).toBeTruthy();
-    expect(body.paths["/api/parlays/grade-due"]).toBeTruthy();
+    expect(body.paths["/api/v3/grading/grade-due"]).toBeTruthy();
     expect(Object.keys(body.paths).length).toBeGreaterThanOrEqual(29);
   });
 });

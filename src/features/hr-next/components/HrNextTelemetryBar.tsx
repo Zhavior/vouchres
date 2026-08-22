@@ -52,7 +52,9 @@ export const HrNextTelemetryBar = React.memo(function HrNextTelemetryBar({
 
   const weatherValue = weather.hasFeed ? `${weather.boostedRows}` : 'N/A';
   const weatherDetail = !weather.hasFeed
-    ? 'NO WEATHER FEED'
+    ? weather.topParkIndex != null
+      ? `NO WEATHER · PARK ${Math.round(weather.topParkIndex)} AVAILABLE`
+      : 'NO WEATHER FEED'
     : weather.topParkIndex != null
       ? `PEAK PARK ${Math.round(weather.topParkIndex)}${weather.topParkVenue ? ` · ${weather.topParkVenue}` : ''}`
       : `MEAN INDEX ${weather.averageWeatherIndex}`;
@@ -90,4 +92,3 @@ export const HrNextTelemetryBar = React.memo(function HrNextTelemetryBar({
     </div>
   );
 });
-

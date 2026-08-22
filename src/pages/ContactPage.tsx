@@ -4,6 +4,7 @@ import { Send, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { FooterSection } from '../components/landing-v3';
 import PublicNav from '../components/landing-v3/PublicNav';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
+import { apiClient } from '../lib/apiClient';
 
 const SUBJECT_OPTIONS = [
   { value: '', label: 'Select Subject...' },
@@ -27,22 +28,11 @@ export default function ContactPage() {
     setErrorMessage('');
     
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          subject: subject || 'General Inquiry',
-          message,
-        }),
+      await apiClient.post('/api/contact', {
+        email,
+        subject: subject || 'General Inquiry',
+        message,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || 'Failed to transmit message.');
-      }
 
       setStatus('success');
     } catch (err: any) {

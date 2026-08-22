@@ -50,6 +50,51 @@ export interface TouchdownPlayer {
   reasons?: string[];
   warnings?: string[];
   historicalTrend?: number[];   // last 5 games TD counts
+  provenance?: {
+    source: string;
+    sourceUpdatedAt: string;
+    ingestedAt: string;
+    fields: Record<string, string>;
+  };
+}
+
+export type TdBoardConnectionState =
+  | 'live'
+  | 'refreshing'
+  | 'partial'
+  | 'stale'
+  | 'unavailable'
+  | 'not_configured';
+
+export interface TdBoardV2Response {
+  success: boolean;
+  version: '2.0';
+  connection: TdBoardConnectionState;
+  dataQuality: 'source_backed' | 'partial' | 'unavailable';
+  source: string;
+  sourceUpdatedAt: string | null;
+  generatedAt: string;
+  ingestedAt: string;
+  players: TouchdownPlayer[];
+  games: NflTickerGame[];
+  warnings: string[];
+  coverage: {
+    candidateCount: number;
+    sourcedFieldPercent: number;
+    missingCapabilities: string[];
+  };
+  servedFromLastGood?: boolean;
+  staleAgeMs?: number;
+  pageInfo: {
+    limit: number;
+    returned: number;
+    total: number;
+    nextCursor: string | null;
+  };
+  diagnostics: {
+    cache: 'l1' | 'l2' | 'miss' | 'last_good' | 'none';
+    durationMs: number;
+  };
 }
 
 export interface NflTickerGame {
@@ -60,15 +105,15 @@ export interface NflTickerGame {
   status: GameStatus;
   period?: number;
   clock?: string;
-  spread: string;               // e.g. "BAL -3.5"
-  overUnder: number;            // e.g. 47.5
+  spread: string | null;        // null when the odds feed is not licensed
+  overUnder: number | null;     // null when the odds feed is not licensed
   homeTeam: {
     id: string;
     name: string;
     abbreviation: string;
     color: string;
     logo: string;
-    score: number;
+    score: number | null;
     hasPossession?: boolean;
   };
   awayTeam: {
@@ -77,7 +122,7 @@ export interface NflTickerGame {
     abbreviation: string;
     color: string;
     logo: string;
-    score: number;
+    score: number | null;
     hasPossession?: boolean;
   };
   isRedZoneActive?: boolean;

@@ -22,12 +22,9 @@ describe("Parlay OS section consolidation", () => {
     expect(isParlayOsSection("today")).toBe(false);
   });
 
-  it("opens each door on its own tab", () => {
+  it("opens My List on the replacement workspace and Results on its ledger", () => {
     expect(parlayOsPanelForSection("build")).toBe("build");
-    // Regression: live_parlays used to render panel="build", so the History
-    // destination landed the user in the slip builder.
-    expect(parlayOsPanelForSection("live_parlays")).toBe("live");
-    // Regression: results rendered a second, prop-starved ResultsStudio.
+    expect(parlayOsPanelForSection("live_parlays")).toBe("build");
     expect(parlayOsPanelForSection("results")).toBe("vai_ledger");
   });
 
