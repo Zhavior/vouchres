@@ -2,7 +2,6 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import http from "http";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { registerApiRoutes } from "../routes";
 import { corsMiddleware, helmetMiddleware } from "../middleware/cors";
 import { apiErrorHandler } from "../middleware/errorHandler";
@@ -59,6 +58,9 @@ export async function createApiApp(httpServer?: http.Server) {
 
   // Dev server static middleware
   if (process.env.NODE_ENV !== "production") {
+    // Vite is ESM-only. Keep it out of the CommonJS production server bundle;
+    // loading it statically makes Vercel fail before Express can boot.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
@@ -91,7 +93,8 @@ export async function createApiApp(httpServer?: http.Server) {
       }),
     );
 
-    app.get("*", (req, res) => {
+    // Express 5/path-to-regexp no longer accepts the legacy "*" route.
+    app.get(/.*/, (req, res) => {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       res.sendFile(path.join(distPath, "index.html"));
     });
