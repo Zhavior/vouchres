@@ -1,17 +1,15 @@
-import { createRequire } from "node:module";
-import path from "node:path";
-
-const require = createRequire(path.join(process.cwd(), "package.json"));
-
 export interface OpenTimestampStampResult {
   proofBase64: string;
   stampedAt: string;
   calendars: string[];
 }
 
-function loadOpenTimestamps(): any {
-  return require("opentimestamps");
-}
+const CALENDAR_URLS = [
+  "https://alice.btc.calendar.opentimestamps.org",
+  "https://bob.btc.calendar.opentimestamps.org",
+  "https://finney.calendar.eternitywall.com",
+  "https://btc.calendar.catallaxy.com",
+];
 
 export async function stampSha256ProofHash(proofHashHex: string): Promise<OpenTimestampStampResult | null> {
   const normalized = String(proofHashHex ?? "").trim().toLowerCase();
@@ -20,20 +18,26 @@ export async function stampSha256ProofHash(proofHashHex: string): Promise<OpenTi
   }
 
   try {
-    const OpenTimestamps = loadOpenTimestamps();
-    const hash = Buffer.from(normalized, "hex");
-    const detached = OpenTimestamps.DetachedTimestampFile.fromHash(new OpenTimestamps.Ops.OpSHA256(), hash);
-    await OpenTimestamps.stamp(detached);
-    const bytes: Uint8Array = detached.serializeToBytes();
+    // The published package's CommonJS wrapper is empty. A native dynamic
+    // import selects its working ESM export and keeps OTS off the boot path.
+    const { submit, write } = await import("@vitrified/typescript-opentimestamps");
+    const hash = Uint8Array.from(Buffer.from(normalized, "hex"));
+    const { timestamp, errors } = await submit("sha256", hash);
+    if (errors.length >= CALENDAR_URLS.length) {
+      console.warn("[openTimestampService] all calendars rejected stamp", errors.map((error) => error.message));
+      return null;
+    }
+
+    const failedCalendars = new Set(
+      CALENDAR_URLS.filter((calendar) =>
+        errors.some((error) => error.message.includes(calendar)),
+      ),
+    );
+    const bytes = write(timestamp);
     return {
       proofBase64: Buffer.from(bytes).toString("base64"),
       stampedAt: new Date().toISOString(),
-      calendars: [
-        "https://a.pool.opentimestamps.org",
-        "https://b.pool.opentimestamps.org",
-        "https://a.pool.eternitywall.com",
-        "https://ots.btc.catallaxy.com",
-      ],
+      calendars: CALENDAR_URLS.filter((calendar) => !failedCalendars.has(calendar)),
     };
   } catch (error) {
     console.warn("[openTimestampService] stamp failed", (error as Error)?.message ?? error);

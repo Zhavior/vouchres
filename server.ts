@@ -7,6 +7,7 @@ import { validateProductionEnvAtBoot } from "./server/platform/config";
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
 import { warmPlayerRegistryInBackground } from "./server/services/mlb/playerRegistryService";
+import { warmDailyReportCacheInBackground } from "./server/services/intelligence/mlbIntelligenceEngine";
 
 // Local/dev: load .env then .env.local (local wins).
 if (process.env.VERCEL !== "1") {
@@ -100,6 +101,7 @@ async function startServer() {
 
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Express custom server running on http://localhost:${PORT}`);
+    warmDailyReportCacheInBackground();
   });
 }
 

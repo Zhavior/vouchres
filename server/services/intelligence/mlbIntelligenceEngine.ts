@@ -152,6 +152,20 @@ export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbR
   }, TTL.dailyReport) as Promise<DailyMlbReport>;
 }
 
+/**
+ * Starts the expensive current-day build before the first browser asks for it.
+ * This is deliberately fire-and-forget: API boot and health checks must remain
+ * available even when an upstream MLB source is slow or unavailable.
+ */
+export function warmDailyReportCacheInBackground(date = todayISO()): void {
+  void getSharedDailyReport(date).catch((error) => {
+    console.warn(
+      `[sharedReport] background warm failed date=${date}`,
+      (error as Error)?.message,
+    );
+  });
+}
+
 export function clearDailyReportCache(date?: string): void {
   if (date) {
     reportCache.delete(`dailyReport:${date}`);

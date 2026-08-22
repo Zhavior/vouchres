@@ -3,10 +3,6 @@ import React, { Suspense, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import { TodayNextSkeleton } from '../../features/today-next/components/TodayNextSkeleton';
 import FadeInMount from '../system/FadeInMount';
-import HrAuroraMaxPage from '../../features/hr-max/pages/HrAuroraMaxPage';
-import AuroraHqPage from '../../features/aurora-hr-hq/pages/AuroraHqPage';
-import { HrIntelligencePageV10 } from '../../features/hr-v2/pages/HrIntelligencePageV10';
-import HomeRunIntelligencePageLegacy from '../../features/hr/pages/HomeRunIntelligencePageLegacy';
 import {
   useAppShell,
   useAppPosts,
@@ -114,6 +110,24 @@ const TrustModelQualityPage = lazyPage(
 const TodayNextPage = lazyWithRetry(
   () => import('../../features/today-next/pages/TodayNextPage'),
   { label: 'TodayNextPage', pendingFallback: <TodayNextSkeleton /> },
+);
+const HomeRunIntelligencePageLegacy = lazyPage(
+  () => import('../../features/hr/pages/HomeRunIntelligencePageLegacy'),
+  'HomeRunIntelligencePageLegacy',
+);
+const HrAuroraMaxPage = lazyPage(
+  () => import('../../features/hr-max/pages/HrAuroraMaxPage'),
+  'HrAuroraMaxPage',
+);
+const HrIntelligencePageV10 = lazyPage(
+  () => import('../../features/hr-v2/pages/HrIntelligencePageV10').then((module) => ({
+    default: module.HrIntelligencePageV10,
+  })),
+  'HrIntelligencePageV10',
+);
+const AuroraHqPage = lazyPage(
+  () => import('../../features/aurora-hr-hq/pages/AuroraHqPage'),
+  'AuroraHqPage',
 );
 // Module scope on purpose. Building this inside AdminAccessGateShell creates a
 // new lazy component type every render, so React remounts and re-suspends the

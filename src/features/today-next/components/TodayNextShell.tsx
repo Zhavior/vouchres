@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -12,8 +12,8 @@ import {
   Radio,
   Timer,
 } from 'lucide-react';
-import TodayFieldDesk from '../../../components/today/TodayFieldDesk';
 import { openParlayAdd } from '../../../lib/parlays/parlayAddContract';
+import { lazyWithRetry } from '../../../lib/lazyWithRetry';
 import { toHrParlayPickerPlayer } from '../../hr/utils/hrDecisionBrief';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import { useAppSavedSlips } from '../../../context/AppShellContext';
@@ -32,6 +32,48 @@ import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore'
 
 interface TodayNextShellProps {
   navigateSection?: (section: string) => void;
+}
+
+const TodayFieldDesk = lazyWithRetry(
+  () => import('../../../components/today/TodayFieldDesk'),
+  { label: 'TodayFieldDesk' },
+);
+
+function DeferredTodayFieldDesk(props: ComponentProps<typeof TodayFieldDesk>) {
+  const markerRef = useRef<HTMLDivElement>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker || typeof IntersectionObserver === 'undefined') {
+      setShouldRender(true);
+      return;
+    }
+
+    const scrollRoot = marker.closest<HTMLElement>('.ve-scroll-pane');
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldRender(true);
+        observer.disconnect();
+      },
+      { root: scrollRoot, rootMargin: '120px 0px' },
+    );
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={markerRef} className="tn-desk" style={{ minHeight: 360 }}>
+      {shouldRender ? (
+        <Suspense fallback={<div aria-hidden="true" className="h-[360px] animate-pulse border border-white/[0.08] bg-white/[0.02]" />}>
+          <TodayFieldDesk {...props} />
+        </Suspense>
+      ) : (
+        <div aria-hidden="true" className="h-[360px] animate-pulse border border-white/[0.08] bg-white/[0.02]" />
+      )}
+    </div>
+  );
 }
 
 /** Number-key shortcuts, mirroring the Launchpad tiles in order. */
@@ -292,18 +334,16 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
             <TodayNextAttention decision={decision} onRoute={handleRoute} />
 
             {/* 4. PRIMARY RESEARCH COMMAND DESK (SPOTLIGHT DOSSIER & DAILY SLATE QUEUE) */}
-            <div className="tn-desk">
-              <TodayFieldDesk
-                rows={deskRows}
-                confirmedRows={deskConfirmedRows}
-                freshnessLabel={freshness}
-                state={deskState}
-                gameCount={gameCount}
-                liveGames={liveGames.length}
-                onAddPlayer={addPlayerToSlip}
-                onResearch={() => handleRoute('hr_board')}
-              />
-            </div>
+            <DeferredTodayFieldDesk
+              rows={deskRows}
+              confirmedRows={deskConfirmedRows}
+              freshnessLabel={freshness}
+              state={deskState}
+              gameCount={gameCount}
+              liveGames={liveGames.length}
+              onAddPlayer={addPlayerToSlip}
+              onResearch={() => handleRoute('hr_board')}
+            />
 
             {/* 5. SIGNAL QUICK TABLE & OPEN DECISION SLIP */}
             <div className="grid gap-6 lg:grid-cols-12 items-start">

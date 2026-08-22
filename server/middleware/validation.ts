@@ -25,7 +25,16 @@ export function validate(schemas: {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       if (schemas.body) req.body = schemas.body.parse(req.body);
-      if (schemas.query) req.query = schemas.query.parse(req.query) as any;
+      if (schemas.query) {
+        const query = schemas.query.parse(req.query);
+        // Express 5 exposes req.query through a prototype getter. Define the
+        // validated value on this request so downstream handlers receive it.
+        Object.defineProperty(req, "query", {
+          value: query,
+          configurable: true,
+          enumerable: true,
+        });
+      }
       if (schemas.params) req.params = schemas.params.parse(req.params) as any;
       next();
     } catch (err) {
