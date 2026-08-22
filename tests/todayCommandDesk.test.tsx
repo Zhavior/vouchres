@@ -256,9 +256,9 @@ describe('Today Command Desk Specifications', () => {
       expect(shimmerBlocks.length).toBeGreaterThan(10);
     });
 
-    it('mounts data-performance-page="today" on TodayNextPage so Core Web Vitals are tracked', async () => {
+    it('mounts the progressive Today replacement so Core Web Vitals are tracked', async () => {
       const { isTodayPerformancePage } = await import('../src/lib/todayWebVitals');
-      const { TodayNextPage } = await import('../src/features/today-next/pages/TodayNextPage');
+      const { TodayCommandPage } = await import('../src/features/today-next/pages/TodayCommandPage');
       const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
 
       const queryClient = new QueryClient({
@@ -268,10 +268,11 @@ describe('Today Command Desk Specifications', () => {
       expect(isTodayPerformancePage()).toBe(false);
       const { unmount } = render(
         <QueryClientProvider client={queryClient}>
-          <TodayNextPage />
+          <TodayCommandPage />
         </QueryClientProvider>,
       );
       expect(isTodayPerformancePage()).toBe(true);
+      expect(document.querySelector('[data-today-architecture="progressive-v2"]')).not.toBeNull();
       unmount();
       expect(isTodayPerformancePage()).toBe(false);
     });

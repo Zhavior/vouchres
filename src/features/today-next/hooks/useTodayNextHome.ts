@@ -128,6 +128,22 @@ function useTicker(active: boolean): { now: number; isMounted: boolean } {
   return { now, isMounted: mounted };
 }
 
+function useSourceDeadline(active: boolean, timeoutMs: number): boolean {
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setExpired(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setExpired(true), timeoutMs);
+    return () => window.clearTimeout(timeout);
+  }, [active, timeoutMs]);
+
+  return active && expired;
+}
+
 export function useTodayNextHome(savedSlips: readonly Parlay[]) {
   const reportQuery = useDailyReport();
   const hrBoardQuery = useDailyHrBoard(todayISO());
@@ -255,8 +271,10 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     if (sources.length === 0) sources.push('No source responded');
 
     const gaps: string[] = [];
-    if (!report) gaps.push('The daily report did not load.');
-    if (!hrBoard) gaps.push('The HR board did not load.');
+    if (!report && !reportQuery.isLoading) gaps.push('The daily report did not load.');
+    if (!hrBoard && !hrBoardQuery.loading) gaps.push('The HR board did not load.');
+    if (!report && reportQuery.isLoading) gaps.push('The daily report is still syncing.');
+    if (!hrBoard && hrBoardQuery.loading) gaps.push('Player evidence is still syncing.');
     if (report?.dataQuality === 'partial') gaps.push('Report flags partial input coverage.');
     if (report?.dataQuality === 'limited') gaps.push('Report flags limited input coverage.');
     if (hrBoard && vitals.confirmed === 0) gaps.push('No confirmed lineup has been published yet.');
@@ -266,7 +284,7 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
       sources,
       missing: gaps.length > 0 ? gaps.join(' ') : 'No material source gaps.',
     };
-  }, [hrBoard, hrBoardQuery.lastUpdated, report, vitals.confirmed]);
+  }, [hrBoard, hrBoardQuery.lastUpdated, hrBoardQuery.loading, report, reportQuery.isLoading, vitals.confirmed]);
 
   const unionRows = useMemo<HrWatchRow[]>(() => {
     if (!hrBoard) return [];
@@ -278,11 +296,21 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
   }, [hrBoard]);
 
   const refresh = () => {
-    void Promise.all([reportQuery.refetch(), hrBoardQuery.refresh()]);
+    // The sources are independent. One failed refresh must not cancel or hide
+    // the other source's last-good result.
+    void Promise.allSettled([reportQuery.refetch(), hrBoardQuery.refresh()]);
   };
 
-  const isLoading = reportQuery.isLoading || hrBoardQuery.loading;
-  const isDegraded = reportQuery.isError || Boolean(hrBoardQuery.error) || report?.dataQuality === 'limited';
+  const reportLoading = reportQuery.isLoading && !report;
+  const hrBoardLoading = hrBoardQuery.loading && !hrBoard;
+  const reportDelayed = useSourceDeadline(reportLoading, 4_500);
+  const hrBoardDelayed = useSourceDeadline(hrBoardLoading, 8_000);
+  const isLoading = reportLoading && hrBoardLoading;
+  const isDegraded = reportQuery.isError
+    || Boolean(hrBoardQuery.error)
+    || reportDelayed
+    || hrBoardDelayed
+    || report?.dataQuality === 'limited';
 
   const deskState: TodayFieldState = isLoading
     ? 'loading'
@@ -313,7 +341,13 @@ export function useTodayNextHome(savedSlips: readonly Parlay[]) {
     reportDateLabel: formatReportDate(report?.date),
     freshness: receipt.updated,
     isLoading,
-    isRefreshing: (reportQuery.isFetching || hrBoardQuery.syncing) && !isLoading,
+    reportLoading,
+    hrBoardLoading,
+    reportDelayed,
+    hrBoardDelayed,
+    isRefreshing:
+      (reportQuery.isFetching && !reportLoading)
+      || (hrBoardQuery.syncing && !hrBoardLoading),
     error: reportQuery.isError ? (reportQuery.error ?? new Error('Daily report unavailable')) : null,
     isDegraded,
     refresh,

@@ -107,9 +107,9 @@ const TrustModelQualityPage = lazyPage(
   'TrustModelQualityPage',
 );
 
-const TodayNextPage = lazyWithRetry(
-  () => import('../../features/today-next/pages/TodayNextPage'),
-  { label: 'TodayNextPage', pendingFallback: <TodayNextSkeleton /> },
+const TodayCommandPage = lazyWithRetry(
+  () => import('../../features/today-next/pages/TodayCommandPage'),
+  { label: 'TodayCommandPage', pendingFallback: <TodayNextSkeleton /> },
 );
 const HomeRunIntelligencePageLegacy = lazyPage(
   () => import('../../features/hr/pages/HomeRunIntelligencePageLegacy'),
@@ -266,7 +266,7 @@ function MainViewRouter({
     case 'today':
       return (
         <LazyRoute fallback={<TodayNextSkeleton />}>
-          <TodayNextPage navigateSection={navigateSection} />
+          <TodayCommandPage navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'news':
@@ -570,7 +570,7 @@ function MainViewRouter({
       return (
         <LazyRoute fallback={<TodayNextSkeleton />}>
           <AdminAccessGateShell>
-            <TodayNextPage navigateSection={navigateSection} />
+            <TodayCommandPage navigateSection={navigateSection} />
           </AdminAccessGateShell>
         </LazyRoute>
       );

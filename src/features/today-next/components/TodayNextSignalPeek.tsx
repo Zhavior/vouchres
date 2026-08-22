@@ -33,6 +33,9 @@ import type { TodayNextSignalPreview } from '../hooks/useTodayNextHome';
 interface TodayNextSignalPeekProps {
   signals: TodayNextSignalPreview[];
   totalRows: number | null;
+  isLoading?: boolean;
+  isDelayed?: boolean;
+  onRetry?: () => void;
   onRoute: (section: string) => void;
   onAddPlayer?: (row: HrWatchRow) => void;
   rawRows?: readonly HrWatchRow[];
@@ -45,6 +48,9 @@ interface TodayNextSignalPeekProps {
 export function TodayNextSignalPeek({
   signals,
   totalRows,
+  isLoading = false,
+  isDelayed = false,
+  onRetry,
   onRoute,
   onAddPlayer,
   rawRows = [],
@@ -78,7 +84,37 @@ export function TodayNextSignalPeek({
         </button>
       </div>
 
-      {signals.length === 0 ? (
+      {isDelayed ? (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] p-5 text-center">
+          <ShieldAlert className="mx-auto h-5 w-5 text-amber-300" aria-hidden="true" />
+          <p className="mt-2 text-xs font-medium uppercase text-amber-200">Player evidence is delayed</p>
+          <p className="mt-1 text-[10px] leading-4 text-zinc-400">
+            The rest of Today remains available. No player rows are estimated while the validated board is pending.
+          </p>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-3 min-h-9 rounded-lg border border-amber-400/30 px-3 text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-400/10"
+            >
+              Retry evidence
+            </button>
+          ) : null}
+        </div>
+      ) : isLoading ? (
+        <div className="space-y-2" aria-live="polite" aria-label="Research rows are loading">
+          {[0, 1, 2].map((row) => (
+            <div
+              key={row}
+              aria-hidden="true"
+              className="h-[58px] animate-pulse rounded-lg border border-white/[0.06] bg-white/[0.025]"
+            />
+          ))}
+          <p className="text-center text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+            Verifying player pool in the background
+          </p>
+        </div>
+      ) : signals.length === 0 ? (
         <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-6 text-center rounded-lg">
           <p className="text-xs font-medium text-zinc-400 uppercase">NO RESEARCH ROWS PUBLISHED</p>
           <p className="mt-1 text-[10px] text-zinc-500 font-sans">The HR board has not returned an active player pool yet.</p>

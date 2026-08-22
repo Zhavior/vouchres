@@ -25,7 +25,6 @@ import { TodayNextLaunchpad } from './TodayNextLaunchpad';
 import { TodayNextSignalPeek, TodayNextNewsWire } from './TodayNextSignalPeek';
 import { TodayNextVitalsRail } from './TodayNextVitalsRail';
 import { TodayNextKeyboardCheatsheet } from './TodayNextKeyboardCheatsheet';
-import { TodayNextSkeleton } from './TodayNextSkeleton';
 import { TodayMobileShell } from './mobile/TodayMobileShell';
 import '../today-next.css';
 import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
@@ -98,7 +97,10 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
     receipt,
     reportDateLabel,
     freshness,
-    isLoading,
+    reportLoading,
+    hrBoardLoading,
+    reportDelayed,
+    hrBoardDelayed,
     isRefreshing,
     error,
     isDegraded,
@@ -137,6 +139,8 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
 
   const is3DLayerEnabled = useAmbient3dEnabled();
   const toggle3DLayer = useAmbient3dStore((state) => state.toggle);
+  const sourceDelayed = reportDelayed || hrBoardDelayed;
+  const sourceSyncing = (reportLoading || hrBoardLoading) && !sourceDelayed;
 
   const handleRoute = useCallback(
     (section: string) => {
@@ -181,31 +185,6 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [decision.ctaSection, handleRoute, refresh]);
-
-  if (isLoading) return <TodayNextSkeleton />;
-
-  if (error) {
-    return (
-      <div className="today-next relative z-10 flex min-h-screen min-w-0 flex-1 items-center justify-center px-4">
-        <div className="max-w-md space-y-3 border-2 border-rose-500/50 bg-[#131B1E] p-6 text-center font-mono shadow-2xl">
-          <AlertTriangle className="mx-auto h-6 w-6 text-rose-400" />
-          <p className="text-sm font-bold text-white uppercase tracking-wider">DAILY BRIEF TELEMETRY UNAVAILABLE</p>
-          <p className="text-xs leading-5 text-zinc-400">
-            The daily report did not load, so today's command desk cannot be built. Nothing has been estimated in its
-            place.
-          </p>
-          <p className="text-[10px] text-zinc-500">{String((error as Error)?.message ?? error)}</p>
-          <button
-            type="button"
-            onClick={refresh}
-            className="mx-auto flex min-h-[44px] items-center gap-1.5 border border-[#00FF87] bg-[#00FF87] text-[#0A0D0E] px-4 py-2 text-xs font-black uppercase tracking-wider hover:bg-emerald-300 transition-colors cursor-pointer shadow-[2px_2px_0px_0px_#00FF87]"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> RETRY SENSOR SYNC
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="today-next relative z-10 min-h-screen min-w-0 flex-1 overscroll-none text-white font-mono">
@@ -261,13 +240,23 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                 {/* Sensors Verified Pill */}
                 <span
                   className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-[9px] font-mono font-medium uppercase tracking-wider rounded-md ${
-                    isDegraded
+                    sourceDelayed
+                      ? 'border-amber-500/25 bg-amber-500/10 text-amber-300'
+                      : sourceSyncing
+                      ? 'border-sky-500/25 bg-sky-500/10 text-sky-300'
+                      : isDegraded
                       ? 'border-amber-500/25 bg-amber-500/10 text-amber-300'
                       : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400'
                   }`}
                 >
                   <ShieldCheck className="h-3 w-3" />
-                  {isDegraded ? 'DEGRADED SENSORS' : 'SENSORS VERIFIED'}
+                  {sourceDelayed
+                    ? 'SHELL READY · SOURCE DELAYED'
+                    : sourceSyncing
+                      ? 'SHELL READY · SYNCING'
+                      : isDegraded
+                        ? 'DEGRADED SENSORS'
+                        : 'SENSORS VERIFIED'}
                 </span>
 
                 {/* Quick Sync [R] */}
@@ -315,6 +304,48 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
             {/* 0. SUMMARY VITALS RAIL (APPLE PRO OBSIDIAN CARDS) */}
             <TodayNextVitalsRail vitals={vitals} />
 
+            {(reportLoading || hrBoardLoading || error) && (
+              <section
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                  error || sourceDelayed
+                    ? 'border-amber-500/25 bg-amber-500/10'
+                    : 'border-sky-500/20 bg-sky-500/[0.06]'
+                }`}
+                aria-live="polite"
+              >
+                <div className="flex min-w-0 items-start gap-2">
+                  {error || sourceDelayed ? (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                  ) : (
+                    <Radio className="mt-0.5 h-4 w-4 shrink-0 animate-pulse text-sky-300" />
+                  )}
+                  <div className="min-w-0 break-words">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-white">
+                      {error
+                        ? 'Daily report unavailable · workspace remains open'
+                        : sourceDelayed
+                          ? 'Source delayed · workspace remains open'
+                          : 'Background source sync'}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-4 text-zinc-400">
+                      {error
+                        ? 'Live tools and saved work are still available. Retry the report without reloading this page.'
+                        : `${reportDelayed ? 'Daily slate delayed' : reportLoading ? 'Daily slate syncing' : 'Daily slate ready'} · ${hrBoardDelayed ? 'player evidence delayed' : hrBoardLoading ? 'player evidence syncing' : 'player evidence ready'}`}
+                    </p>
+                  </div>
+                </div>
+                {(error || sourceDelayed) && (
+                  <button
+                    type="button"
+                    onClick={refresh}
+                    className="min-h-9 shrink-0 rounded-lg border border-amber-400/30 px-3 text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-400/10"
+                  >
+                    Retry sources
+                  </button>
+                )}
+              </section>
+            )}
+
             {/* 1. HERO INTEL CALLOUT */}
             <TodayNextCommandBrief
               decision={decision}
@@ -352,6 +383,9 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                 <TodayNextSignalPeek
                   signals={topSignals}
                   totalRows={vitals.hrSignals}
+                  isLoading={hrBoardLoading}
+                  isDelayed={hrBoardDelayed}
+                  onRetry={refresh}
                   onRoute={handleRoute}
                   onAddPlayer={addPlayerToSlip}
                   rawRows={deskRows}
