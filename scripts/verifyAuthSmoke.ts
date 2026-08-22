@@ -19,9 +19,10 @@ function includesAll(source: string, snippets: string[], label: string): void {
 
 const auth = read("server/middleware/auth.ts");
 const ownership = read("server/middleware/ownership.ts");
-const parlayUserRoutes = read("server/routes/parlay/parlayUserRoutes.ts");
 const parlaySupportRoutes = read("server/routes/parlay/mountParlaySupportRoutes.ts");
-const parlayRoutes = `${parlayUserRoutes}\n${parlaySupportRoutes}`;
+const v3ParlayRoutes = read("server/v3/modules/parlays/routes.ts");
+const v3ParlayHandlers = read("server/v3/modules/parlays/handlers.ts");
+const userParlayService = read("server/services/parlays/userParlayService.ts");
 const parlayController = read("server/controllers/parlayController.ts");
 const results = read("server/routes/resultRoutes.ts");
 const notifications = read("server/routes/notificationRoutes.ts");
@@ -111,17 +112,35 @@ includesAll(ownership, [
   "[ownership] rejected cross-user access",
 ], "ownership helper");
 
-includesAll(parlayRoutes, [
+includesAll(v3ParlayRoutes, [
   '"/parlays/save"',
   "requireAuth",
+  "requireLegalConfirmed",
   '"/me/parlays"',
   '"/parlays/:id"',
-  "listMyParlaysHandler",
-  "saveMeParlayHandler",
+  "sendV3ParlayListResponse",
+  "sendV3ParlayDetailResponse",
+  "sendV3ParlaySaveResponse",
+], "V3 parlay route ownership");
+
+includesAll(v3ParlayHandlers, [
+  "assertOwnedParlay(userId, req.params.id)",
+  "const userId = req.user?.id;",
+  "buildV3ParlayListPayload",
+  "buildV3ParlaySavePayload",
+], "V3 parlay handler ownership");
+
+includesAll(userParlayService, [
+  "findUserParlayById(input.userId, input.parlayId)",
+  "listVisibleUserParlayRows(input)",
+], "V3 parlay service ownership");
+
+includesAll(parlaySupportRoutes, [
+  '"/parlays/:id"',
+  "requireAuth",
   "updateParlayHandler",
   "hideParlayHandler",
-  ".eq(\"user_id\", req.user!.id)",
-], "parlay route ownership");
+], "parlay support route ownership");
 
 includesAll(parlayController, [
   "assertUserOwnsResource(req.user!.id, \"parlay\", req.params.id)",
