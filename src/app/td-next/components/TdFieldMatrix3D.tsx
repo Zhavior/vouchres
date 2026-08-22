@@ -25,7 +25,7 @@ export function TdFieldMatrix3D({ player }: { player: TouchdownPlayer }) {
       const widthRaw = Math.cos(player.tdpiScore * i * 11.2); 
       
       let distance; // 0 is goal line, 20 is 20-yard line, -10 is back of endzone
-      let isSuccess = Math.sin(i * 3.1) > 0.2; // ~60% success rate visually
+      const isSuccess = Math.sin(i * 3.1) > 0.2; // ~60% success rate visually
       
       if (isPasser) {
         // QBs throw to the endzone
