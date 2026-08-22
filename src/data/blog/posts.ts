@@ -33,7 +33,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 Home run player props have exploded into the most popular wager in modern sports betting. 
 
-They offer electrifying payouts: turning a \$10 bet into \$45 or \$60 on a single swing. But there is an uncomfortable truth that sportsbooks love and "cappers" hide from you:
+They offer electrifying payouts: turning a $10 bet into $45 or $60 on a single swing. But there is an uncomfortable truth that sportsbooks love and "cappers" hide from you:
 
 > **Over 90% of retail bettors lose their bankroll on home run props because they bet on past results rather than underlying physics.**
 
@@ -121,7 +121,7 @@ This is **+32.5% Positive Expected Value (+EV)**. Over a sample of 500 bets, con
 | :--- | :--- | :--- |
 | **Decision Driver** | Gut feeling, hype, Twitter "locks" | Sourced Statcast velocity, weather vectors & HRPI |
 | **Post-Game Accountability** | Deletes tweets, blames umpires | Records decision on immutable SHA-256 ledger |
-| **Bankroll Management** | Bets \$200 on "sure things" | Strict 1-unit kelly criterion allocation |
+| **Bankroll Management** | Bets $200 on "sure things" | Strict 1-unit kelly criterion allocation |
 | **Edge Source** | Box-score recency | Closing Line Value (CLV) & +EV Discrepancies |
 
 ---
