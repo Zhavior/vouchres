@@ -1,30 +1,237 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  Terminal, 
-  ChevronRight, 
-  X, 
-  Copy, 
-  Check, 
-  Share2, 
-  Rss, 
-  Clock, 
-  Sparkles, 
-  Zap, 
-  ShieldCheck, 
-  ArrowUpRight, 
-  BookOpen,
-  Radio,
-  Layers
-} from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'motion/react';
+import { Search, X, Copy, Check, Share2, Rss, ArrowRight, ArrowUpRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FooterSection } from '../components/landing-v3';
-import PublicNav from '../components/landing-v3/PublicNav';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 import { BLOG_POSTS, BlogPost } from '../data/blog/posts';
 import { apiClient } from '../lib/apiClient';
+import Navbar from '../components/landing-v4/Navbar';
+import PublicFooter from '../components/landing-v4/PublicFooter';
+
+/**
+ * /blog — "The Record".
+ *
+ * Positioning inside the public family: LANDING is cinematic intelligence, DEV is
+ * technical editorial engineering, CONTACT is a communications console. This page
+ * is the published archive — an index, not a card wall. Every entry is a numbered
+ * row on a hairline register, titles set in the V4 display face, all metadata in
+ * mono. One accent (ve-emerald) carries the whole page; the previous per-tag
+ * cyan/emerald/amber/purple coding was decoration that encoded nothing the tag
+ * label did not already say, and its amber collided with --ve-warning.
+ */
+
+const META_CLASS = 'font-mono text-[10px] uppercase tracking-[0.24em] text-white/40';
+const RULE = 'border-white/[0.08]';
+
+const FIELD_CLASS =
+  'w-full rounded-none border border-white/10 bg-obsidian-950 px-4 py-3 font-sans text-sm text-white ' +
+  'placeholder-white/25 transition-colors focus:border-ve-emerald focus:outline-none focus:ring-1 focus:ring-ve-emerald ' +
+  'disabled:cursor-not-allowed disabled:opacity-50';
+
+/** Meta separator. Rendered as a hairline dot so the row reads as one line. */
+function Dot({ className = '' }: { className?: string }) {
+  return (
+    <span aria-hidden="true" className={`h-[3px] w-[3px] shrink-0 rounded-full bg-white/20 ${className}`} />
+  );
+}
+
+function PostMeta({ post, className = '' }: { post: BlogPost; className?: string }) {
+  return (
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 ${META_CLASS} ${className}`}>
+      {/* The tag takes the whole first line on narrow viewports so the row never
+          wraps mid-list and strands a separator dot at the end of a line. */}
+      <span className="w-full text-ve-emerald sm:w-auto">{post.tag}</span>
+      <Dot className="hidden sm:block" />
+      <time>{post.date}</time>
+      <Dot />
+      <span>{post.readTime}</span>
+    </div>
+  );
+}
+
+/**
+ * One entry in the register. Used by the archive and by the adjacent-records
+ * block in the reader so both read as the same object.
+ */
+function IndexRow({
+  post,
+  index,
+  onOpen,
+  compact = false,
+}: {
+  post: BlogPost;
+  index: number;
+  onOpen: (post: BlogPost) => void;
+  /**
+   * Stacked variant. The reader column is max-w-3xl, so the wide row's third
+   * column would eat the title's measure and wrap it to six lines; inside a
+   * narrow container the meta belongs under the title at every width.
+   */
+  compact?: boolean;
+}) {
+  return (
+    <li className={`border-b ${RULE}`}>
+      <button
+        type="button"
+        onClick={() => onOpen(post)}
+        className={`group grid w-full grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-3 px-1 py-7 text-left transition-colors hover:bg-white/[0.02] focus-visible:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald sm:gap-x-8 ${
+          compact ? 'sm:py-8' : 'sm:py-9 lg:grid-cols-[auto_1fr_auto]'
+        }`}
+      >
+        <span className={`${META_CLASS} pt-1.5 tabular-nums transition-colors group-hover:text-ve-emerald`}>
+          {String(index + 1).padStart(2, '0')}
+        </span>
+
+        <span className="min-w-0">
+          <span
+            className={`block font-bold italic leading-[1.15] tracking-tighter text-white transition-colors group-hover:text-ve-emerald ${
+              compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+            }`}
+          >
+            {post.title}
+          </span>
+          <span className="mt-3 block max-w-2xl font-sans text-sm font-light leading-relaxed text-white/45 line-clamp-2">
+            {post.excerpt}
+          </span>
+          <PostMeta post={post} className={`mt-4 ${compact ? '' : 'lg:hidden'}`} />
+        </span>
+
+        {!compact && (
+          <span className="col-start-2 hidden items-center gap-6 lg:col-start-3 lg:flex">
+            <PostMeta post={post} className="justify-end" />
+            <ArrowUpRight
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ve-emerald"
+            />
+          </span>
+        )}
+      </button>
+    </li>
+  );
+}
+
+/** Shared subscribe block. Same field language as /contact's transmission form. */
+function SubscribeBlock({
+  email,
+  status,
+  error,
+  onEmailChange,
+  onSubmit,
+  id,
+  stacked = false,
+}: {
+  email: string;
+  status: 'idle' | 'submitting' | 'success';
+  error: string;
+  onEmailChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  id: string;
+  /** Single column. The reader's measure is too narrow for the 5/7 split. */
+  stacked?: boolean;
+}) {
+  const headingId = `${id}-heading`;
+
+  return (
+    <section aria-labelledby={headingId} className={`border-t ${RULE} pt-14`}>
+      <div className={`grid gap-10 ${stacked ? '' : 'lg:grid-cols-12 lg:gap-16'}`}>
+        <div className={stacked ? '' : 'lg:col-span-5'}>
+          <span className={`${META_CLASS} text-ve-emerald`}>Dispatch</span>
+          <h2
+            id={headingId}
+            className="mt-5 text-3xl font-bold italic leading-[0.95] tracking-tighter text-white sm:text-4xl"
+          >
+            New entries,
+            <br />
+            <span className="text-white/25">as they land.</span>
+          </h2>
+        </div>
+
+        <div className={stacked ? '' : 'lg:col-span-7'}>
+          <p className="max-w-md font-sans text-base font-light leading-relaxed text-white/55">
+            Architectural teardowns, quantitative model notes, and release logs. No cadence
+            promised — the list only moves when something is published.
+          </p>
+
+          <p aria-live="polite" className="sr-only">
+            {status === 'submitting' && 'Submitting your address.'}
+            {status === 'success' && 'Subscription confirmed.'}
+          </p>
+
+          {status === 'success' ? (
+            <div className="mt-8 flex items-center gap-3 border border-ve-emerald/30 bg-ve-emerald/[0.06] px-4 py-4">
+              <Check className="h-4 w-4 shrink-0 text-ve-emerald" aria-hidden="true" />
+              <span className="font-sans text-sm text-white/75">
+                Confirmed. You are on the dispatch list.
+              </span>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="mt-8 max-w-lg">
+              <label htmlFor={`${id}-email`} className={`block ${META_CLASS}`}>
+                Return address
+              </label>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input
+                  id={`${id}-email`}
+                  type="email"
+                  required
+                  placeholder="analyst@domain.com"
+                  value={email}
+                  onChange={(e) => onEmailChange(e.target.value)}
+                  className={`${FIELD_CLASS} sm:flex-1`}
+                  disabled={status === 'submitting'}
+                  aria-describedby={error ? `${id}-error` : undefined}
+                />
+                <button
+                  type="submit"
+                  disabled={status === 'submitting'}
+                  className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-3 bg-ve-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ve-emerald focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {status === 'submitting' ? (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/30 border-t-black"
+                      />
+                      Sending
+                    </>
+                  ) : (
+                    <>
+                      Subscribe
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
+                      />
+                    </>
+                  )}
+                </button>
+              </div>
+              {error && (
+                <p id={`${id}-error`} className="mt-3 font-mono text-[11px] text-ve-red">
+                  {error}
+                </p>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Scroll-scrubbed rule under the navbar. Transform only — no layout cost. */
+function ReadingProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 220, damping: 40, restDelta: 0.001 });
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{ scaleX }}
+      className="pointer-events-none fixed inset-x-0 top-16 z-40 h-px origin-left bg-ve-emerald"
+    />
+  );
+}
 
 export default function BlogPage({ slug }: { slug?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,15 +240,17 @@ export default function BlogPage({ slug }: { slug?: string }) {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [newsletterError, setNewsletterError] = useState('');
-  
+
+  const reduceMotion = useReducedMotion();
+
   // Use slug from URL to initialize active post, otherwise null
   const initialPost = useMemo(() => {
     return slug ? BLOG_POSTS.find(p => p.slug === slug) || null : null;
   }, [slug]);
-  
+
   const [activePost, setActivePost] = useState<BlogPost | null>(initialPost);
 
-  // Sync state if user navigates back/forward
+  // Sync state if the deep-linked slug changes.
   useEffect(() => {
     if (slug) {
       const post = BLOG_POSTS.find(p => p.slug === slug);
@@ -51,14 +260,37 @@ export default function BlogPage({ slug }: { slug?: string }) {
     }
   }, [slug]);
 
+  // Back/forward. The `slug` prop only reflects the URL as it was at mount:
+  // App.tsx reads window.location once and has no state, so it never re-renders
+  // on a history change, and this page sits on the document branch where
+  // useSectionNavigation's popstate handler is not mounted. Without this
+  // listener, Back out of an article left the article on screen under a /blog
+  // URL and only a manual reload recovered.
+  useEffect(() => {
+    const syncFromLocation = () => {
+      const path = window.location.pathname;
+      const current = path.toLowerCase().startsWith('/blog/')
+        ? path.slice('/blog/'.length).replace(/\/+$/, '')
+        : '';
+      setActivePost(current ? BLOG_POSTS.find(p => p.slug === current) ?? null : null);
+    };
+    window.addEventListener('popstate', syncFromLocation);
+    return () => window.removeEventListener('popstate', syncFromLocation);
+  }, []);
+
   // Update browser URL and Document Title for SEO when post changes
   useEffect(() => {
     if (activePost) {
-      document.title = `${activePost.title} | VouchEdge Transmission Log`;
-      window.history.pushState({}, '', `/blog/${activePost.slug}`);
+      document.title = `${activePost.title} | The VouchEdge Record`;
+      // Only push when the URL is not already the article — arriving by deep
+      // link would otherwise stack an identical entry and cost two Backs.
+      const target = `/blog/${activePost.slug}`;
+      if (window.location.pathname !== target) {
+        window.history.pushState({}, '', target);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      document.title = 'Transmission Log & Knowledge Vault | VouchEdge';
+      document.title = 'The Record — Research & Engineering Log | VouchEdge';
       if (window.location.pathname !== '/blog') {
         window.history.pushState({}, '', '/blog');
       }
@@ -76,7 +308,7 @@ export default function BlogPage({ slug }: { slug?: string }) {
   const handleShareX = () => {
     if (activePost) {
       const url = encodeURIComponent(window.location.href);
-      const text = encodeURIComponent(`"${activePost.title}" — Engineering Transmission from @VouchEdge`);
+      const text = encodeURIComponent(`"${activePost.title}" — from the VouchEdge Record`);
       window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
     }
   };
@@ -110,7 +342,7 @@ export default function BlogPage({ slug }: { slug?: string }) {
   // Filter posts based on search and tags
   const filteredPosts = useMemo(() => {
     return BLOG_POSTS.filter(post => {
-      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             post.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -124,496 +356,398 @@ export default function BlogPage({ slug }: { slug?: string }) {
     return BLOG_POSTS.find(p => p.featured) || BLOG_POSTS[0];
   }, []);
 
+  const isUnfiltered = !searchQuery && !selectedTag;
+
+  // Unfiltered, entry 01 is pulled out as the lead, so the register carries the
+  // remainder and keeps counting from 02 — one continuous numbering, no entry
+  // printed twice. Under a filter there is no lead and every match is listed.
+  const registerPosts = useMemo(() => {
+    if (isUnfiltered && featuredPost) {
+      return filteredPosts.filter(p => p.id !== featuredPost.id);
+    }
+    return filteredPosts;
+  }, [filteredPosts, isUnfiltered, featuredPost]);
+
   // Related posts for reader view
   const relatedPosts = useMemo(() => {
     if (!activePost) return [];
     return BLOG_POSTS.filter(p => p.id !== activePost.id).slice(0, 2);
   }, [activePost]);
 
-  const getAccentColor = (accent?: string) => {
-    switch (accent) {
-      case 'emerald':
-        return { border: 'border-emerald-500/40', bg: 'bg-emerald-500', text: 'text-emerald-400', glow: 'shadow-[0_0_20px_rgba(49,181,131,0.2)]' };
-      case 'amber':
-        return { border: 'border-amber-500/40', bg: 'bg-amber-500', text: 'text-amber-400', glow: 'shadow-[0_0_20px_rgba(217,156,74,0.2)]' };
-      case 'purple':
-        return { border: 'border-purple-500/40', bg: 'bg-purple-500', text: 'text-purple-400', glow: 'shadow-[0_0_20px_rgba(192,132,252,0.2)]' };
-      default:
-        return { border: 'border-cyan-500/40', bg: 'bg-cyan-400', text: 'text-cyan-300', glow: 'shadow-[0_0_20px_rgba(34,211,238,0.2)]' };
-    }
-  };
+  const filterButtonClass = (active: boolean) =>
+    `inline-flex items-center gap-2 border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald ${
+      active
+        ? 'border-ve-emerald bg-ve-emerald text-black'
+        : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white'
+    }`;
 
   return (
-    <div className={`ve-public-landing-root z8-app-shell ve-theme-transition bg-black font-z8 ${AURORA_MAX_SHELL}`} data-scroll-owner="document">
-      <PublicNav />
-      <div className="flex flex-col min-h-screen bg-black text-white pt-16 relative selection:bg-cyan-500 selection:text-black">
-        
-        {/* Subtle Cyber Grid Background */}
-        <div 
-          className="pointer-events-none fixed inset-0 z-0 opacity-[0.035]" 
-          style={{ 
-            backgroundImage: 'linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(90deg, #38bdf8 1px, transparent 1px)',
-            backgroundSize: '48px 48px'
-          }} 
-        />
+    <div
+      className={`ve-public-landing-root z8-app-shell ve-theme-transition bg-black font-z8 selection:bg-ve-emerald/30 ${AURORA_MAX_SHELL}`}
+      data-scroll-owner="document"
+    >
+      <Navbar />
 
-        <main className="flex-grow flex flex-col px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full max-w-7xl mx-auto relative z-10">
-          
+      <div className="flex min-h-screen flex-col bg-black pt-16 text-white">
+        {activePost && <ReadingProgress />}
+
+        <main id="main" className="flex-grow">
           <AnimatePresence mode="wait">
             {activePost ? (
               /* ============================================================ */
-              /* ARTICLE READER DECK                                          */
+              /* READER                                                       */
               /* ============================================================ */
               <motion.div
                 key="reader"
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -24 }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-4xl mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="px-6 py-16 sm:py-20"
               >
-                {/* Navigation & Action Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-10 border-b border-white/10 pb-5">
-                  <button 
-                    onClick={() => setActivePost(null)}
-                    className="flex items-center gap-2 text-zinc-400 hover:text-cyan-300 font-mono text-xs font-bold tracking-widest uppercase transition-colors group"
-                  >
-                    <span className="group-hover:-translate-x-1.5 transition-transform">←</span> 
-                    <span>Back to Transmission Deck</span>
-                  </button>
-
-                  <div className="flex items-center gap-2.5">
+                <div className="mx-auto w-full max-w-3xl">
+                  {/* Action rail */}
+                  <div className={`flex flex-wrap items-center justify-between gap-4 border-b ${RULE} pb-5`}>
                     <button
-                      onClick={handleCopyLink}
-                      className="flex items-center gap-2 border border-white/15 bg-zinc-950 px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-zinc-300 hover:border-cyan-400 hover:text-white transition-colors cursor-pointer"
+                      type="button"
+                      onClick={() => setActivePost(null)}
+                      className={`group inline-flex items-center gap-2.5 ${META_CLASS} transition-colors hover:text-white`}
                     >
-                      {copied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400 font-bold">Link Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-zinc-400" />
-                          <span>Copy Link</span>
-                        </>
-                      )}
+                      <span aria-hidden="true" className="transition-transform group-hover:-translate-x-1">
+                        ←
+                      </span>
+                      <span>The Record</span>
                     </button>
 
-                    <button
-                      onClick={handleShareX}
-                      className="flex items-center gap-2 border border-cyan-500/40 bg-cyan-950/40 px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/60 transition-colors cursor-pointer"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>Share to X</span>
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Article Header */}
-                <header className="mb-12 border-b border-white/10 pb-10">
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <span className="font-mono text-[10px] font-black uppercase tracking-widest text-cyan-300 border border-cyan-400/40 px-2.5 py-1 bg-cyan-950/50">
-                      {activePost.tag}
-                    </span>
-                    <span className="font-mono text-xs text-zinc-500">·</span>
-                    <time className="font-mono text-xs text-zinc-400 tracking-wider">
-                      {activePost.date}
-                    </time>
-                    <span className="font-mono text-xs text-zinc-500">·</span>
-                    <span className="flex items-center gap-1.5 text-zinc-400 font-mono text-xs tracking-wider">
-                      <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                      {activePost.readTime}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyLink}
+                        className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-ve-emerald" aria-hidden="true" />
+                            <span className="text-ve-emerald">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Copy link</span>
+                          </>
+                        )}
+                      </button>
 
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-8 text-white leading-tight font-mono tracking-tight">
-                    {activePost.title}
-                  </h1>
-
-                  {/* Author Bio Bar */}
-                  <div className="flex items-center justify-between p-4 border border-white/10 bg-zinc-950/80">
-                    <div className="flex items-center gap-3.5">
-                      <div className="h-10 w-10 border border-cyan-400/50 bg-cyan-950/60 flex items-center justify-center font-mono font-black text-cyan-300 text-sm">
-                        ⚡
-                      </div>
-                      <div>
-                        <div className="font-mono font-bold text-sm text-white tracking-wide">{activePost.author}</div>
-                        <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{activePost.authorRole}</div>
-                      </div>
-                    </div>
-
-                    <div className="hidden sm:flex items-center gap-2 text-zinc-500 font-mono text-[11px] uppercase tracking-widest">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Ledger Verified</span>
+                      <button
+                        type="button"
+                        onClick={handleShareX}
+                        className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white"
+                      >
+                        <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Share</span>
+                      </button>
                     </div>
                   </div>
-                </header>
 
-                {/* Sourced Evidence / Key Takeaway Card */}
-                {activePost.keyTakeaway && (
-                  <div className="mb-12 border-l-4 border-cyan-400 bg-zinc-950/90 border-y border-r border-white/10 p-6 shadow-2xl">
-                    <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs font-black uppercase tracking-widest mb-2">
-                      <Terminal className="w-4 h-4" />
-                      <span>Core Takeaway // Sourced Evidence</span>
-                    </div>
-                    <p className="text-zinc-200 text-sm sm:text-base leading-relaxed font-mono">
-                      "{activePost.keyTakeaway}"
+                  {/* Article header */}
+                  <header className="pt-14">
+                    <PostMeta post={activePost} />
+
+                    <h1 className="mt-7 text-4xl font-bold italic leading-[0.95] tracking-tighter text-white sm:text-5xl lg:text-6xl">
+                      {activePost.title}
+                    </h1>
+
+                    <p className="mt-8 max-w-2xl font-sans text-lg font-light leading-relaxed text-white/55">
+                      {activePost.excerpt}
                     </p>
-                  </div>
-                )}
 
-                {/* Markdown Content Deck */}
-                <article className="prose prose-invert prose-p:text-zinc-300 prose-p:text-base prose-p:leading-relaxed prose-headings:font-mono prose-headings:font-black prose-headings:text-white prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-3 prose-h2:mt-12 prose-a:text-cyan-400 prose-a:underline hover:prose-a:text-cyan-300 prose-strong:text-white prose-code:text-cyan-300 prose-code:bg-zinc-950 prose-code:px-2 prose-code:py-1 prose-code:border prose-code:border-white/15 prose-blockquote:border-l-cyan-400 prose-blockquote:text-zinc-400 max-w-none pb-16">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {activePost.content}
-                  </ReactMarkdown>
-                </article>
-
-                {/* Post Footer Newsletter Subscription */}
-                <section className="border border-cyan-500/40 bg-gradient-to-br from-zinc-950 via-black to-cyan-950/20 p-8 sm:p-10 my-16 relative overflow-hidden shadow-2xl">
-                  <div className="absolute -top-12 -right-12 w-40 h-40 bg-cyan-500/10 blur-3xl pointer-events-none" />
-                  
-                  <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs font-black uppercase tracking-widest mb-3">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Direct Intelligence Dispatch</span>
-                  </div>
-                  
-                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 font-mono uppercase tracking-tight">
-                    Subscribe to Engineering Transmissions
-                  </h3>
-                  <p className="text-zinc-400 text-sm mb-6 max-w-xl leading-relaxed">
-                    Receive verified architectural teardowns, quantitative MLB probability models, and early beta cohort drops.
-                  </p>
-                  
-                  {newsletterStatus === 'success' ? (
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-sm border border-emerald-500/30 bg-emerald-950/30 p-4">
-                      <Check className="w-5 h-5" />
-                      <span>Node registration confirmed. Transmission dispatched to your inbox.</span>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleNewsletterSubmit} className="space-y-3 max-w-md">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <input 
-                          type="email" 
-                          required
-                          placeholder="analyst@vouchedge.xyz"
-                          value={newsletterEmail}
-                          onChange={(e) => setNewsletterEmail(e.target.value)}
-                          className="bg-black border border-white/20 px-4 py-3 font-mono text-sm text-white focus:outline-none focus:border-cyan-400 flex-1"
-                          disabled={newsletterStatus === 'submitting'}
-                        />
-                        <button 
-                          type="submit"
-                          disabled={newsletterStatus === 'submitting'}
-                          className="bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs uppercase tracking-widest px-6 py-3 transition-colors font-black shrink-0 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                        >
-                          {newsletterStatus === 'submitting' ? 'Linking...' : 'Subscribe'}
-                        </button>
+                    <div className={`mt-10 flex flex-wrap items-center justify-between gap-4 border-y ${RULE} py-5`}>
+                      <div className="min-w-0">
+                        <div className="font-sans text-sm font-medium text-white">{activePost.author}</div>
+                        <div className={`mt-1 ${META_CLASS}`}>{activePost.authorRole}</div>
                       </div>
-                      {newsletterError && (
-                        <p className="text-xs font-mono text-red-400">{newsletterError}</p>
-                      )}
-                    </form>
+                      <div className={`${META_CLASS} inline-flex items-center gap-2`}>
+                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-ve-emerald" />
+                        <span>Published</span>
+                      </div>
+                    </div>
+                  </header>
+
+                  {/* Key takeaway */}
+                  {activePost.keyTakeaway && (
+                    <aside className="mt-12 border-l-2 border-ve-emerald bg-obsidian-950 py-6 pl-6 pr-5 sm:pl-8">
+                      <span className={`${META_CLASS} text-ve-emerald`}>Key takeaway</span>
+                      <p className="mt-3 font-sans text-base font-light leading-relaxed text-white/75 sm:text-lg">
+                        {activePost.keyTakeaway}
+                      </p>
+                    </aside>
                   )}
-                </section>
 
-                {/* Related Articles Bento Grid */}
-                {relatedPosts.length > 0 && (
-                  <div className="border-t border-white/10 pt-12 pb-24">
-                    <div className="flex items-center justify-between mb-8">
-                      <h3 className="font-mono text-lg font-black uppercase tracking-wider text-white flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-cyan-400" />
-                        <span>Adjacent Transmissions</span>
-                      </h3>
-                    </div>
+                  {/* Body */}
+                  <article className="ve-article mt-14">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{activePost.content}</ReactMarkdown>
+                  </article>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {relatedPosts.map((post) => {
-                        const style = getAccentColor(post.colorAccent);
-                        return (
-                          <div
-                            key={post.id}
-                            onClick={() => setActivePost(post)}
-                            className="group border border-white/10 bg-zinc-950/80 p-6 hover:border-cyan-400/60 transition-all cursor-pointer flex flex-col justify-between"
-                          >
-                            <div>
-                              <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 mb-3">
-                                <span className={`${style.text} font-bold uppercase tracking-wider`}>{post.tag}</span>
-                                <span>{post.readTime}</span>
-                              </div>
-                              <h4 className="font-mono font-bold text-lg text-white group-hover:text-cyan-300 transition-colors mb-2 leading-snug">
-                                {post.title}
-                              </h4>
-                              <p className="text-zinc-400 text-xs line-clamp-2 leading-relaxed">
-                                {post.excerpt}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider mt-6 pt-4 border-t border-white/5">
-                              <span>Read Log</span>
-                              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="mt-24">
+                    <SubscribeBlock
+                      id="reader-subscribe"
+                      stacked
+                      email={newsletterEmail}
+                      status={newsletterStatus}
+                      error={newsletterError}
+                      onEmailChange={setNewsletterEmail}
+                      onSubmit={handleNewsletterSubmit}
+                    />
                   </div>
-                )}
+
+                  {relatedPosts.length > 0 && (
+                    <section aria-labelledby="adjacent-heading" className={`mt-24 border-t ${RULE} pt-14 pb-8`}>
+                      <h2 id="adjacent-heading" className={`${META_CLASS} text-ve-emerald`}>
+                        Adjacent entries
+                      </h2>
+                      <ul className={`mt-6 border-t ${RULE}`}>
+                        {relatedPosts.map((post, i) => (
+                          <IndexRow key={post.id} post={post} index={i} onOpen={setActivePost} compact />
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </div>
               </motion.div>
             ) : (
               /* ============================================================ */
-              /* VAULT LIST / BENTO HUB VIEW                                 */
+              /* THE RECORD — INDEX                                           */
               /* ============================================================ */
               <motion.div
                 key="feed"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="space-y-12"
+                transition={{ duration: 0.3, ease: 'easeOut' }}
               >
-                {/* HUD Top Deck Banner */}
-                <section className="relative border border-white/15 bg-gradient-to-b from-zinc-950 to-black p-6 sm:p-10 shadow-2xl overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
-                  
-                  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-                    <div className="max-w-3xl space-y-4">
-                      <div className="inline-flex items-center gap-2 border border-cyan-500/40 bg-cyan-950/40 px-3.5 py-1 font-mono font-black uppercase text-xs text-cyan-300">
-                        <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                        <span>VOUCHEDGE KNOWLEDGE VAULT & INTELLIGENCE DECK</span>
+                {/* Masthead */}
+                <section className="px-6 pt-20 pb-16 sm:pt-28 sm:pb-20">
+                  <div className="mx-auto w-full max-w-7xl">
+                    <motion.div
+                      initial={reduceMotion ? false : { x: -12 }}
+                      animate={{ x: 0 }}
+                      transition={{ duration: 0.45, ease: 'easeOut' }}
+                    >
+                      <div className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b ${RULE} pb-5`}>
+                        <span className={`${META_CLASS} text-ve-emerald`}>06 / Published Record</span>
+                        <span className={META_CLASS}>
+                          {BLOG_POSTS.length} {BLOG_POSTS.length === 1 ? 'Entry' : 'Entries'}
+                        </span>
                       </div>
-                      
-                      <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-white font-mono leading-none">
-                        Transmission <span className="text-cyan-400">Log</span>
-                      </h1>
-                      
-                      <p className="text-sm sm:text-base font-mono text-zinc-400 max-w-2xl leading-relaxed">
-                        Sourced evidence, quantitative probability distribution breakdowns, and live release notes straight from the core engineering deck.
-                      </p>
+
+                      <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-16">
+                        <h1 className="text-5xl font-bold italic leading-[0.9] tracking-tighter text-white sm:text-7xl lg:col-span-7 lg:text-8xl">
+                          Research
+                          <br />
+                          <span className="text-white/25">Record</span>
+                        </h1>
+
+                        <p className="max-w-md font-sans text-lg font-light leading-relaxed text-white/55 lg:col-span-5">
+                          Everything we have published: quantitative method, architecture teardowns,
+                          and release notes. Sourced, dated, and kept on the record.
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </section>
+
+                {/* Controls */}
+                <section
+                  aria-label="Filter the record"
+                  /* Sticky only where it costs little: on a phone the chips wrap to
+                     three rows and a pinned bar would eat a third of the viewport. */
+                  className={`z-30 border-y ${RULE} bg-black/80 px-6 py-4 backdrop-blur-md lg:sticky lg:top-16`}
+                >
+                  <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTag(null)}
+                        aria-pressed={selectedTag === null}
+                        className={filterButtonClass(selectedTag === null)}
+                      >
+                        <span>All</span>
+                        <span className={selectedTag === null ? 'text-black/50' : 'text-white/30'}>
+                          {BLOG_POSTS.length}
+                        </span>
+                      </button>
+
+                      {tagStats.map(({ tag, count }) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setSelectedTag(tag)}
+                          aria-pressed={selectedTag === tag}
+                          className={filterButtonClass(selectedTag === tag)}
+                        >
+                          <span>{tag}</span>
+                          <span className={selectedTag === tag ? 'text-black/50' : 'text-white/30'}>
+                            {count}
+                          </span>
+                        </button>
+                      ))}
                     </div>
 
-                    {/* Search Input Box */}
-                    <div className="w-full lg:max-w-md">
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                        <input 
-                          type="text" 
-                          placeholder="Search transmissions by keyword..." 
+                    <div className="flex items-center gap-2 lg:shrink-0">
+                      <div className="relative min-w-0 flex-1 lg:w-72 lg:flex-none">
+                        <Search
+                          aria-hidden="true"
+                          className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30"
+                        />
+                        <label htmlFor="record-search" className="sr-only">
+                          Search the record
+                        </label>
+                        <input
+                          id="record-search"
+                          type="search"
+                          placeholder="Search"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full bg-black border border-white/20 px-4 py-3.5 pl-11 pr-10 text-sm font-mono text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors shadow-inner"
+                          className="w-full border-b border-white/10 bg-transparent py-2 pl-6 pr-7 font-mono text-xs text-white placeholder:text-white/30 transition-colors focus:border-ve-emerald focus:outline-none [&::-webkit-search-cancel-button]:hidden"
                         />
                         {searchQuery && (
-                          <button 
+                          <button
+                            type="button"
                             onClick={() => setSearchQuery('')}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                            aria-label="Clear search"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-white"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="h-3.5 w-3.5" aria-hidden="true" />
                           </button>
                         )}
                       </div>
-                    </div>
-                  </div>
-                </section>
 
-                {/* Filter Badges with Post Counters */}
-                <section className="flex flex-wrap items-center justify-between gap-3 border-y border-white/10 py-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button 
-                      onClick={() => setSelectedTag(null)}
-                      className={`font-mono text-xs font-black uppercase tracking-wider px-3.5 py-1.5 border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        selectedTag === null 
-                          ? 'border-cyan-400 text-black bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' 
-                          : 'border-white/10 text-zinc-400 hover:border-white/30 hover:text-white bg-zinc-950'
-                      }`}
-                    >
-                      <span>ALL</span>
-                      <span className={`text-[10px] px-1 py-0.2 ${selectedTag === null ? 'bg-black text-cyan-300' : 'bg-white/10 text-zinc-400'}`}>
-                        {BLOG_POSTS.length}
-                      </span>
-                    </button>
-
-                    {tagStats.map(({ tag, count }) => (
-                      <button 
-                        key={tag}
-                        onClick={() => setSelectedTag(tag)}
-                        className={`font-mono text-xs font-black uppercase tracking-wider px-3.5 py-1.5 border transition-all cursor-pointer flex items-center gap-1.5 ${
-                          selectedTag === tag 
-                            ? 'border-cyan-400 text-black bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' 
-                            : 'border-white/10 text-zinc-400 hover:border-white/30 hover:text-white bg-zinc-950'
-                        }`}
+                      <a
+                        href="/feed.xml"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="RSS feed"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 text-white/40 transition-colors hover:border-white/30 hover:text-white"
                       >
-                        <span>{tag}</span>
-                        <span className={`text-[10px] px-1 py-0.2 ${selectedTag === tag ? 'bg-black text-cyan-300' : 'bg-white/10 text-zinc-400'}`}>
-                          {count}
-                        </span>
-                      </button>
-                    ))}
+                        <Rss className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    </div>
                   </div>
-
-                  <a 
-                    href="/feed.xml" 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="border border-amber-500/40 bg-amber-950/20 hover:bg-amber-950/50 text-amber-300 px-3 py-1.5 transition-colors inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider font-bold"
-                  >
-                    <Rss className="w-3.5 h-3.5" />
-                    <span>RSS Feed</span>
-                  </a>
                 </section>
 
-                {/* Featured Transmission Bento Spotlight (Only on ALL / unfiltered view) */}
-                {!searchQuery && !selectedTag && featuredPost && (
-                  <section className="space-y-3">
-                    <div className="flex items-center gap-2 font-mono text-xs font-black uppercase tracking-widest text-cyan-400">
-                      <Zap className="w-4 h-4 fill-cyan-400" />
-                      <span>FLAGSHIP TRANSMISSION</span>
-                    </div>
-
-                    <div 
-                      onClick={() => setActivePost(featuredPost)}
-                      className="group border-2 border-cyan-500/40 bg-zinc-950/90 hover:border-cyan-400 transition-all duration-300 cursor-pointer overflow-hidden relative shadow-2xl"
-                    >
-                      <div className="h-1.5 w-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400" />
-                      
-                      <div className="p-6 sm:p-10">
-                        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-                          <div className="flex items-center gap-2">
-                            <span className="border border-cyan-400/50 bg-cyan-950/60 px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-widest text-cyan-300">
-                              {featuredPost.tag}
-                            </span>
-                            <span className="font-mono text-xs text-zinc-500">·</span>
-                            <time className="font-mono text-xs text-zinc-400">{featuredPost.date}</time>
-                          </div>
-                          
-                          <span className="flex items-center gap-1.5 font-mono text-xs text-zinc-400">
-                            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                            {featuredPost.readTime}
-                          </span>
+                <div className="px-6 pb-32 sm:pb-40">
+                  <div className="mx-auto w-full max-w-7xl">
+                    {/* Lead entry */}
+                    {isUnfiltered && featuredPost && (
+                      <section aria-labelledby="lead-heading" className={`border-b ${RULE} py-16 sm:py-24`}>
+                        <div className="flex items-center gap-3">
+                          <span className={`${META_CLASS} tabular-nums`}>01</span>
+                          <span className={`${META_CLASS} text-ve-emerald`}>Lead entry</span>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                          <div className="lg:col-span-2 space-y-4">
-                            <h2 className="text-2xl sm:text-4xl font-black font-mono text-white group-hover:text-cyan-300 transition-colors leading-tight">
+                        <button
+                          type="button"
+                          onClick={() => setActivePost(featuredPost)}
+                          className="group mt-8 block w-full text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald"
+                        >
+                          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+                            <h2
+                              id="lead-heading"
+                              className="text-4xl font-bold italic leading-[0.95] tracking-tighter text-white transition-colors group-hover:text-ve-emerald sm:text-5xl lg:col-span-7 lg:text-6xl"
+                            >
                               {featuredPost.title}
                             </h2>
-                            <p className="text-zinc-300 font-mono text-sm sm:text-base leading-relaxed">
-                              {featuredPost.excerpt}
-                            </p>
-                          </div>
 
-                          <div className="border border-white/10 bg-black/60 p-5 space-y-4 flex flex-col justify-between h-full">
-                            <div>
-                              <div className="font-mono text-[10px] uppercase text-zinc-500 font-bold tracking-widest mb-1.5">
-                                AUTHOR
-                              </div>
-                              <div className="font-mono font-bold text-white text-sm">
-                                {featuredPost.author}
-                              </div>
-                              <div className="font-mono text-[11px] text-cyan-400">
-                                {featuredPost.authorRole}
+                            <div className="lg:col-span-5">
+                              <PostMeta post={featuredPost} />
+                              <p className="mt-6 font-sans text-base font-light leading-relaxed text-white/55">
+                                {featuredPost.excerpt}
+                              </p>
+                              <div className={`mt-8 flex items-center justify-between border-t ${RULE} pt-5`}>
+                                <div className="min-w-0">
+                                  <div className="font-sans text-sm font-medium text-white">
+                                    {featuredPost.author}
+                                  </div>
+                                  <div className={`mt-1 ${META_CLASS}`}>{featuredPost.authorRole}</div>
+                                </div>
+                                <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ve-emerald">
+                                  Read
+                                  <ArrowUpRight
+                                    aria-hidden="true"
+                                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                                  />
+                                </span>
                               </div>
                             </div>
-
-                            <button className="w-full bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-black text-xs uppercase tracking-widest py-3 px-4 transition-colors flex items-center justify-center gap-2 cursor-pointer mt-4">
-                              <span>Open Transmission</span>
-                              <ArrowUpRight className="w-4 h-4" />
-                            </button>
                           </div>
-                        </div>
+                        </button>
+                      </section>
+                    )}
+
+                    {/* Register */}
+                    <section aria-labelledby="register-heading" className="pt-16 sm:pt-20">
+                      <div className={`flex items-center justify-between border-b ${RULE} pb-4`}>
+                        <h2 id="register-heading" className={META_CLASS}>
+                          {isUnfiltered ? 'Archive' : 'Results'}
+                        </h2>
+                        <span className={`${META_CLASS} tabular-nums`}>
+                          {isUnfiltered
+                            ? `${registerPosts.length} more`
+                            : `${filteredPosts.length} of ${BLOG_POSTS.length}`}
+                        </span>
                       </div>
-                    </div>
-                  </section>
-                )}
 
-                {/* All Quest Logs / Transmissions Bento Grid */}
-                <section className="space-y-6 pt-4">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <h2 className="text-lg sm:text-xl font-black uppercase font-mono tracking-wider text-white flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-cyan-400" />
-                      <span>Transmissions Archive</span>
-                      <span className="border border-white/20 bg-zinc-950 px-2 py-0.5 text-xs text-zinc-400">
-                        {filteredPosts.length}
-                      </span>
-                    </h2>
-                  </div>
-
-                  {filteredPosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredPosts.map((post, i) => {
-                        const style = getAccentColor(post.colorAccent);
-                        return (
-                          <motion.article
-                            key={post.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: i * 0.08 }}
-                            onClick={() => setActivePost(post)}
-                            className="group border border-white/15 bg-zinc-950/90 hover:border-cyan-400/80 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden shadow-xl"
+                      {filteredPosts.length === 0 ? (
+                        <div className="py-24 text-center sm:py-32">
+                          <p className={META_CLASS}>No entries match that query</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSelectedTag(null);
+                            }}
+                            className="mt-5 font-mono text-[11px] uppercase tracking-[0.18em] text-ve-emerald underline underline-offset-4 transition-colors hover:text-white"
                           >
-                            <div className={`h-1 w-full ${style.bg}`} />
-                            
-                            <div className="p-6 flex-1 flex flex-col justify-between">
-                              <div>
-                                <div className="flex items-center justify-between text-xs font-mono text-zinc-500 mb-3.5">
-                                  <span className={`border ${style.border} bg-black px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${style.text}`}>
-                                    {post.tag}
-                                  </span>
-                                  <span className="flex items-center gap-1 text-[11px] text-zinc-400">
-                                    <Clock className="w-3 h-3" />
-                                    {post.readTime}
-                                  </span>
-                                </div>
+                            Reset filters
+                          </button>
+                        </div>
+                      ) : registerPosts.length === 0 ? (
+                        <p className={`${META_CLASS} py-16 text-center`}>
+                          The lead entry above is the whole record.
+                        </p>
+                      ) : (
+                        <ul>
+                          {registerPosts.map((post, i) => (
+                            <IndexRow
+                              key={post.id}
+                              post={post}
+                              index={isUnfiltered ? i + 1 : i}
+                              onOpen={setActivePost}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                    </section>
 
-                                <h3 className="text-xl font-black font-mono text-white group-hover:text-cyan-300 transition-colors leading-snug mb-3 line-clamp-2">
-                                  {post.title}
-                                </h3>
-
-                                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-6 font-mono">
-                                  {post.excerpt}
-                                </p>
-                              </div>
-
-                              <div className="pt-4 border-t border-white/10 flex items-center justify-between mt-auto">
-                                <div>
-                                  <p className="font-mono text-xs font-bold text-white leading-none mb-1">
-                                    {post.author}
-                                  </p>
-                                  <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
-                                    {post.date}
-                                  </p>
-                                </div>
-
-                                <div className="flex h-8 w-8 items-center justify-center border border-white/20 bg-black text-cyan-400 group-hover:border-cyan-400 group-hover:bg-cyan-950 transition-all">
-                                  <ArrowUpRight className="w-4 h-4" />
-                                </div>
-                              </div>
-                            </div>
-                          </motion.article>
-                        );
-                      })}
+                    <div className="mt-28 sm:mt-36">
+                      <SubscribeBlock
+                        id="record-subscribe"
+                        email={newsletterEmail}
+                        status={newsletterStatus}
+                        error={newsletterError}
+                        onEmailChange={setNewsletterEmail}
+                        onSubmit={handleNewsletterSubmit}
+                      />
                     </div>
-                  ) : (
-                    <div className="py-24 text-center border border-white/10 bg-zinc-950/50 border-dashed">
-                      <Terminal className="w-10 h-10 text-zinc-600 mx-auto mb-4" />
-                      <p className="text-zinc-400 font-mono text-sm font-bold uppercase tracking-widest">
-                        NO TRANSMISSIONS MATCH YOUR QUERY.
-                      </p>
-                      <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); }}
-                        className="mt-4 text-xs font-mono text-cyan-400 hover:underline uppercase"
-                      >
-                        Reset Filter
-                      </button>
-                    </div>
-                  )}
-                </section>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </main>
-        
+
         {/* Always display footer for consistent navigation and SEO across all views */}
-        <FooterSection />
+        <PublicFooter />
       </div>
     </div>
   );

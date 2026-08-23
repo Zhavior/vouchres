@@ -9,6 +9,7 @@ import {
 } from './lib/chunkRecovery';
 import { initSentry } from './lib/sentry';
 import { lazyWithRetry } from './lib/lazyWithRetry';
+import './index.css';
 
 const SpeedInsights = lazyWithRetry(
   () => import('@vercel/speed-insights/react').then((module) => ({ default: module.SpeedInsights })),
