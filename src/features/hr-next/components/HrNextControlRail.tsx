@@ -49,7 +49,7 @@ const LINEUP_MODES: ReadonlyArray<{ key: HrWatchMode; label: string }> = [
 function RailSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="space-y-1.5 font-mono">
-      <h3 className="px-0.5 text-[9px] font-black uppercase tracking-widest text-white/40">
+      <h3 className="px-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/40">
         {label}
       </h3>
       {children}
@@ -169,7 +169,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => onViewModeChange(key)}
-                className={`w-full px-2.5 py-1.5 text-left text-xs font-black uppercase tracking-wider transition-colors border cursor-pointer ${
+                className={`w-full px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors border cursor-pointer ${
                   isActive
                     ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
                     : 'border-transparent text-white/55 hover:bg-obsidian-800 hover:text-white'
@@ -193,7 +193,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => onLineupModeChange(key)}
-                className={`px-1 py-1.5 text-center text-[10px] font-black uppercase tracking-wider transition-colors border cursor-pointer ${
+                className={`px-1 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider transition-colors border cursor-pointer ${
                   isActive
                     ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan font-bold'
                     : 'border-transparent text-white/40 hover:text-white'

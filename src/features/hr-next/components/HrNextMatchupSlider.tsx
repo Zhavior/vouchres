@@ -78,7 +78,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
           aria-pressed={isAll}
           className={`h-9 flex items-center gap-2 px-3 text-xs font-bold transition-all border cursor-pointer ${
             isAll
-              ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-black'
+              ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-bold'
               : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
           }`}
         >
@@ -113,7 +113,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
               onClick={() => onSelectIndex(idx)}
               className={`h-9 shrink-0 flex items-center gap-2.5 px-3 text-xs transition-all duration-150 cursor-pointer border ${
                 isActive
-                  ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-black'
+                  ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-bold'
                   : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
               }`}
             >
@@ -124,6 +124,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
                     src={awayLogo}
                     alt={m.awayTeam}
                     className="w-4 h-4 object-contain"
+                    loading="lazy"
                   />
                 )}
                 {homeLogo && (
@@ -131,6 +132,7 @@ export const HrNextMatchupSlider = memo(function HrNextMatchupSlider({
                     src={homeLogo}
                     alt={m.homeTeam}
                     className="w-4 h-4 object-contain"
+                    loading="lazy"
                   />
                 )}
               </div>

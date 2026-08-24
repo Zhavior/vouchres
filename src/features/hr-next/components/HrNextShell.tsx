@@ -500,18 +500,37 @@ export function HrNextShell() {
 
   if (isLoading) {
     return (
-      <div className="hr-next flex min-h-screen items-center justify-center bg-black">
-        <div className="text-vouch-emerald font-mono animate-pulse">Loading HR Intelligence...</div>
+      <div className="hr-next flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2 border border-white/[0.08] bg-white/[0.02] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.24em] text-white/55">
+          <span className="hr-live-dot" /> Loading HR intelligence
+        </div>
       </div>
     );
   }
 
   if (error) {
+    /*
+     * Previously a dead end: it printed `String(error)` — usually
+     * "[object Object]" — with no way back. The board is a network read, so the
+     * useful action is to retry it without reloading the page.
+     */
+    const detail = typeof error === 'string' ? error : null;
     return (
-      <div className="hr-next flex min-h-screen items-center justify-center bg-black">
-        <div className="text-ve-red font-mono text-center">
-          <p>Failed to load HR board</p>
-          <p className="text-sm opacity-70">{String(error)}</p>
+      <div className="hr-next flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md border border-ve-amber/25 bg-ve-amber/10 p-5 text-center font-mono">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+            HR board unavailable
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-white/55 font-sans">
+            {detail ?? 'The board did not respond. Nothing was estimated in its place.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-4 min-h-9 border border-ve-amber/30 px-3 text-[10px] font-medium uppercase tracking-wider text-ve-amber transition-colors hover:bg-ve-amber/10 cursor-pointer"
+          >
+            Retry board
+          </button>
         </div>
       </div>
     );
@@ -575,10 +594,10 @@ export function HrNextShell() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-ve-cyan">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ve-cyan">
                   VOUCHEDGE // HOME RUN COMMAND DESK
                 </span>
-                <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-obsidian-800 text-[8px] font-black text-white/55">
+                <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-obsidian-800 text-[8px] font-bold text-white/55">
                   STAGE: 03 / STATCAST & PROJECTIONS
                 </span>
               </div>
@@ -594,7 +613,7 @@ export function HrNextShell() {
               onClick={() => refetch()}
               disabled={syncing}
               title="Synchronize Live Board (R)"
-              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
             >
               <RotateCw className={`w-3 h-3 text-ve-cyan ${syncing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Sync</span>
@@ -604,7 +623,7 @@ export function HrNextShell() {
             <button
               type="button"
               onClick={() => setCheatsheetOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
               title="Keyboard Shortcuts (?)"
             >
               <Keyboard className="w-3 h-3 text-ve-cyan" />
@@ -623,7 +642,7 @@ export function HrNextShell() {
             onClick={() => setMobileControlsOpen((prev) => !prev)}
             aria-expanded={mobileControlsOpen}
             aria-controls="hr-next-control-sheet"
-            className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors lg:hidden cursor-pointer ${
+            className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors lg:hidden cursor-pointer ${
               mobileControlsOpen
                 ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
                 : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
@@ -640,9 +659,9 @@ export function HrNextShell() {
               onClick={() => setIsTeamRankOpen((prev) => !prev)}
               aria-pressed={isTeamRankOpen}
               title="Rank teams by home run power for the selected games"
-              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                 isTeamRankOpen
-                  ? 'border-ve-cyan bg-ve-cyan text-black font-black'
+                  ? 'border-ve-cyan bg-ve-cyan text-black font-bold'
                   : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
               }`}
             >
@@ -658,9 +677,9 @@ export function HrNextShell() {
               onClick={toggleProMode}
               aria-pressed={isProMode}
               title="Toggle Pro Mode telemetry cards (Shortcut: P)"
-              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                 isProMode
-                  ? 'border-ve-cyan bg-ve-cyan text-black font-black'
+                  ? 'border-ve-cyan bg-ve-cyan text-black font-bold'
                   : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
               }`}
             >
@@ -683,7 +702,7 @@ export function HrNextShell() {
                 : `Share my HR list — ${savedCount} ${savedCount === 1 ? 'player' : 'players'}`
             }
             title={savedCount === 0 ? 'Star players to build your HR list first' : 'Share my HR list'}
-            className={`ml-auto flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+            className={`ml-auto flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
               savedCount > 0
                 ? 'border-ve-emerald/60 bg-ve-emerald/40 text-ve-emerald hover:bg-ve-emerald/20/50'
                 : 'border-white/10 bg-black text-white/30 cursor-not-allowed'

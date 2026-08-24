@@ -211,7 +211,7 @@ function MetricSelect({
   return (
     <label htmlFor={id} className="flex min-w-0 flex-1 flex-col gap-1 sm:min-w-[210px] font-mono">
       <span
-        className="font-mono text-[8.5px] font-black uppercase tracking-[0.18em]"
+        className="font-mono text-[8.5px] font-semibold uppercase tracking-[0.18em]"
         style={{ color: accent }}
       >
         {label}
@@ -281,7 +281,7 @@ function Toggle({
       onClick={onClick}
       aria-pressed={active}
       title={title}
-      className={`flex shrink-0 items-center gap-1.5 border px-2.5 py-1.5 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] transition-colors cursor-pointer ${
+      className={`flex shrink-0 items-center gap-1.5 border px-2.5 py-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] transition-colors cursor-pointer ${
         active
           ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
           : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
@@ -308,7 +308,7 @@ function GameCard({
   active: boolean;
   onToggle: () => void;
 }) {
-  const accent = game.rank === 1 ? '#10B981' : game.rank <= 3 ? '#4FB8DC' : '#94A3B8';
+  const accent = game.rank === 1 ? '#31B583' : game.rank <= 3 ? '#4FB8DC' : 'rgba(255,255,255,0.55)';
   const barPct = leaderScore > 0 ? Math.max(6, Math.round((game.score / leaderScore) * 100)) : 0;
   const runs = liveScoreLabel(game.live);
   const status = liveStatusLabel(game.live);
@@ -328,12 +328,12 @@ function GameCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <span
-            className="font-mono text-[8.5px] font-black uppercase tracking-[0.16em]"
+            className="font-mono text-[8.5px] font-semibold uppercase tracking-[0.16em]"
             style={{ color: accent }}
           >
             #{game.rank} GAME
           </span>
-          <span className="mt-0.5 block truncate text-[13px] font-black leading-tight text-white font-sans uppercase">
+          <span className="mt-0.5 block truncate text-[13px] font-bold leading-tight text-white font-sans uppercase">
             {game.matchupLabel}
           </span>
         </div>
@@ -342,7 +342,7 @@ function GameCard({
             GAME SCORE
           </span>
           <strong
-            className="block font-mono text-xl font-black leading-none tabular-nums"
+            className="block font-mono text-xl font-bold leading-none tabular-nums"
             style={{ color: accent }}
           >
             {game.score}
@@ -364,7 +364,7 @@ function GameCard({
             <span
               className={`h-1.5 w-1.5 shrink-0 rounded-full ${game.live?.isLive ? 'bg-ve-red animate-ping' : 'bg-white/20'}`}
             />
-            <strong className="font-mono text-[12px] font-black tabular-nums text-white">{runs}</strong>
+            <strong className="font-mono text-[12px] font-bold tabular-nums text-white">{runs}</strong>
             <span className="truncate font-mono text-[9px] font-semibold text-white/55 uppercase">{status}</span>
           </span>
         ) : (
@@ -388,11 +388,11 @@ function Stat({ label, value, accent = '#ffffff', hint }: {
 }) {
   return (
     <div className="min-w-0 border border-white/15 bg-black px-2.5 py-2 font-mono">
-      <span className="block truncate font-mono text-[8.5px] font-black uppercase tracking-[0.16em] text-white/40">
+      <span className="block truncate font-mono text-[8.5px] font-semibold uppercase tracking-[0.16em] text-white/40">
         {label}
       </span>
       <strong
-        className="mt-1 block truncate font-mono text-sm font-black leading-none tabular-nums font-sans"
+        className="mt-1 block truncate font-mono text-sm font-bold leading-none tabular-nums font-sans"
         style={{ color: accent }}
       >
         {value}
@@ -869,13 +869,13 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 border border-ve-cyan/50 bg-ve-cyan/40 px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-ve-cyan">
+              <span className="inline-flex items-center gap-1.5 border border-ve-cyan/50 bg-ve-cyan/40 px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-ve-cyan">
                 <ChartScatter className="h-3 w-3" />
                 PROJECTION MATRIX
               </span>
               <span className="font-mono text-[10px] font-semibold text-white/40 uppercase">{scopeLabel}</span>
             </div>
-            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl font-sans uppercase">
+            <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl font-sans uppercase">
               {yMetric.short} AGAINST {xMetric.short}
             </h2>
             <p className="max-w-2xl font-mono text-[10.5px] leading-relaxed text-white/55">
@@ -887,10 +887,10 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
 
           <div className="flex shrink-0 items-start gap-2">
             <div className="border border-white/15 bg-obsidian-950 px-4 py-3 text-center">
-              <span className="block font-mono text-[8.5px] font-black uppercase tracking-[0.16em] text-white/40">
+              <span className="block font-mono text-[8.5px] font-semibold uppercase tracking-[0.16em] text-white/40">
                 PLOTTED
               </span>
-              <strong className="mt-1 block font-mono text-2xl font-black leading-none tabular-nums text-ve-cyan font-sans">
+              <strong className="mt-1 block font-mono text-2xl font-bold leading-none tabular-nums text-ve-cyan font-sans">
                 {model.points.length}
               </strong>
               <span className="mt-0.5 block font-mono text-[9px] font-semibold text-white/40 uppercase">
@@ -950,8 +950,8 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                   onClick={() => setThresholdMode(mode.id)}
                   aria-pressed={thresholdMode === mode.id}
                   title={mode.title}
-                  className={`px-2.5 py-1 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] transition-colors cursor-pointer ${
-                    thresholdMode === mode.id ? 'bg-white text-black font-black' : 'text-white/55 hover:text-white'
+                  className={`px-2.5 py-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] transition-colors cursor-pointer ${
+                    thresholdMode === mode.id ? 'bg-white text-black font-bold' : 'text-white/55 hover:text-white'
                   }`}
                 >
                   {mode.label}
@@ -971,8 +971,8 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       ? 'Scale each axis to the plotted rows so the pool fills the canvas'
                       : 'Keep each metric\'s declared range (0–100 for board layers) so axes stay comparable'
                   }
-                  className={`px-2.5 py-1 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] transition-colors cursor-pointer ${
-                    rangeMode === mode ? 'bg-white text-black font-black' : 'text-white/55 hover:text-white'
+                  className={`px-2.5 py-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] transition-colors cursor-pointer ${
+                    rangeMode === mode ? 'bg-white text-black font-bold' : 'text-white/55 hover:text-white'
                   }`}
                 >
                   {mode === 'fit' ? 'FIT DATA' : 'FULL SCALE'}
@@ -993,8 +993,8 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       ? 'Drag selects a region. Hold Shift to pan without leaving this mode.'
                       : 'Drag moves the view around the axes.'
                   }
-                  className={`px-2 py-1 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] transition-colors cursor-pointer ${
-                    dragMode === mode ? 'bg-white text-black font-black' : 'text-white/55 hover:text-white'
+                  className={`px-2 py-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] transition-colors cursor-pointer ${
+                    dragMode === mode ? 'bg-white text-black font-bold' : 'text-white/55 hover:text-white'
                   }`}
                 >
                   {mode === 'brush' ? 'BRUSH' : 'PAN'}
@@ -1062,7 +1062,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
             {resolvable && resolveStatcast ? (
               <span
                 title={MATRIX_RESOLUTION_METHODOLOGY}
-                className="inline-flex shrink-0 items-center gap-1.5 border border-ve-cyan/50 bg-ve-cyan/40 px-2.5 py-1.5 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] text-ve-cyan"
+                className="inline-flex shrink-0 items-center gap-1.5 border border-ve-cyan/50 bg-ve-cyan/40 px-2.5 py-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ve-cyan"
               >
                 <Microscope className="h-3 w-3" />
                 STATCAST RESOLVED
@@ -1073,7 +1073,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
               <button
                 type="button"
                 onClick={resetSelection}
-                className="flex shrink-0 items-center gap-1.5 border border-ve-cyan bg-ve-cyan/50 px-2.5 py-1.5 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] text-ve-cyan transition-colors hover:bg-ve-cyan/20/50 cursor-pointer"
+                className="flex shrink-0 items-center gap-1.5 border border-ve-cyan bg-ve-cyan/50 px-2.5 py-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-ve-cyan transition-colors hover:bg-ve-cyan/20/50 cursor-pointer"
               >
                 <X className="h-3 w-3" />
                 {selectionLabel} — CLEAR
@@ -1144,7 +1144,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
       {gameIndex.games.length > 0 && (
         <div className="border-2 border-white/15 bg-black p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/55">
+            <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-white/55">
               <Trophy className="h-3 w-3" />
               OVERALL GAME SCORE ({gameIndex.games.length})
             </span>
@@ -1452,7 +1452,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                   </span>
                 </div>
                 <strong
-                  className="shrink-0 font-mono text-base font-black leading-none tabular-nums font-sans"
+                  className="shrink-0 font-mono text-base font-bold leading-none tabular-nums font-sans"
                   style={{ color: hovered.tier.accent }}
                 >
                   {hovered.hrpi}
@@ -1461,18 +1461,18 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
 
               <div className="mt-2 grid grid-cols-2 gap-1.5">
                 <div className="border border-white/15 bg-obsidian-950 px-1.5 py-1">
-                  <span className="block truncate font-mono text-[8px] font-black uppercase tracking-[0.12em] text-ve-cyan">
+                  <span className="block truncate font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-ve-cyan">
                     {yMetric.short}
                   </span>
-                  <strong className="font-mono text-[11px] font-black tabular-nums text-white">
+                  <strong className="font-mono text-[11px] font-bold tabular-nums text-white">
                     {yMetric.format(hovered.y)}
                   </strong>
                 </div>
                 <div className="border border-white/15 bg-obsidian-950 px-1.5 py-1">
-                  <span className="block truncate font-mono text-[8px] font-black uppercase tracking-[0.12em] text-ve-amber">
+                  <span className="block truncate font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-ve-amber">
                     {xMetric.short}
                   </span>
-                  <strong className="font-mono text-[11px] font-black tabular-nums text-white">
+                  <strong className="font-mono text-[11px] font-bold tabular-nums text-white">
                     {xMetric.format(hovered.x)}
                   </strong>
                 </div>
@@ -1580,13 +1580,13 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
             >
               <div className="flex items-center justify-between gap-2">
                 <span
-                  className="truncate font-mono text-[9px] font-black uppercase tracking-[0.14em]"
+                  className="truncate font-mono text-[9px] font-semibold uppercase tracking-[0.14em]"
                   style={{ color: quadrant.accent }}
                 >
                   {quadrant.label}
                 </span>
                 <strong
-                  className="shrink-0 font-mono text-lg font-black leading-none tabular-nums font-sans"
+                  className="shrink-0 font-mono text-lg font-bold leading-none tabular-nums font-sans"
                   style={{ color: quadrant.accent }}
                 >
                   {quadrant.count}
@@ -1618,7 +1618,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
       {/* ── Ranked list ──────────────────────────────────────────────────── */}
       <div className="border-2 border-white/15 bg-black p-4 font-mono">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/55">
+          <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-white/55">
             <Sigma className="h-3 w-3" />
             RANKED BY MATRIX SCORE ({visible.length})
           </span>
@@ -1657,7 +1657,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
 
                   <div className="min-w-0 flex-1 basis-40">
                     <div className="flex items-center gap-1.5">
-                      <span className="truncate text-[13px] font-black leading-tight text-white font-sans uppercase">
+                      <span className="truncate text-[13px] font-bold leading-tight text-white font-sans uppercase">
                         {point.row.playerName}
                       </span>
                       {point.row.truthStatus === 'official' && (
@@ -1665,7 +1665,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       )}
                       {point.onFrontier && (
                         <span
-                          className="inline-flex shrink-0 items-center gap-0.5 border px-1 font-mono text-[8px] font-black uppercase"
+                          className="inline-flex shrink-0 items-center gap-0.5 border px-1 font-mono text-[8px] font-semibold uppercase"
                           style={{ color: '#31B583', borderColor: '#31B58359', backgroundColor: '#31B5831F' }}
                           title={MATRIX_FRONTIER_METHODOLOGY}
                         >
@@ -1695,8 +1695,8 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                             <span
                               className="inline-flex shrink-0 items-center gap-1 border px-1 uppercase"
                               style={{
-                                color: game?.live?.isLive ? '#EF4444' : '#ffffff80',
-                                borderColor: game?.live?.isLive ? '#EF444459' : 'rgba(255,255,255,0.15)',
+                                color: game?.live?.isLive ? '#D96359' : '#ffffff80',
+                                borderColor: game?.live?.isLive ? '#D9635959' : 'rgba(255,255,255,0.15)',
                               }}
                               title={GAME_LIVE_METHODOLOGY}
                             >
@@ -1711,27 +1711,27 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
 
                   <div className="flex shrink-0 items-center gap-2">
                     <div className="w-14 text-right">
-                      <span className="block font-mono text-[8px] font-black uppercase tracking-[0.12em] text-ve-cyan">
+                      <span className="block font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-ve-cyan">
                         {yMetric.short}
                       </span>
-                      <strong className="block font-mono text-[12px] font-black leading-none tabular-nums text-white">
+                      <strong className="block font-mono text-[12px] font-bold leading-none tabular-nums text-white">
                         {yMetric.format(point.y)}
                       </strong>
                     </div>
                     <div className="w-14 text-right">
-                      <span className="block font-mono text-[8px] font-black uppercase tracking-[0.12em] text-ve-amber">
+                      <span className="block font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-ve-amber">
                         {xMetric.short}
                       </span>
-                      <strong className="block font-mono text-[12px] font-black leading-none tabular-nums text-white">
+                      <strong className="block font-mono text-[12px] font-bold leading-none tabular-nums text-white">
                         {xMetric.format(point.x)}
                       </strong>
                     </div>
                     <div className="w-12 text-right" title={MATRIX_FIT_METHODOLOGY}>
-                      <span className="block font-mono text-[8px] font-black uppercase tracking-[0.12em] text-white/40">
+                      <span className="block font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-white/40">
                         RESID
                       </span>
                       <strong
-                        className="block font-mono text-[12px] font-black leading-none tabular-nums"
+                        className="block font-mono text-[12px] font-bold leading-none tabular-nums"
                         style={{
                           color:
                             point.residualZ == null ? '#ffffff66' : point.residualZ >= 0 ? '#4FB8DC' : '#D99C4A',
@@ -1743,11 +1743,11 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       </strong>
                     </div>
                     <div className="w-12 text-right" title={MATRIX_SCORE_METHODOLOGY}>
-                      <span className="block font-mono text-[8px] font-black uppercase tracking-[0.12em] text-white/40">
+                      <span className="block font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-white/40">
                         MATRIX
                       </span>
                       <strong
-                        className="block font-mono text-sm font-black leading-none tabular-nums font-sans"
+                        className="block font-mono text-sm font-bold leading-none tabular-nums font-sans"
                         style={{ color: point.tier.accent }}
                       >
                         {point.matrixScore}
@@ -1761,7 +1761,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       onClick={() => onOpenResearch({ id: point.row.playerId || point.row.stableId, name: point.row.playerName })}
                       title={`Research ${point.row.playerName}`}
                       aria-label={`Research ${point.row.playerName}`}
-                      className="h-7 px-2 border border-white/20 bg-black text-white/55 text-[10px] font-black uppercase hover:border-ve-cyan hover:text-ve-cyan transition-colors cursor-pointer"
+                      className="h-7 px-2 border border-white/20 bg-black text-white/55 text-[10px] font-semibold uppercase hover:border-ve-cyan hover:text-ve-cyan transition-colors cursor-pointer"
                     >
                       INTEL
                     </button>
@@ -1784,7 +1784,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                       onClick={() => onAddToSlip(point.row)}
                       title={`Add ${point.row.playerName} to slip`}
                       aria-label={`Add ${point.row.playerName} to slip`}
-                      className="h-7 px-2.5 border border-white bg-white text-black text-[10px] font-black uppercase tracking-wider hover:bg-white/80 transition-colors cursor-pointer"
+                      className="h-7 px-2.5 border border-white bg-white text-black text-[10px] font-semibold uppercase tracking-wider hover:bg-white/80 transition-colors cursor-pointer"
                     >
                       + SLIP
                     </button>
@@ -1798,7 +1798,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
                 type="button"
                 onClick={() => setListExpanded((prev) => !prev)}
                 aria-expanded={listExpanded}
-                className="w-full border border-white/20 bg-black px-3 py-2 font-mono text-[9.5px] font-black uppercase tracking-[0.14em] text-white/55 transition-colors hover:border-white hover:text-white cursor-pointer"
+                className="w-full border border-white/20 bg-black px-3 py-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/55 transition-colors hover:border-white hover:text-white cursor-pointer"
               >
                 {listExpanded ? `SHOW TOP ${LIST_PAGE}` : `SHOW ALL ${visible.length} PLOTTED ROWS`}
               </button>
@@ -1816,11 +1816,11 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
             aria-expanded={exclusionsOpen}
             className="flex w-full items-center justify-between gap-3 text-left cursor-pointer"
           >
-            <span className="flex min-w-0 items-center gap-1.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-ve-amber">
+            <span className="flex min-w-0 items-center gap-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-ve-amber">
               <Crosshair className="h-3 w-3 shrink-0" />
               {model.excluded.length} ROW{model.excluded.length === 1 ? '' : 'S'} NOT PLOTTED
             </span>
-            <span className="shrink-0 font-mono text-[9.5px] font-black uppercase tracking-[0.12em] text-white/40">
+            <span className="shrink-0 font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-white/40">
               {exclusionsOpen ? 'HIDE' : 'SHOW'}
             </span>
           </button>
@@ -1851,7 +1851,7 @@ export const HrNextProjectionMatrix = React.memo(function HrNextProjectionMatrix
 
       {/* ── Methodology ──────────────────────────────────────────────────── */}
       <div className="space-y-1.5 border-2 border-white/15 bg-black p-4 font-mono">
-        <span className="flex items-center gap-1.5 font-mono text-[8.5px] font-black uppercase tracking-[0.16em] text-white/40">
+        <span className="flex items-center gap-1.5 font-mono text-[8.5px] font-semibold uppercase tracking-[0.16em] text-white/40">
           <Info className="h-3 w-3" />
           METHODOLOGY & AUDIT SPECS
         </span>

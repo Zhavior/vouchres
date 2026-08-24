@@ -154,7 +154,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <h3
                     onClick={onTicketActivate}
-                    className={`font-mono text-sm sm:text-base font-black leading-tight tracking-tight cursor-pointer hover:underline truncate uppercase ${
+                    className={`font-mono text-sm sm:text-base font-bold leading-tight tracking-tight cursor-pointer hover:underline truncate uppercase ${
                       active ? 'text-ve-cyan' : 'text-white'
                     }`}
                   >
@@ -162,14 +162,16 @@ export const HrNextCard = React.memo(function HrNextCard({
                   </h3>
                   <span className="text-[10px] font-mono text-white/70 bg-obsidian-950 px-1.5 py-0.5 border border-white/15 flex items-center gap-1">
                     {teamLogo ? (
-                      <img src={teamLogo} alt="" width={12} height={12} className="h-3 w-3 shrink-0 object-contain" />
+                      <img src={teamLogo} alt="" width={12} height={12} className="h-3 w-3 shrink-0 object-contain"
+                    loading="lazy"
+                  />
                     ) : null}
                     {row.team}
                   </span>
 
                   {/* Tier Badge */}
                   <span
-                    className="border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase"
+                    className="border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase"
                     style={{ color: activeTier.accent, borderColor: `${activeTier.accent}60`, backgroundColor: `${activeTier.accent}15` }}
                   >
                     {activeTier.label.toUpperCase()}
@@ -177,12 +179,12 @@ export const HrNextCard = React.memo(function HrNextCard({
 
                   {/* HR Intelligence Live & Recent Badges */}
                   {hasHitHrToday && (
-                    <span className="inline-flex items-center gap-1 border border-ve-red bg-ve-red/10/60 px-1.5 py-0.5 font-mono text-[9px] font-black text-ve-red uppercase animate-pulse">
+                    <span className="inline-flex items-center gap-1 border border-ve-red bg-ve-red/10/60 px-1.5 py-0.5 font-mono text-[9px] font-bold text-ve-red uppercase animate-pulse">
                       <Flame className="w-3 h-3 text-ve-red" /> Today HR
                     </span>
                   )}
                   {recentHrs != null && recentHrs > 0 && (
-                    <span className="inline-flex items-center gap-1 border border-ve-amber/50 bg-ve-amber/10/40 px-1.5 py-0.5 font-mono text-[9px] font-black text-ve-amber">
+                    <span className="inline-flex items-center gap-1 border border-ve-amber/50 bg-ve-amber/10/40 px-1.5 py-0.5 font-mono text-[9px] font-bold text-ve-amber">
                       <Flame className="w-3 h-3 text-ve-amber" /> 7Days HR: {recentHrs}
                     </span>
                   )}
@@ -195,7 +197,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                   <span className="text-white/30">·</span>
                   <span className="text-white/55 truncate">{matchupLabel.split('·')[1]?.trim() || matchupLabel}</span>
                   <span className="text-white/30">·</span>
-                  <span className="text-ve-cyan text-[10px] font-black uppercase">{lineupText}</span>
+                  <span className="text-ve-cyan text-[10px] font-semibold uppercase">{lineupText}</span>
                 </p>
 
                 {/* Layer Score Pips */}
@@ -220,14 +222,14 @@ export const HrNextCard = React.memo(function HrNextCard({
 
             {/* Top Right: HRPI Score & Edge Badge */}
             <div className="flex shrink-0 flex-col items-end leading-none">
-              <span className="font-mono text-2xl font-black tabular-nums text-white font-sans" style={{ color: activeTier.accent }}>
+              <span className="font-mono text-2xl font-bold tabular-nums text-white font-sans" style={{ color: activeTier.accent }}>
                 {score}
               </span>
-              <span className="mt-0.5 font-mono text-[8px] font-black uppercase tracking-widest text-white/40">
+              <span className="mt-0.5 font-mono text-[8px] font-semibold uppercase tracking-widest text-white/40">
                 HRPI
               </span>
               {evEdge != null && (
-                <span className={`mt-1 text-[10px] font-mono font-black tabular-nums ${evEdge > 0 ? 'text-ve-emerald' : 'text-white/40'}`}>
+                <span className={`mt-1 text-[10px] font-mono font-bold tabular-nums ${evEdge > 0 ? 'text-ve-emerald' : 'text-white/40'}`}>
                   {evEdge > 0 ? `+${evEdge}% EV` : `${evEdge}% EV`}
                 </span>
               )}
@@ -237,7 +239,7 @@ export const HrNextCard = React.memo(function HrNextCard({
           {/* Statcast telemetry */}
           <div className="grid grid-cols-2 gap-1.5 border-t border-white/10 pt-2 font-mono">
             <div className="border border-white/10 bg-obsidian-950 p-2">
-              <span className="block text-[8px] font-black uppercase tracking-widest text-white/40">AVG EXIT VELO</span>
+              <span className="block text-[8px] font-semibold uppercase tracking-widest text-white/40">AVG EXIT VELO</span>
               <strong
                 className={`mt-0.5 block text-xs font-bold ${avgExitVelo == null ? 'text-white/30' : 'text-ve-cyan'}`}
               >
@@ -246,7 +248,7 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
 
             <div className="border border-white/10 bg-obsidian-950 p-2">
-              <span className="block text-[8px] font-black uppercase tracking-widest text-white/40">BARREL %</span>
+              <span className="block text-[8px] font-semibold uppercase tracking-widest text-white/40">BARREL %</span>
               <strong
                 className={`mt-0.5 block text-xs font-bold ${barrelRate == null ? 'text-white/30' : 'text-ve-amber'}`}
               >
@@ -255,7 +257,7 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
 
             <div className="border border-white/10 bg-obsidian-950 p-2">
-              <span className="block text-[8px] font-black uppercase tracking-widest text-white/40">HANDEDNESS</span>
+              <span className="block text-[8px] font-semibold uppercase tracking-widest text-white/40">HANDEDNESS</span>
               <strong
                 className={`mt-0.5 flex items-baseline gap-1 text-xs font-bold ${handednessValue === 'N/A' ? 'text-white/30' : 'text-ve-emerald'}`}
               >
@@ -269,7 +271,7 @@ export const HrNextCard = React.memo(function HrNextCard({
             </div>
 
             <div className="border border-white/10 bg-obsidian-950 p-2">
-              <span className="block text-[8px] font-black uppercase tracking-widest text-white/40">
+              <span className="block text-[8px] font-semibold uppercase tracking-widest text-white/40">
                 PITCH VULN{pitchVulnerabilityIsProxy ? '*' : ''}
               </span>
               <strong
@@ -308,7 +310,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                 </span>
               )}
               {hasHitHrToday && (
-                <span className="min-w-0 truncate text-[9px] font-black uppercase text-ve-red">
+                <span className="min-w-0 truncate text-[9px] font-semibold uppercase text-ve-red">
                   ⚡ HR LIVE
                 </span>
               )}
@@ -346,7 +348,7 @@ export const HrNextCard = React.memo(function HrNextCard({
               onClick={() => onAddToSlip(row)}
               title="Add to parlay slip"
               aria-label={`Add ${row.playerName} to parlay slip`}
-              className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap border border-ve-cyan/60 bg-ve-cyan/50 px-2.5 text-[9px] font-black uppercase text-ve-cyan transition-colors hover:bg-ve-cyan/20/60 cursor-pointer"
+              className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap border border-ve-cyan/60 bg-ve-cyan/50 px-2.5 text-[9px] font-semibold uppercase text-ve-cyan transition-colors hover:bg-ve-cyan/20/60 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" /> + SLIP
             </button>
@@ -431,7 +433,9 @@ export const HrNextCard = React.memo(function HrNextCard({
             {/* Middle row: Matchup line, pips, lineup */}
             <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[9px]">
               {teamLogo ? (
-                <img src={teamLogo} alt="" width={12} height={12} className="h-3 w-3 shrink-0 object-contain" />
+                <img src={teamLogo} alt="" width={12} height={12} className="h-3 w-3 shrink-0 object-contain"
+                    loading="lazy"
+                  />
               ) : null}
               <span className="min-w-0 truncate text-white/55">
                 {matchupLabel}
@@ -446,7 +450,7 @@ export const HrNextCard = React.memo(function HrNextCard({
                   />
                 ))}
               </span>
-              <span className="shrink-0 truncate font-black uppercase text-ve-cyan">
+              <span className="shrink-0 truncate font-semibold uppercase text-ve-cyan">
                 {lineupText}
               </span>
             </div>
@@ -476,10 +480,10 @@ export const HrNextCard = React.memo(function HrNextCard({
             className="flex shrink-0 flex-col items-center justify-center border px-2.5 py-1 leading-none font-mono"
             style={{ borderColor: `${activeTier.accent}60`, backgroundColor: `${activeTier.accent}15` }}
           >
-            <span className="text-base font-black tabular-nums font-sans" style={{ color: activeTier.accent }}>
+            <span className="text-base font-bold tabular-nums font-sans" style={{ color: activeTier.accent }}>
               {score}
             </span>
-            <span className="mt-0.5 text-[7.5px] font-black uppercase tracking-widest" style={{ color: activeTier.accent }}>
+            <span className="mt-0.5 text-[7.5px] font-semibold uppercase tracking-widest" style={{ color: activeTier.accent }}>
               {activeTier.label.toUpperCase()}
             </span>
           </div>
@@ -516,7 +520,7 @@ export const HrNextCard = React.memo(function HrNextCard({
             type="button"
             onClick={() => onAddToSlip(row)}
             aria-label={`Add ${row.playerName} to parlay slip`}
-            className="inline-flex h-8 items-center gap-1 border border-ve-cyan/60 bg-ve-cyan/50 px-2.5 text-[10px] font-black uppercase text-ve-cyan hover:bg-ve-cyan/20/60 transition-colors cursor-pointer"
+            className="inline-flex h-8 items-center gap-1 border border-ve-cyan/60 bg-ve-cyan/50 px-2.5 text-[10px] font-semibold uppercase text-ve-cyan hover:bg-ve-cyan/20/60 transition-colors cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" /> + SLIP
           </button>

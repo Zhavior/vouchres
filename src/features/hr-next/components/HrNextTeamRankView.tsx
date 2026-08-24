@@ -13,7 +13,7 @@ import {
 
 const ROWS_PER_STACK = 5;
 const STACK_LEGS = 3;
-const RANK_ACCENTS = ['#10B981', '#6EE7B7', '#F59E0B'] as const;
+const RANK_ACCENTS = ['#31B583', '#6EE7B7', '#D99C4A'] as const;
 
 function rankAccent(rank: number): string {
   return RANK_ACCENTS[rank - 1] ?? '#64748B';
@@ -38,11 +38,11 @@ interface MetricProps {
 function Metric({ label, value, accent = '#ffffff' }: MetricProps) {
   return (
     <div className="min-w-0 border border-white/15 bg-obsidian-950 px-2.5 py-2 font-mono">
-      <span className="block truncate text-[8.5px] font-black uppercase tracking-widest text-white/40">
+      <span className="block truncate text-[8.5px] font-semibold uppercase tracking-widest text-white/40">
         {label}
       </span>
       <strong
-        className="mt-1 block truncate text-sm font-black leading-none tabular-nums"
+        className="mt-1 block truncate text-sm font-bold leading-none tabular-nums"
         style={{ color: accent }}
       >
         {value}
@@ -108,12 +108,14 @@ function TeamStackCard({
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative grid h-14 w-14 shrink-0 place-items-center border-2 border-white/20 bg-obsidian-950 p-2">
               {stack.teamLogoUrl ? (
-                <img src={stack.teamLogoUrl} alt="" className="h-9 w-9 object-contain" />
+                <img src={stack.teamLogoUrl} alt="" className="h-9 w-9 object-contain"
+                    loading="lazy"
+                  />
               ) : (
-                <span className="font-mono text-sm font-black text-white">{stack.team.slice(0, 3)}</span>
+                <span className="font-mono text-sm font-bold text-white">{stack.team.slice(0, 3)}</span>
               )}
               <span
-                className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center border border-black font-mono text-[10px] font-black text-black tabular-nums"
+                className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center border border-black font-mono text-[10px] font-bold text-black tabular-nums"
                 style={{ backgroundColor: accent }}
               >
                 {stack.rank}
@@ -123,7 +125,7 @@ function TeamStackCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span
-                  className="border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest"
+                  className="border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest"
                   style={{ color: accent, borderColor: `${accent}60`, backgroundColor: `${accent}1F` }}
                 >
                   #{stack.rank} HR STACK
@@ -132,7 +134,7 @@ function TeamStackCard({
                   {stack.isHome === false ? '@' : 'vs'} {stack.opponent}
                 </span>
               </div>
-              <h3 className="mt-1 truncate text-lg font-black leading-tight text-white uppercase">{stack.team}</h3>
+              <h3 className="mt-1 truncate text-lg font-bold leading-tight text-white uppercase">{stack.team}</h3>
               <p className="truncate text-xs text-white/55">
                 {stack.pitcherName ? `SP ${stack.pitcherName}` : 'STARTER TBD'}
                 {stack.gameTime ? ` · ${formatGameTime(stack.gameTime)}` : ''}
@@ -141,11 +143,11 @@ function TeamStackCard({
           </div>
 
           <div className="shrink-0 text-right font-mono">
-            <span className="block text-[8.5px] font-black uppercase tracking-widest text-white/40">
+            <span className="block text-[8.5px] font-semibold uppercase tracking-widest text-white/40">
               {headlineLabel}
             </span>
             <strong
-              className="block text-2xl font-black leading-none tabular-nums font-sans"
+              className="block text-2xl font-bold leading-none tabular-nums font-sans"
               style={{ color: accent }}
             >
               {headlineValue}
@@ -169,7 +171,7 @@ function TeamStackCard({
           <Metric
             label="BEST EV"
             value={stack.bestEvPct != null ? `${stack.bestEvPct > 0 ? '+' : ''}${stack.bestEvPct}%` : 'N/A'}
-            accent={stack.bestEvPct != null && stack.bestEvPct > 0 ? '#10B981' : '#ffffff'}
+            accent={stack.bestEvPct != null && stack.bestEvPct > 0 ? '#31B583' : '#ffffff'}
           />
         </div>
       </header>
@@ -177,7 +179,7 @@ function TeamStackCard({
       {/* ── Bats ─────────────────────────────────────────────────────────── */}
       <div className="flex-1 space-y-2 p-4">
         <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
+          <span className="text-[9px] font-semibold uppercase tracking-widest text-white/40">
             POWER BATS ({stack.batters})
           </span>
           <span className="text-[9px] font-bold text-ve-cyan">
@@ -223,7 +225,7 @@ function TeamStackCard({
                     <span className="h-1.5 w-1.5 shrink-0 bg-ve-emerald" title="Lineup confirmed" />
                   )}
                   {typeof row.recentHomeRuns === 'number' && row.recentHomeRuns > 0 && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 border border-ve-amber/40 bg-ve-amber/10/40 px-1 text-[8.5px] font-black text-ve-amber">
+                    <span className="inline-flex shrink-0 items-center gap-0.5 border border-ve-amber/40 bg-ve-amber/10/40 px-1 text-[8.5px] font-bold text-ve-amber">
                       <Flame className="h-2.5 w-2.5" />
                       {row.recentHomeRuns}
                     </span>
@@ -236,11 +238,11 @@ function TeamStackCard({
               </div>
 
               <div className="shrink-0 text-right">
-                <span className="block text-[8px] font-black uppercase tracking-widest text-white/40">
+                <span className="block text-[8px] font-semibold uppercase tracking-widest text-white/40">
                   HRPI
                 </span>
                 <strong
-                  className="block text-sm font-black leading-none tabular-nums font-sans"
+                  className="block text-sm font-bold leading-none tabular-nums font-sans"
                   style={{ color: tier.accent }}
                 >
                   {hrpi}
@@ -290,7 +292,7 @@ function TeamStackCard({
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
             aria-expanded={expanded}
-            className="w-full border border-white/15 bg-obsidian-950 px-3 py-2 text-[9.5px] font-black uppercase tracking-widest text-white/55 transition-colors hover:border-white hover:text-white cursor-pointer"
+            className="w-full border border-white/15 bg-obsidian-950 px-3 py-2 text-[9.5px] font-semibold uppercase tracking-widest text-white/55 transition-colors hover:border-white hover:text-white cursor-pointer"
           >
             {expanded ? `SHOW TOP ${ROWS_PER_STACK}` : `SHOW ALL ${stack.rows.length} BATS`}
           </button>
@@ -303,7 +305,7 @@ function TeamStackCard({
         <button
           type="button"
           onClick={() => stackLegs.forEach((row) => onAddToSlip(row))}
-          className="shrink-0 border border-ve-emerald bg-ve-emerald text-black px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider hover:bg-ve-emerald transition-colors cursor-pointer"
+          className="shrink-0 border border-ve-emerald bg-ve-emerald text-black px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider hover:bg-ve-emerald transition-colors cursor-pointer"
         >
           <Plus className="mr-1 inline h-3 w-3" />
           STACK TOP {stackLegs.length}
@@ -348,13 +350,13 @@ export const HrNextTeamRankView = React.memo(function HrNextTeamRankView({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 border border-ve-emerald/50 bg-ve-emerald/40 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-ve-emerald">
+              <span className="inline-flex items-center gap-1.5 border border-ve-emerald/50 bg-ve-emerald/40 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-ve-emerald">
                 <Trophy className="h-3 w-3" />
                 TEAM POWER RANKINGS
               </span>
               <span className="text-[10px] font-bold text-white/40 uppercase">{scopeLabel}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase font-sans">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase font-sans">
               Which Lineup Goes Deep First
             </h2>
             <p className="max-w-2xl text-[10.5px] leading-relaxed text-white/55">
@@ -364,10 +366,10 @@ export const HrNextTeamRankView = React.memo(function HrNextTeamRankView({
 
           <div className="flex shrink-0 items-start gap-2">
             <div className="border-2 border-white/15 bg-obsidian-950 px-4 py-2.5 text-center">
-              <span className="block text-[8.5px] font-black uppercase tracking-widest text-white/40">
+              <span className="block text-[8.5px] font-semibold uppercase tracking-widest text-white/40">
                 TEAMS RANKED
               </span>
-              <strong className="mt-1 block text-2xl font-black leading-none tabular-nums text-ve-emerald font-sans">
+              <strong className="mt-1 block text-2xl font-bold leading-none tabular-nums text-ve-emerald font-sans">
                 {teams.length}
               </strong>
             </div>
@@ -385,7 +387,7 @@ export const HrNextTeamRankView = React.memo(function HrNextTeamRankView({
 
         {/* Ladder */}
         <div className="mt-4 space-y-2 border-t border-white/10 pt-3">
-          <span className="flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-widest text-white/40">
+          <span className="flex items-center gap-1.5 text-[8.5px] font-semibold uppercase tracking-widest text-white/40">
             <Layers className="h-3 w-3" />
             POWER LADDER
           </span>
@@ -395,11 +397,13 @@ export const HrNextTeamRankView = React.memo(function HrNextTeamRankView({
             const accent = rankAccent(team.rank);
             return (
               <div key={team.team} className="flex items-center gap-2.5">
-                <span className="w-5 shrink-0 text-[10px] font-black tabular-nums text-white/40">
+                <span className="w-5 shrink-0 text-[10px] font-bold tabular-nums text-white/40">
                   {team.rank}
                 </span>
                 {team.teamLogoUrl ? (
-                  <img src={team.teamLogoUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                  <img src={team.teamLogoUrl} alt="" className="h-4 w-4 shrink-0 object-contain"
+                    loading="lazy"
+                  />
                 ) : (
                   <span className="h-4 w-4 shrink-0" />
                 )}
@@ -412,7 +416,7 @@ export const HrNextTeamRankView = React.memo(function HrNextTeamRankView({
                     style={{ width: `${pct}%`, backgroundColor: accent }}
                   />
                 </div>
-                <span className="w-12 shrink-0 text-right text-[10px] font-black tabular-nums text-white/55">
+                <span className="w-12 shrink-0 text-right text-[10px] font-bold tabular-nums text-white/55">
                   {basis === 'xhr' && team.expectedHr != null ? team.expectedHr.toFixed(2) : team.stackRating}
                 </span>
               </div>

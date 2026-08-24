@@ -31,7 +31,7 @@ export function HrNextKeyboardCheatsheet({ isOpen, onClose }: HrNextKeyboardChea
             <span className="p-1 border border-ve-cyan/40 bg-ve-cyan/40 text-ve-cyan">
               <Command className="w-4 h-4" />
             </span>
-            <h3 className="text-xs font-black text-white uppercase tracking-widest">Terminal Keybindings</h3>
+            <h3 className="text-xs font-bold text-white uppercase tracking-widest">Terminal Keybindings</h3>
           </div>
           <button
             type="button"

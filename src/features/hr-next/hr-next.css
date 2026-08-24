@@ -1,13 +1,12 @@
 /*
- * HR Next — Quant-Terminal Primitives (Linear × Bloomberg Terminal).
+ * HR Next — Apple Cupertino Pro Material, matching Today Next, Live Games,
+ * News Wire and the V4 landing. Colour tokens come from `@theme` in
+ * src/index.css (ve-cyan / ve-emerald / ve-amber / ve-red).
  */
 
 .hr-next {
-  background-color: #090A0F;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
-  background-size: 48px 48px, 48px 48px;
+  color: #ffffff;
+  background-color: #050505;
 }
 
 .hr-next * {
@@ -56,3 +55,50 @@
   }
 }
 
+
+/* ============================================================
+   MATERIAL SURFACES & CHROME — shared with the other desks
+   ============================================================ */
+
+.hr-next .hr-plate {
+  background-color: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Quiet chrome button, identical to lg-control / news-control. */
+.hr-next .hr-control {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+.hr-next .hr-control:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* 6px LED, no ping halo. */
+.hr-next .hr-live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background-color: var(--color-ve-emerald, #31b583);
+  box-shadow: 0 0 8px rgba(49, 181, 131, 0.45);
+  animation: hr-live-pulse 1.8s ease-in-out infinite;
+}
+
+.hr-next .hr-live-dot--red {
+  background-color: var(--color-ve-red, #d96359);
+  box-shadow: 0 0 8px rgba(217, 99, 89, 0.45);
+}
+
+@keyframes hr-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-next .hr-live-dot { animation: none; box-shadow: none; }
+}

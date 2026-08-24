@@ -84,7 +84,7 @@ export function HrNextTacticalFilters({
               isColumn ? 'w-full px-2.5 py-1.5 text-xs' : 'whitespace-nowrap px-3 py-1.5 text-xs'
             } ${
               isActive
-                ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-black'
+                ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-bold'
                 : 'border-white/10 bg-black text-white/55 hover:text-white hover:bg-obsidian-800 hover:border-white/25'
             }`}
           >
@@ -97,7 +97,7 @@ export function HrNextTacticalFilters({
               <span className="truncate">{label}</span>
             </div>
             <span
-              className={`px-1.5 py-0.2 text-[9px] font-black tabular-nums border ${
+              className={`px-1.5 py-0.2 text-[9px] font-bold tabular-nums border ${
                 isActive
                   ? 'border-ve-cyan/50 bg-ve-cyan/50 text-ve-cyan'
                   : 'border-white/10 bg-obsidian-950 text-white/40'

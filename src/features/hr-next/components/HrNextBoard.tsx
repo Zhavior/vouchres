@@ -175,7 +175,7 @@ export function HrNextBoard({
                 className={`mb-3 flex items-center justify-between gap-2 rounded-none border ${column.tier.columnBorder} bg-[#060a0a] px-3 py-2`}
               >
                 <h2
-                  className={`flex min-w-0 items-center gap-2 font-mono text-[11px] font-black uppercase tracking-[0.18em] ${column.tier.headerText}`}
+                  className={`flex min-w-0 items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] ${column.tier.headerText}`}
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full ${column.tier.headerDot}`} />
                   <span className="truncate">{column.tier.label}</span>
@@ -286,7 +286,7 @@ export function HrNextBoard({
         {displayedMatchups.map((matchup) => (
           <div key={matchup.header.id} className="mb-6 rounded-none border border-white/10 bg-[#0a1010] p-5">
             <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
-              <h2 className="text-sm font-black uppercase tracking-widest text-white">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-white">
                 {matchup.awayTeam || 'AWAY'} <span className="text-white/40">@</span> {matchup.homeTeam || 'HOME'}
               </h2>
               <span className="font-mono text-[10px] text-white/50">

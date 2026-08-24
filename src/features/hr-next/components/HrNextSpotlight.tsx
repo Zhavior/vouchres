@@ -67,7 +67,7 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
                 {row.team}
               </span>
               <span
-                className="px-2 py-0.5 text-[9px] font-black uppercase border"
+                className="px-2 py-0.5 text-[9px] font-semibold uppercase border"
                 style={{ color: tier.accent, borderColor: `${tier.accent}60`, backgroundColor: `${tier.accent}15` }}
               >
                 {tier.label.toUpperCase()}
@@ -88,25 +88,25 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
         <div className="flex shrink-0 flex-wrap items-stretch gap-2.5">
           <div className="min-w-[96px] border-l border-white/[0.08] px-3 first:border-l-0 first:pl-0">
             <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">HRPI</span>
-            <strong className="mt-1 block text-2xl font-black leading-none tabular-nums font-sans" style={{ color: tier.accent }}>
+            <strong className="mt-1 block text-2xl font-bold leading-none tabular-nums font-sans" style={{ color: tier.accent }}>
               {hrpi}
             </strong>
           </div>
           <div className="min-w-[96px] border-l border-white/[0.08] px-3 first:border-l-0 first:pl-0">
             <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">MODEL HR%</span>
-            <strong className="mt-1 block text-2xl font-black leading-none tabular-nums text-white font-sans">
+            <strong className="mt-1 block text-2xl font-bold leading-none tabular-nums text-white font-sans">
               {modelProbPct != null ? `${modelProbPct}%` : 'N/A'}
             </strong>
           </div>
           <div className="min-w-[96px] border-l border-white/[0.08] px-3 first:border-l-0 first:pl-0">
             <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">BOOK IMP</span>
-            <strong className="mt-1 block text-2xl font-black leading-none tabular-nums text-white/70 font-sans">
+            <strong className="mt-1 block text-2xl font-bold leading-none tabular-nums text-white/70 font-sans">
               {impliedProbPct != null ? `${impliedProbPct}%` : 'N/A'}
             </strong>
           </div>
           <div className="min-w-[104px] border-2 border-ve-emerald/40 bg-ve-emerald/30 p-2.5">
-            <span className="block text-[8.5px] font-black uppercase tracking-widest text-ve-emerald">EDGE</span>
-            <strong className="mt-1 block text-2xl font-black leading-none tabular-nums text-ve-emerald font-sans">
+            <span className="block text-[8.5px] font-semibold uppercase tracking-widest text-ve-emerald">EDGE</span>
+            <strong className="mt-1 block text-2xl font-bold leading-none tabular-nums text-ve-emerald font-sans">
               {evEdgePct != null ? `${evEdgePct > 0 ? '+' : ''}${evEdgePct}%` : 'N/A'}
             </strong>
             <span className="mt-1 block text-[9px] text-white/55 font-bold">{oddsLabel ?? 'NO BOOK LINE'}</span>
@@ -131,7 +131,7 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
             onClick={() => sourceComplete && onAddToSlip(row)}
             disabled={!sourceComplete}
             title={sourceComplete ? 'Add verified candidate to slip' : 'Required lineup, weather, bullpen, Statcast, game-time, and market inputs are missing'}
-            className={`inline-flex h-8 items-center gap-1 border px-3.5 text-[10px] font-black uppercase tracking-wider transition-colors ${
+            className={`inline-flex h-8 items-center gap-1 border px-3.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
               sourceComplete
                 ? 'border-ve-amber bg-ve-amber text-black hover:bg-ve-amber cursor-pointer'
                 : 'border-white/15 bg-obsidian-950 text-white/30 cursor-not-allowed'

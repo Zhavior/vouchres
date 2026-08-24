@@ -64,7 +64,7 @@ function readAxes(row: HrWatchRow): CollisionAxis[] {
       key: 'park',
       label: 'Park / env',
       value: finite(row.parkContext) ?? finite(row.parkFactor),
-      color: '#8A8A93',
+      color: 'rgba(255,255,255,0.4)',
       dir: [0, 0, 1],
     },
   ];
