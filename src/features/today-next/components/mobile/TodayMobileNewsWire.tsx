@@ -28,7 +28,7 @@ export function TodayMobileNewsWire({ slateRows, onOpenPlayer }: TodayMobileNews
   return (
     <section className="px-4 md:hidden font-mono" aria-label="MLB tactical intel wire">
       <div className="flex items-center justify-between pb-2">
-        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/55">
+        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/55">
           <Zap className="h-3 w-3 text-[#31B583]" />
           TACTICAL INTEL WIRE ({items.length})
         </span>

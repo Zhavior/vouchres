@@ -28,7 +28,7 @@ function Gauge({ score }: { score: number }) {
   const clamped = Math.max(0, Math.min(100, Math.round(score)));
   return (
     <div className="border border-ve-emerald/30 bg-ve-emerald/10 px-2.5 py-1.5 text-center min-w-[56px] rounded-none shrink-0 font-mono">
-      <span className="text-lg font-black leading-none tabular-nums text-ve-emerald block">{clamped}</span>
+      <span className="text-lg font-bold leading-none tabular-nums text-ve-emerald block">{clamped}</span>
       <span className="text-[7px] font-bold uppercase tracking-wider text-ve-emerald block mt-0.5">HRPI</span>
     </div>
   );

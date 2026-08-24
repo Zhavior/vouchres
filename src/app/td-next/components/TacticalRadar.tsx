@@ -80,7 +80,7 @@ export const TacticalRadar: React.FC<TacticalRadarProps> = ({
                 onClick={() => onUpdateFilter('positionFocus', opt.key)}
                 className={`px-1 py-1.5 text-center text-[9px] font-semibold uppercase tracking-wider transition-colors border cursor-pointer ${
                   isChecked
-                    ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                    ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
                     : 'border-transparent text-white/55 hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
@@ -104,7 +104,7 @@ export const TacticalRadar: React.FC<TacticalRadarProps> = ({
             onClick={() => onUpdateFilter('rzTouchShareMin25', !filters.rzTouchShareMin25)}
             className={`w-full px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors border cursor-pointer flex justify-between items-center ${
               filters.rzTouchShareMin25
-                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
                 : 'border-transparent text-white/55 hover:bg-white/[0.04] hover:text-white'
             }`}
           >
@@ -119,7 +119,7 @@ export const TacticalRadar: React.FC<TacticalRadarProps> = ({
             onClick={() => onUpdateFilter('inside10TargetMin30', !filters.inside10TargetMin30)}
             className={`w-full px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors border cursor-pointer flex justify-between items-center ${
               filters.inside10TargetMin30
-                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
                 : 'border-transparent text-white/55 hover:bg-white/[0.04] hover:text-white'
             }`}
           >
@@ -134,7 +134,7 @@ export const TacticalRadar: React.FC<TacticalRadarProps> = ({
             onClick={() => onUpdateFilter('oppRzDefBottom10', !filters.oppRzDefBottom10)}
             className={`w-full px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors border cursor-pointer flex justify-between items-center ${
               filters.oppRzDefBottom10
-                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
                 : 'border-transparent text-white/55 hover:bg-white/[0.04] hover:text-white'
             }`}
           >

@@ -171,7 +171,7 @@ export function TodayNextCommandBrief({
 
               <div>
                 <span className="text-[9px] text-white/40 uppercase tracking-wider block font-mono">COUNTDOWN TO LOCK:</span>
-                <strong className="mt-1 block text-3xl sm:text-4xl font-black tabular-nums text-[#ffffff] font-mono">
+                <strong className="mt-1 block text-3xl sm:text-4xl font-bold tabular-nums text-[#ffffff] font-mono">
                   {firstPitch.countdownMs != null ? formatCountdown(firstPitch.countdownMs) : 'STARTING SOON'}
                 </strong>
               </div>

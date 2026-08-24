@@ -41,7 +41,7 @@ export function TacticalPresets({ onApplyPreset, onReset }: TacticalPresetsProps
           aria-pressed={activePreset === 'HEAVY_GL'}
           className={`flex items-center justify-between w-full px-2.5 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider transition-colors border cursor-pointer ${
             activePreset === 'HEAVY_GL'
-              ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+              ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
               : 'border-transparent text-white/55 hover:bg-white/[0.04] hover:text-white'
           }`}
         >

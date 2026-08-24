@@ -515,7 +515,7 @@ function NewsArticleModal({
 
           {/* Headline & Metadata */}
           <div className="space-y-1.5">
-            <h2 id="intel-modal-title" className="text-lg sm:text-xl font-black text-white leading-tight font-sans">
+            <h2 id="intel-modal-title" className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight font-sans">
               {story.headline}
             </h2>
             <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/40 border-b border-white/10 pb-2.5">

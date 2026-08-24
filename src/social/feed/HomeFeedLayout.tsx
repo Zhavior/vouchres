@@ -4,7 +4,6 @@ import React, { Suspense, useEffect, useState } from 'react';
 // full desktop width — and the mobile drawer still covers the phone case.
 import AppTopBar from '../../app/AppTopBar';
 import { useTheme } from '../../components/theme/ThemeProvider';
-import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
 import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
@@ -204,10 +203,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-      {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
-        <DeferredBubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
-      )}
-
       {!isPublicFrontPage && (
         <AppTopBar
           activeSection={activeSection}

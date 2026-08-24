@@ -7,7 +7,6 @@ import { THEME_REGISTRY } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
-import { DeferredBubbleField } from './vouchedge/DeferredBubbleField';
 import { VEButton } from './ui/ve';
 import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
