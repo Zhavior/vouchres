@@ -2,8 +2,23 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import HeroCommandCarousel from './HeroCommandCarousel';
+import { useLandingTelemetry } from '../../hooks/public/useLandingTelemetry';
 
 export default function Hero() {
+  const telemetry = useLandingTelemetry();
+
+  /*
+   * A dash, never a stand-in number. These sit under a "LIVE MODEL" banner, so
+   * printing a literal the feed did not return would be the exact failure the
+   * product exists to call out.
+   */
+  const cells = [
+    { val: telemetry.gamesActive, label: 'Games_Active' },
+    { val: telemetry.lineupsSynced, label: 'Lineups_Synced' },
+    { val: telemetry.eliteCandidates, label: 'Elite_Candidates' },
+    { val: telemetry.modelStatus, label: 'Model_Status', color: 'text-ve-emerald' },
+  ];
+
   return (
     <section className="relative min-h-[95vh] flex items-center pt-32 pb-20 px-6 overflow-hidden">
       <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-16 items-center relative z-10">
@@ -62,14 +77,15 @@ export default function Hero() {
             transition={{ delay: 0.22, duration: 0.35 }}
             className="pt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-white/5 sm:flex sm:gap-12"
           >
-            {[
-              { val: '15', label: 'Games_Active' },
-              { val: '270/270', label: 'Lineups_Synced' },
-              { val: '14', label: 'Elite_Candidates' },
-              { val: 'LIVE', label: 'Model_Status', color: 'text-ve-emerald' }
-            ].map((item) => (
+            {cells.map((item) => (
               <div key={item.label} className="min-w-0">
-                <p className={`text-lg font-mono ${item.color || 'text-white'}`}>{item.val}</p>
+                <p
+                  className={`text-lg font-mono tabular-nums ${
+                    item.val == null ? 'text-white/25' : item.color || 'text-white'
+                  }`}
+                >
+                  {item.val ?? '—'}
+                </p>
                 <p className="text-[8px] font-mono text-white/35 uppercase tracking-tighter break-words">{item.label}</p>
               </div>
             ))}
