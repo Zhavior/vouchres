@@ -37,6 +37,38 @@ function pct(value: number | null): string | null {
   return value == null ? null : `${(value * 100).toFixed(1)}%`;
 }
 
+/**
+ * Confidence tier as a 4-step ladder.
+ *
+ * This replaced a percentage bar fed by `dataConfidence`, which does not
+ * discriminate between players: on a live 120-row board, 110 rows carried
+ * exactly 90, the remaining 10 scattered 75-87 with no relationship to
+ * hrScore, and confirmed rows all read 100. It encodes lineup status, not
+ * evidence coverage — so rendering it as a per-player "Evidence_Coverage"
+ * percentage claimed a precision the field does not have.
+ *
+ * `confidenceTier` genuinely varies (elite 14 / strong 26 / watchlist 50 /
+ * thin 30 on that same board), and it is categorical, so it is drawn as
+ * discrete steps rather than a continuous bar.
+ */
+const TIER_LADDER = ['thin', 'watchlist', 'strong', 'elite'] as const;
+
+function TierMeter({ tier }: { tier: string | null }) {
+  const index = tier ? TIER_LADDER.indexOf(tier.toLowerCase() as (typeof TIER_LADDER)[number]) : -1;
+  return (
+    <div className="flex gap-1" aria-label={tier ? `Confidence tier ${tier}` : 'Confidence tier unavailable'}>
+      {TIER_LADDER.map((step, i) => (
+        <span
+          key={step}
+          className={`h-1 flex-1 transition-colors duration-500 ${
+            index >= 0 && i <= index ? 'bg-ve-emerald' : 'bg-white/10'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
 function buildScenes(
   top: LandingCandidate | null,
   rows: LandingCandidate[],
@@ -101,17 +133,12 @@ function buildScenes(
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
-              <span className="text-white/40">Evidence_Coverage</span>
+              <span className="text-white/40">Confidence_Tier</span>
               <span className="text-ve-emerald">
-                <Cell value={top?.dataConfidence != null ? `${top.dataConfidence}%` : null} />
+                <Cell value={top?.confidenceTier ? top.confidenceTier.toUpperCase() : null} />
               </span>
             </div>
-            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-ve-emerald transition-[width] duration-700"
-                style={{ width: `${top?.dataConfidence ?? 0}%` }}
-              />
-            </div>
+            <TierMeter tier={top?.confidenceTier ?? null} />
           </div>
         </div>
       ),
@@ -142,8 +169,8 @@ function buildScenes(
               <span className="text-[10px] font-mono tabular-nums text-ve-emerald">
                 <Cell value={row.hrScore} />
               </span>
-              <span className="text-[10px] font-mono tabular-nums text-white/40">
-                <Cell value={row.dataConfidence != null ? `${row.dataConfidence}%` : null} />
+              <span className="w-16 shrink-0 text-right text-[9px] font-mono uppercase tracking-wider text-white/40">
+                <Cell value={row.confidenceTier ?? null} />
               </span>
             </div>
           ))}
