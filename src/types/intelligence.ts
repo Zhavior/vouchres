@@ -35,6 +35,41 @@ export interface BatterRecord {
   verifiedOutcome?: 'HR_CONFIRMED' | 'NO_HR' | 'IN_PLAY';
 }
 
+/**
+ * One audited evidence layer behind a candidate. `status` is deliberately not a
+ * boolean: a layer can be legitimately absent (indoor venue zeroes the
+ * atmospheric vector) without that counting as a failure.
+ */
+export interface EvidenceItem {
+  id: string;
+  layer: string;
+  source: string;
+  status: 'verified' | 'missing';
+  detail: string;
+  timestamp: string;
+}
+
+/** A batter on the HR board, with the evidence stack that produced its HRPI. */
+export interface PlayerCandidate {
+  id: string;
+  name: string;
+  pos: string;
+  team: string;
+  opp: string;
+  hand: string;
+  pitcherOpp: string;
+  pitcherHand: string;
+  avgEv: number;
+  barrelPct: number;
+  hardHitPct: number;
+  pitchVuln: number;
+  parkBoost: number;
+  hrpi: number;
+  projHrPct: number;
+  auditScore: number;
+  evidenceItems: EvidenceItem[];
+}
+
 export interface StadiumGeoMetric {
   id: string;
   name: string;
