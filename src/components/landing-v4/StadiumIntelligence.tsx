@@ -2,9 +2,28 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Wind, Thermometer, Droplets, Navigation, Globe, Zap } from 'lucide-react';
 import { STADIUMS, StadiumTelemetry } from '../../lib/stadium-data';
+import { useLandingTelemetry } from '../../hooks/public/useLandingTelemetry';
 
 export default function StadiumIntelligence() {
   const [activeStadium, setActiveStadium] = useState<StadiumTelemetry>(STADIUMS[0]);
+  const { weatherByVenue, isLoading } = useLandingTelemetry();
+
+  /*
+   * Conditions are looked up by the venue's official StatsAPI name. When the
+   * forecast feed has nothing for first pitch it says so rather than estimating
+   * — the same contract the endpoint itself states — so these read as dashes
+   * instead of the literals that used to sit here.
+   */
+  const conditions = weatherByVenue.find((w) => w.venue === activeStadium.venueName) ?? null;
+  const windLabel =
+    conditions?.windMph != null
+      ? `${Math.round(conditions.windMph)} MPH${conditions.windCompass ? ` ${conditions.windCompass}` : ''}`
+      : null;
+  const tempLabel = conditions?.tempF != null ? `${Math.round(conditions.tempF)}\u00B0F` : null;
+  const precipLabel = conditions?.precipChancePct != null ? `${Math.round(conditions.precipChancePct)}%` : null;
+  const liveCell = (value: string | null) =>
+    value ?? <span className="text-white/25">{isLoading ? '\u2026' : '\u2014'}</span>;
+
 
   return (
     <section id="intelligence" className="scroll-mt-20 py-40 px-6 bg-obsidian-950 relative overflow-hidden">
@@ -87,19 +106,19 @@ export default function StadiumIntelligence() {
                       <div className="flex items-center gap-2 terminal-text">
                         <Wind size={12} /> Wind_Vector
                       </div>
-                      <p className="text-sm font-mono text-white">{activeStadium.wind}</p>
+                      <p className="text-sm font-mono text-white">{liveCell(windLabel)}</p>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 terminal-text">
                         <Thermometer size={12} /> Air_Temp
                       </div>
-                      <p className="text-sm font-mono text-white">{activeStadium.temp}</p>
+                      <p className="text-sm font-mono text-white">{liveCell(tempLabel)}</p>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 terminal-text">
-                        <Droplets size={12} /> Humidity
+                        <Droplets size={12} /> Precip_Chance
                       </div>
-                      <p className="text-sm font-mono text-white">{activeStadium.humidity}</p>
+                      <p className="text-sm font-mono text-white">{liveCell(precipLabel)}</p>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 terminal-text">
@@ -114,15 +133,19 @@ export default function StadiumIntelligence() {
                       <p className="text-sm font-mono text-white">{activeStadium.elevation}</p>
                     </div>
                     <div className="p-4 bg-ve-cyan/5 border border-ve-cyan/20 rounded flex flex-col justify-center">
-                      <span className="text-[8px] font-bold text-ve-cyan uppercase mb-1">Model_Adjustment</span>
-                      <span className="text-xs font-mono text-white">CALIBRATED</span>
+                      <span className="text-[8px] font-bold text-ve-cyan uppercase mb-1">Forecast_Feed</span>
+                      <span className="text-xs font-mono text-white">
+                        {conditions?.available ? 'LIVE' : isLoading ? 'SYNCING' : 'NO FORECAST'}
+                      </span>
                     </div>
                   </motion.div>
                 </AnimatePresence>
 
                 <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-center">
                   <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">
-                    Source: NOAA_WEATHER_FEED // STATCAST_GEO_v2
+                    {/* Claimed NOAA; the forecast feed is open-meteo, and
+                        "STATCAST_GEO_v2" was not a real system. */}
+                    Source: OPEN-METEO // PARK_FACTOR_TABLE
                   </span>
                   <div className="flex gap-1">
                     {[1, 2, 3].map(i => (

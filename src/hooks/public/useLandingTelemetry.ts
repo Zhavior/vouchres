@@ -26,6 +26,27 @@ export interface LandingCandidate {
   avgExitVelo: number | null;
 }
 
+/** One evidence layer, with the count and provenance the API actually returned. */
+export interface CoverageLayer {
+  id: string;
+  label: string;
+  description: string;
+  /** Null until the feed answers — never a placeholder figure. */
+  count: number | null;
+  unit: string;
+  source: string | null;
+}
+
+/** First-pitch conditions for one venue, exactly as the forecast feed reported. */
+export interface VenueWeather {
+  venue: string;
+  tempF: number | null;
+  windMph: number | null;
+  windCompass: string | null;
+  precipChancePct: number | null;
+  available: boolean;
+}
+
 export interface LandingTelemetry {
   gamesActive: number | null;
   lineupsSynced: string | null;
@@ -34,6 +55,8 @@ export interface LandingTelemetry {
   generatedAt: string | null;
   contractVersion: string | null;
   topCandidates: LandingCandidate[];
+  coverage: CoverageLayer[];
+  weatherByVenue: VenueWeather[];
   isLoading: boolean;
   isError: boolean;
 }
@@ -46,6 +69,8 @@ const EMPTY: Omit<LandingTelemetry, 'isLoading' | 'isError'> = {
   generatedAt: null,
   contractVersion: null,
   topCandidates: [],
+  coverage: [],
+  weatherByVenue: [],
 };
 
 function num(value: unknown): number | null {
@@ -72,13 +97,19 @@ async function fetchSnapshot(): Promise<Snapshot> {
       try {
         // Settled rather than awaited together: one feed being down should not
         // blank the numbers the other one can still answer for.
-        const [lineup, board] = await Promise.allSettled([
+        const [lineup, board, statcast, matchups, weather] = await Promise.allSettled([
           fetch('/api/mlb/lineup/today').then((r) => r.json()),
           fetch('/api/mlb/hr-board/today').then((r) => r.json()),
+          fetch('/api/mlb/statcast/batters').then((r) => r.json()),
+          fetch('/api/mlb/matchups/today').then((r) => r.json()),
+          fetch('/api/mlb/weather/today').then((r) => r.json()),
         ]);
 
         const l = lineup.status === 'fulfilled' && lineup.value?.ok ? lineup.value : null;
         const b = board.status === 'fulfilled' && board.value?.ok ? board.value : null;
+        const sc = statcast.status === 'fulfilled' && statcast.value?.ok ? statcast.value : null;
+        const mu = matchups.status === 'fulfilled' && matchups.value?.ok ? matchups.value : null;
+        const we = weather.status === 'fulfilled' && weather.value?.ok ? weather.value : null;
 
         const rawCandidates: unknown[] = Array.isArray(b?.candidates) ? b.candidates : [];
         const elite = rawCandidates.filter(
@@ -120,6 +151,54 @@ async function fetchSnapshot(): Promise<Snapshot> {
           generatedAt: str(b?.generatedAt),
           contractVersion: str(b?.contractVersion),
           topCandidates,
+          /*
+           * These replaced a hardcoded table claiming 840K / 120K / 45K / 210K
+           * records. Nothing in the API can substantiate figures at that scale,
+           * so each layer reports the count and the source its endpoint
+           * actually returned, and stays null when the feed is silent.
+           */
+          coverage: [
+            {
+              id: '01',
+              label: 'STATCAST_TELEMETRY',
+              description: 'Season exit velocity, barrel rate and hard-hit profiles per qualified batter.',
+              count: num(sc?.count),
+              unit: 'batters',
+              source: str(sc?.source),
+            },
+            {
+              id: '02',
+              label: 'PITCHER_MATCHUPS',
+              description: 'Probable starters and handedness resolved for every game on the slate.',
+              count: num(mu?.count),
+              unit: 'matchups',
+              source: str(mu?.meta?.source) ?? 'mlb_statsapi',
+            },
+            {
+              id: '03',
+              label: 'ENVIRONMENTAL_VECTORS',
+              description: 'First-pitch wind, temperature and precipitation per venue.',
+              count: Array.isArray(we?.weather) ? we.weather.length : null,
+              unit: 'venues',
+              source: str(we?.source),
+            },
+            {
+              id: '04',
+              label: 'CANDIDATE_EVALUATIONS',
+              description: 'Batters scored against park, matchup and lineup evidence for today.',
+              count: num(b?.counts?.totalCandidates) ?? num(b?.candidates?.length),
+              unit: 'evaluations',
+              source: str(b?.contractVersion),
+            },
+          ],
+          weatherByVenue: (Array.isArray(we?.weather) ? we.weather : []).map((w: Record<string, unknown>) => ({
+            venue: str(w.venue) ?? '',
+            tempF: num(w.tempF),
+            windMph: num(w.windMph),
+            windCompass: str(w.windCompass),
+            precipChancePct: num(w.precipChancePct),
+            available: w.status === 'ok' || num(w.tempF) != null,
+          })),
         };
         return { data, isError: !l && !b };
       } catch {

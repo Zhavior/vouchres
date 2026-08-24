@@ -36,8 +36,11 @@ export default function FinalStatement() {
 
       {/* Bottom Metadata */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-7xl px-6 flex justify-between items-center opacity-10">
-        <span className="terminal-text">System_v2.4.0_Stable</span>
-        <span className="terminal-text">Node_Proxima_01</span>
+        {/* Was "System_v2.4.0_Stable" / "Node_Proxima_01" — an invented version
+            (package.json reads 0.0.0) and a node identifier for infrastructure
+            that does not exist. */}
+        <span className="terminal-text">Open_Beta</span>
+        <span className="terminal-text">Evidence_Over_Hindsight</span>
       </div>
     </section>
   );
