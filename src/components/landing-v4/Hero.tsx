@@ -62,12 +62,27 @@ export default function Hero() {
             transition={{ delay: 0.06, duration: 0.4, ease: 'easeOut' }}
             className="flex flex-wrap gap-4"
           >
-            <button className="px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-ve-emerald transition-all flex items-center gap-3">
-              Launch HR Command Desk <ArrowRight size={16} />
-            </button>
-            <button className="px-8 py-4 border border-white/10 hover:bg-white/5 transition-all text-[10px] font-mono uppercase tracking-widest text-white/40">
-              Inspect Audit Ledger
-            </button>
+            {/*
+              Both of these were bare <button> elements with no onClick and no
+              href — the hero's primary and secondary calls to action did
+              nothing at all when clicked. They are anchors now.
+
+              The primary points at the free beta sign-up rather than /hr-board:
+              sending a first-time visitor straight into a gated desk skips the
+              thing the page is actually offering.
+            */}
+            <a
+              href="/join"
+              className="px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-ve-emerald transition-all flex items-center gap-3 no-underline"
+            >
+              Create free account <ArrowRight size={16} />
+            </a>
+            <a
+              href="/#methodology"
+              className="px-8 py-4 border border-white/10 hover:bg-white/5 transition-all text-[10px] font-mono uppercase tracking-widest text-white/40 no-underline"
+            >
+              See the methodology
+            </a>
           </motion.div>
           
           {/* Telemetry Strip */}

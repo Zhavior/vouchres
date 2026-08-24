@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Shield, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import VouchEdgeLogo from '../brand/VouchEdgeLogo';
 
 const navItems = [
   { label: 'Intelligence', href: '/#intelligence' },
@@ -22,7 +23,7 @@ export default function Navbar() {
   const backgroundColor = useTransform(
     scrollY,
     [0, 100],
-    ['rgba(5, 5, 5, 0)', 'rgba(5, 5, 5, 0.88)']
+    ['rgba(5, 5, 5, 0)', 'rgba(5, 5, 5, 0.95)']
   );
 
   const borderBottom = useTransform(
@@ -30,7 +31,7 @@ export default function Navbar() {
     [0, 100],
     [
       '1px solid rgba(255,255,255,0)',
-      '1px solid rgba(255,255,255,0.06)',
+      '1px solid rgba(255,255,255,0.08)',
     ]
   );
 
@@ -101,20 +102,20 @@ export default function Navbar() {
       style={{ backgroundColor, borderBottom }}
       className="fixed top-0 left-0 w-full z-[100] backdrop-blur-xl"
     >
-      <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between gap-4">
+      <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-6">
         {/* Brand */}
+        {/*
+          The same lockup the app top bar and the world footer use. This bar
+          previously drew its own mark — a lucide Shield in a rounded tile beside
+          italic "VOUCHEDGE" — so the public site and the signed-in product
+          showed two different brands.
+        */}
         <a
           href="/"
           aria-label="VouchEdge home"
-          className="flex items-center gap-3 group no-underline shrink-0"
+          className="flex shrink-0 items-center no-underline transition-opacity hover:opacity-85"
         >
-          <div className="w-8 h-8 rounded bg-ve-emerald/10 border border-ve-emerald/30 flex items-center justify-center group-hover:border-ve-emerald transition-colors">
-            <Shield size={18} className="text-ve-emerald" />
-          </div>
-
-          <span className="text-lg font-bold tracking-tighter italic text-white">
-            VOUCHEDGE
-          </span>
+          <VouchEdgeLogo emeraldMark markClassName="h-7 w-7 shrink-0" />
         </a>
 
         {/* Desktop Navigation */}
@@ -132,7 +133,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           {/* Secondary auth entry. Deliberately a quiet text link, not a second
-              button — Launch Desk stays the single visual CTA in the bar. */}
+              button — the sign-up stays the single visual CTA in the bar. */}
           <a
             href="/login"
             className="hidden sm:inline-flex items-center terminal-text hover:text-white transition-colors no-underline"
@@ -140,12 +141,17 @@ export default function Navbar() {
             Log in
           </a>
 
-          {/* Product CTA — hidden on the narrowest widths, where it lives in the index */}
+          {/*
+            Sign-up CTA — hidden on the narrowest widths, where it lives in the
+            index. This pointed at /hr-board ("Launch Desk"), which sends a
+            first-time visitor into a gated desk rather than into the free beta
+            the page is offering.
+          */}
           <a
-            href="/hr-board"
+            href="/join"
             className="hidden sm:inline-flex group items-center gap-2 px-5 py-2 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:bg-ve-emerald transition-colors no-underline"
           >
-            Launch Desk
+            Sign up free
             <ArrowUpRight
               size={13}
               className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -246,11 +252,11 @@ export default function Navbar() {
                 Log in
               </a>
               <a
-                href="/hr-board"
+                href="/join"
                 onClick={close}
                 className="group flex w-full items-center justify-center gap-2 bg-white px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black no-underline transition-colors hover:bg-ve-emerald focus:outline-none focus:ring-1 focus:ring-ve-emerald focus:ring-offset-2 focus:ring-offset-[#050505]"
               >
-                Launch Desk
+                Sign up free
                 <ArrowUpRight
                   size={13}
                   aria-hidden="true"
