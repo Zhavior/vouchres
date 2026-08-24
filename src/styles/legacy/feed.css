@@ -111,7 +111,19 @@
   color: var(--ve-home-muted) !important;
 }
 
-/* Buttons/pills inside feed should match Dashboard cyan accent */
+/*
+ * Buttons/pills inside feed should match Dashboard cyan accent.
+ *
+ * This file is imported by HomeFeedLayout but scoped only to `#inner-view-slot`
+ * — the app-wide scroller — so these three rules leaked onto every desk that
+ * shares it. They are unlayered, which beats *all* Tailwind utilities regardless
+ * of specificity under Tailwind v4's cascade layers, so any `<button>` or
+ * `[class*="tab"]` on a modern desk had its border repainted slate-400, hovered
+ * legacy green, and `[aria-selected]` chips got a green ring with !important.
+ *
+ * The `:not()` guards exempt the desks that own their own border language. Feed
+ * pages match exactly as before.
+ */
 #inner-view-slot :is(
   button,
   .btn,
@@ -121,7 +133,7 @@
   [class*="Tab"],
   [class*="filter"],
   [class*="Filter"]
-) {
+):not(.live-games-next *, .news-hub-root *) {
   border-color: rgba(148, 163, 184, 0.14);
 }
 
@@ -131,7 +143,7 @@
   [role="tab"]:hover,
   [class*="tab"]:hover,
   [class*="filter"]:hover
-) {
+):not(.live-games-next *, .news-hub-root *) {
   border-color: rgba(0, 217, 160, 0.32);
 }
 
@@ -141,7 +153,7 @@
   .is-active,
   [aria-selected="true"],
   [data-state="active"]
-) {
+):not(.live-games-next *, .news-hub-root *) {
   border-color: rgba(0, 217, 160, 0.38) !important;
   box-shadow: 0 0 0 1px rgba(0, 217, 160, 0.10), 0 12px 28px rgba(0, 0, 0, 0.22);
 }

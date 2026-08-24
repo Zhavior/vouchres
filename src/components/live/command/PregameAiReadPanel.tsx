@@ -65,7 +65,7 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
 
   return (
     <AuroraMaxPanel as="section" className="relative overflow-hidden p-4 sm:p-5">
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-ve-cyan/40 to-transparent" />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
@@ -74,7 +74,7 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
             <AuroraMaxTruthBadge state="projected">Pregame</AuroraMaxTruthBadge>
           </div>
 
-          <h3 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
+          <h3 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             {awayName} at {homeName}
           </h3>
 
@@ -85,8 +85,8 @@ export function PregameAiReadPanel({ game }: PregameAiReadPanelProps) {
           </p>
         </div>
 
-        <div className="border border-white/10 bg-black/25 p-3 text-xs text-white/55 lg:min-w-60">
-          <p className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-white/35">
+        <div className="border border-white/[0.08] bg-white/[0.03] p-3 text-xs text-white/55 lg:min-w-60">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
             Game context
           </p>
           <p className="mt-2 font-bold text-white/75">{game.status ?? "Scheduled"}</p>
@@ -122,8 +122,8 @@ function ReadCard({
   body: string;
 }) {
   return (
-    <article className="aurora-max-panel border-white/10 bg-white/[0.045] p-4">
-      <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-vouch-cyan/70">
+    <article className="aurora-max-panel border-white/[0.08] bg-white/[0.03] p-4">
+      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ve-cyan">
         {title}
       </p>
       <p className="mt-3 text-sm leading-6 text-white/70">{body}</p>

@@ -66,36 +66,36 @@ export function TodayNextSignalPeek({
   return (
     <section
       aria-label="Top research signals"
-      className="border border-white/[0.08] bg-[#111113] p-4 sm:p-5 font-mono rounded-xl shadow-xl space-y-3.5"
+      className="border-t border-white/[0.08] pt-5 space-y-3.5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#F4F4F5]">
+          <span className="h-1.5 w-1.5 rounded-full bg-ve-emerald animate-pulse" />
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ffffff]">
             TOP EVIDENCE SIGNALS // QUICK TABLE
           </h2>
         </div>
         <button
           type="button"
           onClick={() => onRoute('hr_board')}
-          className="inline-flex items-center gap-1 text-[10px] font-mono font-medium uppercase tracking-wider text-emerald-400 hover:text-emerald-300 cursor-pointer"
+          className="inline-flex items-center gap-1 text-[10px] font-mono font-medium uppercase tracking-wider text-ve-emerald hover:text-ve-emerald cursor-pointer"
         >
           {totalRows != null ? `ALL ${totalRows} ROWS` : 'OPEN FULL BOARD'} <ArrowUpRight className="h-3 w-3" />
         </button>
       </div>
 
       {isDelayed ? (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] p-5 text-center">
-          <ShieldAlert className="mx-auto h-5 w-5 text-amber-300" aria-hidden="true" />
-          <p className="mt-2 text-xs font-medium uppercase text-amber-200">Player evidence is delayed</p>
-          <p className="mt-1 text-[10px] leading-4 text-zinc-400">
+        <div className="rounded-none border border-ve-amber/20 bg-ve-amber/[0.06] p-5 text-center">
+          <ShieldAlert className="mx-auto h-5 w-5 text-ve-amber" aria-hidden="true" />
+          <p className="mt-2 text-xs font-medium uppercase text-ve-amber">Player evidence is delayed</p>
+          <p className="mt-1 text-[10px] leading-4 text-white/55">
             The rest of Today remains available. No player rows are estimated while the validated board is pending.
           </p>
           {onRetry ? (
             <button
               type="button"
               onClick={onRetry}
-              className="mt-3 min-h-9 rounded-lg border border-amber-400/30 px-3 text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-400/10"
+              className="mt-3 min-h-9 rounded-none border border-ve-amber/30 px-3 text-[10px] font-bold uppercase tracking-wider text-ve-amber hover:bg-ve-amber/10"
             >
               Retry evidence
             </button>
@@ -107,22 +107,22 @@ export function TodayNextSignalPeek({
             <div
               key={row}
               aria-hidden="true"
-              className="h-[58px] animate-pulse rounded-lg border border-white/[0.06] bg-white/[0.025]"
+              className="h-[58px] animate-pulse rounded-none border border-white/[0.06] bg-white/[0.025]"
             />
           ))}
-          <p className="text-center text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+          <p className="text-center text-[10px] font-mono uppercase tracking-wider text-white/40">
             Verifying player pool in the background
           </p>
         </div>
       ) : signals.length === 0 ? (
-        <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-6 text-center rounded-lg">
-          <p className="text-xs font-medium text-zinc-400 uppercase">NO RESEARCH ROWS PUBLISHED</p>
-          <p className="mt-1 text-[10px] text-zinc-500 font-sans">The HR board has not returned an active player pool yet.</p>
+        <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-6 text-center rounded-none">
+          <p className="text-xs font-medium text-white/55 uppercase">NO RESEARCH ROWS PUBLISHED</p>
+          <p className="mt-1 text-[10px] text-white/40 font-sans">The HR board has not returned an active player pool yet.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {/* Table Header (Desktop) */}
-          <div className="hidden sm:grid grid-cols-[36px_minmax(140px,1.5fr)_minmax(100px,1fr)_120px_70px_90px] items-center gap-3 px-3 py-1.5 border-b border-white/[0.06] text-[9px] font-mono font-medium uppercase tracking-wider text-zinc-500">
+          <div className="hidden sm:grid grid-cols-[36px_minmax(140px,1.5fr)_minmax(100px,1fr)_120px_70px_90px] items-center gap-3 px-3 py-1.5 border-b border-white/[0.06] text-[9px] font-mono font-medium uppercase tracking-wider text-white/40">
             <span>#</span>
             <span>PLAYER</span>
             <span>MATCHUP</span>
@@ -142,42 +142,42 @@ export function TodayNextSignalPeek({
             return (
               <div
                 key={signal.id}
-                className="group flex flex-col sm:grid sm:grid-cols-[36px_minmax(140px,1.5fr)_minmax(100px,1fr)_120px_70px_90px] items-start sm:items-center gap-2 sm:gap-3 border border-white/[0.06] bg-white/[0.02] p-3 rounded-lg transition-colors hover:border-white/[0.16] hover:bg-white/[0.04]"
+                className="group flex flex-col sm:grid sm:grid-cols-[36px_minmax(140px,1.5fr)_minmax(100px,1fr)_120px_70px_90px] items-start sm:items-center gap-2 sm:gap-3 border border-white/[0.06] bg-white/[0.02] p-3 rounded-none transition-colors hover:border-white/[0.16] hover:bg-white/[0.04]"
               >
                 {/* Index / Rank */}
                 <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
-                  <span className="w-6 shrink-0 font-mono text-xs font-medium text-zinc-500 group-hover:text-zinc-300">
+                  <span className="w-6 shrink-0 font-mono text-xs font-medium text-white/40 group-hover:text-white/70">
                     0{index + 1}
                   </span>
                   {/* Mobile-only HRPI pill */}
                   <div className="flex sm:hidden items-center gap-2">
-                    <span className="text-base font-bold text-emerald-400 tabular-nums">{signal.score}</span>
-                    <span className="text-[8px] font-mono font-medium text-zinc-500 uppercase">HRPI</span>
+                    <span className="text-base font-bold text-ve-emerald tabular-nums">{signal.score}</span>
+                    <span className="text-[8px] font-mono font-medium text-white/40 uppercase">HRPI</span>
                   </div>
                 </div>
 
                 {/* Player Name & Headshot */}
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded border border-white/10 bg-zinc-900">
+                  <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded border border-white/10 bg-obsidian-800">
                     <PlayerHeadshot name={signal.playerName} size={36} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <strong className="truncate text-xs font-medium text-[#F4F4F5] group-hover:text-white transition-colors">
+                      <strong className="truncate text-xs font-medium text-[#ffffff] group-hover:text-white transition-colors">
                         {signal.playerName}
                       </strong>
                       {signal.confirmed && (
-                        <span className="shrink-0 border border-emerald-500/25 bg-emerald-500/10 px-1 py-0.2 text-[7px] font-mono font-medium uppercase text-emerald-300 rounded">
+                        <span className="shrink-0 border border-ve-emerald/25 bg-ve-emerald/10 px-1 py-0.2 text-[7px] font-mono font-medium uppercase text-ve-emerald rounded">
                           CONFIRMED
                         </span>
                       )}
                     </div>
-                    <span className="block truncate text-[9px] text-zinc-400">{signal.headline}</span>
+                    <span className="block truncate text-[9px] text-white/55">{signal.headline}</span>
                   </div>
                 </div>
 
                 {/* Matchup & Opponent */}
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-300">
+                <div className="flex items-center gap-1.5 text-[10px] text-white/70">
                   {logo ? <img src={logo} alt="" className="h-3.5 w-3.5 shrink-0 object-contain" /> : null}
                   <span className="truncate">
                     {signal.team} vs {signal.opponent}
@@ -186,23 +186,23 @@ export function TodayNextSignalPeek({
 
                 {/* 3-Tier Metric Badges */}
                 <div className="flex items-center justify-center gap-1 text-[9px] font-mono w-full sm:w-auto">
-                  <span className="border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 rounded text-zinc-300" title="Hitter Power">
+                  <span className="border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 rounded text-white/70" title="Hitter Power">
                     P:{power}
                   </span>
-                  <span className="border border-sky-500/20 bg-sky-500/10 px-1.5 py-0.5 rounded text-sky-400" title="Pitcher Vulnerability">
+                  <span className="border border-ve-cyan/20 bg-ve-cyan/10 px-1.5 py-0.5 rounded text-ve-cyan" title="Pitcher Vulnerability">
                     V:{vuln}
                   </span>
-                  <span className="border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300" title="Park Factor">
+                  <span className="border border-ve-amber/20 bg-ve-amber/10 px-1.5 py-0.5 rounded text-ve-amber" title="Park Factor">
                     K:{park}
                   </span>
                 </div>
 
                 {/* Desktop HRPI Score */}
                 <div className="hidden sm:block text-right">
-                  <span className="text-base font-bold text-emerald-400 tabular-nums block leading-none font-mono">
+                  <span className="text-base font-bold text-ve-emerald tabular-nums block leading-none font-mono">
                     {signal.score}
                   </span>
-                  <span className="text-[8px] font-mono font-medium text-zinc-500 uppercase">HRPI</span>
+                  <span className="text-[8px] font-mono font-medium text-white/40 uppercase">HRPI</span>
                 </div>
 
                 {/* Action button */}
@@ -211,7 +211,7 @@ export function TodayNextSignalPeek({
                     <button
                       type="button"
                       onClick={() => onAddPlayer(matchingRow)}
-                      className="min-h-[44px] sm:min-h-8 flex-1 sm:flex-initial flex items-center justify-center gap-1 bg-white text-black font-semibold px-2.5 py-1 text-[9px] uppercase hover:bg-zinc-200 transition-colors cursor-pointer rounded"
+                      className="min-h-[44px] sm:min-h-8 flex-1 sm:flex-initial flex items-center justify-center gap-1 bg-white text-black font-semibold px-2.5 py-1 text-[9px] uppercase hover:bg-white transition-colors cursor-pointer rounded"
                     >
                       <Plus className="h-3 w-3" /> ADD SLIP
                     </button>
@@ -219,7 +219,7 @@ export function TodayNextSignalPeek({
                     <button
                       type="button"
                       onClick={() => onRoute('hr_board')}
-                      className="min-h-[44px] sm:min-h-8 flex-1 sm:flex-initial flex items-center justify-center gap-1 border border-white/[0.10] bg-white/[0.04] px-2.5 py-1 text-[9px] font-medium uppercase text-zinc-300 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer rounded"
+                      className="min-h-[44px] sm:min-h-8 flex-1 sm:flex-initial flex items-center justify-center gap-1 border border-white/[0.10] bg-white/[0.04] px-2.5 py-1 text-[9px] font-medium uppercase text-white/70 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer rounded"
                     >
                       DOSSIER
                     </button>
@@ -256,22 +256,22 @@ export function TodayNextNewsWire({
 
   if (isLoading && items.length === 0) {
     return (
-      <section className="border-2 border-white/15 bg-[#131B1E] p-4 sm:p-5 font-mono" aria-label="MLB News Wire Loading">
+      <section className="border-2 border-white/15 bg-[#0A0A0A] p-4 sm:p-5 font-mono" aria-label="MLB News Wire Loading">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#00FF87] animate-pulse" />
+            <span className="h-2 w-2 bg-[#31B583] animate-pulse" />
             <span className="text-white font-bold text-xs tracking-widest uppercase">
               VOUCHEDGE // TACTICAL INTEL WIRE
             </span>
           </div>
-          <span className="text-[10px] text-zinc-500 uppercase">SCANNING SENSORS...</span>
+          <span className="text-[10px] text-white/40 uppercase">SCANNING SENSORS...</span>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-12 animate-pulse">
-          <div className="h-56 border border-white/10 bg-[#0A0D0E] lg:col-span-7" />
+          <div className="h-56 border border-white/10 bg-[#0A0A0A] lg:col-span-7" />
           <div className="space-y-2 lg:col-span-5">
-            <div className="h-16 border border-white/10 bg-[#0A0D0E]" />
-            <div className="h-16 border border-white/10 bg-[#0A0D0E]" />
-            <div className="h-16 border border-white/10 bg-[#0A0D0E]" />
+            <div className="h-16 border border-white/10 bg-[#0A0A0A]" />
+            <div className="h-16 border border-white/10 bg-[#0A0A0A]" />
+            <div className="h-16 border border-white/10 bg-[#0A0A0A]" />
           </div>
         </div>
       </section>
@@ -290,22 +290,22 @@ export function TodayNextNewsWire({
   return (
     <>
       <section
-        className="border border-white/[0.08] bg-[#111113] p-4 sm:p-5 font-mono rounded-xl shadow-xl space-y-3.5"
+        className="border-t border-white/[0.08] pt-5 space-y-3.5"
         aria-labelledby="mlb-intel-wire-title"
       >
         {/* TOP INTEL HUD STRIP */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <h2 id="mlb-intel-wire-title" className="text-[#F4F4F5] font-bold text-xs sm:text-sm tracking-wider uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-ve-emerald" />
+            <h2 id="mlb-intel-wire-title" className="text-[#ffffff] font-bold text-xs sm:text-sm tracking-wider uppercase">
               CURATED MLB TACTICAL INTEL WIRE
             </h2>
-            <span className="text-zinc-600 hidden sm:inline">|</span>
-            <span className="text-sky-400 text-[10px] font-medium hidden sm:inline font-mono">LINEUP · PITCHER · WEATHER · DEVIATION</span>
+            <span className="text-white/30 hidden sm:inline">|</span>
+            <span className="text-ve-cyan text-[10px] font-medium hidden sm:inline font-mono">LINEUP · PITCHER · WEATHER · DEVIATION</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono font-medium text-emerald-400 uppercase tracking-wider rounded">
+            <span className="border border-ve-emerald/25 bg-ve-emerald/10 px-2 py-0.5 text-[9px] font-mono font-medium text-ve-emerald uppercase tracking-wider rounded">
               {items.length} TACTICAL SIGNALS
             </span>
           </div>
@@ -315,11 +315,11 @@ export function TodayNextNewsWire({
         <div className="grid gap-4 lg:grid-cols-12 items-stretch">
           {/* FEATURED BREAKING HERO STORY (7 COLS) */}
           <div
-            className="group relative flex flex-col justify-between border border-white/[0.08] bg-white/[0.02] rounded-lg overflow-hidden hover:border-white/[0.18] transition-all cursor-pointer lg:col-span-7 min-h-[280px]"
+            className="group relative flex flex-col justify-between border border-white/[0.08] bg-white/[0.02] rounded-none overflow-hidden hover:border-white/[0.18] transition-all cursor-pointer lg:col-span-7 min-h-[280px]"
             onClick={() => setSelectedStory(heroStory)}
           >
             {/* Editorial Photo Banner */}
-            <div className="relative h-44 sm:h-52 w-full bg-zinc-900 border-b border-white/[0.06] tn-hud-frame">
+            <div className="relative h-44 sm:h-52 w-full bg-obsidian-800 border-b border-white/[0.06] tn-hud-frame">
               <img
                 src={heroStory.image?.url || getCyberFallbackImage(heroCategory)}
                 alt={heroStory.image?.alt || heroStory.headline}
@@ -332,22 +332,22 @@ export function TodayNextNewsWire({
               <span className="tn-hud-corner-br" aria-hidden="true" />
 
               {/* Matte Vignette Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#111113] via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-black/30 to-transparent" />
 
               {/* Tactical Category Badge + Timestamp */}
               <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10">
                 <span className={`px-2 py-0.5 text-[9px] font-mono font-medium uppercase border tracking-wider rounded ${heroStyle.pill}`}>
                   {heroStyle.label}
                 </span>
-                <span className="border border-white/20 bg-black/70 px-2 py-0.5 text-[9px] font-mono text-zinc-300 backdrop-blur-md rounded">
+                <span className="border border-white/20 bg-black/70 px-2 py-0.5 text-[9px] font-mono text-white/70 rounded">
                   {relativeTime(heroStory.publishedAt)}
                 </span>
               </div>
 
               {/* Slate Impact Alert */}
               {heroMentions.length > 0 && (
-                <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center gap-1.5 border border-emerald-500/30 bg-black/85 px-2 py-1 text-[10px] text-emerald-400 font-medium backdrop-blur-md z-10 rounded">
-                  <Flame className="h-3.5 w-3.5 text-emerald-400" />
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center gap-1.5 border border-ve-emerald/30 bg-black/85 px-2 py-1 text-[10px] text-ve-emerald font-medium z-10 rounded">
+                  <Flame className="h-3.5 w-3.5 text-ve-emerald" />
                   <span>SLATE IMPACT: {heroMentions.length} ACTIVE BAT{heroMentions.length > 1 ? 'S' : ''} DETECTED</span>
                 </div>
               )}
@@ -356,19 +356,19 @@ export function TodayNextNewsWire({
             {/* Headline & Synopsis */}
             <div className="p-4 flex-1 flex flex-col justify-between space-y-2.5">
               <div className="space-y-1.5">
-                <h3 className="text-[#F4F4F5] font-bold text-base sm:text-lg leading-snug tracking-tight group-hover:text-white transition-colors font-sans">
+                <h3 className="text-[#ffffff] font-bold text-base sm:text-lg leading-snug tracking-tight group-hover:text-white transition-colors font-sans">
                   {heroStory.headline}
                 </h3>
-                <p className="text-zinc-400 text-xs line-clamp-2 leading-relaxed font-sans">
+                <p className="text-white/55 text-xs line-clamp-2 leading-relaxed font-sans">
                   {heroStory.description}
                 </p>
               </div>
 
               <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
-                <span className="text-emerald-400 font-medium flex items-center gap-1 group-hover:text-emerald-300">
+                <span className="text-ve-emerald font-medium flex items-center gap-1 group-hover:text-ve-emerald">
                   OPEN INTEL DRAWER <ArrowRight className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">REF #{heroStory.id.slice(-6)}</span>
+                <span className="text-[10px] text-white/40 font-mono">REF #{heroStory.id.slice(-6)}</span>
               </div>
             </div>
           </div>
@@ -384,10 +384,10 @@ export function TodayNextNewsWire({
                 <div
                   key={story.id}
                   onClick={() => setSelectedStory(story)}
-                  className="group flex gap-2.5 border border-white/[0.06] bg-white/[0.02] p-2.5 rounded-lg hover:border-white/[0.16] hover:bg-white/[0.04] transition-all cursor-pointer flex-1"
+                  className="group flex gap-2.5 border border-white/[0.06] bg-white/[0.02] p-2.5 rounded-none hover:border-white/[0.16] hover:bg-white/[0.04] transition-all cursor-pointer flex-1"
                 >
                   {/* Thumbnail Photo */}
-                  <div className="relative h-[72px] w-20 shrink-0 bg-zinc-900 border border-white/[0.08] rounded overflow-hidden tn-hud-frame">
+                  <div className="relative h-[72px] w-20 shrink-0 bg-obsidian-800 border border-white/[0.08] rounded overflow-hidden tn-hud-frame">
                     <img
                       src={story.image?.url || getCyberFallbackImage(cat)}
                       alt={story.image?.alt || story.headline}
@@ -406,20 +406,20 @@ export function TodayNextNewsWire({
                   {/* Headline & Meta */}
                   <div className="min-w-0 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center justify-between text-[8px] text-zinc-500 mb-0.5 font-mono">
+                      <div className="flex items-center justify-between text-[8px] text-white/40 mb-0.5 font-mono">
                         <span>{relativeTime(story.publishedAt)}</span>
                         {mentions.length > 0 && (
-                          <span className="text-emerald-400 font-medium flex items-center gap-0.5">
+                          <span className="text-ve-emerald font-medium flex items-center gap-0.5">
                             ● {mentions.length} SLATE
                           </span>
                         )}
                       </div>
-                      <h4 className="text-[#F4F4F5] font-medium text-xs leading-snug line-clamp-2 group-hover:text-white transition-colors font-sans">
+                      <h4 className="text-[#ffffff] font-medium text-xs leading-snug line-clamp-2 group-hover:text-white transition-colors font-sans">
                         {story.headline}
                       </h4>
                     </div>
 
-                    <span className="text-[9px] text-zinc-400 flex items-center gap-1 group-hover:text-zinc-200 transition-colors mt-0.5">
+                    <span className="text-[9px] text-white/55 flex items-center gap-1 group-hover:text-white/80 transition-colors mt-0.5">
                       Read Intel <ArrowRight className="h-2.5 w-2.5" />
                     </span>
                   </div>
@@ -469,27 +469,27 @@ function NewsArticleModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="intel-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-mono animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 font-mono animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col border border-white/[0.12] bg-[#111113] text-[#F4F4F5] rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col border border-white/[0.12] bg-[#0A0A0A] text-[#ffffff] rounded-none shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* MODAL HUD HEADER */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0A0A0C] px-4 py-3">
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0A0A0A] px-4 py-3">
           <div className="flex items-center gap-2">
             <span className={`px-2 py-0.5 text-[9px] font-mono font-medium uppercase border rounded ${style.pill}`}>
               {style.label}
             </span>
-            <span className="text-[#F4F4F5] font-medium text-xs tracking-wider">INTEL DISPATCH #{story.id.slice(-8)}</span>
+            <span className="text-[#ffffff] font-medium text-xs tracking-wider">INTEL DISPATCH #{story.id.slice(-8)}</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 border border-white/20 text-zinc-400 hover:text-white hover:border-white transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+            className="p-1.5 border border-white/20 text-white/55 hover:text-white hover:border-white transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
           >
             <X className="h-4 w-4" />
           </button>
@@ -498,7 +498,7 @@ function NewsArticleModal({
         {/* MODAL BODY (SCROLLABLE) */}
         <div className="overflow-y-auto p-4 sm:p-6 space-y-4">
           {/* Big Editorial Photo Banner with Fallback */}
-          <div className="relative w-full h-48 sm:h-64 border border-white/15 overflow-hidden bg-zinc-950">
+          <div className="relative w-full h-48 sm:h-64 border border-white/15 overflow-hidden bg-obsidian-950">
             <img
               src={image?.url || story.image?.url || getCyberFallbackImage(cat)}
               alt={image?.alt || story.headline}
@@ -507,8 +507,8 @@ function NewsArticleModal({
               }}
               className="h-full w-full object-cover object-center brightness-95"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D0E] via-transparent to-transparent opacity-80" />
-            <span className="absolute bottom-2 right-3 text-[9px] text-zinc-400 bg-black/80 px-2 py-0.5 border border-white/10 font-mono">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent opacity-80" />
+            <span className="absolute bottom-2 right-3 text-[9px] text-white/55 bg-black/80 px-2 py-0.5 border border-white/10 font-mono">
               {relativeTime(story.publishedAt)}
             </span>
           </div>
@@ -518,33 +518,33 @@ function NewsArticleModal({
             <h2 id="intel-modal-title" className="text-lg sm:text-xl font-black text-white leading-tight font-sans">
               {story.headline}
             </h2>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] text-zinc-500 border-b border-white/10 pb-2.5">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/40 border-b border-white/10 pb-2.5">
               <span>PUBLISHED: {story.publishedAt ? new Date(story.publishedAt).toLocaleString() : 'LIVE'}</span>
               <span>•</span>
-              <span className="text-[#00FF87]">TACTICAL CLASSIFICATION: {cat}</span>
+              <span className="text-[#31B583]">TACTICAL CLASSIFICATION: {cat}</span>
             </div>
           </div>
 
           {/* ACTIVE SLATE PLAYERS IMPACT DECK */}
           {matchedPlayers.length > 0 && (
-            <div className="border-2 border-emerald-400/50 bg-emerald-950/30 p-3.5 space-y-2.5">
+            <div className="border-2 border-ve-emerald/50 bg-ve-emerald/30 p-3.5 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-emerald-300 font-bold flex items-center gap-1.5">
-                  <Flame className="h-4 w-4 text-[#00FF87]" />
+                <span className="text-ve-emerald font-bold flex items-center gap-1.5">
+                  <Flame className="h-4 w-4 text-[#31B583]" />
                   ACTIVE SLATE BATS IN THIS STORY ({matchedPlayers.length})
                 </span>
-                <span className="text-[9px] text-zinc-400">INSTANT RESEARCH BRIDGE</span>
+                <span className="text-[9px] text-white/55">INSTANT RESEARCH BRIDGE</span>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
                 {matchedPlayers.map((player) => (
                   <div
                     key={player.stableId}
-                    className="flex items-center justify-between p-2.5 border border-emerald-400/30 bg-[#0A0D0E] text-xs"
+                    className="flex items-center justify-between p-2.5 border border-ve-emerald/30 bg-[#0A0A0A] text-xs"
                   >
                     <div>
                       <strong className="text-white block font-bold">{player.playerName}</strong>
-                      <span className="text-[10px] text-zinc-400">
+                      <span className="text-[10px] text-white/55">
                         {player.team} vs {player.opponent}
                       </span>
                     </div>
@@ -557,7 +557,7 @@ function NewsArticleModal({
                             onOpenPlayer(player);
                             onClose();
                           }}
-                          className="px-2 py-1.5 border border-cyan-400/40 bg-cyan-950/40 text-cyan-300 font-bold text-[9px] hover:bg-cyan-900/50 transition-colors cursor-pointer min-h-[36px]"
+                          className="px-2 py-1.5 border border-ve-cyan/40 bg-ve-cyan/10/40 text-ve-cyan font-bold text-[9px] hover:bg-ve-cyan/20/50 transition-colors cursor-pointer min-h-[36px]"
                         >
                           DOSSIER
                         </button>
@@ -566,7 +566,7 @@ function NewsArticleModal({
                         <button
                           type="button"
                           onClick={() => onAddPlayer(player)}
-                          className="px-2.5 py-1.5 border border-[#00FF87] bg-[#00FF87] text-[#0A0D0E] font-bold text-[9px] hover:bg-emerald-300 transition-colors flex items-center gap-0.5 cursor-pointer min-h-[36px]"
+                          className="px-2.5 py-1.5 border border-[#31B583] bg-[#31B583] text-[#0A0A0A] font-bold text-[9px] hover:bg-ve-emerald transition-colors flex items-center gap-0.5 cursor-pointer min-h-[36px]"
                         >
                           <Plus className="h-3 w-3" /> SLIP
                         </button>
@@ -579,14 +579,14 @@ function NewsArticleModal({
           )}
 
           {/* Article Text Content */}
-          <div className="space-y-3 text-xs sm:text-sm text-zinc-200 leading-relaxed font-sans">
+          <div className="space-y-3 text-xs sm:text-sm text-white/80 leading-relaxed font-sans">
             {paragraphs.map((p, idx) => (
-              <p key={idx} className="text-zinc-300 leading-relaxed">
+              <p key={idx} className="text-white/70 leading-relaxed">
                 {p}
               </p>
             ))}
             {isLoadingBody && (
-              <p className="text-xs text-zinc-500 font-mono italic animate-pulse">
+              <p className="text-xs text-white/40 font-mono italic animate-pulse">
                 Fetching full dispatch body...
               </p>
             )}
@@ -594,12 +594,12 @@ function NewsArticleModal({
         </div>
 
         {/* MODAL FOOTER */}
-        <div className="border-t border-white/15 bg-[#131B1E] px-4 py-3 flex items-center justify-between text-[10px] text-zinc-400">
+        <div className="border-t border-white/15 bg-[#0A0A0A] px-4 py-3 flex items-center justify-between text-[10px] text-white/55">
           <span>PROVENANCE: IMMUTABLE TACTICAL FEED</span>
           <button
             type="button"
             onClick={onClose}
-            className="border border-white bg-white text-black px-4 py-2 font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors cursor-pointer min-h-[36px]"
+            className="border border-white bg-white text-black px-4 py-2 font-bold uppercase tracking-wider hover:bg-white transition-colors cursor-pointer min-h-[36px]"
           >
             CLOSE DISPATCH
           </button>

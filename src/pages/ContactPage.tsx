@@ -41,11 +41,18 @@ const LABEL_CLASS =
 
 function ChannelMeta() {
   return (
-    <div className="mt-12 lg:mt-auto lg:pt-12">
+    /* The offset is explicit rather than `mt-auto` inside a stretched column.
+       Bottom-pinning made the space above the ledger a by-product of the
+       console's height — 125px at rest, and a different figure the moment the
+       form swapped to its receipt. This is a fixed 88px at lg. */
+    <div className="mt-12 lg:mt-[5.5rem]">
       <dl className="border-t border-white/[0.08]">
       {CHANNEL_META.map((item) => (
-        <div key={item.label} className="flex items-baseline gap-4 border-b border-white/[0.08] py-3.5">
-          <dt className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <div
+          key={item.label}
+          className="flex items-baseline gap-4 border-b border-white/[0.08] py-3.5 lg:gap-8 lg:py-5"
+        >
+          <dt className="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 sm:w-24 lg:w-32">
             {item.label}
           </dt>
           <dd className="min-w-0 font-mono text-xs text-white/70">
@@ -55,7 +62,13 @@ function ChannelMeta() {
                 {item.value}
               </span>
             ) : (
-              <span className="break-all">{item.value}</span>
+              /* Wrap at word boundaries. `break-all` used to split any value at
+                 the column edge, which rendered "transmission subjec / t" on a
+                 phone; an address is the only value long enough to need a break
+                 mid-token, so only it opts into breaking anywhere. */
+              <span className={item.value.includes('@') ? '[overflow-wrap:anywhere]' : 'break-words'}>
+                {item.value}
+              </span>
             )}
           </dd>
         </div>
@@ -73,9 +86,12 @@ function ContactHero() {
       initial={{ x: -12 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="flex min-w-0 flex-col lg:h-full"
+      className="flex min-w-0 flex-col"
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-white/[0.08] pb-5">
+      {/* pb-10 at lg lands this rule on y=107, the same line the console's
+          header rule is drawn on, so one hairline crosses the whole
+          composition and the console reads as its counterpart. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-white/[0.08] pb-5 lg:pb-10">
         <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-ve-cyan">
           05 / External Communications
         </span>
@@ -84,13 +100,18 @@ function ContactHero() {
         </span>
       </div>
 
-      <h1 className="mt-10 text-5xl font-bold italic leading-[0.9] tracking-tighter text-white sm:text-6xl lg:text-7xl">
+      {/* Sized against the measured column, not by eye: "Transmission" is the
+          binding line at 12 characters. Its rendered width (canvas measure minus
+          the -0.05em tracking) is 324px at 64, 364px at 72, 444px at 88 — each
+          step stays inside the left column at the breakpoint that introduces it,
+          so the two-tone statement never wraps to a third line. */}
+      <h1 className="mt-10 text-5xl font-bold italic leading-[0.9] tracking-tighter text-white sm:text-6xl lg:text-[4rem] xl:text-7xl 2xl:text-[5.5rem]">
         Secure
         <br />
         <span className="text-white/25">Transmission</span>
       </h1>
 
-      <p className="mt-8 max-w-md font-sans text-lg font-light leading-relaxed text-white/55">
+      <p className="mt-8 max-w-md font-sans text-lg font-light leading-relaxed text-white/55 lg:max-w-lg xl:text-xl">
         Support, bug reports, beta access, partnerships, and press. Pick a subject and it
         routes to the right place.
       </p>
@@ -106,7 +127,7 @@ function TransmissionReceipt({ onReset }: { onReset: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="p-6 sm:p-10"
+      className="p-6 sm:p-10 lg:p-12"
     >
       <div className="flex items-center gap-3 border-b border-ve-emerald/20 pb-5">
         <span className="flex h-6 w-6 items-center justify-center border border-ve-emerald/40 bg-ve-emerald/10">
@@ -184,9 +205,17 @@ export default function ContactPage() {
       <Navbar />
 
       <div className="flex min-h-screen flex-col bg-black pt-16 text-white">
-        <main id="main" className="flex-grow px-6 py-24 sm:py-28 lg:py-32">
-          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-start gap-16 lg:grid-cols-12 lg:gap-20">
-            <div className="lg:col-span-5 lg:self-stretch">
+        <main id="main" className="flex-grow px-6 py-24 sm:py-28 lg:px-10 lg:py-32 xl:py-40">
+          {/*
+           * The 12-column frame matches Landing (max-w-7xl). The gap is stepped
+           * rather than fixed because at 1024 a flat gap-20 spends 880px of a
+           * 976px grid on gutters and starves the 5-column editorial region down
+           * to ~360px — narrower than the heading it has to hold. 2xl lifts the
+           * cap to 1440 so a 1920 viewport reads as an asymmetric composition
+           * instead of a centred strip; below 1536 the frame is Landing's.
+           */}
+          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-start gap-16 lg:grid-cols-12 lg:gap-12 xl:gap-16 2xl:max-w-[1440px] 2xl:gap-20">
+            <div className="lg:col-span-5">
               <ContactHero />
             </div>
 
@@ -197,7 +226,7 @@ export default function ContactPage() {
               transition={{ duration: 0.45, delay: 0.06, ease: 'easeOut' }}
               className="min-w-0 border border-white/10 bg-obsidian-900 lg:col-span-7"
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 sm:px-10">
+              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 sm:px-10 lg:px-12 lg:py-5">
                 <h2 id="transmission-heading" className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/70 whitespace-nowrap">
                   Transmission // {status === 'success' ? 'Complete' : 'New'}
                 </h2>
@@ -231,7 +260,7 @@ export default function ContactPage() {
                     transition={{ duration: 0.3 }}
                     onSubmit={handleSubmit}
                     aria-busy={submitting}
-                    className="space-y-7 p-6 sm:p-10"
+                    className="space-y-7 p-6 sm:p-10 lg:space-y-8 lg:p-12"
                   >
                     <div className="space-y-2">
                       <label htmlFor="email" className={LABEL_CLASS}>
@@ -309,7 +338,7 @@ export default function ContactPage() {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="group inline-flex min-h-12 w-full items-center justify-center gap-3 bg-ve-cyan px-6 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ve-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian-900 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-10"
+                        className="group inline-flex min-h-11 w-full items-center justify-center gap-3 bg-ve-cyan px-6 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ve-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian-900 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
                       >
                         {submitting ? (
                           <>

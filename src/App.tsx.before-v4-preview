@@ -1,0 +1,25 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import VouchEdgeLandingV4 from './pages/VouchEdgeLandingV4';
+
+// Import your existing components/pages here
+// import Dashboard from './pages/Dashboard'; 
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* The New Showroom */}
+        <Route path="/" element={<VouchEdgeLandingV4 />} />
+
+        {/* Your Existing Engine Room Routes */}
+        {/* Example: <Route path="/terminal" element={<Dashboard />} /> */}
+        
+        {/* Fallback to Landing */}
+        <Route path="*" element={<VouchEdgeLandingV4 />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;

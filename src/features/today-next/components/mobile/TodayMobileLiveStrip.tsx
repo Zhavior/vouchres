@@ -22,17 +22,23 @@ export function TodayMobileLiveStrip({ games, onRoute }: TodayMobileLiveStripPro
   return (
     <section aria-label="Live games" className="md:hidden">
       <div className="flex items-baseline justify-between px-4 pb-2">
-        <h2 className="font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">Live games</h2>
+        <h2 className="font-mono text-[10px] font-medium uppercase tracking-wider text-white/55">Live games</h2>
         <button
           type="button"
           onClick={() => onRoute('live_games')}
-          className="font-mono text-[10px] font-medium text-emerald-400 hover:text-emerald-300 uppercase tracking-wider"
+          className="-my-3 inline-flex min-h-11 items-center px-2 -mr-2 font-mono text-[10px] font-medium uppercase tracking-wider text-ve-cyan hover:text-white"
         >
           All →
         </button>
       </div>
 
-      <div className="tn-scrollbar-none flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pb-1">
+      {/*
+        Operational data, so a register rather than a fourth carousel: live
+        games stack vertically on hairlines and the header's ALL -> remains the
+        escape to the full view. Every value is the same feed field as before —
+        nothing added, nothing dropped, the list is simply not scrolled sideways.
+      */}
+      <ul className="border-t border-white/[0.08]">
         {games.map((game) => {
           const away = abbr(game.awayTeam, 'AWY');
           const home = abbr(game.homeTeam, 'HOM');
@@ -42,28 +48,32 @@ export function TodayMobileLiveStrip({ games, onRoute }: TodayMobileLiveStripPro
           const leadAway = awayScore > homeScore;
 
           return (
-            <button
-              key={game.gamePk}
-              type="button"
-              onClick={() => onRoute('live_games')}
-              className="w-[46vw] max-w-[190px] shrink-0 snap-start rounded-xl border border-white/[0.08] bg-[#111113] p-3 text-left active:scale-[0.98] shadow-md"
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className={`font-mono text-[12px] font-bold ${leadAway ? 'text-[#F4F4F5]' : 'text-zinc-500'}`}>{away}</span>
-                <span className={`font-mono text-[15px] font-bold tabular-nums ${leadAway ? 'text-[#F4F4F5]' : 'text-zinc-500'}`}>{awayScore}</span>
-              </div>
-              <div className="mt-1 flex items-baseline justify-between gap-2">
-                <span className={`font-mono text-[12px] font-bold ${leadHome ? 'text-[#F4F4F5]' : 'text-zinc-500'}`}>{home}</span>
-                <span className={`font-mono text-[15px] font-bold tabular-nums ${leadHome ? 'text-[#F4F4F5]' : 'text-zinc-500'}`}>{homeScore}</span>
-              </div>
-              <p className="mt-1.5 flex items-center gap-1.5 truncate border-t border-white/[0.06] pt-1.5 font-mono text-[9px] uppercase tracking-wider text-rose-400">
-                <span className="h-1 w-1 shrink-0 animate-pulse rounded-full bg-rose-400" aria-hidden="true" />
-                {game.inning != null ? `Inn ${game.inning}` : game.status || 'Live'}
-              </p>
-            </button>
+            <li key={game.gamePk} className="border-b border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => onRoute('live_games')}
+                className="flex min-h-[52px] w-full items-center gap-4 px-4 py-2.5 text-left transition-colors active:bg-white/[0.03]"
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className={`truncate font-mono text-[12px] font-bold ${leadAway ? 'text-white' : 'text-white/40'}`}>{away}</span>
+                    <span className={`shrink-0 font-mono text-[15px] font-bold tabular-nums ${leadAway ? 'text-white' : 'text-white/40'}`}>{awayScore}</span>
+                  </span>
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className={`truncate font-mono text-[12px] font-bold ${leadHome ? 'text-white' : 'text-white/40'}`}>{home}</span>
+                    <span className={`shrink-0 font-mono text-[15px] font-bold tabular-nums ${leadHome ? 'text-white' : 'text-white/40'}`}>{homeScore}</span>
+                  </span>
+                </span>
+
+                <span className="flex w-[84px] shrink-0 items-center justify-end gap-1.5 font-mono text-[9px] uppercase tracking-wider text-ve-red">
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-ve-red" aria-hidden="true" />
+                  <span className="truncate">{game.inning != null ? `Inn ${game.inning}` : game.status || 'Live'}</span>
+                </span>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }

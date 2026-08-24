@@ -41,18 +41,18 @@ export function TodayMobileChrome({
   return (
     <>
       {/* Telemetry Top Bar (Sticky on Mobile) */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-[52px] items-center justify-between gap-2 border-b border-white/[0.08] bg-[#050505]/95 px-3 backdrop-blur-xl font-mono md:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-[52px] items-center justify-between gap-2 border-b border-white/[0.08] bg-[#050505]/95 px-3 font-mono md:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="h-1.5 w-1.5 rounded-full bg-ve-emerald animate-pulse shrink-0" />
           <div className="min-w-0">
-            <span className="block truncate font-bold text-xs text-[#F4F4F5] uppercase tracking-wider">
+            <span className="block truncate font-bold text-xs text-[#ffffff] uppercase tracking-wider">
               VOUCHEDGE // TODAY
             </span>
-            <div className="flex items-center gap-1.5 text-[9px] text-zinc-400">
-              <span className="text-emerald-400 font-medium">{gameCount ?? '—'} SLATE</span>
+            <div className="flex items-center gap-1.5 text-[9px] text-white/55">
+              <span className="text-ve-emerald font-medium">{gameCount ?? '—'} SLATE</span>
               <span>·</span>
               {firstPitch?.countdownMs != null ? (
-                <span className="text-emerald-400 font-medium tabular-nums font-mono">
+                <span className="text-ve-emerald font-medium tabular-nums font-mono">
                   LOCK: {formatCountdown(firstPitch.countdownMs)}
                 </span>
               ) : (
@@ -64,14 +64,14 @@ export function TodayMobileChrome({
 
         <div className="flex shrink-0 items-center gap-1.5">
           {liveCount > 0 && (
-            <span className="flex items-center gap-1 border border-rose-500/25 bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-mono font-medium text-rose-400 rounded">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+            <span className="flex items-center gap-1 border border-ve-red/25 bg-ve-red/10 px-1.5 py-0.5 text-[9px] font-mono font-medium text-ve-red rounded-none">
+              <span className="h-1.5 w-1.5 rounded-full bg-ve-red animate-pulse" />
               {liveCount} LIVE
             </span>
           )}
 
           {/* Sensors Verified pill */}
-          <span className="hidden xs:inline-flex items-center gap-1 border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8px] font-mono font-medium text-emerald-400 rounded">
+          <span className="hidden xs:inline-flex items-center gap-1 border border-ve-emerald/25 bg-ve-emerald/10 px-1.5 py-0.5 text-[8px] font-mono font-medium text-ve-emerald rounded-none">
             <ShieldCheck className="h-2.5 w-2.5" /> VERIFIED
           </span>
 
@@ -81,9 +81,9 @@ export function TodayMobileChrome({
               type="button"
               onClick={onRefresh}
               aria-label="Quick Sync"
-              className="grid h-8 w-8 place-items-center rounded-md border border-white/[0.08] bg-[#111113] text-zinc-300 hover:text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+              className="grid h-8 w-8 place-items-center rounded-none border border-white/[0.08] bg-[#0A0A0A] text-white/70 hover:text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
             >
-              <RefreshCw className={`h-3.5 w-3.5 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3.5 w-3.5 text-ve-emerald ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
           )}
 
@@ -91,7 +91,7 @@ export function TodayMobileChrome({
             type="button"
             onClick={() => openCommandPalette?.()}
             aria-label="Search"
-            className="grid h-8 w-8 place-items-center rounded-md border border-white/[0.08] bg-[#111113] text-zinc-300 active:bg-white/10 min-h-[44px] min-w-[44px]"
+            className="grid h-8 w-8 place-items-center rounded-none border border-white/[0.08] bg-[#0A0A0A] text-white/70 active:bg-white/10 min-h-[44px] min-w-[44px]"
           >
             <Search className="h-3.5 w-3.5" />
           </button>
@@ -99,7 +99,7 @@ export function TodayMobileChrome({
             type="button"
             onClick={openMobileDrawer}
             aria-label="Account and navigation"
-            className="grid h-8 w-8 place-items-center border border-white/20 bg-[#131B1E] text-zinc-300 active:bg-white/10 min-h-[44px] min-w-[44px]"
+            className="grid h-8 w-8 place-items-center border border-white/20 bg-[#0A0A0A] text-white/70 active:bg-white/10 min-h-[44px] min-w-[44px]"
           >
             <UserCircle className="h-4 w-4" />
           </button>
@@ -108,7 +108,7 @@ export function TodayMobileChrome({
 
       {/* Sticky Filter Rail */}
       <div
-        className="tn-scrollbar-none sticky top-[52px] z-30 flex gap-2 overflow-x-auto border-b border-white/15 bg-[#0A0D0E]/95 px-3 py-2 backdrop-blur-sm md:hidden font-mono"
+        className="tn-scrollbar-none sticky top-[52px] z-30 flex gap-2 overflow-x-auto border-b border-white/15 bg-[#0A0A0A]/95 px-3 py-2 md:hidden font-mono"
         role="tablist"
         aria-label="Slate filter"
       >
@@ -121,15 +121,14 @@ export function TodayMobileChrome({
               role="tab"
               aria-selected={active}
               onClick={() => onFilterChange(def.id)}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 py-2 text-[11px] font-bold uppercase transition-colors min-h-[44px] ${
+              className={`flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap border px-3.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] transition-colors ${
                 active
-                  ? 'border-[#00FF87] bg-emerald-950/60 text-[#00FF87] shadow-[2px_2px_0px_0px_#00FF87]'
-                  : 'border-white/15 bg-[#131B1E] text-zinc-400'
+                  ? 'border-ve-cyan bg-ve-cyan/10 text-ve-cyan'
+                  : 'border-white/10 bg-transparent text-white/45'
               }`}
             >
-              <span aria-hidden="true">{def.glyph}</span>
               {def.label}
-              <span className={`font-mono text-[9px] tabular-nums ${active ? 'text-[#00FF87]' : 'text-zinc-500'}`}>
+              <span className={`font-mono text-[9px] tabular-nums ${active ? 'text-ve-cyan/70' : 'text-white/30'}`}>
                 ({counts[def.id]})
               </span>
             </button>

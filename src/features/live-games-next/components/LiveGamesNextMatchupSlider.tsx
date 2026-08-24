@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Radio } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { GameMatchup } from '../../../types/matchup';
 
 export interface LiveGamesNextMatchupSliderProps {
@@ -43,7 +43,7 @@ export const LiveGamesNextMatchupSlider = memo(function LiveGamesNextMatchupSlid
 
   return (
     <div
-      className="flex w-full select-none items-center gap-2 border-2 border-white/15 bg-black p-2 font-mono shadow-2xl"
+      className="flex w-full select-none items-center gap-2 border border-white/[0.08] bg-white/[0.015] p-2 font-mono"
       role="region"
       aria-label="Team vs team matchup slider"
       data-testid="live-next-matchup-slider"
@@ -53,7 +53,7 @@ export const LiveGamesNextMatchupSlider = memo(function LiveGamesNextMatchupSlid
         onClick={onPrev}
         aria-label="Previous matchup (left arrow)"
         title="Previous matchup (←)"
-        className="flex h-9 shrink-0 items-center justify-center gap-1 border border-white/20 bg-zinc-900 px-3 text-xs font-bold text-zinc-300 transition-all hover:border-white hover:text-white cursor-pointer"
+        className="lg-control flex h-9 shrink-0 items-center justify-center gap-1 px-3 text-xs font-medium cursor-pointer"
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="hidden text-[10px] md:inline">PREV</span>
@@ -78,10 +78,10 @@ export const LiveGamesNextMatchupSlider = memo(function LiveGamesNextMatchupSlid
               aria-selected={isActive}
               onClick={() => onSelect(game.gamePk)}
               data-testid={`live-next-matchup-chip-${game.gamePk}`}
-              className={`flex h-9 shrink-0 items-center gap-2.5 border px-3 text-xs transition-all duration-150 cursor-pointer ${
+              className={`flex h-9 shrink-0 items-center gap-2.5 border px-3 text-xs transition-colors duration-150 cursor-pointer ${
                 isActive
-                  ? 'border-2 border-cyan-400 bg-zinc-950 font-black text-cyan-300'
-                  : 'border-white/10 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+                  ? 'border-white/30 bg-white/[0.08] font-semibold text-white'
+                  : 'border-white/[0.06] bg-transparent text-white/55 hover:border-white/[0.16] hover:bg-white/[0.04] hover:text-white'
               }`}
             >
               <span className="flex items-center -space-x-1">
@@ -103,27 +103,25 @@ export const LiveGamesNextMatchupSlider = memo(function LiveGamesNextMatchupSlid
                 )}
               </span>
 
-              <span className="flex items-center gap-1 font-mono font-bold">
+              <span className="flex items-center gap-1 font-mono font-semibold">
                 <span className="text-white">{game.away.abbreviation}</span>
-                <span className="text-[10px] text-zinc-500">@</span>
+                <span className="text-[10px] text-white/30">@</span>
                 <span className="text-white">{game.home.abbreviation}</span>
               </span>
 
               {showScore ? (
-                <span className="border border-white/10 bg-zinc-900 px-1.5 py-0.2 text-[10px] font-bold tabular-nums text-white">
+                <span className="border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-white">
                   {game.score.away}–{game.score.home}
                 </span>
               ) : (
-                <span className="hidden text-[10px] text-zinc-500 sm:inline">
+                <span className="hidden text-[10px] tabular-nums text-white/40 sm:inline">
                   {formatMatchupTime(game.gameTime)}
                 </span>
               )}
 
-              {game.isLive && (
-                <Radio className="h-3 w-3 animate-pulse text-rose-400" aria-label="Live" />
-              )}
+              {game.isLive && <span className="lg-live-dot" aria-label="Live" />}
               {game.isFinal && (
-                <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 border border-white/10 px-1">FINAL</span>
+                <span className="text-[8px] font-medium uppercase tracking-wider text-white/40 border border-white/[0.08] px-1">FINAL</span>
               )}
             </button>
           );
@@ -136,15 +134,15 @@ export const LiveGamesNextMatchupSlider = memo(function LiveGamesNextMatchupSlid
           onClick={onNext}
           aria-label="Next matchup (right arrow)"
           title="Next matchup (→)"
-          className="flex h-9 items-center justify-center gap-1 border border-white/20 bg-zinc-900 px-3 text-xs font-bold text-zinc-300 transition-all hover:border-white hover:text-white cursor-pointer"
+          className="lg-control flex h-9 items-center justify-center gap-1 px-3 text-xs font-medium cursor-pointer"
         >
           <span className="hidden text-[10px] md:inline">NEXT</span>
           <ChevronRight className="h-4 w-4" />
         </button>
 
-        <div className="hidden items-center gap-1 border border-white/10 bg-black px-2 py-1 text-[10px] text-zinc-500 lg:flex">
-          <kbd className="border border-white/20 bg-zinc-900 px-1 text-zinc-300">[←]</kbd>
-          <kbd className="border border-white/20 bg-zinc-900 px-1 text-zinc-300">[→]</kbd>
+        <div className="hidden items-center gap-1 px-2 py-1 text-[10px] text-white/30 lg:flex">
+          <kbd className="border border-white/[0.08] bg-white/[0.04] px-1 text-white/55">[←]</kbd>
+          <kbd className="border border-white/[0.08] bg-white/[0.04] px-1 text-white/55">[→]</kbd>
         </div>
       </div>
     </div>

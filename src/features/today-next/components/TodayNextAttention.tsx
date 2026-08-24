@@ -13,41 +13,44 @@ const KIND_ICON = {
   action: Target,
 } as const;
 
-function toneFor(item: TodayAttentionItem): { text: string; badge: string; border: string } {
+function toneFor(item: TodayAttentionItem): { text: string; badge: string; badgeText: string; border: string } {
   const value = `${item.value} ${item.detail}`.toLowerCase();
   if (/unavailable|incomplete|missing|degraded|cannot|needs verification/.test(value)) {
     return {
-      text: 'text-amber-300',
-      badge: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
-      border: 'border-amber-500/20',
+      text: 'text-ve-amber',
+      badge: 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber',
+      badgeText: 'text-ve-amber',
+      border: 'border-ve-amber/20',
     };
   }
   if (/available|complete|pending/.test(value)) {
     return {
-      text: 'text-emerald-400',
-      badge: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400',
+      text: 'text-ve-emerald',
+      badge: 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald',
+      badgeText: 'text-ve-emerald',
       border: 'border-white/[0.08] hover:border-white/[0.18]',
     };
   }
   return {
-    text: 'text-[#F4F4F5]',
-    badge: 'border-white/[0.08] bg-white/[0.04] text-zinc-300',
+    text: 'text-white',
+    badge: 'border-white/[0.08] bg-white/[0.04] text-white/70',
+    badgeText: 'text-white/40',
     border: 'border-white/[0.08] hover:border-white/[0.18]',
   };
 }
 
 export function TodayNextAttention({ decision, onRoute }: TodayNextAttentionProps) {
   return (
-    <section aria-label="What needs attention" className="font-mono space-y-3">
+    <section aria-label="What needs attention" className="space-y-3">
       <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-        <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+        <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/55">
+          <AlertTriangle className="h-3.5 w-3.5 text-ve-amber" aria-hidden="true" />
           SYSTEM ATTENTION &amp; INTEGRITY
         </h2>
-        <span className="text-[9px] text-zinc-500 uppercase font-mono">STAGE 01 AUDIT</span>
+        <span className="text-[9px] text-white/40 uppercase font-mono">STAGE 01 AUDIT</span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid border-t border-white/[0.08] sm:grid-cols-3">
         {decision.attention.map((item) => {
           const Icon = KIND_ICON[item.kind];
           const routable = Boolean(item.section);
@@ -57,31 +60,31 @@ export function TodayNextAttention({ decision, onRoute }: TodayNextAttentionProp
             <div
               key={item.id}
               onClick={routable ? () => onRoute(item.section!) : undefined}
-              className={`group flex flex-col justify-between border ${tone.border} bg-[#111113] p-4 font-mono rounded-xl transition-all shadow-md ${
-                routable ? 'cursor-pointer hover:bg-[#18181B]' : ''
+              className={`group flex flex-col justify-between border-b border-white/[0.08] px-4 py-4 transition-colors sm:[&:not(:first-child)]:border-l ${
+                routable ? 'cursor-pointer hover:bg-white/[0.03]' : ''
               }`}
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[9px] font-mono font-medium uppercase tracking-wider text-zinc-400">
-                    <Icon className="h-3 w-3 text-zinc-500" aria-hidden="true" />
+                  <span className="flex items-center gap-1.5 text-[9px] font-mono font-medium uppercase tracking-wider text-white/55">
+                    <Icon className="h-3 w-3 text-white/40" aria-hidden="true" />
                     {item.label}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <span className={`px-1.5 py-0.5 text-[8px] font-mono font-medium uppercase border rounded ${tone.badge}`}>
+                    <span className={`text-[8px] font-mono font-medium uppercase tracking-[0.18em] ${tone.badgeText}`}>
                       {item.kind}
                     </span>
                     {routable && (
-                      <ArrowUpRight className="h-3 w-3 text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                      <ArrowUpRight className="h-3 w-3 text-ve-cyan opacity-60 group-hover:opacity-100 transition-opacity" />
                     )}
                   </div>
                 </div>
 
-                <strong className={`block text-sm font-bold leading-tight ${tone.text}`}>
+                <strong className={`block font-sans text-base font-medium leading-snug ${tone.text}`}>
                   {item.value}
                 </strong>
 
-                <p className="text-[11px] leading-relaxed text-zinc-400 font-sans">{item.detail}</p>
+                <p className="font-sans text-xs font-light leading-relaxed text-white/45">{item.detail}</p>
               </div>
             </div>
           );

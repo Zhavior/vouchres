@@ -49,7 +49,7 @@ const LINEUP_MODES: ReadonlyArray<{ key: HrWatchMode; label: string }> = [
 function RailSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="space-y-1.5 font-mono">
-      <h3 className="px-0.5 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+      <h3 className="px-0.5 text-[9px] font-black uppercase tracking-widest text-white/40">
         {label}
       </h3>
       {children}
@@ -108,7 +108,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
       {/* Search */}
       <RailSection label="SEARCH SLATE">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
           <input
             ref={searchInputRef}
             type="text"
@@ -116,9 +116,9 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
             onChange={handleSearch}
             placeholder="PLAYER / TEAM / SP"
             aria-label="Search the slate"
-            className="w-full border border-white/15 bg-zinc-950 py-2 pl-8 pr-7 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-cyan-400 focus:outline-none"
+            className="w-full border border-white/15 bg-obsidian-950 py-2 pl-8 pr-7 font-mono text-xs text-white placeholder-zinc-600 transition-colors focus:border-ve-cyan focus:outline-none"
           />
-          <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 border border-white/15 bg-zinc-900 px-1 text-[9px] text-zinc-500">
+          <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 border border-white/15 bg-obsidian-800 px-1 text-[9px] text-white/40">
             /
           </kbd>
         </div>
@@ -128,14 +128,14 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
       <RailSection label="SLATE DATE">
         <div className="flex items-center gap-1.5">
           <div className="relative min-w-0 flex-1">
-            <CalendarDays className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+            <CalendarDays className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
             <input
               id={dateFieldId}
               type="date"
               value={date}
               onChange={handleDate}
               aria-label="Slate date"
-              className="w-full border border-white/15 bg-zinc-950 py-1.5 pl-8 pr-2 font-mono text-xs text-white transition-colors focus:border-cyan-400 focus:outline-none"
+              className="w-full border border-white/15 bg-obsidian-950 py-1.5 pl-8 pr-2 font-mono text-xs text-white transition-colors focus:border-ve-cyan focus:outline-none"
             />
           </div>
           <button
@@ -143,12 +143,12 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
             onClick={onRefresh}
             title="Refresh the slate"
             aria-label="Refresh the slate"
-            className="grid h-[34px] w-[34px] shrink-0 place-items-center border border-white/15 bg-zinc-950 text-zinc-400 transition-colors hover:border-white hover:text-white cursor-pointer"
+            className="grid h-[34px] w-[34px] shrink-0 place-items-center border border-white/15 bg-obsidian-950 text-white/55 transition-colors hover:border-white hover:text-white cursor-pointer"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin text-ve-cyan' : ''}`} />
           </button>
         </div>
-        <p className="px-0.5 text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
+        <p className="px-0.5 text-[9px] uppercase tracking-widest text-white/40 font-bold">
           {isToday ? "TODAY'S ACTIVE SLATE" : 'ARCHIVED HISTORICAL SLATE'}
         </p>
       </RailSection>
@@ -158,7 +158,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
         <div
           role="tablist"
           aria-label="Board view"
-          className="flex flex-col gap-1 border border-white/10 bg-zinc-950 p-1"
+          className="flex flex-col gap-1 border border-white/10 bg-obsidian-950 p-1"
         >
           {viewModes.map(({ key, label }) => {
             const isActive = viewMode === key;
@@ -171,8 +171,8 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
                 onClick={() => onViewModeChange(key)}
                 className={`w-full px-2.5 py-1.5 text-left text-xs font-black uppercase tracking-wider transition-colors border cursor-pointer ${
                   isActive
-                    ? 'border-cyan-400 bg-cyan-950/50 text-cyan-300 shadow-[0_0_12px_rgba(0,240,255,0.15)]'
-                    : 'border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-white'
+                    ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
+                    : 'border-transparent text-white/55 hover:bg-obsidian-800 hover:text-white'
                 }`}
               >
                 {label}
@@ -184,7 +184,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
 
       {/* Lineup certainty */}
       <RailSection label="LINEUP CERTAINTY">
-        <div className="grid grid-cols-3 gap-1 border border-white/10 bg-zinc-950 p-1">
+        <div className="grid grid-cols-3 gap-1 border border-white/10 bg-obsidian-950 p-1">
           {LINEUP_MODES.map(({ key, label }) => {
             const isActive = lineupMode === key;
             return (
@@ -195,8 +195,8 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
                 onClick={() => onLineupModeChange(key)}
                 className={`px-1 py-1.5 text-center text-[10px] font-black uppercase tracking-wider transition-colors border cursor-pointer ${
                   isActive
-                    ? 'border-cyan-400 bg-cyan-950/50 text-cyan-300 font-bold'
-                    : 'border-transparent text-zinc-500 hover:text-white'
+                    ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan font-bold'
+                    : 'border-transparent text-white/40 hover:text-white'
                 }`}
               >
                 {label}
@@ -225,11 +225,11 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
           title="Resolve every plotted node against its Statcast reading"
           className={`flex w-full items-center gap-2 border px-2.5 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
             statcastResolved
-              ? 'border-cyan-400 bg-cyan-950/50 text-cyan-300'
-              : 'border-white/15 bg-zinc-950 text-zinc-400 hover:text-white hover:border-white/30'
+              ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
+              : 'border-white/15 bg-obsidian-950 text-white/55 hover:text-white hover:border-white/30'
           }`}
         >
-          <Zap className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+          <Zap className="h-3.5 w-3.5 shrink-0 text-ve-cyan" />
           <span className="min-w-0 flex-1 truncate text-left">STATCAST RESOLVE</span>
         </button>
 
@@ -237,7 +237,7 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
           <button
             type="button"
             onClick={() => onExport('json')}
-            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 border border-white/15 bg-zinc-950 px-2 py-1.5 text-xs font-bold text-zinc-300 hover:border-white hover:text-white transition-colors cursor-pointer"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 border border-white/15 bg-obsidian-950 px-2 py-1.5 text-xs font-bold text-white/70 hover:border-white hover:text-white transition-colors cursor-pointer"
           >
             <Download className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">JSON</span>
@@ -245,14 +245,14 @@ export const HrNextControlRail = React.memo(function HrNextControlRail({
           <button
             type="button"
             onClick={() => onExport('csv')}
-            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 border border-white/15 bg-zinc-950 px-2 py-1.5 text-xs font-bold text-zinc-300 hover:border-white hover:text-white transition-colors cursor-pointer"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 border border-white/15 bg-obsidian-950 px-2 py-1.5 text-xs font-bold text-white/70 hover:border-white hover:text-white transition-colors cursor-pointer"
           >
             <Download className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">CSV</span>
           </button>
         </div>
 
-        <p className="px-0.5 text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
+        <p className="px-0.5 text-[9px] uppercase tracking-widest text-white/40 font-bold">
           {exportStatus ?? `${savedCount} SIGNALS SAVED`}
         </p>
       </RailSection>

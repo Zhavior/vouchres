@@ -12,25 +12,21 @@ interface TelemetryTileProps {
 
 function TelemetryTile({ icon, label, value, detail, accent }: TelemetryTileProps) {
   return (
-    <div className="flex items-start gap-2.5 border-2 border-white/15 bg-black p-3 font-mono shadow-md">
-      <span
-        className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center border border-white/15 bg-zinc-950"
-        style={{ color: accent }}
-        aria-hidden="true"
-      >
+    <div className="flex min-w-0 items-baseline gap-3 border-l border-white/[0.08] px-4 py-3 first:border-l-0 first:pl-0">
+      <span className="mt-0.5 shrink-0" style={{ color: accent }} aria-hidden="true">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <span className="block truncate text-[9px] font-black uppercase tracking-widest text-zinc-500">
+        <span className="block truncate font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/40">
           {label}
         </span>
         <strong
-          className="mt-1 block truncate text-lg sm:text-xl font-black leading-none tabular-nums font-sans"
+          className="mt-1 block truncate font-mono text-xl font-bold leading-none tabular-nums"
           style={{ color: accent }}
         >
           {value}
         </strong>
-        <span className="mt-1 block truncate text-[10px] text-zinc-400 font-mono font-medium">
+        <span className="mt-1 block truncate font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
           {detail}
         </span>
       </div>
@@ -60,30 +56,30 @@ export const HrNextTelemetryBar = React.memo(function HrNextTelemetryBar({
       : `MEAN INDEX ${weather.averageWeatherIndex}`;
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+    <div className="grid grid-cols-2 border-y border-white/[0.08] xl:grid-cols-4">
       <TelemetryTile
-        icon={<Activity className="h-4 w-4" />}
+        icon={<Activity className="h-3.5 w-3.5" />}
         label="SLATE VOLUME"
         value={volume.games > 0 ? `${volume.games}` : '—'}
         detail={volume.games > 0 ? `${volume.players} BATTERS ANALYZED` : 'NO ACTIVE GAMES'}
-        accent="#00F0FF"
+        accent="#4FB8DC"
       />
       <TelemetryTile
-        icon={<ClipboardCheck className="h-4 w-4" />}
+        icon={<ClipboardCheck className="h-3.5 w-3.5" />}
         label="LINEUP STATUS"
         value={lineupValue}
         detail={lineupDetail}
-        accent="#34D399"
+        accent="#31B583"
       />
       <TelemetryTile
-        icon={<Wind className="h-4 w-4" />}
+        icon={<Wind className="h-3.5 w-3.5" />}
         label="WEATHER EDGE"
         value={weatherValue}
         detail={weatherDetail}
-        accent="#FBBF24"
+        accent="#D99C4A"
       />
       <TelemetryTile
-        icon={<Crosshair className="h-4 w-4" />}
+        icon={<Crosshair className="h-3.5 w-3.5" />}
         label="TOP COLLISION"
         value={topCollision ? `${topCollision.hrpi}` : '—'}
         detail={topCollision ? `${topCollision.playerName} · ${topCollision.team}` : 'AWAITING BOARD'}

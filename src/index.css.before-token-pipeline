@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 CSS-first tokens.
+ *
+ * Values mirror the canonical palette in src/styles/vouchedge-tokens.css and the
+ * critical-CSS block in index.html (.text-vouch-cyan / .text-vouch-emerald), so
+ * there is no hex drift. These are additive `ve-*` names — nothing that already
+ * ships on the V4 landing references them, so registering them cannot change it.
+ *
+ *   ve-cyan     engineering, infrastructure, developer systems
+ *   ve-emerald  verified, operational, evidence
+ *   ve-amber    SEOlaQuest / secondary system, context
+ */
+@theme {
+  --color-ve-cyan: #4FB8DC;
+  --color-ve-emerald: #31B583;
+  --color-ve-amber: #D99C4A;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --obsidian-950: #020202;
+  --obsidian-900: #050505;
+  --obsidian-800: #0A0A0A;
+  --vouch-emerald: #00FF94;
+  --vouch-cyan: #00F0FF;
+}
+
+@layer base {
+  body {
+    @apply bg-[#050505] text-white antialiased selection:bg-[#00FF94]/30;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-[#0A0A0A]/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+  }
+
+  .terminal-text {
+    @apply font-mono uppercase tracking-[0.2em] text-[10px] text-white/40;
+  }
+
+  .vouch-border {
+    @apply border border-white/5 hover:border-[#00FF94]/30 transition-colors duration-500;
+  }
+}
+
+/* Custom Scrollbar for the Terminal Look */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #020202;
+}
+::-webkit-scrollbar-thumb {
+  background: #1A1A1A;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00FF94;
+}
+
+/*
+ * Mobile system index (src/components/landing-v4/Navbar.tsx).
+ *
+ * The reveal is pure CSS rather than a motion component: the panel must be
+ * readable the instant it mounts even if no animation frame ever runs.
+ */
+@keyframes ve-index-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ve-index-panel-in {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+.ve-index-scrim {
+  animation: ve-index-scrim-in 180ms ease-out both;
+}
+
+.ve-index-panel {
+  animation: ve-index-panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-index-scrim,
+  .ve-index-panel {
+    animation-duration: 1ms;
+  }
+}

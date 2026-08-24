@@ -65,11 +65,11 @@ function DeferredTodayFieldDesk(props: ComponentProps<typeof TodayFieldDesk>) {
   return (
     <div ref={markerRef} className="tn-desk" style={{ minHeight: 360 }}>
       {shouldRender ? (
-        <Suspense fallback={<div aria-hidden="true" className="h-[360px] animate-pulse border border-white/[0.08] bg-white/[0.02]" />}>
+        <Suspense fallback={<div aria-hidden="true" className="h-[360px] border-y border-white/[0.08] bg-white/[0.015]" />}>
           <TodayFieldDesk {...props} />
         </Suspense>
       ) : (
-        <div aria-hidden="true" className="h-[360px] animate-pulse border border-white/[0.08] bg-white/[0.02]" />
+        <div aria-hidden="true" className="h-[360px] border-y border-white/[0.08] bg-white/[0.015]" />
       )}
     </div>
   );
@@ -207,21 +207,21 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
       ) : (
         <>
           {/* PINNED HUD TELEMETRY TOP BAR (DESKTOP) */}
-          <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3 backdrop-blur-xl sm:px-8">
+          <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3 sm:px-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-ve-emerald animate-pulse" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-sm sm:text-base font-bold tracking-wider text-[#F4F4F5] uppercase font-sans">
+                    <h1 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.24em] text-white font-mono">
                       VOUCHEDGE // TODAY'S COMMAND DESK
                     </h1>
-                    <span className="text-zinc-600 hidden sm:inline">|</span>
-                    <span className="text-emerald-400 text-[10px] font-medium hidden sm:inline font-mono">
+                    <span className="text-white/30 hidden sm:inline">|</span>
+                    <span className="text-ve-emerald text-[10px] font-medium hidden sm:inline font-mono">
                       STAGE: 01 / LIVE SLATE
                     </span>
                   </div>
-                  <p className="text-[9px] text-zinc-500 uppercase mt-0.5 font-mono">
+                  <p className="text-[9px] text-white/40 uppercase mt-0.5 font-mono">
                     ENGINE: DETERMINISTIC_LEDGER · {reportDateLabel} · {freshness}
                   </p>
                 </div>
@@ -231,7 +231,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
               <div className="flex items-center gap-2">
                 {/* Countdown to Lock Pill */}
                 {firstPitch?.countdownMs != null && liveGames.length === 0 && (
-                  <span className="inline-flex items-center gap-1.5 border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-mono font-medium text-emerald-400 rounded-md">
+                  <span className="inline-flex items-center gap-1.5 border border-ve-emerald/25 bg-ve-emerald/10 px-2.5 py-1 text-[10px] font-mono font-medium text-ve-emerald rounded-none">
                     <Timer className="h-3 w-3" />
                     LOCK: <strong className="font-mono tabular-nums">{formatCountdown(firstPitch.countdownMs)}</strong>
                   </span>
@@ -239,14 +239,14 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
 
                 {/* Sensors Verified Pill */}
                 <span
-                  className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-[9px] font-mono font-medium uppercase tracking-wider rounded-md ${
+                  className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-[9px] font-mono font-medium uppercase tracking-wider rounded-none ${
                     sourceDelayed
-                      ? 'border-amber-500/25 bg-amber-500/10 text-amber-300'
+                      ? 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber'
                       : sourceSyncing
-                      ? 'border-sky-500/25 bg-sky-500/10 text-sky-300'
+                      ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
                       : isDegraded
-                      ? 'border-amber-500/25 bg-amber-500/10 text-amber-300'
-                      : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400'
+                      ? 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber'
+                      : 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald'
                   }`}
                 >
                   <ShieldCheck className="h-3 w-3" />
@@ -264,11 +264,11 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                   type="button"
                   onClick={refresh}
                   title="Re-sync today's report and board (R)"
-                  className="flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white rounded-md transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs text-white/70 hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white rounded-none transition-colors cursor-pointer"
                 >
-                  <RefreshCw className={`h-3 w-3 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-3 w-3 text-ve-emerald ${isRefreshing ? 'animate-spin' : ''}`} />
                   <span className="font-medium">SYNC</span>
-                  <kbd className="text-[9px] text-zinc-500 font-mono">[R]</kbd>
+                  <kbd className="text-[9px] text-white/40 font-mono">[R]</kbd>
                 </button>
 
                 {/* Keyboard Shortcuts [?] */}
@@ -276,21 +276,21 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                   type="button"
                   onClick={() => setCheatsheetOpen(true)}
                   title="Keyboard shortcuts (?)"
-                  className="flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white rounded-md transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs text-white/70 hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white rounded-none transition-colors cursor-pointer"
                 >
-                  <Keyboard className="h-3 w-3 text-sky-400" />
+                  <Keyboard className="h-3 w-3 text-ve-cyan" />
                   <span className="font-medium">KEYS</span>
-                  <kbd className="text-[9px] text-zinc-500 font-mono">[?]</kbd>
+                  <kbd className="text-[9px] text-white/40 font-mono">[?]</kbd>
                 </button>
 
                 {/* 3D Toggle */}
                 <button
                   type="button"
                   onClick={() => toggle3DLayer()}
-                  className={`border px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  className={`border px-2.5 py-1 text-xs font-medium rounded-none transition-colors cursor-pointer ${
                     is3DLayerEnabled
                       ? 'border-white/20 bg-white/10 text-white'
-                      : 'border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:text-white'
+                      : 'border-white/[0.08] bg-white/[0.04] text-white/55 hover:text-white'
                   }`}
                 >
                   3D: {is3DLayerEnabled ? 'ON' : 'OFF'}
@@ -306,18 +306,18 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
 
             {(reportLoading || hrBoardLoading || error) && (
               <section
-                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-none border px-4 py-3 ${
                   error || sourceDelayed
-                    ? 'border-amber-500/25 bg-amber-500/10'
-                    : 'border-sky-500/20 bg-sky-500/[0.06]'
+                    ? 'border-ve-amber/25 bg-ve-amber/10'
+                    : 'border-ve-cyan/20 bg-ve-cyan/[0.06]'
                 }`}
                 aria-live="polite"
               >
                 <div className="flex min-w-0 items-start gap-2">
                   {error || sourceDelayed ? (
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ve-amber" />
                   ) : (
-                    <Radio className="mt-0.5 h-4 w-4 shrink-0 animate-pulse text-sky-300" />
+                    <Radio className="mt-0.5 h-4 w-4 shrink-0 animate-pulse text-ve-cyan" />
                   )}
                   <div className="min-w-0 break-words">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-white">
@@ -327,7 +327,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                           ? 'Source delayed · workspace remains open'
                           : 'Background source sync'}
                     </p>
-                    <p className="mt-0.5 text-[10px] leading-4 text-zinc-400">
+                    <p className="mt-0.5 text-[10px] leading-4 text-white/55">
                       {error
                         ? 'Live tools and saved work are still available. Retry the report without reloading this page.'
                         : `${reportDelayed ? 'Daily slate delayed' : reportLoading ? 'Daily slate syncing' : 'Daily slate ready'} · ${hrBoardDelayed ? 'player evidence delayed' : hrBoardLoading ? 'player evidence syncing' : 'player evidence ready'}`}
@@ -338,7 +338,7 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
                   <button
                     type="button"
                     onClick={refresh}
-                    className="min-h-9 shrink-0 rounded-lg border border-amber-400/30 px-3 text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-400/10"
+                    className="min-h-9 shrink-0 rounded-none border border-ve-amber/30 px-3 text-[10px] font-bold uppercase tracking-wider text-ve-amber hover:bg-ve-amber/10"
                   >
                     Retry sources
                   </button>
@@ -396,67 +396,67 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
               <div className="space-y-4 lg:col-span-5">
                 {/* Resume Task */}
                 <section
-                  className="border border-white/[0.08] bg-[#111113] p-4 sm:p-5 space-y-3 rounded-xl shadow-lg"
+                  className="border-t border-white/[0.08] pt-5 space-y-3"
                   aria-label="Resume where you left off"
                 >
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-                    <span className="text-[9px] font-mono font-medium uppercase tracking-wider text-emerald-400">
+                    <span className="text-[9px] font-mono font-medium uppercase tracking-wider text-ve-emerald">
                       {decision.resumeLabel}
                     </span>
-                    <span className="text-[8px] text-zinc-500 uppercase font-mono">ACTIVE SESSION</span>
+                    <span className="text-[8px] text-white/40 uppercase font-mono">ACTIVE SESSION</span>
                   </div>
 
                   <div>
-                    <h3 className="text-base font-bold text-[#F4F4F5] font-sans">{decision.resumeTitle}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-zinc-400 font-sans">{decision.resumeDetail}</p>
+                    <h3 className="text-base font-bold text-[#ffffff] font-sans">{decision.resumeTitle}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-white/55 font-sans">{decision.resumeDetail}</p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleRoute(decision.resumeSection)}
-                    className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-white rounded-none transition-colors cursor-pointer shadow-sm"
                   >
                     CONTINUE SESSION <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </section>
 
                 {/* Tracked Open Decision Slip */}
-                <section className="border border-white/[0.08] bg-[#111113] p-4 sm:p-5 space-y-3 rounded-xl shadow-lg" aria-label="Open slip">
+                <section className="border border-white/[0.08] bg-[#0A0A0A] p-4 sm:p-5 space-y-3 rounded-none" aria-label="Open slip">
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-                    <h3 className="flex items-center gap-2 text-xs font-mono font-medium uppercase tracking-wider text-zinc-300">
-                      <ClipboardList className="h-3.5 w-3.5 text-sky-400" />
+                    <h3 className="flex items-center gap-2 text-xs font-mono font-medium uppercase tracking-wider text-white/70">
+                      <ClipboardList className="h-3.5 w-3.5 text-ve-cyan" />
                       ACTIVE DECISION SLIP
                     </h3>
                     <button
                       type="button"
                       onClick={() => handleRoute('live_parlays')}
-                      className="text-[10px] font-mono font-medium uppercase tracking-wider text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
+                      className="text-[10px] font-mono font-medium uppercase tracking-wider text-ve-cyan hover:text-ve-cyan transition-colors cursor-pointer"
                     >
                       OPEN WORKSPACE →
                     </button>
                   </div>
 
                   {pendingSlips[0] ? (
-                    <div className="border border-white/[0.06] bg-white/[0.02] p-3.5 space-y-2 rounded-lg">
-                      <p className="truncate text-sm font-medium text-[#F4F4F5]">
+                    <div className="border border-white/[0.06] bg-white/[0.02] p-3.5 space-y-2 rounded-none">
+                      <p className="truncate text-sm font-medium text-[#ffffff]">
                         {pendingSlips[0].title || 'Active Tracked Slip'}
                       </p>
-                      <p className="text-[10px] text-zinc-400 font-mono">
+                      <p className="text-[10px] text-white/55 font-mono">
                         {pendingSlips[0].legs.length} LEG{pendingSlips[0].legs.length === 1 ? '' : 'S'} ·{' '}
                         {pendingSlips[0].mode === 'REAL' ? 'IMMUTABLE TRACKED' : 'PRACTICE MODE'}
                       </p>
                       <button
                         type="button"
                         onClick={() => handleRoute('live_parlays')}
-                        className="flex w-full items-center justify-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] py-2 text-[10px] font-mono font-medium uppercase tracking-wider text-zinc-200 rounded-lg transition-colors cursor-pointer"
+                        className="flex w-full items-center justify-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] py-2 text-[10px] font-mono font-medium uppercase tracking-wider text-white/80 rounded-none transition-colors cursor-pointer"
                       >
                         INSPECT SLIP <ArrowRight className="h-3 w-3" />
                       </button>
                     </div>
                   ) : (
-                    <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-center space-y-1 rounded-lg">
-                      <p className="text-xs font-mono font-medium text-zinc-300 uppercase">NO ACTIVE SLIP IN QUEUE</p>
-                      <p className="text-[10px] text-zinc-500 font-sans">
+                    <div className="border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-center space-y-1 rounded-none">
+                      <p className="text-xs font-mono font-medium text-white/70 uppercase">NO ACTIVE SLIP IN QUEUE</p>
+                      <p className="text-[10px] text-white/40 font-sans">
                         Add verified bats from the command desk to build a tracked ticket.
                       </p>
                     </div>
@@ -469,27 +469,27 @@ export function TodayNextShell({ navigateSection }: TodayNextShellProps) {
             <TodayNextLaunchpad vitals={vitals} onRoute={handleRoute} />
 
             {/* 7. DETERMINISTIC AUDIT RECEIPT FOOTER */}
-            <section className="border border-white/[0.08] bg-[#111113] p-4 sm:p-5 space-y-3 rounded-xl shadow-lg" aria-label="Source receipt">
+            <section className="border-t border-white/[0.08] pt-5 space-y-3" aria-label="Source receipt">
               <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-                <span className="flex items-center gap-2 text-[10px] font-mono font-medium uppercase tracking-wider text-zinc-400">
-                  <FileCheck2 className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+                <span className="flex items-center gap-2 text-[10px] font-mono font-medium uppercase tracking-wider text-white/55">
+                  <FileCheck2 className="h-3.5 w-3.5 text-ve-emerald" aria-hidden="true" />
                   SYSTEM VERIFICATION RECEIPT
                 </span>
-                <span className="text-[8px] text-zinc-500 uppercase font-mono">SHA-256 AUDIT LOG</span>
+                <span className="text-[8px] text-white/40 uppercase font-mono">SHA-256 AUDIT LOG</span>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3 text-xs font-mono">
                 <div>
-                  <p className="text-[9px] uppercase tracking-wider text-zinc-500 font-medium font-mono">ACTIVE DATA FEEDS</p>
-                  <p className="mt-1 text-zinc-300 font-medium">{receipt.sources.join(' · ')}</p>
+                  <p className="text-[9px] uppercase tracking-wider text-white/40 font-medium font-mono">ACTIVE DATA FEEDS</p>
+                  <p className="mt-1 text-white/70 font-medium">{receipt.sources.join(' · ')}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-wider text-zinc-500 font-medium font-mono">INTEGRITY &amp; GAP REPORT</p>
-                  <p className="mt-1 text-zinc-400">{receipt.missing}</p>
+                  <p className="text-[9px] uppercase tracking-wider text-white/40 font-medium font-mono">INTEGRITY &amp; GAP REPORT</p>
+                  <p className="mt-1 text-white/55">{receipt.missing}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-wider text-zinc-500 font-medium font-mono">LAST SENSOR SYNC</p>
-                  <p className="mt-1 text-emerald-400 font-medium">{receipt.updated}</p>
+                  <p className="text-[9px] uppercase tracking-wider text-white/40 font-medium font-mono">LAST SENSOR SYNC</p>
+                  <p className="mt-1 text-ve-emerald font-medium">{receipt.updated}</p>
                 </div>
               </div>
             </section>

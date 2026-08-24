@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- Primary SEO -->
+    <title>VouchEdge — Sports Research, Home Run Intelligence and Parlay Tracking</title>
+    <meta name="description" content="Research MLB matchups, compare hitters and pitchers, track parlays, and review verified betting results with VouchEdge." />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="VouchEdge" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="__PUBLIC_SITE_URL__/" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/vouchedge-180.png" />
+
+    <!-- Open Graph (Discord, iMessage, Slack, LinkedIn previews) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="__PUBLIC_SITE_URL__/" />
+    <meta property="og:title" content="VouchEdge — Sports Research, Home Run Intelligence and Parlay Tracking" />
+    <meta property="og:description" content="Research MLB matchups, compare hitters and pitchers, track parlays, and review verified betting results with VouchEdge." />
+    <meta property="og:image" content="__PUBLIC_SITE_URL__/og-image.png" />
+    <meta property="og:site_name" content="VouchEdge" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@vouchedge" />
+    <meta name="twitter:title" content="VouchEdge — Sports Research, Home Run Intelligence and Parlay Tracking" />
+    <meta name="twitter:description" content="Research MLB matchups, compare hitters and pitchers, track parlays, and review verified betting results with VouchEdge." />
+    <meta name="twitter:image" content="__PUBLIC_SITE_URL__/og-image.png" />
+
+    <!-- Above-fold type — self-hosted, fetched in parallel with the CSS bundle -->
+    <link rel="preload" href="/fonts/cabinet-grotesk-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/cabinet-grotesk-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Critical above-fold shell — paints before 740KB Tailwind bundle parses -->
+    <style id="ve-critical-shell">
+      /* Mirrors src/styles/fonts.css for the three above-fold faces only, so the
+         first paint uses real type instead of swapping once the bundle lands.
+         Keep in sync with that file. */
+      @font-face {
+        font-family: 'Cabinet Grotesk';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('/fonts/cabinet-grotesk-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Cabinet Grotesk';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url('/fonts/cabinet-grotesk-500.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Space Grotesk';
+        font-style: normal;
+        font-weight: 300 700;
+        font-display: swap;
+        src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      :root {
+        color-scheme: dark;
+        --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --font-sans: 'Cabinet Grotesk', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --font-z8: var(--font-sans);
+        --z8-font-mono: var(--font-mono);
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      #root {
+        min-height: 100vh;
+        isolation: isolate;
+        opacity: 1;
+        visibility: visible;
+      }
+      /* Boot canvas — matches the app shell so the pre-mount frame is
+         indistinguishable from the loaded app (no flash, no loading card). */
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        background-color: #000000;
+      }
+      body {
+        min-height: 100vh;
+      }
+      body, #root {
+        font-family: var(--font-z8);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Critical boot safety — must paint before the main CSS bundle */
+      .lazy-mount-fade,
+      .ve-hero-in,
+      .ve-edge-island-enter,
+      .ve-edge-island-enter-delay-1,
+      .ve-edge-island-enter-delay-2,
+      .ve-edge-island-enter-delay-3 {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      .font-z8 { font-family: var(--font-z8); }
+      .text-vouch-cyan { color: #4FB8DC; }
+      .text-vouch-emerald { color: #31B583; }
+      .bg-vouch-emerald { background-color: #31B583; }
+      .bg-obsidian-900 { background-color: #000000; }
+      .z8-layout-root { min-height: 100vh; color: #E7ECF3; width: 100%; }
+      /* Legacy duplicate top chrome — sidebar/drawer owns auth + alerts */
+      .ve-mobile-header,
+      #center-main-content-column > header {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .glass-panel {
+        background-color: rgba(5, 10, 20, 0.28);
+        backdrop-filter: blur(16px) saturate(1.15);
+        -webkit-backdrop-filter: blur(16px) saturate(1.15);
+        border: 1px solid rgba(231, 236, 243, 0.05);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+      }
+      .glass-border { border: 1px solid rgba(231, 236, 243, 0.1); }
+      .terminal-text {
+        font-family: var(--z8-font-mono);
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: rgba(231, 236, 243, 0.4);
+      }
+      .ve-route-suspense-fallback { min-height: 40vh; contain: strict; pointer-events: none; }
+      @keyframes ve-hero-in {
+        from { transform: translateY(16px); }
+        to { transform: translateY(0); }
+      }
+      .ve-hero-in {
+        opacity: 1;
+        animation: ve-hero-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) ease-out;
+      }
+      @keyframes pulse { 50% { opacity: 0.5; } }
+      .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      .ve-chunk-recovery-fallback {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #000000;
+        color: #E7ECF3;
+        font-family: var(--font-z8);
+      }
+      .ve-chunk-recovery-fallback__card {
+        max-width: 28rem;
+        width: 100%;
+        border: 1px solid rgba(79, 184, 220, 0.25);
+        border-radius: 1.5rem;
+        background: rgba(5, 10, 20, 0.92);
+        padding: 1.5rem;
+        box-shadow: 0 0 60px rgba(79, 184, 220, 0.12);
+      }
+      .ve-chunk-recovery-fallback__eyebrow {
+        margin: 0 0 0.75rem;
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #31B583;
+      }
+      .ve-chunk-recovery-fallback h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #E7ECF3;
+      }
+      .ve-chunk-recovery-fallback p {
+        margin: 0 0 1rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: rgba(231, 236, 243, 0.78);
+      }
+      .ve-chunk-recovery-fallback button {
+        width: 100%;
+        border: none;
+        border-radius: 0.9rem;
+        padding: 0.75rem 1rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        background: #4FB8DC;
+        color: #050A14;
+        cursor: pointer;
+      }
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!--
+      HR Intelligence early fetch. The board request used to start only after the
+      whole route module graph had loaded and the page mounted, so the flagship
+      screen waited on JS before it even asked for its data. Firing it here puts
+      the request in flight during HTML parse, in parallel with the bundle, so the
+      board is usually resolved by the time React mounts and the page can paint
+      complete instead of skeleton-then-content.
+
+      previewLimit must match HR_BOARD_CANONICAL_FETCH_LIMIT in src/lib/hrBoardSlice.ts —
+      a mismatch makes this a wasted request instead of a warm one.
+    -->
+    <script>
+      (function () {
+        try {
+          // Section comes from the entry URL only. "/" resolves to the Today home
+          // regardless of the last section visited, so a stored section here would
+          // just buy a ~300KB response nobody reads.
+          var section = (window.location.hash.replace(/^#/, '') || window.location.pathname)
+            .toLowerCase()
+            .replace(/^\//, '');
+          var isTodaySection = !section || section === 'today' || section === 'today_next';
+          var isHrSection = section === 'hr_board' || section === 'daily_hr_watch_new';
+
+          if (isTodaySection) {
+            window.__veDailyReportEarly = fetch('/api/mlb/reports/daily', {
+              credentials: 'include',
+            }).then(function (res) {
+              if (!res.ok) throw new Error('daily_report_early_fetch_failed');
+              return res.json();
+            });
+            window.__veDailyReportEarly.catch(function () {});
+          }
+
+          if (isTodaySection || isHrSection) {
+            window.__veHrBoardEarly = fetch('/api/mlb/hr-board/today?previewLimit=350&compact=1', {
+              credentials: 'include',
+            }).then(function (res) {
+              if (!res.ok) throw new Error('hr_board_early_fetch_failed');
+              window.__veHrBoardEarlyCacheControl = res.headers.get('cache-control');
+              return res.json();
+            });
+            window.__veHrBoardEarly.catch(function () {});
+          }
+        } catch (e) {
+          /* Best effort only — the app still fetches on its own. */
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

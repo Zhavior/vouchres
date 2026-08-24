@@ -20,7 +20,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-white/[0.05] bg-black">
+    <section className="relative isolate overflow-hidden border-b border-white/[0.05] bg-[#080a0f]">
       <AuroraBackground />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(32,199,244,0.14),transparent_42%),linear-gradient(to_bottom,transparent_45%,#000_100%)]" />
 
@@ -57,7 +57,7 @@ export default function AuroraHero({ onJoinBeta, onLogin, onViewDemo }: AuroraHe
             type="button"
             onClick={onLogin}
             aria-label="Log in"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 text-sm font-semibold text-white/75 transition hover:border-white/20 hover:text-white sm:px-4"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-[#080a0f]/20 px-3 text-sm font-semibold text-white/75 transition hover:border-white/20 hover:text-white sm:px-4"
           >
             <LogIn aria-hidden="true" className="h-4 w-4" />
             <span className="hidden sm:inline">Log in</span>

@@ -21,7 +21,7 @@ export function TodayNextVitalsRail({ vitals }: TodayNextVitalsRailProps) {
       icon: Radio,
       label: 'LIVE NOW',
       value: vitals.live,
-      tone: vitals.live > 0 ? 'text-rose-400' : 'text-zinc-400',
+      tone: vitals.live > 0 ? 'text-ve-red' : 'text-white/55',
       badge: vitals.live > 0 ? 'ACTIVE' : 'IDLE',
       isLive: vitals.live > 0,
     },
@@ -30,7 +30,7 @@ export function TodayNextVitalsRail({ vitals }: TodayNextVitalsRailProps) {
       icon: CheckCircle2,
       label: 'FINAL SCORES',
       value: vitals.final,
-      tone: 'text-zinc-300',
+      tone: 'text-white/70',
       badge: 'OFFICIAL',
     },
     {
@@ -38,7 +38,7 @@ export function TodayNextVitalsRail({ vitals }: TodayNextVitalsRailProps) {
       icon: Activity,
       label: 'RESEARCH ROWS',
       value: vitals.hrSignals ?? '—',
-      tone: 'text-emerald-400',
+      tone: 'text-ve-emerald',
       badge: 'VERIFIED',
     },
     {
@@ -46,30 +46,32 @@ export function TodayNextVitalsRail({ vitals }: TodayNextVitalsRailProps) {
       icon: ClipboardList,
       label: 'PENDING SLIPS',
       value: vitals.pendingSlips,
-      tone: vitals.pendingSlips > 0 ? 'text-amber-300' : 'text-zinc-400',
+      tone: vitals.pendingSlips > 0 ? 'text-ve-amber' : 'text-white/55',
       badge: 'TRACKED',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    /* Open register rather than five boxes: one rule above, one rule between
+       columns. The figures are telemetry, so they stay mono and tabular. */
+    <div className="grid grid-cols-2 border-t border-white/[0.08] sm:grid-cols-3 lg:grid-cols-5">
       {cells.map((cell) => {
         const Icon = cell.icon;
         return (
           <div
             key={cell.key}
-            className="bg-[#111113] border border-white/[0.08] rounded-xl p-4 sm:p-5 shadow-2xl flex flex-col justify-between"
+            className="flex flex-col justify-between border-b border-white/[0.08] px-4 py-4 sm:px-5 sm:py-5 [&:not(:nth-child(2n+1))]:border-l sm:[&:not(:nth-child(3n+1))]:border-l sm:[&:nth-child(3n+1)]:border-l-0 lg:[&:not(:nth-child(5n+1))]:border-l lg:[&:nth-child(3n+1)]:border-l [&]:border-white/[0.08]"
           >
             <div className="flex items-center justify-between gap-1 mb-1">
-              <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-zinc-400 uppercase">
+              <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/55 uppercase">
                 {cell.isLive ? (
-                  <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" aria-hidden="true" />
+                  <span className="h-2 w-2 rounded-full bg-ve-red animate-pulse" aria-hidden="true" />
                 ) : (
-                  <Icon className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
+                  <Icon className="h-3.5 w-3.5 text-white/55" aria-hidden="true" />
                 )}
                 {cell.label}
               </span>
-              <span className="text-[8px] font-mono font-medium px-1.5 py-0.5 rounded border border-white/[0.06] text-zinc-400 uppercase tracking-wider">
+              <span className="text-[8px] font-mono font-medium uppercase tracking-[0.18em] text-white/30">
                 {cell.badge}
               </span>
             </div>

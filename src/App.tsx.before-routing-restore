@@ -1,0 +1,36 @@
+import { MotionConfig } from 'motion/react';
+import VouchEdgeLandingV4 from './pages/VouchEdgeLandingV4';
+import BlogPage from './pages/BlogPage';
+import ContactPage from './pages/ContactPage';
+import DevProfilePage from './pages/DevProfilePage';
+
+function CurrentPage() {
+  const path = window.location.pathname;
+
+  // Existing public pages
+  if (path === '/dev') {
+    return <DevProfilePage />;
+  }
+
+  if (path === '/contact') {
+    return <ContactPage />;
+  }
+
+  // BlogPage already handles /blog and /blog/:slug internally.
+  if (path === '/blog' || path.startsWith('/blog/')) {
+    return <BlogPage />;
+  }
+
+  // New V4 public landing.
+  return <VouchEdgeLandingV4 />;
+}
+
+export default function App() {
+  // Single shared public-surface motion policy: transform/layout motion is
+  // suppressed when the OS asks for reduced motion; opacity still animates.
+  return (
+    <MotionConfig reducedMotion="user">
+      <CurrentPage />
+    </MotionConfig>
+  );
+}

@@ -19,24 +19,21 @@ export type TodayMobileFilter = 'collision' | 'live' | 'confirmed' | 'park';
 
 export interface TodayMobileFilterDef {
   id: TodayMobileFilter;
-  glyph: string;
   label: string;
-  /** Shown to screen readers so the chip's meaning is not carried by an emoji. */
+  /** Shown to screen readers; the chip's meaning is carried by text alone. */
   description: string;
 }
 
 export const TODAY_MOBILE_FILTERS: readonly TodayMobileFilterDef[] = [
   {
     id: 'collision',
-    glyph: '🔥',
     label: 'Top collision',
     description: 'Ranked by hitter power against opposing pitcher vulnerability',
   },
-  { id: 'live', glyph: '⚾', label: 'Live slate', description: 'Only players in games underway' },
-  { id: 'confirmed', glyph: '🎯', label: 'Confirmed lineups', description: 'Only players on an official published lineup' },
+  { id: 'live', label: 'Live slate', description: 'Only players in games underway' },
+  { id: 'confirmed', label: 'Confirmed lineups', description: 'Only players on an official published lineup' },
   {
     id: 'park',
-    glyph: '🏟',
     label: 'Park edge',
     description: 'Only venues whose home-run index runs above neutral, best first',
   },

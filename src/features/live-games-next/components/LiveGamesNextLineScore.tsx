@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
-import { Radio, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import type { GameMatchup } from '../../../types/matchup';
 import type { OfficialLineScore } from '../api/officialLineScore';
 
 /**
- * Official Line Score — MLB StatsAPI `linescore`, rendered verbatim in sharp HUD matrix style.
+ * Official Line Score — MLB StatsAPI `linescore`, rendered verbatim on the
+ * Cupertino Pro material plate shared with Today Next.
  */
 
 export interface LiveGamesNextLineScoreProps {
@@ -36,21 +37,21 @@ function Frame({
     <section
       data-testid="live-next-linescore"
       aria-label="Official line score"
-      className={`w-full min-w-0 border-2 border-white/15 bg-black font-mono shadow-2xl ${
+      className={`w-full min-w-0 border border-white/[0.08] bg-white/[0.015] font-mono ${
         compact ? 'p-3' : 'p-4 sm:p-5'
       }`}
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 bg-cyan-400" />
-          <h3 className="text-xs font-black uppercase tracking-widest text-white">
-            OFFICIAL LINE SCORE MATRIX
+          <span className="h-1.5 w-1.5 bg-ve-cyan" />
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+            Official line score
           </h3>
-          <span className={`px-1.5 py-0.5 text-[9px] font-black uppercase border tracking-wider ${badgeTone}`}>
+          <span className={`px-1.5 py-0.5 text-[9px] font-medium uppercase border tracking-wider ${badgeTone}`}>
             {badge}
           </span>
         </div>
-        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[9px] font-medium uppercase tracking-wider text-white/30">
           MLB STATSAPI · LINESCORE VERIFIED
         </span>
       </div>
@@ -82,9 +83,9 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
 
   if (isError) {
     return (
-      <Frame compact={compact} badge="FEED DOWN" badgeTone="border-rose-500/40 bg-rose-500/15 text-rose-300">
-        <p className="flex items-center gap-2 py-4 text-xs text-zinc-400">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
+      <Frame compact={compact} badge="FEED DOWN" badgeTone="border-ve-amber/25 bg-ve-amber/10 text-ve-amber">
+        <p className="flex items-center gap-2 py-4 text-xs text-white/55">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-ve-amber" />
           The MLB line score feed did not respond. No estimations applied — retry with Fast Sync.
         </p>
       </Frame>
@@ -93,11 +94,11 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
 
   if (isLoading && !lineScore) {
     return (
-      <Frame compact={compact} badge="SYNCING" badgeTone="border-white/20 bg-zinc-900 text-zinc-400">
+      <Frame compact={compact} badge="SYNCING" badgeTone="border-white/[0.08] bg-white/[0.04] text-white/40">
         <div className="space-y-2 py-2" aria-hidden="true">
-          <div className="h-4 w-full animate-pulse bg-zinc-900 border border-white/10" />
-          <div className="h-6 w-full animate-pulse bg-zinc-900 border border-white/10" />
-          <div className="h-6 w-full animate-pulse bg-zinc-900 border border-white/10" />
+          <div className="h-4 w-full animate-pulse bg-white/[0.04] border border-white/[0.06]" />
+          <div className="h-6 w-full animate-pulse bg-white/[0.04] border border-white/[0.06]" />
+          <div className="h-6 w-full animate-pulse bg-white/[0.04] border border-white/[0.06]" />
         </div>
       </Frame>
     );
@@ -105,8 +106,8 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
 
   if (!lineScore) {
     return (
-      <Frame compact={compact} badge="SCHEDULED" badgeTone="border-white/20 bg-zinc-900 text-zinc-400">
-        <p className="py-4 text-xs leading-relaxed text-zinc-400">
+      <Frame compact={compact} badge="SCHEDULED" badgeTone="border-white/[0.08] bg-white/[0.04] text-white/40">
+        <p className="py-4 text-xs leading-relaxed text-white/55">
           MLB has not published in-game per-inning runs for this scheduled matchup yet. Inning scores appear here the moment the official feed transmits them.
         </p>
       </Frame>
@@ -114,10 +115,10 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
   }
 
   const badgeTone = lineScore.isLive
-    ? 'border-rose-500/40 bg-rose-500/15 text-rose-300'
+    ? 'border-ve-red/25 bg-ve-red/10 text-ve-red'
     : lineScore.isFinal
-      ? 'border-white/20 bg-zinc-900 text-zinc-400'
-      : 'border-emerald-400/40 bg-emerald-950/40 text-emerald-300';
+      ? 'border-white/[0.08] bg-white/[0.04] text-white/40'
+      : 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald';
 
   const battingSide: 'away' | 'home' | null = lineScore.isLive
     ? lineScore.isTopInning === true
@@ -144,15 +145,15 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
     },
   ];
 
-  const headCell = 'px-1.5 py-1 text-[9px] font-black uppercase tracking-wider text-zinc-500';
+  const headCell = 'px-1.5 py-1 text-[9px] font-medium uppercase tracking-wider text-white/40';
 
   return (
     <Frame compact={compact} badge={lineScore.stateLabel.toUpperCase()} badgeTone={badgeTone}>
       <div className="w-full min-w-0 overflow-x-auto">
         <table className="w-full border-collapse text-center tabular-nums font-mono">
           <thead>
-            <tr className="border-b border-white/15 bg-zinc-950">
-              <th scope="col" className={`sticky left-0 z-10 bg-zinc-950 text-left ${headCell} min-w-[70px]`}>
+            <tr className="border-b border-white/[0.08] bg-white/[0.03]">
+              <th scope="col" className={`sticky left-0 z-10 bg-[#0a0a0a] text-left ${headCell} min-w-[70px]`}>
                 TEAM
               </th>
               {columns.map((inning) => {
@@ -162,14 +163,14 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
                     key={inning.num}
                     scope="col"
                     className={`min-w-[24px] sm:min-w-[28px] ${headCell} ${
-                      isCurrent ? 'bg-rose-500/20 text-rose-300 border-x border-rose-500/40' : ''
+                      isCurrent ? 'bg-ve-red/10 text-ve-red border-x border-ve-red/25' : ''
                     }`}
                   >
                     {inning.num}
                   </th>
                 );
               })}
-              <th scope="col" className={`min-w-[28px] border-l border-white/15 bg-emerald-950/40 ${headCell} !text-emerald-300`}>
+              <th scope="col" className={`min-w-[28px] border-l border-white/[0.08] bg-ve-emerald/[0.08] ${headCell} !text-ve-emerald`}>
                 R
               </th>
               <th scope="col" className={`min-w-[28px] ${headCell}`}>H</th>
@@ -178,24 +179,19 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-white/[0.06]">
             {rows.map((row) => {
               const isBatting = battingSide === row.side;
               return (
-                <tr key={row.side} className={isBatting ? 'bg-rose-500/[0.08]' : 'hover:bg-zinc-950/60'}>
+                <tr key={row.side} className={isBatting ? 'bg-ve-red/[0.06]' : 'hover:bg-white/[0.03]'}>
                   <th
                     scope="row"
-                    className="sticky left-0 z-10 bg-black px-2 py-2 text-left font-normal border-r border-white/10"
+                    className="sticky left-0 z-10 bg-[#0a0a0a] px-2 py-2 text-left font-normal border-r border-white/[0.06]"
                   >
                     <span className="flex items-center gap-2">
                       {row.logo && <img src={row.logo} alt="" className="h-4 w-4 shrink-0 object-contain" loading="lazy" />}
-                      <strong className="text-xs font-black text-white">{row.abbr}</strong>
-                      {isBatting && (
-                        <span
-                          className="h-1.5 w-1.5 shrink-0 bg-rose-400 animate-pulse"
-                          title={`${row.name} batting`}
-                        />
-                      )}
+                      <strong className="text-xs font-semibold text-white">{row.abbr}</strong>
+                      {isBatting && <span className="lg-live-dot" title={`${row.name} batting`} />}
                     </span>
                   </th>
 
@@ -206,20 +202,20 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
                       <td
                         key={inning.num}
                         className={`px-1 py-2 text-xs ${
-                          value == null ? 'text-zinc-600' : 'font-bold text-white'
-                        } ${isCurrent ? 'bg-rose-500/10 font-black text-rose-200' : ''}`}
+                          value == null ? 'text-white/25' : 'font-semibold text-white'
+                        } ${isCurrent ? 'bg-ve-red/[0.08] font-bold text-ve-red' : ''}`}
                       >
                         {value == null ? '·' : value}
                       </td>
                     );
                   })}
 
-                  <td className="border-l border-white/15 bg-emerald-950/40 px-2 py-2 text-sm font-black text-emerald-400">
+                  <td className="border-l border-white/[0.08] bg-ve-emerald/[0.08] px-2 py-2 text-sm font-bold text-ve-emerald">
                     {cell(row.totals.runs)}
                   </td>
-                  <td className="px-2 py-2 text-xs font-bold text-zinc-300">{cell(row.totals.hits)}</td>
-                  <td className="px-2 py-2 text-xs font-bold text-zinc-400">{cell(row.totals.errors)}</td>
-                  <td className="px-2 py-2 text-xs font-bold text-zinc-500">{cell(row.totals.leftOnBase)}</td>
+                  <td className="px-2 py-2 text-xs font-semibold text-white/70">{cell(row.totals.hits)}</td>
+                  <td className="px-2 py-2 text-xs font-semibold text-white/55">{cell(row.totals.errors)}</td>
+                  <td className="px-2 py-2 text-xs font-semibold text-white/40">{cell(row.totals.leftOnBase)}</td>
                 </tr>
               );
             })}
@@ -229,29 +225,29 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
 
       {/* Live count strip */}
       {lineScore.isLive && (
-        <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-white/10 pt-3">
-          <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-rose-300 border border-rose-500/40 bg-rose-950/40 px-2 py-0.5">
-            <Radio className="h-3 w-3 animate-pulse" />
+        <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-3">
+          <span className="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wider text-ve-red border border-ve-red/25 bg-ve-red/10 px-2 py-0.5">
+            <span className="lg-live-dot" />
             {lineScore.inningState?.toUpperCase() ?? 'LIVE'} {lineScore.currentInningOrdinal?.toUpperCase() ?? ''}
           </span>
 
           {lineScore.balls != null && lineScore.strikes != null && (
-            <span className="text-xs font-bold text-zinc-300">
-              <span className="text-zinc-500 uppercase text-[9px]">COUNT:</span> {lineScore.balls}-{lineScore.strikes}
+            <span className="text-xs font-semibold tabular-nums text-white/70">
+              <span className="text-white/40 uppercase text-[9px]">COUNT:</span> {lineScore.balls}-{lineScore.strikes}
             </span>
           )}
 
           {lineScore.outs != null && (
-            <span className="flex items-center gap-2 text-xs font-bold text-zinc-300">
-              <span className="text-zinc-500 uppercase text-[9px]">OUTS:</span>
+            <span className="flex items-center gap-2 text-xs font-semibold text-white/70">
+              <span className="text-white/40 uppercase text-[9px]">OUTS:</span>
               <span className="flex items-center gap-1" aria-label={`${lineScore.outs} out`}>
                 {[0, 1, 2].map((index) => (
                   <span
                     key={index}
                     className={`h-2.5 w-2.5 border ${
                       index < (lineScore.outs ?? 0)
-                        ? 'border-rose-400 bg-rose-400'
-                        : 'border-white/20 bg-black'
+                        ? 'border-ve-red bg-ve-red'
+                        : 'border-white/[0.16] bg-transparent'
                     }`}
                   />
                 ))}
@@ -259,7 +255,7 @@ export const LiveGamesNextLineScore = React.memo(function LiveGamesNextLineScore
             </span>
           )}
 
-          <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+          <span className="ml-auto text-[9px] font-medium uppercase tracking-wider text-white/30">
             REGULATION {lineScore.scheduledInnings} INNINGS
           </span>
         </div>

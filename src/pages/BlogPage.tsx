@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'motion/react';
-import { Search, X, Copy, Check, Share2, Rss, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { Search, X, Copy, Check, Share2, ArrowRight, ArrowUpRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
@@ -10,18 +10,23 @@ import Navbar from '../components/landing-v4/Navbar';
 import PublicFooter from '../components/landing-v4/PublicFooter';
 
 /**
- * /blog — "The Record".
+ * /blog — the published intelligence record.
  *
- * Positioning inside the public family: LANDING is cinematic intelligence, DEV is
- * technical editorial engineering, CONTACT is a communications console. This page
- * is the published archive — an index, not a card wall. Every entry is a numbered
- * row on a hairline register, titles set in the V4 display face, all metadata in
- * mono. One accent (ve-emerald) carries the whole page; the previous per-tag
- * cyan/emerald/amber/purple coding was decoration that encoded nothing the tag
- * label did not already say, and its amber collided with --ve-warning.
+ * The editorial interpretation of the V4 constitution. Landing is the cinematic
+ * narrative, /dev the engineering dossier, /contact the communications console;
+ * this surface is the publication — a research journal kept inside an evidence
+ * system. It takes the constitution's grammar (obsidian ground, Cabinet Grotesk
+ * statements, mono telemetry, hairline structure, numbered architecture) without
+ * taking another page's composition: the index is a register under a dominant
+ * lead entry, and the reader is a two-column research document with a standing
+ * provenance rail rather than a centred column of text.
+ *
+ * One accent. ve-emerald carries the editorial/evidence signal throughout;
+ * nothing on this surface is an interface action in the cyan sense, so cyan is
+ * absent by decision rather than by omission.
  */
 
-const META_CLASS = 'font-mono text-[10px] uppercase tracking-[0.24em] text-white/40';
+const META = 'font-mono text-[10px] uppercase tracking-[0.24em] text-white/40';
 const RULE = 'border-white/[0.08]';
 
 const FIELD_CLASS =
@@ -29,7 +34,7 @@ const FIELD_CLASS =
   'placeholder-white/25 transition-colors focus:border-ve-emerald focus:outline-none focus:ring-1 focus:ring-ve-emerald ' +
   'disabled:cursor-not-allowed disabled:opacity-50';
 
-/** Meta separator. Rendered as a hairline dot so the row reads as one line. */
+/** Separator between metadata terms. Hairline dot, never a glyph. */
 function Dot({ className = '' }: { className?: string }) {
   return (
     <span aria-hidden="true" className={`h-[3px] w-[3px] shrink-0 rounded-full bg-white/20 ${className}`} />
@@ -38,9 +43,9 @@ function Dot({ className = '' }: { className?: string }) {
 
 function PostMeta({ post, className = '' }: { post: BlogPost; className?: string }) {
   return (
-    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 ${META_CLASS} ${className}`}>
-      {/* The tag takes the whole first line on narrow viewports so the row never
-          wraps mid-list and strands a separator dot at the end of a line. */}
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 ${META} ${className}`}>
+      {/* The subject holds the whole first line on narrow viewports so the row
+          never wraps mid-list and strands a separator dot at a line end. */}
       <span className="w-full text-ve-emerald sm:w-auto">{post.tag}</span>
       <Dot className="hidden sm:block" />
       <time>{post.date}</time>
@@ -51,67 +56,52 @@ function PostMeta({ post, className = '' }: { post: BlogPost; className?: string
 }
 
 /**
- * One entry in the register. Used by the archive and by the adjacent-records
- * block in the reader so both read as the same object.
+ * One numbered entry in the register. Shared by the archive and by the adjacent
+ * research block so both read as the same object in the same publication.
  */
 function IndexRow({
   post,
   index,
   onOpen,
-  compact = false,
 }: {
   post: BlogPost;
   index: number;
   onOpen: (post: BlogPost) => void;
-  /**
-   * Stacked variant. The reader column is max-w-3xl, so the wide row's third
-   * column would eat the title's measure and wrap it to six lines; inside a
-   * narrow container the meta belongs under the title at every width.
-   */
-  compact?: boolean;
 }) {
   return (
     <li className={`border-b ${RULE}`}>
       <button
         type="button"
         onClick={() => onOpen(post)}
-        className={`group grid w-full grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-3 px-1 py-7 text-left transition-colors hover:bg-white/[0.02] focus-visible:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald sm:gap-x-8 ${
-          compact ? 'sm:py-8' : 'sm:py-9 lg:grid-cols-[auto_1fr_auto]'
-        }`}
+        className="group grid w-full grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-3 px-1 py-8 text-left transition-colors hover:bg-white/[0.02] focus-visible:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald sm:gap-x-10 sm:py-10 lg:grid-cols-[auto_minmax(0,1fr)_auto]"
       >
-        <span className={`${META_CLASS} pt-1.5 tabular-nums transition-colors group-hover:text-ve-emerald`}>
+        <span className={`${META} pt-2 tabular-nums transition-colors group-hover:text-ve-emerald`}>
           {String(index + 1).padStart(2, '0')}
         </span>
 
         <span className="min-w-0">
-          <span
-            className={`block font-bold italic leading-[1.15] tracking-tighter text-white transition-colors group-hover:text-ve-emerald ${
-              compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
-            }`}
-          >
+          <span className="block text-2xl font-bold italic leading-[1.12] tracking-tighter text-white transition-colors group-hover:text-ve-emerald sm:text-3xl">
             {post.title}
           </span>
-          <span className="mt-3 block max-w-2xl font-sans text-sm font-light leading-relaxed text-white/45 line-clamp-2">
+          <span className="mt-3 block max-w-2xl font-sans text-sm font-light leading-relaxed text-white/45 line-clamp-2 lg:line-clamp-1">
             {post.excerpt}
           </span>
-          <PostMeta post={post} className={`mt-4 ${compact ? '' : 'lg:hidden'}`} />
+          <PostMeta post={post} className="mt-4 lg:hidden" />
         </span>
 
-        {!compact && (
-          <span className="col-start-2 hidden items-center gap-6 lg:col-start-3 lg:flex">
-            <PostMeta post={post} className="justify-end" />
-            <ArrowUpRight
-              aria-hidden="true"
-              className="h-4 w-4 shrink-0 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ve-emerald"
-            />
-          </span>
-        )}
+        <span className="col-start-2 hidden items-center gap-8 lg:col-start-3 lg:flex">
+          <PostMeta post={post} className="justify-end" />
+          <ArrowUpRight
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ve-emerald"
+          />
+        </span>
       </button>
     </li>
   );
 }
 
-/** Shared subscribe block. Same field language as /contact's transmission form. */
+/** Dispatch sign-up. Same field language as the rest of the public system. */
 function SubscribeBlock({
   email,
   status,
@@ -127,7 +117,7 @@ function SubscribeBlock({
   onEmailChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   id: string;
-  /** Single column. The reader's measure is too narrow for the 5/7 split. */
+  /** Single column, for the reader's narrower measure. */
   stacked?: boolean;
 }) {
   const headingId = `${id}-heading`;
@@ -136,7 +126,7 @@ function SubscribeBlock({
     <section aria-labelledby={headingId} className={`border-t ${RULE} pt-14`}>
       <div className={`grid gap-10 ${stacked ? '' : 'lg:grid-cols-12 lg:gap-16'}`}>
         <div className={stacked ? '' : 'lg:col-span-5'}>
-          <span className={`${META_CLASS} text-ve-emerald`}>Dispatch</span>
+          <span className={`${META} text-ve-emerald`}>Dispatch</span>
           <h2
             id={headingId}
             className="mt-5 text-3xl font-bold italic leading-[0.95] tracking-tighter text-white sm:text-4xl"
@@ -167,7 +157,7 @@ function SubscribeBlock({
             </div>
           ) : (
             <form onSubmit={onSubmit} className="mt-8 max-w-lg">
-              <label htmlFor={`${id}-email`} className={`block ${META_CLASS}`}>
+              <label htmlFor={`${id}-email`} className={`block ${META}`}>
                 Return address
               </label>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -185,7 +175,7 @@ function SubscribeBlock({
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-3 bg-ve-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ve-emerald focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-3 bg-ve-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ve-emerald focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {status === 'submitting' ? (
                     <>
@@ -356,6 +346,25 @@ export default function BlogPage({ slug }: { slug?: string }) {
     return BLOG_POSTS.find(p => p.featured) || BLOG_POSTS[0];
   }, []);
 
+  /**
+   * Masthead register facts. Each is derived from the entries themselves — how
+   * many there are, how many distinct subjects they cover, and the newest
+   * publication date actually present. Nothing is asserted that the data can't
+   * prove, and the date is computed rather than assuming array order.
+   */
+  const latestEntryDate = useMemo(() => {
+    let newest = BLOG_POSTS[0];
+    let newestTime = Date.parse(newest?.date ?? '');
+    BLOG_POSTS.forEach(p => {
+      const t = Date.parse(p.date);
+      if (!Number.isNaN(t) && (Number.isNaN(newestTime) || t > newestTime)) {
+        newest = p;
+        newestTime = t;
+      }
+    });
+    return newest?.date ?? '';
+  }, []);
+
   const isUnfiltered = !searchQuery && !selectedTag;
 
   // Unfiltered, entry 01 is pulled out as the lead, so the register carries the
@@ -374,12 +383,27 @@ export default function BlogPage({ slug }: { slug?: string }) {
     return BLOG_POSTS.filter(p => p.id !== activePost.id).slice(0, 2);
   }, [activePost]);
 
-  const filterButtonClass = (active: boolean) =>
-    `inline-flex items-center gap-2 border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald ${
+  /**
+   * Subject filters read as the index of a publication rather than as dashboard
+   * chips: type only, an emerald rule under the active subject, and the count
+   * carried as a superior figure the way a printed index sets it.
+   */
+  const subjectClass = (active: boolean) =>
+    `group inline-flex items-baseline gap-1.5 border-b pb-1 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald ${
       active
-        ? 'border-ve-emerald bg-ve-emerald text-black'
-        : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white'
+        ? 'border-ve-emerald text-ve-emerald'
+        : 'border-transparent text-white/45 hover:border-white/25 hover:text-white'
     }`;
+
+  const readerMeta = activePost
+    ? [
+        { label: 'Subject', value: activePost.tag, accent: true },
+        { label: 'Published', value: activePost.date },
+        { label: 'Length', value: activePost.readTime },
+        { label: 'Author', value: activePost.author },
+        { label: 'Role', value: activePost.authorRole },
+      ]
+    : [];
 
   return (
     <div
@@ -395,128 +419,145 @@ export default function BlogPage({ slug }: { slug?: string }) {
           <AnimatePresence mode="wait">
             {activePost ? (
               /* ============================================================ */
-              /* READER                                                       */
+              /* READER — research document                                   */
               /* ============================================================ */
-              <motion.div
+              <motion.article
                 key="reader"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="px-6 py-16 sm:py-20"
+                className="px-6 pb-32 pt-16 sm:pt-20 lg:px-10 lg:pb-40"
               >
-                <div className="mx-auto w-full max-w-3xl">
-                  {/* Action rail */}
-                  <div className={`flex flex-wrap items-center justify-between gap-4 border-b ${RULE} pb-5`}>
-                    <button
-                      type="button"
-                      onClick={() => setActivePost(null)}
-                      className={`group inline-flex items-center gap-2.5 ${META_CLASS} transition-colors hover:text-white`}
-                    >
-                      <span aria-hidden="true" className="transition-transform group-hover:-translate-x-1">
-                        ←
-                      </span>
-                      <span>The Record</span>
-                    </button>
-
-                    <div className="flex items-center gap-2">
+                <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1440px]">
+                  {/* Document masthead — full measure, above the two columns */}
+                  <header>
+                    <div className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b ${RULE} pb-5`}>
                       <button
                         type="button"
-                        onClick={handleCopyLink}
-                        className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white"
+                        onClick={() => setActivePost(null)}
+                        className={`group inline-flex items-center gap-2.5 ${META} transition-colors hover:text-white`}
                       >
-                        {copied ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-ve-emerald" aria-hidden="true" />
-                            <span className="text-ve-emerald">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Copy link</span>
-                          </>
-                        )}
+                        <span aria-hidden="true" className="transition-transform group-hover:-translate-x-1">
+                          &larr;
+                        </span>
+                        <span>The Record</span>
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={handleShareX}
-                        className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white"
-                      >
-                        <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span>Share</span>
-                      </button>
+                      <span className={`${META} text-ve-emerald`}>{activePost.tag}</span>
                     </div>
-                  </div>
 
-                  {/* Article header */}
-                  <header className="pt-14">
-                    <PostMeta post={activePost} />
-
-                    <h1 className="mt-7 text-4xl font-bold italic leading-[0.95] tracking-tighter text-white sm:text-5xl lg:text-6xl">
+                    <h1 className="mt-12 max-w-5xl text-4xl font-bold italic leading-[0.95] tracking-tighter text-white sm:text-5xl lg:text-6xl 2xl:text-7xl">
                       {activePost.title}
                     </h1>
 
-                    <p className="mt-8 max-w-2xl font-sans text-lg font-light leading-relaxed text-white/55">
+                    <p className="mt-8 max-w-2xl font-sans text-lg font-light leading-relaxed text-white/55 xl:text-xl">
                       {activePost.excerpt}
                     </p>
-
-                    <div className={`mt-10 flex flex-wrap items-center justify-between gap-4 border-y ${RULE} py-5`}>
-                      <div className="min-w-0">
-                        <div className="font-sans text-sm font-medium text-white">{activePost.author}</div>
-                        <div className={`mt-1 ${META_CLASS}`}>{activePost.authorRole}</div>
-                      </div>
-                      <div className={`${META_CLASS} inline-flex items-center gap-2`}>
-                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-ve-emerald" />
-                        <span>Published</span>
-                      </div>
-                    </div>
                   </header>
 
-                  {/* Key takeaway */}
-                  {activePost.keyTakeaway && (
-                    <aside className="mt-12 border-l-2 border-ve-emerald bg-obsidian-950 py-6 pl-6 pr-5 sm:pl-8">
-                      <span className={`${META_CLASS} text-ve-emerald`}>Key takeaway</span>
-                      <p className="mt-3 font-sans text-base font-light leading-relaxed text-white/75 sm:text-lg">
-                        {activePost.keyTakeaway}
-                      </p>
+                  <div className={`mt-16 grid gap-12 border-t ${RULE} pt-12 lg:grid-cols-12 lg:gap-16 lg:pt-16`}>
+                    {/* Standing provenance rail. Sticky on desktop so the
+                        document's attribution stays with the reader throughout. */}
+                    <aside className="lg:col-span-3">
+                      <div className="lg:sticky lg:top-28">
+                        <dl className={`border-t ${RULE}`}>
+                          {readerMeta.map((item) => (
+                            <div key={item.label} className={`border-b ${RULE} py-3.5`}>
+                              <dt className={META}>{item.label}</dt>
+                              <dd
+                                className={`mt-1.5 font-mono text-xs ${
+                                  item.accent ? 'text-ve-emerald' : 'text-white/70'
+                                }`}
+                              >
+                                {item.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+
+                        <div className="mt-8 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyLink}
+                            className="inline-flex min-h-9 items-center gap-2 border border-white/10 px-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald"
+                          >
+                            {copied ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-ve-emerald" aria-hidden="true" />
+                                <span className="text-ve-emerald">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Copy link</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleShareX}
+                            className="inline-flex min-h-9 items-center gap-2 border border-white/10 px-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald"
+                          >
+                            <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Share</span>
+                          </button>
+                        </div>
+                      </div>
                     </aside>
-                  )}
 
-                  {/* Body */}
-                  <article className="ve-article mt-14">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{activePost.content}</ReactMarkdown>
-                  </article>
+                    {/* Body column. Capped independently of the grid so the
+                        reading measure stays near 68 characters at every width. */}
+                    <div className="min-w-0 lg:col-span-9">
+                      <div className="max-w-[42rem]">
+                        {activePost.keyTakeaway && (
+                          <aside className="border-l-2 border-ve-emerald bg-obsidian-950 py-6 pl-6 pr-5 sm:pl-8">
+                            <span className={`${META} text-ve-emerald`}>Key takeaway</span>
+                            <p className="mt-3 font-sans text-base font-light leading-relaxed text-white/75 sm:text-lg">
+                              {activePost.keyTakeaway}
+                            </p>
+                          </aside>
+                        )}
 
-                  <div className="mt-24">
-                    <SubscribeBlock
-                      id="reader-subscribe"
-                      stacked
-                      email={newsletterEmail}
-                      status={newsletterStatus}
-                      error={newsletterError}
-                      onEmailChange={setNewsletterEmail}
-                      onSubmit={handleNewsletterSubmit}
-                    />
+                        <div className="ve-article mt-14">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{activePost.content}</ReactMarkdown>
+                        </div>
+
+                        <div className="mt-24">
+                          <SubscribeBlock
+                            id="reader-subscribe"
+                            stacked
+                            email={newsletterEmail}
+                            status={newsletterStatus}
+                            error={newsletterError}
+                            onEmailChange={setNewsletterEmail}
+                            onSubmit={handleNewsletterSubmit}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {relatedPosts.length > 0 && (
-                    <section aria-labelledby="adjacent-heading" className={`mt-24 border-t ${RULE} pt-14 pb-8`}>
-                      <h2 id="adjacent-heading" className={`${META_CLASS} text-ve-emerald`}>
-                        Adjacent entries
-                      </h2>
-                      <ul className={`mt-6 border-t ${RULE}`}>
+                    <section aria-labelledby="adjacent-heading" className={`mt-28 border-t ${RULE} pt-14`}>
+                      <div className="flex items-baseline justify-between">
+                        <h2 id="adjacent-heading" className={`${META} text-ve-emerald`}>
+                          Adjacent research
+                        </h2>
+                        <span className={META}>{relatedPosts.length} entries</span>
+                      </div>
+                      <ul className={`mt-8 border-t ${RULE}`}>
                         {relatedPosts.map((post, i) => (
-                          <IndexRow key={post.id} post={post} index={i} onOpen={setActivePost} compact />
+                          <IndexRow key={post.id} post={post} index={i} onOpen={setActivePost} />
                         ))}
                       </ul>
                     </section>
                   )}
                 </div>
-              </motion.div>
+              </motion.article>
             ) : (
               /* ============================================================ */
-              /* THE RECORD — INDEX                                           */
+              /* INDEX — the register                                         */
               /* ============================================================ */
               <motion.div
                 key="feed"
@@ -526,55 +567,70 @@ export default function BlogPage({ slug }: { slug?: string }) {
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
                 {/* Masthead */}
-                <section className="px-6 pt-20 pb-16 sm:pt-28 sm:pb-20">
-                  <div className="mx-auto w-full max-w-7xl">
+                <section className="px-6 pb-16 pt-20 sm:pb-20 sm:pt-28 lg:px-10 lg:pb-24 lg:pt-32">
+                  <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1440px]">
                     <motion.div
-                      initial={reduceMotion ? false : { x: -12 }}
-                      animate={{ x: 0 }}
+                      initial={reduceMotion ? false : { y: 10 }}
+                      animate={{ y: 0 }}
                       transition={{ duration: 0.45, ease: 'easeOut' }}
                     >
-                      <div className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b ${RULE} pb-5`}>
-                        <span className={`${META_CLASS} text-ve-emerald`}>06 / Published Record</span>
-                        <span className={META_CLASS}>
-                          {BLOG_POSTS.length} {BLOG_POSTS.length === 1 ? 'Entry' : 'Entries'}
-                        </span>
+                      <div className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b ${RULE} pb-5 lg:pb-10`}>
+                        <span className={`${META} text-ve-emerald`}>06 / The Record</span>
+                        <span className={META}>Register // Open</span>
                       </div>
 
-                      <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-16">
-                        <h1 className="text-5xl font-bold italic leading-[0.9] tracking-tighter text-white sm:text-7xl lg:col-span-7 lg:text-8xl">
-                          Research
+                      <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:items-end lg:gap-16">
+                        <h1 className="text-5xl font-bold italic leading-[0.9] tracking-tighter text-white sm:text-7xl lg:col-span-8 lg:text-8xl 2xl:text-[6.5rem]">
+                          Published
                           <br />
-                          <span className="text-white/25">Record</span>
+                          <span className="text-white/25">Intelligence</span>
                         </h1>
 
-                        <p className="max-w-md font-sans text-lg font-light leading-relaxed text-white/55 lg:col-span-5">
-                          Everything we have published: quantitative method, architecture teardowns,
-                          and release notes. Sourced, dated, and kept on the record.
-                        </p>
+                        {/* Register summary. Derived facts only. */}
+                        <dl className={`border-t ${RULE} lg:col-span-4`}>
+                          <div className={`flex items-baseline justify-between border-b ${RULE} py-3`}>
+                            <dt className={META}>Entries</dt>
+                            <dd className="font-mono text-xs tabular-nums text-white/70">
+                              {BLOG_POSTS.length}
+                            </dd>
+                          </div>
+                          <div className={`flex items-baseline justify-between border-b ${RULE} py-3`}>
+                            <dt className={META}>Subjects</dt>
+                            <dd className="font-mono text-xs tabular-nums text-white/70">
+                              {tagStats.length}
+                            </dd>
+                          </div>
+                          <div className={`flex items-baseline justify-between border-b ${RULE} py-3`}>
+                            <dt className={META}>Latest</dt>
+                            <dd className="font-mono text-xs text-white/70">{latestEntryDate}</dd>
+                          </div>
+                        </dl>
                       </div>
+
+                      <p className="mt-12 max-w-2xl font-sans text-lg font-light leading-relaxed text-white/55 xl:text-xl">
+                        Research method, architecture teardowns, and release notes from inside the
+                        VouchEdge system. Every entry dated, attributed, and kept on the record.
+                      </p>
                     </motion.div>
                   </div>
                 </section>
 
-                {/* Controls */}
+                {/* Index controls — part of the publication, not a toolbar */}
                 <section
                   aria-label="Filter the record"
-                  /* Sticky only where it costs little: on a phone the chips wrap to
-                     three rows and a pinned bar would eat a third of the viewport. */
-                  className={`z-30 border-y ${RULE} bg-black/80 px-6 py-4 backdrop-blur-md lg:sticky lg:top-16`}
+                  className={`z-30 border-y ${RULE} bg-black/85 px-6 py-5 backdrop-blur-md lg:sticky lg:top-16 lg:px-10`}
                 >
-                  <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-12 2xl:max-w-[1440px]">
+                    <div className="flex min-w-0 flex-wrap items-baseline gap-x-6 gap-y-3">
+                      <span className={`${META} hidden shrink-0 lg:inline`}>Subject</span>
                       <button
                         type="button"
                         onClick={() => setSelectedTag(null)}
                         aria-pressed={selectedTag === null}
-                        className={filterButtonClass(selectedTag === null)}
+                        className={subjectClass(selectedTag === null)}
                       >
                         <span>All</span>
-                        <span className={selectedTag === null ? 'text-black/50' : 'text-white/30'}>
-                          {BLOG_POSTS.length}
-                        </span>
+                        <span className="text-[9px] tabular-nums opacity-50">{BLOG_POSTS.length}</span>
                       </button>
 
                       {tagStats.map(({ tag, count }) => (
@@ -583,18 +639,16 @@ export default function BlogPage({ slug }: { slug?: string }) {
                           type="button"
                           onClick={() => setSelectedTag(tag)}
                           aria-pressed={selectedTag === tag}
-                          className={filterButtonClass(selectedTag === tag)}
+                          className={subjectClass(selectedTag === tag)}
                         >
                           <span>{tag}</span>
-                          <span className={selectedTag === tag ? 'text-black/50' : 'text-white/30'}>
-                            {count}
-                          </span>
+                          <span className="text-[9px] tabular-nums opacity-50">{count}</span>
                         </button>
                       ))}
                     </div>
 
-                    <div className="flex items-center gap-2 lg:shrink-0">
-                      <div className="relative min-w-0 flex-1 lg:w-72 lg:flex-none">
+                    <div className="flex items-center gap-6 lg:shrink-0">
+                      <div className="relative min-w-0 flex-1 lg:w-64 lg:flex-none">
                         <Search
                           aria-hidden="true"
                           className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30"
@@ -605,10 +659,10 @@ export default function BlogPage({ slug }: { slug?: string }) {
                         <input
                           id="record-search"
                           type="search"
-                          placeholder="Search"
+                          placeholder="Search entries"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full border-b border-white/10 bg-transparent py-2 pl-6 pr-7 font-mono text-xs text-white placeholder:text-white/30 transition-colors focus:border-ve-emerald focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+                          className="w-full border-b border-white/10 bg-transparent py-1.5 pl-6 pr-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white placeholder:text-white/30 transition-colors focus:border-ve-emerald focus:outline-none [&::-webkit-search-cancel-button]:hidden"
                         />
                         {searchQuery && (
                           <button
@@ -626,52 +680,52 @@ export default function BlogPage({ slug }: { slug?: string }) {
                         href="/feed.xml"
                         target="_blank"
                         rel="noreferrer"
-                        aria-label="RSS feed"
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 text-white/40 transition-colors hover:border-white/30 hover:text-white"
+                        className={`${META} shrink-0 border-b border-transparent pb-1 transition-colors hover:border-white/25 hover:text-white`}
                       >
-                        <Rss className="h-3.5 w-3.5" aria-hidden="true" />
+                        RSS
                       </a>
                     </div>
                   </div>
                 </section>
 
-                <div className="px-6 pb-32 sm:pb-40">
-                  <div className="mx-auto w-full max-w-7xl">
-                    {/* Lead entry */}
+                <div className="px-6 pb-32 sm:pb-40 lg:px-10">
+                  <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1440px]">
+                    {/* Lead entry — the publication's dominant statement */}
                     {isUnfiltered && featuredPost && (
-                      <section aria-labelledby="lead-heading" className={`border-b ${RULE} py-16 sm:py-24`}>
-                        <div className="flex items-center gap-3">
-                          <span className={`${META_CLASS} tabular-nums`}>01</span>
-                          <span className={`${META_CLASS} text-ve-emerald`}>Lead entry</span>
+                      <section aria-labelledby="lead-heading" className={`border-b ${RULE} py-20 sm:py-28`}>
+                        <div className="flex items-center gap-4">
+                          <span className={`${META} tabular-nums`}>01</span>
+                          <span className={`${META} text-ve-emerald`}>Lead entry</span>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => setActivePost(featuredPost)}
-                          className="group mt-8 block w-full text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald"
+                          className="group mt-10 block w-full text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ve-emerald"
                         >
-                          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-                            <h2
-                              id="lead-heading"
-                              className="text-4xl font-bold italic leading-[0.95] tracking-tighter text-white transition-colors group-hover:text-ve-emerald sm:text-5xl lg:col-span-7 lg:text-6xl"
-                            >
-                              {featuredPost.title}
-                            </h2>
+                          <h2
+                            id="lead-heading"
+                            className="max-w-5xl text-4xl font-bold italic leading-[0.95] tracking-tighter text-white transition-colors group-hover:text-ve-emerald sm:text-5xl lg:text-6xl 2xl:text-7xl"
+                          >
+                            {featuredPost.title}
+                          </h2>
+
+                          <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:gap-16">
+                            <p className="max-w-2xl font-sans text-lg font-light leading-relaxed text-white/55 lg:col-span-7">
+                              {featuredPost.excerpt}
+                            </p>
 
                             <div className="lg:col-span-5">
                               <PostMeta post={featuredPost} />
-                              <p className="mt-6 font-sans text-base font-light leading-relaxed text-white/55">
-                                {featuredPost.excerpt}
-                              </p>
-                              <div className={`mt-8 flex items-center justify-between border-t ${RULE} pt-5`}>
+                              <div className={`mt-6 flex items-end justify-between gap-6 border-t ${RULE} pt-5`}>
                                 <div className="min-w-0">
                                   <div className="font-sans text-sm font-medium text-white">
                                     {featuredPost.author}
                                   </div>
-                                  <div className={`mt-1 ${META_CLASS}`}>{featuredPost.authorRole}</div>
+                                  <div className={`mt-1 ${META}`}>{featuredPost.authorRole}</div>
                                 </div>
-                                <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ve-emerald">
-                                  Read
+                                <span className="inline-flex shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ve-emerald">
+                                  Read entry
                                   <ArrowUpRight
                                     aria-hidden="true"
                                     className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -686,11 +740,11 @@ export default function BlogPage({ slug }: { slug?: string }) {
 
                     {/* Register */}
                     <section aria-labelledby="register-heading" className="pt-16 sm:pt-20">
-                      <div className={`flex items-center justify-between border-b ${RULE} pb-4`}>
-                        <h2 id="register-heading" className={META_CLASS}>
+                      <div className={`flex items-baseline justify-between border-b ${RULE} pb-4`}>
+                        <h2 id="register-heading" className={META}>
                           {isUnfiltered ? 'Archive' : 'Results'}
                         </h2>
-                        <span className={`${META_CLASS} tabular-nums`}>
+                        <span className={`${META} tabular-nums`}>
                           {isUnfiltered
                             ? `${registerPosts.length} more`
                             : `${filteredPosts.length} of ${BLOG_POSTS.length}`}
@@ -699,7 +753,7 @@ export default function BlogPage({ slug }: { slug?: string }) {
 
                       {filteredPosts.length === 0 ? (
                         <div className="py-24 text-center sm:py-32">
-                          <p className={META_CLASS}>No entries match that query</p>
+                          <p className={META}>No entries match that query</p>
                           <button
                             type="button"
                             onClick={() => {
@@ -712,7 +766,7 @@ export default function BlogPage({ slug }: { slug?: string }) {
                           </button>
                         </div>
                       ) : registerPosts.length === 0 ? (
-                        <p className={`${META_CLASS} py-16 text-center`}>
+                        <p className={`${META} py-16 text-center`}>
                           The lead entry above is the whole record.
                         </p>
                       ) : (

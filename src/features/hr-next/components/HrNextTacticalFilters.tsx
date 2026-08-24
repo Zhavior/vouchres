@@ -84,14 +84,14 @@ export function HrNextTacticalFilters({
               isColumn ? 'w-full px-2.5 py-1.5 text-xs' : 'whitespace-nowrap px-3 py-1.5 text-xs'
             } ${
               isActive
-                ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 shadow-[0_0_12px_rgba(0,240,255,0.15)] font-black'
-                : 'border-white/10 bg-black text-zinc-400 hover:text-white hover:bg-zinc-900 hover:border-white/25'
+                ? 'border-2 border-ve-cyan bg-obsidian-950 text-ve-cyan font-black'
+                : 'border-white/10 bg-black text-white/55 hover:text-white hover:bg-obsidian-800 hover:border-white/25'
             }`}
           >
             <div className="flex items-center gap-2 min-w-0">
               <Icon
                 className={`w-3.5 h-3.5 shrink-0 ${
-                  isActive ? 'text-cyan-400' : 'text-zinc-500 group-hover:text-zinc-300'
+                  isActive ? 'text-ve-cyan' : 'text-white/40 group-hover:text-white/70'
                 }`}
               />
               <span className="truncate">{label}</span>
@@ -99,8 +99,8 @@ export function HrNextTacticalFilters({
             <span
               className={`px-1.5 py-0.2 text-[9px] font-black tabular-nums border ${
                 isActive
-                  ? 'border-cyan-400/50 bg-cyan-950/50 text-cyan-200'
-                  : 'border-white/10 bg-zinc-950 text-zinc-500'
+                  ? 'border-ve-cyan/50 bg-ve-cyan/50 text-ve-cyan'
+                  : 'border-white/10 bg-obsidian-950 text-white/40'
               }`}
             >
               {count}
