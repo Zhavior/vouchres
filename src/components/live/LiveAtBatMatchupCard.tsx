@@ -13,25 +13,25 @@ export function LiveAtBatMatchupCard({
   const pitcher = snapshot?.play?.pitcher;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-400/20 bg-[linear-gradient(145deg,rgba(8,20,31,0.97),rgba(4,9,16,0.95))] shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
-      <header className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
+    <section className="overflow-hidden border border-white/[0.08] bg-white/[0.015]">
+      <header className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-5">
         <div>
-          <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300/70">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-ve-emerald">
             Live Matchup
           </p>
-          <p className="mt-1 text-xs text-white/45">
+          <p className="mt-1 text-xs text-white/40">
             Pitcher vs current batter
           </p>
         </div>
 
-        <span className="rounded-full border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">
+        <span className="border border-ve-red/25 bg-ve-red/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-ve-red">
           Live
         </span>
       </header>
 
-      <div className="grid grid-cols-1 gap-px bg-white/10 md:grid-cols-2">
-        <article className="bg-ve-obsidian p-4 sm:p-5">
-          <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+      <div className="grid grid-cols-1 gap-px bg-white/[0.08] md:grid-cols-2">
+        <article className="bg-[#050505] p-4 sm:p-5">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
             Pitcher
           </p>
 
@@ -43,7 +43,7 @@ export function LiveAtBatMatchupCard({
             />
 
             <div className="min-w-0">
-              <h3 className="truncate text-lg font-black text-white sm:text-xl">
+              <h3 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
                 {pitcher?.name ?? "Waiting for pitcher"}
               </h3>
 
@@ -73,15 +73,15 @@ export function LiveAtBatMatchupCard({
             <button
               type="button"
               onClick={() => onOpenPitcherProfile(pitcher.id as number)}
-              className="mt-4 w-full rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-2.5 text-sm font-black text-emerald-300 transition hover:border-emerald-300/50 hover:bg-emerald-400/15"
+              className="mt-4 w-full border border-ve-emerald/25 bg-ve-emerald/10 px-4 py-2.5 text-sm font-medium uppercase tracking-wider text-ve-emerald transition-colors hover:border-ve-emerald/40 hover:bg-ve-emerald/20"
             >
               View Pitcher Profile
             </button>
           )}
         </article>
 
-        <article className="bg-ve-storm p-4 sm:p-5">
-          <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+        <article className="bg-[#0a0a0a] p-4 sm:p-5">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
             At The Plate
           </p>
 
@@ -93,7 +93,7 @@ export function LiveAtBatMatchupCard({
             />
 
             <div className="min-w-0">
-              <h3 className="truncate text-lg font-black text-white sm:text-xl">
+              <h3 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
                 {batter?.name ?? "Waiting for batter"}
               </h3>
 
@@ -112,8 +112,8 @@ export function LiveAtBatMatchupCard({
             />
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.045] p-3">
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/35">
+          <div className="mt-4 border border-white/[0.08] bg-white/[0.03] p-3">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-white/40">
               Current play
             </p>
 
@@ -147,15 +147,15 @@ function PlayerAvatar({
 
   const accentClass =
     accent === "cyan"
-      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
-      : "border-amber-300/30 bg-amber-300/10 text-amber-200";
+      ? "border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald"
+      : "border-ve-amber/25 bg-ve-amber/10 text-ve-amber";
 
   if (imageUrl) {
     return (
       <img
         src={imageUrl}
         alt={`${name} headshot`}
-        className="h-16 w-16 shrink-0 rounded-2xl border border-white/10 bg-black/30 object-cover"
+        className="h-16 w-16 shrink-0 border border-white/[0.08] bg-white/[0.03] object-cover"
         loading="lazy"
       />
     );
@@ -163,7 +163,7 @@ function PlayerAvatar({
 
   return (
     <div
-      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border text-lg font-black ${accentClass}`}
+      className={`flex h-16 w-16 shrink-0 items-center justify-center border text-lg font-bold ${accentClass}`}
       aria-hidden="true"
     >
       {initials || "—"}
@@ -179,12 +179,12 @@ function Metric({
   value: string | number;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-3 text-center">
-      <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-white/35">
+    <div className="border border-white/[0.08] bg-white/[0.03] p-3 text-center">
+      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-white/40">
         {label}
       </p>
 
-      <p className="mt-1 text-base font-black text-white">
+      <p className="mt-1 text-base font-bold tabular-nums text-white">
         {value}
       </p>
     </div>

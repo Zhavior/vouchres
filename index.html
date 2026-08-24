@@ -133,12 +133,18 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
       }
       .glass-border { border: 1px solid rgba(231, 236, 243, 0.1); }
+      /*
+       * No `color` here on purpose. This rule is unlayered, so it outranks every
+       * Tailwind colour utility regardless of specificity — `terminal-text
+       * text-ve-emerald` was rendering grey on six landing eyebrows. The default
+       * colour now lives on the layered .terminal-text in src/index.css, which
+       * utilities can override normally.
+       */
       .terminal-text {
         font-family: var(--z8-font-mono);
         letter-spacing: -0.05em;
         text-transform: uppercase;
         font-size: 10px;
-        color: rgba(231, 236, 243, 0.4);
       }
       .ve-route-suspense-fallback { min-height: 40vh; contain: strict; pointer-events: none; }
       @keyframes ve-hero-in {

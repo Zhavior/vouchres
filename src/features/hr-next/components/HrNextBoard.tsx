@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { HrNextItem } from '../hooks/useHrNextData';
 import { HrNextCard } from './HrNextCard';
+import { HrNextRegisterRow } from './HrNextRegisterRow';
 import type { GroupByMode } from '../hooks/useHrNextData';
 import { partitionByTier, tierForScore, type HrNextTierColumn } from '../utils/tierPartition';
 
@@ -134,7 +135,7 @@ export function HrNextBoard({
         type="button"
         onClick={() => toggleTier(column.tier.key)}
         aria-expanded={Boolean(expandedTiers[column.tier.key])}
-        className={`mt-3 w-full rounded-lg border ${column.tier.columnBorder} bg-[#060a0a] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition-colors hover:bg-[#0a1010] ${column.tier.headerText}`}
+        className={`mt-3 w-full rounded-none border ${column.tier.columnBorder} bg-[#060a0a] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition-colors hover:bg-[#0a1010] ${column.tier.headerText}`}
       >
         {expandedTiers[column.tier.key]
           ? `Show top ${ROWS_PER_COLUMN}`
@@ -148,51 +149,33 @@ export function HrNextBoard({
     // If every tier is empty, show one unified empty state — not 4 blank columns.
     if (totalRows === 0) {
       return (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a1010] px-6 py-12 text-center font-mono text-xs text-white/40">
+        <div className="rounded-none border border-dashed border-white/10 bg-[#0a1010] px-6 py-12 text-center font-mono text-xs text-white/40">
           No rows matched the active filters.
         </div>
       );
     }
 
-    // Pro Mode: always show all 4 tier columns so the grid is stable.
-    // Standard: collapse empty tiers to avoid dead space in single-column layout.
-    const displayColumns = isProMode
-      ? tierColumns
-      : tierColumns.filter((column) => column.rows.length > 0);
-
-    // One tree for both modes — only the class names differ, so React keeps the
-    // very same DOM nodes and the switch is a transform, not a re-render.
-    // Branching into two trees here would unmount and remount, hard-swapping.
-    //
-    // Pro Mode: one column per HRPI band.
-    // Standard: the normal single-column stacked board — standard cards are wide
-    // scan rows and read badly squeezed into quarter-width columns.
-    return (
-        <div
-          className={
-            isProMode
-              ? 'grid grid-cols-1 items-start gap-4 @xl:grid-cols-2 @5xl:grid-cols-4'
-              : 'flex flex-col gap-6'
-          }
-        >
-          {displayColumns.map((column) => (
+    // Pro Mode keeps its premium card grid: always all four tier columns so the
+    // grid stays stable, cards rather than register lines. Standard mode is the
+    // ranked register below. The two modes now render genuinely different row
+    // components, so unlike the previous single-tree version this branch does
+    // remount on toggle — the board's own state (expandedTiers, openReceiptId,
+    // activeId) lives above it and survives.
+    if (isProMode) {
+      return (
+        <div className="grid grid-cols-1 items-start gap-4 @xl:grid-cols-2 @5xl:grid-cols-4">
+          {tierColumns.map((column) => (
             <section
               key={column.tier.key}
               aria-label={`${column.tier.label} tier`}
               className="min-w-0"
-              style={isProMode ? { contain: 'layout style' } : undefined}
+              style={{ contain: 'layout style' }}
             >
               <header
-                className={
-                  isProMode
-                    ? `mb-3 flex items-center justify-between gap-2 rounded-lg border ${column.tier.columnBorder} bg-[#060a0a] px-3 py-2`
-                    : 'mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-1.5'
-                }
+                className={`mb-3 flex items-center justify-between gap-2 rounded-none border ${column.tier.columnBorder} bg-[#060a0a] px-3 py-2`}
               >
                 <h2
-                  className={`flex min-w-0 items-center gap-2 font-mono font-black uppercase ${column.tier.headerText} ${
-                    isProMode ? 'text-[11px] tracking-[0.18em]' : 'text-xs tracking-widest'
-                  }`}
+                  className={`flex min-w-0 items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] ${column.tier.headerText}`}
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full ${column.tier.headerDot}`} />
                   <span className="truncate">{column.tier.label}</span>
@@ -203,11 +186,11 @@ export function HrNextBoard({
               </header>
 
               {column.rows.length > 0 ? (
-                <div className={isProMode ? 'space-y-3' : 'space-y-2.5'}>
-                  {renderTierRows(column)}
-                </div>
+                <div className="space-y-3">{renderTierRows(column)}</div>
               ) : (
-                <div className={`rounded-lg border border-dashed ${column.tier.columnBorder} bg-[#060a0a]/50 px-3 py-6 text-center font-mono text-[10px] text-white/25`}>
+                <div
+                  className={`rounded-none border border-dashed ${column.tier.columnBorder} bg-[#060a0a]/50 px-3 py-6 text-center font-mono text-[10px] text-white/25`}
+                >
                   No {column.tier.label.toLowerCase()} picks on today's slate
                 </div>
               )}
@@ -215,6 +198,84 @@ export function HrNextBoard({
             </section>
           ))}
         </div>
+      );
+    }
+
+    const displayColumns = tierColumns.filter((column) => column.rows.length > 0);
+
+    /*
+     * The ranked opportunity register.
+     *
+     * Tier mode used to be a grid of cards — four columns in Pro Mode, a stack
+     * otherwise. The page's dominant object is the ranked set, so it now reads
+     * as one continuous register: tier bands are section headers, and every
+     * candidate is a line carrying the same evidence sub-scores the Collision
+     * Field plots. Rank is continuous across bands, so `01` is the slate leader
+     * rather than the leader of its band.
+     *
+     * Selection, saved state, add-to-slip, tier grouping, the per-tier cap and
+     * its expander all keep their existing handlers and ids — the row swaps its
+     * presentation, not the board's behaviour.
+     */
+    let rank = 0;
+
+    return (
+      <div className="flex flex-col gap-8">
+        {displayColumns.map((column) => {
+          const visible = expandedTiers[column.tier.key]
+            ? column.rows
+            : column.rows.slice(0, ROWS_PER_COLUMN);
+
+          return (
+            <section key={column.tier.key} aria-label={`${column.tier.label} tier`} className="min-w-0">
+              <header className="flex items-center justify-between gap-2 border-b border-white/[0.08] pb-2">
+                <h2 className={`flex min-w-0 items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${column.tier.headerText}`}>
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${column.tier.headerDot}`} />
+                  <span className="truncate">{column.tier.label}</span>
+                </h2>
+                <span className="shrink-0 font-mono text-[9px] tabular-nums uppercase tracking-[0.16em] text-white/30">
+                  {column.rows.length} · {column.tier.rangeLabel}
+                </span>
+              </header>
+
+              <table className="w-full table-auto border-collapse">
+                <thead>
+                  <tr className="border-b border-white/[0.08]">
+                    <th scope="col" className="w-10 py-2 pl-3 pr-2 text-left font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30">#</th>
+                    <th scope="col" className="py-2 pr-3 text-left font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30">Player</th>
+                    <th scope="col" className="hidden py-2 pr-3 text-left font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30 sm:table-cell">Matchup</th>
+                    <th scope="col" className="w-16 py-2 pr-3 text-right font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30">HRPI</th>
+                    <th scope="col" className="hidden w-16 py-2 pr-3 text-right font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30 md:table-cell">Power</th>
+                    <th scope="col" className="hidden w-16 py-2 pr-3 text-right font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30 md:table-cell">Vuln</th>
+                    <th scope="col" className="hidden w-16 py-2 pr-3 text-right font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30 lg:table-cell">Park</th>
+                    <th scope="col" className="w-28 py-2 pr-3 text-right font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/30">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((item) => {
+                    rank += 1;
+                    return (
+                      <HrNextRegisterRow
+                        key={item.id}
+                        row={item.row}
+                        rank={rank}
+                        tier={column.tier}
+                        active={activeId === item.row.stableId}
+                        saved={Boolean(savedMap[item.row.stableId])}
+                        onSelect={setActiveId}
+                        onToggleSaved={onToggleSaved}
+                        onAddToSlip={onAddToSlip}
+                      />
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {renderExpander(column)}
+            </section>
+          );
+        })}
+      </div>
     );
   }
 
@@ -223,9 +284,9 @@ export function HrNextBoard({
     return (
       <>
         {displayedMatchups.map((matchup) => (
-          <div key={matchup.header.id} className="mb-6 rounded-xl border border-white/10 bg-[#0a1010] p-5">
+          <div key={matchup.header.id} className="mb-6 rounded-none border border-white/10 bg-[#0a1010] p-5">
             <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
-              <h2 className="text-sm font-black uppercase tracking-widest text-white">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-white">
                 {matchup.awayTeam || 'AWAY'} <span className="text-white/40">@</span> {matchup.homeTeam || 'HOME'}
               </h2>
               <span className="font-mono text-[10px] text-white/50">

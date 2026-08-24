@@ -39,51 +39,51 @@ export function TdLedgerView({ players }: TdLedgerViewProps) {
   }, []);
 
   return (
-    <div className="w-full flex-1 flex flex-col min-h-0 bg-black p-6 space-y-6 overflow-y-auto">
+    <div className="w-full flex-1 flex flex-col min-h-0 bg-transparent p-6 space-y-6 overflow-y-auto">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black uppercase text-white font-mono flex items-center gap-2">
-          <TrendingUp className="text-cyan-400" />
+        <h2 className="text-xl font-semibold uppercase text-white font-mono flex items-center gap-2">
+          <TrendingUp className="text-ve-cyan" />
           Verified TD Outcome Ledger
         </h2>
-        <div className="border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-right font-mono">
-          <div className="text-[10px] font-bold uppercase text-amber-300">Calibration pending</div>
-          <div className="text-[9px] text-zinc-500">No ROI or accuracy claim without stored snapshots.</div>
+        <div className="border border-ve-amber/30 bg-ve-amber/10 px-3 py-2 text-right font-mono">
+          <div className="text-[10px] font-bold uppercase text-ve-amber">Calibration pending</div>
+          <div className="text-[9px] text-white/40">No ROI or accuracy claim without stored snapshots.</div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-950 overflow-hidden min-h-[400px] relative">
+      <div className="border border-white/10 bg-white/[0.02] overflow-hidden min-h-[400px] relative">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-ve-cyan animate-spin" />
           </div>
         )}
         <table className="w-full text-left font-mono text-xs">
-          <thead className="bg-zinc-900 border-b border-white/10">
+          <thead className="bg-white/[0.04] border-b border-white/10">
             <tr>
-              <th className="p-3 text-zinc-400 font-bold uppercase tracking-wider">Player</th>
-              <th className="p-3 text-zinc-400 font-bold uppercase tracking-wider">Proj TDPI</th>
-              <th className="p-3 text-zinc-400 font-bold uppercase tracking-wider">Closing Odds</th>
-              <th className="p-3 text-zinc-400 font-bold uppercase tracking-wider">Model Edge</th>
-              <th className="p-3 text-zinc-400 font-bold uppercase tracking-wider text-right">Result (Wk 9)</th>
+              <th className="p-3 text-white/55 font-bold uppercase tracking-wider">Player</th>
+              <th className="p-3 text-white/55 font-bold uppercase tracking-wider">Proj TDPI</th>
+              <th className="p-3 text-white/55 font-bold uppercase tracking-wider">Closing Odds</th>
+              <th className="p-3 text-white/55 font-bold uppercase tracking-wider">Model Edge</th>
+              <th className="p-3 text-white/55 font-bold uppercase tracking-wider text-right">Result (Wk 9)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {ledgerData.map((row) => (
               <tr key={row.id} className="hover:bg-white/[0.02]">
                 <td className="p-3 font-bold text-white uppercase flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${row.scoredTouchdown ? 'bg-emerald-400' : 'bg-rose-500'}`} />
-                  {row.name} <span className="text-zinc-500 font-normal">({row.team})</span>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${row.scoredTouchdown ? 'bg-ve-emerald/10' : 'bg-ve-red/10'}`} />
+                  {row.name} <span className="text-white/40 font-normal">({row.team})</span>
                 </td>
-                <td className="p-3 text-cyan-300 font-black">{row.tdpiScore.toFixed(1)}</td>
-                <td className="p-3 text-zinc-300">{row.marketOdds}</td>
-                <td className="p-3 text-emerald-400 font-bold">+{row.modelEdgePercent.toFixed(1)}%</td>
+                <td className="p-3 text-ve-cyan font-bold">{row.tdpiScore.toFixed(1)}</td>
+                <td className="p-3 text-white/70">{row.marketOdds}</td>
+                <td className="p-3 text-ve-emerald font-bold">+{row.modelEdgePercent.toFixed(1)}%</td>
                 <td className="p-3 text-right">
                   {row.scoredTouchdown ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1 text-ve-emerald font-bold">
                       <CheckCircle className="w-3.5 h-3.5" /> TOUCHDOWN
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-rose-500 font-bold">
+                    <span className="inline-flex items-center gap-1 text-ve-red font-bold">
                       <XCircle className="w-3.5 h-3.5" /> BLANK
                     </span>
                   )}
@@ -92,7 +92,7 @@ export function TdLedgerView({ players }: TdLedgerViewProps) {
             ))}
             {!loading && ledgerData.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-zinc-500">
+                <td colSpan={5} className="p-8 text-center text-white/40">
                   No verified prediction/outcome pairs are stored yet.
                 </td>
               </tr>

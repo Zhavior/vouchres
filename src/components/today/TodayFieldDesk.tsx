@@ -66,35 +66,35 @@ export default function TodayFieldDesk({
 
   return (
     <section
-      className="border border-white/[0.08] bg-[#111113] overflow-hidden font-mono shadow-2xl rounded-xl"
+      className="border-y border-white/[0.08] bg-[#0A0A0A] overflow-hidden rounded-none"
       data-state={state}
       data-testid="today-field-desk"
       title="Today's field desk"
     >
       {/* FIELD DESK TELEMETRY BAR (CONSOLIDATED HEADER) */}
-      <div className="border-b border-white/[0.08] bg-[#0A0A0C] px-4 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div className="border-b border-white/[0.08] bg-[#0A0A0A] px-4 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className={`h-1.5 w-1.5 rounded-full bg-emerald-400 ${state === 'loading' ? 'animate-pulse' : ''}`} />
+          <span className={`h-1.5 w-1.5 rounded-full bg-ve-emerald ${state === 'loading' ? 'animate-pulse' : ''}`} />
           <div className="flex items-center gap-2">
-            <span className="text-[#F4F4F5] font-bold text-xs tracking-wider uppercase">
+            <span className="text-[#ffffff] font-bold text-xs tracking-wider uppercase">
               SLATE TELEMETRY
             </span>
-            <span className="text-zinc-600 hidden sm:inline">|</span>
-            <span className="text-[10px] text-zinc-400 uppercase">
+            <span className="text-white/30 hidden sm:inline">|</span>
+            <span className="text-[10px] text-white/55 uppercase">
               {STATE_LABEL[state]} · {freshnessLabel}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] text-zinc-300 font-medium uppercase font-mono">
-          <span className="rounded border border-white/[0.08] px-2 py-0.5 bg-white/[0.04] text-zinc-200">
+        <div className="flex items-center gap-2 text-[10px] text-white/70 font-medium uppercase font-mono">
+          <span className="rounded-none border border-white/[0.08] px-2 py-0.5 bg-white/[0.04] text-white/80">
             {gameCount ?? '—'} GAMES
           </span>
           <span
-            className={`rounded border px-2 py-0.5 ${
+            className={`rounded-none border px-2 py-0.5 ${
               liveGames > 0
-                ? 'border-rose-500/30 bg-rose-500/10 text-rose-400 font-medium'
-                : 'border-white/[0.08] bg-white/[0.04] text-zinc-400'
+                ? 'border-ve-red/30 bg-ve-red/10 text-ve-red font-medium'
+                : 'border-white/[0.08] bg-white/[0.04] text-white/55'
             }`}
           >
             {liveGames} LIVE
@@ -107,43 +107,43 @@ export default function TodayFieldDesk({
         <Spotlight player={selected} state={state} onAddPlayer={onAddPlayer} onResearch={onResearch} />
 
         {/* Right: Daily Slate Queue */}
-        <div className="min-w-0 bg-[#0A0A0C]">
+        <div className="min-w-0 bg-[#0A0A0A]">
           {/* SLATE WORKSPACE HEADER (STRICT FLEX BASELINE) */}
-          <div className="px-4 sm:px-5 py-2.5 border-b border-white/[0.08] flex items-center justify-between bg-[#111113] gap-2">
+          <div className="px-4 sm:px-5 py-2.5 border-b border-white/[0.08] flex items-center justify-between bg-[#0A0A0A] gap-2">
             <div className="flex items-center gap-2">
-              <ListFilter className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-              <strong className="text-[#F4F4F5] font-medium text-xs uppercase tracking-wider" aria-label="Daily slate queue">
+              <ListFilter className="h-3.5 w-3.5 text-ve-emerald" aria-hidden="true" />
+              <strong className="text-[#ffffff] font-medium text-xs uppercase tracking-wider" aria-label="Daily slate queue">
                 DAILY SLATE QUEUE
               </strong>
             </div>
 
             <div className="flex items-center gap-2">
               {!confirmedFallback && (
-                <span className="hidden sm:inline-flex text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded bg-emerald-500/10 text-[9px] font-mono font-medium uppercase tracking-wider">
+                <span className="hidden sm:inline-flex text-ve-emerald border border-ve-emerald/25 px-2 py-0.5 rounded-none bg-ve-emerald/10 text-[9px] font-mono font-medium uppercase tracking-wider">
                   CONFIRMED ONLY
                 </span>
               )}
 
-              <label className="relative inline-flex items-center rounded border border-white/[0.10] bg-white/[0.04] px-2.5 py-0.5 text-[9px] font-mono font-medium text-zinc-200 uppercase cursor-pointer">
-                <SlidersHorizontal className="mr-1.5 h-3 w-3 text-sky-400" aria-hidden="true" />
+              <label className="relative inline-flex items-center rounded-none border border-white/[0.10] bg-white/[0.04] px-2.5 py-0.5 text-[9px] font-mono font-medium text-white/80 uppercase cursor-pointer">
+                <SlidersHorizontal className="mr-1.5 h-3 w-3 text-ve-cyan" aria-hidden="true" />
                 <select
                   value={sortMode}
                   onChange={(event) => setSortMode(event.target.value as SortMode)}
                   className="appearance-none bg-transparent pr-4 outline-none uppercase cursor-pointer"
                   aria-label="Sort slate queue"
                 >
-                  <option value="score" className="bg-[#111113] text-white">HRPI SCORE</option>
-                  <option value="time" className="bg-[#111113] text-white">GAME TIME</option>
+                  <option value="score" className="bg-[#0A0A0A] text-white">HRPI SCORE</option>
+                  <option value="time" className="bg-[#0A0A0A] text-white">GAME TIME</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-zinc-400" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-white/55" aria-hidden="true" />
               </label>
             </div>
           </div>
 
-          <div className="px-4 sm:px-5 py-1.5 border-b border-white/[0.06] bg-[#0A0A0C] text-[9px] font-mono font-medium uppercase tracking-wider flex items-center justify-between text-zinc-400">
+          <div className="px-4 sm:px-5 py-1.5 border-b border-white/[0.06] bg-[#0A0A0A] text-[9px] font-mono font-medium uppercase tracking-wider flex items-center justify-between text-white/55">
             <span>{groups.length} MATCHUPS · {confirmedRows.length} CONFIRMED BATS</span>
             {confirmedFallback && (
-              <span className="text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded bg-amber-500/10">
+              <span className="text-ve-amber border border-ve-amber/30 px-1.5 py-0.2 rounded-none bg-ve-amber/10">
                 Confirmed lineups unavailable — showing best available slate
               </span>
             )}
@@ -246,18 +246,18 @@ function Spotlight({
 }) {
   if (!player) {
     return (
-      <div className="flex min-h-[380px] items-center justify-center p-6 text-center bg-[#111113]">
+      <div className="flex min-h-[380px] items-center justify-center p-6 text-center bg-[#0A0A0A]">
         <div className="space-y-3 font-mono">
-          <Clock3 className="mx-auto h-8 w-8 text-zinc-600" aria-hidden="true" />
-          <h3 className="text-base sm:text-lg font-bold tracking-tight text-[#F4F4F5] uppercase">
+          <Clock3 className="mx-auto h-8 w-8 text-white/30" aria-hidden="true" />
+          <h3 className="text-base sm:text-lg font-bold tracking-tight text-[#ffffff] uppercase">
             {state === 'loading' ? 'BUILDING TODAY’S BOARD' : 'NO ACTIVE HR SIGNALS'}
           </h3>
-          <p className="mx-auto max-w-sm text-xs text-zinc-400">
+          <p className="mx-auto max-w-sm text-xs text-white/55">
             The desk stays honest when the slate or lineup feed has no usable rows.
           </p>
           <button
             onClick={onResearch}
-            className="mt-4 rounded-lg border border-white/[0.10] bg-white/[0.05] text-zinc-200 px-4 py-2 text-xs font-medium uppercase hover:bg-white/[0.10] transition-colors cursor-pointer min-h-[44px]"
+            className="mt-4 rounded-none border border-white/[0.10] bg-white/[0.05] text-white/80 px-4 py-2 text-xs font-medium uppercase hover:bg-white/[0.10] transition-colors cursor-pointer min-h-[44px]"
           >
             OPEN RESEARCH BOARD
           </button>
@@ -274,7 +274,7 @@ function Spotlight({
   const micro = getMicroTelemetry(player);
 
   return (
-    <article className="relative min-h-[380px] p-4 sm:p-5 flex flex-col justify-between space-y-4 bg-[#111113] font-mono">
+    <article className="relative min-h-[380px] p-4 sm:p-5 flex flex-col justify-between space-y-4 bg-[#0A0A0A] font-mono">
       {player.teamLogoUrl ? (
         <img
           src={player.teamLogoUrl}
@@ -288,11 +288,11 @@ function Spotlight({
       <div className="space-y-3">
         {/* Header telemetry pill */}
         <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-          <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-mono font-medium uppercase tracking-wider">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <div className="flex items-center gap-2 text-ve-emerald text-[10px] font-mono font-medium uppercase tracking-wider">
+            <span className="h-1.5 w-1.5 rounded-full bg-ve-emerald" />
             SPOTLIGHT DOSSIER // QUANTITATIVE TELEMETRY
           </div>
-          <span className="text-[9px] border border-white/[0.08] px-2 py-0.5 text-zinc-400 uppercase rounded bg-white/[0.02] font-mono">
+          <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/30">
             {player.truthStatus} VERIFIED
           </span>
         </div>
@@ -300,13 +300,13 @@ function Spotlight({
         {/* Player & HRPI Gauge Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-mono font-medium text-zinc-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-mono font-medium text-white/55 uppercase tracking-wider block">
               {player.team} VS {player.opponent}
             </span>
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#F4F4F5] tracking-tight mt-0.5 font-sans">
+            <h3 className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-bold italic leading-[1.0] tracking-tighter text-white">
               {player.playerName}
             </h3>
-            <p className="text-xs text-zinc-400 mt-0.5 truncate font-mono">
+            <p className="text-xs text-white/55 mt-0.5 truncate font-mono">
               {player.pitcherName && player.pitcherName !== 'Pitcher TBD'
                 ? `VS ${player.pitcherName.toUpperCase()}`
                 : 'OPPOSING ARM PENDING'}
@@ -315,11 +315,11 @@ function Spotlight({
           </div>
 
           {/* Big HRPI Badge — Primary visual anchor (Restrained Glass Plate) */}
-          <div className="border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-center min-w-[80px] rounded-lg shrink-0">
-            <span className="text-2xl sm:text-3xl font-black text-emerald-400 block tabular-nums leading-none font-mono">
+          <div className="border border-ve-emerald/30 bg-ve-emerald/10 p-2.5 text-center min-w-[80px] rounded-none shrink-0">
+            <span className="text-2xl sm:text-3xl font-black text-ve-emerald block tabular-nums leading-none font-mono">
               {score}
             </span>
-            <span className="text-[8px] font-mono font-bold text-emerald-300 uppercase tracking-wider mt-1 block">
+            <span className="text-[8px] font-mono font-bold text-ve-emerald uppercase tracking-wider mt-1 block">
               HRPI INDEX
             </span>
           </div>
@@ -328,75 +328,75 @@ function Spotlight({
         {/* Actionable Micro-Telemetry Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[10px] font-mono">
           {/* Pitch Arsenal */}
-          <div className="border border-white/[0.06] bg-white/[0.02] p-2 space-y-0.5 rounded">
-            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-sky-400">
+          <div className="border-l border-white/[0.08] px-3 py-2 space-y-0.5 first:border-l-0 first:pl-0">
+            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-ve-cyan">
               <Zap className="h-2.5 w-2.5" /> PITCH ARSENAL
             </div>
-            <p className="text-zinc-200 leading-snug font-mono text-[10px] truncate" title={micro.pitchArsenal}>
+            <p className="text-white/80 leading-snug font-mono text-[10px] truncate" title={micro.pitchArsenal}>
               {micro.pitchArsenal}
             </p>
           </div>
 
           {/* Batted Ball Telemetry */}
-          <div className="border border-white/[0.06] bg-white/[0.02] p-2 space-y-0.5 rounded">
-            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-emerald-400">
+          <div className="border-l border-white/[0.08] px-3 py-2 space-y-0.5 first:border-l-0 first:pl-0">
+            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-ve-emerald">
               <Flame className="h-2.5 w-2.5" /> BATTED BALL
             </div>
-            <p className="text-zinc-200 leading-snug font-mono text-[10px] truncate" title={micro.battedBall}>
+            <p className="text-white/80 leading-snug font-mono text-[10px] truncate" title={micro.battedBall}>
               {micro.battedBall}
             </p>
           </div>
 
           {/* Environmental Vector */}
-          <div className="border border-white/[0.06] bg-white/[0.02] p-2 space-y-0.5 rounded">
-            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-amber-300">
+          <div className="border-l border-white/[0.08] px-3 py-2 space-y-0.5 first:border-l-0 first:pl-0">
+            <div className="flex items-center gap-1 text-[8px] font-mono font-medium uppercase tracking-wider text-ve-amber">
               <Radio className="h-2.5 w-2.5" /> ENVIRONMENT
             </div>
-            <p className="text-zinc-200 leading-snug font-mono text-[10px] truncate" title={micro.envVector}>
+            <p className="text-white/80 leading-snug font-mono text-[10px] truncate" title={micro.envVector}>
               {micro.envVector}
             </p>
           </div>
         </div>
 
         {/* 3-Tier Monospace Segmented Brutalist Block Gauges */}
-        <div className="border border-white/[0.06] bg-[#0A0A0C] p-2.5 space-y-1.5 font-mono rounded-lg">
-          <div className="flex items-center justify-between text-[8px] font-mono font-medium uppercase tracking-wider text-zinc-500 border-b border-white/[0.04] pb-1">
+        <div className="border border-white/[0.06] bg-[#0A0A0A] p-2.5 space-y-1.5 font-mono rounded-none">
+          <div className="flex items-center justify-between text-[8px] font-mono font-medium uppercase tracking-wider text-white/40 border-b border-white/[0.04] pb-1">
             <span>QUANTITATIVE METRICS MATRIX</span>
-            <span className="text-zinc-600 font-mono">OPTA PRO STANDARD</span>
+            <span className="text-white/30 font-mono">OPTA PRO STANDARD</span>
           </div>
 
           <div className="space-y-1 text-xs font-mono">
             {/* Hitter Power */}
-            <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
-              <span className="text-[10px] text-zinc-400 font-medium tracking-wider">HITTER POWER</span>
+            <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] py-1.5 last:border-b-0">
+              <span className="text-[10px] text-white/55 font-medium tracking-wider">HITTER POWER</span>
               <div className="flex items-center gap-2">
-                <AnimatedBar value={hitterPower} max={100} colorClass="bg-emerald-400" />
-                <span className="text-emerald-400 font-bold text-xs tabular-nums w-14 text-right font-mono">{hitterPower}/100</span>
+                <AnimatedBar value={hitterPower} max={100} colorClass="bg-ve-emerald" />
+                <span className="text-ve-emerald font-bold text-xs tabular-nums w-14 text-right font-mono">{hitterPower}/100</span>
               </div>
             </div>
 
             {/* Pitcher Vulnerability */}
-            <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
-              <span className="text-[10px] text-zinc-400 font-medium tracking-wider">PITCHER VULN</span>
+            <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] py-1.5 last:border-b-0">
+              <span className="text-[10px] text-white/55 font-medium tracking-wider">PITCHER VULN</span>
               <div className="flex items-center gap-2">
-                <AnimatedBar value={pitcherVuln} max={100} colorClass="bg-sky-400" />
-                <span className="text-sky-400 font-bold text-xs tabular-nums w-14 text-right font-mono">{pitcherVuln}/100</span>
+                <AnimatedBar value={pitcherVuln} max={100} colorClass="bg-ve-cyan" />
+                <span className="text-ve-cyan font-bold text-xs tabular-nums w-14 text-right font-mono">{pitcherVuln}/100</span>
               </div>
             </div>
 
             {/* Park Factor */}
-            <div className="flex items-center justify-between gap-2 p-1.5 bg-white/[0.02] border border-white/[0.04] rounded">
-              <span className="text-[10px] text-zinc-400 font-medium tracking-wider">PARK FACTOR</span>
+            <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] py-1.5 last:border-b-0">
+              <span className="text-[10px] text-white/55 font-medium tracking-wider">PARK FACTOR</span>
               <div className="flex items-center gap-2">
-                <AnimatedBar value={parkVal} max={150} colorClass="bg-amber-300" />
-                <span className="text-amber-300 font-bold text-xs tabular-nums w-14 text-right font-mono">{parkVal} IDX</span>
+                <AnimatedBar value={parkVal} max={150} colorClass="bg-ve-amber" />
+                <span className="text-ve-amber font-bold text-xs tabular-nums w-14 text-right font-mono">{parkVal} IDX</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tactical Model Rationale */}
-        <p className="text-xs text-zinc-300 leading-relaxed font-sans border-l-2 border-emerald-400/50 pl-3">
+        <p className="text-xs text-white/70 leading-relaxed font-sans border-l-2 border-ve-emerald/50 pl-3">
           {player.reasons[0] ?? 'Inspect full Statcast telemetry before locking decisions.'}
         </p>
       </div>
@@ -407,14 +407,14 @@ function Spotlight({
           type="button"
           onClick={() => onAddPlayer(player)}
           disabled={player.truthStatus === 'blocked'}
-          className="flex-1 min-h-11 bg-white text-black font-semibold text-xs uppercase tracking-wider hover:bg-zinc-200 active:bg-zinc-300 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-mono"
+          className="flex-1 min-h-11 bg-ve-cyan text-black font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white rounded-none transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-mono"
         >
           <Plus className="h-3.5 w-3.5" /> ADD TO SLIP
         </button>
         <button
           type="button"
           onClick={onResearch}
-          className="border border-white/[0.10] bg-white/[0.05] text-zinc-200 px-4 min-h-11 text-xs font-medium uppercase tracking-wider hover:border-white/[0.20] hover:bg-white/[0.10] hover:text-white rounded-lg transition-colors flex items-center gap-1 cursor-pointer font-mono"
+          className="border border-white/[0.10] bg-white/[0.05] text-white/80 px-4 min-h-11 text-xs font-medium uppercase tracking-wider hover:border-white/[0.20] hover:bg-white/[0.10] hover:text-white rounded-none transition-colors flex items-center gap-1 cursor-pointer font-mono"
         >
           FULL EVIDENCE <ArrowRight className="h-3.5 w-3.5" />
         </button>
@@ -453,30 +453,30 @@ function MatchupRow({
           onClick={onSelect}
           className="p-2.5 sm:p-3 flex items-center gap-3 text-left w-full cursor-pointer min-h-[44px]"
         >
-          <span className="font-mono text-xs font-medium text-zinc-500 tabular-nums w-5">
+          <span className="font-mono text-xs font-medium text-white/40 tabular-nums w-5">
             {String(rank).padStart(2, '0')}
           </span>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <TeamLogo src={group.primaryLogoUrl} name={group.primaryTeam} />
-              <strong className="truncate text-xs font-medium text-[#F4F4F5] uppercase">
+              <strong className="truncate text-xs font-medium text-[#ffffff] uppercase">
                 {group.primaryTeam} vs {group.opponent}
               </strong>
             </div>
-            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-zinc-400">
-              <span className="truncate text-zinc-200">Lead: {player.playerName}</span>
-              <span className="text-zinc-600">·</span>
-              <span className="shrink-0 text-zinc-500 font-mono">{formatGameTime(group.gameTime)}</span>
+            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-white/55">
+              <span className="truncate text-white/80">Lead: {player.playerName}</span>
+              <span className="text-white/30">·</span>
+              <span className="shrink-0 text-white/40 font-mono">{formatGameTime(group.gameTime)}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right hidden sm:block">
-              <span className="block text-[8px] font-mono font-medium text-zinc-500 uppercase">{group.rows.length} BATS</span>
-              <span className="text-[8px] text-zinc-400 uppercase font-mono">{player.truthStatus}</span>
+              <span className="block text-[8px] font-mono font-medium text-white/40 uppercase">{group.rows.length} BATS</span>
+              <span className="text-[8px] text-white/55 uppercase font-mono">{player.truthStatus}</span>
             </div>
-            <span className="font-mono text-base font-bold text-emerald-400 min-w-[36px] text-right">
+            <span className="font-mono text-base font-bold text-ve-emerald min-w-[36px] text-right">
               {boardScore(player)}
             </span>
           </div>
@@ -485,7 +485,7 @@ function MatchupRow({
         <button
           type="button"
           onClick={onToggleReceipt}
-          className="p-3 text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="p-3 text-white/40 hover:text-white/80 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label={`${receiptOpen ? 'Close' : 'Open'} research receipt`}
         >
           <ChevronDown className={`h-4 w-4 transition-transform ${receiptOpen ? 'rotate-180' : ''}`} />
@@ -493,23 +493,23 @@ function MatchupRow({
       </div>
 
       {receiptOpen && (
-        <div className="border-t border-white/[0.06] bg-[#0A0A0C] p-3.5 text-[10px] space-y-2">
-          <div className="flex items-center gap-1.5 text-sky-400 font-medium uppercase font-mono">
+        <div className="border-t border-white/[0.06] bg-[#0A0A0A] p-3.5 text-[10px] space-y-2">
+          <div className="flex items-center gap-1.5 text-ve-cyan font-medium uppercase font-mono">
             <FileCheck2 className="h-3.5 w-3.5" />
             RECEIPT FOR {player.playerName.toUpperCase()}
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 text-zinc-400 pt-1 font-mono">
+          <div className="grid gap-3 sm:grid-cols-3 text-white/55 pt-1 font-mono">
             <div>
-              <p className="uppercase text-zinc-500 text-[8px] font-medium">SOURCE CHANNELS</p>
-              <p className="text-zinc-300 mt-0.5">MLBAM · Statcast · Lineup Truth</p>
+              <p className="uppercase text-white/40 text-[8px] font-medium">SOURCE CHANNELS</p>
+              <p className="text-white/70 mt-0.5">MLBAM · Statcast · Lineup Truth</p>
             </div>
             <div>
-              <p className="uppercase text-zinc-500 text-[8px] font-medium">INTEGRITY GAPS</p>
-              <p className="text-zinc-300 mt-0.5">{player.warnings[0] ?? '0 missing inputs'}</p>
+              <p className="uppercase text-white/40 text-[8px] font-medium">INTEGRITY GAPS</p>
+              <p className="text-white/70 mt-0.5">{player.warnings[0] ?? '0 missing inputs'}</p>
             </div>
             <div>
-              <p className="uppercase text-zinc-500 text-[8px] font-medium">CONCLUSION</p>
-              <p className="text-zinc-300 mt-0.5">{player.reasons[0] ?? 'Verified'}</p>
+              <p className="uppercase text-white/40 text-[8px] font-medium">CONCLUSION</p>
+              <p className="text-white/70 mt-0.5">{player.reasons[0] ?? 'Verified'}</p>
             </div>
           </div>
         </div>
@@ -521,13 +521,13 @@ function MatchupRow({
 function QueueEmpty({ state, onResearch }: { state: TodayFieldState; onResearch: () => void }) {
   return (
     <div className="p-8 text-center space-y-3 font-mono">
-      <p className="text-xs font-bold text-zinc-400 uppercase">
+      <p className="text-xs font-bold text-white/55 uppercase">
         {state === 'loading' ? 'LOADING THE SLATE...' : 'NO USABLE MATCHUPS'}
       </p>
-      <p className="text-[10px] text-zinc-600">The source has not returned an eligible HR row.</p>
+      <p className="text-[10px] text-white/30">The source has not returned an eligible HR row.</p>
       <button
         onClick={onResearch}
-        className="border border-white/20 bg-[#131B1E] px-4 py-2 text-[10px] font-bold uppercase text-zinc-300 hover:text-white cursor-pointer min-h-[44px]"
+        className="border border-white/20 bg-[#0A0A0A] px-4 py-2 text-[10px] font-bold uppercase text-white/70 hover:text-white cursor-pointer min-h-[44px]"
       >
         OPEN RESEARCH BOARD
       </button>
@@ -539,7 +539,7 @@ function TeamLogo({ src, name }: { src: string | null; name: string }) {
   return src ? (
     <img src={src} alt="" className="h-4 w-4 shrink-0 object-contain" loading="lazy" decoding="async" />
   ) : (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center bg-zinc-800 text-[7px] font-black text-white">
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center bg-white/10 text-[7px] font-black text-white">
       {name.slice(0, 2)}
     </span>
   );

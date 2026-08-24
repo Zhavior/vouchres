@@ -1,0 +1,35 @@
+import React from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { Shield } from 'lucide-react';
+
+export default function Navbar() {
+  const { scrollY } = useScroll();
+  const backgroundColor = useTransform(scrollY, [0, 100], ['rgba(5, 5, 5, 0)', 'rgba(5, 5, 5, 0.8)']);
+  const borderBottom = useTransform(scrollY, [0, 100], ['1px solid rgba(255, 255, 255, 0)', '1px solid rgba(255, 255, 255, 0.05)']);
+
+  return (
+    <motion.nav 
+      style={{ backgroundColor, borderBottom }}
+      className="fixed top-0 left-0 w-full z-[100] backdrop-blur-md transition-all duration-300"
+    >
+      <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-8 h-8 rounded bg-vouch-emerald/10 border border-vouch-emerald/30 flex items-center justify-center group-hover:border-vouch-emerald transition-colors">
+            <Shield size={18} className="text-vouch-emerald" />
+          </div>
+          <span className="text-lg font-bold tracking-tighter italic text-white">VOUCHEDGE</span>
+        </div>
+
+        <div className="hidden md:flex items-center gap-8">
+          {['Intelligence', 'Methodology', 'Audit Ledger', 'Community'].map((item) => (
+            <a key={item} href="#" className="terminal-text hover:text-white transition-colors">{item}</a>
+          ))}
+        </div>
+
+        <button className="px-5 py-2 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:bg-vouch-emerald transition-all">
+          Launch Command Desk
+        </button>
+      </div>
+    </motion.nav>
+  );
+}

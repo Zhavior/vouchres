@@ -1,6 +1,6 @@
 import { useAmbient3dEnabled, useAmbient3dStore } from '@/stores/ambient3dStore';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Keyboard, Radio, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
+import { Keyboard, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
 import type { MLBPlayer } from '../../../types';
 import LiveAtBatView from '../../../components/live/LiveAtBatView';
 import { PregameAiReadPanel } from '../../../components/live/command/PregameAiReadPanel';
@@ -27,6 +27,13 @@ const FILTER_TABS: Array<{ id: LiveGamesFilterTab; label: string }> = [
   { id: 'final', label: 'FINAL' },
 ];
 
+/** Feed-state → status pill copy + tone, matching Today's sensor pill. */
+function feedPillTone(feedState: string): string {
+  if (feedState === 'live') return 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald';
+  if (feedState === 'reconnecting') return 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan';
+  return 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber';
+}
+
 function isEditingText(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
@@ -34,7 +41,8 @@ function isEditingText(target: EventTarget | null): boolean {
 }
 
 /**
- * Live Games — Cyber-Engineering HUD Command Desk.
+ * Live Games — Cupertino Pro command desk, sharing the obsidian ramp, hairline
+ * borders and desaturated accents used by Today Next and the V4 landing.
  */
 export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps) {
   const {
@@ -150,69 +158,83 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
 
   if (isLoading) {
     return (
-      <div className="live-games-next flex min-h-screen items-center justify-center bg-black">
-        <div className="text-cyan-400 font-mono text-xs uppercase tracking-widest animate-pulse flex items-center gap-2 border border-cyan-500/40 bg-zinc-950 px-4 py-3">
-          <Zap className="h-4 w-4 text-cyan-400" /> INITIALIZING LIVE COMMAND SENSORS...
+      <div className="live-games-next flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2 border border-white/[0.08] bg-white/[0.02] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.24em] text-white/55">
+          <Zap className="h-3.5 w-3.5 text-ve-cyan" /> Initializing live sensors
         </div>
       </div>
     );
   }
 
   return (
-    <main className="live-games-next flex-1 min-w-0 min-h-screen relative z-10 overscroll-none text-white">
+    <main className="live-games-next flex-1 min-w-0 min-h-screen relative z-10 overscroll-none text-white font-mono">
 
-      {/* Sticky Telemetry HUD Header */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-8 bg-black/95 backdrop-blur-md border-b-2 border-white/15 space-y-3">
+      {/* PINNED HUD TELEMETRY TOP BAR */}
+      <header className="sticky top-0 z-30 space-y-3 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3 backdrop-blur-md sm:px-8">
         {/* Title row */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[10px] font-mono font-bold tracking-widest text-cyan-400 uppercase">
-              <span className="h-1.5 w-1.5 bg-cyan-400" />
-              VOUCHEDGE // LIVE GAMES COMMAND DESK · STAGE: 02 / IN-GAME SWEAT STREAM
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase flex items-center gap-3">
-              LIVE GAMES TERMINAL
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-rose-500/50 bg-rose-950/40 font-mono text-[9px] font-bold uppercase tracking-wider text-rose-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
-                {feedState === 'live' ? '● STREAMING 6s SENSORS' : feedState === 'reconnecting' ? 'RECONNECTING' : 'OFFLINE'}
-              </span>
-              {liveCount > 0 && (
-                <span className="hidden sm:inline-flex items-center gap-1 border border-rose-500 bg-rose-500 text-black px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider">
-                  <Radio className="h-3 w-3 animate-pulse" /> {liveCount} LIVE IN-GAME
+          <div className="flex items-center gap-3">
+            <span className={liveCount > 0 ? 'lg-live-dot' : 'lg-live-dot lg-live-dot--emerald'} />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.24em] text-white">
+                  VOUCHEDGE // LIVE GAMES DESK
+                </h1>
+                <span className="text-white/30 hidden sm:inline">|</span>
+                <span className="hidden sm:inline text-[10px] font-medium text-ve-emerald">
+                  STAGE: 02 / IN-GAME STREAM
                 </span>
-              )}
-            </h1>
+              </div>
+              <p className="mt-0.5 text-[9px] uppercase text-white/40">
+                ENGINE: MLB_STATSAPI · {liveCount} LIVE · LAST SYNC {lastSyncLabel.toUpperCase()}
+              </p>
+            </div>
           </div>
 
-          {/* Quick Action Controls */}
-          <div className="flex items-center gap-2">
+          {/* Status pills & action triggers */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider ${feedPillTone(feedState)}`}
+            >
+              <ShieldCheck className="h-3 w-3" />
+              {feedState === 'live'
+                ? 'SENSORS STREAMING · 6s'
+                : feedState === 'reconnecting'
+                  ? 'RECONNECTING'
+                  : 'FEED OFFLINE'}
+            </span>
+
             <button
               type="button"
               onClick={handleManualRefresh}
               disabled={isSyncing}
               aria-label="Fast sync the live feed and HR board"
               title="Fast sync (R)"
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/20 bg-zinc-900 text-zinc-300 hover:border-white hover:text-white text-xs font-mono transition-colors disabled:opacity-50 cursor-pointer"
+              className="lg-control flex items-center gap-1.5 px-2.5 py-1 text-xs disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>SYNC [R]</span>
+              <RefreshCw className={`h-3 w-3 text-ve-emerald ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="font-medium">SYNC</span>
+              <kbd className="text-[9px] text-white/40">[R]</kbd>
             </button>
+
             <button
               type="button"
               onClick={() => setCheatsheetOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/20 bg-zinc-900 text-zinc-300 hover:border-white hover:text-white text-xs font-mono transition-colors cursor-pointer"
-              title="Keyboard Shortcuts (?)"
+              className="lg-control flex items-center gap-1.5 px-2.5 py-1 text-xs cursor-pointer"
+              title="Keyboard shortcuts (?)"
             >
-              <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
-              <span>KEYS [?]</span>
+              <Keyboard className="h-3 w-3 text-ve-cyan" />
+              <span className="font-medium">KEYS</span>
+              <kbd className="text-[9px] text-white/40">[?]</kbd>
             </button>
+
             <button
               type="button"
               onClick={toggle3DLayer}
-              className={`px-3 py-1.5 border text-xs font-mono transition-colors cursor-pointer ${
+              className={`border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                 is3DLayerEnabled
-                  ? 'border-emerald-400 bg-emerald-950/40 text-emerald-300'
-                  : 'border-white/20 bg-zinc-900 text-zinc-400 hover:border-white hover:text-white'
+                  ? 'border-white/20 bg-white/10 text-white'
+                  : 'border-white/[0.08] bg-white/[0.04] text-white/55 hover:text-white'
               }`}
             >
               3D: {is3DLayerEnabled ? 'ON' : 'OFF'}
@@ -221,26 +243,26 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
         </div>
 
         {/* Feed Status Sensor Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-2.5 font-mono" data-testid="live-next-feed-strip">
-          <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-            <strong className="text-white uppercase">{sourceNote}</strong>
-            <span className="text-zinc-600">·</span>
-            <span>LAST SYNC: <strong className="text-zinc-300">{lastSyncLabel.toUpperCase()}</strong></span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-2.5" data-testid="live-next-feed-strip">
+          <div className="flex items-center gap-2 text-[10px] text-white/40">
+            <strong className="font-medium uppercase text-white/70">{sourceNote}</strong>
+            <span className="text-white/20">·</span>
+            <span>LAST SYNC: <strong className="font-medium text-white/70">{lastSyncLabel.toUpperCase()}</strong></span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { label: 'LIVE NOW', value: liveCount, color: liveCount > 0 ? 'text-rose-400' : 'text-zinc-400' },
-              { label: 'UPCOMING', value: upcomingCount, color: 'text-zinc-300' },
-              { label: 'FINAL', value: finalCount, color: 'text-emerald-400' },
-              { label: 'FEED STATUS', value: feedState === 'live' ? 'STREAMING' : feedState === 'reconnecting' ? 'SYNC' : 'DOWN', color: 'text-cyan-300' },
+              { label: 'LIVE NOW', value: liveCount, color: liveCount > 0 ? 'text-ve-red' : 'text-white/55' },
+              { label: 'UPCOMING', value: upcomingCount, color: 'text-white/70' },
+              { label: 'FINAL', value: finalCount, color: 'text-ve-emerald' },
+              { label: 'FEED', value: feedState === 'live' ? 'STREAMING' : feedState === 'reconnecting' ? 'SYNC' : 'DOWN', color: 'text-ve-cyan' },
             ].map((tile) => (
               <span
                 key={tile.label}
-                className="flex items-center gap-1.5 border border-white/15 bg-zinc-950 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider"
+                className="flex items-center gap-1.5 border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider"
               >
-                <span className="text-zinc-500">{tile.label}:</span>
-                <span className={`tabular-nums font-black ${tile.color}`}>
+                <span className="text-white/40">{tile.label}</span>
+                <span className={`tabular-nums font-semibold ${tile.color}`}>
                   {tile.value}
                 </span>
               </span>
@@ -249,7 +271,7 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
         </div>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 tn-scrollbar-none font-mono" role="toolbar" aria-label="Live filter tabs">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 tn-scrollbar-none" role="toolbar" aria-label="Live filter tabs">
           {FILTER_TABS.map((tab) => {
             const isActive = filterTab === tab.id;
             const count = tab.id === 'all' ? liveCount + upcomingCount + finalCount
@@ -262,20 +284,15 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
                 type="button"
                 onClick={() => setFilterTab(tab.id)}
                 aria-pressed={isActive}
-                className={`flex shrink-0 items-center gap-2 border px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex shrink-0 items-center gap-2 border px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                   isActive
-                    ? 'border-2 border-cyan-400 bg-zinc-950 text-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.15)] font-black'
-                    : 'border-white/15 bg-black text-zinc-400 hover:text-white hover:border-white/30 hover:bg-zinc-950'
+                    ? 'border-white/30 bg-white/[0.08] text-white font-semibold'
+                    : 'border-white/[0.08] bg-white/[0.02] text-white/55 hover:text-white hover:border-white/[0.16] hover:bg-white/[0.06]'
                 }`}
               >
-                {tab.id === 'live' && liveCount > 0 && (
-                  <span className="relative flex h-2 w-2 items-center justify-center">
-                    <span className="absolute h-2 w-2 animate-ping rounded-full bg-rose-500" />
-                    <span className="relative h-1.5 w-1.5 rounded-full bg-rose-400" />
-                  </span>
-                )}
+                {tab.id === 'live' && liveCount > 0 && <span className="lg-live-dot" />}
                 <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.2 text-[10px] font-black border ${isActive ? 'border-cyan-400 bg-cyan-950/40 text-cyan-200' : 'border-white/10 bg-zinc-900 text-zinc-400'}`}>
+                <span className={`px-1.5 py-0.5 text-[10px] font-medium tabular-nums border ${isActive ? 'border-white/20 bg-white/10 text-white' : 'border-white/[0.08] bg-white/[0.04] text-white/40'}`}>
                   {count}
                 </span>
               </button>
@@ -293,21 +310,24 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
             onNext={handleNextMatchup}
           />
         )}
-      </div>
+      </header>
 
-      {/* Desk body */}
-      <div className="w-full max-w-[1400px] mx-auto px-6 pt-6 pb-36 sm:px-8 xl:pb-12 space-y-6">
+      {/* MAIN TACTICAL DESK CANVAS */}
+      <div className="mx-auto w-full max-w-[1380px] space-y-6 px-4 pt-6 pb-36 sm:px-8 xl:pb-12">
         {error && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-2 border-rose-500 bg-rose-950/40 px-4 py-3 font-mono">
-            <p className="text-xs font-bold text-rose-200">{error}</p>
+          <section
+            className="flex flex-wrap items-center justify-between gap-3 border border-ve-amber/25 bg-ve-amber/10 px-4 py-3"
+            aria-live="polite"
+          >
+            <p className="text-xs font-medium text-white/70">{error}</p>
             <button
               type="button"
               onClick={handleManualRefresh}
-              className="border border-rose-400 bg-rose-500 text-black px-3 py-1.5 text-[10px] font-black uppercase tracking-wider hover:bg-rose-400 transition cursor-pointer"
+              className="min-h-9 shrink-0 border border-ve-amber/30 px-3 text-[10px] font-medium uppercase tracking-wider text-ve-amber hover:bg-ve-amber/10 transition-colors cursor-pointer"
             >
-              RETRY SYNC
+              Retry sync
             </button>
-          </div>
+          </section>
         )}
 
         {activeGame ? (
@@ -324,14 +344,14 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
 
             {/* Live game modules */}
             {activeGame.isLive && activeGame.gamePk != null && (
-              <section className="border-2 border-rose-500/60 bg-black p-5 shadow-2xl font-mono" data-testid="live-next-atbat">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                  <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white">
-                    <Zap className="h-4 w-4 animate-pulse text-rose-400" />
-                    PITCH-BY-PITCH SWEAT STREAM
+              <section className="border border-ve-red/25 bg-ve-red/[0.04] p-5" data-testid="live-next-atbat">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+                  <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+                    <Zap className="h-3.5 w-3.5 text-ve-red" />
+                    Pitch-by-pitch stream
                   </h2>
-                  <span className="border border-rose-500/50 bg-rose-950/50 px-2.5 py-0.5 text-[9px] font-black uppercase text-rose-300 tracking-wider">
-                    6s REAL-TIME SENSOR STREAM
+                  <span className="border border-ve-red/25 bg-ve-red/10 px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-ve-red">
+                    6s real-time sensors
                   </span>
                 </div>
                 <div className="max-w-4xl">
@@ -341,33 +361,33 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
             )}
 
             {!activeGame.isLive && !activeGame.isFinal && (
-              <section className="border-2 border-white/15 bg-black p-5 shadow-2xl" data-testid="live-next-pregame">
+              <section data-testid="live-next-pregame">
                 <PregameAiReadPanel game={activeGame} />
               </section>
             )}
 
             {activeGame.isFinal && (
-              <section className="border-2 border-white/15 bg-black p-5 shadow-2xl" data-testid="live-next-final">
+              <section data-testid="live-next-final">
                 <FinalGameRecapPanel game={activeGame} />
               </section>
             )}
           </>
         ) : (
-          <div className="border-2 border-dashed border-white/15 bg-black p-8 text-center font-mono text-xs text-zinc-400">
-            <p className="font-bold text-white mb-1 uppercase">NO GAMES ON THE ACTIVE BOARD</p>
-            <p>The MLB schedule returned no records. Fast Sync is standing by.</p>
+          <div className="border border-dashed border-white/[0.12] bg-white/[0.015] p-8 text-center text-xs text-white/55">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">No games on the board</p>
+            <p>The MLB schedule returned no records. Fast sync is standing by.</p>
           </div>
         )}
 
         {/* Slate index */}
         <div className="space-y-3 pt-2">
-          <div className="flex items-center justify-between gap-2 border-b-2 border-white/15 pb-2">
-            <h2 className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2 font-mono">
-              <span className="h-2 w-2 bg-emerald-400" />
-              TODAY&apos;S MLB SLATE ({filteredGames.length} MATCHUPS)
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2">
+            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+              <span className="h-1.5 w-1.5 bg-ve-emerald" />
+              Today&apos;s MLB slate ({filteredGames.length})
             </h2>
-            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-zinc-500">
-              [←] / [→] OR [J] / [K] TO CYCLE
+            <span className="text-[9px] font-medium uppercase tracking-wider text-white/30">
+              [←] / [→] or [J] / [K] to cycle
             </span>
           </div>
 
@@ -383,30 +403,32 @@ export function LiveGamesNextShell({ onAddLegToParlay }: LiveGamesNextShellProps
               ))}
             </div>
           ) : (
-            <div className="border-2 border-dashed border-white/15 bg-black p-8 text-center font-mono text-xs text-zinc-400">
-              <p className="font-bold text-white mb-1 uppercase">
-                {filterTab === 'live' ? 'NO GAMES ARE CURRENTLY LIVE IN-GAME.' : 'NO MATCHUPS FOUND FOR THIS FILTER.'}
+            <div className="border border-dashed border-white/[0.12] bg-white/[0.015] p-8 text-center text-xs text-white/55">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+                {filterTab === 'live' ? 'No games are live right now' : 'No matchups for this filter'}
               </p>
               <button
                 type="button"
                 onClick={() => setFilterTab('all')}
-                className="mt-2 text-[10px] text-cyan-300 font-bold uppercase hover:underline cursor-pointer"
+                className="mt-2 text-[10px] font-medium uppercase tracking-wider text-ve-cyan hover:underline cursor-pointer"
               >
-                SHOW FULL SCHEDULE
+                Show full schedule
               </button>
             </div>
           )}
         </div>
 
         {/* Deterministic Data Audit Receipt Footer */}
-        <div className="mt-12 pt-6 border-t-2 border-white/15 text-zinc-500 font-mono text-[10px] flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] pt-6 text-[10px] uppercase tracking-wider text-white/30">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-cyan-400" />
-            <span>VOUCHEDGE DETERMINISTIC AUDIT RECEIPT · SHA-256: 7f3b890a2c</span>
+            <span className="h-1.5 w-1.5 bg-ve-cyan" />
+            <span>VouchEdge deterministic audit receipt</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span>MLB STATSAPI REAL-TIME STREAM</span>
-            <span>PROVENANCE: VERIFIED</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <span>MLB StatsAPI real-time stream</span>
+            <span className="flex items-center gap-1.5 text-ve-emerald">
+              <ShieldCheck className="h-3 w-3" /> Provenance verified
+            </span>
           </div>
         </div>
       </div>

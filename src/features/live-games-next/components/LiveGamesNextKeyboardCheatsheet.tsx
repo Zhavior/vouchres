@@ -21,19 +21,19 @@ export function LiveGamesNextKeyboardCheatsheet({ isOpen, onClose }: LiveGamesNe
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 font-mono">
-      <div className="relative w-full max-w-md bg-black border-2 border-white/20 p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-white/15 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-150 font-mono">
+      <div className="relative w-full max-w-md bg-[#050505] border border-white/[0.08] p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
           <div className="flex items-center gap-2">
-            <span className="p-1 border border-cyan-400/40 bg-cyan-950/40 text-cyan-300">
+            <span className="p-1 border border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan">
               <Command className="w-4 h-4" />
             </span>
-            <h3 className="text-xs font-black text-white uppercase tracking-widest">Live Terminal Keybindings</h3>
+            <h3 className="text-[11px] font-semibold text-white uppercase tracking-[0.24em]">Live keybindings</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 border border-white/20 text-zinc-400 hover:text-white hover:border-white transition-colors cursor-pointer"
+            className="lg-control p-1 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -41,17 +41,17 @@ export function LiveGamesNextKeyboardCheatsheet({ isOpen, onClose }: LiveGamesNe
 
         <div className="space-y-2 text-xs">
           {shortcuts.map((sc, idx) => (
-            <div key={idx} className="flex items-center justify-between p-2.5 border border-white/10 bg-zinc-950">
-              <span className="text-zinc-300">{sc.desc}</span>
-              <kbd className="px-2 py-0.5 border border-cyan-400/50 bg-cyan-950/50 text-cyan-300 font-bold text-[11px]">
+            <div key={idx} className="flex items-center justify-between gap-3 p-2.5 border border-white/[0.06] bg-white/[0.02]">
+              <span className="text-white/70">{sc.desc}</span>
+              <kbd className="shrink-0 px-2 py-0.5 border border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan font-medium text-[11px]">
                 {sc.key}
               </kbd>
             </div>
           ))}
         </div>
 
-        <div className="text-[10px] text-zinc-500 text-center pt-3 border-t border-white/10">
-          PRESS <kbd className="text-zinc-300 px-1 py-0.5 border border-white/20 bg-zinc-900">[?]</kbd> ANYTIME TO TOGGLE KEYBINDINGS
+        <div className="text-[10px] text-white/30 text-center pt-3 border-t border-white/[0.06] uppercase tracking-wider">
+          Press <kbd className="text-white/55 px-1 py-0.5 border border-white/[0.08] bg-white/[0.04]">[?]</kbd> anytime to toggle keybindings
         </div>
       </div>
     </div>

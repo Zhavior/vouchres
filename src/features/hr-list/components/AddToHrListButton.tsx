@@ -65,10 +65,10 @@ export function AddToHrListButton({
         aria-label={label}
         aria-pressed={onList}
         title={label}
-        className={`flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400 ${
+        className={`flex h-11 w-11 items-center justify-center border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ve-cyan ${
           onList
-            ? 'border-emerald-400/45 bg-emerald-400/12 text-emerald-300'
-            : 'border-white/12 text-white/50 hover:border-cyan-400/40 hover:text-white'
+            ? 'border-ve-emerald/45 bg-ve-emerald/12 text-ve-emerald'
+            : 'border-white/12 text-white/50 hover:border-ve-cyan/40 hover:text-white'
         } ${className}`}
       >
         <Icon className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -82,10 +82,10 @@ export function AddToHrListButton({
       onClick={toggle}
       disabled={busy}
       aria-pressed={onList}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400 ${
+      className={`inline-flex min-h-11 items-center gap-2 border px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ve-cyan ${
         onList
-          ? 'border-emerald-400/45 bg-emerald-400/12 text-emerald-300'
-          : 'border-white/12 text-white/65 hover:border-cyan-400/40 hover:text-white'
+          ? 'border-ve-emerald/45 bg-ve-emerald/12 text-ve-emerald'
+          : 'border-white/12 text-white/65 hover:border-ve-cyan/40 hover:text-white'
       } ${className}`}
     >
       <Icon className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} aria-hidden="true" />

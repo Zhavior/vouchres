@@ -615,21 +615,23 @@ export default function AuthModal({
                     : 'ACCOUNT / 01'}
                 </span>
 
-                <h1>
-                  {mode === 'signup' ? (
-                    <>
-                      Build a record
-                      <br />
-                      that <em>holds up.</em>
-                    </>
-                  ) : (
-                    <>
-                      Welcome
-                      <br />
-                      <em>back.</em>
-                    </>
-                  )}
-                </h1>
+                {/*
+                  Story panel, not a second auth heading. In signup it carries a
+                  statement the form does not ("Build a record that holds up."
+                  against "Create your account"); in login it used to repeat the
+                  form's own "Welcome back" verbatim, giving the dialog two
+                  competing versions of one message. The form's h2 is the
+                  authentication heading — it owns id="ve-auth-title", the
+                  dialog's aria-labelledby target and the focus ref — so the
+                  duplicate presentation is dropped here instead.
+                */}
+                {mode === 'signup' && (
+                  <h1>
+                    Build a record
+                    <br />
+                    that <em>holds up.</em>
+                  </h1>
+                )}
 
                 <p>
                   {mode === 'signup'
@@ -738,7 +740,7 @@ export default function AuthModal({
                 style={{ boxShadow: '0 0 24px rgba(0, 217, 160,0.12)' }}>
                 <MailCheck className="w-8 h-8 text-vouch-cyan" />
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
+              <p className="text-sm text-white/70 leading-relaxed max-w-xs">
                 We sent a secure link to{' '}
                 <span className="font-bold text-white break-all">{email || 'your email'}</span>.
                 Click it to {mode === 'signup' ? 'confirm your account' : 'finish signing in'}.
@@ -752,7 +754,7 @@ export default function AuthModal({
               </button>
               <button
                 onClick={() => { setEmailSent(false); setMode('login'); }}
-                className="mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+                className="mt-2 text-[13px] font-semibold text-white/45 hover:text-white/70 transition-colors"
               >
                 Back to sign in
               </button>
@@ -796,10 +798,10 @@ export default function AuthModal({
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-0.5">{opt.tagline}</p>
+                          <p className="text-[11px] text-white/55 mt-0.5">{opt.tagline}</p>
                           <ul className="mt-1.5 space-y-0.5">
                             {opt.perks.map((perk) => (
-                              <li key={perk} className="flex items-start gap-1.5 text-[10px] text-slate-500">
+                              <li key={perk} className="flex items-start gap-1.5 text-[10px] text-white/45">
                                 <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? AURORA_CYAN_HEX : '#64748b' }} />
                                 {perk}
                               </li>
@@ -935,7 +937,7 @@ export default function AuthModal({
                         }));
                       }}
                     />
-                    <span className="text-[12px] leading-5 text-slate-300">{item.label}</span>
+                    <span className="text-[12px] leading-5 text-white/70">{item.label}</span>
                   </label>
                 ))}
               </div>
@@ -1024,7 +1026,7 @@ export default function AuthModal({
                   {mode === m && (
                     <div
                       className="ve-auth-mode-active"
-                      style={{ background: 'linear-gradient(110deg, #7de8ff, #55cbed 48%, #64e6b2)' }}
+                      style={{ background: '#4FB8DC' }}
                     />
                   )}
                   <span className="relative">{m === 'signup' ? 'Sign Up' : 'Log In'}</span>
@@ -1051,10 +1053,10 @@ export default function AuthModal({
               disabled={busy || googleBusy || redirectingToCheckout || googleAvailable === false}
               className="ve-auth-google-button"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-white via-slate-50 to-white opacity-0 transition-opacity group-hover:opacity-100" />
+              <span className="absolute inset-0 bg-white opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center justify-center gap-3">
                 {googleBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-slate-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-white/35" />
                 ) : (
                   <GoogleMark />
                 )}
@@ -1095,7 +1097,7 @@ export default function AuthModal({
             {mode === 'signup' && (
               <div className="ve-auth-reveal overflow-hidden">
                 <Field icon={<User className="w-4 h-4" />}>
-                  <span className="text-sm text-slate-500 shrink-0">@</span>
+                  <span className="text-sm text-white/45 shrink-0">@</span>
                   <input
                     type="text"
                     aria-label="Username"
@@ -1110,9 +1112,9 @@ export default function AuthModal({
                     }}
                     className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                   />
-                  {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
-                  {handleState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                  {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
+                  {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-white/55 animate-spin" />}
+                  {handleState === 'available' && <Check className="w-3.5 h-3.5 text-ve-emerald" />}
+                  {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-ve-red" />}
                 </Field>
                 {handleHint[handleState] && (
                   <p aria-live="polite" className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
@@ -1141,7 +1143,7 @@ export default function AuthModal({
                   type="button"
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPw((v) => !v)}
-                  className="text-slate-500 hover:text-slate-300"
+                  className="text-white/45 hover:text-white/70"
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -1253,7 +1255,7 @@ export default function AuthModal({
 
           {/* Footer — trust */}
           <div className="px-5 pb-6 pt-1 sm:px-8">
-            <p className="text-[10px] text-center leading-relaxed text-slate-600">
+            <p className="text-[10px] text-center leading-relaxed text-white/35">
               By continuing you agree to the account, privacy, and billing terms reviewed during signup. You must be
               of legal age in your jurisdiction and located somewhere this is legal. Probability-based research for
               entertainment — not betting advice.

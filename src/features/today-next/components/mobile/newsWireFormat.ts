@@ -3,66 +3,75 @@ import type { MlbNewsCategory, MlbNewsItem } from '../../hooks/useMlbNewsWire';
 
 export type TacticalNewsCategory = 'LINEUP' | 'PITCHER' | 'WEATHER' | 'DEVIATION';
 
+/*
+ * Category tone on the registered ve-* tokens.
+ *
+ * These were on raw Tailwind ramps (emerald-500, sky-500, amber-500,
+ * fuchsia-500) at hues that drift from the system palette, and DEVIATION's
+ * fuchsia had no token anywhere in the product. Three Today surfaces render
+ * from this map; the News Wire page keeps its own local tone map and reads
+ * only `label` from here.
+ */
 export const CATEGORY_STYLES: Record<
   TacticalNewsCategory | 'ALERT' | 'INJURY' | 'ROSTER' | 'NEWS',
   { label: string; pill: string; dot: string; border: string; accent: string }
 > = {
   LINEUP: {
     label: 'LINEUP',
-    pill: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 font-medium',
-    dot: 'bg-emerald-400',
-    border: 'border-emerald-500/20',
-    accent: '#34D399',
+    pill: 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald font-medium',
+    dot: 'bg-ve-emerald',
+    border: 'border-ve-emerald/25',
+    accent: '#31B583',
   },
   PITCHER: {
     label: 'PITCHER',
-    pill: 'border-sky-500/25 bg-sky-500/10 text-sky-400 font-medium',
-    dot: 'bg-sky-400',
-    border: 'border-sky-500/20',
-    accent: '#38BDF8',
+    pill: 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan font-medium',
+    dot: 'bg-ve-cyan',
+    border: 'border-ve-cyan/25',
+    accent: '#4FB8DC',
   },
   WEATHER: {
     label: 'WEATHER',
-    pill: 'border-amber-500/25 bg-amber-500/10 text-amber-300 font-medium',
-    dot: 'bg-amber-400',
-    border: 'border-amber-500/20',
-    accent: '#FBBF24',
+    pill: 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber font-medium',
+    dot: 'bg-ve-amber',
+    border: 'border-ve-amber/25',
+    accent: '#D99C4A',
   },
   DEVIATION: {
     label: 'DEVIATION',
-    pill: 'border-fuchsia-500/25 bg-fuchsia-500/10 text-fuchsia-300 font-medium',
-    dot: 'bg-fuchsia-400',
-    border: 'border-fuchsia-500/20',
-    accent: '#E879F9',
+    pill: 'border-ve-red/25 bg-ve-red/10 text-ve-red font-medium',
+    dot: 'bg-ve-red',
+    border: 'border-ve-red/25',
+    accent: '#D96359',
   },
   // Compatibility mappings
   INJURY: {
     label: 'PITCHER',
-    pill: 'border-rose-500/25 bg-rose-500/10 text-rose-400 font-medium',
-    dot: 'bg-rose-400',
-    border: 'border-rose-500/20',
-    accent: '#FB7185',
+    pill: 'border-ve-red/25 bg-ve-red/10 text-ve-red font-medium',
+    dot: 'bg-ve-red',
+    border: 'border-ve-red/25',
+    accent: '#D96359',
   },
   ROSTER: {
     label: 'LINEUP',
-    pill: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400 font-medium',
-    dot: 'bg-emerald-400',
-    border: 'border-emerald-500/20',
-    accent: '#34D399',
+    pill: 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald font-medium',
+    dot: 'bg-ve-emerald',
+    border: 'border-ve-emerald/25',
+    accent: '#31B583',
   },
   ALERT: {
     label: 'DEVIATION',
-    pill: 'border-amber-500/25 bg-amber-500/10 text-amber-300 font-medium',
-    dot: 'bg-amber-400',
-    border: 'border-amber-500/20',
-    accent: '#FBBF24',
+    pill: 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber font-medium',
+    dot: 'bg-ve-amber',
+    border: 'border-ve-amber/25',
+    accent: '#D99C4A',
   },
   NEWS: {
     label: 'LINEUP',
-    pill: 'border-white/[0.08] bg-white/[0.04] text-zinc-300 font-medium',
-    dot: 'bg-zinc-400',
+    pill: 'border-white/[0.08] bg-white/[0.04] text-white/70 font-medium',
+    dot: 'bg-white/40',
     border: 'border-white/[0.08]',
-    accent: '#A1A1AA',
+    accent: 'rgba(255,255,255,0.55)',
   },
 };
 

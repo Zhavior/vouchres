@@ -14,6 +14,3 @@ export type { PricingSectionProps } from "./PricingSection";
 export { default as FAQSection } from "./FAQSection";
 export { default as CTASection } from "./CTASection";
 export type { CTASectionProps } from "./CTASection";
-export { default as FooterSection } from "./FooterSection";
-export type {
-} from "./FooterSection";

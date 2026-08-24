@@ -4,6 +4,7 @@ import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, tod
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { getLiveGames } from "../services/mlb/liveGamesService";
 import { getMlbNewsArticle, getMlbNewsWire } from "../services/mlb/mlbNewsService";
+import { getMlbInjuries } from "../services/mlb/mlbInjuryService";
 import { TTL } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
@@ -63,7 +64,7 @@ export function registerMlbRoutes(app: Express): void {
   app.get("/api/mlb/news", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const wire = await getMlbNewsWire();
     // Matches the service's 5-minute TTL; public because the wire carries no
-    // per-user data and every phone on the slate wants the same six stories.
+    // per-user data and every client wants the same stories.
     res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     return res.json(apiOkFlat(req, wire as unknown as Record<string, unknown>));
   }));
@@ -86,6 +87,20 @@ export function registerMlbRoutes(app: Express): void {
     // Published stories do not change; cache them harder than the wire itself.
     res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
     return res.json(apiOkFlat(req, article as unknown as Record<string, unknown>));
+  }));
+
+  /**
+   * League-wide injury report — every club's IL and day-to-day designations.
+   *
+   * Separate from the wire on purpose: these records carry a team abbreviation
+   * and a position next to the player name, so they can be joined against the
+   * slate. Wire mentions carry ESPN athlete ids, which are not MLBAM ids and
+   * are never safe to join.
+   */
+  app.get("/api/mlb/injuries", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const report = await getMlbInjuries();
+    res.setHeader("Cache-Control", "public, max-age=600, stale-while-revalidate=1800");
+    return res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
   }));
 
   app.get("/api/mlb/live", mlbReadLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {

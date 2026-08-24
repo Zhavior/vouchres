@@ -35,13 +35,19 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40,
 
   return (
     <div
-      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/40 shadow-[0_0_0_1px_rgba(0,240,255,0.12),0_2px_8px_rgba(0,0,0,0.45)]"
+      /*
+       * The ring was rgba(0,240,255) — the legacy #00F0FF neon that index.css
+       * removed for hue drift. This component is imported by 55 files, so that
+       * one literal was tinting every headshot in the product. Now a plain
+       * hairline, matching the desk surfaces it sits on.
+       */
+      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.12] bg-white/[0.04] shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
       style={dim}
       aria-label={name || 'Player'}
     >
       {/* Initials sit underneath so they show instantly and on image failure. */}
       <span
-        className="select-none font-black uppercase tracking-tight text-white/70"
+        className="select-none font-bold uppercase tracking-tight text-white/70"
         style={{ fontSize: Math.max(10, Math.round(size * 0.34)) }}
       >
         {initials}

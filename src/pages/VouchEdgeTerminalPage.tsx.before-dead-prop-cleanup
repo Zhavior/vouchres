@@ -1,0 +1,113 @@
+import { Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { SIGNED_IN_HOME } from '../app/sectionNavigation';
+import VouchEdgeLandingV3 from './VouchEdgeLandingV3';
+import { lazyWithRetry } from '../lib/lazyWithRetry';
+
+type AuthMode = 'login' | 'signup';
+type SignupPlan = 'free' | 'pro';
+
+const AuthModal = lazyWithRetry(() => import('../components/auth/AuthModal'), { label: 'AuthModal' });
+
+function authModeFromPath(): AuthMode | null {
+  if (typeof window === 'undefined') return null;
+  const path = window.location.pathname.toLowerCase();
+  if (path === '/login' || path === '/signin') return 'login';
+  if (path === '/signup' || path === '/join') return 'signup';
+  return null;
+}
+
+function scrollToSection(id: string) {
+  window.requestAnimationFrame(() => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function rememberAfterAuthDestination(destination = SIGNED_IN_HOME) {
+  try {
+    localStorage.setItem('vouchedge_after_auth_destination', destination);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
+  const initialMode = authModeFromPath();
+  const [authOpen, setAuthOpen] = useState(Boolean(initialMode));
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode ?? 'signup');
+  const [authPlan, setAuthPlan] = useState<SignupPlan>(initialMode === 'login' ? 'free' : 'pro');
+
+  const syncAuthPath = useCallback(() => {
+    const mode = authModeFromPath();
+    setAuthOpen(Boolean(mode));
+    if (mode) setAuthMode(mode);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('popstate', syncAuthPath);
+    return () => window.removeEventListener('popstate', syncAuthPath);
+  }, [syncAuthPath]);
+
+  useLayoutEffect(() => {
+    // The product shell uses #inner-view-slot as its desktop scrollport. The
+    // public landing deliberately does not: its sticky chapters must resolve
+    // against the document viewport. Scope that contract to this route so a
+    // future shell overflow rule cannot turn a non-scrolling ancestor into the
+    // sticky containing block and strand the page at one viewport.
+    document.documentElement.classList.add('ve-public-landing-scroll');
+    document.body.classList.add('ve-public-landing-scroll');
+
+    return () => {
+      document.documentElement.classList.remove('ve-public-landing-scroll');
+      document.body.classList.remove('ve-public-landing-scroll');
+    };
+  }, []);
+
+  const openAuth = useCallback((mode: AuthMode, plan: SignupPlan = 'free') => {
+    if (mode === 'signup') {
+      rememberAfterAuthDestination(SIGNED_IN_HOME);
+    }
+    setAuthMode(mode);
+    setAuthPlan(plan);
+    setAuthOpen(true);
+    const nextPath = mode === 'login' ? '/login' : '/signup';
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({ vouchedgeAuthOverlay: true }, '', nextPath);
+    }
+  }, []);
+
+  const closeAuth = useCallback(() => {
+    setAuthOpen(false);
+    if (!authModeFromPath()) return;
+    if (window.history.state?.vouchedgeAuthOverlay) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState(null, '', '/');
+  }, []);
+
+  return (
+    <>
+      <VouchEdgeLandingV3
+        onLogin={() => openAuth('login')}
+        onJoinBeta={() => openAuth('signup', 'pro')}
+        onViewDemo={() => scrollToSection('record')}
+        onExploreCommunity={() => openAuth('signup', 'free')}
+      />
+
+      {authOpen && (
+        <Suspense fallback={null}>
+          <AuthModal
+            open
+            initialMode={authMode}
+            initialPlan={authPlan}
+            onClose={closeAuth}
+            onAuthed={() => {
+              closeAuth();
+              onAuthed?.();
+            }}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+}

@@ -53,6 +53,52 @@ import './news-hub.css';
 
 type ActiveFeedTab = 'ALL' | 'BLOG' | 'TACTICAL' | 'LINEUP' | 'PITCHER' | 'WEATHER' | 'DEVIATION';
 
+const FEED_TABS: ActiveFeedTab[] = ['ALL', 'BLOG', 'TACTICAL', 'LINEUP', 'PITCHER', 'WEATHER', 'DEVIATION'];
+
+const TAB_LABELS: Record<ActiveFeedTab, string> = {
+  ALL: 'ALL',
+  BLOG: 'ENGINEERING BLOG',
+  TACTICAL: 'WIRE DISPATCHES',
+  LINEUP: 'LINEUP',
+  PITCHER: 'PITCHER',
+  WEATHER: 'WEATHER',
+  DEVIATION: 'DEVIATION',
+};
+
+/**
+ * Category tone, mapped onto the registered ve-* tokens.
+ *
+ * `CATEGORY_STYLES` in newsWireFormat stays as-is — it is Today's own palette
+ * and three Today surfaces render from it. This local map keeps the News Wire
+ * internally consistent without repainting another page.
+ */
+const CATEGORY_TONE: Record<string, { pill: string; text: string; bar: string }> = {
+  LINEUP: { pill: 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald', text: 'text-ve-emerald', bar: '#31B583' },
+  PITCHER: { pill: 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan', text: 'text-ve-cyan', bar: '#4FB8DC' },
+  WEATHER: { pill: 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber', text: 'text-ve-amber', bar: '#D99C4A' },
+  DEVIATION: { pill: 'border-ve-red/25 bg-ve-red/10 text-ve-red', text: 'text-ve-red', bar: '#D96359' },
+};
+
+const NEUTRAL_TONE = {
+  pill: 'border-white/[0.08] bg-white/[0.04] text-white/55',
+  text: 'text-white/55',
+  bar: '#A1A1AA',
+};
+
+function toneFor(category: string) {
+  return CATEGORY_TONE[category] ?? NEUTRAL_TONE;
+}
+
+/**
+ * Blog dates arrive as display strings ("Mar 4, 2026"); wire items arrive as
+ * ISO. The stream previously printed raw `publishedAt` in the lead card, so a
+ * featured wire story rendered a full ISO timestamp.
+ */
+function displayTime(value: string): string {
+  const relative = relativeTime(value);
+  return relative || value;
+}
+
 export interface NewsHubPageProps {
   navigateSection?: (section: string) => void;
   initialSlug?: string;
@@ -69,6 +115,7 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
     return null;
   });
   const [copiedLink, setCopiedLink] = useState(false);
+  const searchRef = React.useRef<HTMLInputElement>(null);
 
   // Live Slate & Intel Feeds
   const reportQuery = useDailyReport();
@@ -108,8 +155,9 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
     });
   };
 
-  // Combine Blog Posts & Tactical Wire Stories into an ESPN-level unified stream
-  const unifiedItems = useMemo(() => {
+  // Blog posts + tactical wire stories, unified into one stream. Filtering is
+  // layered on below so tab counts can be computed from the same pool.
+  const allItems = useMemo(() => {
     type UnifiedEntry = {
       type: 'BLOG' | 'WIRE';
       id: string;
@@ -152,41 +200,117 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
       };
     });
 
-    // Interleave or sort
-    let all = [...blogEntries, ...wireEntries];
+    return [...blogEntries, ...wireEntries];
+  }, [wireItems]);
 
-    // Filter by tab
-    if (activeTab === 'BLOG') {
-      all = all.filter((i) => i.type === 'BLOG');
-    } else if (activeTab === 'TACTICAL') {
-      all = all.filter((i) => i.type === 'WIRE');
-    } else if (activeTab !== 'ALL') {
-      all = all.filter((i) => i.category === activeTab);
+  /** Tab predicate, shared by the rendered feed and the per-tab counts. */
+  const matchesTab = React.useCallback((item: { type: string; category: string }, tab: ActiveFeedTab) => {
+    if (tab === 'ALL') return true;
+    if (tab === 'BLOG') return item.type === 'BLOG';
+    if (tab === 'TACTICAL') return item.type === 'WIRE';
+    return item.category === tab;
+  }, []);
+
+  const searchedItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return allItems;
+    return allItems.filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.summary.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q)
+    );
+  }, [allItems, searchQuery]);
+
+  const unifiedItems = useMemo(
+    () => searchedItems.filter((i) => matchesTab(i, activeTab)),
+    [searchedItems, activeTab, matchesTab]
+  );
+
+  /** Counts reflect the active search, so a tab never advertises hidden rows. */
+  const tabCounts = useMemo(() => {
+    const counts = {} as Record<ActiveFeedTab, number>;
+    for (const tab of FEED_TABS) {
+      counts[tab] = searchedItems.filter((i) => matchesTab(i, tab)).length;
     }
+    return counts;
+  }, [searchedItems, matchesTab]);
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      all = all.filter(
-        (i) =>
-          i.title.toLowerCase().includes(q) ||
-          i.summary.toLowerCase().includes(q) ||
-          i.category.toLowerCase().includes(q)
-      );
-    }
-
-    return all;
-  }, [wireItems, activeTab, searchQuery]);
+  const wireCount = allItems.filter((i) => i.type === 'WIRE').length;
+  const blogCount = allItems.filter((i) => i.type === 'BLOG').length;
 
   const featuredItem = unifiedItems[0];
   const secondaryItems = unifiedItems.slice(1, 5);
   const streamItems = unifiedItems.slice(5);
 
   const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    // `navigator.clipboard` is undefined on insecure origins; the badge should
+    // not flip to COPIED when nothing was written.
+    void navigator.clipboard?.writeText(url).then(
+      () => {
+        setCopiedLink(true);
+        window.setTimeout(() => setCopiedLink(false), 2000);
+      },
+      () => undefined,
+    );
   };
+
+  const openItem = React.useCallback((item: { type: string; blogData?: BlogPost; wireData?: MlbNewsItem }) => {
+    if (item.type === 'BLOG' && item.blogData) {
+      setSelectedBlogPost(item.blogData);
+    } else if (item.wireData) {
+      setSelectedWireStory(item.wireData);
+    }
+  }, []);
+
+  /*
+   * Desk keybindings, matching Today and Live Games: `/` focuses search, Escape
+   * steps back out (modal → article → search), and the modal's own "CLOSE [ESC]"
+   * label previously had no handler behind it at all.
+   */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const editing = tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+
+      if (e.key === 'Escape') {
+        if (editing) {
+          (target as HTMLElement).blur();
+          return;
+        }
+        if (selectedWireStory) {
+          setSelectedWireStory(null);
+        } else if (selectedBlogPost) {
+          setSelectedBlogPost(null);
+        } else if (searchQuery) {
+          setSearchQuery('');
+        }
+        return;
+      }
+
+      if (editing) return;
+
+      if (e.key === '/') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedWireStory, selectedBlogPost, searchQuery]);
+
+  /* Lock the page behind the wire modal so the feed does not scroll under it. */
+  useEffect(() => {
+    if (!selectedWireStory) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [selectedWireStory]);
 
   // If a blog post is selected, render the ESPN Long-form Article Reader with Comments
   if (selectedBlogPost) {
@@ -194,25 +318,24 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
     return (
       <div className="news-hub-root min-h-screen font-sans pb-24">
         {/* Top Sticky Navigation Bar */}
-        <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#0A0A0C]/95 backdrop-blur-xl px-4 py-3 sm:px-8 font-mono">
-          <div className="mx-auto flex max-w-5xl items-center justify-between">
+        <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3 backdrop-blur-md sm:px-8 font-mono">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setSelectedBlogPost(null)}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer"
+              className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-white/55 transition-colors hover:text-white cursor-pointer"
             >
-              <span>← RETURN TO NEWS WIRE</span>
+              <span>← Return to news wire</span>
+              <kbd className="text-[9px] text-white/30">[ESC]</kbd>
             </button>
-            <div className="flex items-center gap-3 text-xs">
-              <button
-                type="button"
-                onClick={() => handleCopy(window.location.href)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-zinc-300 hover:text-white transition cursor-pointer"
-              >
-                <Copy className="h-3 w-3" />
-                <span>{copiedLink ? 'COPIED' : 'SHARE'}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleCopy(window.location.href)}
+              className="news-control inline-flex items-center gap-1.5 px-2.5 py-1 text-xs cursor-pointer"
+            >
+              <Copy className="h-3 w-3 text-ve-cyan" />
+              <span className="font-medium">{copiedLink ? 'COPIED' : 'SHARE'}</span>
+            </button>
           </div>
         </header>
 
@@ -220,58 +343,58 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
         <main className="mx-auto max-w-4xl px-4 pt-8 sm:px-6">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2 font-mono text-[10px]">
-              <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-bold text-cyan-300 uppercase">
+              <span className="border border-ve-cyan/25 bg-ve-cyan/10 px-2.5 py-1 font-medium uppercase tracking-wider text-ve-cyan">
                 {selectedBlogPost.tag}
               </span>
-              <span className="text-zinc-500">·</span>
-              <span className="text-zinc-400 font-medium">{selectedBlogPost.date}</span>
-              <span className="text-zinc-500">·</span>
-              <span className="text-zinc-400 font-medium">{selectedBlogPost.readTime}</span>
-              <span className="text-zinc-500">·</span>
-              <span className="text-emerald-400 flex items-center gap-1">
+              <span className="text-white/20">·</span>
+              <span className="font-medium text-white/55">{selectedBlogPost.date}</span>
+              <span className="text-white/20">·</span>
+              <span className="font-medium text-white/55">{selectedBlogPost.readTime}</span>
+              <span className="text-white/20">·</span>
+              <span className="flex items-center gap-1 text-ve-emerald">
                 <MessageSquare className="h-3 w-3" /> {articleCommentsCount} COMMENTS
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight font-sans">
               {selectedBlogPost.title}
             </h1>
 
             {/* Author Byline Plate */}
             <div className="flex items-center justify-between border-y border-white/[0.08] py-3.5 my-6 font-mono">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full border border-cyan-400/40 bg-gradient-to-tr from-cyan-900/60 to-emerald-900/60 flex items-center justify-center font-bold text-cyan-300">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-ve-cyan/25 bg-ve-cyan/10 text-xs font-semibold text-ve-cyan">
                   {selectedBlogPost.author.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <strong className="text-xs font-bold text-white font-sans">{selectedBlogPost.author}</strong>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400" />
+                    <strong className="text-xs font-semibold text-white font-sans">{selectedBlogPost.author}</strong>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-ve-cyan" />
                   </div>
-                  <p className="text-[10px] text-zinc-400">{selectedBlogPost.authorRole}</p>
+                  <p className="text-[10px] text-white/40">{selectedBlogPost.authorRole}</p>
                 </div>
               </div>
 
               <div className="hidden sm:flex items-center gap-2">
-                <span className="border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[9px] font-mono text-zinc-400 rounded">
+                <span className="border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider text-white/40">
                   TRANSMISSION ID #{selectedBlogPost.id.padStart(4, '0')}
                 </span>
               </div>
             </div>
 
             {/* Key Takeaway Callout Box */}
-            <div className="rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-4 sm:p-5 font-mono space-y-1.5 shadow-lg">
-              <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
+            <div className="border border-ve-cyan/25 bg-ve-cyan/[0.06] p-4 sm:p-5 font-mono space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-ve-cyan">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>EXECUTIVE QUANTITATIVE SUMMARY</span>
+                <span>Executive quantitative summary</span>
               </div>
-              <p className="text-xs sm:text-sm text-cyan-100 font-sans leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
                 {selectedBlogPost.keyTakeaway}
               </p>
             </div>
 
             {/* Markdown Body Content */}
-            <article className="prose prose-invert prose-emerald max-w-none pt-6 text-zinc-200 text-sm sm:text-base leading-relaxed font-sans space-y-4">
+            <article className="prose prose-invert max-w-none pt-6 text-white/75 text-sm sm:text-base leading-relaxed font-sans space-y-4">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {selectedBlogPost.content}
               </ReactMarkdown>
@@ -291,157 +414,210 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
 
   return (
     <div className="news-hub-root min-h-screen font-sans pb-24">
-      {/* 1. ESPN-STYLE TOP BREAKING NEWS BANNER WITH GLINT ANIMATION */}
-      <div className="news-ticker-bar sticky top-0 z-30 px-4 py-2.5 sm:px-8 font-mono">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      {/* 1. PINNED HUD TELEMETRY TOP BAR */}
+      <header className="sticky top-0 z-30 space-y-3 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3 backdrop-blur-md sm:px-8 font-mono">
+        <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-            </span>
-            <span className="text-xs font-black uppercase tracking-widest text-white">
-              VOUCHEDGE NEWS WIRE
-            </span>
-            <span className="hidden sm:inline text-zinc-600">|</span>
-            <span className="hidden sm:inline text-[10px] text-emerald-400 font-medium">
-              LIVE MLB TELEMETRY · EDITORIAL TRANSMISSIONS · PEER DISCUSSIONS
-            </span>
+            <span className="news-live-dot" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.24em] text-white">
+                  VOUCHEDGE // NEWS WIRE
+                </h1>
+                <span className="hidden sm:inline text-white/30">|</span>
+                <span className="hidden sm:inline text-[10px] font-medium text-ve-emerald">
+                  STAGE: 03 / INTEL TRANSMISSIONS
+                </span>
+              </div>
+              <p className="mt-0.5 text-[9px] uppercase text-white/40">
+                ENGINE: MLB_WIRE + EDITORIAL · {wireCount} DISPATCHES · {blogCount} BRIEFS
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider ${
+                isWireLoading
+                  ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
+                  : wireCount > 0
+                    ? 'border-ve-emerald/25 bg-ve-emerald/10 text-ve-emerald'
+                    : 'border-ve-amber/25 bg-ve-amber/10 text-ve-amber'
+              }`}
+            >
+              <ShieldCheck className="h-3 w-3" />
+              {isWireLoading ? 'SYNCING WIRE' : wireCount > 0 ? 'WIRE VERIFIED' : 'WIRE QUIET'}
+            </span>
+
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
               <input
+                ref={searchRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search intel, players, models..."
-                className="h-8 w-40 sm:w-64 rounded-lg border border-white/[0.10] bg-[#111113] pl-8 pr-3 text-xs text-white placeholder-zinc-500 outline-none focus:border-emerald-400/50"
+                placeholder="Search intel, players, models…"
+                aria-label="Search the news wire"
+                className="h-8 w-44 border border-white/[0.08] bg-white/[0.04] pl-8 pr-9 text-xs text-white placeholder-white/30 outline-none transition-colors focus:border-white/30 focus:bg-white/[0.06] sm:w-64"
               />
+              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-white/30">
+                [/]
+              </kbd>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 2. CATEGORY FILTER RAIL (AUTHENTIC MACHINED SURFACE TABS WITH ANIMATION) */}
-      <div className="border-b border-white/[0.06] bg-[#0D0D10] px-4 py-2 sm:px-8 font-mono overflow-x-auto tn-scrollbar-none">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 shrink-0">
-          {(['ALL', 'BLOG', 'TACTICAL', 'LINEUP', 'PITCHER', 'WEATHER', 'DEVIATION'] as ActiveFeedTab[]).map((tab) => (
+        {/* 2. CATEGORY FILTER RAIL */}
+        <div
+          className="mx-auto flex max-w-[1380px] items-center gap-2 overflow-x-auto border-t border-white/[0.06] pt-2.5 tn-scrollbar-none"
+          role="toolbar"
+          aria-label="News category filters"
+        >
+          {FEED_TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
+              aria-pressed={activeTab === tab}
               className={`news-category-tab ${activeTab === tab ? 'news-category-tab--active' : ''}`}
             >
-              {tab === 'BLOG' ? 'ENGINEERING BLOG' : tab === 'TACTICAL' ? 'WIRE DISPATCHES' : tab}
+              <span>{TAB_LABELS[tab]}</span>
+              <span className="news-category-tab__count">{tabCounts[tab]}</span>
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
       {/* 3. MAIN CONTENT GRID (ESPN BENTO HERO + TOP WIRE STREAM + OP-ED FEED) */}
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-8 space-y-8">
+      <main className="mx-auto max-w-[1380px] px-4 py-6 sm:px-8 space-y-8">
+        {isWireLoading && allItems.length === 0 && <NewsWireSkeleton />}
+
+        {!isWireLoading && unifiedItems.length === 0 && (
+          <section className="border border-dashed border-white/[0.12] bg-white/[0.015] p-10 text-center">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white font-mono">
+              No transmissions match this filter
+            </p>
+            <p className="text-xs text-white/55 font-sans">
+              {searchQuery.trim()
+                ? `Nothing in the wire or the blog mentions "${searchQuery.trim()}".`
+                : 'The MLB wire has not published anything in this category yet.'}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 font-mono">
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="news-control px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider cursor-pointer"
+                >
+                  Clear search
+                </button>
+              )}
+              {activeTab !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ALL')}
+                  className="news-control px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider cursor-pointer"
+                >
+                  Show every transmission
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
         {featuredItem && (
           <section className="grid gap-6 lg:grid-cols-12 items-start" aria-label="Lead Story">
             {/* BIG LEAD HERO CARD (7 COLUMNS) */}
-            <div
-              onClick={() => {
-                if (featuredItem.type === 'BLOG' && featuredItem.blogData) {
-                  setSelectedBlogPost(featuredItem.blogData);
-                } else if (featuredItem.wireData) {
-                  setSelectedWireStory(featuredItem.wireData);
-                }
-              }}
-              className="news-bento-card group lg:col-span-7 relative flex flex-col justify-between rounded-2xl overflow-hidden cursor-pointer shadow-2xl min-h-[380px]"
+            <button
+              type="button"
+              onClick={() => openItem(featuredItem)}
+              className="news-card group lg:col-span-7 relative flex flex-col justify-between overflow-hidden min-h-[380px]"
             >
-              <div className="relative h-64 sm:h-80 w-full bg-zinc-950 overflow-hidden">
+              <div className="relative h-64 w-full overflow-hidden bg-white/[0.03] sm:h-80">
                 <img
                   src={featuredItem.image || getCyberFallbackImage('LINEUP')}
                   alt=""
-                  className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500 brightness-90"
+                  className="h-full w-full object-cover object-center brightness-[0.85] transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#111113] via-black/40 to-transparent" />
-                <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <span className="rounded-md border border-emerald-500/30 bg-black/80 px-2.5 py-1 text-[9px] font-mono font-bold text-emerald-300 uppercase backdrop-blur-md">
-                    FEATURED {featuredItem.type}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                <div className="absolute left-3 top-3 flex items-center gap-2 font-mono">
+                  <span className="border border-ve-emerald/25 bg-[#050505]/85 px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider text-ve-emerald backdrop-blur-md">
+                    Featured {featuredItem.type}
                   </span>
-                  <span className="rounded-md border border-white/15 bg-black/80 px-2.5 py-1 text-[9px] font-mono text-zinc-300 backdrop-blur-md">
+                  <span className={`border bg-[#050505]/85 px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider backdrop-blur-md ${toneFor(featuredItem.category).pill}`}>
                     {featuredItem.category}
                   </span>
                 </div>
               </div>
 
-              <div className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-400">
-                  <span>{featuredItem.author}</span>
-                  <span>·</span>
-                  <span>{featuredItem.publishedAt}</span>
-                  <span>·</span>
-                  <span className="text-emerald-400">{featuredItem.readTime}</span>
+              <div className="space-y-3 p-5 sm:p-6">
+                <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-white/40">
+                  <span className="truncate">{featuredItem.author}</span>
+                  <span className="text-white/20">·</span>
+                  <span>{displayTime(featuredItem.publishedAt)}</span>
+                  <span className="text-white/20">·</span>
+                  <span className="text-ve-emerald">{featuredItem.readTime}</span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-black text-white group-hover:text-emerald-300 transition leading-snug">
+                <h2 className="text-xl font-bold leading-snug tracking-tight text-white transition-colors group-hover:text-ve-emerald sm:text-2xl font-sans">
                   {featuredItem.title}
                 </h2>
 
-                <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 leading-relaxed font-sans">
+                <p className="line-clamp-3 text-xs leading-relaxed text-white/55 font-sans sm:text-sm">
                   {featuredItem.summary}
                 </p>
 
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
-                  <span className="text-emerald-400 font-bold flex items-center gap-1 group-hover:underline">
-                    READ FULL DISPATCH &amp; AUDIT <ArrowRight className="h-3.5 w-3.5" />
+                <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] pt-3 font-mono text-xs">
+                  <span className="flex items-center gap-1 font-medium text-ve-emerald group-hover:underline">
+                    Read full dispatch <ArrowRight className="h-3.5 w-3.5" />
                   </span>
-                  <span className="text-zinc-500 text-[10px]">VERIFIED DISPATCH</span>
+                  <span className="text-[10px] uppercase tracking-wider text-white/30">Verified dispatch</span>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* TOP 4 CURATED DISPATCHES (5 COLUMNS) */}
             <div className="lg:col-span-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-2 font-mono">
-                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-                  TOP ANALYTICAL DISPATCHES
+              <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] pb-2 font-mono">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+                  Top analytical dispatches
                 </span>
-                <span className="text-[9px] text-zinc-500 uppercase">REAL-TIME</span>
+                <span className="text-[9px] uppercase tracking-wider text-white/30">Real-time</span>
               </div>
 
               <div className="space-y-3">
                 {secondaryItems.map((item) => (
-                  <div
+                  <button
                     key={item.id}
-                    onClick={() => {
-                      if (item.type === 'BLOG' && item.blogData) {
-                        setSelectedBlogPost(item.blogData);
-                      } else if (item.wireData) {
-                        setSelectedWireStory(item.wireData);
-                      }
-                    }}
-                    className="news-bento-card group flex gap-3 rounded-xl p-3 cursor-pointer"
+                    type="button"
+                    onClick={() => openItem(item)}
+                    className="news-card group flex w-full gap-3 p-3"
                   >
                     {item.image && (
-                      <div className="h-20 w-24 shrink-0 rounded-lg overflow-hidden bg-zinc-900 border border-white/[0.06]">
+                      <div className="h-20 w-24 shrink-0 overflow-hidden border border-white/[0.06] bg-white/[0.03]">
                         <img
                           src={item.image}
                           alt=""
-                          className="h-full w-full object-cover group-hover:scale-105 transition"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
                         />
                       </div>
                     )}
-                    <div className="min-w-0 flex-1 flex flex-col justify-between space-y-1">
-                      <div className="flex items-center gap-1.5 font-mono text-[8px] text-zinc-400">
-                        <span className="text-emerald-400 font-bold">{item.category}</span>
-                        <span>·</span>
-                        <span>{relativeTime(item.publishedAt)}</span>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between space-y-1">
+                      <div className="flex items-center gap-1.5 font-mono text-[9px] text-white/40">
+                        <span className={`font-medium uppercase tracking-wider ${toneFor(item.category).text}`}>
+                          {item.category}
+                        </span>
+                        <span className="text-white/20">·</span>
+                        <span>{displayTime(item.publishedAt)}</span>
                       </div>
-                      <h3 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-emerald-300 transition">
+                      <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-white transition-colors group-hover:text-ve-emerald sm:text-sm font-sans">
                         {item.title}
                       </h3>
-                      <span className="text-[9px] font-mono text-zinc-500 flex items-center gap-1">
-                        Read Story →
+                      <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-white/30">
+                        Read story →
                       </span>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -449,52 +625,49 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
         )}
 
         {/* 4. CHRONOLOGICAL DISPATCH STREAM & OP-ED VAULT */}
-        <section className="space-y-4 pt-6 border-t border-white/[0.08]">
-          <div className="flex items-center justify-between font-mono pb-2 border-b border-white/[0.06]">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-              ALL NEWS TRANSMISSIONS &amp; INTEL LOGS ({unifiedItems.length})
-            </h3>
-            <span className="text-[10px] text-zinc-500 uppercase">CHRONOLOGICAL FEED</span>
-          </div>
+        {streamItems.length > 0 && (
+          <section className="space-y-4 border-t border-white/[0.08] pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-2 font-mono">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+                All transmissions ({unifiedItems.length})
+              </h3>
+              <span className="text-[9px] uppercase tracking-wider text-white/30">Chronological feed</span>
+            </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {streamItems.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
-                  if (item.type === 'BLOG' && item.blogData) {
-                    setSelectedBlogPost(item.blogData);
-                  } else if (item.wireData) {
-                    setSelectedWireStory(item.wireData);
-                  }
-                }}
-                className="news-bento-card group flex flex-col justify-between rounded-xl p-4 cursor-pointer shadow-md space-y-3"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between font-mono text-[9px]">
-                    <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-400 uppercase">
-                      {item.category}
-                    </span>
-                    <span className="text-zinc-500">{relativeTime(item.publishedAt)}</span>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {streamItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => openItem(item)}
+                  className="news-card group flex flex-col justify-between gap-3 p-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2 font-mono text-[9px]">
+                      <span className={`border px-1.5 py-0.5 font-medium uppercase tracking-wider ${toneFor(item.category).pill}`}>
+                        {item.category}
+                      </span>
+                      <span className="text-white/30">{displayTime(item.publishedAt)}</span>
+                    </div>
+
+                    <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-ve-emerald font-sans">
+                      {item.title}
+                    </h4>
+
+                    <p className="line-clamp-3 text-xs leading-relaxed text-white/55 font-sans">
+                      {item.summary}
+                    </p>
                   </div>
 
-                  <h4 className="text-sm font-bold text-white group-hover:text-emerald-300 transition leading-snug line-clamp-2">
-                    {item.title}
-                  </h4>
-
-                  <p className="text-xs text-zinc-400 font-sans line-clamp-3 leading-relaxed">
-                    {item.summary}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between font-mono text-[10px]">
-                  <span className="text-zinc-500 truncate max-w-[150px]">{item.author}</span>
-                  <span className="text-emerald-400 font-bold">INSPECT →</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+                  <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] pt-3 font-mono text-[10px]">
+                    <span className="max-w-[150px] truncate text-white/30">{item.author}</span>
+                    <span className="font-medium text-ve-emerald">Inspect →</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* 5. WIRE STORY MODAL READER WITH ANIMATED STATCAST BARS & PEER COMMENTS */}
@@ -512,18 +685,75 @@ export function NewsHubPage({ navigateSection, initialSlug }: NewsHubPageProps) 
   );
 }
 
+/**
+ * Feed skeleton. The wire query used to render nothing at all while loading, so
+ * the hero and the stream popped in separately once it resolved; this holds the
+ * final geometry from the first paint.
+ */
+function NewsWireSkeleton() {
+  return (
+    <div className="space-y-8" aria-hidden="true">
+      <section className="grid items-start gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-7 border border-white/[0.08] bg-white/[0.015]">
+          <div className="news-skeleton h-64 w-full sm:h-80" />
+          <div className="space-y-3 p-5 sm:p-6">
+            <div className="news-skeleton h-3 w-48" />
+            <div className="news-skeleton h-6 w-full" />
+            <div className="news-skeleton h-6 w-4/5" />
+            <div className="news-skeleton h-3 w-full" />
+            <div className="news-skeleton h-3 w-2/3" />
+          </div>
+        </div>
+
+        <div className="space-y-3 lg:col-span-5">
+          <div className="news-skeleton h-3 w-44" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3 border border-white/[0.08] bg-white/[0.015] p-3">
+              <div className="news-skeleton h-20 w-24 shrink-0" />
+              <div className="flex-1 space-y-2 py-1">
+                <div className="news-skeleton h-2.5 w-24" />
+                <div className="news-skeleton h-3.5 w-full" />
+                <div className="news-skeleton h-3.5 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4 border-t border-white/[0.08] pt-6">
+        <div className="news-skeleton h-3 w-52" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="space-y-2 border border-white/[0.08] bg-white/[0.015] p-4">
+              <div className="news-skeleton h-3 w-20" />
+              <div className="news-skeleton h-4 w-full" />
+              <div className="news-skeleton h-3 w-full" />
+              <div className="news-skeleton h-3 w-5/6" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StatcastGaugeBar({ label, value, color }: { label: string; value: number; color: string }) {
+  const clamped = Math.min(100, Math.max(8, value));
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[10px] font-mono">
-        <span className="text-zinc-400 uppercase">{label}</span>
-        <span className="font-bold tabular-nums text-white">{value}%</span>
+        <span className="uppercase tracking-wider text-white/40">{label}</span>
+        <span className="font-semibold tabular-nums text-white">{value}%</span>
       </div>
-      <div className="news-metric-bar">
-        <div 
-          className="news-metric-bar__fill" 
-          style={{ width: `${Math.min(100, Math.max(8, value))}%`, backgroundColor: color }}
-        />
+      <div
+        className="news-metric-bar"
+        role="meter"
+        aria-label={label}
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div className="news-metric-bar__fill" style={{ width: `${clamped}%`, backgroundColor: color }} />
       </div>
     </div>
   );
@@ -547,67 +777,70 @@ function WireModalStoryReader({
   const { paragraphs, image, isLoadingBody } = useMlbNewsArticle(story);
   const cat = classifyTacticalNews(story);
   const style = CATEGORY_STYLES[cat];
+  const tone = toneFor(cat);
   const matchedPlayers = resolveMentions(story, slateIndex, paragraphs);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md font-mono animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md font-mono animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col border border-white/[0.12] bg-[#111113] text-[#F4F4F5] rounded-2xl shadow-2xl overflow-hidden"
+        className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden border border-white/[0.08] bg-[#050505] text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0A0A0C] px-4 sm:px-6 py-3.5">
-          <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 text-[9px] font-mono font-medium uppercase border rounded ${style.pill}`}>
+        <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] bg-[#050505]/95 px-4 py-3.5 backdrop-blur-md sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`border px-2 py-0.5 text-[9px] font-mono font-medium uppercase tracking-wider ${tone.pill}`}>
               {style.label}
             </span>
-            <span className="text-white text-xs font-bold">TACTICAL DISPATCH #{story.id.slice(-8)}</span>
+            <span className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+              Dispatch #{story.id.slice(-8)}
+            </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-zinc-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            className="news-control shrink-0 px-2.5 py-1 text-xs cursor-pointer"
           >
-            CLOSE [ESC]
+            <span className="font-medium">CLOSE</span> <kbd className="text-[9px] text-white/40">[ESC]</kbd>
           </button>
         </div>
 
         {/* Content Body */}
         <div className="overflow-y-auto p-4 sm:p-6 space-y-6">
-          <div className="relative h-48 sm:h-64 w-full rounded-xl overflow-hidden bg-zinc-950 border border-white/10">
+          <div className="relative h-48 w-full overflow-hidden border border-white/[0.08] bg-white/[0.03] sm:h-64">
             <img
               src={image?.url || story.image?.url || getCyberFallbackImage(cat)}
               alt=""
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover brightness-[0.85]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#111113] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-xl sm:text-2xl font-black text-white font-sans leading-tight">
+            <h2 className="text-xl font-bold leading-tight tracking-tight text-white font-sans sm:text-2xl">
               {story.headline}
             </h2>
-            <div className="flex items-center gap-2 text-[10px] text-zinc-400 border-b border-white/[0.08] pb-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] pb-3 text-[10px] text-white/40">
               <span>{story.publishedAt ? new Date(story.publishedAt).toLocaleString() : 'LIVE'}</span>
-              <span>·</span>
-              <span className="text-emerald-400 font-bold">{cat} INTEL</span>
+              <span className="text-white/20">·</span>
+              <span className={`font-medium uppercase tracking-wider ${tone.text}`}>{cat} intel</span>
             </div>
           </div>
 
           {/* ACTIVE SLATE HITTER BARS & METRICS (PRECISE QUANTITATIVE GAUGES WITH METALLIC ANIMATION) */}
           {matchedPlayers.length > 0 && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-emerald-300 font-bold flex items-center gap-1.5 font-mono">
-                  <Flame className="h-4 w-4 text-emerald-400" />
-                  ACTIVE SLATE HITTERS IN THIS DISPATCH ({matchedPlayers.length})
+            <div className="border border-ve-emerald/25 bg-ve-emerald/[0.06] p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ve-emerald">
+                  <Flame className="h-3.5 w-3.5 text-ve-amber" />
+                  Active slate hitters ({matchedPlayers.length})
                 </span>
-                <span className="text-[9px] text-zinc-400 font-mono">STATCAST RESOLVED</span>
+                <span className="font-mono text-[9px] uppercase tracking-wider text-white/30">Statcast resolved</span>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
@@ -619,12 +852,12 @@ function WireModalStoryReader({
                   return (
                     <div
                       key={player.stableId}
-                      className="rounded-xl border border-white/[0.10] bg-[#0E0E11] p-3 space-y-2.5 shadow-md"
+                      className="border border-white/[0.08] bg-white/[0.03] p-3 space-y-2.5"
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <strong className="text-white block font-sans font-bold text-xs">{player.playerName}</strong>
-                          <span className="text-[10px] text-zinc-400 font-mono">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <strong className="block truncate font-sans text-xs font-semibold text-white">{player.playerName}</strong>
+                          <span className="truncate font-mono text-[10px] text-white/40">
                             {player.team} vs {player.opponent}
                           </span>
                         </div>
@@ -632,17 +865,17 @@ function WireModalStoryReader({
                         <button
                           type="button"
                           onClick={() => onAddPlayer(player)}
-                          className="rounded-lg bg-emerald-400 px-2.5 py-1 text-[10px] font-bold text-black hover:bg-emerald-300 transition cursor-pointer flex items-center gap-1 shadow-sm"
+                          title={`Add ${player.playerName} Anytime HR to slip`}
+                          className="flex shrink-0 items-center gap-1 border border-ve-emerald/25 bg-ve-emerald/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-ve-emerald transition-colors hover:border-ve-emerald/40 hover:bg-ve-emerald/20 cursor-pointer"
                         >
-                          <Plus className="h-3 w-3" /> ADD SLIP
+                          <Plus className="h-3 w-3" /> Slip
                         </button>
                       </div>
 
-                      {/* 3 Physical Animated Gauges */}
-                      <div className="space-y-1.5 pt-1.5 border-t border-white/[0.06]">
-                        <StatcastGaugeBar label="Hitter Power" value={hitterPower} color="#34D399" />
-                        <StatcastGaugeBar label="Pitcher Vulnerability" value={pitcherVuln} color="#38BDF8" />
-                        <StatcastGaugeBar label="Park Boost" value={parkFactor} color="#FBBF24" />
+                      <div className="space-y-1.5 border-t border-white/[0.06] pt-1.5">
+                        <StatcastGaugeBar label="Hitter Power" value={hitterPower} color="#31B583" />
+                        <StatcastGaugeBar label="Pitcher Vulnerability" value={pitcherVuln} color="#4FB8DC" />
+                        <StatcastGaugeBar label="Park Boost" value={parkFactor} color="#D99C4A" />
                       </div>
                     </div>
                   );
@@ -652,14 +885,16 @@ function WireModalStoryReader({
           )}
 
           {/* Paragraphs */}
-          <div className="space-y-3 text-sm text-zinc-200 font-sans leading-relaxed">
+          <div className="space-y-3 font-sans text-sm leading-relaxed text-white/75">
             {paragraphs.map((p, idx) => (
               <p key={idx}>{p}</p>
             ))}
             {isLoadingBody && (
-              <p className="text-xs text-zinc-500 font-mono italic animate-pulse">
-                Fetching full dispatch body...
-              </p>
+              <div className="space-y-2" aria-label="Fetching full dispatch body">
+                <div className="news-skeleton h-3 w-full" />
+                <div className="news-skeleton h-3 w-full" />
+                <div className="news-skeleton h-3 w-4/5" />
+              </div>
             )}
           </div>
 

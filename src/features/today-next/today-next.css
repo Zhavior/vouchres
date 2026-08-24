@@ -13,23 +13,23 @@
   --ve-border-hover: rgba(255, 255, 255, 0.16);
 
   /* Functional Accents — Restrained & Desaturated */
-  --ve-accent-emerald: #34D399;
-  --ve-accent-emerald-dim: rgba(52, 211, 153, 0.12);
-  --ve-accent-rose: #FB7185;
-  --ve-accent-rose-dim: rgba(251, 113, 133, 0.12);
-  --ve-accent-sky: #38BDF8;
-  --ve-accent-sky-dim: rgba(56, 189, 248, 0.12);
-  --ve-accent-amber: #FBBF24;
-  --ve-accent-amber-dim: rgba(251, 191, 36, 0.12);
+  --ve-accent-emerald: #31B583;
+  --ve-accent-emerald-dim: rgba(49,181,131,0.12);
+  --ve-accent-rose: #D96359;
+  --ve-accent-rose-dim: rgba(217,99,89,0.12);
+  --ve-accent-sky: #4FB8DC;
+  --ve-accent-sky-dim: rgba(79,184,220,0.12);
+  --ve-accent-amber: #D99C4A;
+  --ve-accent-amber-dim: rgba(217,156,74,0.12);
 
   /* Material Layer Shadows */
-  --tn-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --tn-shadow-card-sm: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --tn-shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  --tn-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --tn-shadow-card-sm: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --tn-shadow-floating: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .today-next {
-  color: #F4F4F5;
+  color: #ffffff;
   background-color: var(--ve-bg-base);
 }
 
@@ -39,7 +39,7 @@
 
 .tn-skeleton {
   background-color: rgba(255, 255, 255, 0.06);
-  border-radius: 0.5rem;
+  border-radius: 0;
   position: relative;
   overflow: hidden;
 }
@@ -107,8 +107,8 @@
 /* Translucent Glass Pill CTA */
 .today-next .tn-cta-glass {
   background-color: rgba(52, 211, 153, 0.10);
-  color: #34D399;
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: #31B583;
+  border: 1px solid rgba(49,181,131,0.25);
   transition: background-color 120ms ease, border-color 120ms ease;
 }
 .today-next .tn-cta-glass:hover {
@@ -125,8 +125,8 @@
   display: inline-block;
   width: 6px;
   height: 6px;
-  background-color: #34D399;
-  border-radius: 50%;
+  background-color: #31B583;
+  border-radius: 0;
   flex-shrink: 0;
   box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
   animation: tn-live-pulse 1.8s ease-in-out infinite;
@@ -139,7 +139,7 @@
 
 /* Rose variant for in-progress games */
 .tn-live-dot--rose {
-  background-color: #FB7185;
+  background-color: #D96359;
   box-shadow: 0 0 8px rgba(251, 113, 133, 0.6);
   animation: tn-live-pulse-rose 1.8s ease-in-out infinite;
 }
@@ -218,4 +218,21 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #71717A;
+}
+
+/* ============================================================
+   HORIZONTAL SCROLLER CHROME
+   ============================================================
+   Every mobile carousel already carried `tn-scrollbar-none`, but the rule was
+   never written — so each region rendered a native scrollbar bar beneath it and
+   the lower half read as a stack of identical scrollers. This hides the chrome
+   only: overflow, touch panning, snapping and keyboard scrolling are unchanged.
+*/
+.tn-scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tn-scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

@@ -2,10 +2,10 @@
  * MLB news & intel wire.
  *
  * Reads ESPN's public MLB news feed, strips it down to what the wire ticker
- * actually renders, and tags each story so the UI can colour it. The feed is
- * small (roughly half a dozen stories) and changes slowly, so it is cached for
- * five minutes with a stale-if-error window — a wire that briefly shows a
- * six-minute-old headline is better than a wire that shows an error.
+ * actually renders, and tags each story so the UI can colour it. It changes
+ * slowly, so it is cached for five minutes with a stale-if-error window — a
+ * wire that briefly shows a six-minute-old headline is better than a wire that
+ * shows an error.
  *
  * Player mentions come from ESPN's own `athlete` categories, not from scanning
  * prose for names. ESPN ids are not MLBAM ids, so the payload carries the name
@@ -13,7 +13,15 @@
  */
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
-const NEWS_URL = "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news";
+/**
+ * ESPN defaults this feed to 6 articles when no `limit` is passed, which is
+ * what it was doing — so MAX_ITEMS below never bound, the tactical filter had
+ * almost nothing to work with, and no injury story ever ranked high enough to
+ * be tagged. Asking for 50 gives the classifier real material; MAX_ITEMS still
+ * decides what the wire actually serves.
+ */
+const NEWS_FETCH_LIMIT = 50;
+const NEWS_URL = `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?limit=${NEWS_FETCH_LIMIT}`;
 /**
  * ESPN's per-article reader. The wire listing omits `story` on every item —
  * verified against the live feed — so the full body has to be fetched per id.
@@ -122,6 +130,19 @@ const CATEGORY_RULES: ReadonlyArray<{ category: MlbNewsCategory; pattern: RegExp
   { category: "ROSTER", pattern: /\b(roster|call(?:ed)?[- ]up|option\w*|designat\w* for assignment|\bDFA\b|trade\w*|acquir\w*|sign\w*|waiver\w*|rotation|promot\w*)\b/i },
   { category: "ALERT", pattern: /\b(weather|rain(?:out|ed)?|postpon\w*|delay\w*|suspend\w*|forecast|wind)\b/i },
 ];
+
+/**
+ * Wire ordering. Injuries move a player off the slate outright, so they lead;
+ * NEWS is last because it is overwhelmingly recaps and highlights, which are
+ * the least actionable thing on a research desk.
+ */
+const CATEGORY_RANK: Record<MlbNewsCategory, number> = {
+  INJURY: 0,
+  LINEUP: 1,
+  ALERT: 2,
+  ROSTER: 3,
+  NEWS: 4,
+};
 
 function classify(text: string): MlbNewsCategory {
   for (const rule of CATEGORY_RULES) {
@@ -301,7 +322,20 @@ export async function getMlbNewsWire(): Promise<MlbNewsPayload> {
   const items = (raw?.articles ?? [])
     .map(mapArticle)
     .filter((item): item is MlbNewsItem => item != null)
-    .sort((a, b) => (Date.parse(b.publishedAt ?? "") || 0) - (Date.parse(a.publishedAt ?? "") || 0))
+    /*
+     * Tactical categories outrank generic NEWS, then recency within a tier.
+     *
+     * Sorting purely by recency made this a recap feed: in a 50-article pull
+     * ESPN returns roughly 43 NEWS to 7 tactical, and every tactical story
+     * lands past index 24, so the served slice was 12 game recaps on a wire
+     * whose whole purpose is lineups, injuries and deviations. Ranking first
+     * surfaces all of the tactical signal and lets recaps fill what is left.
+     */
+    .sort((a, b) => {
+      const tier = CATEGORY_RANK[a.category] - CATEGORY_RANK[b.category];
+      if (tier !== 0) return tier;
+      return (Date.parse(b.publishedAt ?? "") || 0) - (Date.parse(a.publishedAt ?? "") || 0);
+    })
     .slice(0, MAX_ITEMS);
 
   return { items, source: "ESPN", fetchedAt: new Date().toISOString() };

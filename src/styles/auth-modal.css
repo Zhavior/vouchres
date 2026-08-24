@@ -18,8 +18,8 @@
 
   overflow-y: auto;
 
-  background: #050507 !important;
-  color: #f1f1ef;
+  background: #020202 !important;
+  color: #ffffff;
 }
 
 /* ----------------------------------------------------------
@@ -41,10 +41,10 @@
 
   overflow: hidden;
 
-  border: 1px solid #292a30 !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
   border-radius: 0 !important;
 
-  background: #090a0d !important;
+  background: #050505 !important;
 
   box-shadow:
     0 40px 120px rgba(0, 0, 0, .55) !important;
@@ -78,7 +78,7 @@
   width: 92px;
   height: 1px;
 
-  background: #8be6f4;
+  background: #4FB8DC;
 }
 
 /* ----------------------------------------------------------
@@ -96,9 +96,9 @@
   min-height: 64px;
   padding: 0 22px;
 
-  border-bottom: 1px solid #292a30;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
 
-  background: #090a0d;
+  background: #050505;
 }
 
 .ve-auth-vouch-brand {
@@ -113,7 +113,7 @@
   border: 0;
   background: transparent;
 
-  color: #f1f1ef;
+  color: #ffffff;
 
   cursor: pointer;
 }
@@ -127,10 +127,10 @@
 .ve-auth-vouch-brand > b {
   padding: 3px 5px;
 
-  border: 1px solid rgba(139, 230, 244, .28);
-  background: rgba(139, 230, 244, .06);
+  border: 1px solid rgba(79,184,220, .28);
+  background: rgba(79,184,220, .06);
 
-  color: #8be6f4;
+  color: #4FB8DC;
 
   font-family:
     ui-monospace,
@@ -147,7 +147,7 @@
   align-items: center;
   gap: 8px;
 
-  color: #71717a;
+  color: rgba(255,255,255,0.40);
 
   font-family:
     ui-monospace,
@@ -164,9 +164,9 @@
 
   border-radius: 50%;
 
-  background: #67d39b;
+  background: #31B583;
 
-  box-shadow: 0 0 8px rgba(103, 211, 155, .4);
+  box-shadow: 0 0 8px rgba(49,181,131,.4);
 }
 
 .ve-auth-vouch-close {
@@ -179,12 +179,12 @@
   height: 34px;
   padding: 0;
 
-  border: 1px solid #292a30;
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 0;
 
   background: transparent;
 
-  color: #85858d;
+  color: rgba(255,255,255,0.45);
 
   cursor: pointer;
 
@@ -195,9 +195,9 @@
 }
 
 .ve-auth-vouch-close:hover {
-  border-color: #8be6f4;
-  background: rgba(139, 230, 244, .04);
-  color: #8be6f4;
+  border-color: #4FB8DC;
+  background: rgba(79,184,220, .04);
+  color: #4FB8DC;
 }
 
 /* ----------------------------------------------------------
@@ -231,15 +231,15 @@
 
   overflow: hidden;
 
-  border-right: 1px solid #292a30;
+  border-right: 1px solid rgba(255,255,255,0.10);
 
   background:
     linear-gradient(
       135deg,
-      rgba(139, 230, 244, .035),
+      rgba(79,184,220, .035),
       transparent 42%
     ),
-    #07080a;
+    #020202;
 }
 
 .ve-auth-vouch-story::before {
@@ -254,12 +254,12 @@
 
   background-image:
     linear-gradient(
-      rgba(139, 230, 244, .08) 1px,
+      rgba(79,184,220, .08) 1px,
       transparent 1px
     ),
     linear-gradient(
       90deg,
-      rgba(139, 230, 244, .08) 1px,
+      rgba(79,184,220, .08) 1px,
       transparent 1px
     );
 
@@ -282,7 +282,7 @@
 .ve-auth-vouch-panel-label {
   display: block;
 
-  color: #8be6f4;
+  color: #4FB8DC;
 
   font-family:
     ui-monospace,
@@ -299,17 +299,19 @@
 
   margin: 24px 0 0;
 
-  color: #f4f4f2;
+  color: #ffffff;
 
   font-size: clamp(46px, 5vw, 72px);
-  font-weight: 500;
-  line-height: .96;
-  letter-spacing: -.055em;
+  font-weight: 700;
+  font-style: italic;
+  line-height: .9;
+  letter-spacing: -.05em;
 }
 
+/* Second clause of the statement carries the system's two-tone treatment. */
 .ve-auth-vouch-story h1 em {
-  color: #f4f4f2;
-  font-style: normal;
+  color: rgba(255,255,255,0.25);
+  font-style: italic;
 }
 
 .ve-auth-vouch-story > div:first-child > p {
@@ -317,7 +319,7 @@
 
   margin: 28px 0 0;
 
-  color: #96969f;
+  color: rgba(255,255,255,0.55);
 
   font-size: 13px;
   line-height: 1.75;
@@ -329,20 +331,24 @@
 
   margin-top: 64px;
 
-  border: 1px solid #292a30;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
 
-  background: rgba(9, 10, 13, .72);
+  background: none;
 }
 
+/* Register columns, not cards: one hairline above, one rule between. */
 .ve-auth-vouch-proof > div {
-  min-height: 100px;
-  padding: 18px;
+  min-height: 0;
+  padding: 18px 20px 0 0;
 
-  border-right: 1px solid #292a30;
+  border-right: 0;
 }
 
-.ve-auth-vouch-proof > div:last-child {
-  border-right: 0;
+.ve-auth-vouch-proof > div + div {
+  padding-left: 20px;
+
+  border-left: 1px solid rgba(255,255,255,0.08);
 }
 
 .ve-auth-vouch-proof span {
@@ -350,7 +356,7 @@
 
   margin-bottom: 20px;
 
-  color: #67d39b;
+  color: #31B583;
 
   font-family:
     ui-monospace,
@@ -363,7 +369,7 @@
 .ve-auth-vouch-proof p {
   margin: 0;
 
-  color: #b0b0b7;
+  color: rgba(255,255,255,0.62);
 
   font-size: 10px;
   line-height: 1.5;
@@ -376,7 +382,7 @@
 
   margin-top: 20px;
 
-  color: #696971;
+  color: rgba(255,255,255,0.40);
 
   font-family:
     ui-monospace,
@@ -393,7 +399,7 @@
 
   border-radius: 50%;
 
-  background: #67d39b;
+  background: #31B583;
 }
 
 .ve-auth-story-continue {
@@ -416,7 +422,7 @@
 
   overflow-y: auto;
 
-  background: #0d0e12;
+  background: #0A0A0A;
 }
 
 .ve-auth-form-header {
@@ -426,7 +432,7 @@
 .ve-auth-form-header h2 {
   margin: 15px 0 0;
 
-  color: #f1f1ef;
+  color: #ffffff;
 
   font-size: 30px;
   font-weight: 500;
@@ -439,7 +445,7 @@
 
   margin: 12px 0 0;
 
-  color: #85858d;
+  color: rgba(255,255,255,0.45);
 
   font-size: 12px;
   line-height: 1.65;
@@ -454,28 +460,28 @@
 }
 
 .ve-auth-form-panel input {
-  color: #f1f1ef !important;
+  color: #ffffff !important;
 }
 
 .ve-auth-form-panel input::placeholder {
-  color: #5d5d65 !important;
+  color: rgba(255,255,255,0.30) !important;
 }
 
 .ve-auth-form-panel label:has(input:not([type="checkbox"])) {
-  border-color: #292a30 !important;
+  border-color: rgba(255,255,255,0.10) !important;
   border-radius: 0 !important;
 
-  background: #08090b !important;
+  background: #050505 !important;
 
   box-shadow: none !important;
 }
 
 .ve-auth-form-panel
 label:has(input:not([type="checkbox"])):focus-within {
-  border-color: rgba(139, 230, 244, .6) !important;
+  border-color: rgba(79,184,220, .6) !important;
 
   box-shadow:
-    0 0 0 1px rgba(139, 230, 244, .08) !important;
+    0 0 0 1px rgba(79,184,220, .08) !important;
 }
 
 .ve-auth-form-panel button {
@@ -486,10 +492,10 @@ label:has(input:not([type="checkbox"])):focus-within {
 .ve-auth-form-panel form button[type="submit"] {
   min-height: 46px;
 
-  border: 1px solid #f1f1ef !important;
+  border: 1px solid #4FB8DC !important;
 
-  background: #f1f1ef !important;
-  color: #08090b !important;
+  background: #4FB8DC !important;
+  color: #000000 !important;
 
   font-family:
     ui-monospace,
@@ -504,8 +510,8 @@ label:has(input:not([type="checkbox"])):focus-within {
 
 .ve-auth-form-panel
 form button[type="submit"]:hover:not(:disabled) {
-  border-color: #8be6f4 !important;
-  background: #8be6f4 !important;
+  border-color: #4FB8DC !important;
+  background: #4FB8DC !important;
 }
 
 /* login / signup segmented switch */
@@ -515,18 +521,19 @@ form button[type="submit"]:hover:not(:disabled) {
 
   padding: 0 !important;
 
-  overflow: hidden;
+  overflow: visible;
 
-  border: 1px solid #292a30 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 0 !important;
 
-  background: #08090b !important;
+  background: none !important;
 }
 
 .ve-auth-form-panel .grid.grid-cols-2.gap-1 > button {
   min-height: 42px;
 
-  border-right: 1px solid #292a30;
+  border-right: 0;
 
   font-family:
     ui-monospace,
@@ -548,15 +555,15 @@ form button[type="submit"]:hover:not(:disabled) {
 .ve-auth-form-panel .grid.grid-cols-3.gap-2 {
   gap: 0 !important;
 
-  border: 1px solid #292a30;
+  border: 1px solid rgba(255,255,255,0.10);
 
-  background: #08090b;
+  background: #050505;
 }
 
 .ve-auth-form-panel .grid.grid-cols-3.gap-2 > div {
   min-height: 70px;
 
-  border-right: 1px solid #292a30;
+  border-right: 1px solid rgba(255,255,255,0.10);
 
   background: transparent !important;
 }
@@ -602,7 +609,7 @@ form button[type="submit"]:hover:not(:disabled) {
     padding: 48px 32px;
 
     border-right: 0;
-    border-bottom: 1px solid #292a30;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
   }
 
   .ve-auth-vouch-story h1 {
@@ -646,7 +653,7 @@ form button[type="submit"]:hover:not(:disabled) {
     min-height: auto;
 
     border-right: 0;
-    border-bottom: 1px solid #292a30;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
   }
 
   .ve-auth-vouch-proof > div:last-child {
@@ -703,7 +710,7 @@ form button[type="submit"]:hover:not(:disabled) {
   .ve-auth-vouch-proof > div {
     min-height: 68px;
     padding: 10px;
-    border-right: 1px solid #292a30;
+    border-right: 1px solid rgba(255,255,255,0.10);
     border-bottom: 0;
   }
 
@@ -727,10 +734,10 @@ form button[type="submit"]:hover:not(:disabled) {
     min-height: 42px;
     margin-top: 18px;
     padding: 0 12px;
-    border: 1px solid #3f434a;
+    border: 1px solid rgba(255,255,255,0.18);
     border-radius: 0;
-    background: #090a0d;
-    color: #d4d4d8;
+    background: #050505;
+    color: rgba(255,255,255,0.80);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 9px;
     font-weight: 700;
@@ -739,7 +746,7 @@ form button[type="submit"]:hover:not(:disabled) {
   }
 
   .ve-auth-story-continue span:last-child {
-    color: #67d39b;
+    color: #31B583;
   }
 
   .ve-auth-form-panel {
@@ -787,7 +794,7 @@ form button[type="submit"]:hover:not(:disabled) {
   }
 
   .ve-auth-policy-carousel-head span {
-    color: #71717a;
+    color: rgba(255,255,255,0.40);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 8px;
     letter-spacing: .1em;
@@ -796,7 +803,7 @@ form button[type="submit"]:hover:not(:disabled) {
   .ve-auth-policy-carousel-body {
     min-height: 48px;
     margin: 7px 0 8px;
-    color: #a1a1aa;
+    color: rgba(255,255,255,0.55);
     font-size: 9px;
     line-height: 1.35;
   }
@@ -804,15 +811,15 @@ form button[type="submit"]:hover:not(:disabled) {
   .ve-auth-policy-carousel-controls button {
     min-height: 28px;
     padding: 0 6px;
-    border: 1px solid #292a30;
-    color: #d4d4d8;
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.80);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 7px;
     letter-spacing: .08em;
   }
 
   .ve-auth-policy-carousel-controls button:disabled {
-    color: #52525b;
+    color: rgba(255,255,255,0.30);
   }
 
   .ve-auth-policy-carousel-controls > div {
@@ -823,11 +830,11 @@ form button[type="submit"]:hover:not(:disabled) {
   .ve-auth-policy-carousel-controls i {
     width: 5px;
     height: 5px;
-    background: #3f3f46;
+    background: rgba(255,255,255,0.18);
   }
 
   .ve-auth-policy-carousel-controls i[data-active="true"] {
-    background: #67d39b;
+    background: #31B583;
   }
 
   .ve-auth-agreements {
@@ -911,7 +918,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   border: 0;
   background: transparent;
-  color: #787880;
+  color: rgba(255,255,255,0.45);
 
   font-family:
     ui-monospace,
@@ -927,7 +934,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 }
 
 .ve-auth-back-link:hover {
-  color: #8be6f4;
+  color: #4FB8DC;
 }
 
 
@@ -939,8 +946,8 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   margin-bottom: 18px;
 
-  border: 1px solid #292a30;
-  background: #08090b;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: #050505;
 }
 
 .ve-auth-mode-button {
@@ -950,10 +957,10 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
   padding: 0 14px;
 
   border: 0;
-  border-right: 1px solid #292a30;
+  border-right: 1px solid rgba(255,255,255,0.10);
 
   background: transparent;
-  color: #6f7078;
+  color: rgba(255,255,255,0.40);
 
   font-family:
     ui-monospace,
@@ -977,9 +984,9 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
   position: absolute;
   inset: 0;
 
-  border-bottom: 1px solid #8be6f4;
+  border-bottom: 1px solid #4FB8DC;
 
-  background: rgba(139, 230, 244, .065);
+  background: rgba(79,184,220, .065);
 }
 
 .ve-auth-mode-button > span {
@@ -996,8 +1003,8 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   margin-bottom: 20px;
 
-  border: 1px solid #292a30;
-  background: #08090b;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: #050505;
 }
 
 .ve-auth-trust-strip > span {
@@ -1008,9 +1015,9 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
   min-height: 46px;
   padding: 0 12px;
 
-  border-right: 1px solid #292a30;
+  border-right: 1px solid rgba(255,255,255,0.10);
 
-  color: #777780;
+  color: rgba(255,255,255,0.45);
 
   font-family:
     ui-monospace,
@@ -1033,7 +1040,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   border-radius: 50%;
 
-  background: #67d39b;
+  background: #31B583;
 }
 
 
@@ -1060,11 +1067,11 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
   min-height: 44px;
   padding: 0 16px;
 
-  border: 1px solid #34353b !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
   border-radius: 0 !important;
 
-  background: #111216 !important;
-  color: #d9d9dd !important;
+  background: #0A0A0A !important;
+  color: rgba(255,255,255,0.80) !important;
 
   box-shadow: none !important;
 
@@ -1075,8 +1082,8 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 }
 
 .ve-auth-google-button:hover:not(:disabled) {
-  border-color: #8be6f4 !important;
-  background: #15171b !important;
+  border-color: #4FB8DC !important;
+  background: #0A0A0A !important;
 }
 
 
@@ -1085,13 +1092,13 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 .ve-auth-account-form input {
   min-width: 0;
 
-  color: #ededeb !important;
+  color: #ffffff !important;
 
   font-size: 12px !important;
 }
 
 .ve-auth-account-form input::placeholder {
-  color: #5f6067 !important;
+  color: rgba(255,255,255,0.30) !important;
 }
 
 
@@ -1106,7 +1113,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 /* DIVIDER */
 
 .ve-auth-account-form [aria-hidden="true"] {
-  color: #65666d;
+  color: rgba(255,255,255,0.40);
 }
 
 .ve-auth-account-form [aria-hidden="true"] span {
@@ -1125,7 +1132,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 /* INVITE NOTE */
 
 .ve-auth-account-form .ve-auth-reveal p {
-  color: #6f7078 !important;
+  color: rgba(255,255,255,0.40) !important;
   font-size: 9px !important;
   line-height: 1.5;
 }
@@ -1143,11 +1150,11 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
   min-height: 46px;
   padding: 0 16px;
 
-  border: 1px solid #f1f1ef !important;
+  border: 1px solid #ffffff !important;
   border-radius: 0 !important;
 
-  background: #f1f1ef !important;
-  color: #08090b !important;
+  background: #ffffff !important;
+  color: #050505 !important;
 
   box-shadow: none !important;
 
@@ -1166,8 +1173,8 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 }
 
 .ve-auth-submit:hover:not(:disabled) {
-  border-color: #8be6f4 !important;
-  background: #8be6f4 !important;
+  border-color: #4FB8DC !important;
+  background: #4FB8DC !important;
 }
 
 .ve-auth-submit:disabled {
@@ -1183,7 +1190,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   margin-top: 4px;
 
-  color: #66666e !important;
+  color: rgba(255,255,255,0.40) !important;
 
   font-size: 9px !important;
   line-height: 1.6 !important;
@@ -1199,7 +1206,7 @@ body:has(.ve-auth-backdrop) .ve-terminal-background {
 
   .ve-auth-trust-strip > span {
     border-right: 0;
-    border-bottom: 1px solid #292a30;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
   }
 
   .ve-auth-trust-strip > span:last-child {

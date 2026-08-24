@@ -210,7 +210,7 @@ export default function HeroResearchCard({ onOpenPreview }: HeroResearchCardProp
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-100/70">
-                        Linked research row
+                        Player Dossier
                       </p>
                       <p className="mt-1.5 truncate text-[15px] font-semibold text-white">
                         {primaryPlayer.playerName}

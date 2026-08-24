@@ -77,7 +77,7 @@ export function BrainMarketLoadingState({
         />
       </div>
       {blockers.length > 0 && (
-        <p className="mt-3 text-xs leading-5 text-amber-100/55">
+        <p className="mt-3 text-xs leading-5 text-ve-amber/55">
           Missing or insufficient:{" "}
           {blockers.map((value) => value.replaceAll("_", " ")).join(", ")}.
         </p>

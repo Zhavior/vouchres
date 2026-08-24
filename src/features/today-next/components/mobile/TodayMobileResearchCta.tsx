@@ -18,20 +18,20 @@ export function TodayMobileResearchCta({ remaining, onRoute }: TodayMobileResear
 
   return (
     <section className="px-4 md:hidden font-mono" aria-label="Full research board">
-      <div className="rounded-xl border border-white/[0.08] bg-[#111113] p-5 shadow-2xl space-y-2">
-        <p className="font-mono text-[9px] font-medium uppercase tracking-wider text-emerald-400">
+      <div className="rounded-none border border-white/[0.08] bg-[#0A0A0A] p-5 space-y-2">
+        <p className="font-mono text-[9px] font-medium uppercase tracking-wider text-ve-emerald">
           Deep research terminal
         </p>
         <h2 className="text-base sm:text-lg font-bold leading-snug text-white font-sans">
           Explore {remaining} remaining slate bats
         </h2>
-        <p className="text-xs leading-relaxed text-zinc-400 font-sans">
+        <p className="text-xs leading-relaxed text-white/55 font-sans">
           Full layer breakdowns, pitcher arsenals and the ranked matrix — the whole board, not just tonight's top collisions.
         </p>
         <button
           type="button"
           onClick={() => onRoute('hr_max')}
-          className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-white text-black text-xs font-mono font-semibold uppercase hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer"
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-none bg-ve-cyan text-black font-mono text-[11px] font-bold uppercase tracking-[0.18em] hover:bg-white transition-colors cursor-pointer"
         >
           <span>Launch full research board ({remaining})</span>
           <ArrowRight className="h-4 w-4" aria-hidden="true" />

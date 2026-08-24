@@ -500,18 +500,37 @@ export function HrNextShell() {
 
   if (isLoading) {
     return (
-      <div className="hr-next flex min-h-screen items-center justify-center bg-black">
-        <div className="text-vouch-emerald font-mono animate-pulse">Loading HR Intelligence...</div>
+      <div className="hr-next flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2 border border-white/[0.08] bg-white/[0.02] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.24em] text-white/55">
+          <span className="hr-live-dot" /> Loading HR intelligence
+        </div>
       </div>
     );
   }
 
   if (error) {
+    /*
+     * Previously a dead end: it printed `String(error)` — usually
+     * "[object Object]" — with no way back. The board is a network read, so the
+     * useful action is to retry it without reloading the page.
+     */
+    const detail = typeof error === 'string' ? error : null;
     return (
-      <div className="hr-next flex min-h-screen items-center justify-center bg-black">
-        <div className="text-red-500 font-mono text-center">
-          <p>Failed to load HR board</p>
-          <p className="text-sm opacity-70">{String(error)}</p>
+      <div className="hr-next flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md border border-ve-amber/25 bg-ve-amber/10 p-5 text-center font-mono">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+            HR board unavailable
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-white/55 font-sans">
+            {detail ?? 'The board did not respond. Nothing was estimated in its place.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-4 min-h-9 border border-ve-amber/30 px-3 text-[10px] font-medium uppercase tracking-wider text-ve-amber transition-colors hover:bg-ve-amber/10 cursor-pointer"
+          >
+            Retry board
+          </button>
         </div>
       </div>
     );
@@ -557,7 +576,7 @@ export function HrNextShell() {
       <main className="flex min-w-0 flex-1 flex-col">
 
       {/* Translucent rather than solid, so the ambient field reads through the
-          chrome. No `backdrop-blur` on this one: it is sticky over a long
+          chrome. No `` on this one: it is sticky over a long
           scrolling list, and a backdrop-filter here re-composites the whole
           board every scroll frame. Alpha alone gets the particles through at no
           scroll cost. */}
@@ -570,19 +589,19 @@ export function HrNextShell() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="flex h-2 w-2 relative shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ve-cyan opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-ve-cyan"></span>
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ve-cyan">
                   VOUCHEDGE // HOME RUN COMMAND DESK
                 </span>
-                <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-zinc-900 text-[8px] font-black text-zinc-400">
+                <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-obsidian-800 text-[8px] font-bold text-white/55">
                   STAGE: 03 / STATCAST & PROJECTIONS
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+              <p className="text-[10px] text-white/40 truncate mt-0.5">
                 Deterministic HRPI Model Feed · Real-Time Statcast Radar · Sharp HUD Telemetry
               </p>
             </div>
@@ -594,22 +613,22 @@ export function HrNextShell() {
               onClick={() => refetch()}
               disabled={syncing}
               title="Synchronize Live Board (R)"
-              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-zinc-950 text-zinc-300 hover:text-white hover:border-white text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
             >
-              <RotateCw className={`w-3 h-3 text-cyan-400 ${syncing ? 'animate-spin' : ''}`} />
+              <RotateCw className={`w-3 h-3 text-ve-cyan ${syncing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Sync</span>
-              <kbd className="text-[8.5px] bg-black px-1 border border-white/15 text-zinc-500">R</kbd>
+              <kbd className="text-[8.5px] bg-black px-1 border border-white/15 text-white/40">R</kbd>
             </button>
 
             <button
               type="button"
               onClick={() => setCheatsheetOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-zinc-950 text-zinc-300 hover:text-white hover:border-white text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-white/20 bg-obsidian-950 text-white/70 hover:text-white hover:border-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
               title="Keyboard Shortcuts (?)"
             >
-              <Keyboard className="w-3 h-3 text-cyan-400" />
+              <Keyboard className="w-3 h-3 text-ve-cyan" />
               <span className="hidden sm:inline">Keys</span>
-              <kbd className="text-[8.5px] bg-black px-1 border border-white/15 text-zinc-500">?</kbd>
+              <kbd className="text-[8.5px] bg-black px-1 border border-white/15 text-white/40">?</kbd>
             </button>
           </div>
         </div>
@@ -623,10 +642,10 @@ export function HrNextShell() {
             onClick={() => setMobileControlsOpen((prev) => !prev)}
             aria-expanded={mobileControlsOpen}
             aria-controls="hr-next-control-sheet"
-            className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors lg:hidden cursor-pointer ${
+            className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors lg:hidden cursor-pointer ${
               mobileControlsOpen
-                ? 'border-cyan-400 bg-cyan-950/50 text-cyan-300'
-                : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+                ? 'border-ve-cyan bg-ve-cyan/50 text-ve-cyan'
+                : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
             }`}
           >
             <SlidersHorizontal className="h-3 w-3" />
@@ -640,13 +659,13 @@ export function HrNextShell() {
               onClick={() => setIsTeamRankOpen((prev) => !prev)}
               aria-pressed={isTeamRankOpen}
               title="Rank teams by home run power for the selected games"
-              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                 isTeamRankOpen
-                  ? 'border-cyan-400 bg-cyan-400 text-black font-black shadow-[0_0_14px_rgba(0,240,255,0.45)]'
-                  : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+                  ? 'border-ve-cyan bg-ve-cyan text-black font-bold'
+                  : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
               }`}
             >
-              <Trophy className={`h-3 w-3 ${isTeamRankOpen ? 'text-black' : 'text-cyan-400'}`} />
+              <Trophy className={`h-3 w-3 ${isTeamRankOpen ? 'text-black' : 'text-ve-cyan'}`} />
               <span>{isTeamRankOpen ? 'Ranking Teams' : 'Rank Teams'}</span>
             </button>
           )}
@@ -658,15 +677,15 @@ export function HrNextShell() {
               onClick={toggleProMode}
               aria-pressed={isProMode}
               title="Toggle Pro Mode telemetry cards (Shortcut: P)"
-              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                 isProMode
-                  ? 'border-cyan-400 bg-cyan-400 text-black font-black shadow-[0_0_14px_rgba(0,240,255,0.45)]'
-                  : 'border-white/15 bg-black text-zinc-400 hover:border-white/30 hover:text-white'
+                  ? 'border-ve-cyan bg-ve-cyan text-black font-bold'
+                  : 'border-white/15 bg-black text-white/55 hover:border-white/30 hover:text-white'
               }`}
             >
-              <Sparkles className={`h-3 w-3 ${isProMode ? 'fill-black text-black' : 'text-cyan-400'}`} />
+              <Sparkles className={`h-3 w-3 ${isProMode ? 'fill-black text-black' : 'text-ve-cyan'}`} />
               <span>Pro Mode: {isProMode ? 'ACTIVE' : 'OFF'}</span>
-              <kbd className={`px-1 py-0.2 text-[8.5px] border ${isProMode ? 'border-black/40 bg-black/20 text-black' : 'border-white/15 bg-zinc-900 text-zinc-500'}`}>
+              <kbd className={`px-1 py-0.2 text-[8.5px] border ${isProMode ? 'border-black/40 bg-black/20 text-black' : 'border-white/15 bg-obsidian-800 text-white/40'}`}>
                 P
               </kbd>
             </button>
@@ -683,10 +702,10 @@ export function HrNextShell() {
                 : `Share my HR list — ${savedCount} ${savedCount === 1 ? 'player' : 'players'}`
             }
             title={savedCount === 0 ? 'Star players to build your HR list first' : 'Share my HR list'}
-            className={`ml-auto flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+            className={`ml-auto flex items-center gap-1.5 border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
               savedCount > 0
-                ? 'border-emerald-400/60 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50'
-                : 'border-white/10 bg-black text-zinc-600 cursor-not-allowed'
+                ? 'border-ve-emerald/60 bg-ve-emerald/40 text-ve-emerald hover:bg-ve-emerald/20/50'
+                : 'border-white/10 bg-black text-white/30 cursor-not-allowed'
             }`}
           >
             {hrListSharing
@@ -695,7 +714,7 @@ export function HrNextShell() {
             <span>Share My HR List</span>
           </button>
 
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
             {exportStatus ?? `${savedCount} saved`}
           </span>
         </div>
@@ -849,20 +868,20 @@ export function HrNextShell() {
       )}
 
       {/* Deterministic Protocol SHA-256 Audit Verification Footer */}
-      <footer className="mt-8 border-t-2 border-white/10 bg-zinc-950 p-4 font-mono text-[10px] text-zinc-500">
+      <footer className="mt-8 border-t-2 border-white/10 bg-obsidian-950 p-4 font-mono text-[10px] text-white/40">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+            <ShieldCheck className="h-4 w-4 text-ve-emerald shrink-0" />
             <span className="text-white font-bold uppercase tracking-wider">
               VOUCH DETERMINISTIC PROTOCOL // SOURCE GAPS PRESERVED
             </span>
-            <span className="text-zinc-600 hidden md:inline">
+            <span className="text-white/30 hidden md:inline">
               VERIFIED NOW: {verifiedNow.completeRows}/{verifiedNow.totalRows}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[9px] uppercase tracking-widest text-zinc-400">
+          <div className="flex items-center gap-3 text-[9px] uppercase tracking-widest text-white/55">
             <span className="flex items-center gap-1">
-              <Activity className="h-3 w-3 text-cyan-400 shrink-0" />
+              <Activity className="h-3 w-3 text-ve-cyan shrink-0" />
               MLB PIPELINE ENGINE: RUNNING
             </span>
             <span>·</span>
