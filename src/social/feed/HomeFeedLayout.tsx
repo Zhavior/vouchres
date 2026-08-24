@@ -17,7 +17,7 @@ import '../../styles/legacy/feed-stream.css';
 import AuroraMaxRouteFrame from '../../components/layout/AuroraMaxRouteFrame';
 import '../../styles/app-topbar.css';
 import { lazyWithRetry } from '../../lib/lazyWithRetry';
-import { FooterSection } from '../../components/landing-v3';
+import PublicFooter from '../../components/landing-v4/PublicFooter';
 
 const CmdKPalette = lazyWithRetry(() => import('./CmdKPalette'), { label: 'CmdKPalette' });
 const FeedRightRail = lazyWithRetry(() => import('./FeedRightRail'), { label: 'FeedRightRail' });
@@ -227,7 +227,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
               <div className="flex-grow">
                 <AuroraMaxRouteFrame section={activeSection}>{children}</AuroraMaxRouteFrame>
               </div>
-              {!isPublicFrontPage && <FooterSection />}
+              {!isPublicFrontPage && <PublicFooter />}
             </div>
           </FeedScrollProvider>
         </main>

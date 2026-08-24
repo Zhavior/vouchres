@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FooterSection } from '../components/landing-v3';
+import PublicFooter from '../components/landing-v4/PublicFooter';
 import PublicNav from '../components/landing-v3/PublicNav';
 import { AURORA_MAX_SHELL } from '../theme/auroraTokens';
 
@@ -38,7 +38,7 @@ export default function PolicyPage() {
             </div>
           </motion.div>
         </main>
-        <FooterSection />
+        <PublicFooter />
       </div>
     </div>
   );
