@@ -15,6 +15,10 @@ export interface HrEvent {
   gamePk: number;
   matchup: string;
   timestamp: string;
+  /** Statcast exit velocity (mph). Null when MLB published no hitData for the play. */
+  exitVelocity?: number | null;
+  /** Statcast projected distance (ft). Null when MLB published no hitData. */
+  distance?: number | null;
 }
 
 export interface HrFeedResponse {

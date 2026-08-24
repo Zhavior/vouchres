@@ -9,6 +9,14 @@
  * The match is deliberately strict: normalised full name AND team abbreviation
  * must both agree. A name-only match would attach the wrong Rodriguez to a
  * board row, and a wrong IL flag on a candidate is worse than no flag.
+ *
+ * Join it against the PROJECTED pool, not the confirmed rows. A confirmed
+ * candidate has already cleared an official batting order, so it can never be
+ * on the IL and the join is always empty there — measured 0/9 on confirmed
+ * rows and 0/270 against posted lineups. The projected pool is roster-based
+ * and does carry them: 4 of 120 on the first slate this ran against, including
+ * one listed OUT. That is the case worth catching, because before lineups post
+ * the board is otherwise happy to rank a player who will not appear.
  */
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';

@@ -16,6 +16,7 @@ import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
+import type { SlateResultsContract } from "../kernel/contracts/slateResults";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import type { LiveGamesPayload } from "../types/liveGames";
@@ -223,6 +224,9 @@ export const vouchedgeApi = {
   // Live HR notification feed
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
   hrFeedByDate: (date: string) => getJson<HrFeedResponse>(`/api/mlb/hr-feed/date/${date}`),
+
+  // Results desk — one slate, graded against the real HR feed
+  slateResults: (date: string) => getJson<SlateResultsContract>(`/api/results/slate/${date}`),
 
   // Live at-bat pitch-by-pitch snapshot
   liveAtBat: async (gamePk: number) =>

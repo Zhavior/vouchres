@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Cpu, Database, Layers, Zap, CheckCircle2 } from 'lucide-react';
+import { Database, Zap, CheckCircle2 } from 'lucide-react';
 import { useLandingTelemetry } from '../../hooks/public/useLandingTelemetry';
 
 export default function MethodologyEngine() {
@@ -18,9 +18,9 @@ export default function MethodologyEngine() {
   );
 
   return (
-    <section id="methodology" className="scroll-mt-20 py-40 px-6 bg-obsidian-900 border-y border-white/5">
+    <section id="methodology" className="scroll-mt-20 border-y border-white/5 bg-obsidian-900 px-6 py-28 lg:py-32">
       <div className="container mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 items-start">
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-16">
           
           {/* Left: Technical Thesis */}
           <div className="lg:col-span-5 sticky top-40">
@@ -32,7 +32,7 @@ export default function MethodologyEngine() {
             >
               <span className="terminal-text text-ve-emerald">03 / COMPUTATIONAL_METHODOLOGY</span>
               <h2 className="text-5xl md:text-7xl font-bold tracking-tighter italic text-white leading-[0.9]">
-                {total != null ? total.toLocaleString() : '—'} <br />
+                {total != null ? total.toLocaleString() : 'Off-slate'} <br />
                 <span className="text-white/20">Evidence Records.</span> <br />
                 Zero Guesses.
               </h2>
@@ -99,7 +99,7 @@ export default function MethodologyEngine() {
                   <div className="md:col-span-1">
                     <span className="terminal-text block mb-1">{layer.unit}</span>
                     <span className={`text-2xl font-mono tabular-nums ${layer.count != null ? 'text-white' : 'text-white/25'}`}>
-                      {layer.count != null ? layer.count.toLocaleString() : '—'}
+                      {layer.count != null ? layer.count.toLocaleString() : 'NO FEED'}
                     </span>
                     {layer.source && (
                       <span className="mt-1 block truncate text-[9px] font-mono uppercase tracking-wider text-white/30">
@@ -107,9 +107,17 @@ export default function MethodologyEngine() {
                       </span>
                     )}
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="md:col-span-3 space-y-3">
                     <p className="text-sm text-white/40 leading-relaxed">
                       {layer.description}
+                    </p>
+                    {/* Jargon translation. The label is what the system calls
+                        it; this is what it does for the person reading. */}
+                    <p className="border-l border-ve-emerald/30 pl-4 text-sm font-light leading-relaxed text-white/55">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ve-emerald">
+                        {layer.label.replace(/_/g, ' ')} →{' '}
+                      </span>
+                      {layer.outcome}
                     </p>
                   </div>
                 </div>

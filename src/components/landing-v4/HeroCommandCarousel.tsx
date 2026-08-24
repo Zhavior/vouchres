@@ -2,11 +2,29 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { ShieldCheck, ChevronRight, ChevronLeft } from 'lucide-react';
-import { useLandingTelemetry, type LandingCandidate } from '../../hooks/public/useLandingTelemetry';
+import {
+  useLandingTelemetry,
+  type LandingCandidate,
+  type TelemetryMode,
+} from '../../hooks/public/useLandingTelemetry';
+import { TelemetryModeChip } from './TelemetryStatus';
+import { MODE_COPY, slateLabel } from './telemetryStatusCopy';
 
-/** A dash beats a placeholder: every cell here is API-backed or absent. */
-function Cell({ value, suffix }: { value: string | number | null; suffix?: string }) {
-  if (value == null) return <span className="text-white/25">—</span>;
+/**
+ * Every cell here is API-backed or explicitly absent — the value is never
+ * invented. What changed is the absent case: a bare dash under a live banner
+ * read as a bug, so a missing figure now names the feed that owes it.
+ */
+function Cell({
+  value,
+  suffix,
+  missing = 'NO FEED',
+}: {
+  value: string | number | null;
+  suffix?: string;
+  missing?: string;
+}) {
+  if (value == null) return <span className="font-mono text-[10px] uppercase tracking-widest text-white/30">{missing}</span>;
   return (
     <>
       {value}
@@ -24,7 +42,11 @@ function buildScenes(
   rows: LandingCandidate[],
   generatedAt: string | null,
   contractVersion: string | null,
+  mode: TelemetryMode,
+  slateDate: string | null,
 ) {
+  const modeCopy = MODE_COPY[mode];
+  const replayFrom = mode === 'replay' ? slateLabel(slateDate) : null;
   return [
     {
       id: '01',
@@ -34,10 +56,12 @@ function buildScenes(
           <div className="flex justify-between items-start gap-3">
             <div className="min-w-0">
               <h4 className="truncate text-2xl font-bold italic tracking-tighter text-white">
-                {top ? top.playerName.toUpperCase() : '—'}
+                {top ? top.playerName.toUpperCase() : 'BOARD OFFLINE'}
               </h4>
               <p className="truncate text-[10px] font-mono uppercase tracking-tight text-white/40">
-                {top ? `${top.teamAbbrev} @ ${top.opponent} // ${top.venue ?? 'Venue TBD'}` : 'Awaiting board'}
+                {top
+                  ? `${top.teamAbbrev} @ ${top.opponent} // ${top.venue ?? 'Venue TBD'}`
+                  : 'No slate answered in the last seven days'}
               </p>
             </div>
             <div className="shrink-0 text-right">
@@ -45,7 +69,7 @@ function buildScenes(
                 HRPI <Cell value={top?.hrScore ?? null} />
               </div>
               <div className="text-[10px] uppercase text-white/20">
-                {top?.confidenceTier ? `${top.confidenceTier}_Tier` : '—'}
+                {top?.confidenceTier ? `${top.confidenceTier}_Tier` : modeCopy.chip}
               </div>
             </div>
           </div>
@@ -60,6 +84,18 @@ function buildScenes(
               <p className="text-[9px] font-mono text-white/40 uppercase mb-1">Barrel_%</p>
               <p className="text-lg font-mono text-white">
                 <Cell value={pct(top?.barrelRate ?? null)} />
+              </p>
+            </div>
+            <div className="p-3 bg-white/5 border border-white/5 rounded-none">
+              <p className="text-[9px] font-mono text-white/40 uppercase mb-1">Park_Factor</p>
+              <p className="text-lg font-mono text-white">
+                <Cell value={top?.parkFactor ?? null} />
+              </p>
+            </div>
+            <div className="p-3 bg-white/5 border border-white/5 rounded-none">
+              <p className="text-[9px] font-mono text-white/40 uppercase mb-1">Opposing_SP</p>
+              <p className="truncate text-sm font-mono text-white">
+                <Cell value={top?.opposingPitcher ?? null} missing="NOT POSTED" />
               </p>
             </div>
           </div>
@@ -86,8 +122,8 @@ function buildScenes(
       content: (
         <div className="space-y-3">
           {rows.length === 0 && (
-            <p className="py-8 text-center text-[10px] font-mono uppercase tracking-widest text-white/25">
-              Board syncing
+            <p className="py-8 text-center text-[10px] font-mono uppercase tracking-widest text-white/30">
+              {modeCopy.chip} · {modeCopy.detail}
             </p>
           )}
           {rows.map((row, i) => (
@@ -123,9 +159,13 @@ function buildScenes(
             <ShieldCheck className="text-ve-emerald" size={24} />
           </div>
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-white">Board_Locked</h4>
+            <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-white">
+              {replayFrom ? `Board_Locked · ${replayFrom}` : 'Board_Locked'}
+            </h4>
             <p className="mt-1 text-[9px] font-mono uppercase text-white/40">
-              {generatedAt ? `Generated: ${new Date(generatedAt).toISOString().replace('T', '_').slice(0, 19)}_UTC` : 'Awaiting board'}
+              {generatedAt
+                ? `Generated: ${new Date(generatedAt).toISOString().replace('T', '_').slice(0, 19)}_UTC`
+                : 'No board generated for this slate'}
             </p>
           </div>
           {/*
@@ -135,7 +175,7 @@ function buildScenes(
           */}
           <div className="w-full border border-dashed border-white/10 bg-black/40 p-3">
             <p className="break-all text-[9px] font-mono text-white/40">
-              CONTRACT: {contractVersion ?? '—'}
+              CONTRACT: {contractVersion ?? 'NOT PUBLISHED'}
             </p>
           </div>
           <p className="text-[10px] font-mono uppercase tracking-widest text-ve-emerald">
@@ -148,10 +188,10 @@ function buildScenes(
 }
 
 export default function HeroCommandCarousel() {
-  const { topCandidates, generatedAt, contractVersion } = useLandingTelemetry();
+  const { topCandidates, generatedAt, contractVersion, mode, slateDate } = useLandingTelemetry();
   const scenes = useMemo(
-    () => buildScenes(topCandidates[0] ?? null, topCandidates, generatedAt, contractVersion),
-    [topCandidates, generatedAt, contractVersion],
+    () => buildScenes(topCandidates[0] ?? null, topCandidates, generatedAt, contractVersion, mode, slateDate),
+    [topCandidates, generatedAt, contractVersion, mode, slateDate],
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 7000 })]);
@@ -192,9 +232,12 @@ export default function HeroCommandCarousel() {
         <div className="flex">
           {scenes.map((scene) => (
             <div key={scene.id} className="flex-[0_0_100%] min-w-0 p-5 sm:p-8 h-[400px] flex flex-col">
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-[10px] font-mono text-ve-emerald uppercase tracking-tighter">{scene.title}</span>
-                <span className="text-[10px] font-mono text-white/20">{scene.id} / 03</span>
+              <div className="mb-6 flex items-center justify-between gap-2">
+                <span className="truncate text-[10px] font-mono uppercase tracking-tighter text-ve-emerald">{scene.title}</span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <TelemetryModeChip mode={mode} />
+                  <span className="text-[10px] font-mono text-white/20">{scene.id} / 03</span>
+                </div>
               </div>
               <div className="flex-1">{scene.content}</div>
             </div>
