@@ -1,4 +1,5 @@
 import React from 'react';
+import { useMlbInjuries } from '../../../hooks/queries/useMlbInjuries';
 import { Plus, Star, TrendingUp, Search, Flame } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
@@ -42,6 +43,18 @@ export const HrNextCard = React.memo(function HrNextCard({
   onToggleReceipt,
   onAddToSlip,
 }: HrNextCardProps) {
+  /*
+   * IL flag on projected rows.
+   *
+   * A confirmed candidate has already cleared an official batting order, so it
+   * can never be injured — the join is empty there by construction. The pool
+   * this matters for is projected: on the slate this shipped against, 4 of 120
+   * projected rows were carrying an injury designation, one of them listed OUT.
+   * Without this the board will happily rank a player who will not appear.
+   */
+  const { lookup: injuryFor } = useMlbInjuries();
+  const injury = injuryFor(row.playerName, row.team);
+
   const teamLogo = logoByTeamName(row.team);
   
   const {
@@ -176,6 +189,20 @@ export const HrNextCard = React.memo(function HrNextCard({
                   >
                     {activeTier.label.toUpperCase()}
                   </span>
+
+                  {/* Availability — only ever set on projected rows. */}
+                  {injury && (
+                    <span
+                      title={injury.shortComment ?? injury.status}
+                      className={`border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase ${
+                        injury.availability === 'OUT'
+                          ? 'border-ve-red/40 bg-ve-red/10 text-ve-red'
+                          : 'border-ve-amber/40 bg-ve-amber/10 text-ve-amber'
+                      }`}
+                    >
+                      {injury.availability === 'DAY_TO_DAY' ? 'DTD' : injury.status}
+                    </span>
+                  )}
 
                   {/* HR Intelligence Live & Recent Badges */}
                   {hasHitHrToday && (

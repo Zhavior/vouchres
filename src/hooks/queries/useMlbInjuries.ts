@@ -61,6 +61,19 @@ function joinKey(name: string, teamAbbrev: string | null | undefined): string {
   return `${normalizeInjuryName(name)}|${(teamAbbrev ?? '').toUpperCase()}`;
 }
 
+const indexCache = new WeakMap<MlbInjuryRecord[], Map<string, MlbInjuryRecord>>();
+
+function buildIndex(injuries: MlbInjuryRecord[]): Map<string, MlbInjuryRecord> {
+  const cached = indexCache.get(injuries);
+  if (cached) return cached;
+  const map = new Map<string, MlbInjuryRecord>();
+  for (const record of injuries) {
+    map.set(joinKey(record.playerName, record.teamAbbrev), record);
+  }
+  indexCache.set(injuries, map);
+  return map;
+}
+
 export function useMlbInjuries() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['mlb', 'injuries'],
@@ -72,14 +85,15 @@ export function useMlbInjuries() {
 
   const injuries = useMemo(() => data?.injuries ?? [], [data]);
 
-  /** name+team -> record, for an O(1) lookup per board row. */
-  const byPlayer = useMemo(() => {
-    const map = new Map<string, MlbInjuryRecord>();
-    for (const record of injuries) {
-      map.set(joinKey(record.playerName, record.teamAbbrev), record);
-    }
-    return map;
-  }, [injuries]);
+  /**
+   * name+team -> record, for an O(1) lookup per board row.
+   *
+   * Cached against the array identity rather than rebuilt per component. Every
+   * card on the board calls this hook, and React Query hands them all the same
+   * array — without this, a 120-row board builds the same 291-entry index 120
+   * times on every render.
+   */
+  const byPlayer = useMemo(() => buildIndex(injuries), [injuries]);
 
   /**
    * The injury record for one slate row, or null. Both name and team must
