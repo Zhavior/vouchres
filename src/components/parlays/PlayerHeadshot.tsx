@@ -10,6 +10,14 @@ interface Props {
   headshotUrl?: string | null;
   /** Square size in px. Default 40. */
   size?: number;
+  /**
+   * `circle` is the avatar used in dense rows. `portrait` frames the source at
+   * its real 2:3 ratio so the whole headshot is visible — MLB serves 112x168,
+   * so a square circular frame contains it to ~2/3 width and then masks the
+   * shoulders off. Use `portrait` anywhere the player is the subject rather
+   * than a row marker.
+   */
+  shape?: 'circle' | 'portrait';
   /** When true, loads image eagerly (hero/selected player). Default false for lists. */
   priority?: boolean;
 }
@@ -20,7 +28,15 @@ interface Props {
  * - Falls back to an initials avatar when there is no id OR the image fails to
  *   load — never a broken-image icon, and the layout size stays fixed.
  */
-export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40, priority = false }: Props) {
+export default function PlayerHeadshot({
+  name,
+  playerId,
+  headshotUrl,
+  size = 40,
+  priority = false,
+  shape = 'circle',
+}: Props) {
+  const portrait = shape === 'portrait';
   const resolvedUrl = headshotUrl || getMlbHeadshotUrl(playerId, size * 2);
   const [failed, setFailed] = useState(false);
 
@@ -30,7 +46,8 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40,
   }, [resolvedUrl]);
 
   const initials = getPlayerInitials(name);
-  const dim = { width: size, height: size } as const;
+  // 2:3 matches what MLB actually serves, so nothing is letterboxed or cropped.
+  const dim = { width: size, height: portrait ? Math.round(size * 1.5) : size } as const;
   const showImage = !!resolvedUrl && !failed;
 
   return (
@@ -41,7 +58,9 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40,
        * one literal was tinting every headshot in the product. Now a plain
        * hairline, matching the desk surfaces it sits on.
        */
-      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.12] bg-white/[0.04] shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden border border-white/[0.12] bg-white/[0.04] ${
+        portrait ? '' : 'rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.45)]'
+      }`}
       style={dim}
       aria-label={name || 'Player'}
     >
@@ -62,7 +81,9 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40,
           decoding="async"
           fetchPriority={priority ? 'high' : 'low'}
           referrerPolicy="no-referrer"
-          className={`absolute inset-0 ${MLB_HEADSHOT_IMG_CLASS}`}
+          className={`absolute inset-0 h-full w-full object-contain ${
+            portrait ? 'object-center' : 'object-[center_18%]'
+          }`}
           onError={() => setFailed(true)}
         />
       )}

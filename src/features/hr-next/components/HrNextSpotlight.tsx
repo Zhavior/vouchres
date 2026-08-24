@@ -48,11 +48,20 @@ export const HrNextSpotlight = React.memo(function HrNextSpotlight({
 
       <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <div
-            className="relative h-[68px] w-[68px] shrink-0 overflow-hidden border border-white/10 bg-obsidian-950"
-            style={{ aspectRatio: '1 / 1' }}
-          >
-            <PlayerHeadshot name={row.playerName} playerId={row.playerId?.toString()} size={68} />
+          {/*
+            The HUD is the one place the player is the subject rather than a row
+            marker, so it frames the full 2:3 headshot. The square-plus-circle
+            wrapper this replaced contained a 112x168 portrait to ~45px wide
+            inside a 68px circle and then masked the shoulders off.
+          */}
+          <div className="relative shrink-0 overflow-hidden border border-white/10 bg-obsidian-950">
+            <PlayerHeadshot
+              name={row.playerName}
+              playerId={row.playerId?.toString()}
+              size={76}
+              shape="portrait"
+              priority
+            />
           </div>
 
           <div className="min-w-0">
