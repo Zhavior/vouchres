@@ -61,23 +61,23 @@ export function TdFieldMatrix3D({ player }: { player: TouchdownPlayer }) {
   };
 
   return (
-    <div className="relative w-full rounded-xl bg-black border border-white/10 p-4 flex flex-col items-center shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]">
+    <div className="relative w-full bg-transparent border border-white/10 p-4 flex flex-col items-center shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]">
       {/* 3D Header Badge */}
       <div className="w-full flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-ve-cyan/10 animate-ping inline-block" />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-ve-cyan">
             3D RED ZONE MATRIX
           </span>
         </div>
-        <span className="flex items-center gap-1 px-2.5 py-0.5 rounded border border-white/10 bg-zinc-950 text-zinc-400 text-[9px] font-mono font-bold">
-          <Navigation className="w-3 h-3 text-cyan-400" />
+        <span className="flex items-center gap-1 px-2.5 py-0.5 rounded border border-white/10 bg-white/[0.02] text-white/55 text-[9px] font-mono font-bold">
+          <Navigation className="w-3 h-3 text-ve-cyan" />
           {player.position} TENDENCY
         </span>
       </div>
 
       {/* 3D Isometric Field Canvas */}
-      <div className="relative w-full max-w-[340px] aspect-[4/3] bg-zinc-950 rounded border border-white/5 overflow-hidden">
+      <div className="relative w-full max-w-[340px] aspect-[4/3] bg-white/[0.02] rounded border border-white/5 overflow-hidden">
         <svg viewBox="0 0 300 270" className="w-full h-full">
           <defs>
             <linearGradient id="fieldGrass" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -156,8 +156,8 @@ export function TdFieldMatrix3D({ player }: { player: TouchdownPlayer }) {
 
       {/* Legend */}
       <div className="w-full flex items-center justify-between text-[9px] font-mono text-white/50 border-t border-white/10 pt-2.5 mt-3">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_6px_#00d9a0]" /> Touchdown</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Tackled / Inc</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ve-emerald/10 inline-block shadow-[0_0_6px_#00d9a0]" /> Touchdown</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ve-red/10 inline-block" /> Tackled / Inc</span>
       </div>
     </div>
   );

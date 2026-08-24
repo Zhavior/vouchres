@@ -106,10 +106,10 @@ export const TierBoard: React.FC<TierBoardProps> = ({
             >
               {/* Column Header styled like HR Next */}
               <header
-                className={`mb-3 flex items-center justify-between gap-2 rounded-lg border ${col.headerBorder} ${col.headerBg} px-3 py-2`}
+                className={`mb-3 flex items-center justify-between gap-2 border ${col.headerBorder} ${col.headerBg} px-3 py-2`}
               >
                 <h2
-                  className={`flex min-w-0 items-center gap-2 font-mono font-black uppercase ${col.textColor} text-[11px] tracking-[0.18em]`}
+                  className={`flex min-w-0 items-center gap-2 font-mono font-semibold uppercase ${col.textColor} text-[11px] tracking-[0.18em]`}
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full ${col.headerDot}`} />
                   <span className="truncate">{col.title}</span>
@@ -122,10 +122,10 @@ export const TierBoard: React.FC<TierBoardProps> = ({
               {/* Players Stack */}
               <div className="flex flex-col gap-3">
                 {players.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-white/10 p-6 text-center text-zinc-500 text-xs">
-                    <Target className="h-6 w-6 mb-1 text-zinc-600" />
+                  <div className="flex flex-col items-center justify-center border border-dashed border-white/10 p-6 text-center text-white/40 text-xs">
+                    <Target className="h-6 w-6 mb-1 text-white/25" />
                     <p className="font-bold">No players match</p>
-                    <p className="text-[10px] mt-0.5 text-zinc-600">Adjust tactical radar filters</p>
+                    <p className="text-[10px] mt-0.5 text-white/25">Adjust tactical radar filters</p>
                   </div>
                 ) : (
                   visiblePlayers.map((player) => (
@@ -144,7 +144,7 @@ export const TierBoard: React.FC<TierBoardProps> = ({
                       ...current,
                       [col.tier]: Math.min(current[col.tier] + VISIBLE_STEP, players.length),
                     }))}
-                    className="border border-white/15 bg-white/[0.03] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-400 transition hover:border-white/30 hover:text-white"
+                    className="border border-white/[0.08] bg-white/[0.03] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-white/55 transition hover:border-white/30 hover:text-white"
                   >
                     Show {Math.min(VISIBLE_STEP, players.length - visibleCount)} more · {visibleCount} of {players.length}
                   </button>

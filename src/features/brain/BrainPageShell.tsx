@@ -17,13 +17,13 @@ export function BrainPageShell({
     <AuroraBackground variant="brain" className="min-h-screen">
       <main className={`${AURORA_PAGE} brain-workspace min-h-0 min-w-0 overflow-x-hidden ${AURORA_PAGE_PAD_X} ${AURORA_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1380px] flex-col ${AURORA_PAGE_GAP}`}>
-        <header className="brain-hero rounded-2xl p-4 sm:p-5">
+        <header className="brain-hero p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className={`${AURORA_LABEL} brain-product-mark text-xs font-bold text-vouch-cyan`}>
                 <Brain className="h-3.5 w-3.5 text-vouch-cyan" /> ProjectVABrAIns · Sports Intelligence Brain
               </div>
-              <h1 className="mt-2 max-w-2xl text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+              <h1 className="mt-2 max-w-2xl text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl">
                 The evidence room <span className="text-vouch-emerald">for every decision.</span>
               </h1>
               <p className="mt-1.5 max-w-2xl text-xs sm:text-sm leading-relaxed text-white/60">
@@ -35,7 +35,7 @@ export function BrainPageShell({
                 type="button"
                 data-active={active === 'picks'}
                 onClick={() => onNavigate('brain_picks')}
-                className="brain-tab z8-control inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 font-mono text-xs font-bold uppercase transition"
+                className="brain-tab z8-control inline-flex min-h-10 items-center justify-center gap-2 border px-4 font-mono text-xs font-bold uppercase transition"
               >
                 <Crosshair className="h-3.5 w-3.5" /> Picks
               </button>
@@ -43,7 +43,7 @@ export function BrainPageShell({
                 type="button"
                 data-active={active === 'performance'}
                 onClick={() => onNavigate('brain_performance')}
-                className="brain-tab z8-control inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 font-mono text-xs font-bold uppercase transition"
+                className="brain-tab z8-control inline-flex min-h-10 items-center justify-center gap-2 border px-4 font-mono text-xs font-bold uppercase transition"
               >
                 <ChartNoAxesCombined className="h-3.5 w-3.5" /> Performance
               </button>

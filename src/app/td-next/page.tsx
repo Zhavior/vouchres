@@ -77,9 +77,9 @@ export function TdNextPage() {
   }, []);
 
   return (
-    <div className="hr-next ve-page-shell relative z-10 flex min-h-0 w-full min-w-0 flex-1 bg-black text-white font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="hr-next ve-page-shell relative z-10 flex min-h-0 w-full min-w-0 flex-1 bg-transparent text-white font-mono selection:bg-ve-cyan/10 selection:text-black">
       {/* Left Control Rail (Hidden on Mobile, block on Desktop) */}
-      <aside className="ve-hr-control-rail sticky top-0 hidden w-64 shrink-0 space-y-5 self-start overflow-y-auto border-r-2 border-white/15 bg-black p-4 font-mono lg:block h-screen tn-scrollbar-none">
+      <aside className="ve-hr-control-rail sticky top-0 hidden w-64 shrink-0 space-y-5 self-start overflow-y-auto border-r border-white/[0.08] bg-transparent p-4 font-mono lg:block h-screen tn-scrollbar-none">
         <TacticalPresets onApplyPreset={applyPreset} onReset={resetFilters} />
         <div className="h-px w-full bg-white/10 my-4" />
         <TacticalRadar
@@ -95,7 +95,7 @@ export function TdNextPage() {
         <LiveRedZoneBanner threats={liveThreats} onSelectGame={selectGame} />
         
         {/* Sticky Top Header */}
-        <div className="sticky top-0 z-30 space-y-3 border-b-2 border-white/15 bg-black/95 px-4 py-3 sm:px-6 font-mono backdrop-blur-xl">
+        <div className="sticky top-0 z-30 space-y-3 border-b border-white/[0.08] bg-black/95 px-4 py-3 sm:px-6 font-mono backdrop-blur-xl">
           {games.length > 0 && (
             <MatchupTicker
               games={games}
@@ -115,8 +115,8 @@ export function TdNextPage() {
               onClick={() => setActiveView('BOARD')}
               className={`px-4 py-1.5 rounded-none text-xs font-bold uppercase tracking-widest border transition-colors ${
                 activeView === 'BOARD'
-                  ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300'
-                  : 'border-white/10 bg-black text-zinc-500 hover:text-white'
+                  ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
+                  : 'border-white/10 bg-transparent text-white/40 hover:text-white'
               }`}
             >
               Command Board
@@ -125,8 +125,8 @@ export function TdNextPage() {
               onClick={() => setActiveView('LEDGER')}
               className={`px-4 py-1.5 rounded-none text-xs font-bold uppercase tracking-widest border transition-colors ${
                 activeView === 'LEDGER'
-                  ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300'
-                  : 'border-white/10 bg-black text-zinc-500 hover:text-white'
+                  ? 'border-ve-cyan/25 bg-ve-cyan/10 text-ve-cyan'
+                  : 'border-white/10 bg-transparent text-white/40 hover:text-white'
               }`}
             >
               Ledger
@@ -150,9 +150,9 @@ export function TdNextPage() {
 
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 border border-white/10 bg-[#07080C]/80">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-400/30 border-t-cyan-400 mb-4" />
-                  <div className="font-mono text-xs font-bold text-cyan-300">CALIBRATING SLATE TELEMETRY...</div>
-                  <div className="font-mono text-[10px] text-zinc-500 mt-2">Computing TDPI values for all active skill players</div>
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-ve-cyan/30 border-t-ve-cyan mb-4" />
+                  <div className="font-mono text-xs font-bold text-ve-cyan">CALIBRATING SLATE TELEMETRY...</div>
+                  <div className="font-mono text-[10px] text-white/40 mt-2">Computing TDPI values for all active skill players</div>
                 </div>
               ) : allPlayers.length > 0 ? (
                 <TierBoard
@@ -162,8 +162,8 @@ export function TdNextPage() {
                 />
               ) : (
                 <div className="border border-white/10 bg-[#07080C]/80 px-6 py-16 text-center font-mono">
-                  <div className="text-sm font-black uppercase tracking-widest text-white">No verified touchdown candidates</div>
-                  <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-zinc-500">
+                  <div className="text-sm font-semibold uppercase tracking-widest text-white">No verified touchdown candidates</div>
+                  <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-white/40">
                     TD Next will populate only after the licensed provider returns a complete, source-backed board. Demo players are intentionally disabled.
                   </p>
                 </div>

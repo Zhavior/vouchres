@@ -74,17 +74,17 @@ export function TdCorrelationWarning() {
           key={idx} 
           className={`flex items-start gap-2 rounded border p-2 shadow-inner ${
             w.type === 'danger' 
-              ? 'border-rose-500/30 bg-rose-500/10' 
-              : 'border-amber-500/30 bg-amber-500/10'
+              ? 'border-ve-red/30 bg-ve-red/10' 
+              : 'border-ve-amber/30 bg-ve-amber/10'
           }`}
         >
           {w.type === 'danger' ? (
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-400 mt-0.5" />
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-ve-red mt-0.5" />
           ) : (
-            <Info className="h-3.5 w-3.5 shrink-0 text-amber-400 mt-0.5" />
+            <Info className="h-3.5 w-3.5 shrink-0 text-ve-amber mt-0.5" />
           )}
           <p className={`text-[10px] font-bold leading-tight uppercase tracking-widest font-mono ${
-            w.type === 'danger' ? 'text-rose-200' : 'text-amber-200'
+            w.type === 'danger' ? 'text-ve-red' : 'text-ve-amber'
           }`}>
             {w.message}
           </p>

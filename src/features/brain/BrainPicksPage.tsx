@@ -288,7 +288,7 @@ export default function BrainPicksPage({
             <div className={`${AURORA_LABEL} text-vouch-cyan`}>
               Brain Scan · Full slate intake
             </div>
-            <h2 className="mt-1 text-xl font-black text-white">
+            <h2 className="mt-1 text-xl font-bold text-white">
               Evidence coverage before selection
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-white/50">
@@ -330,14 +330,14 @@ export default function BrainPicksPage({
                     {source.label}
                   </strong>
                   <span
-                    className={`${AURORA_LABEL} ${source.status === "verified" ? "text-vouch-emerald" : source.status === "partial" ? "text-amber-200" : "text-rose-300"}`}
+                    className={`${AURORA_LABEL} ${source.status === "verified" ? "text-vouch-emerald" : source.status === "partial" ? "text-ve-amber" : "text-ve-red"}`}
                   >
                     {source.coverage}%
                   </span>
                 </div>
                 <div className="brain-source-track mt-2">
                   <div
-                    className={source.status === "missing" ? "bg-rose-400" : source.status === "partial" ? "bg-amber-300" : undefined}
+                    className={source.status === "missing" ? "bg-ve-red/10" : source.status === "partial" ? "bg-ve-amber/10" : undefined}
                     style={{ width: `${source.coverage}%` }}
                   />
                 </div>
@@ -348,7 +348,7 @@ export default function BrainPicksPage({
             ))}
           </div>
         ) : (
-          <p className="py-4 text-center text-xs text-slate-400">
+          <p className="py-4 text-center text-xs text-white/55">
             Scan evidence active. Slate candidates verified against production MLB API feeds.
           </p>
         )}
@@ -358,10 +358,10 @@ export default function BrainPicksPage({
       <section className="brain-panel p-4 sm:p-6">
         <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className={`${AURORA_LABEL} text-amber-200`}>
+            <div className={`${AURORA_LABEL} text-ve-amber`}>
               Stolen Base Brain · Runner Analysis
             </div>
-            <h2 className="mt-1 text-xl font-black text-white">
+            <h2 className="mt-1 text-xl font-bold text-white">
               Selective Runner Opportunities
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-white/50">
@@ -369,7 +369,7 @@ export default function BrainPicksPage({
             </p>
           </div>
           <span
-            className={`${AURORA_LABEL} border border-amber-400/20 bg-amber-400/5 px-3 py-1.5 text-amber-200`}
+            className={`${AURORA_LABEL} border border-ve-amber/20 bg-ve-amber/5 px-3 py-1.5 text-ve-amber`}
           >
             {stolenBasePicks.length} Speed Candidates Loaded
           </span>
@@ -410,7 +410,7 @@ export default function BrainPicksPage({
                       </div>
                     </div>
                     <div className="text-right">
-                      <strong className="font-mono text-2xl text-amber-200">
+                      <strong className="font-mono text-2xl text-ve-amber">
                         {pick.score}
                       </strong>
                       <span className={`${AURORA_LABEL} block text-white/35`}>
@@ -421,7 +421,7 @@ export default function BrainPicksPage({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {index < 3 && (
                       <span
-                        className={`${AURORA_LABEL} border border-amber-300/40 bg-amber-300/10 px-2 py-1 text-amber-200`}
+                        className={`${AURORA_LABEL} border border-ve-amber/40 bg-ve-amber/10 px-2 py-1 text-ve-amber`}
                       >
                         Top Speed Target
                       </span>
@@ -474,7 +474,7 @@ export default function BrainPicksPage({
         ].map(([label, value]) => (
           <div key={String(label)} className="brain-stat">
             <div className={`${AURORA_LABEL} text-white/40`}>{label}</div>
-            <div className="mt-1 font-mono text-2xl font-black text-white">
+            <div className="mt-1 font-mono text-2xl font-bold text-white">
               {value}
             </div>
           </div>
@@ -482,7 +482,7 @@ export default function BrainPicksPage({
       </section>
 
       {picks.some((pick) => pick.evidenceQuality === "preview") && (
-        <div className="brain-callout flex items-start gap-2 p-3 text-sm text-amber-100/75">
+        <div className="brain-callout flex items-start gap-2 p-3 text-sm text-ve-amber/75">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> Official lineups
           are incomplete. Preview selections are penalized and may change.
         </div>
@@ -520,21 +520,21 @@ export default function BrainPicksPage({
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-400">#{index + 1}</span>
+                      <span className="font-mono text-xs font-bold text-white/55">#{index + 1}</span>
                       <strong className="truncate text-sm font-bold text-white">
                         {pick.player.playerName}
                       </strong>
                     </div>
-                    <p className="mt-0.5 truncate text-[11px] text-slate-400 font-mono">
+                    <p className="mt-0.5 truncate text-[11px] text-white/55 font-mono">
                       {pick.player.team} vs {pick.player.opponent}
                     </p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="font-mono text-lg font-black text-vouch-emerald">
+                  <span className="font-mono text-lg font-bold text-vouch-emerald">
                     {pick.selectionScore}
                   </span>
-                  <span className={`${AURORA_LABEL} block text-slate-400`}>
+                  <span className={`${AURORA_LABEL} block text-white/55`}>
                     Score
                   </span>
                 </div>
@@ -549,7 +549,7 @@ export default function BrainPicksPage({
                   <div className={`${AURORA_LABEL} text-vouch-emerald`}>
                     Selected over the slate
                   </div>
-                  <h2 className="mt-1 text-2xl font-black text-white">
+                  <h2 className="mt-1 text-2xl font-bold text-white">
                     {selected.player.playerName}
                   </h2>
                   <p className="mt-1 text-sm text-white/45 font-mono">
@@ -557,7 +557,7 @@ export default function BrainPicksPage({
                     {selected.player.venue || "Venue pending"}
                   </p>
                 </div>
-                <div className="border border-vouch-emerald/25 bg-vouch-emerald/8 px-4 py-3 text-center rounded-xl">
+                <div className="border border-vouch-emerald/25 bg-vouch-emerald/8 px-4 py-3 text-center ">
                   <strong className="font-mono text-3xl text-vouch-emerald">
                     {selected.slatePercentile}
                   </strong>
@@ -571,32 +571,32 @@ export default function BrainPicksPage({
                 {selected.tags.map((tag) => (
                   <span
                     key={tag.label}
-                    className={`${AURORA_LABEL} border px-2.5 py-1 rounded-lg ${tag.tone === "positive" ? "border-vouch-emerald/30 bg-vouch-emerald/8 text-vouch-emerald" : tag.tone === "warning" ? "border-amber-400/25 bg-amber-400/5 text-amber-200" : "border-white/10 text-white/55"}`}
+                    className={`${AURORA_LABEL} border px-2.5 py-1 ${tag.tone === "positive" ? "border-vouch-emerald/30 bg-vouch-emerald/8 text-vouch-emerald" : tag.tone === "warning" ? "border-ve-amber/25 bg-ve-amber/5 text-ve-amber" : "border-white/10 text-white/55"}`}
                   >
                     {tag.label}
                   </span>
                 ))}
               </div>
 
-              <p className="text-sm leading-relaxed text-slate-300">
+              <p className="text-sm leading-relaxed text-white/70">
                 {selected.explanation}
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 font-mono text-xs">
-                <div className="p-3 rounded-xl border border-white/10 bg-black/40 text-center">
-                  <p className="text-slate-400 uppercase text-[10px]">Power</p>
+                <div className="p-3 border border-white/10 bg-black/40 text-center">
+                  <p className="text-white/55 uppercase text-[10px]">Power</p>
                   <p className="text-white font-bold text-sm mt-1">{selected.player.hitterPower ?? '—'}</p>
                 </div>
-                <div className="p-3 rounded-xl border border-white/10 bg-black/40 text-center">
-                  <p className="text-slate-400 uppercase text-[10px]">Pitcher Vuln</p>
-                  <p className="text-amber-300 font-bold text-sm mt-1">{selected.player.pitcherVulnerability ?? '—'}</p>
+                <div className="p-3 border border-white/10 bg-black/40 text-center">
+                  <p className="text-white/55 uppercase text-[10px]">Pitcher Vuln</p>
+                  <p className="text-ve-amber font-bold text-sm mt-1">{selected.player.pitcherVulnerability ?? '—'}</p>
                 </div>
-                <div className="p-3 rounded-xl border border-white/10 bg-black/40 text-center">
-                  <p className="text-slate-400 uppercase text-[10px]">Recent Form</p>
+                <div className="p-3 border border-white/10 bg-black/40 text-center">
+                  <p className="text-white/55 uppercase text-[10px]">Recent Form</p>
                   <p className="text-vouch-cyan font-bold text-sm mt-1">{selected.player.recentForm ?? '—'}</p>
                 </div>
-                <div className="p-3 rounded-xl border border-white/10 bg-black/40 text-center">
-                  <p className="text-slate-400 uppercase text-[10px]">Confidence</p>
+                <div className="p-3 border border-white/10 bg-black/40 text-center">
+                  <p className="text-white/55 uppercase text-[10px]">Confidence</p>
                   <p className="text-vouch-emerald font-bold text-sm mt-1">{selected.player.dataConfidence ?? '—'}</p>
                 </div>
               </div>
@@ -612,7 +612,7 @@ export default function BrainPicksPage({
             <div className={`${AURORA_LABEL} text-vouch-cyan`}>
               Pitcher Strikeout Brain · Target Analysis
             </div>
-            <h2 className="mt-1 text-xl font-black text-white">
+            <h2 className="mt-1 text-xl font-bold text-white">
               Official 5+ K Pitcher Decisions
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-white/50">
@@ -672,7 +672,7 @@ export default function BrainPicksPage({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {index < 3 && (
                       <span
-                        className={`${AURORA_LABEL} border border-amber-300/40 bg-amber-300/10 px-2 py-1 text-amber-200`}
+                        className={`${AURORA_LABEL} border border-ve-amber/40 bg-ve-amber/10 px-2 py-1 text-ve-amber`}
                       >
                         Top K Pitcher
                       </span>
