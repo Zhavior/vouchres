@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 
-import { AuroraGlow } from "./AuroraGlow";
-import {
-  auroraVariants,
-  type AuroraVariant,
-} from "./auroraVariants";
+import { type AuroraVariant } from "./auroraVariants";
 
 type AuroraBackgroundProps = {
   variant?: AuroraVariant;
@@ -12,23 +8,28 @@ type AuroraBackgroundProps = {
   className?: string;
 };
 
+/*
+ * The drifting glow layer is gone.
+ *
+ * AuroraGlow painted two blurred circles — 34rem and 36rem, `rounded-full`,
+ * `blur-3xl` — translating and scaling on 30s and 36s infinite framer-motion
+ * loops. It was the only moving background in the app, it ran forever on a
+ * data desk, and it did not respect prefers-reduced-motion. Every other desk
+ * sits on flat #050505, so this one does too.
+ */
 export function AuroraBackground({
   variant = "brain",
   children,
   className = "",
 }: AuroraBackgroundProps) {
-  const config = auroraVariants[variant];
-
   return (
     <div
       className={[
         "relative isolate overflow-hidden",
-        "bg-ve-obsidian",
+        "bg-[#050505]",
         className,
       ].join(" ")}
     >
-      <AuroraGlow intensity={config.glowIntensity} />
-
       {/* TODO: Sprint 1 */}
       {/* <AuroraGrid opacity={config.gridOpacity} /> */}
       {/* <AuroraParticles density={config.particleDensity} /> */}
