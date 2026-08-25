@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import Navbar from '../components/landing-v4/Navbar';
 import Hero from '../components/landing-v4/Hero';
 import ProductStory from '../components/landing-v4/ProductStory';
+import ProductGallery from '../components/landing-v4/ProductGallery';
 import StadiumIntelligence from '../components/landing-v4/StadiumIntelligence';
 import MethodologyEngine from '../components/landing-v4/MethodologyEngine';
 import AuditContrast from '../components/landing-v4/AuditContrast';
 import CommunityInvitation from '../components/landing-v4/CommunityInvitation';
 import FinalStatement from '../components/landing-v4/FinalStatement';
 import AccessTiers from '../components/landing-v4/AccessTiers';
+import AuditedTrackRecord from '../components/landing-v4/AuditedTrackRecord';
 import PublicFooter from '../components/landing-v4/PublicFooter';
 
 
@@ -76,14 +78,14 @@ export default function VouchEdgeLandingV4() {
       <Hero />
 
       {/* 01 / THE THESIS */}
-      <section className="py-60 px-6 bg-obsidian-950">
-        <div className="container mx-auto max-w-5xl text-center space-y-16">
+      <section className="px-6 py-28 bg-obsidian-950 lg:py-36">
+        <div className="container mx-auto max-w-5xl space-y-10 text-center lg:space-y-12">
           <span className="terminal-text opacity-20">01 / THE_THESIS</span>
           <h2 className="text-6xl md:text-8xl font-bold tracking-tighter italic leading-[0.9] text-white">
             Sports predictions have <br />
             <span className="text-white/10">a memory problem.</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-left pt-24 border-t border-white/5">
+          <div className="grid grid-cols-1 gap-10 border-t border-white/5 pt-12 text-left md:grid-cols-2 md:gap-16">
             <p className="text-xl text-white/55 font-light leading-relaxed">
               The winners get screenshotted. The misses disappear. Confidence changes after the game. Missing evidence gets forgotten.
             </p>
@@ -96,12 +98,16 @@ export default function VouchEdgeLandingV4() {
 
       <ProductStory />
 
+      <ProductGallery />
+
       <StadiumIntelligence />
 
       <MethodologyEngine />
 
       <AuditContrast />
 
+
+      <AuditedTrackRecord />
 
       <AccessTiers />
 

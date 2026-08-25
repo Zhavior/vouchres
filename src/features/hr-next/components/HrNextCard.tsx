@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Star, TrendingUp, Search, Flame } from 'lucide-react';
 import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 import { logoByTeamName } from '../../../lib/teamLogos';
+import type { MlbInjuryRecord } from '../../../hooks/queries/useMlbInjuries';
 import type { HrWatchRow } from '../../hr/types/hrWatch';
 import { extractCardData } from '../utils/cardUtils';
 import { tierForScore, type HrNextTierDef } from '../utils/tierPartition';
@@ -16,6 +17,15 @@ function layerValue(score: number | null | undefined): string {
 
 export interface HrNextCardProps {
   row: HrWatchRow;
+  /**
+   * Availability for this row, already looked up by the board.
+   *
+   * Passed in rather than fetched here. This component is rendered once per
+   * board row, so calling the query hook inside it made every card a data
+   * consumer — and made the component untestable without a QueryClientProvider,
+   * which is exactly how it broke hrNextProMode.
+   */
+  injury?: MlbInjuryRecord | null;
   active: boolean;
   saved: boolean;
   isReceiptOpen: boolean;
@@ -31,6 +41,7 @@ export interface HrNextCardProps {
 
 export const HrNextCard = React.memo(function HrNextCard({
   row,
+  injury = null,
   active,
   saved,
   isReceiptOpen,
@@ -176,6 +187,20 @@ export const HrNextCard = React.memo(function HrNextCard({
                   >
                     {activeTier.label.toUpperCase()}
                   </span>
+
+                  {/* Availability — only ever set on projected rows. */}
+                  {injury && (
+                    <span
+                      title={injury.shortComment ?? injury.status}
+                      className={`border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase ${
+                        injury.availability === 'OUT'
+                          ? 'border-ve-red/40 bg-ve-red/10 text-ve-red'
+                          : 'border-ve-amber/40 bg-ve-amber/10 text-ve-amber'
+                      }`}
+                    >
+                      {injury.availability === 'DAY_TO_DAY' ? 'DTD' : injury.status}
+                    </span>
+                  )}
 
                   {/* HR Intelligence Live & Recent Badges */}
                   {hasHitHrToday && (

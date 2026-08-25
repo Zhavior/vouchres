@@ -22,11 +22,21 @@ export interface HrEvent {
   gamePk: number;
   matchup: string;
   timestamp: string;
+  /** Statcast exit velocity in mph. Null when MLB published no hitData for the play. */
+  exitVelocity: number | null;
+  /** Statcast projected distance in feet. Null when MLB published no hitData. */
+  distance: number | null;
 }
 
 const HR_CACHE_TTL = 45_000;
 const hrCache = new TTLCache<HrFeedPayload>(HR_CACHE_TTL);
 const MAX_GAMES = 15;
+/**
+ * Upper bound on events returned for one date. A full slate tops out around 60
+ * home runs; the cap is headroom against a pathological feed, not a display
+ * limit, so slate totals stay truthful.
+ */
+const MAX_EVENTS = 120;
 
 const LAST_GOOD_TTL_MS = 5 * 60_000;
 const LAST_GOOD_WARNING =
@@ -145,6 +155,11 @@ async function fetchHrEventsForDate(date: string): Promise<HrEvent[]> {
         for (const play of allPlays) {
           if (play?.result?.eventType !== "home_run") continue;
           const batter = play.matchup?.batter ?? {};
+          // hitData rides on the pitch event that ended the at-bat. It is absent
+          // for parks without tracking or when MLB has not published it yet, so
+          // both fields stay null rather than being estimated.
+          const hitData = [...(play.playEvents ?? [])].reverse()
+            .find((event: any) => event?.hitData)?.hitData;
           const isTop = play.about?.halfInning === "top";
           const team = isTop ? g.awayTeam : g.homeTeam;
           const opp = isTop ? g.homeTeam : g.awayTeam;
@@ -163,6 +178,8 @@ async function fetchHrEventsForDate(date: string): Promise<HrEvent[]> {
             gamePk: g.gamePk,
             matchup: `${g.awayTeam.abbreviation} @ ${g.homeTeam.abbreviation}`,
             timestamp: play.about?.endTime ?? play.about?.startTime ?? new Date().toISOString(),
+            exitVelocity: Number.isFinite(Number(hitData?.launchSpeed)) ? Number(hitData.launchSpeed) : null,
+            distance: Number.isFinite(Number(hitData?.totalDistance)) ? Number(hitData.totalDistance) : null,
           });
         }
         return out;
@@ -171,5 +188,5 @@ async function fetchHrEventsForDate(date: string): Promise<HrEvent[]> {
 
     const events = batches.flat();
     events.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)); // newest first
-    return events.slice(0, 60);
+    return events.slice(0, MAX_EVENTS);
 }

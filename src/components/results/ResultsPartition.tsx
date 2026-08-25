@@ -17,11 +17,13 @@ interface PartitionDatum extends HierarchyDatum {
 
 const STATUS_ORDER = ['WON', 'LOST', 'PENDING', 'VOID'] as const;
 
+/** Landing palette: ve-emerald / ve-red / ve-cyan, so the breakdown reads as
+ *  part of the same desk rather than a separate chart. */
 const STATUS_COLOR: Record<string, string> = {
-  WON: '#34d399',
-  LOST: '#f87171',
-  PENDING: '#00F0FF',
-  VOID: '#94a3b8',
+  WON: '#31B583',
+  LOST: '#D96359',
+  PENDING: '#4FB8DC',
+  VOID: '#6B7280',
 };
 
 function legTypeLabel(totalLegs: number): string {

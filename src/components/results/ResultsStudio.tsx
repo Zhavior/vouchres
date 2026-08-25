@@ -1,35 +1,28 @@
-import { useState, useMemo } from "react";
-import {
-  BarChart3, Search, ChevronLeft, ChevronRight,
-} from "lucide-react";
-import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
-import { ResultsLedgerSummary } from "./ResultsLedgerSummary";
-import ResultsPartition from "./ResultsPartition";
-import SmartParlaySlipCard from "../parlay/smart/SmartParlaySlipCard";
-import { projectSmartParlayFromParlay } from "../../domain/parlay";
-import {
-  AuroraMaxCommandHeader,
-  AuroraMaxControl,
-  AuroraMaxEyebrow,
-  AuroraMaxFallback,
-  AuroraMaxMetricStrip,
-  AuroraMaxPanel,
-  AuroraMaxRankedWorkspace,
-  AuroraMaxTruthBadge,
-} from '../aurora-max/AuroraMaxPrimitives';
-import {
-  buildResultsRecordSummary,
-  type ResultsRecordSummary,
-} from './resultsRecordModel';
-import './results-aurora-max.css';
+import { useMemo, useState } from 'react';
+import { Archive, BarChart3 } from 'lucide-react';
+import type { Leg, Parlay, FeedPost, CreatorProofProfile } from '../../types';
+import { useSlateResults } from '../../features/hr/hooks/useSlateResults';
+import { localISODate } from '../../features/hr/utils/localDate';
+import type {
+  SlateCapperResult,
+  SlateGameResult,
+  SlateHomeRun,
+  SlateTally,
+} from '../../kernel/contracts/slateResults';
+import { ResultsSlipsPanel } from './ResultsSlipsPanel';
+import { gradeSlipsForSlate } from './slateSlipGrading';
 
 /**
- * ResultsStudio — Premium proof dashboard
+ * Results desk — one MLB slate, graded.
  *
- * Desktop: 2-panel (Calendar + Slip Feed | Win Rates + Breakdown)
- * Mobile: Stacked with filter chips + week strip
+ * Every number on this screen is derived server-side from the real HR
+ * play-by-play feed against calls that were recorded before first pitch
+ * (server/services/results/slateResultsService.ts). Nothing here computes an
+ * outcome, and nothing renders a placeholder in place of one: a tier with no
+ * pregame snapshot behind it reads UNKNOWN rather than a fraction.
  *
- * Uses existing savedSlips + posts data. No fake results.
+ * Styled on the V4 landing vocabulary — obsidian bands, sharp borders,
+ * `terminal-text` eyebrows, emerald for confirmed and red for missed.
  */
 
 interface Props {
@@ -39,379 +32,523 @@ interface Props {
   onTailParlay?: (legs: Leg[]) => void;
 }
 
-type ResultFilter = "all" | "wins" | "losses" | "pushes" | "voids" | "pending";
+type DeskTab = 'slate' | 'slips';
 
-export function ResultsStudio({ profile, savedParlays = [] }: Props) {
-  const [filter, setFilter] = useState<ResultFilter>("all");
-  const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(new Date());
-  const ownerName = profile?.displayName || "You";
+/** Dates offered on the rail. A slate older than a week is not what this desk is for. */
+const RAIL_DAYS = 7;
 
-  // Build all slips from savedParlays
-  const allSlips = useMemo(() => {
-    const slips = savedParlays.map((p) => ({
-      id: p.id,
-      title: p.title,
-      ownerName,
-      ownerType: "user" as const,
-      legs: p.legs,
-      totalLegs: p.legs.length,
-      status: p.status,
-      postedAt: p.createdAt,
-      resultDate: p.createdAt.slice(0, 10),
-      riskTier: p.riskTier,
-    }));
-    return slips;
-  }, [savedParlays, ownerName]);
+function railDates(today: string): string[] {
+  const base = new Date(`${today}T12:00:00`);
+  const out: string[] = [];
+  for (let back = RAIL_DAYS - 1; back >= 0; back -= 1) {
+    const day = new Date(base);
+    day.setDate(base.getDate() - back);
+    out.push(
+      `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`,
+    );
+  }
+  return out;
+}
 
-  const filteredParlays = useMemo(() => {
-    let result = savedParlays;
-    if (filter === "wins") result = result.filter((s) => s.status === "WON");
-    else if (filter === "losses") result = result.filter((s) => s.status === "LOST");
-    else if (filter === "pending") result = result.filter((s) => s.status === "PENDING");
-    else if (filter === "voids") result = result.filter((s) => s.status === "VOID");
-    if (selectedDate) {
-      result = result.filter((s) => s.createdAt.slice(0, 10) === selectedDate);
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.title.toLowerCase().includes(q)
-          || s.legs.some((l) => l.selection.toLowerCase().includes(q)),
-      );
-    }
-    return result;
-  }, [savedParlays, filter, selectedDate, search]);
+function shortDate(date: string): string {
+  const [, month, day] = date.split('-');
+  return `${Number(month)}/${Number(day)}`;
+}
 
-  // Calendar placement uses the saved timestamp. It does not imply a grading date.
-  const calendarDays = useMemo(() => {
-    const year = calendarMonth.getFullYear();
-    const month = calendarMonth.getMonth();
-    const lastDay = new Date(year, month + 1, 0);
-    const days: Array<{
-      date: string; day: number; slips: number;
-      wins: number; losses: number; pending: number;
-      winRate: number;
-    }> = [];
+function longDate(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const daySlips = allSlips.filter((s) => s.resultDate === dateStr);
-      const wins    = daySlips.filter((s) => s.status === "WON");
-      const losses  = daySlips.filter((s) => s.status === "LOST");
-      const settled = wins.length + losses.length;
-      days.push({
-        date: dateStr,
-        day: d,
-        slips: daySlips.length,
-        wins: wins.length,
-        losses: losses.length,
-        pending: daySlips.filter((s) => s.status === "PENDING").length,
-        winRate: settled > 0 ? Math.round((wins.length / settled) * 100) : -1,
-      });
-    }
-    return days;
-  }, [calendarMonth, allSlips]);
+function tallyText(tally: SlateTally | null): string {
+  return tally ? `${tally.hit}/${tally.total}` : 'UNKNOWN';
+}
 
-  const stats = useMemo(() => buildResultsRecordSummary(savedParlays), [savedParlays]);
+function tallyTone(tally: SlateTally | null): string {
+  if (!tally) return 'text-white/25';
+  return tally.hit > 0 ? 'text-ve-emerald' : 'text-white/40';
+}
 
-  const monthName = calendarMonth.toLocaleString("default", { month: "long", year: "numeric" });
+/* ============ Verdict ============ */
+
+function GradeDial({ letter, reason }: { letter: string | null; reason: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 px-6 py-8">
+      <div
+        className={`flex h-32 w-32 items-center justify-center rounded-full border ${
+          letter ? 'border-ve-emerald/40 shadow-[0_0_60px_rgba(49,181,131,0.12)]' : 'border-white/10'
+        }`}
+      >
+        <span
+          className={`text-5xl font-bold italic tracking-tighter ${letter ? 'text-ve-emerald' : 'text-white/20'}`}
+        >
+          {letter ?? '—'}
+        </span>
+      </div>
+      <div className="text-center">
+        <span className="terminal-text block">Slate grade</span>
+        <p className="mt-2 max-w-[16rem] text-[10px] leading-relaxed text-white/30">{reason}</p>
+      </div>
+    </div>
+  );
+}
+
+function MetricCell({
+  label,
+  value,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  tone?: 'default' | 'confirmed' | 'unknown';
+}) {
+  const valueTone =
+    tone === 'confirmed' ? 'text-ve-emerald' : tone === 'unknown' ? 'text-white/25' : 'text-white';
+  // A word ("UNKNOWN") set at the numeral size overruns the cell and collides
+  // with its neighbour, so non-numeric values drop to the label scale.
+  const numeric = /^[\d/.]+$/.test(value);
+  const valueSize = numeric
+    ? 'text-3xl font-bold italic tracking-tighter'
+    : 'font-mono text-xs font-bold uppercase tracking-widest';
+  return (
+    <div className="min-w-0 border-l border-white/5 px-4 py-6 first:border-l-0">
+      <div className={`${valueSize} ${valueTone}`}>{value}</div>
+      <span className="terminal-text mt-2 block">{label}</span>
+    </div>
+  );
+}
+
+/* ============ Per-game grid ============ */
+
+function GameTile({ game }: { game: SlateGameResult }) {
+  const produced = game.homeRuns > 0;
+  return (
+    <div
+      className={`border px-3 py-2.5 text-center transition-colors ${
+        produced ? 'border-ve-emerald/25 bg-ve-emerald/[0.03]' : 'border-white/5 bg-white/[0.01]'
+      }`}
+    >
+      <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-white/70">
+        {game.matchup}
+      </div>
+      <div className="mt-1.5 flex items-center justify-center gap-2 font-mono text-[10px]">
+        {game.topPlays || game.zoneFit ? (
+          <>
+            <span className={tallyTone(game.topPlays)}>{tallyText(game.topPlays)}</span>
+            <span className="text-white/15">·</span>
+            <span className={tallyTone(game.zoneFit)}>{tallyText(game.zoneFit)}</span>
+          </>
+        ) : (
+          // Ungraded, and the band above already says why. Repeating UNKNOWN
+          // thirty times across the grid states nothing the note has not.
+          <span className="text-white/15">Ungraded</span>
+        )}
+      </div>
+      <div
+        className={`mt-1.5 font-mono text-[10px] font-bold uppercase tracking-wider ${
+          produced ? 'text-ve-emerald' : 'text-white/20'
+        }`}
+      >
+        {game.homeRuns} {game.homeRuns === 1 ? 'Total HR' : 'Total HRs'}
+      </div>
+    </div>
+  );
+}
+
+/* ============ Cappers ============ */
+
+function TicketRow({ capper }: { capper: SlateCapperResult }) {
+  const ticket = capper.ticket;
+  return (
+    <div className="flex items-center gap-3 border-b border-white/5 py-3.5 last:border-b-0">
+      <span className="w-14 shrink-0 font-mono text-[10px] font-bold uppercase tracking-widest text-white/40">
+        {capper.displayName}
+      </span>
+
+      {ticket ? (
+        <>
+          <img
+            src={ticket.headshot}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="h-8 w-8 shrink-0 rounded-full border border-white/10 object-cover"
+          />
+          <span className="min-w-0 flex-1 truncate text-sm font-bold italic text-white">
+            {ticket.playerName}
+            {ticket.teamAbbr ? (
+              <span className="ml-2 font-mono text-[10px] font-normal not-italic text-white/30">
+                {ticket.teamAbbr}
+              </span>
+            ) : null}
+          </span>
+          <span
+            className={`shrink-0 border px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-widest ${
+              ticket.hit === true
+                ? 'border-ve-emerald/40 text-ve-emerald'
+                : ticket.hit === false
+                  ? 'border-ve-red/40 text-ve-red'
+                  : 'border-white/10 text-white/30'
+            }`}
+          >
+            {ticket.hit === true ? 'Bang' : ticket.hit === false ? 'No go' : 'Live'}
+          </span>
+        </>
+      ) : (
+        <span className="flex-1 font-mono text-[10px] uppercase tracking-widest text-white/20">
+          No pick recorded
+        </span>
+      )}
+    </div>
+  );
+}
+
+function CapperScoreRow({ capper }: { capper: SlateCapperResult }) {
+  return (
+    <div className="flex items-center justify-between border-b border-white/5 py-4 last:border-b-0">
+      <div className="min-w-0">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-white/70">
+          {capper.displayName}
+        </span>
+        <span className="ml-2 font-mono text-[10px] text-white/20">@{capper.handle}</span>
+      </div>
+      <div className="flex items-baseline gap-1.5">
+        <span
+          className={`text-2xl font-bold italic tracking-tighter ${
+            capper.correct > 0 ? 'text-ve-emerald' : 'text-white/25'
+          }`}
+        >
+          {capper.correct}
+        </span>
+        <span className="font-mono text-[10px] text-white/20">/ {capper.picks}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ============ Home runs ============ */
+
+function HomeRunRow({ event }: { event: SlateHomeRun }) {
+  // Statcast is absent for some parks and some plays; the row shows what MLB
+  // published and stays silent about what it did not.
+  const velo = event.exitVelocity != null ? `${event.exitVelocity.toFixed(1)} mph` : null;
+  const distance = event.distance != null ? `${Math.round(event.distance)} ft` : null;
 
   return (
-    <main className="results-aurora-max min-h-screen min-w-0 overflow-x-hidden pb-24 sm:pb-12 font-mono">
-      <div className="mx-auto w-full max-w-[1280px] min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5">
-        
-        {/* Top Command Desk Panel */}
-        <AuroraMaxPanel as="section" className="results-command-panel p-4 sm:p-5 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="track-record-title">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="flex h-2 w-2 relative shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
-              </span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
-                    VOUCHEDGE // TRACK RECORD & AUDIT LEDGER
-                  </span>
-                  <span className="hidden md:inline px-1.5 py-0.2 border border-white/20 bg-zinc-900 text-[8px] font-black text-zinc-400">
-                    STAGE: 04 / DETERMINISTIC PROOF
-                  </span>
-                </div>
-                <p className="text-[10px] text-zinc-500 truncate mt-0.5">
-                  Verified Research Receipts · Cryptographic Proof · Zero Fake Records
-                </p>
-              </div>
-            </div>
+    <div className="flex items-center gap-3 border-b border-white/5 py-3 last:border-b-0">
+      <img
+        src={event.headshot}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="h-8 w-8 shrink-0 rounded-full border border-white/10 object-cover"
+      />
+      <div className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold italic text-white">{event.playerName}</span>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-white/25">
+          {event.teamAbbr} · {event.matchup}
+        </span>
+      </div>
+      <span className="shrink-0 text-right font-mono text-[10px] text-white/40">
+        {velo && distance ? `${velo} · ${distance}` : (velo ?? distance ?? `Inn ${event.inning}`)}
+      </span>
+    </div>
+  );
+}
 
-            <AuroraMaxTruthBadge state={stats.synced > 0 ? 'confirmed' : 'missing'}>
-              {stats.synced > 0 ? `${stats.synced} receipts synced` : 'No synced receipts'}
-            </AuroraMaxTruthBadge>
+/* ============ Panels ============ */
+
+function Panel({
+  title,
+  children,
+  className = '',
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`border border-white/5 bg-white/[0.01] p-5 ${className}`}>
+      <h2 className="terminal-text mb-1 text-ve-emerald">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function EmptyLine({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="py-8 text-center font-mono text-[10px] uppercase tracking-widest text-white/20">
+      {children}
+    </p>
+  );
+}
+
+/* ============ Desk ============ */
+
+export function ResultsStudio({ profile, savedParlays = [] }: Props) {
+  const today = localISODate();
+  const dates = useMemo(() => railDates(today), [today]);
+  // Yesterday by default: today's slate is still being played, so the graded
+  // record a visitor came for is the one that finished.
+  const [date, setDate] = useState(() => dates[dates.length - 2] ?? today);
+  const [tab, setTab] = useState<DeskTab>('slate');
+
+  const { results, loading, error } = useSlateResults(date);
+
+  // The user's own calls, settled by the same home runs the desk is showing.
+  // This is what fuses the parlay system into the record: one slate, one feed,
+  // the tracked cappers and the user graded side by side.
+  const mySlate = useMemo(
+    () => gradeSlipsForSlate(savedParlays, date, results?.homeRuns ?? [], results?.isToday ?? false),
+    [savedParlays, date, results],
+  );
+
+  return (
+    <main className="min-h-screen bg-obsidian-950 pb-24 text-white sm:pb-12">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-8 sm:py-12">
+        {/* Masthead */}
+        <header className="flex flex-col gap-6 border-b border-white/5 pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <span className="terminal-text text-ve-emerald">05 / Slate_Record</span>
+            <h1 className="mt-3 text-5xl font-bold italic tracking-tighter sm:text-6xl">Results</h1>
+            <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-white/30">
+              {longDate(date)}
+            </p>
           </div>
 
-          <AuroraMaxCommandHeader
-            eyebrow={<span className="inline-flex items-center gap-2 text-cyan-400 font-bold uppercase"><BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> Results command desk</span>}
-            title={<span id="track-record-title" className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">Track Record</span>}
-            description="Saved slips and their current recorded states. Backend-synced and local records remain visibly distinct."
-          />
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Slate date">
+            {dates.map((option) => {
+              const active = option === date;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setDate(option)}
+                  aria-pressed={active}
+                  className={`border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                    active
+                      ? 'border-ve-emerald/50 bg-ve-emerald/10 text-ve-emerald'
+                      : 'border-white/5 text-white/30 hover:border-white/20 hover:text-white/60'
+                  }`}
+                >
+                  {shortDate(option)}
+                </button>
+              );
+            })}
+          </div>
+        </header>
 
-          <AuroraMaxMetricStrip
-            className="mt-4"
-            items={[
-              { label: 'Saved slips', value: stats.total, tone: 'neutral' },
-              { label: 'Settled', value: stats.settled, tone: 'neutral' },
-              { label: 'Win rate', value: stats.winRate === null ? 'Unavailable' : `${stats.winRate}%`, tone: stats.winRate === null ? 'warning' : 'confirmed' },
-              { label: 'Backend synced', value: stats.synced, tone: stats.synced > 0 ? 'confirmed' : 'warning' },
-            ]}
-          />
-        </AuroraMaxPanel>
-
-        <div className="grid min-w-0 gap-4 lg:grid-cols-12">
-          <div className="min-w-0 space-y-4 lg:col-span-8">
-            
-            {/* Evidence Calendar Panel */}
-            <AuroraMaxPanel as="section" className="results-calendar p-3 sm:p-4 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="saved-activity-title">
-              <div className="results-calendar__header border-b border-white/10 pb-3">
-                <div className="min-w-0">
-                  <AuroraMaxEyebrow>EVIDENCE CALENDAR</AuroraMaxEyebrow>
-                  <h2 id="saved-activity-title" className="mt-1 text-base font-black uppercase tracking-wider text-white">Saved activity</h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] font-bold uppercase text-zinc-400">
-                    <span className="flex items-center gap-1.5"><span className="results-key results-key--won border border-emerald-400" />Win</span>
-                    <span className="flex items-center gap-1.5"><span className="results-key results-key--lost border border-rose-400" />Loss</span>
-                    <span className="flex items-center gap-1.5"><span className="results-key results-key--pending border border-cyan-400" />Live/Pending</span>
-                  </div>
-                </div>
-                <div className="results-month-control">
-                  <AuroraMaxControl aria-label="Previous month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="!h-9 !w-9 !p-0 border border-white/20 bg-zinc-950 text-zinc-300 hover:border-cyan-400 hover:text-white cursor-pointer">
-                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                  </AuroraMaxControl>
-                  <span className="min-w-0 text-center text-xs font-black uppercase text-cyan-300 font-mono">{monthName}</span>
-                  <AuroraMaxControl aria-label="Next month" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="!h-9 !w-9 !p-0 border border-white/20 bg-zinc-950 text-zinc-300 hover:border-cyan-400 hover:text-white cursor-pointer">
-                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                  </AuroraMaxControl>
-                </div>
-              </div>
-
-              {allSlips.length === 0 ? (
-                <AuroraMaxFallback compact title="No saved activity" detail="Save a decision to begin a traceable track record." />
-              ) : (
-                <>
-                  <div className="results-calendar-grid mb-1 mt-4">
-                    {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                      <div key={i} className="text-center font-mono text-[9px] font-black uppercase text-zinc-500">{d}</div>
-                    ))}
-                  </div>
-                  <div className="results-calendar-grid">
-                    {/* Empty cells for first week offset */}
-                    {Array.from({ length: new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay() }).map((_, i) => (
-                      <div key={`empty-${i}`} />
-                    ))}
-                    {calendarDays.map((day) => {
-                      const hasSlips   = day.slips > 0;
-                      const hasSettled = day.wins + day.losses > 0;
-                      const isAllWins  = hasSettled && day.losses === 0;
-                      const isAllLoss  = hasSettled && day.wins  === 0;
-                      const isMixed    = hasSettled && day.wins > 0 && day.losses > 0;
-                      const isSelected = selectedDate === day.date;
-                      const today      = new Date().toISOString().slice(0, 10);
-                      const isToday    = day.date === today;
-
-                      // Background tint
-                      const bg = isAllWins  ? "rgba(52,211,153,0.12)"
-                               : isAllLoss  ? "rgba(248,113,113,0.12)"
-                               : isMixed    ? "rgba(251,191,36,0.10)"
-                               : hasSlips   ? "rgba(0,240,255,0.08)"
-                               :              "rgba(255,255,255,0.02)";
-
-                      // Border
-                      const borderColor = isSelected   ? "#00F0FF"
-                                        : isToday      ? "rgba(0,240,255,0.4)"
-                                        : isAllWins    ? "rgba(52,211,153,0.4)"
-                                        : isAllLoss    ? "rgba(248,113,113,0.4)"
-                                        : isMixed      ? "rgba(251,191,36,0.3)"
-                                        :                "rgba(255,255,255,0.08)";
-
-                      return (
-                        <button
-                          key={day.date}
-                          onClick={() => hasSlips && setSelectedDate(isSelected ? null : day.date)}
-                          className={`results-calendar-day relative flex min-w-0 flex-col items-center justify-between p-1.5 transition-all font-mono ${
-                            hasSlips ? "cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(0,240,255,0.25)]" : "cursor-default opacity-60"
-                          } ${isSelected ? "border-2 border-cyan-400 bg-cyan-950/40 shadow-[0_0_12px_rgba(0,240,255,0.3)]" : ""}`}
-                          style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
-                          title={hasSettled ? `${day.wins} won, ${day.losses} lost; saved on ${day.date}` : hasSlips ? `Saved on ${day.date}` : undefined}
-                        >
-                          {/* Day number */}
-                          <span className={`text-[10px] font-mono font-bold leading-none ${
-                            hasSlips ? "text-white" : "text-zinc-600"
-                          }`}>
-                            {day.day}
-                          </span>
-
-                          {hasSettled ? (
-                            <>
-                              {/* Win rate */}
-                              <span
-                                className="text-[9px] font-black leading-none"
-                                style={{
-                                  color: isAllWins ? "#34d399"
-                                       : isAllLoss ? "#f87171"
-                                       : day.winRate >= 50 ? "#fbbf24" : "#f87171",
-                                }}
-                              >
-                                {day.winRate}%
-                              </span>
-
-                              {/* Slip count dots */}
-                              <div className="flex gap-[2px] mt-0.5">
-                                {day.wins    > 0 && <div className="w-1.5 h-1.5 bg-emerald-400" />}
-                                {day.losses  > 0 && <div className="w-1.5 h-1.5 bg-rose-500" />}
-                                {day.pending > 0 && <div className="w-1.5 h-1.5 bg-cyan-400" />}
-                              </div>
-                            </>
-                          ) : hasSlips ? (
-                            <>
-                              <span className="text-[8px] font-black uppercase leading-none text-cyan-400">live</span>
-                              <div className="flex gap-[2px] mt-0.5">
-                                <div className="w-1.5 h-1.5 bg-cyan-400" />
-                              </div>
-                            </>
-                          ) : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {selectedDate && (
-                    <div className="mt-3 flex items-center justify-between border border-cyan-400/40 bg-cyan-950/30 p-2 font-mono">
-                      <span className="text-[10px] font-black uppercase text-cyan-300">FILTERED DATE: {selectedDate}</span>
-                      <button onClick={() => setSelectedDate(null)} className="px-2 py-0.5 border border-white/20 bg-black text-[9px] font-bold uppercase text-zinc-300 hover:border-white hover:text-white cursor-pointer">Clear Filter</button>
-                    </div>
-                  )}
-                </>
-              )}
-            </AuroraMaxPanel>
-
-            {/* Filter and Search Panel */}
-            <AuroraMaxPanel className="results-filter-panel p-3 border-2 border-white/15 bg-black shadow-2xl">
-              <div className="relative min-w-0 flex-1">
-                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="SEARCH SLIPS BY TITLE OR LEG..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="results-search min-h-10 w-full border-2 border-white/15 bg-black py-2 pl-9 pr-3 font-mono text-xs text-white uppercase placeholder-zinc-600 focus:border-cyan-400 focus:outline-none"
-                />
-              </div>
-              <div className="results-filter-grid">
-                {([
-                  { id: "all" as ResultFilter, label: "All" },
-                  { id: "wins" as ResultFilter, label: "Wins" },
-                  { id: "losses" as ResultFilter, label: "Losses" },
-                  { id: "pending" as ResultFilter, label: "Pending" },
-                  { id: "voids" as ResultFilter, label: "Void" },
-                ]).map((f) => (
-                  <button
-                    key={f.id}
-                    onClick={() => setFilter(f.id)}
-                    className={`results-filter-control min-h-10 px-3 text-[10px] font-black uppercase transition-colors cursor-pointer ${filter === f.id ? "is-active" : ""}`}
-                    data-tone={f.id}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </AuroraMaxPanel>
-
-            {/* Research Receipt Ledger */}
-            <AuroraMaxRankedWorkspace
-              title="Research receipt ledger"
-              subtitle={`${filteredParlays.length} visible of ${allSlips.length} saved slips`}
-              className="results-receipt-workspace border-2 border-white/15 bg-black shadow-2xl"
+        {/* Desk tabs */}
+        <nav className="mt-6 flex gap-1" aria-label="Results view">
+          {([
+            ['slate', 'Slate record', BarChart3],
+            ['slips', 'My slips', Archive],
+          ] as const).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              aria-current={tab === id ? 'page' : undefined}
+              className={`inline-flex items-center gap-2 border px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                tab === id
+                  ? 'border-ve-emerald/40 bg-ve-emerald/[0.06] text-ve-emerald'
+                  : 'border-white/5 text-white/30 hover:border-white/20 hover:text-white/60'
+              }`}
             >
-              {filteredParlays.length === 0 ? (
-                <EmptyResultsState hasSlips={allSlips.length > 0} />
-              ) : (
-                <div className="space-y-3">
-                  {filteredParlays.map((parlay) => (
-                    <ResultSmartSlipCard
-                      key={parlay.id}
-                      parlay={parlay}
-                      ownerName={ownerName}
-                    />
-                  ))}
-                </div>
-              )}
-            </AuroraMaxRankedWorkspace>
+              <Icon size={12} aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {tab === 'slips' ? (
+          <div className="mt-8">
+            <ResultsSlipsPanel
+              profile={profile}
+              savedParlays={savedParlays}
+              slateHomeRuns={results?.homeRuns ?? []}
+              slateDate={date}
+              slateIsToday={results?.isToday ?? date === today}
+              onSelectSlate={(next) => {
+                setDate(next);
+                setTab('slate');
+              }}
+            />
           </div>
+        ) : loading && !results ? (
+          // One quiet frame for the whole desk. Panels never arrive one at a
+          // time — a staggered reveal reads as a broken page, not as progress.
+          <div
+            className="mt-8 border border-white/5 bg-white/[0.01] py-32 text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="terminal-text text-white/25">Grading {shortDate(date)} slate…</span>
+          </div>
+        ) : error && !results ? (
+          <div className="mt-8 border border-ve-red/20 bg-ve-red/[0.03] p-8">
+            <span className="terminal-text text-ve-red">Slate unavailable</span>
+            <p className="mt-3 text-sm text-white/50">{error}</p>
+          </div>
+        ) : results ? (
+          <div className="mt-8 space-y-4">
+            {/* Verdict band */}
+            <section className="grid gap-4 border border-white/5 bg-white/[0.01] p-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
+                <GradeDial letter={results.grade.letter} reason={results.grade.reason} />
 
-          {/* Right Rail Breakdown */}
-          <aside className="min-w-0 space-y-4 lg:col-span-4 font-mono">
-            <ResultsLedgerSummary summary={stats} />
+                <div className="grid min-w-0 grid-cols-3 border-t border-white/5 sm:border-l sm:border-t-0">
+                  <MetricCell label="Total slate HRs" value={String(results.totals.slateHomeRuns)} />
+                  <MetricCell
+                    label="Bangs"
+                    value={String(results.totals.bangs)}
+                    tone={results.totals.bangs > 0 ? 'confirmed' : 'default'}
+                  />
+                  <MetricCell
+                    label="Correct cappers picks"
+                    value={String(results.totals.correctCapperPicks)}
+                    tone={results.totals.correctCapperPicks > 0 ? 'confirmed' : 'default'}
+                  />
+                  <MetricCell
+                    label="Cappers ticket"
+                    value={tallyText(results.tiers.cappersTicket)}
+                    tone={results.tiers.cappersTicket.hit > 0 ? 'confirmed' : 'default'}
+                  />
+                  <MetricCell
+                    label="Top plays"
+                    value={tallyText(results.tiers.topPlays)}
+                    tone={results.tiers.topPlays ? 'confirmed' : 'unknown'}
+                  />
+                  <MetricCell
+                    label="Zone fit"
+                    value={tallyText(results.tiers.zoneFit)}
+                    tone={results.tiers.zoneFit ? 'confirmed' : 'unknown'}
+                  />
+                  <MetricCell
+                    label="Your HR legs"
+                    value={
+                      mySlate.legTally.total > 0
+                        ? `${mySlate.legTally.hit}/${mySlate.legTally.total}`
+                        : 'No slip'
+                    }
+                    tone={mySlate.legTally.hit > 0 ? 'confirmed' : mySlate.legTally.total > 0 ? 'default' : 'unknown'}
+                  />
+                </div>
+              </div>
 
-            <AuroraMaxPanel as="section" className="p-3 sm:p-4 border-2 border-white/15 bg-black shadow-2xl" ariaLabelledBy="record-breakdown-title">
-              <AuroraMaxEyebrow>RANKED WORKSPACE</AuroraMaxEyebrow>
-              <h2 id="record-breakdown-title" className="mb-3 mt-1 text-base font-black uppercase tracking-wider text-white">Record breakdown</h2>
-              <ResultsPartition slips={allSlips} />
-              <p className="mt-3 text-[10px] font-bold uppercase leading-relaxed text-zinc-500 border-t border-white/10 pt-2">Grouped by current saved status and leg count.</p>
-            </AuroraMaxPanel>
+              <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                {results.games.length === 0 ? (
+                  <div className="col-span-full">
+                    <EmptyLine>No games scheduled for this date</EmptyLine>
+                  </div>
+                ) : (
+                  results.games.map((game) => <GameTile game={game} key={game.gamePk} />)
+                )}
+              </div>
+            </section>
 
-            <div className="border border-white/10 bg-zinc-950 p-3 text-center text-[9px] uppercase leading-relaxed text-zinc-500 font-mono">
-              VOUCHEDGE DETERMINISTIC PROTOCOL // AUDIT LEDGER · ZERO FAKE METRICS · RESEARCH & ENTERTAINMENT
+            {/* Tier provenance — says out loud what the fractions were graded against. */}
+            <p className="px-1 font-mono text-[10px] uppercase tracking-widest text-white/20">
+              {results.board.note}
+              {results.tiers.topPlays
+                ? ' · Top plays = 5 per game by pregame HR score; zone fit = 3 per game by pitcher vulnerability × park.'
+                : ''}
+            </p>
+
+            {/* Ticket · leaderboard · home runs */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Panel title="Cappers ticket">
+                {results.cappers.length === 0 ? (
+                  <EmptyLine>No cappers tracked yet</EmptyLine>
+                ) : (
+                  results.cappers.map((capper) => <TicketRow capper={capper} key={capper.id} />)
+                )}
+
+                {mySlate.slips.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setTab('slips')}
+                    className="mt-4 w-full border border-ve-emerald/25 px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-ve-emerald transition-colors hover:bg-ve-emerald/[0.06]"
+                  >
+                    Your ticket · {mySlate.legTally.hit}/{mySlate.legTally.total} HR legs
+                  </button>
+                ) : null}
+              </Panel>
+
+              <Panel title="All cappers results">
+                {results.cappers.length === 0 && mySlate.legTally.total === 0 ? (
+                  <EmptyLine>No cappers tracked yet</EmptyLine>
+                ) : (
+                  <>
+                    {results.cappers.map((capper) => <CapperScoreRow capper={capper} key={capper.id} />)}
+                    {mySlate.legTally.total > 0 ? (
+                      <div className="mt-2 flex items-center justify-between border-t border-ve-emerald/20 pt-4">
+                        <div className="min-w-0">
+                          <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-ve-emerald">
+                            You
+                          </span>
+                          <span className="ml-2 font-mono text-[10px] text-white/20">
+                            {mySlate.slips.length} {mySlate.slips.length === 1 ? 'slip' : 'slips'}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span
+                            className={`text-2xl font-bold italic tracking-tighter ${
+                              mySlate.legTally.hit > 0 ? 'text-ve-emerald' : 'text-white/25'
+                            }`}
+                          >
+                            {mySlate.legTally.hit}
+                          </span>
+                          <span className="font-mono text-[10px] text-white/20">/ {mySlate.legTally.total}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </Panel>
+
+              <Panel title="All home runs">
+                <div className="max-h-[22rem] overflow-y-auto pr-1">
+                  {results.homeRuns.length === 0 ? (
+                    <EmptyLine>
+                      {results.isToday ? 'No home runs yet today' : 'No home runs on this slate'}
+                    </EmptyLine>
+                  ) : (
+                    results.homeRuns.map((event) => <HomeRunRow event={event} key={event.id} />)
+                  )}
+                </div>
+              </Panel>
             </div>
-          </aside>
-        </div>
+
+            {results.warnings.length > 0 ? (
+              <ul className="space-y-1 px-1">
+                {results.warnings.map((warning) => (
+                  <li key={warning} className="font-mono text-[10px] uppercase tracking-widest text-white/20">
+                    {warning}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {results.cappers.length > 0 ? (
+              <footer className="border-t border-white/5 pt-8 text-center">
+                <span className="terminal-text block text-white/30">Tracked handles</span>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-white/20">
+                  {results.cappers.map((capper) => `@${capper.handle}`).join('  ')}
+                </p>
+              </footer>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </main>
   );
 }
 
-
-function ResultSmartSlipCard({
-  parlay,
-  ownerName,
-}: {
-  parlay: Parlay;
-  ownerName: string;
-}) {
-  const smartSlip = useMemo(() => projectSmartParlayFromParlay(parlay), [parlay]);
-  const savedAt = new Date(parlay.createdAt);
-  const savedDate = Number.isNaN(savedAt.getTime()) ? 'Saved date unavailable' : savedAt.toLocaleDateString();
-  const metaLine = `${ownerName} · ${parlay.legs.length}-leg · ${savedDate}`;
-  const recordState = parlay.status === 'PENDING'
-    ? 'Awaiting recorded outcome'
-    : parlay.backendSyncState === 'synced' && parlay.backendPickId
-      ? 'Backend-synced result'
-      : 'Local result state';
-  const footerParts = [
-    parlay.oddsValue ? `Odds: ${parlay.oddsValue > 0 ? `+${parlay.oddsValue}` : parlay.oddsValue}` : null,
-    parlay.riskTier ? `Risk: ${parlay.riskTier}` : null,
-    recordState,
-  ].filter(Boolean);
-
-  return (
-    <div>
-      <SmartParlaySlipCard
-        slip={smartSlip}
-        variant="results"
-        metaLine={metaLine}
-        legVariant="pro"
-        maxLegs={99}
-        showTrustPanel={false}
-        showOsBadges={false}
-        footerNote={footerParts.join(" · ")}
-        legOdds={Object.fromEntries(parlay.legs.map((leg) => [leg.id, leg.odds]))}
-      />
-    </div>
-  );
-}
-
 export default ResultsStudio;
-
-
-/* ============ Empty State ============ */
-function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {
-  return <AuroraMaxFallback title={hasSlips ? 'No matching receipts' : 'No saved slips'} detail={hasSlips ? 'Change the active filter or search term to restore receipt rows.' : 'Save a researched decision to begin a traceable track record.'} />;
-}

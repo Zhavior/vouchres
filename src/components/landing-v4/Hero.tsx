@@ -3,28 +3,60 @@ import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import HeroCommandCarousel from './HeroCommandCarousel';
 import { useLandingTelemetry } from '../../hooks/public/useLandingTelemetry';
+import { TelemetryStatusBadge } from './TelemetryStatus';
+import { MODE_COPY } from './telemetryStatusCopy';
 
 export default function Hero() {
   const telemetry = useLandingTelemetry();
+  const modeCopy = MODE_COPY[telemetry.mode];
 
   /*
-   * A dash, never a stand-in number. These sit under a "LIVE MODEL" banner, so
-   * printing a literal the feed did not return would be the exact failure the
-   * product exists to call out.
+   * Still never a stand-in number — but no longer a row of dashes either. The
+   * hook degrades from confirmed rows to the board's projected pool to the last
+   * published slate, and the banner above these cells says which one they came
+   * from, so the numbers are real in every state the visitor can land in.
+   *
+   * `sub` is the plain-English translation of the label above it. The telemetry
+   * names are the product's own vocabulary and stay; the sub-line is what they
+   * mean to someone who has never seen the desk.
    */
   const cells = [
-    { val: telemetry.gamesActive, label: 'Games_Active' },
-    { val: telemetry.lineupsSynced, label: 'Lineups_Synced' },
-    { val: telemetry.eliteCandidates, label: 'Elite_Candidates' },
-    { val: telemetry.modelStatus, label: 'Model_Status', color: 'text-ve-emerald' },
+    { val: telemetry.gamesActive, label: 'Games_Active', sub: 'Games on the card' },
+    {
+      /*
+       * Before lineups post this is `0/260`, which reads as a broken counter
+       * rather than as a stage of the day. The zero is real, so it is not
+       * hidden — it is stated as the thing it means, with the pool size kept in
+       * the sub-line so the scale is still visible.
+       */
+      val:
+        telemetry.lineupProgress && telemetry.lineupProgress.confirmed === 0
+          ? 'PENDING'
+          : telemetry.lineupsSynced,
+      label: 'Lineups_Synced',
+      sub:
+        telemetry.lineupProgress && telemetry.lineupProgress.confirmed === 0
+          ? `Official cards not posted · ${telemetry.lineupProgress.checked} batters in pool`
+          : 'Batters with an official lineup',
+    },
+    { val: telemetry.eliteCandidates, label: 'Elite_Candidates', sub: 'Cleared the top evidence tier' },
+    { val: telemetry.modelStatus, label: 'Model_Status', color: 'text-ve-emerald', sub: 'Evidence coverage grade' },
   ];
 
+  /*
+   * Fold rebalance: the hero was `min-h-[95vh] pt-32 pb-20` with `gap-16` and
+   * `space-y-10` inside it, which pushed the command deck below the fold on a
+   * 900px-tall desktop viewport — the one panel showing live telemetry was the
+   * one nobody saw without scrolling. The height below is capped rather than
+   * minimum and the internal rhythm is condensed, which lifts the deck into the
+   * first screen without touching the type scale.
+   */
   return (
-    <section className="relative min-h-[95vh] flex items-center pt-32 pb-20 px-6 overflow-hidden">
-      <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-16 items-center relative z-10">
-        
+    <section className="relative flex min-h-[auto] items-center overflow-hidden px-6 pb-12 pt-24 lg:min-h-[calc(100vh-4rem)] lg:py-16">
+      <div className="container relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
+
         {/* Left Side: Editorial */}
-        <div className="lg:col-span-7 space-y-10">
+        <div className="space-y-6 lg:col-span-7">
           {/* No opacity gate: the eyebrow and headline are the hero's meaning and
               must be legible on the first painted frame. Motion still enhances via
               the x-offset, which MotionConfig reducedMotion="user" neutralises. */}
@@ -38,7 +70,8 @@ export default function Hero() {
               <div className="w-2 h-2 rounded-full bg-ve-emerald animate-pulse" />
               <span className="terminal-text text-ve-emerald">LIVE MODEL // MLB HR INTELLIGENCE // COVERAGE AUDITED</span>
             </div>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tighter italic leading-[0.85] text-white">
+            <TelemetryStatusBadge telemetry={telemetry} />
+            <h1 className="text-5xl font-bold italic leading-[0.85] tracking-tighter text-white sm:text-6xl md:text-7xl xl:text-8xl">
               The First MLB Model <br />
               {/* Ghost line keeps the two-tone treatment; white/10 measured ~1.2:1 and was
                   effectively invisible on mobile. white/25 holds the hierarchy and reads. */}
@@ -50,7 +83,7 @@ export default function Hero() {
             initial={{ y: 6 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
-            className="text-lg sm:text-xl text-white/55 max-w-xl leading-relaxed font-light"
+            className="max-w-xl text-base font-light leading-relaxed text-white/55 sm:text-lg"
           >
             Build and lock auditable home-run hypotheses from Statcast telemetry, 
             matchup vulnerabilities, park context, and explicit evidence coverage.
@@ -90,25 +123,28 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.22, duration: 0.35 }}
-            className="pt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-white/5 sm:flex sm:gap-12"
+            className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/5 pt-6 sm:grid-cols-4 sm:gap-8"
           >
             {cells.map((item) => (
               <div key={item.label} className="min-w-0">
                 <p
-                  className={`text-lg font-mono tabular-nums ${
-                    item.val == null ? 'text-white/25' : item.color || 'text-white'
+                  className={`font-mono text-lg tabular-nums ${
+                    item.val == null ? 'text-white/40' : item.color || 'text-white'
                   }`}
                 >
-                  {item.val ?? '—'}
+                  {/* Off-slate is a state, not a blank. The badge above already
+                      names which population these came from. */}
+                  {item.val ?? modeCopy.chip}
                 </p>
-                <p className="text-[8px] font-mono text-white/35 uppercase tracking-tighter break-words">{item.label}</p>
+                <p className="break-words font-mono text-[8px] uppercase tracking-tighter text-white/35">{item.label}</p>
+                <p className="mt-1 text-[10px] font-light leading-snug text-white/30">{item.sub}</p>
               </div>
             ))}
           </motion.div>
         </div>
 
         {/* Right Side: Command HUD */}
-        <div className="lg:col-span-5 relative">
+        <div className="relative lg:col-span-5">
           <div className="absolute -inset-4 bg-ve-emerald/5 blur-3xl rounded-full pointer-events-none" />
           <HeroCommandCarousel />
         </div>

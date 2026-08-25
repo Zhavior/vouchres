@@ -465,9 +465,11 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'results':
+      // The Results desk: the graded slate record. The saved-slip ledger that
+      // used to own this section is still here, on the desk's "My slips" tab.
       return (
         <LazyRoute>
-          <ParlayShell key="results" panel={parlayOsPanelForSection('results')} navigateSection={navigateSection} />
+          <ResultsShell />
         </LazyRoute>
       );
     case 'notifications':
@@ -680,6 +682,13 @@ function FeedShell({ navigateSection }: { navigateSection: (section: string) => 
       }}
     />
   );
+}
+
+/** Results desk. Reads the profile and saved slips for the "My slips" tab. */
+function ResultsShell() {
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
+  return <ResultsStudio profile={profile} savedParlays={savedSlips} />;
 }
 
 /**

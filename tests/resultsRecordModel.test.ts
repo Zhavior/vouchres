@@ -58,17 +58,36 @@ describe('Aurora Max results presentation', () => {
     expect(summary).not.toContain('label="Verified"');
   });
 
-  it('keeps the Results route on Aurora Max and its mobile contract', () => {
-    const studio = readFileSync('src/components/results/ResultsStudio.tsx', 'utf8');
+  it('keeps the whole Results route on the landing system', () => {
+    // Aurora Max used to own this route. The desk and the slip panel are now
+    // one surface in the V4 landing vocabulary, so the old stylesheet and its
+    // primitives must not creep back in on either half.
+    const slips = readFileSync('src/components/results/ResultsSlipsPanel.tsx', 'utf8');
     const ledger = readFileSync('src/components/results/ResultsLedgerSummary.tsx', 'utf8');
-    const styles = readFileSync('src/components/results/results-aurora-max.css', 'utf8');
 
-    expect(studio).toContain('results-aurora-max');
-    expect(studio).toContain('AuroraMaxRankedWorkspace');
-    expect(studio).not.toContain('auroraTokens');
-    expect(studio).not.toContain('AURORA_');
-    expect(ledger).not.toContain('auroraTokens');
-    expect(styles).toContain('@media (max-width: 639px)');
-    expect(styles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
+    for (const source of [slips, ledger]) {
+      expect(source).not.toContain('AuroraMax');
+      expect(source).not.toContain('results-aurora-max');
+      expect(source).not.toContain('auroraTokens');
+      expect(source).toContain('terminal-text');
+    }
+
+    // The slip panel is graded by the desk's feed, not by its own opinion.
+    expect(slips).toContain('gradeSlipsForSlate');
+  });
+
+  it('grades the slate desk from real feed data only', () => {
+    const desk = readFileSync('src/components/results/ResultsStudio.tsx', 'utf8');
+
+    // Landing vocabulary, not Aurora Max.
+    expect(desk).toContain('terminal-text');
+    expect(desk).toContain('bg-obsidian-950');
+    expect(desk).not.toContain('AuroraMax');
+
+    // A tier with no pregame snapshot behind it must read UNKNOWN, never a
+    // fabricated fraction, and the desk must not compute outcomes itself.
+    expect(desk).toContain('UNKNOWN');
+    expect(desk).toContain('useSlateResults');
+    expect(desk).not.toMatch(/Math\.random/);
   });
 });
