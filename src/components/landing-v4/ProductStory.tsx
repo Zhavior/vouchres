@@ -6,25 +6,46 @@ const STAGES = [
     id: '01',
     label: 'DISCOVER',
     title: 'Find the signal.',
-    desc: 'VouchEdge scans the active MLB slate and ranks candidates using measurable power, matchup, park, and evidence signals.'
+    desc: 'VouchEdge scans the active MLB slate and ranks candidates using measurable power, matchup, park, and evidence signals.',
+    image: '/media/features/today-desk.webp',
+    // Slate counters and the research-rows headline.
+    focus: '50% 10%',
+    alt: "Today's command desk showing the slate counters and available research rows",
   },
   {
     id: '02',
     label: 'INVESTIGATE',
     title: 'Inspect the evidence.',
-    desc: 'A score without evidence is just another opinion. Open the candidate and inspect exactly what pushed the model higher — and what data is still missing.'
+    desc: 'A score without evidence is just another opinion. Open the candidate and inspect exactly what pushed the model higher — and what data is still missing.',
+    image: '/media/features/hr-intelligence.webp',
+    // The HRPI leader HUD and the evidence vector beneath it.
+    focus: '50% 62%',
+    alt: 'Home run board showing the evidence vector and the feeds still missing for each candidate',
   },
   {
     id: '03',
     label: 'LOCK',
     title: 'Commit before the outcome.',
-    desc: 'When the evidence is strong enough, lock the hypothesis. VouchEdge records the model state, evidence coverage, confidence, and timestamp.'
+    desc: 'When the evidence is strong enough, lock the hypothesis. VouchEdge records the model state, evidence coverage, confidence, and timestamp.',
+    image: '/media/features/today-desk.webp',
+    /*
+     * Same capture as stage 01, framed on the first-pitch lock panel — the
+     * countdown, the matchup lock telemetry, both starting arms. There is no
+     * standalone capture of a lock, and this is the real artifact rather than
+     * a mock of one.
+     */
+    focus: '92% 46%',
+    alt: 'First pitch lock panel counting down, with the matchup lock telemetry for that game',
   },
   {
     id: '04',
     label: 'VERIFY',
     title: 'Let the record speak.',
-    desc: 'After the game, the hypothesis remains exactly where it was left — win or lose. Accountability is the only edge.'
+    desc: 'After the game, the hypothesis remains exactly where it was left — win or lose. Accountability is the only edge.',
+    image: '/media/features/results-desk.webp',
+    // The graded slate record.
+    focus: '50% 40%',
+    alt: 'Results ledger showing the graded slate record for a past date',
   }
 ];
 
@@ -61,6 +82,45 @@ function StageNarrative({
   );
 }
 
+/**
+ * One stage's screenshot.
+ *
+ * Split out for the same reason as StageNarrative — `useTransform` has to run
+ * at a component's top level, not inside `STAGES.map(...)`.
+ *
+ * The image is cropped by `object-position` rather than by cutting new assets,
+ * so stage 03 can frame the lock panel inside the same capture stage 01 uses
+ * without shipping a second file.
+ */
+function StageVisual({
+  stage,
+  index,
+  progress,
+}: {
+  stage: (typeof STAGES)[number];
+  index: number;
+  progress: MotionValue<number>;
+}) {
+  const start = index * 0.25;
+  const end = (index + 1) * 0.25;
+  const opacity = useTransform(
+    progress,
+    [start, start + 0.04, end - 0.04, end],
+    [0, 1, 1, 0],
+  );
+
+  return (
+    <motion.img
+      style={{ opacity, objectPosition: stage.focus }}
+      src={stage.image}
+      alt={stage.alt}
+      loading={index === 0 ? 'eager' : 'lazy'}
+      decoding="async"
+      className="absolute inset-0 h-full w-full scale-[1.02] object-cover transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.12] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.02]"
+    />
+  );
+}
+
 export default function ProductStory() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -81,37 +141,25 @@ export default function ProductStory() {
           </div>
 
           {/* Right: Product Visualization */}
-          <div className="relative aspect-video bg-obsidian-900/50 backdrop-blur-xl border border-white/5 flex items-center justify-center overflow-hidden shadow-2xl">
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(49,181,131,0.02),transparent_70%)]" />
-             
-             {/* Dynamic Screen Content based on scroll */}
-             <motion.div 
-               className="w-full h-full p-8 flex flex-col"
-               style={{
-                 opacity: useTransform(scrollYProgress, [0, 0.1], [0, 1])
-               }}
-             >
-                <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-                  <span className="terminal-text">System_Visualization_v4.0</span>
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 rounded-full bg-ve-emerald/20" />
-                    <div className="w-2 h-2 rounded-full bg-ve-emerald/20" />
-                  </div>
-                </div>
-                
-                <div className="flex-1 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ 
-                      scale: [1, 1.02, 1],
-                      opacity: [0.5, 1, 0.5]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="text-[10px] font-mono text-ve-emerald uppercase tracking-[0.5em]"
-                  >
-                    [ Processing_Neural_Feed ]
-                  </motion.div>
-                </div>
-             </motion.div>
+          {/*
+            Was a static placeholder — a `System_Visualization_v4.0` chrome bar
+            and a pulsing `[ Processing_Neural_Feed ]`. Both invented, and it
+            never changed across the four stages, so the scroll narrative had no
+            visual payoff at all. Each stage now shows the real desk it
+            describes, framed on the part of the capture the copy is about.
+
+            `group` + `peer`-free hover: the whole frame is the hover target, so
+            moving between stages mid-hover does not strand a zoomed image.
+          */}
+          <div className="group relative aspect-video overflow-hidden border border-white/5 bg-obsidian-900/50 shadow-2xl">
+            {STAGES.map((stage, i) => (
+              <StageVisual key={stage.id} stage={stage} index={i} progress={scrollYProgress} />
+            ))}
+
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between border-t border-white/5 bg-[#050505]/80 px-4 py-2 backdrop-blur-sm">
+              <span className="terminal-text">{'{ '}VouchEdge · live product{' }'}</span>
+              <span className="terminal-text opacity-40">Hover to enlarge</span>
+            </div>
           </div>
 
         </div>
