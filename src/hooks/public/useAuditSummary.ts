@@ -7,6 +7,7 @@
  * proof module with invented proof in it.
  */
 import { useEffect, useState } from 'react';
+import { apiClient } from '../../lib/apiClient';
 
 export interface AuditedHypothesis {
   slateDate: string;
@@ -48,11 +49,17 @@ export function useAuditSummary(): AuditSummary {
 
   useEffect(() => {
     let alive = true;
-    fetch('/api/results/audit-summary')
-      .then((response) => response.json())
+    /*
+     * apiClient rather than raw fetch, per the frontend API discipline guard.
+     * It throws on a failed envelope and strips `ok` off a successful flat one,
+     * so reaching the .then at all is the success signal — the old `payload.ok`
+     * check would now always read false and force the empty state.
+     */
+    apiClient
+      .get<Record<string, any>>('/api/results/audit-summary')
       .then((payload) => {
         if (!alive) return;
-        if (!payload?.ok) {
+        if (!payload) {
           setState({ data: EMPTY, isError: true });
           return;
         }

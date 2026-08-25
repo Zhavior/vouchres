@@ -24,6 +24,7 @@
  * panel honestly instead of implying that projected rows are confirmed ones.
  */
 import { useEffect, useState } from 'react';
+import { apiClient } from '../../lib/apiClient';
 
 export interface LandingCandidate {
   playerId: number;
@@ -165,8 +166,8 @@ async function findReplaySlate(maxDaysBack = 7): Promise<{ date: string; pool: u
   for (let back = 1; back <= maxDaysBack; back += 1) {
     const date = dateBack(back);
     try {
-      const response = await fetch(`/api/mlb/hr-board/date/${date}`).then((r) => r.json());
-      if (!response?.ok) continue;
+      const response = await apiClient.get<Record<string, unknown>>(`/api/mlb/hr-board/date/${date}`);
+      if (!response) continue;
       const pool: unknown[] =
         (Array.isArray(response.candidates) && response.candidates.length > 0 && response.candidates)
         || (Array.isArray(response.allProjectedCandidates) && response.allProjectedCandidates)
@@ -193,19 +194,28 @@ async function fetchSnapshot(): Promise<Snapshot> {
       try {
         // Settled rather than awaited together: one feed being down should not
         // blank the numbers the other one can still answer for.
+        type Payload = Record<string, any> | null;
         const [lineup, board, statcast, matchups, weather] = await Promise.allSettled([
-          fetch('/api/mlb/lineup/today').then((r) => r.json()),
-          fetch('/api/mlb/hr-board/today').then((r) => r.json()),
-          fetch('/api/mlb/statcast/batters').then((r) => r.json()),
-          fetch('/api/mlb/matchups/today').then((r) => r.json()),
-          fetch('/api/mlb/weather/today').then((r) => r.json()),
+          apiClient.get<Payload>('/api/mlb/lineup/today'),
+          apiClient.get<Payload>('/api/mlb/hr-board/today'),
+          apiClient.get<Payload>('/api/mlb/statcast/batters'),
+          apiClient.get<Payload>('/api/mlb/matchups/today'),
+          apiClient.get<Payload>('/api/mlb/weather/today'),
         ]);
 
-        const l = lineup.status === 'fulfilled' && lineup.value?.ok ? lineup.value : null;
-        const b = board.status === 'fulfilled' && board.value?.ok ? board.value : null;
-        const sc = statcast.status === 'fulfilled' && statcast.value?.ok ? statcast.value : null;
-        const mu = matchups.status === 'fulfilled' && matchups.value?.ok ? matchups.value : null;
-        const we = weather.status === 'fulfilled' && weather.value?.ok ? weather.value : null;
+        /*
+         * No `.ok` check here, deliberately. These went through raw fetch and
+         * gated on `value.ok`; apiClient runs the body through
+         * unwrapApiPayload, which STRIPS `ok` off a flat envelope and throws on
+         * `ok: false`. Keeping the old predicate would read every feed as
+         * failed and blank the landing to dashes. Settled-and-fulfilled is now
+         * the success signal.
+         */
+        const l = lineup.status === 'fulfilled' ? lineup.value : null;
+        const b = board.status === 'fulfilled' ? board.value : null;
+        const sc = statcast.status === 'fulfilled' ? statcast.value : null;
+        const mu = matchups.status === 'fulfilled' ? matchups.value : null;
+        const we = weather.status === 'fulfilled' ? weather.value : null;
 
         const confirmed: unknown[] = Array.isArray(b?.candidates) ? b.candidates : [];
         const projected: unknown[] = Array.isArray(b?.allProjectedCandidates)

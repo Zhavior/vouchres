@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { HrNextItem } from '../hooks/useHrNextData';
 import { HrNextCard } from './HrNextCard';
+import { useMlbInjuries } from '../../../hooks/queries/useMlbInjuries';
 import { HrNextRegisterRow } from './HrNextRegisterRow';
 import type { GroupByMode } from '../hooks/useHrNextData';
 import { partitionByTier, tierForScore, type HrNextTierColumn } from '../utils/tierPartition';
@@ -47,6 +48,14 @@ export function HrNextBoard({
   onSelectActiveId,
   selectedMatchupIndex = -1,
 }: HrNextBoardProps) {
+  /*
+   * One lookup for every row on the board. Confirmed rows never match — a
+   * candidate that cleared an official batting order cannot be on the IL — so
+   * this only ever lights up the projected pool, which is the pool that would
+   * otherwise rank a player who is not going to appear.
+   */
+  const { lookup: injuryFor } = useMlbInjuries();
+
   const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const [openReceiptId, setOpenReceiptId] = useState<string | null>(null);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, true>>({});
@@ -117,6 +126,7 @@ export function HrNextBoard({
         <div key={item.id} id={`player-card-${item.row.stableId}`} className="w-full min-w-0">
           <HrNextCard
             row={item.row}
+            injury={injuryFor(item.row.playerName, item.row.team)}
             compact={false}
             isProMode={isProMode}
             tier={column.tier}
@@ -304,6 +314,7 @@ export function HrNextBoard({
                     <div key={item.id} id={`player-card-${item.row.stableId}`}>
                       <HrNextCard
                         row={item.row}
+                        injury={injuryFor(item.row.playerName, item.row.team)}
                         compact
                         isProMode={false}
                         tier={tierForScore(item.row.hrScore)}
@@ -332,6 +343,7 @@ export function HrNextBoard({
           <div key={item.id} id={`player-card-${item.row.stableId}`} className="w-full min-w-0">
             <HrNextCard
               row={item.row}
+              injury={injuryFor(item.row.playerName, item.row.team)}
               compact={false}
               isProMode={false}
               tier={tierForScore(item.row.hrScore)}
