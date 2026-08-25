@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { ShieldCheck, ChevronRight, ChevronLeft } from 'lucide-react';
+import PlayerHeadshot from '../parlays/PlayerHeadshot';
 import {
   useLandingTelemetry,
   type LandingCandidate,
@@ -86,7 +87,25 @@ function buildScenes(
       content: (
         <div className="space-y-6">
           <div className="flex justify-between items-start gap-3">
-            <div className="min-w-0">
+            {/*
+              The panel named the player but showed no picture of them, even
+              though playerId was already in the payload and being used only as
+              a React key. Portrait shape so the whole 2:3 headshot is visible —
+              a circular frame contains it to two-thirds width and masks the
+              shoulders.
+            */}
+            {top && (
+              <div className="shrink-0 overflow-hidden border border-white/10 bg-white/[0.03]">
+                <PlayerHeadshot
+                  name={top.playerName}
+                  playerId={top.playerId ? String(top.playerId) : undefined}
+                  size={56}
+                  shape="portrait"
+                  priority
+                />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
               <h4 className="truncate text-2xl font-bold italic tracking-tighter text-white">
                 {top ? top.playerName.toUpperCase() : 'BOARD OFFLINE'}
               </h4>
@@ -160,6 +179,11 @@ function buildScenes(
                 i === 0 ? 'bg-ve-emerald/5 border-ve-emerald/20' : ''
               }`}
             >
+              <PlayerHeadshot
+                name={row.playerName}
+                playerId={row.playerId ? String(row.playerId) : undefined}
+                size={18}
+              />
               <span className="w-16 shrink-0 truncate text-[10px] font-bold text-white">
                 {row.playerName.split(' ').slice(-1)[0]}
               </span>
