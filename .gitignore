@@ -36,10 +36,14 @@ npm
 drafts/
 .cache/
 
-# Accidental Finder-style duplicate copies (verified byte-identical)
-**/* 2.ts
-**/* 2.tsx
-**/* 2.css
+# Accidental Finder-style duplicate copies (verified byte-identical).
+# This listed only .ts/.tsx/.css, so duplicate .webp, .mjs and .sql copies —
+# including a second copy of a Supabase migration — stayed visible to
+# `git add -A` and were committed by accident. Match any extension, plus
+# extensionless files and duplicated directories.
+**/* 2.*
+**/* 2
+**/* 2/
 front-page-lab-visual *.html
 
 # Internal documentation (not for public GitHub)
