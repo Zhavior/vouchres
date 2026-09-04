@@ -1,0 +1,3 @@
+/* Keep the full product utility set behind AuthenticatedApp's lazy boundary. */
+@reference "../index.css";
+@tailwind utilities source("../");
