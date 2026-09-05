@@ -1,146 +1,41 @@
+// @vitest-environment happy-dom
+import React from 'react';
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import Hero from '../src/components/landing-v4/Hero';
 
-const terminalSource = readFileSync(
-  new URL('../src/pages/VouchEdgeTerminalPage.tsx', import.meta.url),
-  'utf8',
-);
-const landingSource = readFileSync(
-  new URL('../src/pages/VouchEdgeLandingV3.tsx', import.meta.url),
-  'utf8',
-);
-const telemetrySource = readFileSync(
-  new URL('../src/components/landing/ResearchTelemetryStory.tsx', import.meta.url),
-  'utf8',
-);
-const previewDataSource = readFileSync(
-  new URL('../src/components/landing-v3/researchPreviewData.ts', import.meta.url),
-  'utf8',
-);
-const sectionNavSource = readFileSync(
-  new URL('../src/app/sectionNavigation.ts', import.meta.url),
-  'utf8',
-);
-const appSource = readFileSync(
-  new URL('../src/App.tsx', import.meta.url),
-  'utf8',
-);
-const publicLandingStyles = readFileSync(
-  new URL('../src/styles/public-landing.css', import.meta.url),
-  'utf8',
-);
-const truthLandingStyles = readFileSync(
-  new URL('../src/styles/vouchres-ultimate-truth-landing.css', import.meta.url),
-  'utf8',
-);
-const integrityJourneySource = readFileSync(
-  new URL('../src/components/landing-v3/EvidenceIntegrityJourney.tsx', import.meta.url),
-  'utf8',
-);
-const integrityJourneyStyles = readFileSync(
-  new URL('../src/components/landing-v3/evidence-integrity-journey.css', import.meta.url),
-  'utf8',
-);
-const evidenceEarthSource = readFileSync(
-  new URL('../src/components/landing-v3/EvidenceEarthGlobe.tsx', import.meta.url),
-  'utf8',
-);
+vi.mock('../src/hooks/public/useLandingTelemetry', () => ({
+  useLandingTelemetry: () => ({
+    mode: 'offline', isLoading: false, slateDate: null, nextFirstPitch: null,
+    gamesActive: null, lineupsSynced: null, eliteCandidates: null, modelStatus: null,
+  }),
+}));
+vi.mock('../src/components/landing-v4/HeroCommandCarousel', () => ({ default: () => null }));
 
 describe('public landing conversion contract', () => {
-  it('mounts the one-record landing from the public terminal page', () => {
-    expect(terminalSource).toContain('<VouchEdgeLandingV3');
-    expect(terminalSource).toContain("scrollToSection('record')");
-    expect(landingSource).toContain('<TruthFlow');
-    expect(landingSource).toContain('TacticalHUDTelemetry');
-    expect(landingSource).toContain("useResearchPreview()");
-    expect(landingSource).toContain("tag: '07 / RESULT'");
-    expect(landingSource).toContain("tag: '08 / LEARN'");
-    expect(landingSource).not.toContain('ResearchRecordBridge');
-    expect(landingSource).not.toContain('CinematicEditorialStory');
-    expect(landingSource).not.toContain('LiveSportsIntelligence');
+  it('offers a working signup link even when the data feed is offline', () => {
+    render(React.createElement(Hero));
+    expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Build today's card free/i }).getAttribute('href')).toBe('/join');
+    expect(screen.getByRole('link', { name: /See exactly how it works/i }).getAttribute('href')).toBe('/#methodology');
+    expect(screen.getByText(/System status:/).textContent).toContain('FEED UNREACHABLE');
   });
 
-  it('anchors the hero on the live research preview instead of a fixture matchup', () => {
-    expect(landingSource).toContain('TacticalHUDTelemetry preview={preview}');
-    expect(landingSource).toContain('preview.featuredGame');
-    expect(previewDataSource).toContain('export function useResearchPreview');
-    for (const fabricated of ['NYY @ BAL', 'NEW YORK YANKEES', 'BALTIMORE ORIOLES']) {
-      expect(landingSource).not.toContain(fabricated);
+  it('mounts V4 publicly and retains the URL-driven authentication surface', () => {
+    const app = readFileSync('src/App.tsx', 'utf8');
+    const access = readFileSync('src/pages/VouchEdgeTerminalPage.tsx', 'utf8');
+    expect(app).toContain('<VouchEdgeLandingV4');
+    expect(access).toContain('<AuthModal');
+    expect(access).toContain("path === '/signup' || path === '/join'");
+    expect(access).toContain("path === '/login' || path === '/signin'");
+    expect(access).not.toContain('<VouchEdgeLandingV3');
+  });
+
+  it('retains forced public preview routes', () => {
+    const source = readFileSync('src/app/sectionNavigation.ts', 'utf8');
+    for (const path of ['/landing', '/vouchedge-preview', '/preview/vouchedge']) {
+      expect(source).toContain("'" + path + "'");
     }
-  });
-
-  it('keeps VouchEdge as the wordmark and identifies the VouchRes engine', () => {
-    expect(landingSource).toContain('VOUCHEDGE');
-    expect(integrityJourneySource).toContain('VouchRes');
-    expect(landingSource).toContain('ve-hud-grid-page');
-    expect(truthLandingStyles).toContain('.ve-hud-grid-page');
-    expect(truthLandingStyles).toContain('background-color: #000000 !important;');
-    expect(truthLandingStyles).toContain('background-size: 44px 44px, 44px 44px !important;');
-  });
-
-  it('does not invent confidence, sparklines, or refresh theater', () => {
-    expect(telemetrySource).not.toContain('<b>68</b>');
-    expect(telemetrySource).not.toContain('[32, 69, 45, 88, 52, 74, 38, 91]');
-    expect(landingSource).not.toContain('Refreshed 2 sec ago');
-    expect(integrityJourneySource).toContain('not a promise of an outcome');
-    expect(telemetrySource).toContain('not a fabricated demo');
-  });
-
-  it('turns the public-record integrity section into a four-phase evidence story', () => {
-    expect(landingSource).toContain('<EvidenceIntegrityJourney');
-    expect(integrityJourneySource).toContain('RESEARCH LIMITS / PUBLIC RECORD');
-    expect(integrityJourneySource).toContain("label: 'RESEARCHED'");
-    expect(integrityJourneySource).toContain("label: 'TIME STAMPED'");
-    expect(integrityJourneySource).toContain("label: 'COMPARED TO RESULT'");
-    expect(integrityJourneySource).toContain("label: 'RETAINED'");
-    expect(integrityJourneySource).toContain('not a prediction oracle');
-    expect(integrityJourneySource).toContain('does not invent a saved record');
-    expect(integrityJourneyStyles).toContain('.ve-integrityJourney__pin {');
-    expect(integrityJourneyStyles).toContain('position: sticky;');
-    expect(integrityJourneyStyles).toContain('height: 100dvh;');
-    expect(evidenceEarthSource).toContain('<Canvas');
-    expect(evidenceEarthSource).toContain("gl.setClearColor('#000000', 1)");
-    expect(evidenceEarthSource).toContain('alpha: false');
-    expect(evidenceEarthSource).toContain('<instancedMesh');
-    expect(evidenceEarthSource).toContain('fresnel * 0.18');
-    expect(evidenceEarthSource).toContain('dampingFactor={0.05}');
-    expect(evidenceEarthSource).toContain('IntersectionObserver');
-    expect(evidenceEarthSource).toContain("frameloop={inView && !reduceMotion ? 'always' : 'demand'}");
-    expect(integrityJourneyStyles).toContain('.ve-earthReticle');
-    expect(integrityJourneyStyles).toContain('.ve-integrityJourney__earthLabel.is-time-stamped');
-    expect(integrityJourneyStyles).toContain('@media (prefers-reduced-motion: reduce)');
-  });
-
-  it('wires conversion to access and the live record', () => {
-    expect(landingSource).toContain('GET BETA ACCESS');
-    expect(landingSource).toContain('id="how-it-works"');
-    expect(landingSource).toContain('id="record"');
-    expect(landingSource).toContain('<EvidenceIntegrityJourney');
-    expect(landingSource).toContain('<CommunitySection');
-    expect(landingSource).toContain('<PricingSection');
-    expect(landingSource).toContain('<FAQSection');
-    expect(landingSource).toContain('<CTASection');
-    expect(terminalSource).toContain("vouchedge_after_auth_destination");
-    expect(terminalSource).toContain('SIGNED_IN_HOME');
-  });
-
-  it('forces the public landing on /landing as well as preview paths', () => {
-    expect(sectionNavSource).toContain('FORCE_PUBLIC_LANDING_PATHS');
-    expect(sectionNavSource).toContain("'/landing'");
-    expect(sectionNavSource).toContain("'/vouchedge-preview'");
-    expect(sectionNavSource).toContain("'/preview/vouchedge'");
-  });
-
-  it('keeps the public landing on one native document scroll owner', () => {
-    expect(appSource).toContain('className={`ve-public-landing-root');
-    expect(appSource).toContain('data-scroll-owner="document"');
-    expect(appSource).not.toContain('className="ve-layout-frame ve-layout-welcome"');
-    expect(terminalSource).toContain("classList.add('ve-public-landing-scroll')");
-    expect(terminalSource).toContain("classList.remove('ve-public-landing-scroll')");
-    expect(publicLandingStyles).toContain('html.ve-public-landing-scroll {');
-    expect(publicLandingStyles).toContain('overflow-y: auto !important;');
-    expect(publicLandingStyles).toContain('overflow-x: clip !important;');
-    expect(publicLandingStyles).toContain('body[style*="overflow: hidden"]');
-    expect(publicLandingStyles).not.toContain('html.ve-public-landing-scroll {\n  overflow: hidden');
   });
 });

@@ -1,4 +1,18 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none) theme(static);
+/* Public boot only. Product utilities load with the application shell. */
+@source "../index.html";
+@source "./App.tsx";
+@source "./main.tsx";
+@source "./pages/{VouchEdgeLandingV4,VouchEdgeTerminalPage,PolicyPage,AboutPage,ContactPage,BlogPage,DevProfilePage,AuthCallbackPage,ResetPasswordPage}.tsx";
+@source "./theme";
+@source "./components/landing-v4";
+@source "./components/auth";
+@source "./components/brand";
+@source "./components/legal";
+@source "./components/layout";
+@source "./components/visual";
+@source "./components/dev";
+@source "./components/parlays/PlayerHeadshot.tsx";
 
 /*
  * Tailwind v4 CSS-first tokens.
@@ -32,10 +46,6 @@
   --color-obsidian-900: #050505;
   --color-obsidian-800: #0A0A0A;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 :root {
   --obsidian-950: #020202;

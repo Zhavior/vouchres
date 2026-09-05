@@ -7,6 +7,7 @@ import { HrNextVerifiedNow } from '../src/features/hr-next/components/HrNextVeri
 import type { HrWatchRow } from '../src/features/hr/types/hrWatch';
 import { assessVerifiedNow, buildVerifiedNowSlate } from '../src/features/hr-next/utils/verifiedNow';
 import { buildSlateTelemetry } from '../src/features/hr-next/utils/slateTelemetry';
+import { HrNextCollisionField } from '../src/features/hr-next/components/HrNextCollisionField';
 
 function row(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
   return {
@@ -25,6 +26,18 @@ function row(overrides: Partial<HrWatchRow> = {}): HrWatchRow {
 }
 
 describe('Verified Now truth gate', () => {
+  it('explains missing layers without substituting a venue index or invalid score', () => {
+    const { container, getByText, getAllByText } = render(<HrNextCollisionField row={row({
+      parkContext: null, hitterPower: Number.NaN, weather: null,
+    })} />);
+    expect(getAllByText('Unavailable')).toHaveLength(2);
+    expect(getByText('80/100')).toBeTruthy();
+    expect(getByText('Weather')).toBeTruthy();
+    expect(getByText('Research still incomplete')).toBeTruthy();
+    expect(container.querySelectorAll('details')).toHaveLength(3);
+    expect(container.querySelector('canvas')).toBeNull();
+  });
+
   it('requires every decision feed and never treats park context as weather', () => {
     const incomplete = row({ weather: null, truthStatus: 'projected' });
     expect(assessVerifiedNow(incomplete).verified).toBe(false);

@@ -86,9 +86,9 @@ describe('Today decision-first layout & Command Desk', () => {
     expect(source).toContain('Every row keeps its research receipt.');
   });
 
-  it('implements neobrutalist Stage 01 status and hard offset shadows on CTA', () => {
+  it('routes the Stage 01 action to the current decision destination', () => {
     expect(todayCommandBriefSource).toContain('STAGE 01: PRE-PITCH THESIS');
-    expect(todayCommandBriefSource).toContain('shadow-[3px_3px_0px_0px_#00FF87]');
+    expect(todayCommandBriefSource).toContain("onRoute(decision.ctaSection || 'hr_board')");
     expect(todayCommandBriefSource).toContain('Review HR Intelligence ->');
   });
 

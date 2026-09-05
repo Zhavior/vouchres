@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import '../styles/app-utilities.css';
 import type { useSectionNavigation } from './useSectionNavigation';
 import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFetch';
 import { useAppBootstrap } from './useAppBootstrap';
