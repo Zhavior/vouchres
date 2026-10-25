@@ -252,8 +252,14 @@ scheduled by the host platform.
 
 ---
 
+## License
+
+All rights reserved. The source is public so it can be read and evaluated; it is not open source. See [LICENSE](LICENSE).
+
+---
+
 <div align="center">
 
-**Built by [@Zhavior](https://github.com/Zhavior)** · Open beta · Not betting advice
+**Built by [@Zhavior](https://github.com/Zhavior)** · Offline · Not betting advice
 
 </div>
