@@ -1,5 +1,0 @@
-import VouchEdgeLandingV4 from './pages/VouchEdgeLandingV4';
-
-export default function App() {
-  return <VouchEdgeLandingV4 />;
-}

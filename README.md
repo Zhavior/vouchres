@@ -7,7 +7,7 @@
 Sports research, home-run intelligence, and verified parlay tracking for MLB.
 Research before the first pitch — with the evidence behind every score.
 
-[**Live site → vouchedge.xyz**](https://www.vouchedge.xyz)
+**Hosted at [vouchedge.xyz](https://www.vouchedge.xyz), which is currently offline.** As of 2026-10-25 the Vercel deployment answers HTTP 402 `DEPLOYMENT_DISABLED`.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
@@ -15,8 +15,8 @@ Research before the first pitch — with the evidence behind every score.
 ![Node](https://img.shields.io/badge/Node-22-5FA04E?logo=nodedotjs&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-Billing-635BFF?logo=stripe&logoColor=white)
-![Status](https://img.shields.io/badge/status-open%20beta-orange)
-![Tests](https://github.com/Zhavior/vouchres/actions/workflows/test.yml/badge.svg)
+![Status](https://img.shields.io/badge/status-offline-lightgrey)
+[![CI](https://github.com/Zhavior/vouchres/actions/workflows/ci.yml/badge.svg)](https://github.com/Zhavior/vouchres/actions/workflows/ci.yml)
 
 </div>
 
@@ -130,7 +130,7 @@ Four internal systems carry most of the architectural weight. Each has its own d
 ```
 src/            React SPA — features/, components/, pages/, hooks/, stores/
 server/         Express API — routes/, services/, middleware/, v3/, aegis/, cron/
-supabase/       Schema, 46 migrations, seed data, email templates
+supabase/       Schema, 61 migrations, seed data, email templates
 aurora/         Design-system constitution (architecture, motion, a11y, errors)
 scripts/        Verification, migration, audit, and perf tooling
 docs/           Architecture, engineering, ADRs, product notes
