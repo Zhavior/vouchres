@@ -50,3 +50,25 @@ front-page-lab-visual *.html
 docs/internal/
 .env*
 !.env.test.example
+!.env.example
+
+# Duplicates numbered past 2 ("Foo 3.tsx") and hand-made backups next to the
+# file they back up. Git history already keeps every earlier version.
+**/* [3-9].*
+*.before-*
+*.bak-*
+*.pre-merge.*
+*.pre-runner.*
+
+# Local logs, screenshots and generated reports
+*.log
+/qa-*.png
+/.lighthouseci/
+
+# AI coding-tool workspaces and working notes. Local to whoever is working on
+# the repo, not part of the product. CLAUDE.md stays tracked: it holds the
+# project's shared instructions.
+/.claude/
+/.agent-plans/
+/.agent-lessons/
+/.cursorignore
